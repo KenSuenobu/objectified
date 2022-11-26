@@ -25,3 +25,33 @@ yarn build
 ```
 
 From the top level of the project.
+
+### Starting the services
+
+You will need to start two modules: the `objectified-services` module, and
+the `objectified-ui` module.  To start the `objectified-services`, use
+the following commands:
+
+```shell
+cd objectified-services
+yarn start
+```
+
+This will start the server on port 3001.  [Click here to explore the
+services documentation](objectified-services/README.md).
+
+Then, you will want to start the UI, `objectified-ui`.  To do so, use the
+following commands in a new terminal window:
+
+```shell
+cd objectified-ui
+yarn start
+```
+
+This will start the UI.
+
+Tune a browser to http://localhost:3000/.  Follow the instructions if you
+are a new user, or use the dashboard elements to build and maintain your
+schema.
+
+[Click here to explore the UI documentation](objectified-ui/README.md).
