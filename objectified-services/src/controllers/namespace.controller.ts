@@ -9,7 +9,7 @@ import {
   ApiTags, ApiUnauthorizedResponse
 } from "@nestjs/swagger";
 import {NamespacesService} from './namespace.service';
-import {NamespaceDto} from '../dto/namespace-dto';
+import {NamespaceDto} from '../dto/namespace.dto';
 
 @ApiTags('namespaces')
 @Controller('namespaces')
@@ -80,7 +80,7 @@ export class NamespacesController {
     description: 'The ID of the `Namespace` to get',
   })
   @ApiOperation({
-    summary: 'Retrieves a Namespace',
+    summary: 'Retrieves a Namespace by its ID',
     description: 'Retrieves a `Namespace` entry by its ID.'
   })
   @ApiOkResponse()
@@ -101,6 +101,19 @@ export class NamespacesController {
   @ApiUnauthorizedResponse()
   async listNamespaces(): Promise<NamespaceDto[]> {
     return this.service.listNamespaces();
+  }
+
+  @Get('/find/:value')
+  @ApiOperation({
+    summary: 'Finds a Namespace by name or description',
+    description: 'Searches for `Namespace`s by both the name and description based on the value provided.  Namespace ' +
+      'searches are case-insensitive.',
+  })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @ApiUnauthorizedResponse()
+  async findNamespaces(@Param('value') value: string): Promise<NamespaceDto[]> {
+    return this.service.findNamespaces(value);
   }
 
 }

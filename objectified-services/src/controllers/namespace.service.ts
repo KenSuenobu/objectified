@@ -1,5 +1,5 @@
 import {Injectable, Logger} from "@nestjs/common";
-import {NamespaceDto} from '../dto/namespace-dto';
+import {NamespaceDto} from '../dto/namespace.dto';
 
 @Injectable()
 export class NamespacesService {
@@ -22,6 +22,10 @@ export class NamespacesService {
   }
 
   async listNamespaces(): Promise<NamespaceDto[]> {
+    throw new Error('Unimplemented');
+  }
+
+  async findNamespaces(value: string): Promise<NamespaceDto[]> {
     throw new Error('Unimplemented');
   }
 }
