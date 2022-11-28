@@ -2,8 +2,7 @@
 
 ## What is Objectified
 
-Objectified is a time-series dynamic schema object storage database that
-uses PostgreSQL to store its data.
+Objectified is a time-series object database that supports dynamic schemas.
 
 It uses REST services to programmatically provide CRUD services for 
 data operations.
