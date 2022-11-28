@@ -10,12 +10,9 @@ import {AppModule} from './app.module';
   const app = await NestFactory.create(AppModule);
   const config = new DocumentBuilder()
     .setTitle('objectified-db')
-    .setDescription('## What is Objectified?\n' +
-      '\n' +
-      'Objectified is a time-series dynamic schema object storage database that\n' +
-      'uses PostgreSQL to store its data.')
     .setVersion('0.1')
-    .addTag('namespaces', 'Handles CRUD services for Namespaces', {
+    .setExternalDoc('Objectified Documentation', 'https://www.objectified.dev/docs/')
+    .addTag('namespaces', 'Namespace services', {
       description: 'Namespace Documentation and Suggestions',
       url: 'https://www.objectified.dev/docs/Namespace',
     })

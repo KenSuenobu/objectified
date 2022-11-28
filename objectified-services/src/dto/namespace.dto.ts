@@ -27,4 +27,12 @@ export class NamespaceDto {
     default: true,
   })
   enabled: boolean = true;
+
+  @ApiProperty({
+    description: 'Date record indicating the date and time this `Namespace` was created.',
+    nullable: false,
+    required: true,
+    default: new Date(),
+  })
+  createDate: Date = new Date();
 }

@@ -26,7 +26,7 @@ export class NamespacesController {
   @ApiOperation({
     summary: 'Creates a Namespace',
     description: 'Creates a new `Namespace` definition in the `Objectified` system layer.  `Namespaces`s ' +
-      'create logical divisions between ownership of large objects.'
+      'create logical divisions between ownership of large objects, and object definitions.'
   })
   @ApiCreatedResponse()
   @ApiConflictResponse()
@@ -105,7 +105,7 @@ export class NamespacesController {
 
   @Get('/find/:value')
   @ApiOperation({
-    summary: 'Finds a Namespace by name or description',
+    summary: 'Searches for a Namespace',
     description: 'Searches for `Namespace`s by both the name and description based on the value provided.  Namespace ' +
       'searches are case-insensitive.',
   })
