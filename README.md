@@ -1,6 +1,6 @@
 # objectified-db
 
-## What is Objectified
+## What is Objectified?
 
 Objectified is a time-series object database that supports dynamic schemas.
 
@@ -54,3 +54,19 @@ are a new user, or use the dashboard elements to build and maintain your
 schema.
 
 [Click here to explore the UI documentation](objectified-ui/README.md).
+
+## Development Plans
+
+### Phase 1
+
+Design of REST services and DTOs (OpenAPI layer):
+
+- [x] Namespaces
+- [ ] Classes
+- [ ] Data Types
+- [ ] Fields
+- [ ] Properties
+- [ ] Object Properties
+- [ ] Class Properties
+- [ ] Instances
+- [ ] Instance Data
