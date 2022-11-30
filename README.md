@@ -62,7 +62,7 @@ schema.
 Design of REST services and DTOs (OpenAPI layer):
 
 - [x] Namespaces
-- [ ] Classes
+- [x] Classes
 - [ ] Data Types
 - [ ] Fields
 - [ ] Properties

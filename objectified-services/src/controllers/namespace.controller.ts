@@ -14,7 +14,7 @@ import {NamespaceDto} from '../dto/namespace.dto';
 @ApiTags('namespaces')
 @Controller('namespaces')
 export class NamespacesController {
-  private readonly logger = new Logger('namespaces.controller');
+  private readonly logger = new Logger('namespace.controller');
 
   constructor(private readonly service: NamespacesService) {}
 

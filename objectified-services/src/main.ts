@@ -16,6 +16,10 @@ import {AppModule} from './app.module';
       description: 'Namespace Documentation and Suggestions',
       url: 'https://www.objectified.dev/docs/Namespace',
     })
+    .addTag('classes', 'Handles classes definitions', {
+      description: 'Classes Documentation',
+      url: 'https://www.objectified.dev/docs/Class',
+    })
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(SWAGGER_PATH, app, document);

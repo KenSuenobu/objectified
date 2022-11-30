@@ -3,7 +3,7 @@ import {NamespaceDto} from '../dto/namespace.dto';
 
 @Injectable()
 export class NamespacesService {
-  private readonly logger = new Logger('namespaces.service');
+  private readonly logger = new Logger('namespace.service');
 
   async createNamespace(payload: NamespaceDto): Promise<NamespaceDto> {
     throw new Error('Unimplemented');
