@@ -69,12 +69,14 @@ export class DataTypeDto {
 
   @ApiProperty({
     description: "Enumeration descriptions applicable to the enumeration definitions, one-for-one match",
+    isArray: true,
     nullable: true,
   })
   enumDescriptions: string[] | null;
 
   @ApiProperty({
     description: "Examples that apply to this data type",
+    isArray: true,
     nullable: true,
   })
   examples: string[] | null;
