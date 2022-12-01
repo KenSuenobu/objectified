@@ -20,6 +20,10 @@ import {AppModule} from './app.module';
       description: 'Classes Documentation',
       url: 'https://www.objectified.dev/docs/Class',
     })
+    .addTag('data-types', 'Handles data types', {
+      description: 'Data Types Documentation',
+      url: 'https://www.objectified.dev/docs/DataType',
+    })
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(SWAGGER_PATH, app, document);
