@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Logger, Param, Post, Put} from "@nestjs/common";
+import {Body, Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put} from "@nestjs/common";
 import {
   ApiBody, ApiConflictResponse,
   ApiCreatedResponse, ApiForbiddenResponse,
@@ -28,7 +28,10 @@ export class ClassesController {
     description: 'Creates a new `Class` definition in the `Objectified` system layer.  `Class`es ' +
       'define dynamic data schemas.'
   })
-  @ApiCreatedResponse()
+  @ApiCreatedResponse({
+    status: HttpStatus.CREATED,
+    type: ClassDto,
+  })
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
@@ -83,7 +86,10 @@ export class ClassesController {
     summary: 'Retrieves a Class by its ID',
     description: 'Retrieves a `Class` entry by its ID.'
   })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: ClassDto,
+  })
   @ApiNotFoundResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
@@ -100,7 +106,11 @@ export class ClassesController {
     summary: 'Lists all Classes by Namespace ID',
     description: 'Retrieves a list of all `Classes` registered in `Objectified` to the specified `Namespace` ID.'
   })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: ClassDto,
+    isArray: true,
+  })
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   async listNamespaces(namespaceId: number): Promise<ClassDto[]> {
@@ -113,7 +123,11 @@ export class ClassesController {
     description: 'Searches for `Class`s by both the name and description based on the value provided.  Class ' +
       'searches are case-insensitive.',
   })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: ClassDto,
+    isArray: true,
+  })
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   async findNamespaces(@Param('value') value: string): Promise<ClassDto[]> {
