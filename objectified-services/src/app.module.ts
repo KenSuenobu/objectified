@@ -5,6 +5,8 @@ import {ClassesController} from './controllers/class.controller';
 import {ClassesService} from './controllers/class.service';
 import {DatatypeController} from './controllers/datatype.controller';
 import {DatatypeService} from './controllers/datatype.service';
+import {FieldsController} from './controllers/field.controller';
+import {FieldsService} from './controllers/field.service';
 
 @Module({
   imports: [],
@@ -12,11 +14,13 @@ import {DatatypeService} from './controllers/datatype.service';
     NamespacesController,
     ClassesController,
     DatatypeController,
+    FieldsController,
   ],
   providers: [
     NamespacesService,
     ClassesService,
     DatatypeService,
+    FieldsService,
   ],
 })
 export class AppModule {}
