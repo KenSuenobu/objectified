@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Logger, Param, Post, Put} from "@nestjs/common";
+import {Body, Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put} from "@nestjs/common";
 import {
   ApiBody, ApiConflictResponse,
   ApiCreatedResponse,
@@ -34,7 +34,7 @@ export class FieldsController {
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   @ApiConflictResponse()
-  createField(@Body() payload: FieldDto) {
+  createField(@Body() payload: FieldDto): Promise<FieldDto> {
     return this.fieldsService.createField(payload);
   }
 
@@ -47,7 +47,10 @@ export class FieldsController {
     name: 'id',
     description: 'The ID of the field',
   })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: FieldDto,
+  })
   @ApiNotFoundResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
@@ -60,7 +63,11 @@ export class FieldsController {
     summary: 'Retrieves all fields',
     description: 'Retrieves a list of all `Field`s in the Objectified system.',
   })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: FieldDto,
+    isArray: true,
+  })
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   listFields(): Promise<FieldDto[]> {

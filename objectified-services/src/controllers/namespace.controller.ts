@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Logger, Param, Post, Put} from "@nestjs/common";
+import {Body, Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put} from "@nestjs/common";
 import {
   ApiBody, ApiConflictResponse,
   ApiCreatedResponse, ApiForbiddenResponse,
@@ -28,7 +28,10 @@ export class NamespacesController {
     description: 'Creates a new `Namespace` definition in the `Objectified` system layer.  `Namespaces`s ' +
       'create logical divisions between ownership of large objects, and object definitions.'
   })
-  @ApiCreatedResponse()
+  @ApiCreatedResponse({
+    status: HttpStatus.CREATED,
+    type: NamespaceDto,
+  })
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
@@ -83,7 +86,10 @@ export class NamespacesController {
     summary: 'Retrieves a Namespace by its ID',
     description: 'Retrieves a `Namespace` entry by its ID.'
   })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: NamespaceDto,
+  })
   @ApiNotFoundResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
@@ -96,7 +102,11 @@ export class NamespacesController {
     summary: 'Lists all Namespaces',
     description: 'Retrieves a list of all `Namespaces` registered in `Objectified`'
   })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: NamespaceDto,
+    isArray: true,
+  })
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   async listNamespaces(): Promise<NamespaceDto[]> {
@@ -109,7 +119,11 @@ export class NamespacesController {
     description: 'Searches for `Namespace`s by both the name and description based on the value provided.  Namespace ' +
       'searches are case-insensitive.',
   })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    status: HttpStatus.CREATED,
+    type: NamespaceDto,
+    isArray: true,
+  })
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   async findNamespaces(@Param('value') value: string): Promise<NamespaceDto[]> {

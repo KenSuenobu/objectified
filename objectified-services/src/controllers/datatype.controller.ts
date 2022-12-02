@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Logger, Param, Post, Put} from '@nestjs/common';
+import {Body, Controller, Get, HttpStatus, Logger, Param, Post, Put} from '@nestjs/common';
 import {DataTypeDto} from '../dto/datatype.dto';
 import {
   ApiBody,
@@ -29,7 +29,10 @@ export class DatatypeController {
     description: 'Creates a new `DataType` definition in the `Objectified` system layer.  `DataType`s contain ' +
       'definitions different types of data that a `Field` can contain.'
   })
-  @ApiCreatedResponse()
+  @ApiCreatedResponse({
+    status: HttpStatus.CREATED,
+    type: DataTypeDto,
+  })
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
@@ -46,7 +49,10 @@ export class DatatypeController {
     summary: 'Retrieves a data type by ID',
     description: 'Retrieves a data type by its numeric `DataType` ID.'
   })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: DataTypeDto,
+  })
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   getDataType(@Param('id') id: number): Promise<DataTypeDto> {
@@ -58,7 +64,11 @@ export class DatatypeController {
     summary: 'Retrieves a list of data types',
     description: 'Retrieves all of the `DataType` objects stored in `Objectified`.',
   })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: DataTypeDto,
+    isArray: true,
+  })
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   listDataTypes(): Promise<DataTypeDto[]> {

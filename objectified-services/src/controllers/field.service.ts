@@ -5,7 +5,7 @@ import {FieldDto} from '../dto/field.dto';
 export class FieldsService {
   private readonly logger = new Logger('fields.service');
 
-  createField(payload: FieldDto) {
+  createField(payload: FieldDto): Promise<FieldDto> {
     throw new Error('Unimplemented');
   }
 
