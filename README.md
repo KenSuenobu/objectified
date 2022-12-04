@@ -65,7 +65,7 @@ Design of REST services and DTOs (OpenAPI layer):
 - [x] Classes
 - [x] Data Types
 - [x] Fields
-- [ ] Properties
+- [x] Properties
 - [ ] Object Properties
 - [ ] Class Properties
 - [ ] Instances

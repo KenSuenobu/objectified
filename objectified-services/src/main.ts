@@ -27,7 +27,12 @@ import {AppModule} from './app.module';
     .addTag('fields', 'Handles data fields', {
       description: 'Field Documentation',
       url: 'https://www.objectified.dev/docs/Field',
-    })    .build();
+    })
+    .addTag('properties', 'Handles properties', {
+      description: 'Properties Documentation',
+      url: 'https://www.objectified.dev/docs/Property',
+    })
+    .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(SWAGGER_PATH, app, document);
   const logger = new Logger('main');
