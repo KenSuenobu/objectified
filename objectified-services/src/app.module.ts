@@ -9,6 +9,8 @@ import {FieldsController} from './controllers/field.controller';
 import {FieldsService} from './controllers/field.service';
 import {PropertiesController} from './controllers/property.controller';
 import {PropertiesService} from './controllers/property.service';
+import {ObjectPropertiesController} from './controllers/object-property.controller';
+import {ObjectPropertiesService} from './controllers/object-property.service';
 
 @Module({
   imports: [],
@@ -18,6 +20,7 @@ import {PropertiesService} from './controllers/property.service';
     DatatypeController,
     FieldsController,
     PropertiesController,
+    ObjectPropertiesController,
   ],
   providers: [
     NamespacesService,
@@ -25,6 +28,7 @@ import {PropertiesService} from './controllers/property.service';
     DatatypeService,
     FieldsService,
     PropertiesService,
+    ObjectPropertiesService,
   ],
 })
 export class AppModule {}

@@ -32,6 +32,10 @@ import {AppModule} from './app.module';
       description: 'Properties Documentation',
       url: 'https://www.objectified.dev/docs/Property',
     })
+    .addTag('object-properties', 'Handles Assignment and Creation of Object Properties', {
+      description: 'Object Properties Documentation and Suggestions',
+      url: 'https://www.objectified.dev/docs/ObjectProperty',
+    })
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(SWAGGER_PATH, app, document);
