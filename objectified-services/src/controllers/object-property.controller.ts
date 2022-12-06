@@ -83,7 +83,7 @@ export class ObjectPropertiesController {
     description: 'The ID of the `Property` to remove from this root object `Property`.',
   })
   @ApiOperation({
-    summary: 'Removes a `Property` assigned to an `ObjectProperty`',
+    summary: 'Removes a Property assigned to an ObjectProperty',
     description: 'Removes assignment of a `Property` from an `ObjectProperty` object.'
   })
   @ApiOkResponse({
@@ -130,7 +130,7 @@ export class ObjectPropertiesController {
     type: NamespaceDto,
   })
   @ApiOperation({
-    summary: 'Retrieves an `ObjectProperty`',
+    summary: 'Retrieves an ObjectProperty',
     description: 'Retrieves an `ObjectProperty` by its name.'
   })
   @ApiOkResponse({

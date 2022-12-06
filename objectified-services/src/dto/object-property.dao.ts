@@ -9,18 +9,12 @@ export class ObjectPropertyDao {
   id: number;
 
   @ApiProperty({
-    description: 'Name of the `ObjectProperty` - up to 80 characters in length.',
+    description: 'The parent `Property` against which to assign additional `Property` objects.',
     nullable: false,
     required: true,
+    type: PropertyDto,
   })
-  name: string;
-
-  @ApiProperty({
-    description: 'Description of the `ObjectProperty` - up to 4096 characters in length.',
-    nullable: false,
-    required: true,
-  })
-  description: string;
+  parent: PropertyDto;
 
   @ApiProperty({
     description: 'The `Property` objects that this object contains - can also point to other properties, ' +
