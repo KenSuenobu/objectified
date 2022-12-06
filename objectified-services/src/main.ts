@@ -40,6 +40,10 @@ import {AppModule} from './app.module';
       description: 'Class Properties Documentation and Suggestions',
       url: 'https://www.objectified.dev/docs/ClassProperty',
     })
+    .addTag('instances', 'Provides CRUD services for Instances and associated data records', {
+      description: 'Instance Creation and Data Documentation',
+      url: 'https://www.objectified.dev/docs/Instance',
+    })
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(SWAGGER_PATH, app, document);

@@ -13,6 +13,8 @@ import {ObjectPropertiesController} from './controllers/object-property.controll
 import {ObjectPropertiesService} from './controllers/object-property.service';
 import {ClassPropertiesService} from './controllers/class-property.service';
 import {ClassPropertiesController} from './controllers/class-property.controller';
+import {InstancesController} from './controllers/instance.controller';
+import {InstancesService} from './controllers/instance.service';
 
 @Module({
   imports: [],
@@ -24,6 +26,7 @@ import {ClassPropertiesController} from './controllers/class-property.controller
     PropertiesController,
     ObjectPropertiesController,
     ClassPropertiesController,
+    InstancesController,
   ],
   providers: [
     NamespacesService,
@@ -33,6 +36,7 @@ import {ClassPropertiesController} from './controllers/class-property.controller
     PropertiesService,
     ObjectPropertiesService,
     ClassPropertiesService,
+    InstancesService,
   ],
 })
 export class AppModule {}
