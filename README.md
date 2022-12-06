@@ -70,3 +70,39 @@ Design of REST services and DTOs (OpenAPI layer):
 - [x] Class Properties
 - [x] Instances
 - [x] Instance Data
+- [ ] Double check DTO and Controller/Service modules:
+  - [ ] Go through all class definitions and make descriptions meaningful and concise
+- [ ] Design initial documentation for objectified.dev docs site
+  - [ ] Skeleton is fine
+- [ ] Design Knowledge Base site for objectified.dev docs site
+  - [ ] Skeleton is fine
+- [ ] Generate Issues section in GitHub
+  - [ ] Define issue types
+  - [ ] Assign all phase objects with issues and document them here
+
+### Phase 2
+
+Database System:
+
+- [ ] In-memory initial design
+  - [ ] Namespaces
+    - [ ] Unit tests
+  - [ ] Classes
+    - [ ] Unit tests
+  - [ ] Data Types
+    - [ ] Unit tests
+    - [ ] Design initial importable data types
+  - [ ] Fields
+    - [ ] Unit tests
+  - [ ] Properties
+    - [ ] Unit tests
+  - [ ] Object Properties
+    - [ ] Unit tests
+  - [ ] Class Properties
+    - [ ] Unit tests
+  - [ ] Instances
+    - [ ] Unit tests
+  - [ ] Instance Data
+    - [ ] Unit tests
+  - [ ] Instance Data Field Indexing
+    - [ ] Unit tests
