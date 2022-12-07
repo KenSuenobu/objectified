@@ -1,6 +1,5 @@
 import {ClassPropertyDto} from '../dto/class-property.dto';
-import {Controller, Delete, Get, HttpStatus, Logger, Post, Put} from '@nestjs/common';
-import {ClassesService} from './class.service';
+import {Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put} from '@nestjs/common';
 import {
   ApiBody,
   ApiConflictResponse,
@@ -9,7 +8,6 @@ import {
   ApiOperation, ApiParam, ApiTags,
   ApiUnauthorizedResponse
 } from '@nestjs/swagger';
-import {ClassDto} from '../dto/class.dto';
 import {ClassPropertiesService} from './class-property.service';
 
 @ApiTags('class-properties')
@@ -40,7 +38,7 @@ export class ClassPropertiesController {
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  createClassProperty(classId: number, propertyId: number): Promise<ClassPropertyDto> {
+  async createClassProperty(@Param('classId') classId: number, @Param('propertyId') propertyId: number): Promise<ClassPropertyDto> {
     return this.service.createClassProperty(classId, propertyId);
   }
 
@@ -64,7 +62,7 @@ export class ClassPropertiesController {
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  addPropertyToClassProperty(classPropertyId: number, propertyId: number): Promise<ClassPropertyDto> {
+  async addPropertyToClassProperty(@Param('classPropertyId') classPropertyId: number, @Param('propertyId') propertyId: number): Promise<ClassPropertyDto> {
     return this.service.addPropertyToClassProperty(classPropertyId, propertyId);
   }
 
@@ -84,7 +82,7 @@ export class ClassPropertiesController {
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  getClassProperties(classId: number): Promise<ClassPropertyDto> {
+  async getClassProperties(@Param('classId') classId: number): Promise<ClassPropertyDto> {
     return this.service.getClassProperties(classId);
   }
 
@@ -108,7 +106,7 @@ export class ClassPropertiesController {
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  removePropertyFromClassProperty(classId: number, propertyId: number): Promise<ClassPropertyDto> {
+  async removePropertyFromClassProperty(@Param('classId') classId: number, @Param('propertyId') propertyId: number): Promise<ClassPropertyDto> {
     return this.service.removePropertyFromClassProperty(classId, propertyId);
   }
 
@@ -125,7 +123,7 @@ export class ClassPropertiesController {
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  removeAllClassProperties(classId: number) {
+  async removeAllClassProperties(@Param('classId') classId: number) {
     return this.service.removeAllClassProperties(classId);
   }
 

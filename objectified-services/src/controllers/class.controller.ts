@@ -98,13 +98,9 @@ export class ClassesController {
   }
 
   @Get('/list')
-  @ApiParam({
-    name: 'id',
-    description: 'The ID of the `Namespace` to reference',
-  })
   @ApiOperation({
-    summary: 'Lists all Classes by Namespace ID',
-    description: 'Retrieves a list of all `Classes` registered in `Objectified` to the specified `Namespace` ID.'
+    summary: 'Lists all Classes',
+    description: 'Retrieves a list of all `Classes` registered in `Objectified`.'
   })
   @ApiOkResponse({
     status: HttpStatus.OK,
@@ -113,11 +109,15 @@ export class ClassesController {
   })
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  async listNamespaces(namespaceId: number): Promise<ClassDto[]> {
-    return this.service.listClasses(namespaceId);
+  async listNamespaces(): Promise<ClassDto[]> {
+    return this.service.listClasses();
   }
 
   @Get('/find/:value')
+  @ApiParam({
+    name: 'value',
+    description: 'A free-formed string value to search for.',
+  })
   @ApiOperation({
     summary: 'Searches for a Class',
     description: 'Searches for `Class`s by both the name and description based on the value provided.  Class ' +

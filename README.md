@@ -70,8 +70,6 @@ Design of REST services and DTOs (OpenAPI layer):
 - [x] Class Properties
 - [x] Instances
 - [x] Instance Data
-- [ ] Double check DTO and Controller/Service modules:
-  - [ ] Go through all class definitions and make descriptions meaningful and concise
 - [ ] Design initial documentation for objectified.dev docs site
   - [ ] Skeleton is fine
 - [ ] Design Knowledge Base site for objectified.dev docs site

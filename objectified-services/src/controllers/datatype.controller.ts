@@ -36,7 +36,7 @@ export class DatatypeController {
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  createDataType(@Body() payload: DataTypeDto): Promise<DataTypeDto> {
+  async createDataType(@Body() payload: DataTypeDto): Promise<DataTypeDto> {
     return this.classService.createDataType(payload);
   }
 
@@ -55,7 +55,7 @@ export class DatatypeController {
   })
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  getDataType(@Param('id') id: number): Promise<DataTypeDto> {
+  async getDataType(@Param('id') id: number): Promise<DataTypeDto> {
     return this.classService.getDataType(id);
   }
 
@@ -71,7 +71,7 @@ export class DatatypeController {
   })
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  listDataTypes(): Promise<DataTypeDto[]> {
+  async listDataTypes(): Promise<DataTypeDto[]> {
     return this.classService.listDataTypes();
   }
 
@@ -91,7 +91,7 @@ export class DatatypeController {
   @ApiNoContentResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  editDataType(@Param('id') id: number, @Body() payload: DataTypeDto): Promise<boolean> {
+  async editDataType(@Param('id') id: number, @Body() payload: DataTypeDto): Promise<boolean> {
     return this.editDataType(id, payload);
   }
 

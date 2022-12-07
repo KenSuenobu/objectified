@@ -34,7 +34,7 @@ export class FieldsController {
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   @ApiConflictResponse()
-  createField(@Body() payload: FieldDto): Promise<FieldDto> {
+  async createField(@Body() payload: FieldDto): Promise<FieldDto> {
     return this.fieldsService.createField(payload);
   }
 
@@ -54,7 +54,7 @@ export class FieldsController {
   @ApiNotFoundResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  getFieldById(@Param('id') id: number): Promise<FieldDto> {
+  async getFieldById(@Param('id') id: number): Promise<FieldDto> {
     return this.fieldsService.getFieldById(id);
   }
 
@@ -70,7 +70,7 @@ export class FieldsController {
   })
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  listFields(): Promise<FieldDto[]> {
+  async listFields(): Promise<FieldDto[]> {
     return this.fieldsService.listFields();
   }
 
@@ -91,7 +91,7 @@ export class FieldsController {
   @ApiNotFoundResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  editField(@Param('id') id: number, @Body() payload: FieldDto) {
+  async editField(@Param('id') id: number, @Body() payload: FieldDto) {
     return this.fieldsService.editField(id, payload);
   }
 
@@ -108,7 +108,7 @@ export class FieldsController {
   @ApiNotFoundResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  deleteField(@Param('id') id: number) {
+  async deleteField(@Param('id') id: number) {
     return this.fieldsService.deleteField(id);
   }
 

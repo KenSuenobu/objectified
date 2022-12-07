@@ -9,13 +9,6 @@ export class ClassDto {
   id?: number;
 
   @ApiProperty({
-    description: 'The `Namespace` that this `Class` occupies.',
-    nullable: false,
-    required: true,
-  })
-  namespace: NamespaceDto;
-
-  @ApiProperty({
     description: 'Name of the `Class` - up to 80 characters in length.',
     nullable: false,
     required: true,

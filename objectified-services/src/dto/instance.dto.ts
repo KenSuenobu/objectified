@@ -9,14 +9,6 @@ export class InstanceDto {
   id: number = 0;
 
   @ApiProperty({
-    description: 'Namespace assigned to the class',
-    nullable: false,
-    required: true,
-    type: NamespaceDto,
-  })
-  namespace: NamespaceDto;
-
-  @ApiProperty({
     description: 'Name of the instance',
     nullable: false,
     required: true,

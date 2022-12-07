@@ -9,14 +9,6 @@ export class PropertyDto {
   id: number = 0;
 
   @ApiProperty({
-    description: 'Namespace assigned to the property',
-    nullable: false,
-    required: true,
-    type: NamespaceDto,
-  })
-  namespace: NamespaceDto;
-
-  @ApiProperty({
     description: 'Name of the property - this is also the name of the variable for this property - up to 80 characters in length.',
     nullable: false,
     required: true,

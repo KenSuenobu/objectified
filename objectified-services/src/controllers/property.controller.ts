@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Logger, Param, Post, Put} from "@nestjs/common";
+import {Body, Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put} from "@nestjs/common";
 import {
   ApiTags,
   ApiOperation,
@@ -11,6 +11,7 @@ import {
 } from "@nestjs/swagger";
 import {PropertiesService} from './property.service';
 import {PropertyDto} from '../dto/property.dto';
+import {ObjectPropertyDao} from '../dto/object-property.dao';
 
 @ApiTags("properties")
 @Controller("properties")
@@ -30,11 +31,14 @@ export class PropertiesController {
       "Creates a new `Property` definition in the `Objectified` system layer.  `Property` contains " +
       "definitions that define `Field`s to assignable data.",
   })
-  @ApiCreatedResponse()
+  @ApiCreatedResponse({
+    status: HttpStatus.CREATED,
+    type: PropertyDto,
+  })
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  createProperty(@Body() payload: PropertyDto) {
+  async createProperty(@Body() payload: PropertyDto): Promise<PropertyDto> {
     return this.service.createProperty(payload);
   }
 
@@ -47,11 +51,14 @@ export class PropertiesController {
     name: "id",
     description: "The ID of the property",
   })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: PropertyDto,
+  })
   @ApiNotFoundResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  getFieldById(@Param("id") id: number): Promise<PropertyDto> {
+  async getFieldById(@Param("id") id: number): Promise<PropertyDto> {
     return this.service.getPropertyById(id);
   }
 
@@ -60,10 +67,14 @@ export class PropertiesController {
     summary: "Retrieves all properties",
     description: "Retrieves a list of all `Property` objects in the Objectified system.",
   })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: PropertyDto,
+    isArray: true,
+  })
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  listProperties(): Promise<PropertyDto[]> {
+  async listProperties(): Promise<PropertyDto[]> {
     return this.service.listProperties();
   }
 
@@ -84,7 +95,7 @@ export class PropertiesController {
   @ApiNotFoundResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  editField(@Param("id") id: number, @Body() payload: PropertyDto) {
+  async editField(@Param("id") id: number, @Body() payload: PropertyDto) {
     return this.service.editProperty(id, payload);
   }
 
@@ -101,7 +112,7 @@ export class PropertiesController {
   @ApiNotFoundResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  deleteField(@Param("id") id: number) {
+  async deleteField(@Param("id") id: number) {
     return this.service.deleteProperty(id);
   }
 }

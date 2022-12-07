@@ -22,7 +22,7 @@ export class ClassesService {
     throw new Error('Unimplemented');
   }
 
-  async listClasses(namespaceId: number): Promise<ClassDto[]> {
+  async listClasses(): Promise<ClassDto[]> {
     throw new Error('Unimplemented');
   }
 
