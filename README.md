@@ -70,8 +70,8 @@ Design of REST services and DTOs (OpenAPI layer):
 - [x] Class Properties
 - [x] Instances
 - [x] Instance Data
-- [ ] Design initial documentation for objectified.dev docs site
-  - [ ] Skeleton is fine
+- [x] Design initial documentation for objectified.dev docs site
+  - [x] Skeleton is fine
 - [ ] Design Knowledge Base site for objectified.dev docs site
   - [ ] Skeleton is fine
 - [ ] Generate Issues section in GitHub
