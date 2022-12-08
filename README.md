@@ -72,11 +72,11 @@ Design of REST services and DTOs (OpenAPI layer):
 - [x] Instance Data
 - [x] Design initial documentation for objectified.dev docs site
   - [x] Skeleton is fine
-- [ ] Design Knowledge Base site for objectified.dev docs site
-  - [ ] Skeleton is fine
-- [ ] Generate Issues section in GitHub
-  - [ ] Define issue types
-  - [ ] Assign all phase objects with issues and document them here
+- [x] Design Knowledge Base site for objectified.dev docs site
+  - [x] Skeleton is fine
+- [x] Generate Issues section in GitHub
+  - [x] Define issue types
+  - [x] Assign all phase objects with issues and document them here
 
 ### Phase 2
 
