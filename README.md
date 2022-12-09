@@ -89,7 +89,7 @@ Design of REST services and DTOs (OpenAPI layer):
 
 ### Phase 2
 
-Design Database.  Use `sem-tools` to define the schema, and for semantic
+Design Database.  Use `sem-tools` to define the schema and loading the database.
 
 - [ ] Postgres Schema
   - [ ] Namespaces
