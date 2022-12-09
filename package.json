@@ -1,0 +1,11 @@
+{
+  "name": "objectified-db",
+  "version": "0.0.1",
+  "workspaces": [
+    "objectified-data",
+    "objectified-services"
+  ],
+  "scripts": {},
+  "devDependencies": {},
+  "dependencies": {}
+}

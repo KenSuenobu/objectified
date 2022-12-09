@@ -25,6 +25,15 @@ yarn build
 
 From the top level of the project.
 
+### Installing the Database
+
+You will need to download the [schema evolution manager](https://github.com/mbryzek/schema-evolution-manager)
+tools.
+
+Once downloaded and installed, install the database schema in the `objectified-data`
+project by using `yarn bootstrap` to bootstrap the database.  You must have
+Postgres installed.
+
 ### Starting the services
 
 You will need to start two modules: the `objectified-services` module, and
@@ -79,6 +88,22 @@ Design of REST services and DTOs (OpenAPI layer):
   - [x] Assign all phase objects with issues and document them here
 
 ### Phase 2
+
+Design Database.  Use `sem-tools` to define the schema, and for semantic
+
+- [ ] Postgres Schema
+  - [ ] Namespaces
+  - [ ] Classes
+  - [ ] Data Types
+  - [ ] Fields
+  - [ ] Properties
+  - [ ] Object Properties
+  - [ ] Class Properties
+  - [ ] Instances
+  - [ ] Instance Data
+  - [ ] Instance Data Index
+
+### Phase 3
 
 Database System:
 
