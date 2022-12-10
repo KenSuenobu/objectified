@@ -91,17 +91,17 @@ Design of REST services and DTOs (OpenAPI layer):
 
 Design Database.  Use `sem-tools` to define the schema and loading the database.
 
-- [ ] Postgres Schema
+- [x] Postgres Schema
   - [x] Namespaces
   - [x] Classes
   - [x] Data Types
   - [x] Fields
   - [x] Properties
-  - [ ] Object Properties
-  - [ ] Class Properties
-  - [ ] Instances
-  - [ ] Instance Data
-  - [ ] Instance Data Index
+  - [x] Object Properties
+  - [x] Class Properties
+  - [x] Instances
+  - [x] Instance Data
+  - [x] Instance Data Index
 
 ### Phase 3
 

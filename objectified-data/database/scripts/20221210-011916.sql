@@ -87,7 +87,7 @@ CREATE UNIQUE INDEX idx_field_unique_name ON obj.field(name);
 DROP TABLE IF EXISTS obj.property CASCADE;
 DROP INDEX IF EXISTS idx_property_unique_name;
 
-CREATE TABLE object.property (
+CREATE TABLE obj.property (
     id SERIAL NOT NULL PRIMARY KEY,
     name VARCHAR(80) NOT NULL,
     description VARCHAR(4096) NOT NULL,
@@ -105,3 +105,75 @@ CREATE TABLE object.property (
 
 CREATE UNIQUE INDEX idx_property_unique_name ON obj.property(name);
 
+---
+
+DROP TABLE IF EXISTS obj.object_property CASCADE;
+DROP INDEX IF EXISTS idx_object_property_unique;
+
+CREATE TABLE obj.object_property (
+    id SERIAL NOT NULL PRIMARY KEY,
+    parent_id INT NOT NULL REFERENCES obj.property(id),
+    child_id INT NOT NULL REFERENCES obj.property(id)
+);
+
+CREATE UNIQUE INDEX idx_object_property_unique ON obj.object_property(parent_id, child_id);
+
+---
+
+DROP TABLE IF EXISTS obj.class_property CASCADE;
+DROP INDEX IF EXISTS idx_class_property_unique;
+
+CREATE TABLE obj.class_property (
+    id SERIAL NOT NULL PRIMARY KEY,
+    class_id INT NOT NULL REFERENCES obj.class(id),
+    property_id INT NOT NULL REFERENCES obj.property(id)
+);
+
+CREATE UNIQUE INDEX idx_class_property_unique ON obj.class_property(class_id, property_id);
+
+---
+
+DROP TABLE IF EXISTS obj.instance CASCADE;
+DROP INDEX IF EXISTS idx_obj_instance_name_classes;
+
+CREATE TABLE obj.instance (
+    id SERIAL NOT NULL PRIMARY KEY,
+    name VARCHAR(80) NOT NULL,
+    description VARCHAR(4096) NOT NULL,
+    class_id INT NOT NULL REFERENCES obj.class(id),
+    enabled BOOLEAN NOT NULL DEFAULT true,
+    create_date TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+    update_date TIMESTAMP WITHOUT TIME ZONE,
+    delete_date TIMESTAMP WITHOUT TIME ZONE
+);
+
+CREATE INDEX idx_obj_instance_name_classes ON obj.instance(name, class_id, create_date);
+
+---
+
+DROP TABLE IF EXISTS obj.instance_data CASCADE;
+DROP INDEX IF EXISTS obj_instance_data_id_version;
+
+CREATE TABLE obj.instance_data (
+    id SERIAL NOT NULL PRIMARY KEY,
+    instance_id INT NOT NULL REFERENCES obj.instance(id),
+    instance_data JSONB NOT NULL,
+    instance_version BIGINT,
+    date TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX obj_instance_data_id_version ON obj.instance_data(instance_id, instance_version);
+
+---
+
+DROP TABLE IF EXISTS obj.instance_data_index;
+DROP INDEX IF EXISTS idx_obj_instance_data_index;
+
+CREATE TABLE obj.instance_data_index (
+    id SERIAL NOT NULL PRIMARY KEY,
+    instance_data_id INT NOT NULL REFERENCES obj.instance_data(id),
+    property_id INT NOT NULL REFERENCES obj.property(id),
+    value TEXT
+);
+
+CREATE INDEX idx_obj_instance_data_index ON obj.instance_data_index(instance_data_id, property_id, value);
