@@ -107,7 +107,7 @@ Design Database.  Use `sem-tools` to define the schema and loading the database.
 
 Database System:
 
-- [ ] In-memory initial design
+- [ ] Initial design
   - [ ] Namespaces
     - [ ] Unit tests
   - [ ] Classes
