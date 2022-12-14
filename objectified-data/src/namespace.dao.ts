@@ -1,10 +1,11 @@
 import {NamespaceDto} from 'objectified-services/dist/dto/namespace.dto';
 import {BaseDao} from './base.dao';
+import * as pgPromise from 'pg-promise';
 
 export class NamespaceDao extends BaseDao<NamespaceDto> {
 
-  constructor() {
-    super('obj.namespace');
+  constructor(readonly db: pgPromise.IDatabase<any>) {
+    super(db, 'obj.namespace');
   }
 
   async create(payload: NamespaceDto): Promise<NamespaceDto> {

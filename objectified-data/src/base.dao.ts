@@ -1,5 +1,7 @@
+import * as pgPromise from 'pg-promise';
+
 export class BaseDao<T> {
-  constructor(private readonly section: string) { }
+  constructor(readonly db: pgPromise.IDatabase<any>, private readonly section: string) { }
 
   async list(): Promise<T[]> {
     const selectStatement = `SELECT * FROM ${this.section}`;
