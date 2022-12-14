@@ -13,9 +13,9 @@ export class NamespaceDao extends BaseDao<NamespaceDto> {
   }
 
   override async deleteById(id: number): Promise<Boolean> {
-    const deleteStatement = `UPDATE ${this.getSection()} SET enabled=false WHERE id=$1`;
+    const deleteStatement = `UPDATE ${this.section} SET enabled=false WHERE id=$1`;
 
-    return false;
+    return this.db.none(deleteStatement, [id]).then(() => true);
   }
 
 }
