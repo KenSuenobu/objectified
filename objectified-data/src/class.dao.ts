@@ -9,8 +9,11 @@ export class ClassDao extends BaseDao<ClassDto> {
     super(db, 'obj.class');
   }
 
-  create(payload: ClassDto): Promise<ClassDto> {
-    throw new Error('Unimplemented');
+  async create(payload: ClassDto): Promise<ClassDto> {
+    const sqlStatement = 'INSERT INTO obj.class (name, description, enabled, create_date) VALUES (?, ?, ?, ?) RETURNING *';
+
+    return this.db.oneOrNone(sqlStatement, [payload.name, payload.description, payload.enabled,
+      payload.createDate ?? 'NOW()']);
   }
 
 }

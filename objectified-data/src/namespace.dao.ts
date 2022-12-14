@@ -9,7 +9,10 @@ export class NamespaceDao extends BaseDao<NamespaceDto> {
   }
 
   async create(payload: NamespaceDto): Promise<NamespaceDto> {
-    throw new Error('Unimplemented');
+    const sqlStatement = 'INSERT INTO obj.namespace (name, description, enabled, create_date) VALUES (?, ?, ?, ?) RETURNING *';
+
+    return this.db.oneOrNone(sqlStatement, [payload.name, payload.description, payload.enabled,
+      payload.createDate ?? 'NOW()']);
   }
 
   override async deleteById(id: number): Promise<Boolean> {

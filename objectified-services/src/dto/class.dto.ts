@@ -43,13 +43,13 @@ export class ClassDto {
     nullable: true,
     required: false,
   })
-  updateDate: Date = new Date();
+  updateDate: Date;
 
   @ApiProperty({
     description: 'Date record indicating the date and time this `Class` was deleted.',
     nullable: true,
     required: false,
   })
-  deleteDate: Date = new Date();
+  deleteDate: Date;
 
 }
