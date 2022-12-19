@@ -111,7 +111,7 @@ Database System:
   - [x] Namespaces
     - [x] Unit tests
   - [x] Classes
-    - [ ] Unit tests
+    - [x] Unit tests
   - [ ] Data Types
     - [ ] Unit tests
     - [ ] Design initial importable data types
