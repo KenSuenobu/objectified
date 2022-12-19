@@ -15,6 +15,12 @@ export class BaseDao<T> {
     return this.db.oneOrNone<T>(selectStatement, [id]);
   }
 
+  async getByName(name: string): Promise<T> {
+    const selectStatement = `SELECT * FROM ${this.section} WHERE name=$1 LIMIT 1`;
+
+    return this.db.oneOrNone<T>(selectStatement, [name]);
+  }
+
   async deleteById(id: number): Promise<Boolean> {
     const deleteStatement = `UPDATE ${this.section} SET enabled=false, delete_date=NOW() WHERE id=$1`;
 
