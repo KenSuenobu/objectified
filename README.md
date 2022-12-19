@@ -109,7 +109,7 @@ Database System:
 
 - [ ] Initial design
   - [x] Namespaces
-    - [ ] Unit tests
+    - [x] Unit tests
   - [x] Classes
     - [ ] Unit tests
   - [ ] Data Types

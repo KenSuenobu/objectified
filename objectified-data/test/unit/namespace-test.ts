@@ -40,6 +40,19 @@ describe('#namespaces', async () => {
     expect(namespace.description).to.equal('This is a unit tested namespace');
   });
 
+  it('should get by id', async () => {
+    const dao = new NamespaceDao(db);
+    const namespace = await dao.getByName('Test');
+    expect(namespace.id > 0).to.equal(true);
+    expect(namespace.name).to.equal('Test');
+    expect(namespace.description).to.equal('This is a unit tested namespace');
+    const foundNamespace = await dao.getById(namespace.id);
+    expect(foundNamespace.id).to.equal(namespace.id);
+    expect(foundNamespace.name).to.equal(namespace.name);
+    expect(foundNamespace.description).to.equal(namespace.description);
+    expect(foundNamespace.createDate).to.equal(namespace.createDate);
+  });
+
   it('should delete the namespace object', async () => {
     const dao = new NamespaceDao(db);
     const namespace = await dao.getByName('Test');
