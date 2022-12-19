@@ -10,7 +10,7 @@ export class ClassDao extends BaseDao<ClassDto> {
   }
 
   async create(payload: ClassDto): Promise<ClassDto> {
-    const sqlStatement = 'INSERT INTO obj.class (name, description, enabled, create_date) VALUES (?, ?, ?, ?) RETURNING *';
+    const sqlStatement = 'INSERT INTO obj.class (name, description, enabled, create_date) VALUES ($1, $2, $3, $4) RETURNING *';
 
     return this.db.oneOrNone(sqlStatement, [payload.name, payload.description, payload.enabled,
       payload.createDate ?? 'NOW()']);
