@@ -60,8 +60,8 @@ describe('#namespaces', async () => {
     await dao.deleteById(namespace.id);
   });
 
-  it('should disconnect from the database', async () => {
-    pgp.end();
-  });
+  // it('should disconnect from the database', async () => {
+  //   pgp.end();
+  // });
 
 });

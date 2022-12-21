@@ -60,8 +60,8 @@ describe('#class', async () => {
     await dao.deleteById(classDto.id);
   });
 
-  it('should disconnect from the database', async () => {
-    pgp.end();
-  });
+  // it('should disconnect from the database', async () => {
+  //   pgp.end();
+  // });
 
 });
