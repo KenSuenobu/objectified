@@ -38,7 +38,7 @@ CREATE UNIQUE INDEX idx_class_unique_name ON obj.class(name);
 DROP TYPE IF EXISTS obj.data_type_enum CASCADE;
 CREATE TYPE obj.data_type_enum AS ENUM (
     'STRING', 'INT32', 'INT64', 'FLOAT', 'DOUBLE', 'BOOLEAN', 'DATE', 'DATE_TIME',
-    'BYTE', 'BINARY', 'PASSWORD'
+    'BYTE', 'BINARY', 'PASSWORD', 'OBJECT'
 );
 
 DROP TABLE IF EXISTS obj.data_type CASCADE;
