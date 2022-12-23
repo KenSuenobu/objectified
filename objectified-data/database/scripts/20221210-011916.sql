@@ -135,7 +135,6 @@ INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, p
 VALUES ('object', 'A JSON object', 'OBJECT', false, 0, null, null, null,
         ARRAY['{ ''key'': ''value'' }'], true);
 
-
 ---
 
 DROP TABLE IF EXISTS obj.field CASCADE;

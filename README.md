@@ -112,9 +112,9 @@ Database System:
     - [x] Unit tests
   - [x] Classes
     - [x] Unit tests
-  - [ ] Data Types
+  - [x] Data Types
     - [ ] Unit tests
-    - [ ] Design initial importable data types
+    - [x] Design initial importable data types
     - [x] Addition of base/core data types
   - [ ] Fields
     - [ ] Unit tests
