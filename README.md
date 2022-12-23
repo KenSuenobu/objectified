@@ -115,6 +115,7 @@ Database System:
   - [ ] Data Types
     - [ ] Unit tests
     - [ ] Design initial importable data types
+    - [x] Addition of base/core data types
   - [ ] Fields
     - [ ] Unit tests
   - [ ] Properties
