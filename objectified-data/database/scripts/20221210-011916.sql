@@ -63,6 +63,79 @@ CREATE TABLE obj.data_type (
 
 CREATE UNIQUE INDEX idx_data_type_unique_name ON obj.data_type(name);
 
+-- String
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled)
+     VALUES ('string', 'An ISO compliant variable string', 'STRING', false, 0, null, null, null,
+             ARRAY['This is a string'], true);
+
+-- 32-bit Integer
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled)
+VALUES ('int32', 'A 32-bit signed integer', 'INT32', false, 0, null, null, null,
+        ARRAY['12345678', '-654321'], true);
+
+-- 64-bit Integer
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled)
+VALUES ('int364', 'A 64-bit signed integer', 'INT64', false, 0, null, null, null,
+        ARRAY['12345678', '-654321'], true);
+
+-- Float
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled)
+VALUES ('float', 'A floating point value', 'FLOAT', false, 0, null, null, null,
+        ARRAY['132.110', '-3.14159'], true);
+
+-- Double
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled)
+VALUES ('double', 'A double precision value', 'DOUBLE', false, 0, null, null, null,
+        ARRAY['6.342E5', '-1.0E5'], true);
+
+-- Boolean
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled)
+VALUES ('boolean', 'A boolean value', 'BOOLEAN', false, 0, null, null, null,
+        ARRAY['true', 'false'], true);
+
+-- Date
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled)
+VALUES ('date', 'A date value', 'DATE', false, 0, null, null, null,
+        ARRAY['06/13/2019', '2022-01-05'], true);
+
+-- Date and Time
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled)
+VALUES ('date-time', 'An ISO-8601 format date and time string', 'DATE_TIME', false, 0, null, null, null,
+        ARRAY['2022-12-23T03:43:47Z', '1970-01-01T00:00:00Z'], true);
+
+-- Byte or Array of Bytes
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled)
+VALUES ('byte', 'An array of bytes', 'BYTE', false, 0, null, null, null,
+        ARRAY['😂😃🧘🏻‍🌍🌦️', '🍞🚗📞🎉❤️🍆🍑'], true);
+
+-- Binary Storage Data
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled)
+VALUES ('binary', 'A base64-encoded binary string', 'BINARY', false, 0, null, null, null,
+        ARRAY['dGVzdAo=', 'dGVzdCBtZXNzYWdlCg=='], true);
+
+-- Password
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled)
+VALUES ('password', 'A stored password value', 'PASSWORD', false, 0, null, null, null,
+        ARRAY['my-password', 'letmein'], true);
+
+-- Object
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled)
+VALUES ('object', 'A JSON object', 'OBJECT', false, 0, null, null, null,
+        ARRAY['{ ''key'': ''value'' }'], true);
+
+
 ---
 
 DROP TABLE IF EXISTS obj.field CASCADE;
