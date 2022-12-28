@@ -8,10 +8,6 @@ describe('#class', async () => {
   const pgp = pgPromise({});
   const db = pgp('postgres://localhost:5432/');
 
-  it('should remove class from tests', async () => {
-    await db.none('delete from obj.class where name=$1', ['Test']);
-  });
-
   it('should create a class DTO object', () => {
     const classDto = new ClassDto();
     classDto.name = 'Test';
@@ -60,8 +56,8 @@ describe('#class', async () => {
     await dao.deleteById(classDto.id);
   });
 
-  // it('should disconnect from the database', async () => {
-  //   pgp.end();
-  // });
+  it('should cleanup', async () => {
+    await db.none('delete from obj.class');
+  });
 
 });

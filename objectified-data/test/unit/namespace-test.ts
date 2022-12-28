@@ -8,10 +8,6 @@ describe('#namespaces', async () => {
   const pgp = pgPromise({});
   const db = pgp('postgres://localhost:5432/');
 
-  it('should remove namespaces from tests', async () => {
-    await db.none('delete from obj.namespace where name=$1', ['Test']);
-  });
-
   it('should create a namespace DTO object', () => {
     const namespace = new NamespaceDto();
     namespace.name = 'Test';
@@ -58,6 +54,10 @@ describe('#namespaces', async () => {
     const namespace = await dao.getByName('Test');
     expect(namespace.id > 0).to.equal(true);
     await dao.deleteById(namespace.id);
+  });
+
+  it('should cleanup', async () => {
+    await db.none('delete from obj.namespace');
   });
 
   // it('should disconnect from the database', async () => {
