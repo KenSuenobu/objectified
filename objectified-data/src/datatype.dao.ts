@@ -5,7 +5,7 @@ import * as pgPromise from 'pg-promise';
 export class DataTypeDao extends BaseDao<DataTypeDto> {
 
   constructor(readonly db: pgPromise.IDatabase<any>) {
-    super(db, 'obj.datatype');
+    super(db, 'obj.data_type');
   }
 
   async create(payload: DataTypeDto): Promise<DataTypeDto> {
