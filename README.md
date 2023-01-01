@@ -122,8 +122,8 @@ Database System:
     - [x] Unit tests
   - [x] Object Properties
     - [x] Unit tests
-  - [ ] Class Properties
-    - [ ] Unit tests
+  - [x] Class Properties
+    - [x] Unit tests
   - [ ] Instances
     - [ ] Unit tests
   - [ ] Instance Data
