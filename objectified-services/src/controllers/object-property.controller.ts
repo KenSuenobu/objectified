@@ -1,5 +1,5 @@
 import {PropertyDto} from '../dto/property.dto';
-import {ObjectPropertyDao} from '../dto/object-property.dao';
+import {ObjectPropertyDto} from '../dto/object-property.dto';
 import {Body, Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put} from '@nestjs/common';
 import {NamespacesService} from './namespace.service';
 import {
@@ -64,12 +64,12 @@ export class ObjectPropertiesController {
   })
   @ApiOkResponse({
     status: HttpStatus.OK,
-    type: ObjectPropertyDao,
+    type: ObjectPropertyDto,
   })
   @ApiNotFoundResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  async addPropertyToObject(@Param('id') rootPropertyId: number, @Param('childId') childPropertyId: number): Promise<ObjectPropertyDao> {
+  async addPropertyToObject(@Param('id') rootPropertyId: number, @Param('childId') childPropertyId: number): Promise<ObjectPropertyDto> {
     return this.service.addPropertyToObject(rootPropertyId, childPropertyId);
   }
 
@@ -88,12 +88,12 @@ export class ObjectPropertiesController {
   })
   @ApiOkResponse({
     status: HttpStatus.OK,
-    type: ObjectPropertyDao,
+    type: ObjectPropertyDto,
   })
   @ApiNotFoundResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  async removePropertyFromObject(@Param('id') rootPropertyId: number, @Param('childId') childPropertyId: number): Promise<ObjectPropertyDao> {
+  async removePropertyFromObject(@Param('id') rootPropertyId: number, @Param('childId') childPropertyId: number): Promise<ObjectPropertyDto> {
     return this.service.removePropertyFromObject(rootPropertyId, childPropertyId);
   }
 
@@ -135,12 +135,12 @@ export class ObjectPropertiesController {
   })
   @ApiOkResponse({
     status: HttpStatus.OK,
-    type: ObjectPropertyDao,
+    type: ObjectPropertyDto,
   })
   @ApiNotFoundResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  async getObjectProperty(@Param('name') name: string): Promise<ObjectPropertyDao> {
+  async getObjectProperty(@Param('name') name: string): Promise<ObjectPropertyDto> {
     throw new Error('Unimplemented');
   }
 

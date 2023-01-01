@@ -1,6 +1,6 @@
 import {Injectable} from '@nestjs/common';
 import {PropertyDto} from '../dto/property.dto';
-import {ObjectPropertyDao} from '../dto/object-property.dao';
+import {ObjectPropertyDto} from '../dto/object-property.dto';
 
 @Injectable()
 export class ObjectPropertiesService {
@@ -8,11 +8,11 @@ export class ObjectPropertiesService {
     throw new Error('Unimplemented');
   }
 
-  addPropertyToObject(rootPropertyId: number, childPropertyId: number): Promise<ObjectPropertyDao> {
+  addPropertyToObject(rootPropertyId: number, childPropertyId: number): Promise<ObjectPropertyDto> {
     throw new Error('Unimplemented');
   }
 
-  removePropertyFromObject(rootPropertyId: number, childPropertyId: number): Promise<ObjectPropertyDao> {
+  removePropertyFromObject(rootPropertyId: number, childPropertyId: number): Promise<ObjectPropertyDto> {
     throw new Error('Unimplemented');
   }
 
@@ -20,7 +20,7 @@ export class ObjectPropertiesService {
     throw new Error('Unimplemented');
   }
 
-  getObjectProperty(name: string): Promise<ObjectPropertyDao> {
+  getObjectProperty(name: string): Promise<ObjectPropertyDto> {
     throw new Error('Unimplemented');
   }
 }

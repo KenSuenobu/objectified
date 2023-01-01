@@ -11,7 +11,7 @@ import {
 } from "@nestjs/swagger";
 import {PropertiesService} from './property.service';
 import {PropertyDto} from '../dto/property.dto';
-import {ObjectPropertyDao} from '../dto/object-property.dao';
+import {ObjectPropertyDto} from '../dto/object-property.dto';
 
 @ApiTags("properties")
 @Controller("properties")

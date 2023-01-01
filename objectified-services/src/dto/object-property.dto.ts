@@ -1,8 +1,7 @@
 import {ApiProperty} from '@nestjs/swagger';
-import {DataTypeDto} from './datatype.dto';
 import {PropertyDto} from './property.dto';
 
-export class ObjectPropertyDao {
+export class ObjectPropertyDto {
   @ApiProperty({
     description: 'ID of the `ObjectProperty` object'
   })
