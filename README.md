@@ -118,8 +118,8 @@ Database System:
     - [x] Addition of base/core data types
   - [x] Fields
     - [x] Unit tests
-  - [ ] Properties
-    - [ ] Unit tests
+  - [x] Properties
+    - [x] Unit tests
   - [ ] Object Properties
     - [ ] Unit tests
   - [ ] Class Properties
