@@ -128,5 +128,4 @@ Database System:
     - [x] Unit tests
   - [x] Instance Data
     - [x] Unit tests
-  - [ ] Instance Data Field Indexing
-    - [ ] Unit tests
+  - [x] Instance Data Field Indexing
