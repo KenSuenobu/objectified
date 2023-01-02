@@ -30,6 +30,7 @@ export class InstanceDataDto {
   @ApiProperty({
     description: 'Date in which this instance data was created',
     type: Date,
+    nullable: true,
   })
   date: Date;
 

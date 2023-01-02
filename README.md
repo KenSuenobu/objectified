@@ -126,7 +126,7 @@ Database System:
     - [x] Unit tests
   - [x] Instances
     - [x] Unit tests
-  - [ ] Instance Data
-    - [ ] Unit tests
+  - [x] Instance Data
+    - [x] Unit tests
   - [ ] Instance Data Field Indexing
     - [ ] Unit tests
