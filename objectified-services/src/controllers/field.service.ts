@@ -1,5 +1,5 @@
 import {Injectable, Logger} from "@nestjs/common";
-import {FieldDto} from '../dto/field.dto';
+import {FieldDto} from '../../../objectified-data/src/dto/field.dto';
 
 @Injectable()
 export class FieldsService {

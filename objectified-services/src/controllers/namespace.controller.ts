@@ -9,7 +9,7 @@ import {
   ApiTags, ApiUnauthorizedResponse
 } from "@nestjs/swagger";
 import {NamespacesService} from './namespace.service';
-import {NamespaceDto} from '../dto/namespace.dto';
+import {NamespaceDto} from '../../../objectified-data/src/dto/namespace.dto';
 
 @ApiTags('namespaces')
 @Controller('namespaces')

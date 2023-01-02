@@ -1,5 +1,5 @@
 import {Injectable} from '@nestjs/common';
-import {ClassPropertyDto} from '../dto/class-property.dto';
+import {ClassPropertyDto} from '../../../objectified-data/src/dto/class-property.dto';
 
 @Injectable()
 export class ClassPropertiesService {

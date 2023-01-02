@@ -1,6 +1,6 @@
 import * as pgPromise from 'pg-promise';
 import {expect} from 'chai';
-import {DataTypeDao} from '../../src/datatype.dao';
+import {DataTypeDao} from '../../src/dao/datatype.dao';
 
 describe('#datatype', async () => {
 

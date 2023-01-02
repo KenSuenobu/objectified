@@ -1,6 +1,6 @@
 import {Injectable, Logger} from '@nestjs/common';
-import {NamespaceDto} from '../dto/namespace.dto';
-import {ClassDto} from '../dto/class.dto';
+import {NamespaceDto} from '../../../objectified-data/src/dto/namespace.dto';
+import {ClassDto} from '../../../objectified-data/src/dto/class.dto';
 
 @Injectable()
 export class ClassesService {

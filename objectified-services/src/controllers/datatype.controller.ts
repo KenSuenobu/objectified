@@ -1,5 +1,5 @@
 import {Body, Controller, Get, HttpStatus, Logger, Param, Post, Put} from '@nestjs/common';
-import {DataTypeDto} from '../dto/datatype.dto';
+import {DataTypeDto} from '../../../objectified-data/src/dto/datatype.dto';
 import {
   ApiBody,
   ApiConflictResponse,

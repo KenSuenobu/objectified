@@ -1,6 +1,6 @@
 import {NamespaceDto} from 'objectified-services/dist/dto/namespace.dto';
 import {expect} from 'chai';
-import {NamespaceDao} from '../../src/namespace.dao';
+import {NamespaceDao} from '../../src/dao/namespace.dao';
 import * as pgPromise from 'pg-promise';
 
 describe('#namespaces', async () => {

@@ -1,4 +1,4 @@
-import {ClassPropertyDto} from '../dto/class-property.dto';
+import {ClassPropertyDto} from '../../../objectified-data/src/dto/class-property.dto';
 import {Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put} from '@nestjs/common';
 import {
   ApiBody,

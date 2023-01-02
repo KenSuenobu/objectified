@@ -1,6 +1,6 @@
 import {Injectable} from '@nestjs/common';
-import {PropertyDto} from '../dto/property.dto';
-import {ObjectPropertyDto} from '../dto/object-property.dto';
+import {PropertyDto} from '../../../objectified-data/src/dto/property.dto';
+import {ObjectPropertyDto} from '../../../objectified-data/src/dto/object-property.dto';
 
 @Injectable()
 export class ObjectPropertiesService {

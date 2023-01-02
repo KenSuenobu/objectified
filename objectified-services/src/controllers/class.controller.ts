@@ -9,7 +9,7 @@ import {
   ApiTags, ApiUnauthorizedResponse
 } from "@nestjs/swagger";
 import {ClassesService} from './class.service';
-import {ClassDto} from '../dto/class.dto';
+import {ClassDto} from '../../../objectified-data/src/dto/class.dto';
 
 @ApiTags('classes')
 @Controller('classes')

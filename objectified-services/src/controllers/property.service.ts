@@ -1,5 +1,5 @@
 import {Injectable, Logger} from "@nestjs/common";
-import {PropertyDto} from '../dto/property.dto';
+import {PropertyDto} from '../../../objectified-data/src/dto/property.dto';
 
 @Injectable()
 export class PropertiesService {

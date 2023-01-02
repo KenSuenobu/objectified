@@ -1,5 +1,5 @@
-import {PropertyDto} from '../dto/property.dto';
-import {ObjectPropertyDto} from '../dto/object-property.dto';
+import {PropertyDto} from '../../../objectified-data/src/dto/property.dto';
+import {ObjectPropertyDto} from '../../../objectified-data/src/dto/object-property.dto';
 import {Body, Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put} from '@nestjs/common';
 import {NamespacesService} from './namespace.service';
 import {
@@ -10,9 +10,9 @@ import {
   ApiOperation, ApiParam, ApiTags,
   ApiUnauthorizedResponse
 } from '@nestjs/swagger';
-import {NamespaceDto} from '../dto/namespace.dto';
+import {NamespaceDto} from '../../../objectified-data/src/dto/namespace.dto';
 import {ObjectPropertiesService} from './object-property.service';
-import {ClassDto} from '../dto/class.dto';
+import {ClassDto} from '../../../objectified-data/src/dto/class.dto';
 
 @ApiTags('object-properties')
 @Controller('object-properties')

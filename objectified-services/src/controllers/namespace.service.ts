@@ -1,5 +1,5 @@
 import {Injectable, Logger} from "@nestjs/common";
-import {NamespaceDto} from '../dto/namespace.dto';
+import {NamespaceDto} from '../../../objectified-data/src/dto/namespace.dto';
 
 @Injectable()
 export class NamespacesService {

@@ -1,8 +1,8 @@
-import {InstanceDto} from '../dto/instance.dto';
+import {InstanceDto} from '../../../objectified-data/src/dto/instance.dto';
 import {Injectable, Logger} from '@nestjs/common';
-import {InstanceDataDto} from '../dto/instance-data.dto';
-import {PropertyDto} from '../dto/property.dto';
-import {FieldDto} from '../dto/field.dto';
+import {InstanceDataDto} from '../../../objectified-data/src/dto/instance-data.dto';
+import {PropertyDto} from '../../../objectified-data/src/dto/property.dto';
+import {FieldDto} from '../../../objectified-data/src/dto/field.dto';
 
 @Injectable()
 export class InstancesService {

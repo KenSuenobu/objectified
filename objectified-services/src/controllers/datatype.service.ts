@@ -1,5 +1,5 @@
 import {Injectable, Logger} from '@nestjs/common';
-import {DataTypeDto} from '../dto/datatype.dto';
+import {DataTypeDto} from '../../../objectified-data/src/dto/datatype.dto';
 
 @Injectable()
 export class DatatypeService {

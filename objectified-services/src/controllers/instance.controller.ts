@@ -1,13 +1,13 @@
 import {Body, Controller, Delete, Get, Logger, Param, Patch, Post, Put} from "@nestjs/common";
 import {ApiBody, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiCreatedResponse, ApiOperation, ApiTags} from "@nestjs/swagger";
 import {InstancesService} from './instance.service';
-import {InstanceDto} from '../dto/instance.dto';
-import {InstanceDataDto} from '../dto/instance-data.dto';
+import {InstanceDto} from '../../../objectified-data/src/dto/instance.dto';
+import {InstanceDataDto} from '../../../objectified-data/src/dto/instance-data.dto';
 import {ApiOkResponse} from '@nestjs/swagger';
 import {ApiNotFoundResponse} from '@nestjs/swagger';
 import {ApiParam} from '@nestjs/swagger';
-import {PropertyDto} from '../dto/property.dto';
-import {FieldDto} from '../dto/field.dto';
+import {PropertyDto} from '../../../objectified-data/src/dto/property.dto';
+import {FieldDto} from '../../../objectified-data/src/dto/field.dto';
 
 @ApiTags('instances')
 @Controller('instances')

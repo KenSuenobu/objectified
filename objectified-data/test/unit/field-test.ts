@@ -1,8 +1,8 @@
 import * as pgPromise from 'pg-promise';
 import {expect} from 'chai';
-import {FieldDao} from '../../src/field.dao';
+import {FieldDao} from '../../src/dao/field.dao';
 import {FieldDto} from 'objectified-services/dist/dto/field.dto';
-import {DataTypeDao} from '../../src/datatype.dao';
+import {DataTypeDao} from '../../src/dao/datatype.dao';
 
 describe('#field', async () => {
 

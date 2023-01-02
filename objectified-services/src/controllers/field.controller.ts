@@ -11,7 +11,7 @@ import {
   ApiTags, ApiUnauthorizedResponse
 } from "@nestjs/swagger";
 import {FieldsService} from './field.service';
-import {FieldDto} from '../dto/field.dto';
+import {FieldDto} from '../../../objectified-data/src/dto/field.dto';
 
 @ApiTags('fields')
 @Controller('fields')
