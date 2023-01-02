@@ -66,48 +66,15 @@ schema.
 
 ## Development Plans
 
-### Phase 1
+### Phase 4
 
-Design of REST services and DTOs (OpenAPI layer):
-
-- [x] Namespaces
-- [x] Classes
-- [x] Data Types
-- [x] Fields
-- [x] Properties
-- [x] Object Properties
-- [x] Class Properties
-- [x] Instances
-- [x] Instance Data
-- [x] Design initial documentation for objectified.dev docs site
-  - [x] Skeleton is fine
-- [x] Design Knowledge Base site for objectified.dev docs site
-  - [x] Skeleton is fine
-- [x] Generate Issues section in GitHub
-  - [x] Define issue types
-  - [x] Assign all phase objects with issues and document them here
-
-### Phase 2
-
-Design Database.  Use `sem-tools` to define the schema and loading the database.
-
-- [x] Postgres Schema
-  - [x] Namespaces
-  - [x] Classes
-  - [x] Data Types
-  - [x] Fields
-  - [x] Properties
-  - [x] Object Properties
-  - [x] Class Properties
-  - [x] Instances
-  - [x] Instance Data
-  - [x] Instance Data Index
+- [ ] REST service implementations
 
 ### Phase 3
 
 Database System:
 
-- [ ] Initial design
+- [x] Initial design
   - [x] Namespaces
     - [x] Unit tests
   - [x] Classes
@@ -129,3 +96,40 @@ Database System:
   - [x] Instance Data
     - [x] Unit tests
   - [x] Instance Data Field Indexing
+
+### Phase 2
+
+Design Database.  Use `sem-tools` to define the schema and loading the database.
+
+- [x] Postgres Schema
+  - [x] Namespaces
+  - [x] Classes
+  - [x] Data Types
+  - [x] Fields
+  - [x] Properties
+  - [x] Object Properties
+  - [x] Class Properties
+  - [x] Instances
+  - [x] Instance Data
+  - [x] Instance Data Index
+
+### Phase 1
+
+Design of REST services and DTOs (OpenAPI layer):
+
+- [x] Namespaces
+- [x] Classes
+- [x] Data Types
+- [x] Fields
+- [x] Properties
+- [x] Object Properties
+- [x] Class Properties
+- [x] Instances
+- [x] Instance Data
+- [x] Design initial documentation for objectified.dev docs site
+  - [x] Skeleton is fine
+- [x] Design Knowledge Base site for objectified.dev docs site
+  - [x] Skeleton is fine
+- [x] Generate Issues section in GitHub
+  - [x] Define issue types
+  - [x] Assign all phase objects with issues and document them here
