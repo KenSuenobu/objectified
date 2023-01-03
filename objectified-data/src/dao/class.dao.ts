@@ -1,7 +1,6 @@
-import {NamespaceDto} from 'objectified-services/dist/dto/namespace.dto';
 import {BaseDao} from './base.dao';
-import {ClassDto} from 'objectified-services/dist/dto/class.dto';
 import * as pgPromise from 'pg-promise';
+import {ClassDto} from "../dto/class.dto";
 
 export class ClassDao extends BaseDao<ClassDto> {
 

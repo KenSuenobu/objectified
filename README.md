@@ -69,6 +69,16 @@ schema.
 ### Phase 4
 
 - [ ] REST service implementations
+  - [ ] Namespaces
+  - [ ] Classes
+  - [ ] Data Types
+  - [ ] Fields
+  - [ ] Properties
+  - [ ] Object Properties
+  - [ ] Class Properties
+  - [ ] Instances
+  - [ ] Instance Data
+  - [ ] Instance Data Index
 
 ### Phase 3
 

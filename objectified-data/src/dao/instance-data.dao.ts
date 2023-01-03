@@ -1,7 +1,6 @@
-import {InstanceDataDto} from "objectified-services/dist/dto/instance-data.dto";
 import {BaseDao} from "./base.dao";
 import * as pgPromise from "pg-promise";
-import {InstanceDto} from "objectified-services/dist/dto/instance.dto";
+import {InstanceDataDto} from "../dto/instance-data.dto";
 
 export class InstanceDataDao extends BaseDao<InstanceDataDto> {
 

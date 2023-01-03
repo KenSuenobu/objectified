@@ -1,6 +1,6 @@
 import * as pgPromise from 'pg-promise';
 import {expect} from 'chai';
-import {ClassDto} from 'objectified-services/dist/dto/class.dto';
+import {ClassDto} from '../../src/dto/class.dto';
 import {ClassDao} from '../../src/dao/class.dao';
 
 describe('#class', async () => {

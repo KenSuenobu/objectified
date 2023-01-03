@@ -1,5 +1,4 @@
 import {ApiProperty} from '@nestjs/swagger';
-import {NamespaceDto} from './namespace.dto';
 
 export class ClassDto {
   @ApiProperty({

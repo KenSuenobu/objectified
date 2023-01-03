@@ -1,6 +1,6 @@
 import {BaseDao} from './base.dao';
-import {DataTypeDto} from 'objectified-services/dist/dto/datatype.dto';
 import * as pgPromise from 'pg-promise';
+import {DataTypeDto} from "../dto/datatype.dto";
 
 export class DataTypeDao extends BaseDao<DataTypeDto> {
 

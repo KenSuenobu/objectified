@@ -77,7 +77,7 @@ export class NamespacesController {
     return this.service.deleteNamespace(id);
   }
 
-  @Get('/:id')
+  @Get('/:id/byId')
   @ApiParam({
     name: 'id',
     description: 'The ID of the `Namespace` to get',
@@ -95,6 +95,26 @@ export class NamespacesController {
   @ApiUnauthorizedResponse()
   async getNamespace(@Param('id') id: number): Promise<NamespaceDto> {
     return this.service.getNamespace(id);
+  }
+
+  @Get('/:name/byName')
+  @ApiParam({
+    name: 'name',
+    description: 'The name of the `Namespace` to get',
+  })
+  @ApiOperation({
+    summary: 'Retrieves a Namespace by its name',
+    description: 'Retrieves a `Namespace` entry by its name.'
+  })
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: NamespaceDto,
+  })
+  @ApiNotFoundResponse()
+  @ApiForbiddenResponse()
+  @ApiUnauthorizedResponse()
+  async getNamespaceByName(@Param('name') name: string): Promise<NamespaceDto> {
+    return this.service.getNamespaceByName(name);
   }
 
   @Get('/list')

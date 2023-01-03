@@ -1,16 +1,16 @@
 import * as pgPromise from 'pg-promise';
 import {expect} from 'chai';
-import {ClassDto} from 'objectified-services/dist/dto/class.dto';
 import {ClassDao} from '../../src/dao/class.dao';
 import {FieldDao} from "../../src/dao/field.dao";
 import {DataTypeDao} from "../../src/dao/datatype.dao";
-import {FieldDto} from "objectified-services/dist/dto/field.dto";
 import {PropertyDao} from "../../src/dao/property.dao";
-import {PropertyDto} from "objectified-services/dist/dto/property.dto";
 import {ObjectPropertyDao} from "../../src/dao/object-property.dao";
-import { ObjectPropertyDto } from 'objectified-services/dist/dto/object-property.dto';
 import {ClassPropertiesDao} from "../../src/dao/class-properties.dao";
-import {ClassPropertyDto} from "objectified-services/dist/dto/class-property.dto";
+import {ClassDto} from "../../src/dto/class.dto";
+import {FieldDto} from "../../src/dto/field.dto";
+import {PropertyDto} from "../../src/dto/property.dto";
+import {ClassPropertyDto} from "../../src/dto/class-property.dto";
+import {ObjectPropertyDto} from "../../src/dto/object-property.dto";
 
 describe('#class-properties', async () => {
 

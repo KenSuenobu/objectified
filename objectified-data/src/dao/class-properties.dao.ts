@@ -1,8 +1,8 @@
 import {BaseDao} from "./base.dao";
-import {ClassPropertyDto} from "objectified-services/dist/dto/class-property.dto";
 import * as pgPromise from "pg-promise";
 import {PropertyDao} from "./property.dao";
 import {ClassDao} from "./class.dao";
+import {ClassPropertyDto} from "../dto/class-property.dto";
 
 export class ClassPropertiesDao extends BaseDao<ClassPropertyDto> {
 

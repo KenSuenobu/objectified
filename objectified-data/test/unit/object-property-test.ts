@@ -1,12 +1,12 @@
 import * as pgPromise from 'pg-promise';
 import {expect} from 'chai';
 import {FieldDao} from '../../src/dao/field.dao';
-import {FieldDto} from 'objectified-services/dist/dto/field.dto';
+import {FieldDto} from '../../src/dto/field.dto';
 import {DataTypeDao} from '../../src/dao/datatype.dao';
 import {PropertyDao} from "../../src/dao/property.dao";
-import {PropertyDto} from "objectified-services/dist/dto/property.dto";
+import {PropertyDto} from "../../src/dto/property.dto";
 import {ObjectPropertyDao} from "../../src/dao/object-property.dao";
-import {ObjectPropertyDto} from "objectified-services/dist/dto/object-property.dto";
+import {ObjectPropertyDto} from "../../src/dto/object-property.dto";
 
 describe('#object-property', async () => {
 

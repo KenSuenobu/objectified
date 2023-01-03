@@ -1,4 +1,4 @@
-import {NamespaceDto} from 'objectified-services/dist/dto/namespace.dto';
+import {NamespaceDto} from '../../src/dto/namespace.dto';
 import {expect} from 'chai';
 import {NamespaceDao} from '../../src/dao/namespace.dao';
 import * as pgPromise from 'pg-promise';
