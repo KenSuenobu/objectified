@@ -68,6 +68,7 @@ schema.
 
 ### Phase 4
 
+- [ ] Remove requirement of `pg` and `pg-promise` in services, only require in `objectified-data`.
 - [ ] REST service implementations
   - [ ] Namespaces
   - [ ] Classes
