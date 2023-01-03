@@ -69,6 +69,10 @@ schema.
 ### Phase 4
 
 - [ ] Remove requirement of `pg` and `pg-promise` in services, only require in `objectified-data`.
+- [ ] Create Instance Grouping
+  - [ ] Group is a series of instances that all relate to one another
+  - [ ] Group contains a parent ID and child IDs are the instances related to the group
+  - [ ] Grouping is used for things like Chain-of-Custody or a document group
 - [ ] REST service implementations
   - [ ] Namespaces
   - [ ] Classes

@@ -18,6 +18,7 @@
   "license": "Apache License 2.0",
   "dependencies": {
     "@types/pg": "^8.6.5",
+    "@nestjs/swagger": "^6.1.4",
     "mocha": "^7.2.0",
     "mocha-dd-reporter": "^1.1.1",
     "pg-promise": "^10.15.4",
