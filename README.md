@@ -74,7 +74,7 @@ schema.
   - [ ] Group contains a parent ID and child IDs are the instances related to the group
   - [ ] Grouping is used for things like Chain-of-Custody or a document group
 - [ ] REST service implementations
-  - [ ] Namespaces
+  - [x] Namespaces
   - [ ] Classes
   - [ ] Data Types
   - [ ] Fields
