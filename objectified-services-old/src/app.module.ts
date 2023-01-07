@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
-import { ClassesController } from "./controllers/class.controller";
-import { ClassesService } from "./controllers/class.service";
+import { ClassesController } from "../../objectified-services/src/controllers/class.controller";
+import { ClassesService } from "../../objectified-services/src/services/class.service";
 import { DatatypeController } from "./controllers/datatype.controller";
 import { DatatypeService } from "./controllers/datatype.service";
 import { FieldsController } from "./controllers/field.controller";

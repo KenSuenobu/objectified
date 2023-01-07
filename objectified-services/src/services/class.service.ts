@@ -1,5 +1,5 @@
-import {Injectable, Logger} from '@nestjs/common';
-import {ClassDto} from '../../../objectified-data/src/dto/class.dto';
+import { Injectable, Logger } from '@nestjs/common';
+import { ClassDto } from 'objectified-data/dist/src/dto/class.dto';
 
 @Injectable()
 export class ClassesService {
@@ -28,5 +28,4 @@ export class ClassesService {
   async findClasses(value: string): Promise<ClassDto[]> {
     throw new Error('Unimplemented');
   }
-
 }

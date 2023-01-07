@@ -1,15 +1,29 @@
-import {Body, Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put} from "@nestjs/common";
 import {
-  ApiBody, ApiConflictResponse,
-  ApiCreatedResponse, ApiForbiddenResponse,
-  ApiNoContentResponse, ApiNotFoundResponse,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
+import {
+  ApiBody,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiTags, ApiUnauthorizedResponse
-} from "@nestjs/swagger";
-import {ClassesService} from './class.service';
-import {ClassDto} from '../../../objectified-data/src/dto/class.dto';
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { ClassesService } from '../services/class.service';
+import { ClassDto } from 'objectified-data/dist/src/dto/class.dto';
 
 @ApiTags('classes')
 @Controller('classes')
@@ -25,8 +39,9 @@ export class ClassesController {
   })
   @ApiOperation({
     summary: 'Creates a Class',
-    description: 'Creates a new `Class` definition in the `Objectified` system layer.  `Class`es ' +
-      'define dynamic data schemas.'
+    description:
+      'Creates a new `Class` definition in the `Objectified` system layer.  `Class`es ' +
+      'define dynamic data schemas.',
   })
   @ApiCreatedResponse({
     status: HttpStatus.CREATED,
@@ -50,7 +65,7 @@ export class ClassesController {
   })
   @ApiOperation({
     summary: 'Edits a Class',
-    description: 'Edits a `Class` entry by its ID.'
+    description: 'Edits a `Class` entry by its ID.',
   })
   @ApiNoContentResponse()
   @ApiNotFoundResponse()
@@ -67,7 +82,7 @@ export class ClassesController {
   })
   @ApiOperation({
     summary: 'Deletes a Class',
-    description: 'Deletes a `Class` entry by its ID.'
+    description: 'Deletes a `Class` entry by its ID.',
   })
   @ApiOkResponse()
   @ApiNotFoundResponse()
@@ -84,7 +99,7 @@ export class ClassesController {
   })
   @ApiOperation({
     summary: 'Retrieves a Class by its ID',
-    description: 'Retrieves a `Class` entry by its ID.'
+    description: 'Retrieves a `Class` entry by its ID.',
   })
   @ApiOkResponse({
     status: HttpStatus.OK,
@@ -100,7 +115,8 @@ export class ClassesController {
   @Get('/list')
   @ApiOperation({
     summary: 'Lists all Classes',
-    description: 'Retrieves a list of all `Classes` registered in `Objectified`.'
+    description:
+      'Retrieves a list of all `Classes` registered in `Objectified`.',
   })
   @ApiOkResponse({
     status: HttpStatus.OK,
@@ -120,7 +136,8 @@ export class ClassesController {
   })
   @ApiOperation({
     summary: 'Searches for a Class',
-    description: 'Searches for `Class`s by both the name and description based on the value provided.  Class ' +
+    description:
+      'Searches for `Class`s by both the name and description based on the value provided.  Class ' +
       'searches are case-insensitive.',
   })
   @ApiOkResponse({
@@ -133,5 +150,4 @@ export class ClassesController {
   async findNamespaces(@Param('value') value: string): Promise<ClassDto[]> {
     return this.service.findClasses(value);
   }
-
 }
