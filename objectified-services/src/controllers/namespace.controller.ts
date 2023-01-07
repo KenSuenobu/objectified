@@ -1,15 +1,29 @@
-import {Body, Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put} from "@nestjs/common";
 import {
-  ApiBody, ApiConflictResponse,
-  ApiCreatedResponse, ApiForbiddenResponse,
-  ApiNoContentResponse, ApiNotFoundResponse,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
+import {
+  ApiBody,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiTags, ApiUnauthorizedResponse
-} from "@nestjs/swagger";
-import {NamespacesService} from './namespace.service';
-import {NamespaceDto} from '../../../objectified-data/src/dto/namespace.dto';
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { NamespacesService } from '../services/namespace.service';
+import { NamespaceDto } from 'objectified-data/dist/src/dto/namespace.dto';
 
 @ApiTags('namespaces')
 @Controller('namespaces')
@@ -25,8 +39,9 @@ export class NamespacesController {
   })
   @ApiOperation({
     summary: 'Creates a Namespace',
-    description: 'Creates a new `Namespace` definition in the `Objectified` system layer.  `Namespaces`s ' +
-      'create logical divisions between ownership of large objects, and object definitions.'
+    description:
+      'Creates a new `Namespace` definition in the `Objectified` system layer.  `Namespaces`s ' +
+      'create logical divisions between ownership of large objects, and object definitions.',
   })
   @ApiCreatedResponse({
     status: HttpStatus.CREATED,
@@ -50,7 +65,7 @@ export class NamespacesController {
   })
   @ApiOperation({
     summary: 'Edits a Namespace',
-    description: 'Edits a `Namespace` entry by its ID.'
+    description: 'Edits a `Namespace` entry by its ID.',
   })
   @ApiNoContentResponse()
   @ApiNotFoundResponse()
@@ -67,7 +82,7 @@ export class NamespacesController {
   })
   @ApiOperation({
     summary: 'Deletes a Namespace',
-    description: 'Deletes a `Namespace` entry by its ID.'
+    description: 'Deletes a `Namespace` entry by its ID.',
   })
   @ApiOkResponse()
   @ApiNotFoundResponse()
@@ -84,7 +99,7 @@ export class NamespacesController {
   })
   @ApiOperation({
     summary: 'Retrieves a Namespace by its ID',
-    description: 'Retrieves a `Namespace` entry by its ID.'
+    description: 'Retrieves a `Namespace` entry by its ID.',
   })
   @ApiOkResponse({
     status: HttpStatus.OK,
@@ -104,7 +119,7 @@ export class NamespacesController {
   })
   @ApiOperation({
     summary: 'Retrieves a Namespace by its name',
-    description: 'Retrieves a `Namespace` entry by its name.'
+    description: 'Retrieves a `Namespace` entry by its name.',
   })
   @ApiOkResponse({
     status: HttpStatus.OK,
@@ -120,7 +135,8 @@ export class NamespacesController {
   @Get('/list')
   @ApiOperation({
     summary: 'Lists all Namespaces',
-    description: 'Retrieves a list of all `Namespaces` registered in `Objectified`'
+    description:
+      'Retrieves a list of all `Namespaces` registered in `Objectified`',
   })
   @ApiOkResponse({
     status: HttpStatus.OK,
@@ -136,7 +152,8 @@ export class NamespacesController {
   @Get('/find/:value')
   @ApiOperation({
     summary: 'Searches for a Namespace',
-    description: 'Searches for `Namespace`s by both the name and description based on the value provided.  Namespace ' +
+    description:
+      'Searches for `Namespace`s by both the name and description based on the value provided.  Namespace ' +
       'searches are case-insensitive.',
   })
   @ApiOkResponse({
@@ -149,5 +166,4 @@ export class NamespacesController {
   async findNamespaces(@Param('value') value: string): Promise<NamespaceDto[]> {
     return this.service.findNamespaces(value);
   }
-
 }

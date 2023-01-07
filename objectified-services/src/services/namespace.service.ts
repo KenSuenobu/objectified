@@ -1,7 +1,7 @@
-import {Injectable, Logger} from "@nestjs/common";
-import {NamespaceDto} from '../../../objectified-data/src/dto/namespace.dto';
-import pgPromise from "pg-promise";
-import {NamespaceDao} from "objectified-data/dist/src/dao/namespace.dao";
+import { Injectable, Logger } from '@nestjs/common';
+import { NamespaceDto } from 'objectified-data/dist/src/dto/namespace.dto';
+import pgPromise from 'pg-promise';
+import { NamespaceDao } from 'objectified-data/dist/src/dao/namespace.dao';
 
 @Injectable()
 export class NamespacesService {
@@ -22,11 +22,12 @@ export class NamespacesService {
   async deleteNamespace(id: number): Promise<Boolean> {
     const dao = new NamespaceDao(this.db);
 
-    return dao.deleteById(id)
-        .then(() => true)
-        .catch((e) => {
-          throw e
-        });
+    return dao
+      .deleteById(id)
+      .then(() => true)
+      .catch((e) => {
+        throw e;
+      });
   }
 
   async getNamespace(id: number): Promise<NamespaceDto> {
@@ -46,9 +47,10 @@ export class NamespacesService {
 
   async findNamespaces(value: string): Promise<NamespaceDto[]> {
     const dao = new NamespaceDao(this.db);
-    return dao.list()
-      .then((r) => {
-        return r.filter((x) => x.name.toLowerCase().indexOf(value.toLowerCase()) !== -1);
-      });
+    return dao.list().then((r) => {
+      return r.filter(
+        (x) => x.name.toLowerCase().indexOf(value.toLowerCase()) !== -1,
+      );
+    });
   }
 }
