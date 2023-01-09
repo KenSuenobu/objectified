@@ -84,6 +84,8 @@ schema.
   - [ ] Instances
   - [ ] Instance Data
   - [ ] Instance Data Index
+- [ ] Create executable docker image
+- [ ] Publish to NPM
 
 ### Phase 3
 
