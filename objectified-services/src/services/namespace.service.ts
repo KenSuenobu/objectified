@@ -46,9 +46,10 @@ export class NamespacesService {
 
   async findNamespaces(value: string): Promise<NamespaceDto[]> {
     const dao = new NamespaceDao(DaoUtils.getDatabase());
-    return dao.list().then((r) => {
-      return r.filter(
-        (x) => x.name.toLowerCase().indexOf(value.toLowerCase()) !== -1,
+    return (await dao.list()).filter((x) => {
+      return (
+        x.name.toLowerCase().indexOf(value.toLowerCase()) !== -1 ||
+        x.description.toLowerCase().indexOf(value.toLowerCase()) !== -1
       );
     });
   }
