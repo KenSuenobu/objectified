@@ -13,15 +13,23 @@ export class ClassesService {
   }
 
   async editClass(id: number, payload: ClassDto) {
-    throw new Error('Unimplemented');
+    const dao = new ClassDao(DaoUtils.getDatabase());
+    return dao.edit(id, payload);
   }
 
   async deleteClass(id: number) {
-    throw new Error('Unimplemented');
+    const dao = new ClassDao(DaoUtils.getDatabase());
+    return dao.deleteById(id);
   }
 
   async getClass(id: number): Promise<ClassDto> {
-    throw new Error('Unimplemented');
+    const dao = new ClassDao(DaoUtils.getDatabase());
+    return dao.getById(id);
+  }
+
+  async getClassByName(name: string): Promise<ClassDto> {
+    const dao = new ClassDao(DaoUtils.getDatabase());
+    return dao.getByName(name);
   }
 
   async listClasses(): Promise<ClassDto[]> {

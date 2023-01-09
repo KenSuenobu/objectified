@@ -92,7 +92,7 @@ export class ClassesController {
     return this.service.deleteClass(id);
   }
 
-  @Get('/:id')
+  @Get('/:id/byId')
   @ApiParam({
     name: 'id',
     description: 'The ID of the `Class` to get',
@@ -110,6 +110,26 @@ export class ClassesController {
   @ApiUnauthorizedResponse()
   async getNamespace(@Param('id') id: number): Promise<ClassDto> {
     return this.service.getClass(id);
+  }
+
+  @Get('/:name/byName')
+  @ApiParam({
+    name: 'name',
+    description: 'The name of the `Class` to get',
+  })
+  @ApiOperation({
+    summary: 'Retrieves a Class by its name',
+    description: 'Retrieves a `Class` entry by its name.',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: ClassDto,
+  })
+  @ApiNotFoundResponse()
+  @ApiForbiddenResponse()
+  @ApiUnauthorizedResponse()
+  async getNamespaceByName(@Param('name') name: string): Promise<ClassDto> {
+    return this.service.getClassByName(name);
   }
 
   @Get('/list')
