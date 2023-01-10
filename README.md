@@ -75,7 +75,7 @@ schema.
   - [ ] Grouping is used for things like Chain-of-Custody or a document group
 - [ ] REST service implementations
   - [x] Namespaces
-  - [ ] Classes
+  - [x] Classes
   - [ ] Data Types
   - [ ] Fields
   - [ ] Properties
