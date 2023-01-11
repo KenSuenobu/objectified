@@ -76,7 +76,7 @@ schema.
 - [ ] REST service implementations
   - [x] Namespaces
   - [x] Classes
-  - [ ] Data Types
+  - [x] Data Types
   - [ ] Fields
   - [ ] Properties
   - [ ] Object Properties
