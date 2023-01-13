@@ -3,8 +3,8 @@ import { ClassesController } from "../../objectified-services/src/controllers/cl
 import { ClassesService } from "../../objectified-services/src/services/class.service";
 import { DatatypeController } from "../../objectified-services/src/controllers/datatype.controller";
 import { DatatypeService } from "../../objectified-services/src/services/datatype.service";
-import { FieldsController } from "./controllers/field.controller";
-import { FieldsService } from "./controllers/field.service";
+import { FieldsController } from "../../objectified-services/src/controllers/field.controller";
+import { FieldsService } from "../../objectified-services/src/services/field.service";
 import { PropertiesController } from "./controllers/property.controller";
 import { PropertiesService } from "./controllers/property.service";
 import { ObjectPropertiesController } from "./controllers/object-property.controller";

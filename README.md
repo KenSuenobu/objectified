@@ -77,7 +77,7 @@ schema.
   - [x] Namespaces
   - [x] Classes
   - [x] Data Types
-  - [ ] Fields
+  - [x] Fields
   - [ ] Properties
   - [ ] Object Properties
   - [ ] Class Properties

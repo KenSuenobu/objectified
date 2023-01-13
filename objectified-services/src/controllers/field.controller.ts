@@ -1,6 +1,17 @@
-import {Body, Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put} from "@nestjs/common";
 import {
-  ApiBody, ApiConflictResponse,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
+import {
+  ApiBody,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNoContentResponse,
@@ -8,17 +19,18 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiTags, ApiUnauthorizedResponse
-} from "@nestjs/swagger";
-import {FieldsService} from './field.service';
-import {FieldDto} from '../../../objectified-data/src/dto/field.dto';
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { FieldsService } from '../services/field.service';
+import { FieldDto } from 'objectified-data/dist/src/dto/field.dto';
 
 @ApiTags('fields')
 @Controller('fields')
 export class FieldsController {
   private readonly logger = new Logger('fields.controller');
 
-  constructor(private readonly fieldsService: FieldsService) { }
+  constructor(private readonly service: FieldsService) {}
 
   @Post('/create')
   @ApiBody({
@@ -27,18 +39,19 @@ export class FieldsController {
   })
   @ApiOperation({
     summary: 'Creates a Field',
-    description: 'Creates a new `Field` definition in the `Objectified` system layer.  `Field`s contain ' +
-      'definitions that define `Property` objects.'
+    description:
+      'Creates a new `Field` definition in the `Objectified` system layer.  `Field`s contain ' +
+      'definitions that define `Property` objects.',
   })
   @ApiCreatedResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   @ApiConflictResponse()
   async createField(@Body() payload: FieldDto): Promise<FieldDto> {
-    return this.fieldsService.createField(payload);
+    return this.service.createField(payload);
   }
 
-  @Get('/:id')
+  @Get('/:id/byId')
   @ApiOperation({
     summary: 'Retrieves a field by ID',
     description: 'Retrieves a full `Field` object by its ID',
@@ -55,7 +68,27 @@ export class FieldsController {
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   async getFieldById(@Param('id') id: number): Promise<FieldDto> {
-    return this.fieldsService.getFieldById(id);
+    return this.service.getFieldById(id);
+  }
+
+  @Get('/:name/byName')
+  @ApiOperation({
+    summary: 'Retrieves a field by name or description',
+    description: 'Retrieves a full `Field` object by its name or description',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The name of the field',
+  })
+  @ApiOkResponse({
+    status: HttpStatus.OK,
+    type: FieldDto,
+  })
+  @ApiNotFoundResponse()
+  @ApiForbiddenResponse()
+  @ApiUnauthorizedResponse()
+  async getFieldByName(@Param('name') name: string): Promise<FieldDto> {
+    return this.service.getFieldByName(name);
   }
 
   @Get('/list')
@@ -71,7 +104,7 @@ export class FieldsController {
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   async listFields(): Promise<FieldDto[]> {
-    return this.fieldsService.listFields();
+    return this.service.listFields();
   }
 
   @Put('/:id/edit')
@@ -92,7 +125,7 @@ export class FieldsController {
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   async editField(@Param('id') id: number, @Body() payload: FieldDto) {
-    return this.fieldsService.editField(id, payload);
+    return this.service.editField(id, payload);
   }
 
   @Delete('/:id')
@@ -109,7 +142,6 @@ export class FieldsController {
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
   async deleteField(@Param('id') id: number) {
-    return this.fieldsService.deleteField(id);
+    return this.service.deleteField(id);
   }
-
 }
