@@ -78,7 +78,7 @@ schema.
   - [x] Classes
   - [x] Data Types
   - [x] Fields
-  - [ ] Properties
+  - [x] Properties
   - [ ] Object Properties
   - [ ] Class Properties
   - [ ] Instances

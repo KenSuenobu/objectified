@@ -32,7 +32,7 @@ async function bootstrap() {
       description: 'Field Documentation',
       url: 'https://www.objectified.dev/docs/Field',
     })
-    .addTag('properties', 'Handles properties', {
+    .addTag('property', 'Handles properties', {
       description: 'Properties Documentation',
       url: 'https://www.objectified.dev/docs/Property',
     })

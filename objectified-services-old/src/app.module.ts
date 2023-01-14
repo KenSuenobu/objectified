@@ -5,8 +5,8 @@ import { DatatypeController } from "../../objectified-services/src/controllers/d
 import { DatatypeService } from "../../objectified-services/src/services/datatype.service";
 import { FieldsController } from "../../objectified-services/src/controllers/field.controller";
 import { FieldsService } from "../../objectified-services/src/services/field.service";
-import { PropertiesController } from "./controllers/property.controller";
-import { PropertiesService } from "./controllers/property.service";
+import { PropertiesController } from "../../objectified-services/src/controllers/property.controller";
+import { PropertiesService } from "../../objectified-services/src/services/property.service";
 import { ObjectPropertiesController } from "./controllers/object-property.controller";
 import { ObjectPropertiesService } from "./controllers/object-property.service";
 import { ClassPropertiesService } from "./controllers/class-property.service";
