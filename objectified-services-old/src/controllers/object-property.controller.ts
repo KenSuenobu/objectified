@@ -1,5 +1,5 @@
-import { PropertyDto } from "../../../objectified-data/src/dto/property.dto";
-import { ObjectPropertyDto } from "../../../objectified-data/src/dto/object-property.dto";
+import { PropertyDto } from "objectified-data/dist/src/dto/property.dto";
+import { ObjectPropertyDto } from "objectified-data/dist/src/dto/object-property.dto";
 import {
   Body,
   Controller,
@@ -25,9 +25,9 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
-import { NamespaceDto } from "../../../objectified-data/src/dto/namespace.dto";
+import { NamespaceDto } from "objectified-data/dist/src/dto/namespace.dto";
 import { ObjectPropertiesService } from "./object-property.service";
-import { ClassDto } from "../../../objectified-data/src/dto/class.dto";
+import { ClassDto } from "objectified-data/dist/src/dto/class.dto";
 
 @ApiTags("object-properties")
 @Controller("object-properties")
