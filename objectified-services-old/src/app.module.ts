@@ -7,8 +7,8 @@ import { FieldsController } from "../../objectified-services/src/controllers/fie
 import { FieldsService } from "../../objectified-services/src/services/field.service";
 import { PropertiesController } from "../../objectified-services/src/controllers/property.controller";
 import { PropertiesService } from "../../objectified-services/src/services/property.service";
-import { ObjectPropertiesController } from "./controllers/object-property.controller";
-import { ObjectPropertiesService } from "./controllers/object-property.service";
+import { ObjectPropertiesController } from "../../objectified-services/src/controllers/object-property.controller";
+import { ObjectPropertiesService } from "../../objectified-services/src/services/object-property.service";
 import { ClassPropertiesService } from "./controllers/class-property.service";
 import { ClassPropertiesController } from "./controllers/class-property.controller";
 import { InstancesController } from "./controllers/instance.controller";
