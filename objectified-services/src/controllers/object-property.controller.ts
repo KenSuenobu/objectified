@@ -96,8 +96,9 @@ export class ObjectPropertiesController {
   async addPropertyToObject(
     @Param('id') rootPropertyId: number,
     @Param('childId') childPropertyId: number,
-  ): Promise<ObjectPropertyDto> {
-    return this.service.addPropertyToObject(rootPropertyId, childPropertyId);
+  ): Promise<boolean> {
+    return this.service.addPropertyToObject(rootPropertyId, childPropertyId)
+      .then(() => true);
   }
 
   @Delete('/:id/:childId')
