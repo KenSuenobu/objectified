@@ -23,6 +23,12 @@ export class ObjectPropertyDao extends BaseDao<ObjectPropertyDto> {
         return this.db.none(deleteStatement, [id]).then(() => true);
     }
 
+    async deletePropertyFromObject(rootPropertyId: number, childPropertyId: number) {
+        const sqlStatement = 'DELETE FROM obj.object_property WHERE parent_id=$1 AND child_id=$2';
+
+        return this.db.none(sqlStatement, [rootPropertyId, childPropertyId]);
+    }
+
     async getByParentId(parentId: number): Promise<ObjectPropertyDto> {
         const propertyDao = new PropertyDao(this.db);
         const sqlStatement = 'SELECT child_id FROM obj.object_property WHERE parent_id=$1';

@@ -55,8 +55,10 @@ export class ObjectPropertiesService {
   removePropertyFromObject(
     rootPropertyId: number,
     childPropertyId: number,
-  ): Promise<ObjectPropertyDto> {
-    throw new Error('Unimplemented');
+  ) {
+    const dao = new ObjectPropertyDao(DaoUtils.getDatabase());
+
+    return dao.deletePropertyFromObject(rootPropertyId, childPropertyId);
   }
 
   removeObjectProperty(rootPropertyId: number) {
