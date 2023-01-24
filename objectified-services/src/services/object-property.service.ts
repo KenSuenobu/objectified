@@ -62,10 +62,15 @@ export class ObjectPropertiesService {
   }
 
   removeObjectProperty(rootPropertyId: number) {
-    throw new Error('Unimplemented');
+    const dao = new ObjectPropertyDao(DaoUtils.getDatabase());
+
+    return dao.deleteById(rootPropertyId);
   }
 
-  getObjectProperty(name: string): Promise<ObjectPropertyDto> {
-    throw new Error('Unimplemented');
+  async getObjectProperty(name: string): Promise<ObjectPropertyDto> {
+    const dao = new ObjectPropertyDao(DaoUtils.getDatabase());
+    const namedDto = await dao.getByName(name);
+
+    return dao.getByParentId(namedDto.id);
   }
 }
