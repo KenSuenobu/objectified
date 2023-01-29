@@ -1,14 +1,26 @@
-import {ClassPropertyDto} from '../../../objectified-data/src/dto/class-property.dto';
-import {Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put} from '@nestjs/common';
+import { ClassPropertyDto } from 'objectified-data/dist/src/dto/class-property.dto';
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import {
   ApiBody,
   ApiConflictResponse,
   ApiCreatedResponse,
-  ApiForbiddenResponse, ApiOkResponse,
-  ApiOperation, ApiParam, ApiTags,
-  ApiUnauthorizedResponse
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import {ClassPropertiesService} from './class-property.service';
+import { ClassPropertiesService } from '../services/class-property.service';
 
 @ApiTags('class-properties')
 @Controller('class-properties')
@@ -28,8 +40,9 @@ export class ClassPropertiesController {
   })
   @ApiOperation({
     summary: 'Creates a Class Property container',
-    description: 'Creates a new `ClassProperty` definition in the `Objectified` system layer.  This assigns ' +
-      'properties to classes.'
+    description:
+      'Creates a new `ClassProperty` definition in the `Objectified` system layer.  This assigns ' +
+      'properties to classes.',
   })
   @ApiCreatedResponse({
     status: HttpStatus.CREATED,
@@ -38,22 +51,27 @@ export class ClassPropertiesController {
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  async createClassProperty(@Param('classId') classId: number, @Param('propertyId') propertyId: number): Promise<ClassPropertyDto> {
-    return this.service.createClassProperty(classId, propertyId);
+  async createClassProperty(
+    @Param('classId') classId: number,
+    @Param('propertyId') propertyId: number,
+  ): Promise<boolean> {
+    return this.service
+      .createClassProperty(classId, propertyId)
+      .then(() => true);
   }
 
-  @Put('/add/:classPropertyId/:propertyId')
+  @Put('/add/:classId/:propertyId')
   @ApiParam({
-    name: 'classPropertyId',
-    description: 'The ID of the class property ID',
+    name: 'classId',
+    description: 'The ID of the class',
   })
   @ApiParam({
     name: 'propertyId',
-    description: 'The ID of the property ID',
+    description: 'The ID of the property',
   })
   @ApiOperation({
     summary: 'Adds a Class Property',
-    description: 'Adds a `Property` to a `Class`.'
+    description: 'Adds a `Property` to a `Class`.',
   })
   @ApiOkResponse({
     status: HttpStatus.OK,
@@ -62,8 +80,11 @@ export class ClassPropertiesController {
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  async addPropertyToClassProperty(@Param('classPropertyId') classPropertyId: number, @Param('propertyId') propertyId: number): Promise<ClassPropertyDto> {
-    return this.service.addPropertyToClassProperty(classPropertyId, propertyId);
+  async addPropertyToClassProperty(
+    @Param('classId') classId: number,
+    @Param('propertyId') propertyId: number,
+  ): Promise<ClassPropertyDto> {
+    return this.service.addPropertyToClassProperty(classId, propertyId);
   }
 
   @Get('/get/:classId')
@@ -73,7 +94,8 @@ export class ClassPropertiesController {
   })
   @ApiOperation({
     summary: 'Retrieves the Class Property object based on the Class ID',
-    description: 'Retrieves the `ClassProperty` object based on the root `Class` ID.'
+    description:
+      'Retrieves the `ClassProperty` object based on the root `Class` ID.',
   })
   @ApiOkResponse({
     status: HttpStatus.OK,
@@ -82,7 +104,9 @@ export class ClassPropertiesController {
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  async getClassProperties(@Param('classId') classId: number): Promise<ClassPropertyDto> {
+  async getClassProperties(
+    @Param('classId') classId: number,
+  ): Promise<ClassPropertyDto> {
     return this.service.getClassProperties(classId);
   }
 
@@ -97,7 +121,7 @@ export class ClassPropertiesController {
   })
   @ApiOperation({
     summary: 'Removes a Class Property',
-    description: 'Removes a `Property` from a `Class`.'
+    description: 'Removes a `Property` from a `Class`.',
   })
   @ApiOkResponse({
     status: HttpStatus.OK,
@@ -106,7 +130,10 @@ export class ClassPropertiesController {
   @ApiConflictResponse()
   @ApiForbiddenResponse()
   @ApiUnauthorizedResponse()
-  async removePropertyFromClassProperty(@Param('classId') classId: number, @Param('propertyId') propertyId: number): Promise<ClassPropertyDto> {
+  async removePropertyFromClassProperty(
+    @Param('classId') classId: number,
+    @Param('propertyId') propertyId: number,
+  ): Promise<ClassPropertyDto> {
     return this.service.removePropertyFromClassProperty(classId, propertyId);
   }
 
@@ -117,7 +144,7 @@ export class ClassPropertiesController {
   })
   @ApiOperation({
     summary: 'Removes a Class Property',
-    description: 'Removes a `ClassProperty` object by its ID.'
+    description: 'Removes a `ClassProperty` object by its ID.',
   })
   @ApiOkResponse()
   @ApiConflictResponse()
@@ -126,5 +153,4 @@ export class ClassPropertiesController {
   async removeAllClassProperties(@Param('classId') classId: number) {
     return this.service.removeAllClassProperties(classId);
   }
-
 }

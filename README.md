@@ -80,7 +80,7 @@ schema.
   - [x] Fields
   - [x] Properties
   - [x] Object Properties
-  - [ ] Class Properties
+  - [x] Class Properties
   - [ ] Instances
   - [ ] Instance Data
   - [ ] Instance Data Index

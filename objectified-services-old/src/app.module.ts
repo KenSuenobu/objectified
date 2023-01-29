@@ -9,8 +9,8 @@ import { PropertiesController } from "../../objectified-services/src/controllers
 import { PropertiesService } from "../../objectified-services/src/services/property.service";
 import { ObjectPropertiesController } from "../../objectified-services/src/controllers/object-property.controller";
 import { ObjectPropertiesService } from "../../objectified-services/src/services/object-property.service";
-import { ClassPropertiesService } from "./controllers/class-property.service";
-import { ClassPropertiesController } from "./controllers/class-property.controller";
+import { ClassPropertiesService } from "../../objectified-services/src/services/class-property.service";
+import { ClassPropertiesController } from "../../objectified-services/src/controllers/class-property.controller";
 import { InstancesController } from "./controllers/instance.controller";
 import { InstancesService } from "./controllers/instance.service";
 
