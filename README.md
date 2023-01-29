@@ -81,7 +81,7 @@ schema.
   - [x] Properties
   - [x] Object Properties
   - [x] Class Properties
-  - [ ] Instances
+  - [x] Instances
   - [ ] Instance Data
   - [ ] Instance Data Index
 - [ ] Create executable docker image
