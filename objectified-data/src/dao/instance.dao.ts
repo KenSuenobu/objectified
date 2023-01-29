@@ -1,19 +1,30 @@
-import {BaseDao} from "./base.dao";
+import { BaseDao } from "./base.dao";
 import * as pgPromise from "pg-promise";
-import {InstanceDto} from "../dto/instance.dto";
+import { InstanceDto } from "../dto/instance.dto";
 
 export class InstanceDao extends BaseDao<InstanceDto> {
+  constructor(readonly db: pgPromise.IDatabase<any>) {
+    super(db, "obj.instance");
+  }
 
-    constructor(readonly db: pgPromise.IDatabase<any>) {
-        super(db, 'obj.instance');
-    }
+  async create(payload: InstanceDto): Promise<InstanceDto> {
+    const sqlStatement =
+      "INSERT INTO obj.instance (name, description, class_id, enabled, create_date) " +
+      "VALUES ($1, $2, $3, $4, $5) RETURNING *";
 
-    async create(payload: InstanceDto): Promise<InstanceDto> {
-        const sqlStatement = 'INSERT INTO obj.instance (name, description, class_id, enabled, create_date) ' +
-            'VALUES ($1, $2, $3, $4, $5) RETURNING *';
+    return this.db.oneOrNone(sqlStatement, [
+      payload.name,
+      payload.description,
+      payload.class.id,
+      payload.enabled,
+      payload.createDate ?? "NOW()",
+    ]);
+  }
 
-        return this.db.oneOrNone(sqlStatement, [payload.name, payload.description, payload.class.id,
-            payload.enabled, payload.createDate ?? 'NOW()']);
-    }
+  async undelete(instanceId: number) {
+    const sqlStatement =
+      "UPDATE obj.instance SET delete_date = NULL WHERE id=$1";
 
+    return this.db.none(sqlStatement, [instanceId]);
+  }
 }
