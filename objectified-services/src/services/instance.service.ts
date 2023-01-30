@@ -36,11 +36,13 @@ export class InstancesService {
   }
 
   async getLatestInstanceDataForInstance(id: number): Promise<InstanceDataDto> {
-    throw new Error('Unimplemented');
+    const dao = new InstanceDataDao(DaoUtils.getDatabase());
+    return dao.getLatestDataInstance(id);
   }
 
   async getAllInstanceDataForInstance(id: number): Promise<InstanceDataDto[]> {
-    throw new Error('Unimplemented');
+    const dao = new InstanceDataDao(DaoUtils.getDatabase());
+    return dao.getAllDataByInstanceId(id);
   }
 
   async findInstanceByPropertyValue(

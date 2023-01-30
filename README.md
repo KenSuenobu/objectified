@@ -82,7 +82,7 @@ schema.
   - [x] Object Properties
   - [x] Class Properties
   - [x] Instances
-  - [ ] Instance Data
+  - [x] Instance Data
   - [ ] Instance Data Index
 - [ ] Create executable docker image
 - [ ] Publish to NPM
