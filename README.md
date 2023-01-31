@@ -66,14 +66,21 @@ schema.
 
 ## Development Plans
 
+### Phase 5
+
+- [ ] UI
+  - [ ] Namespaces
+  - [ ] Classes
+  - [ ] Data Types
+  - [ ] Fields
+  - [ ] Properties
+  - [ ] Object Properties
+  - [ ] Class Properties
+
 ### Phase 4
 
 - [x] Remove requirement of `pg` and `pg-promise` in services, only require in `objectified-data`.
-- [ ] Create Instance Grouping
-  - [ ] Group is a series of instances that all relate to one another
-  - [ ] Group contains a parent ID and child IDs are the instances related to the group
-  - [ ] Grouping is used for things like Chain-of-Custody or a document group
-- [ ] REST service implementations
+- [x] REST service implementations
   - [x] Namespaces
   - [x] Classes
   - [x] Data Types
@@ -83,9 +90,6 @@ schema.
   - [x] Class Properties
   - [x] Instances
   - [x] Instance Data
-  - [ ] Instance Data Index
-- [ ] Create executable docker image
-- [ ] Publish to NPM
 
 ### Phase 3
 
@@ -150,3 +154,12 @@ Design of REST services and DTOs (OpenAPI layer):
 - [x] Generate Issues section in GitHub
   - [x] Define issue types
   - [x] Assign all phase objects with issues and document them here
+
+### TBD
+
+- [ ] Create Instance Grouping
+  - [ ] Group is a series of instances that all relate to one another
+  - [ ] Group contains a parent ID and child IDs are the instances related to the group
+  - [ ] Grouping is used for things like Chain-of-Custody or a document group
+- [ ] Create executable docker image
+- [ ] Publish to NPM
