@@ -68,7 +68,8 @@ schema.
 
 ### Phase 5
 
-- [ ] UI
+- [ ] UI 
+  - [ ] General layout
   - [ ] Namespaces
   - [ ] Classes
   - [ ] Data Types
