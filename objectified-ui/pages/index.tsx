@@ -28,6 +28,7 @@ import {
   ViewListOutlined,
   PublicOutlined, WorkspacesOutlined,
 } from "@mui/icons-material";
+import Namespaces from "./namespaces";
 
 const drawerWidth = 240;
 
@@ -39,7 +40,7 @@ const Home: NextPage = () => {
       {
         icon: <WorkspacesOutlined/>,
         label: "Namespaces",
-        onClick: () => setCurrentPage(<></>),
+        onClick: () => setCurrentPage(<Namespaces/>),
       },
 /*
       {
