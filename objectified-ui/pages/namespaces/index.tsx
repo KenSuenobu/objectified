@@ -1,8 +1,8 @@
-import {LinearProgress, Typography} from '@mui/material';
 import {NextPage} from 'next';
 import {Stack} from '@mui/system';
 import ListHeader from '../../components/ListHeader';
 import {useState} from 'react';
+import LoadingMessage from '../../components/LoadingMessage';
 
 const Namespaces: NextPage = () => {
   const [namespaces, setNamespaces] = useState([]);
@@ -14,14 +14,8 @@ const Namespaces: NextPage = () => {
 
   if (loading) {
     return (
-      <>
-        <Typography>
-          Retrieving namespace list, one moment ...
-        </Typography>
-        <p/>
-        <LinearProgress/>
-      </>
-    )
+      <LoadingMessage label={'Retrieving namespace list, one moment ...'} />
+    );
   }
 
   return (
