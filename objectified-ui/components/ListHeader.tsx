@@ -17,7 +17,7 @@ const ListHeader = (props: ListHeaderProps) => {
 
   return (
     <>
-      <StackItem sx={{ width: '90%' }}>
+      <StackItem sx={{ width: '90%', textAlign: 'left' }}>
         <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle' }}>
           {props.header}
         </Typography>

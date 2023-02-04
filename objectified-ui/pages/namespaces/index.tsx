@@ -6,7 +6,7 @@ import LoadingMessage from '../../components/LoadingMessage';
 
 const Namespaces: NextPage = () => {
   const [namespaces, setNamespaces] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const addNamespaceClicked = () => {
     console.log('Namespace clicked.');
