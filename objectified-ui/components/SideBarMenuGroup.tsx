@@ -23,6 +23,7 @@ export default function SideBarMenuGroup(props: SideBarMenuGroupProps) {
       <ListItemButton
         alignItems="flex-start"
         onClick={() => setOpen(!open)}
+        key={'1'}
         sx={{
           px: 3,
           pt: 2.0,

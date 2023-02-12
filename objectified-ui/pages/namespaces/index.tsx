@@ -1,17 +1,20 @@
 import {NextPage} from 'next';
 import {Stack} from '@mui/system';
 import ListHeader from '../../components/ListHeader';
-import {useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import LoadingMessage from '../../components/LoadingMessage';
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from '@mui/material';
 import { StackItem } from '../../components/StackItem';
+import {NamespaceDto} from 'objectified-data/dist/src/dto/namespace.dto';
+import axios from 'axios';
 
 const Namespaces: NextPage = () => {
   const [namespaces, setNamespaces] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [needsRefresh, setNeedsRefresh] = useState(true);
   const [addNamespaceShowing, setAddNamespaceShowing] = useState(false);
   const [errorState, setErrorState] = useState<[boolean, string]>([false, '']);
-  const namespaceRef = useRef();
+  const namespaceRef = useRef<HTMLInputElement>();
 
   const addNamespaceClicked = () => setAddNamespaceShowing(true);
 
@@ -19,12 +22,29 @@ const Namespaces: NextPage = () => {
     const namespaceValue = namespaceRef?.current?.value ?? '';
 
     if (namespaceValue.length > 0) {
-      console.log(`Add namespace: ${namespaceValue}`);
-      setAddNamespaceShowing(false);
+      const namespace: any = {};
+
+      namespace.name = namespaceValue;
+      namespace.description = namespaceValue;
+      namespace.enabled = true;
+
+      axios.post('/app/namespaces/create', namespace)
+        .then((x) => {
+          setNeedsRefresh(true);
+          setAddNamespaceShowing(false);
+        });
     } else {
       setErrorState([true, 'Namespace is missing a value.']);
     }
   }
+
+  useEffect(() => {
+    axios.get('/app/namespaces/list')
+      .then((result) => {
+        setNamespaces(result.data);
+        setLoading(false);
+      });
+  }, [needsRefresh]);
 
   if (loading) {
     return (
@@ -62,7 +82,7 @@ const Namespaces: NextPage = () => {
       <Stack direction={'row'}>
         <ListHeader header={'Namespaces'} onAdd={addNamespaceClicked}/>
       </Stack>
-      {namespaces}
+      {JSON.stringify(namespaces, null, 2)}
     </>
   );
 }

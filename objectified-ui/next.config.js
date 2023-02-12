@@ -1,21 +1,20 @@
-/** @type {import('next').NextConfig} */
-const REWRITE_LIST = [
-  {
-    source: '/app/:path',
-    destination: 'http://localhost:3001/:path',
-  }
-];
+const { withGlobalCss } = require('next-global-css');
+const withConfig = withGlobalCss();
 
-const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
+module.exports = withConfig({
   async rewrites() {
-    return REWRITE_LIST;
+    return [
+      {
+        source: "/app/:path*",
+        destination: 'http://localhost:3001/:path*',
+      },
+    ];
   },
-}
+});
 
-for(const entry of REWRITE_LIST) {
-  console.log(`Proxy forwarding: ${entry.source} -> ${entry.destination}`);
-}
+console.log(
+  'Redirecting /app/* to http://localhost:3001/*'
+);
 
-module.exports = nextConfig
+console.log('Allowing Global CSS');
+
