@@ -7,6 +7,7 @@ import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} fr
 import { StackItem } from '../../components/StackItem';
 import {NamespaceDto} from 'objectified-data/dist/src/dto/namespace.dto';
 import axios from 'axios';
+import ConfirmDialog, { confirmDialog } from '../../components/dialogs/ConfirmDialog';
 
 const Namespaces: NextPage = () => {
   const [namespaces, setNamespaces] = useState([]);
@@ -34,7 +35,9 @@ const Namespaces: NextPage = () => {
           setAddNamespaceShowing(false);
         });
     } else {
-      setErrorState([true, 'Namespace is missing a value.']);
+      return confirmDialog('Namespace is missing a value.', () => {
+        console.log('OK');
+      });
     }
   }
 
@@ -54,17 +57,7 @@ const Namespaces: NextPage = () => {
 
   return (
     <>
-      <Dialog open={errorState[0]}>
-        <DialogTitle>Error</DialogTitle>
-        <DialogContent>
-          <Stack direction={'row'}>
-            {errorState[1]}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setErrorState([false, errorState[1]])}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog/>
       <Dialog open={addNamespaceShowing}>
         <DialogTitle>Namespace</DialogTitle>
         <DialogContent>
@@ -75,7 +68,7 @@ const Namespaces: NextPage = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={addNamespace}>Add</Button>
+          <Button onClick={() => addNamespace()}>Add</Button>
           <Button onClick={() => setAddNamespaceShowing(false)}>Cancel</Button>
         </DialogActions>
       </Dialog>
