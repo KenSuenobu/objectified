@@ -7,7 +7,7 @@ import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} fr
 import { StackItem } from '../../components/StackItem';
 import {NamespaceDto} from 'objectified-data/dist/src/dto/namespace.dto';
 import axios from 'axios';
-import ConfirmDialog, { confirmDialog } from '../../components/dialogs/ConfirmDialog';
+import { confirmDialog } from '../../components/dialogs/ConfirmDialog';
 
 const Namespaces: NextPage = () => {
   const [namespaces, setNamespaces] = useState([]);
@@ -57,7 +57,6 @@ const Namespaces: NextPage = () => {
 
   return (
     <>
-      <ConfirmDialog/>
       <Dialog open={addNamespaceShowing}>
         <DialogTitle>Namespace</DialogTitle>
         <DialogContent>
