@@ -6,14 +6,14 @@ import {Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogT
 type ConfirmDialogStore = {
   message: string;
   onSubmit?: () => void;
-  open: boolean;
+  isOpen: boolean;
   close: () => void;
 }
 
 const useConfirmDialogStore = create<ConfirmDialogStore>((set) => ({
   message: '',
   onSubmit: undefined,
-  open: false,
+  isOpen: false,
 
   // This close function will unset the onSubmit function, which tells the confirm dialog's "open" field that
   // the dialog is closed.  This is a fire-and-forget function: close will be called once, unsetting the
@@ -22,21 +22,21 @@ const useConfirmDialogStore = create<ConfirmDialogStore>((set) => ({
   close: () =>
     set({
       onSubmit: undefined,
-      open: false,
+      isOpen: false,
     }),
 }));
 
 export const confirmDialog = (message: string, onSubmit: () => void) => {
   useConfirmDialogStore.setState({
-    message, onSubmit, open: true
+    message, onSubmit, isOpen: true
   });
 }
 
 const ConfirmDialog: React.FC = () => {
-  const { message, onSubmit, open, close } = useConfirmDialogStore();
+  const { message, onSubmit, isOpen, close } = useConfirmDialogStore();
 
   return (
-    <Dialog open={open} onClose={close} maxWidth={'sm'} fullWidth>
+    <Dialog open={isOpen} onClose={close} maxWidth={'sm'} fullWidth>
       <DialogTitle fontWeight={'bold'}>Confirm</DialogTitle>
       <DialogContent>
         <DialogContentText>{message}</DialogContentText>
