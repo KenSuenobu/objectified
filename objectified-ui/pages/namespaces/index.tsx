@@ -7,7 +7,7 @@ import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} fr
 import { StackItem } from '../../components/StackItem';
 import {NamespaceDto} from 'objectified-data/dist/src/dto/namespace.dto';
 import axios from 'axios';
-import { confirmDialog } from '../../components/dialogs/ConfirmDialog';
+import {alertDialog, confirmDialog} from '../../components/dialogs/ConfirmDialog';
 
 const Namespaces: NextPage = () => {
   const [namespaces, setNamespaces] = useState([]);
@@ -35,9 +35,7 @@ const Namespaces: NextPage = () => {
           setAddNamespaceShowing(false);
         });
     } else {
-      return confirmDialog('Namespace is missing a value.', () => {
-        console.log('OK');
-      });
+      return alertDialog('Namespace is missing a value.');
     }
   }
 

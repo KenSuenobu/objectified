@@ -3,8 +3,15 @@
 import { create } from "zustand";
 import {Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from '@mui/material';
 
+enum ConfirmDialogEnum {
+  CONFIRM,
+  ALERT,
+};
+
 type ConfirmDialogStore = {
   message: string;
+  title: string;
+  dialogType: ConfirmDialogEnum;
   onSubmit?: () => void;
   isOpen: boolean;
   close: () => void;
@@ -12,6 +19,8 @@ type ConfirmDialogStore = {
 
 const useConfirmDialogStore = create<ConfirmDialogStore>((set) => ({
   message: '',
+  title: '',
+  dialogType: ConfirmDialogEnum.CONFIRM,
   onSubmit: undefined,
   isOpen: false,
 
@@ -23,33 +32,52 @@ const useConfirmDialogStore = create<ConfirmDialogStore>((set) => ({
     set({
       onSubmit: undefined,
       isOpen: false,
+      dialogType: ConfirmDialogEnum.CONFIRM,
     }),
 }));
 
 export const confirmDialog = (message: string, onSubmit: () => void) => {
   useConfirmDialogStore.setState({
-    message, onSubmit, isOpen: true
+    message, title: 'Confirm', dialogType: ConfirmDialogEnum.CONFIRM, onSubmit, isOpen: true
+  });
+}
+
+export const alertDialog = (message: string) => {
+  useConfirmDialogStore.setState({
+    message, title: 'Alert', dialogType: ConfirmDialogEnum.ALERT, isOpen: true
   });
 }
 
 const ConfirmDialog: React.FC = () => {
-  const { message, onSubmit, isOpen, close } = useConfirmDialogStore();
+  const { message, title, dialogType, onSubmit, isOpen, close } = useConfirmDialogStore();
 
   return (
-    <Dialog open={isOpen} onClose={close} maxWidth={'sm'} fullWidth>
-      <DialogTitle fontWeight={'bold'}>Confirm</DialogTitle>
+    <Dialog open={isOpen} onClose={close}>
+      <DialogTitle fontWeight={'bold'}>{title}</DialogTitle>
       <DialogContent>
         <DialogContentText>{message}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button color={'error'} variant={'contained'} onClick={close}>No</Button>
-        <Button color={'primary'} variant={'contained'} onClick={() => {
-          if (onSubmit) {
-            onSubmit();
-          }
+        {dialogType === ConfirmDialogEnum.CONFIRM ? (
+          <>
+            <Button color={'error'} variant={'contained'} onClick={close}>No</Button>
+            <Button color={'primary'} variant={'contained'} onClick={() => {
+              if (onSubmit) {
+                onSubmit();
+              }
 
-          close();
-        }}>Yes</Button>
+              close();
+            }}>Yes</Button>
+          </>
+          ) : (<>
+          <Button color={'primary'} variant={'contained'} onClick={() => {
+            if (onSubmit) {
+              onSubmit();
+            }
+
+            close();
+          }}>OK</Button>
+        </>)}
       </DialogActions>
     </Dialog>
   );
