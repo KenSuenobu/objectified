@@ -23,11 +23,19 @@ import Paper from '@mui/material/Paper';
 const Namespaces: NextPage = () => {
   const [namespaces, setNamespaces] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [needsRefresh, setNeedsRefresh] = useState(true);
   const [addNamespaceShowing, setAddNamespaceShowing] = useState(false);
   const namespaceRef = useRef<HTMLInputElement>();
 
   const addNamespaceClicked = () => setAddNamespaceShowing(true);
+
+  const reloadNamespaces = () => {
+    setLoading(true);
+    axios.get('/app/namespaces/list')
+      .then((result) => {
+        setNamespaces(result.data);
+        setLoading(false);
+      });
+  }
 
   const addNamespace = () => {
     const namespaceValue = namespaceRef?.current?.value ?? '';
@@ -41,8 +49,8 @@ const Namespaces: NextPage = () => {
 
       axios.post('/app/namespaces/create', namespace)
         .then((x) => {
-          setNeedsRefresh(true);
           setAddNamespaceShowing(false);
+          reloadNamespaces();
         });
     } else {
       return alertDialog('Namespace is missing a value.');
@@ -50,12 +58,8 @@ const Namespaces: NextPage = () => {
   }
 
   useEffect(() => {
-    axios.get('/app/namespaces/list')
-      .then((result) => {
-        setNamespaces(result.data);
-        setLoading(false);
-      });
-  }, [needsRefresh]);
+    reloadNamespaces();
+  }, []);
 
   if (loading) {
     return (
@@ -89,11 +93,11 @@ const Namespaces: NextPage = () => {
         <Table sx={{ minWidth: 650 }} aria-label={'namespace table'}>
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Enabled</TableCell>
-              <TableCell>Create Date</TableCell>
+              <TableCell><strong>ID</strong></TableCell>
+              <TableCell><strong>Name</strong></TableCell>
+              <TableCell><strong>Description</strong></TableCell>
+              <TableCell><strong>Enabled</strong></TableCell>
+              <TableCell><strong>Create Date</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
