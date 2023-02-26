@@ -66,101 +66,28 @@ schema.
 
 ## Development Plans
 
-### Phase 5
+### Roadmap
 
-- [ ] UI 
-  - [ ] General layout
-  - [ ] Namespaces
-  - [ ] Classes
-  - [ ] Data Types
-  - [ ] Fields
-  - [ ] Properties
-  - [ ] Object Properties
-  - [ ] Class Properties
+The following is a list of items that will be done as the project grows.  This is
+an approximation; this list may grow or shrink over time, depending on adoption
+and popularity.
 
-### Phase 4
+- [ ] UI
+  - [ ] Base design and layout
+  - [ ] Component library
+  - [ ] Core functionality using REST
 
-- [x] Remove requirement of `pg` and `pg-promise` in services, only require in `objectified-data`.
-- [x] REST service implementations
-  - [x] Namespaces
-  - [x] Classes
-  - [x] Data Types
-  - [x] Fields
-  - [x] Properties
-  - [x] Object Properties
-  - [x] Class Properties
-  - [x] Instances
-  - [x] Instance Data
+- [ ] ETL
+  - [ ] Extract, Transform, and Load library
+    - [ ] Typescript
+    - [ ] Python
+    - [ ] Go
+    - [ ] Rust
 
-### Phase 3
-
-Database System:
-
-- [x] Initial design
-  - [x] Namespaces
-    - [x] Unit tests
-  - [x] Classes
-    - [x] Unit tests
-  - [x] Data Types
-    - [x] Unit tests
-    - [x] Design initial importable data types
-    - [x] Addition of base/core data types
-  - [x] Fields
-    - [x] Unit tests
-  - [x] Properties
-    - [x] Unit tests
-  - [x] Object Properties
-    - [x] Unit tests
-  - [x] Class Properties
-    - [x] Unit tests
-  - [x] Instances
-    - [x] Unit tests
-  - [x] Instance Data
-    - [x] Unit tests
-  - [x] Instance Data Field Indexing
-
-### Phase 2
-
-Design Database.  Use `sem-tools` to define the schema and loading the database.
-
-- [x] Postgres Schema
-  - [x] Namespaces
-  - [x] Classes
-  - [x] Data Types
-  - [x] Fields
-  - [x] Properties
-  - [x] Object Properties
-  - [x] Class Properties
-  - [x] Instances
-  - [x] Instance Data
-  - [x] Instance Data Index
-
-### Phase 1
-
-Design of REST services and DTOs (OpenAPI layer):
-
-- [x] Namespaces
-- [x] Classes
-- [x] Data Types
-- [x] Fields
-- [x] Properties
-- [x] Object Properties
-- [x] Class Properties
-- [x] Instances
-- [x] Instance Data
-- [x] Design initial documentation for objectified.dev docs site
-  - [x] Skeleton is fine
-- [x] Design Knowledge Base site for objectified.dev docs site
-  - [x] Skeleton is fine
-- [x] Generate Issues section in GitHub
-  - [x] Define issue types
-  - [x] Assign all phase objects with issues and document them here
-
-### TBD
-
-- [ ] Create Instance Grouping
-  - [ ] Group is a series of instances that all relate to one another
-  - [ ] Group contains a parent ID and child IDs are the instances related to the group
-  - [ ] Grouping is used for things like Chain-of-Custody or a document group
-- [ ] Create executable docker image
-- [ ] Publish to NPM
+- [ ] Blog Site
+  - [ ] Schema design
+  - [ ] Simple UI design
+  - [ ] User accounts
+  - [ ] Sections
+  - [ ] Postings
+  - [ ] Hosting on `http://objectified.blog`
