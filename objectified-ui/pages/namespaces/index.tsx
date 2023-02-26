@@ -1,20 +1,30 @@
 import {NextPage} from 'next';
 import {Stack} from '@mui/system';
 import ListHeader from '../../components/ListHeader';
-import {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import LoadingMessage from '../../components/LoadingMessage';
-import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from '@mui/material';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle, Table, TableBody,
+  TableCell, TableContainer,
+  TableHead,
+  TableRow,
+  TextField, Typography
+} from '@mui/material';
 import { StackItem } from '../../components/StackItem';
 import {NamespaceDto} from 'objectified-data/dist/src/dto/namespace.dto';
 import axios from 'axios';
 import {alertDialog, confirmDialog} from '../../components/dialogs/ConfirmDialog';
+import Paper from '@mui/material/Paper';
 
 const Namespaces: NextPage = () => {
   const [namespaces, setNamespaces] = useState([]);
   const [loading, setLoading] = useState(false);
   const [needsRefresh, setNeedsRefresh] = useState(true);
   const [addNamespaceShowing, setAddNamespaceShowing] = useState(false);
-  const [errorState, setErrorState] = useState<[boolean, string]>([false, '']);
   const namespaceRef = useRef<HTMLInputElement>();
 
   const addNamespaceClicked = () => setAddNamespaceShowing(true);
@@ -59,6 +69,7 @@ const Namespaces: NextPage = () => {
         <DialogTitle>Namespace</DialogTitle>
         <DialogContent>
           <Stack direction={'row'}>
+
             <StackItem sx={{ width: '100%' }}>
               <TextField id={'namespace'} label={'Namespace'} variant={'outlined'} required inputRef={namespaceRef}/>
             </StackItem>
@@ -69,10 +80,37 @@ const Namespaces: NextPage = () => {
           <Button onClick={() => setAddNamespaceShowing(false)}>Cancel</Button>
         </DialogActions>
       </Dialog>
+
       <Stack direction={'row'}>
         <ListHeader header={'Namespaces'} onAdd={addNamespaceClicked}/>
       </Stack>
-      {JSON.stringify(namespaces, null, 2)}
+
+      <TableContainer component={Paper}>
+        <Table sx={{ minWidth: 650 }} aria-label={'namespace table'}>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Enabled</TableCell>
+              <TableCell>Create Date</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {namespaces.map((row) => (
+              <>
+                <TableRow>
+                  <TableCell>{row.id}</TableCell>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>{row.description}</TableCell>
+                  <TableCell>{row.enabled ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>{row.create_date}</TableCell>
+                </TableRow>
+              </>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </>
   );
 }
