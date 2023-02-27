@@ -90,4 +90,4 @@ and popularity.
   - [ ] User accounts
   - [ ] Sections
   - [ ] Postings
-  - [ ] Hosting on `http://objectified.blog`
+  - [ ] Hosting on `http://objectified.wiki`

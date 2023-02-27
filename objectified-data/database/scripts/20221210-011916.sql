@@ -78,7 +78,7 @@ VALUES ('int32', 'A 32-bit signed integer', 'INT32', false, 0, null, null, null,
 -- 64-bit Integer
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
                            enum_descriptions, examples, enabled)
-VALUES ('int364', 'A 64-bit signed integer', 'INT64', false, 0, null, null, null,
+VALUES ('int64', 'A 64-bit signed integer', 'INT64', false, 0, null, null, null,
         ARRAY['12345678', '-654321'], true);
 
 -- Float
