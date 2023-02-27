@@ -1,5 +1,5 @@
 import {NextPage} from 'next';
-import {Stack} from '@mui/system';
+import {Box, Stack} from '@mui/system';
 import ListHeader from '../../components/ListHeader';
 import React, {useEffect, useRef, useState} from 'react';
 import LoadingMessage from '../../components/LoadingMessage';
@@ -19,6 +19,7 @@ import {NamespaceDto} from 'objectified-data/dist/src/dto/namespace.dto';
 import axios from 'axios';
 import {alertDialog, confirmDialog} from '../../components/dialogs/ConfirmDialog';
 import Paper from '@mui/material/Paper';
+import {CheckBox, CheckBoxOutlineBlank, Delete, DeleteOutline} from '@mui/icons-material';
 
 const Namespaces: NextPage = () => {
   const [namespaces, setNamespaces] = useState([]);
@@ -51,15 +52,17 @@ const Namespaces: NextPage = () => {
         .then((x) => {
           setAddNamespaceShowing(false);
           reloadNamespaces();
+        })
+        .catch((x) => {
+          console.log(`Exception:`, x);
         });
+
     } else {
       return alertDialog('Namespace is missing a value.');
     }
   }
 
-  useEffect(() => {
-    reloadNamespaces();
-  }, []);
+  useEffect(() => reloadNamespaces(), []);
 
   if (loading) {
     return (
@@ -86,11 +89,26 @@ const Namespaces: NextPage = () => {
       </Dialog>
 
       <Stack direction={'row'}>
-        <ListHeader header={'Namespaces'} onAdd={addNamespaceClicked}/>
+        <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
+          <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
+            Namespaces
+          </Typography>
+        </StackItem>
       </Stack>
 
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label={'namespace table'}>
+      <Stack direction={'row'}>
+        <StackItem sx={{ width: '90%', padding: '1em', color: '#000' }}>
+          <Typography>
+            Namespaces are logical groupings of classes, objects, and definitions, grouped by a unique identifier.
+          </Typography>
+        </StackItem>
+        <StackItem sx={{ textAlign: 'right', padding: '1em', width: '10%' }}>
+          <Button onClick={() => addNamespaceClicked()} variant={'outlined'}>Add</Button>
+        </StackItem>
+      </Stack>
+
+      <TableContainer component={Box}>
+        <Table sx={{ minWidth: 650, backgroundColor: '#fff' }} aria-label={'namespace table'}>
           <TableHead>
             <TableRow>
               <TableCell><strong>ID</strong></TableCell>
@@ -98,6 +116,7 @@ const Namespaces: NextPage = () => {
               <TableCell><strong>Description</strong></TableCell>
               <TableCell><strong>Enabled</strong></TableCell>
               <TableCell><strong>Create Date</strong></TableCell>
+              <TableCell/>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -107,8 +126,9 @@ const Namespaces: NextPage = () => {
                   <TableCell>{row.id}</TableCell>
                   <TableCell>{row.name}</TableCell>
                   <TableCell>{row.description}</TableCell>
-                  <TableCell>{row.enabled ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
                   <TableCell>{row.create_date}</TableCell>
+                  <TableCell align={'right'}><Delete sx={{ color: 'red' }}/></TableCell>
                 </TableRow>
               </>
             ))}

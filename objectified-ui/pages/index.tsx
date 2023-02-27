@@ -29,6 +29,7 @@ import {
   PublicOutlined, WorkspacesOutlined,
 } from "@mui/icons-material";
 import Namespaces from "./namespaces";
+import DataTypes from './dataTypes';
 
 const drawerWidth = 240;
 
@@ -42,13 +43,12 @@ const Home: NextPage = () => {
         label: "Namespaces",
         onClick: () => setCurrentPage(<Namespaces/>),
       },
-/*
       {
         icon: <TypeSpecimenOutlined/>,
         label: "Data Types",
-        onClick: () => setCurrentPage(<></>),
+        onClick: () => setCurrentPage(<DataTypes/>),
       },
-      {
+/*      {
         icon: <ReorderOutlined/>,
         label: "Fields",
         onClick: () => setCurrentPage(<></>),
