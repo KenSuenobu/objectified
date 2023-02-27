@@ -4,7 +4,6 @@ import { DaoUtils } from 'objectified-data/dist/src/dao/dao-utils';
 import { ClassDao } from 'objectified-data/dist/src/dao/class.dao';
 import { PropertyDao } from 'objectified-data/dist/src/dao/property.dao';
 import { ClassPropertyDao } from 'objectified-data/dist/src/dao/class-property.dao';
-import { ClassPropertiesDao } from 'objectified-data/dist/src/dao/class-properties.dao';
 
 @Injectable()
 export class ClassPropertiesService {
