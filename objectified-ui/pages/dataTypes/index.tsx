@@ -72,7 +72,7 @@ const DataTypes: NextPage = () => {
               <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Enabled</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Enabled</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Create Date</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Update Date</TableCell>
               <TableCell></TableCell>
@@ -84,7 +84,7 @@ const DataTypes: NextPage = () => {
               <TableCell sx={{ color: '#000' }}>{row.name}</TableCell>
               <TableCell sx={{ color: '#000' }}>{row.description}</TableCell>
               <TableCell sx={{ color: '#000' }}>{row.data_type}</TableCell>
-              <TableCell sx={{ color: '#000' }}>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
+              <TableCell sx={{ color: '#000', textAlign: 'center' }}>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
               <TableCell sx={{ color: '#000' }}>{row.create_date}</TableCell>
               <TableCell sx={{ color: '#000' }}>{row.update_date}</TableCell>
               <TableCell align={'right'}><Delete sx={{ color: 'red' }}/></TableCell>
