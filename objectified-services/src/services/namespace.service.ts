@@ -10,11 +10,13 @@ export class NamespacesService {
 
   async createNamespace(payload: NamespaceDto): Promise<NamespaceDto> {
     const dao = new NamespaceDao(DaoUtils.getDatabase());
+    payload.name = payload.name.toLowerCase();
     return dao.create(payload);
   }
 
   async editNamespace(id: number, payload: NamespaceDto) {
     const dao = new NamespaceDao(DaoUtils.getDatabase());
+    payload.name = payload.name.toLowerCase();
     return dao.edit(id, payload);
   }
 

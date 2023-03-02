@@ -14,7 +14,7 @@ CREATE TABLE obj.namespace (
     create_date TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX idx_namespace_unique_name ON obj.namespace(name);
+CREATE UNIQUE INDEX idx_namespace_unique_name ON obj.namespace(UPPER(name));
 
 ---
 
@@ -31,7 +31,7 @@ CREATE TABLE obj.class (
     delete_date TIMESTAMP WITHOUT TIME ZONE
 );
 
-CREATE UNIQUE INDEX idx_class_unique_name ON obj.class(name);
+CREATE UNIQUE INDEX idx_class_unique_name ON obj.class(UPPER(name));
 
 ---
 
@@ -61,7 +61,7 @@ CREATE TABLE obj.data_type (
     delete_date TIMESTAMP WITHOUT TIME ZONE
 );
 
-CREATE UNIQUE INDEX idx_data_type_unique_name ON obj.data_type(name);
+CREATE UNIQUE INDEX idx_data_type_unique_name ON obj.data_type(UPPER(name));
 
 -- String
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
@@ -152,7 +152,7 @@ CREATE TABLE obj.field (
     delete_date TIMESTAMP WITHOUT TIME ZONE
 );
 
-CREATE UNIQUE INDEX idx_field_unique_name ON obj.field(name);
+CREATE UNIQUE INDEX idx_field_unique_name ON obj.field(UPPER(name));
 
 ---
 
@@ -175,7 +175,7 @@ CREATE TABLE obj.property (
     delete_date TIMESTAMP WITHOUT TIME ZONE
 );
 
-CREATE UNIQUE INDEX idx_property_unique_name ON obj.property(name);
+CREATE UNIQUE INDEX idx_property_unique_name ON obj.property(UPPER(name));
 
 ---
 
@@ -219,7 +219,7 @@ CREATE TABLE obj.instance (
     delete_date TIMESTAMP WITHOUT TIME ZONE
 );
 
-CREATE INDEX idx_obj_instance_name_classes ON obj.instance(name, class_id, create_date);
+CREATE INDEX idx_obj_instance_name_classes ON obj.instance(UPPER(name), class_id, create_date);
 
 ---
 
