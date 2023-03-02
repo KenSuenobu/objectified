@@ -84,7 +84,7 @@ const Namespaces: NextPage = () => {
               <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Enabled</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Enabled</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Create Date</TableCell>
               <TableCell/>
             </TableRow>
@@ -96,7 +96,7 @@ const Namespaces: NextPage = () => {
                   <TableCell>{row.id}</TableCell>
                   <TableCell>{row.name}</TableCell>
                   <TableCell>{row.description}</TableCell>
-                  <TableCell>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
+                  <TableCell sx={{ textAlign: 'center' }}>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
                   <TableCell>{row.create_date}</TableCell>
                   <TableCell align={'right'}><Delete sx={{ color: 'red' }}/></TableCell>
                 </TableRow>
