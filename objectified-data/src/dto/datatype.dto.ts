@@ -88,6 +88,12 @@ export class DataTypeDto {
   enabled: boolean = true;
 
   @ApiProperty({
+    description: 'Indicates whether or not the data type is a core type',
+    default: false,
+  })
+  coreType: boolean = false;
+
+  @ApiProperty({
     description: 'Date and time of creation',
     default: new Date(),
     required: true,

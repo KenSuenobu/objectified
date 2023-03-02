@@ -57,7 +57,7 @@ const Namespaces: NextPage = () => {
           errorDialog(x.message);
         });
     } else {
-      return alertDialog('Namespace is missing a value.');
+      return errorDialog('Namespace is missing a value.');
     }
   }
 
@@ -129,8 +129,8 @@ const Namespaces: NextPage = () => {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => addNamespace()}>Add</Button>
-            <Button onClick={() => setAddNamespaceShowing(false)}>Cancel</Button>
+            <Button onClick={() => addNamespace()} variant={'contained'}>Add</Button>
+            <Button onClick={() => setAddNamespaceShowing(false)} variant={'contained'} color={'error'}>Cancel</Button>
           </DialogActions>
         </Dialog>
 

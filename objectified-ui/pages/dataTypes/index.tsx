@@ -4,7 +4,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle, Table, TableBody, TableCell,
+  DialogTitle, FormControl, InputLabel, Select, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow,
   TextField,
   Typography
@@ -15,10 +15,12 @@ import {CheckBox, CheckBoxOutlineBlank, Delete} from '@mui/icons-material';
 import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import LoadingMessage from '../../components/LoadingMessage';
+import MenuItem from '@mui/material/MenuItem';
 
 const DataTypes: NextPage = () => {
   const [loading, setLoading] = useState(true);
   const [dataTypes, setDataTypes] = useState([]);
+  const [addDataTypeShowing, setAddDataTypeShowing] = useState(false);
 
   const reloadDataTypes = () => {
     setLoading(true);
@@ -31,7 +33,12 @@ const DataTypes: NextPage = () => {
 
   const addDataTypeClicked = () => {
     console.log('Clicked');
-  };
+    setAddDataTypeShowing(true);
+  }
+
+  const addDataType = () => {
+
+  }
 
   useEffect(() => {
     reloadDataTypes();
@@ -46,6 +53,71 @@ const DataTypes: NextPage = () => {
   return (
     <>
       <div sx={{ width: '100%' }} style={{ border: '1px solid #ddd' }}>
+        <Dialog open={addDataTypeShowing}>
+          <DialogTitle>Data Type</DialogTitle>
+          <DialogContent>
+            <Stack direction={'column'}>
+
+              <StackItem sx={{ width: '100%' }}>
+                {/*<TextField id={'namespace'} label={'Namespace'} variant={'outlined'} required inputRef={namespaceRef}/>*/}
+                <TextField id={'name'} label={'Name'} variant={'outlined'} required fullWidth/>
+              </StackItem>
+
+              <StackItem sx={{ width: '100%' }}>
+                <TextField id={'description'} label={'Description'} variant={'outlined'} required fullWidth/>
+              </StackItem>
+
+              <StackItem sx={{ width: '100%' }}>
+                <FormControl fullWidth>
+                  <InputLabel id={'data-type-label'}>Data Type</InputLabel>
+                  <Select labelId={'data-type-label'} id={'data_type'} label={'Data Type'}>
+                    <MenuItem>STRING</MenuItem>
+                    <MenuItem>INT32</MenuItem>
+                    <MenuItem>INT64</MenuItem>
+                    <MenuItem>FLOAT</MenuItem>
+                    <MenuItem>DOUBLE</MenuItem>
+                    <MenuItem>BOOLEAN</MenuItem>
+                    <MenuItem>DATE</MenuItem>
+                    <MenuItem>DATE_TIME</MenuItem>
+                    <MenuItem>BYTE</MenuItem>
+                    <MenuItem>BINARY</MenuItem>
+                    <MenuItem>PASSWORD</MenuItem>
+                    <MenuItem>OBJECT</MenuItem>
+                  </Select>
+                </FormControl>
+              </StackItem>
+
+              <StackItem sx={{ width: '100%' }}>
+                is_array BOOLEAN NOT NULL DEFAULT false,
+              </StackItem>
+
+              <StackItem sx={{ width: '100%' }}>
+                max_length INT NOT NULL DEFAULT 0,
+              </StackItem>
+
+              <StackItem sx={{ width: '100%' }}>
+                pattern TEXT,
+              </StackItem>
+
+              <StackItem sx={{ width: '100%' }}>
+                enum_values TEXT[],
+              </StackItem>
+
+              <StackItem sx={{ width: '100%' }}>
+                enum_descriptions TEXT[],
+              </StackItem>
+
+              <StackItem sx={{ width: '100%' }}>
+                examples TEXT[],
+              </StackItem>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => addDataType()} variant={'contained'}>Add</Button>
+            <Button onClick={() => setAddDataTypeShowing(false)} variant={'contained'} color={'error'}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
+
         <Stack direction={'row'}>
           <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
             <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
@@ -88,7 +160,7 @@ const DataTypes: NextPage = () => {
                 <TableCell sx={{ color: '#000', textAlign: 'center' }}>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
                 <TableCell sx={{ color: '#000' }}>{row.create_date}</TableCell>
                 <TableCell sx={{ color: '#000' }}>{row.update_date}</TableCell>
-                <TableCell align={'right'}><Delete sx={{ color: 'red' }}/></TableCell>
+                <TableCell align={'right'}>{row.core_type ? (<></>) : (<Delete sx={{ color: 'red' }}/>)}</TableCell>
               </TableRow>
             ))}
           </Table>

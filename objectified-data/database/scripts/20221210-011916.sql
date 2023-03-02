@@ -56,6 +56,7 @@ CREATE TABLE obj.data_type (
     enum_descriptions TEXT[],
     examples TEXT[],
     enabled BOOLEAN NOT NULL DEFAULT true,
+    core_type BOOLEAN NOT NULL DEFAULT false,
     create_date TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     update_date TIMESTAMP WITHOUT TIME ZONE,
     delete_date TIMESTAMP WITHOUT TIME ZONE
@@ -65,75 +66,75 @@ CREATE UNIQUE INDEX idx_data_type_unique_name ON obj.data_type(UPPER(name));
 
 -- String
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
-                           enum_descriptions, examples, enabled)
+                           enum_descriptions, examples, enabled, core_type)
      VALUES ('string', 'An ISO compliant variable string', 'STRING', false, 0, null, null, null,
-             ARRAY['This is a string'], true);
+             ARRAY['This is a string'], true, true);
 
 -- 32-bit Integer
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
-                           enum_descriptions, examples, enabled)
+                           enum_descriptions, examples, enabled, core_type)
 VALUES ('int32', 'A 32-bit signed integer', 'INT32', false, 0, null, null, null,
-        ARRAY['12345678', '-654321'], true);
+        ARRAY['12345678', '-654321'], true, true);
 
 -- 64-bit Integer
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
-                           enum_descriptions, examples, enabled)
+                           enum_descriptions, examples, enabled, core_type)
 VALUES ('int64', 'A 64-bit signed integer', 'INT64', false, 0, null, null, null,
-        ARRAY['12345678', '-654321'], true);
+        ARRAY['12345678', '-654321'], true, true);
 
 -- Float
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
-                           enum_descriptions, examples, enabled)
+                           enum_descriptions, examples, enabled, core_type)
 VALUES ('float', 'A floating point value', 'FLOAT', false, 0, null, null, null,
-        ARRAY['132.110', '-3.14159'], true);
+        ARRAY['132.110', '-3.14159'], true, true);
 
 -- Double
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
-                           enum_descriptions, examples, enabled)
+                           enum_descriptions, examples, enabled, core_type)
 VALUES ('double', 'A double precision value', 'DOUBLE', false, 0, null, null, null,
-        ARRAY['6.342E5', '-1.0E5'], true);
+        ARRAY['6.342E5', '-1.0E5'], true, true);
 
 -- Boolean
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
-                           enum_descriptions, examples, enabled)
+                           enum_descriptions, examples, enabled, core_type)
 VALUES ('boolean', 'A boolean value', 'BOOLEAN', false, 0, null, null, null,
-        ARRAY['true', 'false'], true);
+        ARRAY['true', 'false'], true, true);
 
 -- Date
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
-                           enum_descriptions, examples, enabled)
+                           enum_descriptions, examples, enabled, core_type)
 VALUES ('date', 'A date value', 'DATE', false, 0, null, null, null,
-        ARRAY['06/13/2019', '2022-01-05'], true);
+        ARRAY['06/13/2019', '2022-01-05'], true, true);
 
 -- Date and Time
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
-                           enum_descriptions, examples, enabled)
+                           enum_descriptions, examples, enabled, core_type)
 VALUES ('date-time', 'An ISO-8601 format date and time string', 'DATE_TIME', false, 0, null, null, null,
-        ARRAY['2022-12-23T03:43:47Z', '1970-01-01T00:00:00Z'], true);
+        ARRAY['2022-12-23T03:43:47Z', '1970-01-01T00:00:00Z'], true, true);
 
 -- Byte or Array of Bytes
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
-                           enum_descriptions, examples, enabled)
+                           enum_descriptions, examples, enabled, core_type)
 VALUES ('byte', 'An array of bytes', 'BYTE', false, 0, null, null, null,
-        ARRAY['😂😃🧘🏻‍🌍🌦️', '🍞🚗📞🎉❤️🍆🍑'], true);
+        ARRAY['😂😃🧘🏻‍🌍🌦️', '🍞🚗📞🎉❤️🍆🍑'], true, true);
 
 -- Binary Storage Data
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
-                           enum_descriptions, examples, enabled)
+                           enum_descriptions, examples, enabled, core_type)
 VALUES ('binary', 'A base64-encoded binary string', 'BINARY', false, 0, null, null, null,
-        ARRAY['dGVzdAo=', 'dGVzdCBtZXNzYWdlCg=='], true);
+        ARRAY['dGVzdAo=', 'dGVzdCBtZXNzYWdlCg=='], true, true);
 
 -- Password
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
-                           enum_descriptions, examples, enabled)
+                           enum_descriptions, examples, enabled, core_type)
 VALUES ('password', 'A stored password value', 'PASSWORD', false, 0, null, null, null,
-        ARRAY['my-password', 'letmein'], true);
+        ARRAY['my-password', 'letmein'], true, true);
 
 -- Object
 INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
-                           enum_descriptions, examples, enabled)
+                           enum_descriptions, examples, enabled, core_type)
 VALUES ('object', 'A JSON object', 'OBJECT', false, 0, null, null, null,
-        ARRAY['{ ''key'': ''value'' }'], true);
+        ARRAY['{ ''key'': ''value'' }'], true, true);
 
 ---
 
