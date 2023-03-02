@@ -17,7 +17,7 @@ import {
 import { StackItem } from '../../components/StackItem';
 import {NamespaceDto} from 'objectified-data/dist/src/dto/namespace.dto';
 import axios from 'axios';
-import {alertDialog, confirmDialog} from '../../components/dialogs/ConfirmDialog';
+import {alertDialog, confirmDialog, errorDialog} from '../../components/dialogs/ConfirmDialog';
 import Paper from '@mui/material/Paper';
 import {CheckBox, CheckBoxOutlineBlank, Delete, DeleteOutline, Edit, EditOutlined} from '@mui/icons-material';
 
@@ -54,9 +54,8 @@ const Namespaces: NextPage = () => {
           reloadNamespaces();
         })
         .catch((x) => {
-          console.log(`Exception:`, x);
+          errorDialog(x.message);
         });
-
     } else {
       return alertDialog('Namespace is missing a value.');
     }
