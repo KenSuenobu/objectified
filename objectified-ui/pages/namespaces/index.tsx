@@ -72,69 +72,71 @@ const Namespaces: NextPage = () => {
 
   return (
     <>
-      <Dialog open={addNamespaceShowing}>
-        <DialogTitle>Namespace</DialogTitle>
-        <DialogContent>
-          <Stack direction={'row'}>
+      <div sx={{ width: '100%' }} style={{ border: '1px solid #ddd' }}>
+        <Dialog open={addNamespaceShowing}>
+          <DialogTitle>Namespace</DialogTitle>
+          <DialogContent>
+            <Stack direction={'row'}>
 
-            <StackItem sx={{ width: '100%' }}>
-              <TextField id={'namespace'} label={'Namespace'} variant={'outlined'} required inputRef={namespaceRef}/>
-            </StackItem>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => addNamespace()}>Add</Button>
-          <Button onClick={() => setAddNamespaceShowing(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
+              <StackItem sx={{ width: '100%' }}>
+                <TextField id={'namespace'} label={'Namespace'} variant={'outlined'} required inputRef={namespaceRef}/>
+              </StackItem>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => addNamespace()}>Add</Button>
+            <Button onClick={() => setAddNamespaceShowing(false)}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
 
-      <Stack direction={'row'}>
-        <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
-          <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
-            Namespaces
-          </Typography>
-        </StackItem>
-      </Stack>
+        <Stack direction={'row'}>
+          <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
+            <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
+              Namespaces
+            </Typography>
+          </StackItem>
+        </Stack>
 
-      <Stack direction={'row'}>
-        <StackItem sx={{ width: '90%', padding: '1em', color: '#000' }}>
-          <Typography>
-            Namespaces are logical groupings of classes, objects, and definitions, grouped by a unique identifier.
-          </Typography>
-        </StackItem>
-        <StackItem sx={{ textAlign: 'right', padding: '1em', width: '10%' }}>
-          <Button onClick={() => addNamespaceClicked()} variant={'outlined'}>Add</Button>
-        </StackItem>
-      </Stack>
+        <Stack direction={'row'}>
+          <StackItem sx={{ width: '90%', padding: '1em', color: '#000' }}>
+            <Typography>
+              Namespaces are logical groupings of classes, objects, and definitions, grouped by a unique identifier.
+            </Typography>
+          </StackItem>
+          <StackItem sx={{ textAlign: 'right', padding: '1em', width: '10%' }}>
+            <Button onClick={() => addNamespaceClicked()} variant={'outlined'}>Add</Button>
+          </StackItem>
+        </Stack>
 
-      <TableContainer component={Box}>
-        <Table sx={{ minWidth: 650, backgroundColor: '#fff' }} aria-label={'namespace table'}>
-          <TableHead>
-            <TableRow>
-              <TableCell><strong>ID</strong></TableCell>
-              <TableCell><strong>Name</strong></TableCell>
-              <TableCell><strong>Description</strong></TableCell>
-              <TableCell><strong>Enabled</strong></TableCell>
-              <TableCell><strong>Create Date</strong></TableCell>
-              <TableCell/>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {namespaces.map((row) => (
-              <>
-                <TableRow>
-                  <TableCell>{row.id}</TableCell>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.description}</TableCell>
-                  <TableCell>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
-                  <TableCell>{row.create_date}</TableCell>
-                  <TableCell align={'right'}><Delete sx={{ color: 'red' }}/></TableCell>
-                </TableRow>
-              </>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+        <TableContainer component={Box}>
+          <Table sx={{ minWidth: 650, backgroundColor: '#fff' }} aria-label={'namespace table'}>
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>ID</strong></TableCell>
+                <TableCell><strong>Name</strong></TableCell>
+                <TableCell><strong>Description</strong></TableCell>
+                <TableCell><strong>Enabled</strong></TableCell>
+                <TableCell><strong>Create Date</strong></TableCell>
+                <TableCell/>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {namespaces.map((row) => (
+                <>
+                  <TableRow>
+                    <TableCell>{row.id}</TableCell>
+                    <TableCell>{row.name}</TableCell>
+                    <TableCell>{row.description}</TableCell>
+                    <TableCell>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
+                    <TableCell>{row.create_date}</TableCell>
+                    <TableCell align={'right'}><Delete sx={{ color: 'red' }}/></TableCell>
+                  </TableRow>
+                </>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
     </>
   );
 }

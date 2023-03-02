@@ -45,53 +45,55 @@ const DataTypes: NextPage = () => {
 
   return (
     <>
-      <Stack direction={'row'}>
-        <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
-          <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
-            Data Types
-          </Typography>
-        </StackItem>
-      </Stack>
+      <div sx={{ width: '100%' }} style={{ border: '1px solid #ddd' }}>
+        <Stack direction={'row'}>
+          <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
+            <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
+              Data Types
+            </Typography>
+          </StackItem>
+        </Stack>
 
-      <Stack direction={'row'}>
-        <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>
-          <Typography>
-            Data Types define the types of data that can be stored in Objectified.
-          </Typography>
-        </StackItem>
-        <StackItem sx={{ textAlign: 'right', padding: '1em', width: '10%' }}>
-          <Button onClick={() => addDataTypeClicked()} variant={'outlined'}>Add</Button>
-        </StackItem>
-      </Stack>
+        <Stack direction={'row'}>
+          <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>
+            <Typography>
+              Data Types define the types of data that can be stored in Objectified.
+            </Typography>
+          </StackItem>
+          <StackItem sx={{ textAlign: 'right', padding: '1em', width: '10%' }}>
+            <Button onClick={() => addDataTypeClicked()} variant={'outlined'}>Add</Button>
+          </StackItem>
+        </Stack>
 
-      <TableContainer component={Box}>
-        <Table sx={{ minWidth: 650, backgroundColor: '#fff' }} aria-label={'datatype table'}>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Enabled</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Create Date</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Update Date</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-          </TableHead>
-          {dataTypes.map((row) => (
-            <TableRow>
-              <TableCell sx={{ color: '#000' }}>{row.id}</TableCell>
-              <TableCell sx={{ color: '#000' }}>{row.name}</TableCell>
-              <TableCell sx={{ color: '#000' }}>{row.description}</TableCell>
-              <TableCell sx={{ color: '#000' }}>{row.data_type}</TableCell>
-              <TableCell sx={{ color: '#000', textAlign: 'center' }}>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
-              <TableCell sx={{ color: '#000' }}>{row.create_date}</TableCell>
-              <TableCell sx={{ color: '#000' }}>{row.update_date}</TableCell>
-              <TableCell align={'right'}><Delete sx={{ color: 'red' }}/></TableCell>
-            </TableRow>
-          ))}
-        </Table>
-      </TableContainer>
+        <TableContainer component={Box}>
+          <Table sx={{ minWidth: 650, backgroundColor: '#fff' }} aria-label={'datatype table'}>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Enabled</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Create Date</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Update Date</TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableHead>
+            {dataTypes.map((row) => (
+              <TableRow>
+                <TableCell sx={{ color: '#000' }}>{row.id}</TableCell>
+                <TableCell sx={{ color: '#000' }}>{row.name}</TableCell>
+                <TableCell sx={{ color: '#000' }}>{row.description}</TableCell>
+                <TableCell sx={{ color: '#000' }}>{row.data_type}</TableCell>
+                <TableCell sx={{ color: '#000', textAlign: 'center' }}>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
+                <TableCell sx={{ color: '#000' }}>{row.create_date}</TableCell>
+                <TableCell sx={{ color: '#000' }}>{row.update_date}</TableCell>
+                <TableCell align={'right'}><Delete sx={{ color: 'red' }}/></TableCell>
+              </TableRow>
+            ))}
+          </Table>
+        </TableContainer>
+      </div>
     </>
   );
 }
