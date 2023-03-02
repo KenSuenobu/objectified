@@ -62,6 +62,52 @@ const Namespaces: NextPage = () => {
     }
   }
 
+  const namespaceList = () => {
+    if (namespaces.length === 0) {
+      return (
+        <>
+          <Stack direction={'row'}>
+            <StackItem sx={{ width: '90%', padding: '1em', color: '#000' }}>
+              <Typography fontWeight={ 'bold' }>No namespaces have been defined yet.  You will not be able to define
+              any objects until you create a namespace to group them with.</Typography>
+            </StackItem>
+          </Stack>
+        </>
+      );
+    }
+
+    return (
+      <TableContainer component={Box}>
+        <Table sx={{ minWidth: 650, backgroundColor: '#fff' }} aria-label={'namespace table'}>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Enabled</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Create Date</TableCell>
+              <TableCell/>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {namespaces.map((row) => (
+              <>
+                <TableRow hover>
+                  <TableCell>{row.id}</TableCell>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>{row.description}</TableCell>
+                  <TableCell>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
+                  <TableCell>{row.create_date}</TableCell>
+                  <TableCell align={'right'}><Delete sx={{ color: 'red' }}/></TableCell>
+                </TableRow>
+              </>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
+  }
+
   useEffect(() => reloadNamespaces(), []);
 
   if (loading) {
@@ -108,34 +154,7 @@ const Namespaces: NextPage = () => {
           </StackItem>
         </Stack>
 
-        <TableContainer component={Box}>
-          <Table sx={{ minWidth: 650, backgroundColor: '#fff' }} aria-label={'namespace table'}>
-            <TableHead>
-              <TableRow>
-                <TableCell><strong>ID</strong></TableCell>
-                <TableCell><strong>Name</strong></TableCell>
-                <TableCell><strong>Description</strong></TableCell>
-                <TableCell><strong>Enabled</strong></TableCell>
-                <TableCell><strong>Create Date</strong></TableCell>
-                <TableCell/>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {namespaces.map((row) => (
-                <>
-                  <TableRow>
-                    <TableCell>{row.id}</TableCell>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.description}</TableCell>
-                    <TableCell>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
-                    <TableCell>{row.create_date}</TableCell>
-                    <TableCell align={'right'}><Delete sx={{ color: 'red' }}/></TableCell>
-                  </TableRow>
-                </>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        {namespaceList()}
       </div>
     </>
   );

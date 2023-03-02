@@ -80,7 +80,7 @@ const DataTypes: NextPage = () => {
               </TableRow>
             </TableHead>
             {dataTypes.map((row) => (
-              <TableRow>
+              <TableRow hover>
                 <TableCell sx={{ color: '#000' }}>{row.id}</TableCell>
                 <TableCell sx={{ color: '#000' }}>{row.name}</TableCell>
                 <TableCell sx={{ color: '#000' }}>{row.description}</TableCell>
