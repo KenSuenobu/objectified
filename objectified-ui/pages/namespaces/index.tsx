@@ -19,7 +19,7 @@ import {NamespaceDto} from 'objectified-data/dist/src/dto/namespace.dto';
 import axios from 'axios';
 import {alertDialog, confirmDialog} from '../../components/dialogs/ConfirmDialog';
 import Paper from '@mui/material/Paper';
-import {CheckBox, CheckBoxOutlineBlank, Delete, DeleteOutline} from '@mui/icons-material';
+import {CheckBox, CheckBoxOutlineBlank, Delete, DeleteOutline, Edit, EditOutlined} from '@mui/icons-material';
 
 const Namespaces: NextPage = () => {
   const [namespaces, setNamespaces] = useState([]);
@@ -67,7 +67,7 @@ const Namespaces: NextPage = () => {
       return (
         <>
           <Stack direction={'row'}>
-            <StackItem sx={{ width: '90%', padding: '1em', color: '#000' }}>
+            <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>
               <Typography fontWeight={ 'bold' }>No namespaces have been defined yet.  You will not be able to define
               any objects until you create a namespace to group them with.</Typography>
             </StackItem>
@@ -98,7 +98,7 @@ const Namespaces: NextPage = () => {
                   <TableCell>{row.description}</TableCell>
                   <TableCell sx={{ textAlign: 'center' }}>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
                   <TableCell>{row.create_date}</TableCell>
-                  <TableCell align={'right'}><Delete sx={{ color: 'red' }}/></TableCell>
+                  <TableCell align={'right'}><EditOutlined/> <Delete sx={{ color: 'red' }}/></TableCell>
                 </TableRow>
               </>
             ))}
