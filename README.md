@@ -75,6 +75,13 @@ and popularity.
 - [ ] UI
   - [ ] Base design and layout
   - [ ] Component library
+    - [x] Namespaces
+    - [ ] Classes
+    - [x] Data Types
+    - [ ] Fields
+    - [ ] Properties
+    - [ ] Object Properties
+    - [ ] Class Properties
   - [ ] Core functionality using REST
 
 - [ ] ETL
