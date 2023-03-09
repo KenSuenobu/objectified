@@ -4,7 +4,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle, FormControl, FormControlLabel, InputLabel, Select, Table, TableBody, TableCell,
+  DialogTitle, FormControl, FormControlLabel, InputLabel, Select, SelectChangeEvent, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow,
   TextField,
   Typography
@@ -21,6 +21,8 @@ import {errorDialog} from '../../components/dialogs/ConfirmDialog';
 const DataTypes: NextPage = () => {
   const [loading, setLoading] = useState(true);
   const [dataTypes, setDataTypes] = useState([]);
+  const [dataType, setDataType] = useState('');
+  const [isArray, setIsArray] = useState(false);
   const [addDataTypeShowing, setAddDataTypeShowing] = useState(false);
   const nameRef = useRef<HTMLInputElement>();
   const descriptionRef = useRef<HTMLInputElement>();
@@ -40,25 +42,76 @@ const DataTypes: NextPage = () => {
   }
 
   const addDataTypeClicked = () => {
-    console.log('Clicked');
     setAddDataTypeShowing(true);
   }
 
+  const handleDataTypeChanged = (event: SelectChangeEvent) => {
+    setDataType(event.target.value as string);
+  }
+
+  const handleIsArrayChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIsArray(event.target.checked);
+  }
+
   const validate = () => {
-    errorDialog('Missing value.');
-    return false;
+    const name = nameRef.current?.value ?? '';
+    const description = descriptionRef.current?.value ?? '';
+
+    if (name.length === 0) {
+      errorDialog('A name is required');
+      return false;
+    }
+
+    if (description.length === 0) {
+      errorDialog('A description is required');
+      return false;
+    }
+
+    return true;
   }
 
   const addDataType = () => {
     if (validate()) {
       const name = nameRef.current?.value ?? '';
       const description = descriptionRef.current?.value ?? '';
-      const maxLength = maxLengthRef.current?.value ?? '0';
+      const maxLength = maxLengthRef.current?.value;
       const pattern = patternRef.current?.value ?? '';
       const enumValues = enumValuesRef.current?.value ?? '';
       const enumDescriptions = enumDescriptionsRef.current?.value ?? '';
       const examples = examplesRef.current?.value ?? '';
-      
+      const dataTypeObject: any = {};
+
+      dataTypeObject.name = name;
+      dataTypeObject.description = description;
+      dataTypeObject.enabled = true;
+      dataTypeObject.maxLength = maxLength.length > 0 ? parseInt(maxLength) : 0;
+      dataTypeObject.isArray = isArray;
+      dataTypeObject.dataType = dataType;
+      dataTypeObject.pattern = pattern;
+      dataTypeObject.coreType = false;
+
+      if (enumValues.length > 0) {
+        dataTypeObject.enumValues = enumValues.split(',');
+      }
+
+      if (enumDescriptions.length > 0) {
+        dataTypeObject.enumDescriptions = enumDescriptions.split(',');
+      }
+
+      if (examples.length > 0) {
+        dataTypeObject.examples = examples;
+      }
+
+      console.log(`Data: ${JSON.stringify(dataTypeObject, null, 2)}`);
+
+      axios.post('/app/data-types/create', dataTypeObject)
+        .then((x) => {
+          setAddDataTypeShowing(false);
+          reloadDataTypes();
+        })
+        .catch((x) => {
+          errorDialog(x.message);
+        });
     }
   }
 
@@ -93,25 +146,26 @@ const DataTypes: NextPage = () => {
               <StackItem sx={{ width: '100%' }}>
                 <Stack direction={'row'}>
                   <StackItem sx={{ width: '20%' }}>
-                    <FormControlLabel control={<Checkbox/>} label={'Array of: '}/>
+                    <FormControlLabel control={<Checkbox checked={isArray} onChange={handleIsArrayChanged}/>} label={'Array of: '}/>
                   </StackItem>
 
                   <StackItem sx={{ width: '80%' }}>
                     <FormControl fullWidth>
-                      <InputLabel id={'data-type-label'}>Data Type</InputLabel>
-                      <Select labelId={'data-type-label'} id={'data_type'} label={'Data Type'}>
-                        <MenuItem>STRING</MenuItem>
-                        <MenuItem>INT32</MenuItem>
-                        <MenuItem>INT64</MenuItem>
-                        <MenuItem>FLOAT</MenuItem>
-                        <MenuItem>DOUBLE</MenuItem>
-                        <MenuItem>BOOLEAN</MenuItem>
-                        <MenuItem>DATE</MenuItem>
-                        <MenuItem>DATE_TIME</MenuItem>
-                        <MenuItem>BYTE</MenuItem>
-                        <MenuItem>BINARY</MenuItem>
-                        <MenuItem>PASSWORD</MenuItem>
-                        <MenuItem>OBJECT</MenuItem>
+                      <InputLabel id={'data-type-label'} required>Data Type</InputLabel>
+                      <Select labelId={'data-type-label'} id={'data_type'} label={'Data Type'}
+                              onChange={handleDataTypeChanged} value={dataType}>
+                        <MenuItem value={'STRING'}>STRING</MenuItem>
+                        <MenuItem value={'INT32'}>INT32</MenuItem>
+                        <MenuItem value={'INT64'}>INT64</MenuItem>
+                        <MenuItem value={'FLOAT'}>FLOAT</MenuItem>
+                        <MenuItem value={'DOUBLE'}>DOUBLE</MenuItem>
+                        <MenuItem value={'BOOLEAN'}>BOOLEAN</MenuItem>
+                        <MenuItem value={'DATE'}>DATE</MenuItem>
+                        <MenuItem value={'DATE_TIME'}>DATE_TIME</MenuItem>
+                        <MenuItem value={'BYTE'}>BYTE</MenuItem>
+                        <MenuItem value={'BINARY'}>BINARY</MenuItem>
+                        <MenuItem value={'PASSWORD'}>PASSWORD</MenuItem>
+                        <MenuItem value={'OBJECT'}>OBJECT</MenuItem>
                       </Select>
                     </FormControl>
                   </StackItem>
@@ -120,27 +174,27 @@ const DataTypes: NextPage = () => {
 
               <StackItem sx={{ width: '100%' }}>
                 <TextField id={'max_length'} label={'Maximum Input Length'} variant={'outlined'}
-                           required fullWidth inputRef={maxLengthRef}/>
+                           fullWidth inputRef={maxLengthRef}/>
               </StackItem>
 
               <StackItem sx={{ width: '100%' }}>
                 <TextField id={'pattern'} label={'Regexp Pattern'} variant={'outlined'}
-                           required fullWidth inputRef={patternRef}/>
+                           fullWidth inputRef={patternRef}/>
               </StackItem>
 
               <StackItem sx={{ width: '100%' }}>
                 <TextField id={'enum_values'} label={'Enumeration Values'} variant={'outlined'}
-                           required fullWidth inputRef={enumValuesRef}/>
+                           fullWidth inputRef={enumValuesRef}/>
               </StackItem>
 
               <StackItem sx={{ width: '100%' }}>
                 <TextField id={'enum_descriptions'} label={'Enumeration Descriptions'} variant={'outlined'}
-                           required fullWidth inputRef={enumDescriptionsRef}/>
+                           fullWidth inputRef={enumDescriptionsRef}/>
               </StackItem>
 
               <StackItem sx={{ width: '100%' }}>
                 <TextField id={'examples'} label={'Examples'} variant={'outlined'}
-                           required fullWidth inputRef={examplesRef}/>
+                           fullWidth inputRef={examplesRef}/>
               </StackItem>
             </Stack>
           </DialogContent>
