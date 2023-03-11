@@ -48,12 +48,12 @@ const Home: NextPage = () => {
         label: "Data Types",
         onClick: () => setCurrentPage(<DataTypes/>),
       },
-/*      {
+      {
         icon: <ReorderOutlined/>,
         label: "Fields",
         onClick: () => setCurrentPage(<></>),
       },
-      {
+/*      {
         icon: <ClassOutlined/>,
         label: "Classes",
         onClick: () => setCurrentPage(<></>),
