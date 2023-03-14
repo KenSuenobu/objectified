@@ -30,6 +30,7 @@ import {
 } from "@mui/icons-material";
 import Namespaces from "./namespaces";
 import DataTypes from './dataTypes';
+import Fields from './fields';
 
 const drawerWidth = 240;
 
@@ -51,7 +52,7 @@ const Home: NextPage = () => {
       {
         icon: <ReorderOutlined/>,
         label: "Fields",
-        onClick: () => setCurrentPage(<></>),
+        onClick: () => setCurrentPage(<Fields/>),
       },
 /*      {
         icon: <ClassOutlined/>,

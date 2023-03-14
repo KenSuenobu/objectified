@@ -117,7 +117,7 @@ const Namespaces: NextPage = () => {
 
   return (
     <>
-      <div sx={{ width: '100%' }} style={{ border: '1px solid #ddd' }}>
+      <div sx={{ width: '100%' }} style={{ border: '1px solid #ddd', backgroundColor: '#fff' }}>
         <Dialog open={addNamespaceShowing}>
           <DialogTitle>Namespace</DialogTitle>
           <DialogContent>
@@ -134,7 +134,7 @@ const Namespaces: NextPage = () => {
           </DialogActions>
         </Dialog>
 
-        <Stack direction={'row'}>
+        <Stack direction={'row'} sx={{ padding: '1em' }}>
           <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
             <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
               Namespaces
@@ -142,7 +142,7 @@ const Namespaces: NextPage = () => {
           </StackItem>
         </Stack>
 
-        <Stack direction={'row'}>
+        <Stack direction={'row'} sx={{ padding: '1em' }}>
           <StackItem sx={{ width: '90%', padding: '1em', color: '#000' }}>
             <Typography>
               Namespaces are logical groupings of classes, objects, and definitions, grouped by a unique identifier.

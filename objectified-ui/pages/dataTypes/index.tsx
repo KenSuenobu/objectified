@@ -131,7 +131,7 @@ const DataTypes: NextPage = () => {
         <Dialog open={addDataTypeShowing} fullWidth>
           <DialogTitle>Data Type</DialogTitle>
           <DialogContent>
-            <Stack direction={'column'}>
+            <Stack direction={'column'} sx={{ padding: '1em' }}>
 
               <StackItem sx={{ width: '100%' }}>
                 <TextField id={'name'} label={'Name'} variant={'outlined'} required
