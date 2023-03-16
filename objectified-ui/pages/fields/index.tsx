@@ -8,13 +8,15 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl, InputLabel, Select, SelectChangeEvent,
+  FormControl, InputLabel, Select, SelectChangeEvent, Table, TableCell, TableContainer, TableHead, TableRow,
   TextField,
   Typography
 } from '@mui/material';
-import {Stack} from '@mui/system';
+import {Box, Stack} from '@mui/system';
 import {StackItem} from '../../components/StackItem';
 import MenuItem from '@mui/material/MenuItem';
+import {errorDialog} from "../../components/dialogs/ConfirmDialog";
+import {CheckBox, CheckBoxOutlineBlank, Delete} from "@mui/icons-material";
 
 const Fields: NextPage = () => {
   const [loading, setLoading] = useState(false);
@@ -33,6 +35,8 @@ const Fields: NextPage = () => {
       .then((result) => {
         setFields(result.data);
 
+        console.log(`Fields: ${JSON.stringify(result.data, null, 2)}`);
+
         axios.get('/app/data-types/list')
           .then((result) => {
             setDataTypes(result.data);
@@ -46,7 +50,38 @@ const Fields: NextPage = () => {
   }
 
   const addField = () => {
+    const nameValue = nameRef?.current?.value ?? '';
+    const descriptionValue = descriptionRef?.current?.value ?? '';
+    const defaultValue = defaultValueRef?.current?.value ?? '';
 
+    if (nameValue.length > 0 && descriptionValue.length > 0) {
+      const field: any = {};
+
+      field.name = nameValue;
+      field.description = descriptionValue;
+      field.defaultValue = defaultValue;
+      field.enabled = true;
+      field.dataType = {
+        id: dataType,
+      };
+
+      axios.post('/app/fields/create', field)
+          .then((x) => {
+            setAddFieldShowing(false);
+            reloadFields();
+          })
+          .catch((x) => {
+            errorDialog(x.message);
+          });
+    } else if (nameValue.length > 0) {
+      return errorDialog('Name is missing a value.');
+    } else if (descriptionValue.length > 0) {
+      return errorDialog('Description is missing a value.');
+    }
+  }
+
+  const findDataType = (id: number) => {
+    return dataTypes.find((x) => x.id === id);
   }
 
   const handleDataTypeChanged = (event: SelectChangeEvent) => {
@@ -123,7 +158,34 @@ const Fields: NextPage = () => {
           </StackItem>
         </Stack>
 
-        {/*{namespaceList()}*/}
+        <TableContainer component={Box}>
+          <Table sx={{ minWidth: 650, backgroundColor: '#fff' }} aria-label={'datatype table'}>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Data Type</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Enabled</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Create Date</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Update Date</TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableHead>
+            {fields.map((row) => (
+                <TableRow hover>
+                  <TableCell sx={{ color: '#000' }}>{row.id}</TableCell>
+                  <TableCell sx={{ color: '#000' }}>{row.name}</TableCell>
+                  <TableCell sx={{ color: '#000' }}>{row.description}</TableCell>
+                  <TableCell sx={{ color: '#000' }}>{findDataType(row.data_type_id).name}</TableCell>
+                  <TableCell sx={{ color: '#000', textAlign: 'center' }}>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
+                  <TableCell sx={{ color: '#000' }}>{row.create_date}</TableCell>
+                  <TableCell sx={{ color: '#000' }}>{row.update_date}</TableCell>
+                  <TableCell align={'right'}>{row.core_type ? (<></>) : (<Delete sx={{ color: 'red' }}/>)}</TableCell>
+                </TableRow>
+            ))}
+          </Table>
+        </TableContainer>
       </div>
     </>
   );
