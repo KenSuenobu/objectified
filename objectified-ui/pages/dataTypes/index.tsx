@@ -133,23 +133,23 @@ const DataTypes: NextPage = () => {
           <DialogContent>
             <Stack direction={'column'} sx={{ padding: '1em' }}>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <TextField id={'name'} label={'Name'} variant={'outlined'} required
                            fullWidth inputRef={nameRef}/>
               </StackItem>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <TextField id={'description'} label={'Description'} variant={'outlined'}
                            required fullWidth inputRef={descriptionRef}/>
               </StackItem>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <Stack direction={'row'}>
-                  <StackItem sx={{ width: '20%' }}>
+                  <StackItem sx={{ width: '25%', padding: '4px', verticalAlign: 'middle' }}>
                     <FormControlLabel control={<Checkbox checked={isArray} onChange={handleIsArrayChanged}/>} label={'Array of: '}/>
                   </StackItem>
 
-                  <StackItem sx={{ width: '80%' }}>
+                  <StackItem sx={{ width: '75%', padding: '4px' }}>
                     <FormControl fullWidth>
                       <InputLabel id={'data-type-label'} required>Data Type</InputLabel>
                       <Select labelId={'data-type-label'} id={'data_type'} label={'Data Type'}
@@ -172,27 +172,27 @@ const DataTypes: NextPage = () => {
                 </Stack>
               </StackItem>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <TextField id={'max_length'} label={'Maximum Input Length'} variant={'outlined'}
                            fullWidth inputRef={maxLengthRef}/>
               </StackItem>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <TextField id={'pattern'} label={'Regexp Pattern'} variant={'outlined'}
                            fullWidth inputRef={patternRef}/>
               </StackItem>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <TextField id={'enum_values'} label={'Enumeration Values'} variant={'outlined'}
                            fullWidth inputRef={enumValuesRef}/>
               </StackItem>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <TextField id={'enum_descriptions'} label={'Enumeration Descriptions'} variant={'outlined'}
                            fullWidth inputRef={enumDescriptionsRef}/>
               </StackItem>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <TextField id={'examples'} label={'Examples'} variant={'outlined'}
                            fullWidth inputRef={examplesRef}/>
               </StackItem>

@@ -123,7 +123,7 @@ const Namespaces: NextPage = () => {
           <DialogContent>
             <Stack direction={'row'}>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '1em' }}>
                 <TextField id={'namespace'} label={'Namespace'} variant={'outlined'} required inputRef={namespaceRef}/>
               </StackItem>
             </Stack>

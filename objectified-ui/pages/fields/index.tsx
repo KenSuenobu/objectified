@@ -71,7 +71,7 @@ const Fields: NextPage = () => {
           <DialogContent>
             <Stack direction={'column'} sx={{ padding: '1em' }}>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <FormControl fullWidth required>
                   <InputLabel id={'data-type-label'} required>Data Type</InputLabel>
                   <Select labelId={'data-type-label'} id={'data_type'} label={'Data Type'}
@@ -83,15 +83,15 @@ const Fields: NextPage = () => {
                 </FormControl>
               </StackItem>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <TextField id={'name'} label={'Name'} variant={'outlined'} required fullWidth inputRef={nameRef}/>
               </StackItem>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <TextField id={'description'} label={'Description'} variant={'outlined'} required fullWidth inputRef={descriptionRef}/>
               </StackItem>
 
-              <StackItem sx={{ width: '100%' }}>
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <TextField id={'default_value'} label={'Default Value'} variant={'outlined'} fullWidth inputRef={defaultValueRef}/>
               </StackItem>
             </Stack>
