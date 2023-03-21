@@ -76,9 +76,9 @@ and popularity.
   - [ ] Base design and layout
   - [ ] Component library
     - [x] Namespaces
-    - [ ] Classes
+    - [x] Classes
     - [x] Data Types
-    - [ ] Fields
+    - [x] Fields
     - [ ] Properties
     - [ ] Object Properties
     - [ ] Class Properties
