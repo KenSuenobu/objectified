@@ -67,8 +67,7 @@ const Namespaces: NextPage = () => {
         <>
           <Stack direction={'row'}>
             <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>
-              <Typography fontWeight={ 'bold' }>No namespaces have been defined yet.  You will not be able to define
-              any objects until you create a namespace to group them with.</Typography>
+              <Typography fontWeight={ 'bold' }>No namespaces have been defined yet.</Typography>
             </StackItem>
           </Stack>
         </>
@@ -134,7 +133,7 @@ const Namespaces: NextPage = () => {
           </DialogActions>
         </Dialog>
 
-        <Stack direction={'row'} sx={{ padding: '1em' }}>
+        <Stack direction={'row'}>
           <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
             <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
               Namespaces
@@ -142,8 +141,8 @@ const Namespaces: NextPage = () => {
           </StackItem>
         </Stack>
 
-        <Stack direction={'row'} sx={{ padding: '1em' }}>
-          <StackItem sx={{ width: '90%', padding: '1em', color: '#000' }}>
+        <Stack direction={'row'}>
+          <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>
             <Typography>
               Namespaces are logical groupings of classes, objects, and definitions, grouped by a unique identifier.
             </Typography>

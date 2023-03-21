@@ -138,16 +138,16 @@ const Classes: NextPage = () => {
           </DialogActions>
         </Dialog>
 
-        <Stack direction={'row'} sx={{ padding: '1em' }}>
+        <Stack direction={'row'}>
           <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
             <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
-              Namespaces
+              Classes
             </Typography>
           </StackItem>
         </Stack>
 
-        <Stack direction={'row'} sx={{ padding: '1em' }}>
-          <StackItem sx={{ width: '90%', padding: '1em', color: '#000' }}>
+        <Stack direction={'row'}>
+          <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>
             <Typography>
               Classes are used to define object schemas.  Classes are defined with class properties; without classes,
               no data can be stored or queried.
