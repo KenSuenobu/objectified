@@ -79,7 +79,7 @@ and popularity.
     - [x] Classes
     - [x] Data Types
     - [x] Fields
-    - [ ] Properties
+    - [x] Properties
     - [ ] Object Properties
     - [ ] Class Properties
   - [ ] Core functionality using REST
