@@ -32,6 +32,7 @@ import Namespaces from "./namespaces";
 import DataTypes from './dataTypes';
 import Fields from './fields';
 import Classes from './classes';
+import Properties from "./properties";
 
 const drawerWidth = 240;
 
@@ -60,12 +61,12 @@ const Home: NextPage = () => {
         label: "Classes",
         onClick: () => setCurrentPage(<Classes/>),
       },
-/*      {
+      {
         icon: <FormatListBulletedOutlined/>,
         label: "Properties",
-        onClick: () => setCurrentPage(<></>),
+        onClick: () => setCurrentPage(<Properties/>),
       },
-      {
+/*      {
         icon: <PublicOutlined />,
         label: "Class Properties",
         onClick: () => setCurrentPage(<></>),
