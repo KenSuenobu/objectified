@@ -16,6 +16,11 @@ All of this is controlled and configured using a simple UI.
 
 You need the latest versions of node and yarn.
 
+To install and use the latest version, using `nvm` to update your latest packages
+is recommended.  See [this link](https://github.com/nvm-sh/nvm) for more information.
+
+After installing the latest versions of `npm` and `yarn`, follow these directions below.
+
 To build, simply type:
 
 ```shell
