@@ -26,13 +26,14 @@ import {
   RuleOutlined,
   TypeSpecimenOutlined,
   ViewListOutlined,
-  PublicOutlined, WorkspacesOutlined,
+  PublicOutlined, WorkspacesOutlined, Grid3x3Outlined, DatasetOutlined, DatasetLinkedOutlined, LibraryBooksOutlined,
 } from "@mui/icons-material";
 import Namespaces from "./namespaces";
 import DataTypes from './dataTypes';
 import Fields from './fields';
 import Classes from './classes';
 import Properties from "./properties";
+import ClassProperties from "./classProperties";
 
 const drawerWidth = 240;
 
@@ -42,7 +43,7 @@ const Home: NextPage = () => {
     label: "COMPONENTS",
     items: [
       {
-        icon: <WorkspacesOutlined/>,
+        icon: <Grid3x3Outlined/>,
         label: "Namespaces",
         onClick: () => setCurrentPage(<Namespaces/>),
       },
@@ -52,26 +53,26 @@ const Home: NextPage = () => {
         onClick: () => setCurrentPage(<DataTypes/>),
       },
       {
-        icon: <ReorderOutlined/>,
-        label: "Fields",
-        onClick: () => setCurrentPage(<Fields/>),
-      },
-      {
-        icon: <ClassOutlined/>,
+        icon: <LibraryBooksOutlined/>,
         label: "Classes",
         onClick: () => setCurrentPage(<Classes/>),
       },
       {
-        icon: <FormatListBulletedOutlined/>,
+        icon: <DatasetOutlined/>,
+        label: "Fields",
+        onClick: () => setCurrentPage(<Fields/>),
+      },
+      {
+        icon: <DatasetLinkedOutlined/>,
         label: "Properties",
         onClick: () => setCurrentPage(<Properties/>),
       },
-/*      {
+      {
         icon: <PublicOutlined />,
         label: "Class Properties",
-        onClick: () => setCurrentPage(<></>),
+        onClick: () => setCurrentPage(<ClassProperties/>),
       },
-      {
+/*      {
         icon: <ClassOutlined/>,
         label: "Schemas",
         onClick: () => setCurrentPage(<></>),

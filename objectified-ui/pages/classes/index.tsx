@@ -20,6 +20,7 @@ import axios from 'axios';
 import {alertDialog, confirmDialog, errorDialog} from '../../components/dialogs/ConfirmDialog';
 import Paper from '@mui/material/Paper';
 import {CheckBox, CheckBoxOutlineBlank, Delete, DeleteOutline, Edit, EditOutlined} from '@mui/icons-material';
+import { loadClasses } from '../../components/data/classes';
 
 const Classes: NextPage = () => {
   const [classes, setClasses] = useState([]);
@@ -32,11 +33,9 @@ const Classes: NextPage = () => {
 
   const reloadClasses = () => {
     setLoading(true);
-    axios.get('/app/classes/list')
-      .then((result) => {
-        setClasses(result.data);
-        setLoading(false);
-      });
+
+    loadClasses(setClasses)
+      .then(() => setLoading(false));
   }
 
   const addClass = () => {

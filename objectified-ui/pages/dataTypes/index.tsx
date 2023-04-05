@@ -11,12 +11,13 @@ import {
 } from '@mui/material';
 import {Box, Stack} from '@mui/system';
 import {StackItem} from '../../components/StackItem';
-import {CheckBox, CheckBoxOutlineBlank, Delete} from '@mui/icons-material';
+import {CheckBox, CheckBoxOutlineBlank, Delete, EditOutlined} from '@mui/icons-material';
 import React, {useEffect, useRef, useState} from 'react';
 import axios from 'axios';
 import LoadingMessage from '../../components/LoadingMessage';
 import MenuItem from '@mui/material/MenuItem';
 import {errorDialog} from '../../components/dialogs/ConfirmDialog';
+import {loadDataTypes} from "../../components/data/dataTypes";
 
 const DataTypes: NextPage = () => {
   const [loading, setLoading] = useState(true);
@@ -34,11 +35,9 @@ const DataTypes: NextPage = () => {
 
   const reloadDataTypes = () => {
     setLoading(true);
-    axios.get('/app/data-types/list')
-      .then((result) => {
-        setDataTypes(result.data);
-        setLoading(false);
-      });
+
+    loadDataTypes(setDataTypes)
+      .then(() => setLoading(false));
   }
 
   const addDataTypeClicked = () => {
@@ -101,8 +100,6 @@ const DataTypes: NextPage = () => {
       if (examples.length > 0) {
         dataTypeObject.examples = examples;
       }
-
-      console.log(`Data: ${JSON.stringify(dataTypeObject, null, 2)}`);
 
       axios.post('/app/data-types/create', dataTypeObject)
         .then((x) => {
@@ -246,7 +243,12 @@ const DataTypes: NextPage = () => {
                 <TableCell sx={{ color: '#000', textAlign: 'center' }}>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
                 <TableCell sx={{ color: '#000' }}>{row.create_date}</TableCell>
                 <TableCell sx={{ color: '#000' }}>{row.update_date}</TableCell>
-                <TableCell align={'right'}>{row.core_type ? (<></>) : (<Delete sx={{ color: 'red' }}/>)}</TableCell>
+                <TableCell align={'right'}>{row.core_type ? (<></>) : (
+                  <>
+                    <EditOutlined/>&nbsp;
+                    <Delete sx={{ color: 'red' }}/>
+                  </>
+                )}</TableCell>
               </TableRow>
             ))}
           </Table>

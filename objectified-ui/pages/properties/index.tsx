@@ -18,6 +18,7 @@ import axios from 'axios';
 import {CheckBox, CheckBoxOutlineBlank, Delete, DeleteOutline, Edit, EditOutlined} from '@mui/icons-material';
 import MenuItem from '@mui/material/MenuItem';
 import {errorDialog} from '../../components/dialogs/ConfirmDialog';
+import {loadProperties} from "../../components/data/properties";
 
 const Properties: NextPage = () => {
   const [properties, setProperties] = useState([]);
@@ -37,11 +38,8 @@ const Properties: NextPage = () => {
 
   const reloadProperties = () => {
     setLoading(true);
-    axios.get('/app/property/list')
-      .then((result) => {
-        setProperties(result.data);
-        setLoading(false);
-      });
+    loadProperties(setProperties)
+      .then(() => setLoading(false));
   }
 
   const addProperty = () => {

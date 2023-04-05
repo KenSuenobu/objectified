@@ -136,6 +136,22 @@ INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, p
 VALUES ('object', 'A JSON object', 'OBJECT', false, 0, null, null, null,
         ARRAY['{ ''key'': ''value'' }'], true, true);
 
+-- UUID
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled, core_type)
+VALUES ('uuid', 'A universally unique identifier', 'STRING', false, 0, '/^[a-f\d]{4}(?:[a-f\d]{4}-){4}[a-f\d]{12}$/i',
+        null, null, ARRAY['5af62535-b789-421f-908f-96ebd80496c9', 'a4997b35-f8c4-4a9b-b068-b3615e37f693',
+        'ae0cdd5f-ebed-4960-baf4-8bc0f195e2ef', '97176727-65E6-41BA-AFA3-1459959261AE',
+        'DD19954F-1415-4A34-8E6C-6F18527C0CC8'], true, true);
+
+-- UUID
+INSERT INTO obj.data_type (name, description, data_type, is_array, max_length, pattern, enum_values,
+                           enum_descriptions, examples, enabled, core_type)
+VALUES ('uuid', 'A universally unique identifier', 'STRING', false, 0, '/^[a-f\d]{4}(?:[a-f\d]{4}-){4}[a-f\d]{12}$/i',
+        null, null, ARRAY['5af62535-b789-421f-908f-96ebd80496c9', 'a4997b35-f8c4-4a9b-b068-b3615e37f693',
+        'ae0cdd5f-ebed-4960-baf4-8bc0f195e2ef', '97176727-65E6-41BA-AFA3-1459959261AE',
+        'DD19954F-1415-4A34-8E6C-6F18527C0CC8'], true, true);
+
 ---
 
 DROP TABLE IF EXISTS obj.field CASCADE;

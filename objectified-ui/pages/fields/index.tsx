@@ -17,6 +17,8 @@ import {StackItem} from '../../components/StackItem';
 import MenuItem from '@mui/material/MenuItem';
 import {errorDialog} from "../../components/dialogs/ConfirmDialog";
 import {CheckBox, CheckBoxOutlineBlank, Delete} from "@mui/icons-material";
+import { loadFields } from '../../components/data/fields';
+import { loadDataTypes } from '../../components/data/dataTypes';
 
 const Fields: NextPage = () => {
   const [loading, setLoading] = useState(false);
@@ -31,18 +33,9 @@ const Fields: NextPage = () => {
   const reloadFields = () => {
     setLoading(true);
 
-    axios.get('/app/fields/list')
-      .then((result) => {
-        setFields(result.data);
-
-        console.log(`Fields: ${JSON.stringify(result.data, null, 2)}`);
-
-        axios.get('/app/data-types/list')
-          .then((result) => {
-            setDataTypes(result.data);
-            setLoading(false);
-          });
-      });
+    loadFields(setFields)
+      .then(() => loadDataTypes(setDataTypes))
+      .then(() => setLoading(false));
   }
 
   const addFieldClicked = () => {
@@ -66,13 +59,13 @@ const Fields: NextPage = () => {
       };
 
       axios.post('/app/fields/create', field)
-          .then((x) => {
-            setAddFieldShowing(false);
-            reloadFields();
-          })
-          .catch((x) => {
-            errorDialog(x.message);
-          });
+        .then((x) => {
+          setAddFieldShowing(false);
+          reloadFields();
+        })
+        .catch((x) => {
+          errorDialog(x.message);
+        });
     } else if (nameValue.length > 0) {
       return errorDialog('Name is missing a value.');
     } else if (descriptionValue.length > 0) {

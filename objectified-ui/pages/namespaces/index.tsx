@@ -20,6 +20,7 @@ import axios from 'axios';
 import {alertDialog, confirmDialog, errorDialog} from '../../components/dialogs/ConfirmDialog';
 import Paper from '@mui/material/Paper';
 import {CheckBox, CheckBoxOutlineBlank, Delete, DeleteOutline, Edit, EditOutlined} from '@mui/icons-material';
+import {loadNamespaces} from "../../components/data/namespaces";
 
 const Namespaces: NextPage = () => {
   const [namespaces, setNamespaces] = useState([]);
@@ -31,11 +32,9 @@ const Namespaces: NextPage = () => {
 
   const reloadNamespaces = () => {
     setLoading(true);
-    axios.get('/app/namespaces/list')
-      .then((result) => {
-        setNamespaces(result.data);
-        setLoading(false);
-      });
+
+    loadNamespaces(setNamespaces)
+      .then(() => setLoading(false));
   }
 
   const addNamespace = () => {
