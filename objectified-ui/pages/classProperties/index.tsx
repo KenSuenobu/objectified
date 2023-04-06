@@ -172,7 +172,7 @@ const ClassProperties: NextPage = () => {
               <Stack direction={'row'}>
                   <StackItem sx={{width: '100%', textAlign: 'left', backgroundColor: '#ddd'}}>
                       <Typography fontWeight={'bold'} sx={{color: 'black', verticalAlign: 'middle', padding: '1em'}}>
-                          Classes
+                          Class Properties
                       </Typography>
                   </StackItem>
               </Stack>

@@ -33,8 +33,8 @@ const Fields: NextPage = () => {
   const reloadFields = () => {
     setLoading(true);
 
-    loadFields(setFields)
-      .then(() => loadDataTypes(setDataTypes))
+    loadDataTypes(setDataTypes)
+      .then(() => loadFields(setFields))
       .then(() => setLoading(false));
   }
 
