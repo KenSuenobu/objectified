@@ -144,14 +144,14 @@ const DataTypes: NextPage = () => {
 
               <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <Stack direction={'row'}>
-                  <StackItem sx={{ width: '25%', padding: '4px', verticalAlign: 'middle' }}>
+                  <StackItem sx={{ width: '25%', padding: '4px', verticalAlign: 'middle', paddingTop: '10px' }}>
                     <FormControlLabel control={<Checkbox checked={isArray} onChange={handleIsArrayChanged}/>} label={'Array of: '}/>
                   </StackItem>
 
                   <StackItem sx={{ width: '75%', padding: '4px' }}>
                     <FormControl fullWidth>
-                      <InputLabel id={'data-type-label'} required>Data Type</InputLabel>
-                      <Select labelId={'data-type-label'} id={'data_type'} label={'Data Type'}
+                      <InputLabel id={'data-type-label'} required>Native Data Type</InputLabel>
+                      <Select labelId={'data-type-label'} id={'data_type'} label={'Native Data Type'}
                               onChange={handleDataTypeChanged} value={dataType}>
                         <MenuItem value={'STRING'}>STRING</MenuItem>
                         <MenuItem value={'INT32'}>INT32</MenuItem>
@@ -181,17 +181,9 @@ const DataTypes: NextPage = () => {
                            fullWidth inputRef={patternRef}/>
               </StackItem>
 
-              <ArrayManager setterCallback={() => {}} header={'Enumeration Values'} objectArray={[]}/>
+              <ArrayManager setterCallback={() => {}} header={'Enumeration Values and Descriptions'} objectArray={[]}/>
+              <ArrayManager setterCallback={() => {}} header={'Examples'} objectArray={[]}/>
 
-              <StackItem sx={{ width: '100%', padding: '4px' }}>
-                <TextField id={'enum_descriptions'} label={'Enumeration Descriptions'} variant={'outlined'}
-                           fullWidth inputRef={enumDescriptionsRef}/>
-              </StackItem>
-
-              <StackItem sx={{ width: '100%', padding: '4px' }}>
-                <TextField id={'examples'} label={'Examples'} variant={'outlined'}
-                           fullWidth inputRef={examplesRef}/>
-              </StackItem>
             </Stack>
           </DialogContent>
           <DialogActions>
