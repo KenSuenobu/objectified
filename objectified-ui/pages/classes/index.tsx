@@ -118,16 +118,16 @@ const Classes: NextPage = () => {
   return (
     <>
       <div sx={{ width: '100%' }} style={{ border: '1px solid #ddd', backgroundColor: '#fff' }}>
-        <Dialog open={addClassesShowing}>
+        <Dialog open={addClassesShowing} maxWidth={'sm'} fullWidth>
           <DialogTitle>Class</DialogTitle>
           <DialogContent>
             <Stack direction={'column'} sx={{ padding: '1em' }}>
               <StackItem sx={{ width: '100%', padding: '4px' }}>
-                <TextField id={'namespace'} label={'Class Name'} variant={'outlined'} required inputRef={nameRef}/>
+                <TextField id={'namespace'} label={'Class Name'} variant={'outlined'} required inputRef={nameRef} fullWidth/>
               </StackItem>
 
               <StackItem sx={{ width: '100%', padding: '4px' }}>
-                <TextField id={'namespace'} label={'Description'} variant={'outlined'} required inputRef={descriptionRef}/>
+                <TextField id={'namespace'} label={'Description'} variant={'outlined'} required inputRef={descriptionRef} fullWidth/>
               </StackItem>
             </Stack>
           </DialogContent>

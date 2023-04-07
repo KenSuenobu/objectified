@@ -94,7 +94,7 @@ const Fields: NextPage = () => {
   return (
     <>
       <div sx={{ width: '100%' }} style={{ border: '1px solid #ddd' }}>
-        <Dialog open={addFieldShowing}>
+        <Dialog open={addFieldShowing} maxWidth={'sm'} fullWidth>
           <DialogTitle>Field</DialogTitle>
           <DialogContent>
             <Stack direction={'column'} sx={{ padding: '1em' }}>

@@ -125,7 +125,7 @@ const DataTypes: NextPage = () => {
   return (
     <>
       <div sx={{ width: '100%' }} style={{ border: '1px solid #ddd' }}>
-        <Dialog open={addDataTypeShowing} fullWidth>
+        <Dialog open={addDataTypeShowing} fullWidth maxWidth={'sm'}>
           <DialogTitle>Data Type</DialogTitle>
           <DialogContent>
             <Stack direction={'column'} sx={{ padding: '1em' }}>

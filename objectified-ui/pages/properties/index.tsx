@@ -164,7 +164,7 @@ const Properties: NextPage = () => {
   return (
     <>
       <div sx={{ width: '100%' }} style={{ border: '1px solid #ddd', backgroundColor: '#fff' }}>
-        <Dialog open={addPropertiesShowing}>
+        <Dialog open={addPropertiesShowing} maxWidth={'sm'} fullWidth>
           <DialogTitle>Property</DialogTitle>
           <DialogContent>
             <Stack direction={'column'} sx={{ padding: '1em' }}>
@@ -188,6 +188,10 @@ const Properties: NextPage = () => {
                 </FormControl>
               </StackItem>
 
+              <StackItem sx={{ width: '100%', padding: '4px' }}>
+                <TextField id={'default_value'} label={'Default Value'} variant={'outlined'} fullWidth inputRef={defaultValueRef}/>
+              </StackItem>
+
               <StackItem sx={{ width: '100%', padding: '4px', verticalAlign: 'middle' }}>
                 <FormControlLabel control={<Checkbox checked={isRequired} onChange={handleIsRequiredChanged}/>} label={'Value required'}/>
               </StackItem>
@@ -198,10 +202,6 @@ const Properties: NextPage = () => {
 
               <StackItem sx={{ width: '100%', padding: '4px', verticalAlign: 'middle' }}>
                 <FormControlLabel control={<Checkbox checked={isArray} onChange={handleIsArrayChanged}/>} label={'Is an array of values'}/>
-              </StackItem>
-
-              <StackItem sx={{ width: '100%', padding: '4px' }}>
-                <TextField id={'default_value'} label={'Default Value'} variant={'outlined'} fullWidth inputRef={defaultValueRef}/>
               </StackItem>
 
               <StackItem sx={{ width: '100%', padding: '4px', verticalAlign: 'middle' }}>
@@ -218,7 +218,7 @@ const Properties: NextPage = () => {
         <Stack direction={'row'}>
           <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
             <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
-              Classes
+              Properties
             </Typography>
           </StackItem>
         </Stack>

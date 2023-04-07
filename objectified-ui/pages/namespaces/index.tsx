@@ -116,13 +116,13 @@ const Namespaces: NextPage = () => {
   return (
     <>
       <div sx={{ width: '100%' }} style={{ border: '1px solid #ddd', backgroundColor: '#fff' }}>
-        <Dialog open={addNamespaceShowing}>
+        <Dialog open={addNamespaceShowing} maxWidth={'sm'} fullWidth>
           <DialogTitle>Namespace</DialogTitle>
           <DialogContent>
             <Stack direction={'row'}>
 
               <StackItem sx={{ width: '100%', padding: '1em' }}>
-                <TextField id={'namespace'} label={'Namespace'} variant={'outlined'} required inputRef={namespaceRef}/>
+                <TextField id={'namespace'} label={'Namespace'} variant={'outlined'} required inputRef={namespaceRef} fullWidth/>
               </StackItem>
             </Stack>
           </DialogContent>

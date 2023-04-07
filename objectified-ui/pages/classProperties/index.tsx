@@ -131,7 +131,7 @@ const ClassProperties: NextPage = () => {
     return (
       <>
           <div sx={{width: '100%'}} style={{border: '1px solid #ddd', backgroundColor: '#fff'}}>
-              <Dialog open={addFormShowing}>
+              <Dialog open={addFormShowing} maxWidth={'sm'} fullWidth>
                   <DialogTitle>Class Property</DialogTitle>
                   <DialogContent>
                       <Stack direction={'column'} sx={{padding: '1em'}}>
