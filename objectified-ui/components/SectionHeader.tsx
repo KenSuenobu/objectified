@@ -1,13 +1,14 @@
 import {Stack} from "@mui/system";
 import {StackItem} from "./StackItem";
-import {Typography} from "@mui/material";
+import {Button, Typography} from "@mui/material";
 import React from "react";
 
 export interface SectionHeaderProps {
   header: string;
+  onAdd?: any;
 }
 
-const SectionHeader = (props: SectionHeaderProps) => {
+const SectionHeader = (props: React.PropsWithChildren<SectionHeaderProps>) => {
   return (
     <>
       <Stack direction={'row'}>
@@ -16,6 +17,20 @@ const SectionHeader = (props: SectionHeaderProps) => {
             {props.header}
           </Typography>
         </StackItem>
+      </Stack>
+
+      <Stack direction={'row'}>
+        <StackItem sx={{ width: '90%', padding: '1em', color: '#000' }}>
+          <Typography>
+            {props.children}
+          </Typography>
+        </StackItem>
+
+        {props.onAdd ? (
+          <StackItem sx={{ textAlign: 'right', padding: '1em', width: '10%' }}>
+            <Button onClick={() => props.onAdd()} variant={'outlined'}>Add</Button>
+          </StackItem>
+        ) : (<></>)}
       </Stack>
     </>
   );

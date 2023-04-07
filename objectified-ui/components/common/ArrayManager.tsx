@@ -19,7 +19,7 @@ const ArrayManager = (props: ArrayManagerProps) => {
             {props.header}
           </Typography>
         </StackItem>
-        <StackItem sx={{ width: '20%', textAlign: 'right', backgroundColor: '#ddd', paddingRight: '1em' }}>
+        <StackItem sx={{ width: '20%', textAlign: 'right', backgroundColor: '#ddd', paddingRight: '1em', paddingTop: '10px'  }}>
           <Button variant={'contained'}>Add</Button>
         </StackItem>
       </Stack>

@@ -200,18 +200,11 @@ const DataTypes: NextPage = () => {
           </DialogActions>
         </Dialog>
 
-        <SectionHeader header={'Data Types'}/>
-
-        <Stack direction={'row'}>
-          <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>
-            <Typography>
-              Data Types define the types of data that can be stored in Objectified.
-            </Typography>
-          </StackItem>
-          <StackItem sx={{ textAlign: 'right', padding: '1em', width: '10%' }}>
-            <Button onClick={() => addDataTypeClicked()} variant={'outlined'}>Add</Button>
-          </StackItem>
-        </Stack>
+        <SectionHeader header={'Data Types'} onAdd={() => addDataTypeClicked()}>
+          <Typography>
+            Data Types define the types of data that can be stored in Objectified.
+          </Typography>
+        </SectionHeader>
 
         <TableContainer component={Box}>
           <Table sx={{ minWidth: 650, backgroundColor: '#fff' }} aria-label={'datatype table'}>

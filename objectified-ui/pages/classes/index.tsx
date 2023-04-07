@@ -138,19 +138,12 @@ const Classes: NextPage = () => {
           </DialogActions>
         </Dialog>
 
-        <SectionHeader header={'Classes'}/>
-
-        <Stack direction={'row'}>
-          <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>
-            <Typography>
-              Classes are used to define object schemas.  Classes are defined with class properties; without classes,
-              no data can be stored or queried.
-            </Typography>
-          </StackItem>
-          <StackItem sx={{ textAlign: 'right', padding: '1em', width: '10%' }}>
-            <Button onClick={() => addClassClicked()} variant={'outlined'}>Add</Button>
-          </StackItem>
-        </Stack>
+        <SectionHeader header={'Classes'} onAdd={() => addClassClicked()}>
+          <Typography>
+            Classes are used to define object schemas.  Classes are defined with class properties; without classes,
+            no data can be stored or queried.
+          </Typography>
+        </SectionHeader>
 
         {classesList()}
       </div>

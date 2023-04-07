@@ -133,18 +133,11 @@ const Namespaces: NextPage = () => {
           </DialogActions>
         </Dialog>
 
-        <SectionHeader header={'Namespaces'}/>
-
-        <Stack direction={'row'}>
-          <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>
-            <Typography>
-              Namespaces are logical groupings of classes, objects, and definitions, grouped by a unique identifier.
-            </Typography>
-          </StackItem>
-          <StackItem sx={{ textAlign: 'right', padding: '1em', width: '10%' }}>
-            <Button onClick={() => addNamespaceClicked()} variant={'outlined'}>Add</Button>
-          </StackItem>
-        </Stack>
+        <SectionHeader header={'Namespaces'} onAdd={() => addNamespaceClicked()}>
+          <Typography>
+            Namespaces are logical groupings of classes, objects, and definitions, grouped by a unique identifier.
+          </Typography>
+        </SectionHeader>
 
         {namespaceList()}
       </div>

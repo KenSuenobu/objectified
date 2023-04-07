@@ -170,19 +170,12 @@ const ClassProperties: NextPage = () => {
                   </DialogActions>
               </Dialog>
 
-              <SectionHeader header={'Class Properties'}/>
-
-              <Stack direction={'row'}>
-                  <StackItem sx={{width: '100%', padding: '1em', color: '#000'}}>
-                      <Typography>
-                          Class Properties are used to define the names and field types of data that can be stored
-                          in an instance of a Class.
-                      </Typography>
-                  </StackItem>
-                  <StackItem sx={{textAlign: 'right', padding: '1em', width: '10%'}}>
-                      <Button onClick={() => setAddFormShowing(true)} variant={'outlined'}>Add</Button>
-                  </StackItem>
-              </Stack>
+              <SectionHeader header={'Class Properties'} onAdd={() => setAddFormShowing(true)}>
+                  <Typography>
+                      Class Properties are used to define the names and field types of data that can be stored
+                      in an instance of a Class.
+                  </Typography>
+              </SectionHeader>
 
               {classesList()}
           </div>

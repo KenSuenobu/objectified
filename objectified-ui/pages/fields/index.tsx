@@ -131,20 +131,13 @@ const Fields: NextPage = () => {
           </DialogActions>
         </Dialog>
 
-        <SectionHeader header={'Fields'}/>
-
-        <Stack direction={'row'}>
-          <StackItem sx={{ width: '90%', padding: '1em', color: '#000' }}>
-            <Typography>
-              Fields describe data that can be stored by a property.  Fields expand the data type definition by adding
-              default values, a required field flag, and unique name and description.  Properties use field definitions
-              to describe the data that an object can store.
-            </Typography>
-          </StackItem>
-          <StackItem sx={{ textAlign: 'right', padding: '1em', width: '10%' }}>
-            <Button onClick={() => addFieldClicked()} variant={'outlined'}>Add</Button>
-          </StackItem>
-        </Stack>
+        <SectionHeader header={'Fields'} onAdd={() => addFieldClicked()}>
+          <Typography>
+            Fields describe data that can be stored by a property.  Fields expand the data type definition by adding
+            default values, a required field flag, and unique name and description.  Properties use field definitions
+            to describe the data that an object can store.
+          </Typography>
+        </SectionHeader>
 
         <TableContainer component={Box}>
           <Table sx={{ minWidth: 650, backgroundColor: '#fff' }} aria-label={'datatype table'}>

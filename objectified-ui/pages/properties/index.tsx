@@ -216,20 +216,13 @@ const Properties: NextPage = () => {
           </DialogActions>
         </Dialog>
 
-        <SectionHeader header={'Properties'}/>
-
-        <Stack direction={'row'}>
-          <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>
-            <Typography>
-              Properties define an storage member that is defined by a <b>field</b>.  A <b>property</b> is used by
-              a <b>class</b> to define the data that can be stored in a <b>class</b>.  Properties can be reused as many
-              times as necessary, and can be indexed for faster data retrieval.
-            </Typography>
-          </StackItem>
-          <StackItem sx={{ textAlign: 'right', padding: '1em', width: '10%' }}>
-            <Button onClick={() => addPropertyClicked()} variant={'outlined'}>Add</Button>
-          </StackItem>
-        </Stack>
+        <SectionHeader header={'Properties'} onAdd={() => addPropertyClicked()}>
+          <Typography>
+            Properties define an storage member that is defined by a <b>field</b>.  A <b>property</b> is used by
+            a <b>class</b> to define the data that can be stored in a <b>class</b>.  Properties can be reused as many
+            times as necessary, and can be indexed for faster data retrieval.
+          </Typography>
+        </SectionHeader>
 
         {propertiesList()}
       </div>
