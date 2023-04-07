@@ -21,6 +21,7 @@ import {alertDialog, confirmDialog, errorDialog} from '../../components/dialogs/
 import Paper from '@mui/material/Paper';
 import {CheckBox, CheckBoxOutlineBlank, Delete, DeleteOutline, Edit, EditOutlined} from '@mui/icons-material';
 import { loadClasses } from '../../components/data/classes';
+import SectionHeader from "../../components/SectionHeader";
 
 const Classes: NextPage = () => {
   const [classes, setClasses] = useState([]);
@@ -137,13 +138,7 @@ const Classes: NextPage = () => {
           </DialogActions>
         </Dialog>
 
-        <Stack direction={'row'}>
-          <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
-            <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
-              Classes
-            </Typography>
-          </StackItem>
-        </Stack>
+        <SectionHeader header={'Classes'}/>
 
         <Stack direction={'row'}>
           <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>

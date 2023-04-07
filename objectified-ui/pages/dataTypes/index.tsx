@@ -18,6 +18,8 @@ import LoadingMessage from '../../components/LoadingMessage';
 import MenuItem from '@mui/material/MenuItem';
 import {errorDialog} from '../../components/dialogs/ConfirmDialog';
 import {loadDataTypes} from "../../components/data/dataTypes";
+import ArrayManager from "../../components/common/ArrayManager";
+import SectionHeader from "../../components/SectionHeader";
 
 const DataTypes: NextPage = () => {
   const [loading, setLoading] = useState(true);
@@ -179,10 +181,7 @@ const DataTypes: NextPage = () => {
                            fullWidth inputRef={patternRef}/>
               </StackItem>
 
-              <StackItem sx={{ width: '100%', padding: '4px' }}>
-                <TextField id={'enum_values'} label={'Enumeration Values'} variant={'outlined'}
-                           fullWidth inputRef={enumValuesRef}/>
-              </StackItem>
+              <ArrayManager setterCallback={() => {}} header={'Enumeration Values'} objectArray={[]}/>
 
               <StackItem sx={{ width: '100%', padding: '4px' }}>
                 <TextField id={'enum_descriptions'} label={'Enumeration Descriptions'} variant={'outlined'}
@@ -201,13 +200,7 @@ const DataTypes: NextPage = () => {
           </DialogActions>
         </Dialog>
 
-        <Stack direction={'row'}>
-          <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
-            <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
-              Data Types
-            </Typography>
-          </StackItem>
-        </Stack>
+        <SectionHeader header={'Data Types'}/>
 
         <Stack direction={'row'}>
           <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>

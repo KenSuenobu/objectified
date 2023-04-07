@@ -19,6 +19,7 @@ import {errorDialog} from "../../components/dialogs/ConfirmDialog";
 import {CheckBox, CheckBoxOutlineBlank, Delete} from "@mui/icons-material";
 import { loadFields } from '../../components/data/fields';
 import { loadDataTypes } from '../../components/data/dataTypes';
+import SectionHeader from "../../components/SectionHeader";
 
 const Fields: NextPage = () => {
   const [loading, setLoading] = useState(false);
@@ -130,13 +131,7 @@ const Fields: NextPage = () => {
           </DialogActions>
         </Dialog>
 
-        <Stack direction={'row'}>
-          <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
-            <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
-              Fields
-            </Typography>
-          </StackItem>
-        </Stack>
+        <SectionHeader header={'Fields'}/>
 
         <Stack direction={'row'}>
           <StackItem sx={{ width: '90%', padding: '1em', color: '#000' }}>

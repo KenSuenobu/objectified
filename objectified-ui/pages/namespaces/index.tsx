@@ -21,6 +21,7 @@ import {alertDialog, confirmDialog, errorDialog} from '../../components/dialogs/
 import Paper from '@mui/material/Paper';
 import {CheckBox, CheckBoxOutlineBlank, Delete, DeleteOutline, Edit, EditOutlined} from '@mui/icons-material';
 import {loadNamespaces} from "../../components/data/namespaces";
+import SectionHeader from "../../components/SectionHeader";
 
 const Namespaces: NextPage = () => {
   const [namespaces, setNamespaces] = useState([]);
@@ -132,13 +133,7 @@ const Namespaces: NextPage = () => {
           </DialogActions>
         </Dialog>
 
-        <Stack direction={'row'}>
-          <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
-            <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
-              Namespaces
-            </Typography>
-          </StackItem>
-        </Stack>
+        <SectionHeader header={'Namespaces'}/>
 
         <Stack direction={'row'}>
           <StackItem sx={{ width: '100%', padding: '1em', color: '#000' }}>

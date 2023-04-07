@@ -23,6 +23,7 @@ import {CheckBox, CheckBoxOutlineBlank, Delete, DeleteOutline, Edit, EditOutline
 import MenuItem from "@mui/material/MenuItem";
 import {loadClasses} from "../../components/data/classes";
 import {loadProperties} from "../../components/data/properties";
+import SectionHeader from "../../components/SectionHeader";
 
 const ClassProperties: NextPage = () => {
     const [properties, setProperties] = useState([]);
@@ -169,13 +170,7 @@ const ClassProperties: NextPage = () => {
                   </DialogActions>
               </Dialog>
 
-              <Stack direction={'row'}>
-                  <StackItem sx={{width: '100%', textAlign: 'left', backgroundColor: '#ddd'}}>
-                      <Typography fontWeight={'bold'} sx={{color: 'black', verticalAlign: 'middle', padding: '1em'}}>
-                          Class Properties
-                      </Typography>
-                  </StackItem>
-              </Stack>
+              <SectionHeader header={'Class Properties'}/>
 
               <Stack direction={'row'}>
                   <StackItem sx={{width: '100%', padding: '1em', color: '#000'}}>
