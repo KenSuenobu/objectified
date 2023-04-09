@@ -4,6 +4,8 @@ import ListHeader from '../../components/ListHeader';
 import React, {useEffect, useRef, useState} from 'react';
 import LoadingMessage from '../../components/LoadingMessage';
 import {
+    Accordion, AccordionDetails,
+    AccordionSummary,
     Button,
     Dialog,
     DialogActions,
@@ -19,7 +21,15 @@ import {NamespaceDto} from 'objectified-data/dist/src/dto/namespace.dto';
 import axios from 'axios';
 import {alertDialog, confirmDialog, errorDialog} from '../../components/dialogs/ConfirmDialog';
 import Paper from '@mui/material/Paper';
-import {CheckBox, CheckBoxOutlineBlank, Delete, DeleteOutline, Edit, EditOutlined} from '@mui/icons-material';
+import {
+    CheckBox,
+    CheckBoxOutlineBlank,
+    Delete,
+    DeleteOutline,
+    Edit,
+    EditOutlined,
+    ExpandMoreOutlined
+} from '@mui/icons-material';
 import MenuItem from "@mui/material/MenuItem";
 import {loadClasses} from "../../components/data/classes";
 import {loadProperties} from "../../components/data/properties";
@@ -69,6 +79,17 @@ const ClassProperties: NextPage = () => {
           });
     }
 
+    const handleAccordionChange = (panel: string) => (event: React.SyntheticEvent, expanded: boolean) => {
+        console.log(`Panel: ${panel} expanded=${expanded}`);
+
+        if (expanded) {
+            axios.get(`/app/class-properties/get/${panel}`)
+              .then((result) => {
+                  console.log(`Data: ${JSON.stringify(result.data, null, 2)}`);
+              });
+        }
+    }
+
     const classesList = () => {
         if (classes.length === 0) {
             return (
@@ -82,37 +103,18 @@ const ClassProperties: NextPage = () => {
             );
         }
 
-        return (
-          <TableContainer component={Box}>
-              <Table sx={{minWidth: 650, backgroundColor: '#fff'}} aria-label={'namespace table'}>
-                  <TableHead>
-                      <TableRow>
-                          <TableCell sx={{fontWeight: 'bold'}}>ID</TableCell>
-                          <TableCell sx={{fontWeight: 'bold'}}>Name</TableCell>
-                          <TableCell sx={{fontWeight: 'bold'}}>Description</TableCell>
-                          <TableCell sx={{fontWeight: 'bold', textAlign: 'center'}}>Enabled</TableCell>
-                          <TableCell sx={{fontWeight: 'bold'}}>Create Date</TableCell>
-                          <TableCell/>
-                      </TableRow>
-                  </TableHead>
-                  <TableBody>
-                      {classes.map((row) => (
-                        <>
-                            <TableRow hover>
-                                <TableCell>{row.id}</TableCell>
-                                <TableCell>{row.name}</TableCell>
-                                <TableCell>{row.description}</TableCell>
-                                <TableCell sx={{textAlign: 'center'}}>{row.enabled ? <CheckBox/> :
-                                  <CheckBoxOutlineBlank/>}</TableCell>
-                                <TableCell>{row.create_date}</TableCell>
-                                <TableCell align={'right'}><EditOutlined/> <Delete sx={{color: 'red'}}/></TableCell>
-                            </TableRow>
-                        </>
-                      ))}
-                  </TableBody>
-              </Table>
-          </TableContainer>
-        );
+        return classes.map((row) => (
+          <Accordion onChange={handleAccordionChange(row.id)}>
+              <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                  <Typography>
+                      {row.name}
+                  </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                  <LoadingMessage label={'Retrieving class properties'}/>
+              </AccordionDetails>
+          </Accordion>
+        ));
     }
 
     const handleClassIdChanged = (event: SelectChangeEvent) => setClassId(event.target.value as number);

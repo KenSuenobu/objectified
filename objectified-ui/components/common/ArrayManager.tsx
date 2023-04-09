@@ -34,7 +34,7 @@ const ArrayManager = (props: ArrayManagerProps) => {
           <Button onClick={() => setOpen(false)} variant={'contained'} color={'error'}>Cancel</Button>
         </DialogActions>
       </Dialog>
-
+w
       <Stack direction={'row'}>
         <StackItem sx={{ width: '80%', textAlign: 'left', backgroundColor: '#ddd' }}>
           <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>

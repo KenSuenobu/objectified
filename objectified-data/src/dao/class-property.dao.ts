@@ -23,7 +23,7 @@ export class ClassPropertyDao extends BaseDao<ClassPropertyDto> {
     propertyId: number
   ): Promise<ClassPropertyDto> {
     const sqlStatement =
-      "INSERT INTO obj.class_property (class_id, property_id) VALUE ($1, $2)";
+      "INSERT INTO obj.class_property (class_id, property_id) VALUES ($1, $2)";
 
     await this.db.none(sqlStatement, [classId, propertyId]);
 
@@ -65,7 +65,7 @@ export class ClassPropertyDao extends BaseDao<ClassPropertyDto> {
     returnObject.propertyList = [];
 
     for (const child of children) {
-      returnObject.propertyList.push(await propertyDao.getById(child.child_id));
+      returnObject.propertyList.push(await propertyDao.getById(child.property_id));
     }
 
     returnObject.class = await classDao.getById(classId);
