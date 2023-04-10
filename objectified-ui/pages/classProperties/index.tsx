@@ -38,6 +38,7 @@ import SectionHeader from "../../components/SectionHeader";
 const ClassProperties: NextPage = () => {
     const [properties, setProperties] = useState([]);
     const [classes, setClasses] = useState([]);
+    const [classProperties, setClassProperties] = useState({});
     const [loading, setLoading] = useState(false);
     const [addFormShowing, setAddFormShowing] = useState(false);
     const [classId, setClassId] = useState(0);
@@ -85,7 +86,13 @@ const ClassProperties: NextPage = () => {
         if (expanded) {
             axios.get(`/app/class-properties/get/${panel}`)
               .then((result) => {
-                  console.log(`Data: ${JSON.stringify(result.data, null, 2)}`);
+                  const propertyList = result.data.propertyList;
+                  const currentList = classProperties;
+
+                  currentList[panel] = propertyList;
+                  setClassProperties(currentList);
+
+                  console.log(`Current list: ${JSON.stringify(currentList, null, 2)}`);
               });
         }
     }
@@ -111,7 +118,12 @@ const ClassProperties: NextPage = () => {
                   </Typography>
               </AccordionSummary>
               <AccordionDetails>
-                  <LoadingMessage label={'Retrieving class properties'}/>
+                  {classProperties[row.id] ? (<>
+                        {JSON.stringify(classProperties[row.id], null, 2)}
+                    </>
+                  ) : (<>
+                      <LoadingMessage label={'Retrieving class properties'}/>
+                  </>)}
               </AccordionDetails>
           </Accordion>
         ));
@@ -172,7 +184,7 @@ const ClassProperties: NextPage = () => {
                   </DialogActions>
               </Dialog>
 
-              <SectionHeader header={'Class Properties'} onAdd={() => setAddFormShowing(true)}>
+              <SectionHeader header={'Class Properties'}>
                   <Typography>
                       Class Properties are used to define the names and field types of data that can be stored
                       in an instance of a Class.
