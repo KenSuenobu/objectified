@@ -26,7 +26,13 @@ import {
   RuleOutlined,
   TypeSpecimenOutlined,
   ViewListOutlined,
-  PublicOutlined, WorkspacesOutlined, Grid3x3Outlined, DatasetOutlined, DatasetLinkedOutlined, LibraryBooksOutlined,
+  PublicOutlined,
+  WorkspacesOutlined,
+  Grid3x3Outlined,
+  DatasetOutlined,
+  DatasetLinkedOutlined,
+  LibraryBooksOutlined,
+  BackupTableOutlined,
 } from "@mui/icons-material";
 import Namespaces from "./namespaces";
 import DataTypes from './dataTypes';
@@ -34,6 +40,7 @@ import Fields from './fields';
 import Classes from './classes';
 import Properties from "./properties";
 import ClassProperties from "./classProperties";
+import Instances from "./instances";
 
 const drawerWidth = 240;
 
@@ -72,6 +79,11 @@ const Home: NextPage = () => {
         label: "Class Properties",
         onClick: () => setCurrentPage(<ClassProperties/>),
       },
+      {
+        icon: <BackupTableOutlined />,
+        label: 'Instances',
+        onClick: () => setCurrentPage(<Instances/>),
+      }
 /*      {
         icon: <ClassOutlined/>,
         label: "Schemas",

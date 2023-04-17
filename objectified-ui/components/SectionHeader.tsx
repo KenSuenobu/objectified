@@ -2,6 +2,7 @@ import {Stack} from "@mui/system";
 import {StackItem} from "./StackItem";
 import {Button, Typography} from "@mui/material";
 import React from "react";
+import {FileDownloadOutlined, UploadOutlined} from "@mui/icons-material";
 
 export interface SectionHeaderProps {
   header: string;
@@ -12,10 +13,15 @@ const SectionHeader = (props: React.PropsWithChildren<SectionHeaderProps>) => {
   return (
     <>
       <Stack direction={'row'}>
-        <StackItem sx={{ width: '100%', textAlign: 'left', backgroundColor: '#ddd' }}>
+        <StackItem sx={{ width: '50%', textAlign: 'left', backgroundColor: '#ddd' }}>
           <Typography fontWeight={'bold'} sx={{ color: 'black', verticalAlign: 'middle', padding: '1em' }}>
             {props.header}
           </Typography>
+        </StackItem>
+
+        <StackItem sx={{ width: '50%', textAlign: 'right', backgroundColor: '#ddd', paddingRight: '1em', paddingTop: '0.5em' }}>
+          <Button variant={'outlined'}>IMPORT</Button>&nbsp;
+          <Button variant={'outlined'}>EXPORT</Button>
         </StackItem>
       </Stack>
 

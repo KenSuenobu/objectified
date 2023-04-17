@@ -79,12 +79,12 @@ const Namespaces: NextPage = () => {
         <Table sx={{ minWidth: 650, backgroundColor: '#fff' }} aria-label={'namespace table'}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Enabled</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Create Date</TableCell>
-              <TableCell/>
+              <TableCell sx={{ fontWeight: 'bold', borderTop: '1px solid #ddd' }}>ID</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', borderTop: '1px solid #ddd' }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', borderTop: '1px solid #ddd' }}>Description</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', borderTop: '1px solid #ddd', textAlign: 'center' }}>Enabled</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', borderTop: '1px solid #ddd' }}>Create Date</TableCell>
+              <TableCell sx={{ borderTop: '1px solid #ddd' }}/>
             </TableRow>
           </TableHead>
           <TableBody>
