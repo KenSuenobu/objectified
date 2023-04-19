@@ -266,3 +266,31 @@ CREATE TABLE obj.instance_data_index (
 );
 
 CREATE INDEX idx_obj_instance_data_index ON obj.instance_data_index(instance_data_id, property_id, value);
+
+---
+
+DROP TABLE IF EXISTS obj.instance_group;
+DROP INDEX IF EXISTS idx_instance_group_index;
+
+CREATE TABLE obj.instance_group (
+    id SERIAL NOT NULL PRIMARY KEY,
+    name VARCHAR(80) NOT NULL,
+    description VARCHAR(4096) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT true,
+    create_date TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+    update_date TIMESTAMP WITHOUT TIME ZONE,
+    delete_date TIMESTAMP WITHOUT TIME ZONE
+);
+
+CREATE INDEX idx_instance_group_index ON obj.instance_group(UPPER(name));
+
+---
+
+DROP TABLE IF EXISTS obj.instance_group_instance;
+DROP INDEX IF EXISTS idx_instance_group_instance_index;
+
+CREATE TABLE obj.instance_group_instance (
+    id SERIAL NOT NULL PRIMARY KEY,
+    instance_group_id INT NOT NULL REFERENCES obj.instance_group(id),
+    instance_id INT NOT NULL REFERENCES obj.instance(id)
+);
