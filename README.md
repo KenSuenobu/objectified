@@ -79,8 +79,8 @@ The following is a list of items that will be done as the project grows.  This i
 an approximation; this list may grow or shrink over time, depending on adoption
 and popularity.
 
-- [ ] CI/CD
-  - [ ] Build working in CircleCI
+- [x] CI/CD
+  - [x] Build working in CircleCI
 
 - [ ] UI
   - [ ] Base design and layout
