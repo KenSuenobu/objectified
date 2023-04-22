@@ -31,6 +31,12 @@ jobs:
       - run:
           name: Load database into PostgreSQL
           command: psql -d postgres://postgres@localhost/circle_test < objectified-data/database/scripts/20221210-011916.sql
+      - run:
+          name: Install Yarn
+          command: npm i -g yarn
+      - run:
+          name: Build the application
+          command: scripts/build.sh
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
