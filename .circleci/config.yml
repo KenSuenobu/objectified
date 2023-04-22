@@ -23,7 +23,7 @@ jobs:
     steps:
       - checkout
       - run: sudo apt-get install postgresql-client
-      - run: psql < objectified-data/database/scripts/20211210-011916.sql
+      - run: psql < objectified-data/database/scripts/20221210-011916.sql
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
