@@ -38,10 +38,9 @@ jobs:
           name: Setup and prepare for nvm
           command: |
             export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-      - run:
-          name: Update nvm to install the latest build
-          command: nvm install --lts && nvm use --lts
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install --lts
+            nvm use --lts
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
