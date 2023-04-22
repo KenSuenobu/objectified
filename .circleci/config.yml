@@ -15,8 +15,8 @@ jobs:
         environment:
           POSTGRES_USER: postgres
         auth:
-          username: pg
-          password: pg
+          username: mydockerhub-user
+          password: $DOCKERHUB_PASSWORD
 
     # Add steps to the job
     # See: https://circleci.com/docs/configuration-reference/#steps
