@@ -10,7 +10,6 @@ jobs:
     # See: https://circleci.com/docs/configuration-reference/#executor-job
     docker:
       - image: cimg/base:stable
-      - image: cimg/node:18.15.0
       - image: cimg/postgres:14.0
         environment:
           POSTGRES_USER: postgres
@@ -43,11 +42,12 @@ jobs:
             nvm use --lts
             npm i -g yarn
       - run:
-          name: Build Objectified Data layer
+          name: Build Objectified
           command: |
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            cd objectified-data && yarn install && yarn build
+            cd objectified-data && yarn install && yarn build && cd ..
+            cd objectified-services && yarn install && yarn build && cd ..
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
