@@ -41,12 +41,13 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             nvm install --lts
             nvm use --lts
+            npm i -g yarn
       - run:
-          name: Install Yarn
+          name: Build Objectified Data layer
           command: |
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            npm i -g yarn
+            cd objectified-data && yarn install && yarn build
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
