@@ -91,7 +91,9 @@ and popularity.
     - [x] Fields
     - [x] Properties
     - [ ] Object Properties
-    - [ ] Class Properties
+    - [x] Class Properties
+    - [ ] Instances
+    - [ ] Instance Groups
   - [ ] Core functionality using REST
 
 - [ ] ETL
