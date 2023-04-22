@@ -1,5 +1,7 @@
 # objectified-db
 
+Build status: [![CircleCI](https://dl.circleci.com/status-badge/img/gh/KenSuenobu/objectified-db/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/KenSuenobu/objectified-db/tree/main)
+
 ## What is Objectified?
 
 Objectified is a time-series object database that supports dynamic schemas.
