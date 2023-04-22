@@ -14,7 +14,6 @@ jobs:
       - image: cimg/postgres:14.0
         environment:
           POSTGRES_USER: postgres
-          TEST_DATABASE_URL: postgres://postgres@localhost/circle_test
         auth:
           username: mydockerhub-user
           password: $DOCKERHUB_PASSWORD
@@ -31,7 +30,7 @@ jobs:
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
       - run:
           name: Load database into PostgreSQL
-          command: psql -d $TEST_DATABASE_URL < objectified-data/database/scripts/20221210-011916.sql
+          command: psql -d postgres://postgres@localhost/circle_test < objectified-data/database/scripts/20221210-011916.sql
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
