@@ -40,8 +40,8 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
       - run:
-          name: Build DB
-          command: cd objectified-data && yarn install && yarn build
+          name: Update nvm to install the latest build
+          command: nvm install --lts && nvm use --lts
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
