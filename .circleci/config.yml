@@ -22,8 +22,15 @@ jobs:
     # See: https://circleci.com/docs/configuration-reference/#steps
     steps:
       - checkout
-      - run: sudo apt-get install postgresql-client
-      - run: psql < objectified-data/database/scripts/20221210-011916.sql
+      - run:
+          name: Install PostgreSQL Client
+          command: sudo apt-get install postgresql-client
+      - run:
+          name: Wait for PostgreSQL spin-up
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run:
+          name: Load database into PostgreSQL
+          command: psql < objectified-data/database/scripts/20221210-011916.sql
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
