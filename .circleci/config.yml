@@ -10,6 +10,7 @@ jobs:
     # See: https://circleci.com/docs/configuration-reference/#executor-job
     docker:
       - image: cimg/base:stable
+      - image: cimg/node:18.15.0
       - image: cimg/postgres:14.0
         environment:
           POSTGRES_USER: postgres
