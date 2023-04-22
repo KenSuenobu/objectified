@@ -44,16 +44,3 @@ workflows:
   build-objectified-workflow:
     jobs:
       - build-objectified
-
-Disclaimer: Quantum Upgrade® does not recommend or endorse any specific tests, physicians, procedures, 
-  opinions or other information that may be mentioned on this website. Reliance on any information appearing 
-  on this website is solely at your own risk.Statements made on this site have not been evaluated by the Food and 
-  Drug Administration (FDA), the EFSA, or any other government derivatives thereof. Quantum Upgrade® products are 
-  not intended to diagnose, treat, cure or prevent any disease or health condition.
-
-On this website, the word “healer” does not refer to a physician or medical professional and it does not relate to 
-the conventional way of helping others with medical treatments, pharmaceutical drugs, etc. Here a “healer” rather
-refers to how this word was used hundreds and thousands of years ago: someone that seeks to help by means other 
-  than conventional medical treatment. This may involve the use of herbs, minerals, crystals, and other natural 
-  elements. It can certainly also involve the use of various energetic techniques, working with the quantum field, 
-  the source, as well as specific frequencies and vibrations.
