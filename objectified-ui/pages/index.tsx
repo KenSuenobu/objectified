@@ -32,7 +32,7 @@ import {
   DatasetOutlined,
   DatasetLinkedOutlined,
   LibraryBooksOutlined,
-  BackupTableOutlined,
+  BackupTableOutlined, PeopleOutline,
 } from "@mui/icons-material";
 import Namespaces from "./namespaces";
 import DataTypes from './dataTypes';
@@ -46,6 +46,21 @@ const drawerWidth = 240;
 
 const Home: NextPage = () => {
   const [currentPage, setCurrentPage] = React.useState(<></>);
+  const accountsItems: SideBarMenuGroupProps = {
+    label: "ACCOUNTS",
+    items: [
+      {
+        icon: <PeopleOutline/>,
+        label: "Users",
+        onClick: () => setCurrentPage(<></>),
+      },
+      {
+        icon: <GroupsOutlined/>,
+        label: "Groups",
+        onClick: () => setCurrentPage(<></>),
+      },
+    ],
+  };
   const componentsItems: SideBarMenuGroupProps = {
     label: "COMPONENTS",
     items: [
@@ -84,22 +99,22 @@ const Home: NextPage = () => {
         label: 'Instances',
         onClick: () => setCurrentPage(<Instances/>),
       }
-/*      {
-        icon: <ClassOutlined/>,
-        label: "Schemas",
-        onClick: () => setCurrentPage(<></>),
-      },
-      {
-        icon: <ClassOutlined/>,
-        label: "Instances",
-        onClick: () => setCurrentPage(<></>),
-      },
-      {
-        icon: <ClassOutlined/>,
-        label: "Instance Data",
-        onClick: () => setCurrentPage(<></>),
-      },
-*/
+      /*      {
+              icon: <ClassOutlined/>,
+              label: "Schemas",
+              onClick: () => setCurrentPage(<></>),
+            },
+            {
+              icon: <ClassOutlined/>,
+              label: "Instances",
+              onClick: () => setCurrentPage(<></>),
+            },
+            {
+              icon: <ClassOutlined/>,
+              label: "Instance Data",
+              onClick: () => setCurrentPage(<></>),
+            },
+      */
     ],
   };
 
@@ -110,7 +125,7 @@ const Home: NextPage = () => {
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <SideBar width={260} sidebarItems={[componentsItems,]} />
+      <SideBar width={260} sidebarItems={[accountsItems, componentsItems,]} />
       <Box
         component="main"
         sx={{ flexGrow: 1, p: 3 }}

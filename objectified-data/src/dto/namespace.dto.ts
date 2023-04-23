@@ -29,6 +29,12 @@ export class NamespaceDto {
   enabled: boolean = true;
 
   @ApiProperty({
+    description: 'Core Namespace - one that is protected and cannot be deleted or edited',
+    default: false,
+  })
+  coreNamespace: boolean = false;
+
+  @ApiProperty({
     description: 'Date record indicating the date and time this `Namespace` was created.',
     nullable: false,
     required: true,

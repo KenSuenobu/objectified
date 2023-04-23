@@ -9,10 +9,11 @@ export class FieldDao extends BaseDao<FieldDto> {
 
   async edit(id: number, payload: FieldDto) {
     const sqlStatement =
-      "UPDATE obj.field SET data_type_id=$1, name=$2, description=$3, default_value=$4, enabled=$5, " +
-      "update_date=$6 WHERE id=$7";
+      "UPDATE obj.field SET namespace_id=$1, data_type_id=$2, name=$3, description=$4, default_value=$5, enabled=$6, " +
+      "update_date=$7 WHERE id=$8";
 
     return this.db.none(sqlStatement, [
+      payload.namespace.id,
       payload.dataType.id,
       payload.name,
       payload.description,
@@ -25,10 +26,11 @@ export class FieldDao extends BaseDao<FieldDto> {
 
   async create(payload: FieldDto): Promise<FieldDto> {
     const sqlStatement =
-      "INSERT INTO obj.field (data_type_id, name, description, default_value, enabled, create_date) " +
-      "VALUES ($1, $2, $3, $4, $5, $6) RETURNING *";
+      "INSERT INTO obj.field (namespace_id, data_type_id, name, description, default_value, enabled, create_date) " +
+      "VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *";
 
     return this.db.oneOrNone(sqlStatement, [
+      payload.namespace.id,
       payload.dataType.id,
       payload.name,
       payload.description,

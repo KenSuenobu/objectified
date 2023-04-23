@@ -11,10 +11,14 @@ CREATE TABLE obj.namespace (
     name VARCHAR(80) NOT NULL,
     description VARCHAR(4096) NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT true,
+    core_namespace BOOLEAN NOT NULL DEFAULT false,
     create_date TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
 );
 
 CREATE UNIQUE INDEX idx_namespace_unique_name ON obj.namespace(UPPER(name));
+
+INSERT INTO obj.namespace (name, description, enabled, core_namespace, create_date)
+    VALUES ('system', 'Core system namespace used by Objectified', true, true, NOW());
 
 ---
 
@@ -23,6 +27,7 @@ DROP INDEX IF EXISTS idx_class_unique_name;
 
 CREATE TABLE obj.class (
     id SERIAL NOT NULL PRIMARY KEY,
+    namespace_id INT NOT NULL REFERENCES obj.namespace(id),
     name VARCHAR(80) NOT NULL,
     description VARCHAR(4096) NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT true,
@@ -31,7 +36,15 @@ CREATE TABLE obj.class (
     delete_date TIMESTAMP WITHOUT TIME ZONE
 );
 
-CREATE UNIQUE INDEX idx_class_unique_name ON obj.class(UPPER(name));
+CREATE UNIQUE INDEX idx_class_unique_name ON obj.class(namespace_id, UPPER(name));
+
+INSERT INTO obj.class (namespace_id, name, description, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'User', 'System User Account for Objectified', true, NOW());
+
+INSERT INTO obj.class (namespace_id, name, description, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'Group', 'System User Group for Objectified', true, NOW());
 
 ---
 
@@ -151,6 +164,7 @@ DROP INDEX IF EXISTS idx_field_unique_name;
 
 CREATE TABLE obj.field (
     id SERIAL NOT NULL PRIMARY KEY,
+    namespace_id INT NOT NULL REFERENCES obj.namespace(id),
     data_type_id INT NOT NULL REFERENCES obj.data_type(id),
     name VARCHAR(80) NOT NULL,
     description VARCHAR(4096) NOT NULL,
@@ -161,7 +175,22 @@ CREATE TABLE obj.field (
     delete_date TIMESTAMP WITHOUT TIME ZONE
 );
 
-CREATE UNIQUE INDEX idx_field_unique_name ON obj.field(UPPER(name));
+CREATE UNIQUE INDEX idx_field_unique_name ON obj.field(namespace_id, UPPER(name));
+
+INSERT INTO obj.field (namespace_id, data_type_id, name, description, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            (SELECT id FROM obj.data_type WHERE name='string'),
+            'username', 'Account Username', true, NOW());
+
+INSERT INTO obj.field (namespace_id, data_type_id, name, description, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            (SELECT id FROM obj.data_type WHERE name='password'),
+            'password', 'Account Password', true, NOW());
+
+INSERT INTO obj.field (namespace_id, data_type_id, name, description, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            (SELECT id FROM obj.data_type WHERE name='string'),
+            'group', 'Group Name', true, NOW());
 
 ---
 
@@ -170,6 +199,7 @@ DROP INDEX IF EXISTS idx_property_unique_name;
 
 CREATE TABLE obj.property (
     id SERIAL NOT NULL PRIMARY KEY,
+    namespace_id INT NOT NULL REFERENCES obj.namespace(id),
     name VARCHAR(80) NOT NULL,
     description VARCHAR(4096) NOT NULL,
     field_id INT NOT NULL REFERENCES obj.field(id),
@@ -185,6 +215,24 @@ CREATE TABLE obj.property (
 );
 
 CREATE UNIQUE INDEX idx_property_unique_name ON obj.property(UPPER(name));
+
+INSERT INTO obj.property (namespace_id, name, description, field_id, required, enabled, indexed, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'username', 'System Username',
+            (SELECT id FROM obj.field WHERE name='username' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, true, true, NOW());
+
+INSERT INTO obj.property (namespace_id, name, description, field_id, required, enabled, indexed, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'password', 'System Password',
+            (SELECT id FROM obj.field WHERE name='password' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, true, true, NOW());
+
+INSERT INTO obj.property (namespace_id, name, description, field_id, required, enabled, indexed, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'group', 'System Group',
+            (SELECT id FROM obj.field WHERE name='group' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, true, true, NOW());
 
 ---
 
@@ -211,6 +259,18 @@ CREATE TABLE obj.class_property (
 );
 
 CREATE UNIQUE INDEX idx_class_property_unique ON obj.class_property(class_id, property_id);
+
+INSERT INTO obj.class_property (class_id, property_id)
+    VALUES ((SELECT id FROM obj.class WHERE name='User' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            (SELECT id FROM obj.property WHERE name='username' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')));
+
+INSERT INTO obj.class_property (class_id, property_id)
+    VALUES ((SELECT id FROM obj.class WHERE name='User' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            (SELECT id FROM obj.property WHERE name='password' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')));
+
+INSERT INTO obj.class_property (class_id, property_id)
+    VALUES ((SELECT id FROM obj.class WHERE name='Group' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            (SELECT id FROM obj.property WHERE name='group' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')));
 
 ---
 

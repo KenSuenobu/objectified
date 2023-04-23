@@ -1,11 +1,20 @@
 import {ApiProperty} from '@nestjs/swagger';
 import {DataTypeDto} from './datatype.dto';
+import {NamespaceDto} from "./namespace.dto";
 
 export class FieldDto {
   @ApiProperty({
     description: 'ID of the `Field` object'
   })
   id: number;
+
+  @ApiProperty({
+    description: 'Namespace associated with the `Field`',
+    type: NamespaceDto,
+    nullable: false,
+    required: true,
+  })
+  namespace: NamespaceDto;
 
   @ApiProperty({
     description: 'The Data Type associated with the `Field`',

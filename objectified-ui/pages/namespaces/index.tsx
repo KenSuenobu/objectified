@@ -96,7 +96,9 @@ const Namespaces: NextPage = () => {
                   <TableCell>{row.description}</TableCell>
                   <TableCell sx={{ textAlign: 'center' }}>{row.enabled ? <CheckBox/> : <CheckBoxOutlineBlank/>}</TableCell>
                   <TableCell>{row.create_date}</TableCell>
+                  {row.core_namespace ? (<TableCell></TableCell>) : (
                   <TableCell align={'right'}><EditOutlined/> <Delete sx={{ color: 'red' }}/></TableCell>
+                  )}
                 </TableRow>
               </>
             ))}

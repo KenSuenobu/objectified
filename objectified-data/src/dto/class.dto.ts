@@ -1,4 +1,5 @@
 import {ApiProperty} from '@nestjs/swagger';
+import {NamespaceDto} from "./namespace.dto";
 
 export class ClassDto {
   @ApiProperty({
@@ -6,6 +7,13 @@ export class ClassDto {
     nullable: true,
   })
   id?: number;
+
+  @ApiProperty({
+    description: 'Namespace of which the `Class` object is a member.',
+    nullable: false,
+    required: true,
+  })
+  namespace: NamespaceDto;
 
   @ApiProperty({
     description: 'Name of the `Class` - up to 80 characters in length.',
