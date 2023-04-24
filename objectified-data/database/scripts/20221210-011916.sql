@@ -46,6 +46,10 @@ INSERT INTO obj.class (namespace_id, name, description, enabled, create_date)
     VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
             'Group', 'System User Group for Objectified', true, NOW());
 
+INSERT INTO obj.class (namespace_id, name, description, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'Permission', 'System User Permissions for Objectified', true, NOW());
+
 ---
 
 DROP TYPE IF EXISTS obj.data_type_enum CASCADE;
@@ -192,6 +196,26 @@ INSERT INTO obj.field (namespace_id, data_type_id, name, description, enabled, c
             (SELECT id FROM obj.data_type WHERE name='string'),
             'group', 'Group Name', true, NOW());
 
+INSERT INTO obj.field (namespace_id, data_type_id, name, description, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            (SELECT id FROM obj.data_type WHERE name='string'),
+            'firstName', 'First Name', true, NOW());
+
+INSERT INTO obj.field (namespace_id, data_type_id, name, description, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            (SELECT id FROM obj.data_type WHERE name='string'),
+            'lastName', 'Last Name', true, NOW());
+
+INSERT INTO obj.field (namespace_id, data_type_id, name, description, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            (SELECT id FROM obj.data_type WHERE name='string'),
+            'email', 'E-Mail Address', true, NOW());
+
+INSERT INTO obj.field (namespace_id, data_type_id, name, description, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            (SELECT id FROM obj.data_type WHERE name='string'),
+            'permission', 'Permission Name', true, NOW());
+
 ---
 
 DROP TABLE IF EXISTS obj.property CASCADE;
@@ -222,16 +246,40 @@ INSERT INTO obj.property (namespace_id, name, description, field_id, required, e
             (SELECT id FROM obj.field WHERE name='username' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
             true, true, true, NOW());
 
-INSERT INTO obj.property (namespace_id, name, description, field_id, required, enabled, indexed, create_date)
+INSERT INTO obj.property (namespace_id, name, description, field_id, required, enabled, create_date)
     VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
             'password', 'System Password',
             (SELECT id FROM obj.field WHERE name='password' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, true, NOW());
+
+INSERT INTO obj.property (namespace_id, name, description, field_id, required, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'firstName', 'Account First Name',
+            (SELECT id FROM obj.field WHERE name='firstName' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, true, NOW());
+
+INSERT INTO obj.property (namespace_id, name, description, field_id, required, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'lastName', 'Account Last Name',
+            (SELECT id FROM obj.field WHERE name='lastName' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, true, NOW());
+
+INSERT INTO obj.property (namespace_id, name, description, field_id, required, enabled, indexed, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'emailAddress', 'Account E-Mail Address',
+            (SELECT id FROM obj.field WHERE name='email' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
             true, true, true, NOW());
 
 INSERT INTO obj.property (namespace_id, name, description, field_id, required, enabled, indexed, create_date)
     VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
             'group', 'System Group',
             (SELECT id FROM obj.field WHERE name='group' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, true, true, NOW());
+
+INSERT INTO obj.property (namespace_id, name, description, field_id, required, enabled, indexed, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'permission', 'System Permission',
+            (SELECT id FROM obj.field WHERE name='permission' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
             true, true, true, NOW());
 
 ---
@@ -269,8 +317,24 @@ INSERT INTO obj.class_property (class_id, property_id)
             (SELECT id FROM obj.property WHERE name='password' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')));
 
 INSERT INTO obj.class_property (class_id, property_id)
+    VALUES ((SELECT id FROM obj.class WHERE name='User' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            (SELECT id FROM obj.property WHERE name='firstName' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')));
+
+INSERT INTO obj.class_property (class_id, property_id)
+    VALUES ((SELECT id FROM obj.class WHERE name='User' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            (SELECT id FROM obj.property WHERE name='lastName' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')));
+
+INSERT INTO obj.class_property (class_id, property_id)
+    VALUES ((SELECT id FROM obj.class WHERE name='User' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            (SELECT id FROM obj.property WHERE name='emailAddress' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')));
+
+INSERT INTO obj.class_property (class_id, property_id)
     VALUES ((SELECT id FROM obj.class WHERE name='Group' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
             (SELECT id FROM obj.property WHERE name='group' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')));
+
+INSERT INTO obj.class_property (class_id, property_id)
+    VALUES ((SELECT id FROM obj.class WHERE name='Permission' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            (SELECT id FROM obj.property WHERE name='permission' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')));
 
 ---
 
@@ -279,6 +343,7 @@ DROP INDEX IF EXISTS idx_obj_instance_name_classes;
 
 CREATE TABLE obj.instance (
     id SERIAL NOT NULL PRIMARY KEY,
+    namespace_id INT NOT NULL REFERENCES obj.namespace(id),
     name VARCHAR(80) NOT NULL,
     description VARCHAR(4096) NOT NULL,
     class_id INT NOT NULL REFERENCES obj.class(id),
@@ -288,7 +353,13 @@ CREATE TABLE obj.instance (
     delete_date TIMESTAMP WITHOUT TIME ZONE
 );
 
-CREATE INDEX idx_obj_instance_name_classes ON obj.instance(UPPER(name), class_id, create_date);
+CREATE INDEX idx_obj_instance_name_classes ON obj.instance(namespace_id, UPPER(name), class_id, create_date);
+
+INSERT INTO obj.instance (namespace_id, name, description, class_id, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'admin', 'Administrator Account for Objectified',
+            (SELECT id FROM obj.class WHERE name='User' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, NOW());
 
 ---
 
@@ -305,6 +376,12 @@ CREATE TABLE obj.instance_data (
 
 CREATE UNIQUE INDEX obj_instance_data_id_version ON obj.instance_data(instance_id, instance_version);
 
+INSERT INTO obj.instance_data (instance_id, instance_data, instance_version)
+    VALUES ((SELECT id FROM obj.instance WHERE name='admin'
+               AND class_id=(SELECT id FROM obj.class WHERE name='User' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))),
+            '{ "username": "admin", "password": "admin", "firstName": "Administrator", "lastName": null, "emailAddress": "admin@site.com" }',
+            1);
+
 ---
 
 DROP TABLE IF EXISTS obj.instance_data_index;
@@ -318,6 +395,18 @@ CREATE TABLE obj.instance_data_index (
 );
 
 CREATE INDEX idx_obj_instance_data_index ON obj.instance_data_index(instance_data_id, property_id, value);
+
+INSERT INTO obj.instance_data_index (instance_data_id, property_id, value)
+    VALUES ((SELECT id FROM obj.instance WHERE name='admin'
+               AND class_id=(SELECT id FROM obj.class WHERE name='User' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))),
+    (SELECT id FROM obj.property WHERE name='username' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+    'admin');
+
+INSERT INTO obj.instance_data_index (instance_data_id, property_id, value)
+    VALUES ((SELECT id FROM obj.instance WHERE name='admin'
+               AND class_id=(SELECT id FROM obj.class WHERE name='User' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))),
+    (SELECT id FROM obj.property WHERE name='emailAddress' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+    'admin@site.com');
 
 ---
 

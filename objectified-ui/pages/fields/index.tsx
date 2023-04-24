@@ -135,7 +135,7 @@ const Fields: NextPage = () => {
           <Typography>
             Fields describe data that can be stored by a property.  Fields expand the data type definition by adding
             default values, a required field flag, and unique name and description.  Properties use field definitions
-            to describe the data that an object can store.
+            to describe the data that an object can store.  Fields are bound and unique to each namespace.
           </Typography>
         </SectionHeader>
 

@@ -220,7 +220,7 @@ const Properties: NextPage = () => {
           <Typography>
             Properties define an storage member that is defined by a <b>field</b>.  A <b>property</b> is used by
             a <b>class</b> to define the data that can be stored in a <b>class</b>.  Properties can be reused as many
-            times as necessary, and can be indexed for faster data retrieval.
+            times as necessary, and can be indexed for faster data retrieval.  Properties are unique to each namespace.
           </Typography>
         </SectionHeader>
 

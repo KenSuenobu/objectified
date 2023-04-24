@@ -32,7 +32,7 @@ import {
   DatasetOutlined,
   DatasetLinkedOutlined,
   LibraryBooksOutlined,
-  BackupTableOutlined, PeopleOutline,
+  BackupTableOutlined, PeopleOutline, LockOutlined,
 } from "@mui/icons-material";
 import Namespaces from "./namespaces";
 import DataTypes from './dataTypes';
@@ -57,6 +57,11 @@ const Home: NextPage = () => {
       {
         icon: <GroupsOutlined/>,
         label: "Groups",
+        onClick: () => setCurrentPage(<></>),
+      },
+      {
+        icon: <LockOutlined/>,
+        label: "Permissions",
         onClick: () => setCurrentPage(<></>),
       },
     ],

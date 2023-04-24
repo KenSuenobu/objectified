@@ -159,7 +159,7 @@ const Instances: NextPage = () => {
         <SectionHeader header={'Instances'}>
           <Typography>
             Instances are records of data that conform to a Class definition, based on its defined ClassProperties
-            schema records.
+            schema records.  Instances are unique to each namespace.
           </Typography>
         </SectionHeader>
 

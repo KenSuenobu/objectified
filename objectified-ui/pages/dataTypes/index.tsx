@@ -194,7 +194,9 @@ const DataTypes: NextPage = () => {
 
         <SectionHeader header={'Data Types'} onAdd={() => addDataTypeClicked()}>
           <Typography>
-            Data Types define the types of data that can be stored in Objectified.
+            Data Types define the types of data that can be stored in Objectified.  Data Types are not affected by any
+            namespaces - they are global definitions used by all namespaces and objects.  Complex objects will show in
+            this list (ie. object properties) so those names should remain unique.
           </Typography>
         </SectionHeader>
 

@@ -141,7 +141,7 @@ const Classes: NextPage = () => {
         <SectionHeader header={'Classes'} onAdd={() => addClassClicked()}>
           <Typography>
             Classes are used to define object schemas.  Classes are defined with class properties; without classes,
-            no data can be stored or queried.
+            no data can be stored or queried.  Classes are unique across namespaces and cannot be shared.
           </Typography>
         </SectionHeader>
 
