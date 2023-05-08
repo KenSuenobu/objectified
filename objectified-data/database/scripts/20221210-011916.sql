@@ -361,6 +361,36 @@ INSERT INTO obj.instance (namespace_id, name, description, class_id, enabled, cr
             (SELECT id FROM obj.class WHERE name='User' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
             true, NOW());
 
+INSERT INTO obj.instance (namespace_id, name, description, class_id, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'user', 'User Group for Objectified',
+            (SELECT id FROM obj.class WHERE name='Group' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, NOW());
+
+INSERT INTO obj.instance (namespace_id, name, description, class_id, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'admin', 'User Group for Objectified',
+            (SELECT id FROM obj.class WHERE name='Group' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, NOW());
+
+INSERT INTO obj.instance (namespace_id, name, description, class_id, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'read', 'Read Permission for Objectified',
+            (SELECT id FROM obj.class WHERE name='Permission' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, NOW());
+
+INSERT INTO obj.instance (namespace_id, name, description, class_id, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'write', 'Write Permission for Objectified',
+            (SELECT id FROM obj.class WHERE name='Permission' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, NOW());
+
+INSERT INTO obj.instance (namespace_id, name, description, class_id, enabled, create_date)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'),
+            'delete', 'Delete Permission for Objectified',
+            (SELECT id FROM obj.class WHERE name='Permission' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system')),
+            true, NOW());
+
 ---
 
 DROP TABLE IF EXISTS obj.instance_data CASCADE;
@@ -380,6 +410,36 @@ INSERT INTO obj.instance_data (instance_id, instance_data, instance_version)
     VALUES ((SELECT id FROM obj.instance WHERE name='admin'
                AND class_id=(SELECT id FROM obj.class WHERE name='User' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))),
             '{ "username": "admin", "password": "admin", "firstName": "Administrator", "lastName": null, "emailAddress": "admin@site.com" }',
+            1);
+
+INSERT INTO obj.instance_data (instance_id, instance_data, instance_version)
+    VALUES ((SELECT id FROM obj.instance WHERE name='user'
+               AND class_id=(SELECT id FROM obj.class WHERE name='Group' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))),
+            '{ "group": "user" }',
+            1);
+
+INSERT INTO obj.instance_data (instance_id, instance_data, instance_version)
+    VALUES ((SELECT id FROM obj.instance WHERE name='admin'
+               AND class_id=(SELECT id FROM obj.class WHERE name='Group' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))),
+            '{ "group": "admin" }',
+            1);
+
+INSERT INTO obj.instance_data (instance_id, instance_data, instance_version)
+    VALUES ((SELECT id FROM obj.instance WHERE name='read'
+               AND class_id=(SELECT id FROM obj.class WHERE name='Permission' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))),
+            '{ "permission": "read" }',
+            1);
+
+INSERT INTO obj.instance_data (instance_id, instance_data, instance_version)
+    VALUES ((SELECT id FROM obj.instance WHERE name='write'
+               AND class_id=(SELECT id FROM obj.class WHERE name='Permission' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))),
+            '{ "permission": "write" }',
+            1);
+
+INSERT INTO obj.instance_data (instance_id, instance_data, instance_version)
+    VALUES ((SELECT id FROM obj.instance WHERE name='delete'
+               AND class_id=(SELECT id FROM obj.class WHERE name='Permission' AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))),
+            '{ "permission": "delete" }',
             1);
 
 ---
@@ -415,6 +475,7 @@ DROP INDEX IF EXISTS idx_instance_group_index;
 
 CREATE TABLE obj.instance_group (
     id SERIAL NOT NULL PRIMARY KEY,
+    namespace_id INT NOT NULL REFERENCES obj.namespace(id),
     name VARCHAR(80) NOT NULL,
     description VARCHAR(4096) NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT true,
@@ -424,6 +485,15 @@ CREATE TABLE obj.instance_group (
 );
 
 CREATE INDEX idx_instance_group_index ON obj.instance_group(UPPER(name));
+
+INSERT INTO obj.instance_group (namespace_id, name, description)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'), 'user_permissions', 'User Group Permissions');
+
+INSERT INTO obj.instance_group (namespace_id, name, description)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'), 'admin_permissions', 'Admin Group Permissions');
+
+INSERT INTO obj.instance_group (namespace_id, name, description)
+    VALUES ((SELECT id FROM obj.namespace WHERE name='system'), 'admin_user_group', 'Admin User Group Membership');
 
 ---
 
@@ -435,3 +505,78 @@ CREATE TABLE obj.instance_group_instance (
     instance_group_id INT NOT NULL REFERENCES obj.instance_group(id),
     instance_id INT NOT NULL REFERENCES obj.instance(id)
 );
+
+-- Create user group permissions with read permission
+INSERT INTO obj.instance_group_instance (instance_group_id, instance_id)
+    VALUES ((SELECT id FROM obj.instance_group
+                       WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+                       AND name='user_permissions'),
+            (SELECT id FROM obj.instance WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+                                         AND name='user'
+                                         AND class_id=(SELECT id FROM obj.class WHERE name='Group'
+                                                                                  AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))));
+
+INSERT INTO obj.instance_group_instance (instance_group_id, instance_id)
+VALUES ((SELECT id FROM obj.instance_group
+         WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+           AND name='user_permissions'),
+        (SELECT id FROM obj.instance WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+                                       AND name='read'
+                                       AND class_id=(SELECT id FROM obj.class WHERE name='Permission'
+                                                                                AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))));
+
+-- Create admin permissions with write and delete permissions
+INSERT INTO obj.instance_group_instance (instance_group_id, instance_id)
+VALUES ((SELECT id FROM obj.instance_group
+         WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+           AND name='admin_permissions'),
+        (SELECT id FROM obj.instance WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+                                       AND name='admin'
+                                       AND class_id=(SELECT id FROM obj.class WHERE name='Group'
+                                                                                AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))));
+
+INSERT INTO obj.instance_group_instance (instance_group_id, instance_id)
+VALUES ((SELECT id FROM obj.instance_group
+         WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+           AND name='admin_permissions'),
+        (SELECT id FROM obj.instance WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+                                       AND name='write'
+                                       AND class_id=(SELECT id FROM obj.class WHERE name='Permission'
+                                                                                AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))));
+
+INSERT INTO obj.instance_group_instance (instance_group_id, instance_id)
+VALUES ((SELECT id FROM obj.instance_group
+         WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+           AND name='admin_permissions'),
+        (SELECT id FROM obj.instance WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+                                       AND name='delete'
+                                       AND class_id=(SELECT id FROM obj.class WHERE name='Permission'
+                                                                                AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))));
+
+-- Create admin user grouping
+INSERT INTO obj.instance_group_instance (instance_group_id, instance_id)
+VALUES ((SELECT id FROM obj.instance_group
+         WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+           AND name='admin_user_group'),
+        (SELECT id FROM obj.instance WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+                                       AND name='admin'
+                                       AND class_id=(SELECT id FROM obj.class WHERE name='User'
+                                                                                AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))));
+
+INSERT INTO obj.instance_group_instance (instance_group_id, instance_id)
+VALUES ((SELECT id FROM obj.instance_group
+         WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+           AND name='admin_user_group'),
+        (SELECT id FROM obj.instance WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+                                       AND name='user'
+                                       AND class_id=(SELECT id FROM obj.class WHERE name='Group'
+                                                                                AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))));
+
+INSERT INTO obj.instance_group_instance (instance_group_id, instance_id)
+VALUES ((SELECT id FROM obj.instance_group
+         WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+           AND name='admin_user_group'),
+        (SELECT id FROM obj.instance WHERE namespace_id=(SELECT id FROM obj.namespace WHERE name='system')
+                                       AND name='admin'
+                                       AND class_id=(SELECT id FROM obj.class WHERE name='Group'
+                                                                                AND namespace_id=(SELECT id FROM obj.namespace WHERE name='system'))));
