@@ -31,11 +31,11 @@ const Fields: NextPage = () => {
   const descriptionRef = useRef();
   const defaultValueRef = useRef();
 
-  const reloadFields = () => {
+  const reloadFields = async () => {
     setLoading(true);
 
-    loadDataTypes(setDataTypes)
-      .then(() => loadFields(setFields))
+    await loadDataTypes(setDataTypes)
+      .then(async () => await loadFields(setFields))
       .then(() => setLoading(false));
   }
 
@@ -86,7 +86,7 @@ const Fields: NextPage = () => {
     reloadFields();
   }, []);
 
-  if (loading) {
+  if (loading || dataTypes.length === 0) {
     return (
       <LoadingMessage label={'Retrieving fields list, one moment ...'} />
     );

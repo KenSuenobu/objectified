@@ -32,7 +32,7 @@ import {
   DatasetOutlined,
   DatasetLinkedOutlined,
   LibraryBooksOutlined,
-  BackupTableOutlined, PeopleOutline, LockOutlined,
+  BackupTableOutlined, PeopleOutline, LockOutlined, DataObjectOutlined,
 } from "@mui/icons-material";
 import Namespaces from "./namespaces";
 import DataTypes from './dataTypes';
@@ -41,6 +41,9 @@ import Classes from './classes';
 import Properties from "./properties";
 import ClassProperties from "./classProperties";
 import Instances from "./instances";
+import Users from "./users";
+import Groups from "./groups";
+import Permissions from './permissions';
 
 const drawerWidth = 240;
 
@@ -52,17 +55,17 @@ const Home: NextPage = () => {
       {
         icon: <PeopleOutline/>,
         label: "Users",
-        onClick: () => setCurrentPage(<></>),
+        onClick: () => setCurrentPage(<Users/>),
       },
       {
         icon: <GroupsOutlined/>,
         label: "Groups",
-        onClick: () => setCurrentPage(<></>),
+        onClick: () => setCurrentPage(<Groups/>),
       },
       {
         icon: <LockOutlined/>,
         label: "Permissions",
-        onClick: () => setCurrentPage(<></>),
+        onClick: () => setCurrentPage(<Permissions/>),
       },
     ],
   };
@@ -122,6 +125,21 @@ const Home: NextPage = () => {
       */
     ],
   };
+  const instanceItems = {
+    label: 'INSTANCES',
+    items: [
+      {
+        icon: <DataObjectOutlined/>,
+        label: 'Data Records',
+        onClick: () => setCurrentPage(<></>),
+      },
+      {
+        icon: <LibraryBooksOutlined/>,
+        label: 'Data Batches',
+        onClick: () => setCurrentPage(<></>),
+      },
+    ],
+  };
 
   function callTest() {
     console.log('test');
@@ -130,7 +148,7 @@ const Home: NextPage = () => {
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <SideBar width={260} sidebarItems={[accountsItems, componentsItems,]} />
+      <SideBar width={260} sidebarItems={[accountsItems, componentsItems, instanceItems,]} />
       <Box
         component="main"
         sx={{ flexGrow: 1, p: 3 }}
