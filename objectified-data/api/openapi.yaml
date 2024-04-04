@@ -1,0 +1,202 @@
+openapi: 3.1.0
+info:
+  title: Objectified API
+  version: '0.0.1'
+  description: |
+    Objectified is a **time-series object database that supports dynamic schemas**.
+    
+    This API specification defines a RESTful services specification for Objectified.  Requests made
+    to this server can only be made using the `application/json` content type.  No other content
+    types are allowed.
+  contact:
+    name: Objectified Project
+    url: https://www.github.com/KenSuenobu/objectified
+    email: ksuenobu@fastmail.com
+servers:
+  - url: 'https://api.objectified.wiki/v1'
+tags:
+  - name: Namespaces
+    description: |
+      Namespaces are names that are used to organize groups of classes, objects, fields, and
+      so on.  They are used to prevent name collisions that can occur when multiple organizations may 
+      use similar names to describe different object definitions.
+
+      A namespace ensures that all of a given set of objects have unique names so that they may
+      easily be identified and separated under a common group.
+
+      For instance, one namespace's definition of a `User` may differ from another namespace's `User`.
+      Same with a `Car` or a `Bike`.
+paths:
+  /namespaces:
+    get:
+      tags:
+        - Namespaces
+      summary: Returns a list of all namespaces.
+      operationId: listNamespaces
+      description: Returns a list of all namespaces registered in Objectified, regardless of enabled flag status.
+      responses:
+        '200':
+          description: An array of namespaces registered in Objectified.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Namespace'
+  /namespaces/{id}:
+    get:
+      tags:
+        - Namespaces
+      summary: Retrieves a namespace by ID.
+      operationId: getNamespace
+      description: Gets a namespace by its serial ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the namespace to retrieve.
+      responses:
+        '200':
+          description: OK, returns the `Namespace` object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Namespace'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /namespaces/create:
+    post:
+      tags:
+        - Namespaces
+      summary: Creates a new namespace.
+      operationId: createNamespace
+      description: Creates a new namespace.
+      requestBody:
+        description: The namespace object to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Namespace'
+      responses:
+        '201':
+          description: Created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+  /namespaces/edit:
+    patch:
+      tags:
+        - Namespaces
+      summary: Edit a namespace.
+      operationId: patchNamespace
+      description: Applies changes to a namespace, only changing the values supplied in the request body.
+      requestBody:
+        description: The namespace changes to apply.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Namespace'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '409':
+          description: Conflict
+  /namespaces/delete/{id}:
+    delete:
+      tags:
+        - Namespaces
+      summary: Deletes (disables) a namespace.
+      operationId: disableNamespace
+      description: Disables a namespace.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the namespace to disable.
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /namespace/undelete/{id}:
+    put:
+      tags:
+        - Namespaces
+      summary: Undeletes (enables) a namespace.
+      operationId: enableNamespace
+      description: (Re)Enables a namespace.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the namespace to enable.
+      responses:
+        '200':
+          description: OK, returns the `Namespace` object after undeletion.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Namespace'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+components:
+  schemas:
+    Namespace:
+      type: object
+      required:
+        - name
+        - description
+      properties:
+        id:
+          type: integer
+          description: The numerical ID of the namespace.  (Auto-numbering, ignored on create.)
+        name:
+          type: string
+          maxLength: 80
+          description: A simple identifying name of the namespace following pattern `A-Za-z0-9`, should be camel-case.
+          pattern: '^[A-Za-z0-9]*$'
+        description:
+          type: string
+          maxLength: 4096
+          description: The description of the namespace.
+        enabled:
+          type: boolean
+          description: A deletion flag - `true` indicates the namesapce is still enabled, `false` otherwise.
+          default: true
+        coreNamespace:
+          type: boolean
+          description: Indicates whether or not this is a core namespace to Objectified.
+          default: false
+        createDate:
+          type: string
+          format: date-time
+          description: Creation date and time.  Auto-filled, not required.
