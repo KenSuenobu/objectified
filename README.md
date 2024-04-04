@@ -1,4 +1,4 @@
-# objectified-db 
+# objectified 
 
 ## What is Objectified?
 
