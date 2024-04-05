@@ -13,7 +13,10 @@ info:
     url: https://www.github.com/KenSuenobu/objectified
     email: ksuenobu@fastmail.com
 servers:
-  - url: 'https://api.objectified.wiki/v1'
+  - url: 'http://localhost:8080/v1'
+schemes:
+  - http
+  - https
 tags:
   - name: Namespaces
     description: |
@@ -26,6 +29,12 @@ tags:
 
       For instance, one namespace's definition of a `User` may differ from another namespace's `User`.
       Same with a `Car` or a `Bike`.
+      
+      A system namespace is a core namespace that is used by Objectified internally.  These namespaces
+      cannot be altered, but they can be referred to in other namespaces, should you choose to import
+      them directly into your namespace.
+  - name: Authentication
+    description: Authentication services for login and logout.
 paths:
   /namespaces:
     get:
@@ -34,6 +43,8 @@ paths:
       summary: Returns a list of all namespaces.
       operationId: listNamespaces
       description: Returns a list of all namespaces registered in Objectified, regardless of enabled flag status.
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: An array of namespaces registered in Objectified.
@@ -50,6 +61,8 @@ paths:
       summary: Retrieves a namespace by ID.
       operationId: getNamespace
       description: Gets a namespace by its serial ID.
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
@@ -77,6 +90,8 @@ paths:
       summary: Creates a new namespace.
       operationId: createNamespace
       description: Creates a new namespace.
+      security:
+        - bearerAuth: []
       requestBody:
         description: The namespace object to create.
         required: true
@@ -100,6 +115,8 @@ paths:
       summary: Edit a namespace.
       operationId: patchNamespace
       description: Applies changes to a namespace, only changing the values supplied in the request body.
+      security:
+        - bearerAuth: []
       requestBody:
         description: The namespace changes to apply.
         required: true
@@ -125,6 +142,8 @@ paths:
       summary: Deletes (disables) a namespace.
       operationId: disableNamespace
       description: Disables a namespace.
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
@@ -148,6 +167,8 @@ paths:
       summary: Undeletes (enables) a namespace.
       operationId: enableNamespace
       description: (Re)Enables a namespace.
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
@@ -168,7 +189,57 @@ paths:
           description: Forbidden
         '404':
           description: Not found
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Performs a login
+      operationId: login
+      description: Logs a user into the system by their username and password.
+      requestBody:
+        description: The user credentials with which to login.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: The username to use.
+                password:
+                  type: string
+                  description: The base64 encoded password.
+      responses:
+        '200':
+          description: OK, returns the JWT session token that must be stored.
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /auth/logout:
+    get:
+      tags:
+        - Authentication
+      summary: Performs a logout
+      operationId: logout
+      description: Logs a user out of the system
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: No content
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: JWT Authorization header using Bearer scheme.
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     Namespace:
       type: object
@@ -179,6 +250,9 @@ components:
         id:
           type: integer
           description: The numerical ID of the namespace.  (Auto-numbering, ignored on create.)
+        creatorId:
+          type: integer
+          description: The numerical ID of the user ID that created this object.  This is pulled from the session, and cannot be modified by any services.  Values supplied to this field at creation or edit time will be ignored.
         name:
           type: string
           maxLength: 80
@@ -190,11 +264,11 @@ components:
           description: The description of the namespace.
         enabled:
           type: boolean
-          description: A deletion flag - `true` indicates the namesapce is still enabled, `false` otherwise.
+          description: An enabled flag - `true` indicates the namespace is active, `false` otherwise.  System namespaces cannot be deactivated.
           default: true
-        coreNamespace:
+        systemNamespace:
           type: boolean
-          description: Indicates whether or not this is a core namespace to Objectified.
+          description: Indicates whether or not this is a system-level namespace belonging to Objectified.
           default: false
         createDate:
           type: string
