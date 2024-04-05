@@ -40,6 +40,12 @@ tags:
       
       Services require a JWT authentication token to be active for services to respond to requests.
       If authentication is missing, a `401 Unauthorized` response will occur.
+  - name: Classes
+    description: |
+      Classes are templates that define the shape of data that can be contained in a record.  For more
+      information on best practices on creating and updating classes, please 
+      [refer to this documentation](https://www.objectified.wiki/wiki/classes-best-practices)
+      for more detailed information.
 paths:
   /auth/login:
     post:
@@ -469,4 +475,44 @@ components:
         data:
           type: object
           description: A JSON payload that describes more information about the user in a freeform manner.
-
+    Class:
+      type: object
+      required:
+        - namespaceId
+        - ownerId
+        - name
+        - description
+      properties:
+        id:
+          type: integer
+          description: The numerical ID of the class.  (Auto-numbering, ignored on create.)
+        namespaceId:
+          type: integer
+          description: The numerical ID of the namespace to which this class belongs.
+        ownerId:
+          type: integer
+          description: The numerical ID of the user that created this class definition.
+        name:
+          type: string
+          description: Alphanumeric common name of the class, cannot start with a number.
+          maxLength: 80
+          pattern: '^[A-Za-z][A-Za-z0-9]*$'
+        description:
+          type: string
+          description: A short description describing the class.
+          maxLength: 4096
+        enabled:
+          type: boolean
+          description: An enabled flag - `true` indicates the class is active, `false` otherwise.
+        createDate:
+          type: string
+          format: date-time
+          description: Creation date and time.  Ignored if supplied, handled by the service.
+        updateDate:
+          type: string
+          format: date-time
+          description: Update date and time.  Ignored if supplied, handled by the service.
+        deleteDate:
+          type: string
+          format: date-time
+          description: Deletion date and time.  Ignored if supplied, handled by the service.
