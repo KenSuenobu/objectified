@@ -46,6 +46,33 @@ tags:
       information on best practices on creating and updating classes, please 
       [refer to this documentation](https://www.objectified.wiki/wiki/classes-best-practices)
       for more detailed information.
+  - name: DataTypes
+    description: |
+      Data types describe the types of data that can be stored in fields in Objectified.
+      
+      Data types can contain arrays of data, enumerations, regular expressions, and much more.
+      
+      Core data types cannot be modified or removed, as they are considered core to the Objectified
+      system.  Data types are specific to ownership in their namespace.  Core data types are available
+      system-wide.
+      
+      The most common usage for Data Types outside of the core data types is in defining custom
+      enumeration values.  Other data types like custom filters and regular expressions can be
+      created, but these occasions are generally rare.
+      
+      Please
+      [refer to this documentation](https://www.objectified.wiki/wiki/data-types-best-practices)
+      for more detailed on best practices regarding field definitions.
+  - name: Fields
+    description: |
+      Fields are storage objects that utilize a data type definition.
+      
+      Fields define the types of data that a class property can contain.  Fields can be reused.
+      Fields are not indexed, whereas properties can be.
+      
+      Please
+      [refer to this documentation](https://www.objectified.wiki/wiki/fields-best-practices)
+      for more detailed on best practices regarding field definitions.
 paths:
   /auth/login:
     post:

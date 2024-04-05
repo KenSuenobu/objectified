@@ -28,6 +28,7 @@ DROP INDEX IF EXISTS idx_data_type_unique_name;
 
 CREATE TABLE obj.data_type (
     id SERIAL NOT NULL PRIMARY KEY,
+    namespace_id INT NOT NULL REFERENCES obj.namespace(id),
     name VARCHAR(80) NOT NULL,
     description VARCHAR(4096) NOT NULL,
     data_type obj.data_type_enum NOT NULL,
@@ -44,7 +45,7 @@ CREATE TABLE obj.data_type (
     delete_date TIMESTAMP WITHOUT TIME ZONE
 );
 
-CREATE UNIQUE INDEX idx_data_type_unique_name ON obj.data_type(UPPER(name));
+CREATE UNIQUE INDEX idx_data_type_unique_name ON obj.data_type(namespace_id, UPPER(name));
 
 ---
 
