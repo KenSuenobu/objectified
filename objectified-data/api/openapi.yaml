@@ -18,6 +18,10 @@ schemes:
   - http
   - https
 tags:
+  - name: Authentication
+    description: Authentication services for login and logout.
+  - name: Users
+    description: Services for User accounts.
   - name: Namespaces
     description: |
       Namespaces are names that are used to organize groups of classes, objects, fields, and
@@ -33,10 +37,55 @@ tags:
       A system namespace is a core namespace that is used by Objectified internally.  These namespaces
       cannot be altered, but they can be referred to in other namespaces, should you choose to import
       them directly into your namespace.
-  - name: Authentication
-    description: Authentication services for login and logout.
+      
+      Services require a JWT authentication token to be active for services to respond to requests.
+      If authentication is missing, a `401 Unauthorized` response will occur.
 paths:
-  /namespaces:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Performs a login
+      operationId: login
+      description: Logs a user into the system by their username and password.
+      requestBody:
+        description: The user credentials with which to login.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: The username to use.
+                password:
+                  type: string
+                  description: The base64 encoded password.
+      responses:
+        '200':
+          description: OK, returns the JWT session token that must be stored.
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /auth/logout:
+    get:
+      tags:
+        - Authentication
+      summary: Performs a logout
+      operationId: logout
+      description: Logs a user out of the system
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: No content
+  /namespaces/list:
     get:
       tags:
         - Namespaces
@@ -54,6 +103,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Namespace'
+        '401':
+          description: Unauthorized
   /namespaces/{id}:
     get:
       tags:
@@ -160,7 +211,7 @@ paths:
           description: Forbidden
         '404':
           description: Not found
-  /namespace/undelete/{id}:
+  /namespaces/undelete/{id}:
     put:
       tags:
         - Namespaces
@@ -189,50 +240,159 @@ paths:
           description: Forbidden
         '404':
           description: Not found
-  /auth/login:
+  /users/list:
+    get:
+      tags:
+        - Users
+      summary: Returns a list of all users.
+      operationId: listNamespaces
+      description: |
+        Returns a list of all users registered in Objectified, regardless of enabled flag status.  Only users with
+        administrative privileges may list users.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: An array of users registered in Objectified.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+  /users/create:
     post:
       tags:
-        - Authentication
-      summary: Performs a login
-      operationId: login
-      description: Logs a user into the system by their username and password.
+        - Users
+      summary: Creates a new user.
+      operationId: createUser
+      description: Creates a new `User` record in the Objectified platform.
+      security:
+        - bearerAuth: []
       requestBody:
-        description: The user credentials with which to login.
+        description: The `User` object to create.
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                  description: The username to use.
-                password:
-                  type: string
-                  description: The base64 encoded password.
+              $ref: '#/components/schemas/User'
       responses:
-        '200':
-          description: OK, returns the JWT session token that must be stored.
-          content:
-            text/plain:
-              schema:
-                type: string
+        '201':
+          description: Created successfully
         '401':
           description: Unauthorized
         '403':
           description: Forbidden
-  /auth/logout:
+        '409':
+          description: Conflict
+  /users/verify/{key}:
     get:
       tags:
-        - Authentication
-      summary: Performs a logout
-      operationId: logout
-      description: Logs a user out of the system
+        - Users
+      summary: Verifies a user.
+      operationId: verifyUser
+      description: Validates a user's email address through a key they received in an email message.
       security:
         - bearerAuth: []
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+          description: The encoded key that was sent in the email.
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Token invalid
+        '500':
+          description: Request to validate timed out
+  /users/delete/{id}:
+    delete:
+      tags:
+        - Users
+      summary: Deletes (disables) a user.
+      operationId: disableUser
+      description: Disables a user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the user to disable.
       responses:
         '204':
           description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /users/undelete/{id}:
+    put:
+      tags:
+        - Users
+      summary: Undeletes (enables) a user.
+      operationId: enableUser
+      description: (Re)Enables a user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the user to enable.
+      responses:
+        '200':
+          description: OK, returns the `User` object after undeletion.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /users/edit:
+    patch:
+      tags:
+        - Users
+      summary: Edit a user.
+      operationId: editUser
+      description: |
+        Applies changes to a user, only changing the values supplied in the request body.
+        Only administrators may make changes to user records that do not belong to them.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The user changes to apply.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '409':
+          description: Conflict
 components:
   securitySchemes:
     bearerAuth:
@@ -274,3 +434,39 @@ components:
           type: string
           format: date-time
           description: Creation date and time.  Auto-filled, not required.
+    User:
+      type: object
+      required:
+        - username
+        - password
+        - emailAddress
+      properties:
+        id:
+          type: integer
+          description: The numerical ID of the user.  (Auto-numbering, ignored on create.)
+        username:
+          type: string
+          maxLength: 80
+          description: Username
+          pattern: '^[A-Za-z0-9]*$'
+        password:
+          type: string
+          maxLength: 255
+          description: Password of any type
+        emailAddress:
+          type: string
+          maxLength: 255
+          format: email
+          description: Valid e-mail address for the user
+        verified:
+          type: boolean
+          description: Indicates whether or not the user record has verified their e-mail address.
+          default: false
+        enabled:
+          type: boolean
+          description: An enabled flag - `true` indicates the ujser is active, `false` otherwise.
+          default: true
+        data:
+          type: object
+          description: A JSON payload that describes more information about the user in a freeform manner.
+

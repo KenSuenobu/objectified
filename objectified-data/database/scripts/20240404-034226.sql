@@ -10,6 +10,7 @@ CREATE TABLE obj.user (
     password VARCHAR(255) NOT NULL,
     email_address VARCHAR(255) NOT NULL,
     verified BOOLEAN NOT NULL DEFAULT false,
+    enabled BOOLEAN NOT NULL DEFAULT true,
     data JSONB
 );
 
