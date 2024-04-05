@@ -21,33 +21,33 @@ jobs:
     # See: https://circleci.com/docs/configuration-reference/#steps
     steps:
       - checkout
-      - run:
-          name: Install PostgreSQL Client
-          command: sudo apt-get install postgresql-client
-      - run:
-          name: Wait for PostgreSQL spin-up
-          command: dockerize -wait tcp://localhost:5432 -timeout 1m
-      - run:
-          name: Load database into PostgreSQL
-          command: psql -d postgres://postgres@localhost/circle_test < objectified-data/database/scripts/20221210-011916.sql
-      - run:
-          name: Install nvm
-          command: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-      - run:
-          name: Setup and prepare for nvm
-          command: |
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install --lts
-            nvm use --lts
-            npm i -g yarn
-      - run:
-          name: Build Objectified
-          command: |
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            cd objectified-data && yarn install && yarn build && cd ..
-            cd objectified-services && yarn install && yarn build && cd ..
+#      - run:
+#          name: Install PostgreSQL Client
+#          command: sudo apt-get install postgresql-client
+#      - run:
+#          name: Wait for PostgreSQL spin-up
+#          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+#      - run:
+#          name: Load database into PostgreSQL
+#          command: psql -d postgres://postgres@localhost/circle_test < objectified-data/database/scripts/20221210-011916.sql
+#      - run:
+#          name: Install nvm
+#          command: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+#      - run:
+#          name: Setup and prepare for nvm
+#          command: |
+#            export NVM_DIR="$HOME/.nvm"
+#            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+#            nvm install --lts
+#            nvm use --lts
+#            npm i -g yarn
+#      - run:
+#          name: Build Objectified
+#          command: |
+#            export NVM_DIR="$HOME/.nvm"
+#            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+#            cd objectified-data && yarn install && yarn build && cd ..
+#            cd objectified-services && yarn install && yarn build && cd ..
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
