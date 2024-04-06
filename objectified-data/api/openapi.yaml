@@ -80,6 +80,11 @@ tags:
       
       Properties extend fields by adding items such as nullability, default values, required
       flags, indexing, and so on.  Properties can also be objects that implement other properties.
+  - name: Instances
+    description: |
+      Instances are records created using Class definitions as templates.
+      
+      Instance data contains data associated with an instance, organized by version number and record date.
 paths:
   /auth/login:
     post:
@@ -965,6 +970,168 @@ paths:
           description: Not found
         '409':
           description: Conflict
+  /instances/create:
+    post:
+      tags:
+        - Instances
+      summary: Creates a new instance.
+      operationId: createInstance
+      description: Creates a new instance.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The instance object to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Instance'
+      responses:
+        '201':
+          description: Created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+  /instances/delete/{id}:
+    delete:
+      tags:
+        - Instances
+      summary: Deletes (disables) an instance.
+      operationId: disableInstance
+      description: Disables an instance.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the instance to disable.
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /instances/undelete/{id}:
+    put:
+      tags:
+        - Instances
+      summary: Undeletes (enables) an instance.
+      operationId: enableField
+      description: (Re)Enables an instance.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the instance to enable.
+      responses:
+        '200':
+          description: OK, returns the `Instance` object after undeletion.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Instance'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /instances/data/create:
+    post:
+      tags:
+        - Instances
+      summary: Creates a new instance data record.
+      operationId: createInstanceData
+      description: |
+        Creates a new instance data record.  If an instance data record already exists for the Instance,
+        a new instance data record is created, and the version is incremented.
+        
+        __NOTE:__ Adding a new data record to an instance that has been deleted will append the record,
+        but will not affect the deletion flag.
+        
+        Records that are added to an instance are validated using JSON Schema Validation.  Any validations
+        that fail will return an bad request error (400), and the record will not be created.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The instance data object to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceData'
+      responses:
+        '201':
+          description: Created successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+  /instances/data/latest/{instanceId}:
+    get:
+      tags:
+        - Instances
+      summary: Returns the latest instance data record for an instance.
+      operationId: getInstanceDataLatest
+      description: Returns the latest data instance record for the instance.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: instanceId
+          required: true
+          schema:
+            type: integer
+          description: The ID of the instance.
+      responses:
+        '200':
+          description: An array of fields.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InstanceData'
+        '401':
+          description: Unauthorized
+  /instances/data/record-count/{instanceId}:
+    get:
+      tags:
+        - Instances
+      summary: Returns the number of records for an instance.
+      operationId: getInstanceDataCount
+      description: Returns the total number of records stored in an instance.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: instanceId
+          required: true
+          schema:
+            type: integer
+          description: The ID of the instance.
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
 components:
   securitySchemes:
     bearerAuth:
@@ -1262,3 +1429,71 @@ components:
           type: string
           format: date-time
           description: Deletion date and time.  Ignored if supplied, handled by the service.
+    Instance:
+      type: object
+      required:
+        - namespaceId
+        - classId
+        - ownerId
+        - name
+        - description
+      properties:
+        id:
+          type: integer
+          description: The numerical ID of the instance.  (Auto-numbering, ignored on create.)
+        namespaceId:
+          type: integer
+          description: The numerical ID of the namespace to which this instance belongs.
+        classId:
+          type: integer
+          description: The numerical ID of the class to which this instance belongs.
+        ownerId:
+          type: integer
+          description: The numerical ID of the user to which this instance belongs.
+        name:
+          type: string
+          description: Alphanumeric common name of the intsance, cannot start with a number.
+          maxLength: 80
+          pattern: '^[A-Za-z][A-Za-z0-9]*$'
+        description:
+          type: string
+          description: A short description describing the instance.
+          maxLength: 4096
+        enabled:
+          type: boolean
+          description: An enabled flag - `true` indicates the instance is active, `false` otherwise.
+          default: true
+        createDate:
+          type: string
+          format: date-time
+          description: Creation date and time.  Ignored if supplied, handled by the service.
+        updateDate:
+          type: string
+          format: date-time
+          description: Update date and time.  Ignored if supplied, handled by the service.
+        deleteDate:
+          type: string
+          format: date-time
+          description: Deletion date and time.  Ignored if supplied, handled by the service.
+    InstanceData:
+      type: object
+      required:
+        - instanceId
+        - instanceData
+      properties:
+        id:
+          type: integer
+          description: The numerical ID of the instance data record.  (Auto-numbering, ignored on create.)
+        instanceId:
+          type: integer
+          description: The numerical ID of the instance to which this instance belongs.
+        instanceData:
+          type: object
+          description: The dynamic data stored within this record.
+        instanceVersion:
+          type: integer
+          description: This is the version of the record.
+        date:
+          type: string
+          format: date-time
+          description: Date and time of the data record, which may or may not reflect the creation time.
