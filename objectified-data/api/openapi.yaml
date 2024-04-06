@@ -73,6 +73,13 @@ tags:
       Please
       [refer to this documentation](https://www.objectified.wiki/wiki/fields-best-practices)
       for more detailed on best practices regarding field definitions.
+  - name: Properties
+    description: |
+      Properties are member variables that are used by classes to store data defined by a
+      field.
+      
+      Properties extend fields by adding items such as nullability, default values, required
+      flags, indexing, and so on.  Properties can also be objects that implement other properties.
 paths:
   /auth/login:
     post:
@@ -426,6 +433,139 @@ paths:
           description: Not found
         '409':
           description: Conflict
+  /classes/list/{namespaceId}:
+    get:
+      tags:
+        - Classes
+      summary: Returns a list of classes by namespace.
+      operationId: listClasses
+      description: Returns a list of all classes registered in the given namespace ID, regardless of enabled flag status.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: namespaceId
+          required: true
+          schema:
+            type: integer
+          description: The ID of the namespace.
+      responses:
+        '200':
+          description: An array of classes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Class'
+        '401':
+          description: Unauthorized
+  /classes/create:
+    post:
+      tags:
+        - Classes
+      summary: Creates a new class.
+      operationId: createClass
+      description: Creates a new class.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The class object to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Class'
+      responses:
+        '201':
+          description: Created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+  /classes/delete/{id}:
+    delete:
+      tags:
+        - Classes
+      summary: Deletes (disables) a class.
+      operationId: disableClass
+      description: Disables a class.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the class to disable.
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /classes/undelete/{id}:
+    put:
+      tags:
+        - Classes
+      summary: Undeletes (enables) a class.
+      operationId: enableClass
+      description: (Re)Enables a class.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the class to enable.
+      responses:
+        '200':
+          description: OK, returns the `Class` object after undeletion.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /classes/edit:
+    patch:
+      tags:
+        - Classes
+      summary: Edit a class.
+      operationId: editClass
+      description: Applies changes to a class, only changing the values supplied in the request body.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The class changes to apply.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Class'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '409':
+          description: Conflict
 components:
   securitySchemes:
     bearerAuth:
@@ -531,6 +671,65 @@ components:
         enabled:
           type: boolean
           description: An enabled flag - `true` indicates the class is active, `false` otherwise.
+        createDate:
+          type: string
+          format: date-time
+          description: Creation date and time.  Ignored if supplied, handled by the service.
+        updateDate:
+          type: string
+          format: date-time
+          description: Update date and time.  Ignored if supplied, handled by the service.
+        deleteDate:
+          type: string
+          format: date-time
+          description: Deletion date and time.  Ignored if supplied, handled by the service.
+    Property:
+      type: object
+      required:
+        - namespaceId
+        - name
+        - description
+        - fieldId
+      properties:
+        id:
+          type: integer
+          description: The numerical ID of the property.  (Auto-numbering, ignored on create.)
+        namespaceId:
+          type: integer
+          description: The numerical ID of the namespace to which this property belongs.
+        name:
+          type: string
+          description: Alphanumeric common name of the property, cannot start with a number.
+          maxLength: 80
+          pattern: '^[A-Za-z][A-Za-z0-9]*$'
+        description:
+          type: string
+          description: A short description describing the property.
+        fieldId:
+          type: integer
+          description: The numerical ID of the field to which this property is assigned.
+        required:
+          type: boolean
+          description: Boolean flag indicating whether or not this property requires a value.
+          default: false
+        nullable:
+          type: boolean
+          description: Boolean flag indicating whether or not this poperty is nullable.
+          default: false
+        isArray:
+          type: boolean
+          description: Boolean flag indicating if this value expects an array of field data types.
+          default: false
+        defaultValue:
+          type: string
+          description: The default value of this property if not value is assigned.
+        enabled:
+          type: boolean
+          description: An enabled flag - `true` indicates the property is active, `false` otherwise.
+          default: true
+        indexed:
+          type: boolean
+          description: Indicates whether or not the value of this property should be included for indexing in Objectified.
         createDate:
           type: string
           format: date-time
