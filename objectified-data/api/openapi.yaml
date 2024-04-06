@@ -566,6 +566,405 @@ paths:
           description: Not found
         '409':
           description: Conflict
+  /properties/list/{namespaceId}:
+    get:
+      tags:
+        - Properties
+      summary: Returns a list of properties by namespace.
+      operationId: listProperties
+      description: Returns a list of all properties registered in the given namespace ID, regardless of enabled flag status.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: namespaceId
+          required: true
+          schema:
+            type: integer
+          description: The ID of the namespace.
+      responses:
+        '200':
+          description: An array of properties.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Property'
+        '401':
+          description: Unauthorized
+  /properties/create:
+    post:
+      tags:
+        - Properties
+      summary: Creates a new property.
+      operationId: createProperty
+      description: Creates a new property.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The property object to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Property'
+      responses:
+        '201':
+          description: Created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+  /properties/delete/{id}:
+    delete:
+      tags:
+        - Properties
+      summary: Deletes (disables) a property.
+      operationId: disableProperty
+      description: Disables a property.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the property to disable.
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /properties/undelete/{id}:
+    put:
+      tags:
+        - Properties
+      summary: Undeletes (enables) a property.
+      operationId: enableProperty
+      description: (Re)Enables a property.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the property to enable.
+      responses:
+        '200':
+          description: OK, returns the `Property` object after undeletion.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /properties/edit:
+    patch:
+      tags:
+        - Properties
+      summary: Edit a property.
+      operationId: editProperty
+      description: Applies changes to a property, only changing the values supplied in the request body.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The property changes to apply.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Property'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '409':
+          description: Conflict
+  /data-types/list/{namespaceId}:
+    get:
+      tags:
+        - DataTypes
+      summary: Returns a list of data types by namespace.
+      operationId: listDataTypes
+      description: Returns a list of all data types registered in the given namespace ID, regardless of enabled flag status.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: namespaceId
+          required: true
+          schema:
+            type: integer
+          description: The ID of the namespace.
+      responses:
+        '200':
+          description: An array of data types.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataType'
+        '401':
+          description: Unauthorized
+  /data-types/create:
+    post:
+      tags:
+        - DataTypes
+      summary: Creates a new data type.
+      operationId: createDataType
+      description: Creates a new data type.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The data type object to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataType'
+      responses:
+        '201':
+          description: Created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+  /data-types/delete/{id}:
+    delete:
+      tags:
+        - DataTypes
+      summary: Deletes (disables) a data type.
+      operationId: disableDataType
+      description: Disables a data type.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the data type to disable.
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /data-types/undelete/{id}:
+    put:
+      tags:
+        - DataTypes
+      summary: Undeletes (enables) a data type.
+      operationId: enableDataType
+      description: (Re)Enables a data type.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the data type to enable.
+      responses:
+        '200':
+          description: OK, returns the `DataType` object after undeletion.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataType'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /data-types/edit:
+    patch:
+      tags:
+        - DataTypes
+      summary: Edits a data type.
+      operationId: editDataType
+      description: Applies changes to a data type, only changing the values supplied in the request body.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The data type changes to apply.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataType'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '409':
+          description: Conflict
+  /fields/list/{namespaceId}:
+    get:
+      tags:
+        - Fields
+      summary: Returns a list of fields by namespace.
+      operationId: listFields
+      description: Returns a list of all fields registered in the given namespace ID, regardless of enabled flag status.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: namespaceId
+          required: true
+          schema:
+            type: integer
+          description: The ID of the namespace.
+      responses:
+        '200':
+          description: An array of fields.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Field'
+        '401':
+          description: Unauthorized
+  /fields/create:
+    post:
+      tags:
+        - Fields
+      summary: Creates a new field.
+      operationId: createField
+      description: Creates a new field.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The field object to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Field'
+      responses:
+        '201':
+          description: Created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+  /fields/delete/{id}:
+    delete:
+      tags:
+        - Fields
+      summary: Deletes (disables) a field.
+      operationId: disableField
+      description: Disables a field.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the field to disable.
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /fields/undelete/{id}:
+    put:
+      tags:
+        - Fields
+      summary: Undeletes (enables) a field.
+      operationId: enableField
+      description: (Re)Enables a field.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the field to enable.
+      responses:
+        '200':
+          description: OK, returns the `Field` object after undeletion.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Field'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /fields/edit:
+    patch:
+      tags:
+        - Fields
+      summary: Edits a field.
+      operationId: editField
+      description: Applies changes to a field, only changing the values supplied in the request body.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The field changes to apply.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Field'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '409':
+          description: Conflict
 components:
   securitySchemes:
     bearerAuth:
@@ -705,6 +1104,7 @@ components:
         description:
           type: string
           description: A short description describing the property.
+          maxLength: 4096
         fieldId:
           type: integer
           description: The numerical ID of the field to which this property is assigned.
@@ -730,6 +1130,126 @@ components:
         indexed:
           type: boolean
           description: Indicates whether or not the value of this property should be included for indexing in Objectified.
+        createDate:
+          type: string
+          format: date-time
+          description: Creation date and time.  Ignored if supplied, handled by the service.
+        updateDate:
+          type: string
+          format: date-time
+          description: Update date and time.  Ignored if supplied, handled by the service.
+        deleteDate:
+          type: string
+          format: date-time
+          description: Deletion date and time.  Ignored if supplied, handled by the service.
+    DataType:
+      type: object
+      required:
+        - namespaceId
+        - name
+        - description
+        - dataType
+      properties:
+        id:
+          type: integer
+          description: The numerical ID of the data type.  (Auto-numbering, ignored on create.)
+        namespaceId:
+          type: integer
+          description: The numerical ID of the namespace to which this data type belongs.
+        name:
+          type: string
+          description: Alphanumeric common name of the data type, cannot start with a number.
+          maxLength: 80
+          pattern: '^[A-Za-z][A-Za-z0-9]*$'
+        description:
+          type: string
+          description: A short description describing the data type.
+          maxLength: 4096
+        dataType:
+          type: string
+          enum: [STRING, INT32, INT64, FLOAT, DOUBLE, BOOLEAN, DATE, DATE_TIME, BYTE, BINARY, PASSWORD, OBJECT]
+        isArray:
+          type: boolean
+          description: Boolean flag indicating if this data type stores an array.
+          default: false
+        maxLength:
+          type: integer
+          description: Maximum length of the data that can be stored; does not apply to OBJECT, as they are dynamic.
+        pattern:
+          type: string
+          description: A regular expression pattern to apply to the data stored in this type.
+          nullable: true
+        enumValues:
+          type: array
+          description: A list of enumeration values that are allowed in this data type.  These lengths should be equal to the number of entries in `enumDescriptions`
+          items:
+            type: string
+          nullable: true
+        enumDescriptions:
+          type: array
+          description: A list of the descriptions for each of the values in `enumValues`.  These lengths should be equal to the number of entries in `enumValues`.
+          items:
+            type: string
+          nullable: true
+        examples:
+          type: array
+          description: An array of examples that can be applied to this data type.
+          items:
+            type: string
+          nullable: true
+        enabled:
+          type: boolean
+          description: An enabled flag - `true` indicates the data type is active, `false` otherwise.
+          default: true
+        coreType:
+          type: boolean
+          description: Indicates whether or not this data type is a core data type, indicating a type that is available system-wide regardless of namespace.
+          default: false
+        createDate:
+          type: string
+          format: date-time
+          description: Creation date and time.  Ignored if supplied, handled by the service.
+        updateDate:
+          type: string
+          format: date-time
+          description: Update date and time.  Ignored if supplied, handled by the service.
+        deleteDate:
+          type: string
+          format: date-time
+          description: Deletion date and time.  Ignored if supplied, handled by the service.
+    Field:
+      type: object
+      required:
+        - namespaceId
+        - dataTypeId
+        - name
+        - description
+      properties:
+        id:
+          type: integer
+          description: The numerical ID of the field.  (Auto-numbering, ignored on create.)
+        namespaceId:
+          type: integer
+          description: The numerical ID of the namespace to which this field belongs.
+        dataTypeId:
+          type: integer
+          description: The numerical ID of the data type to use.  The data type ID must belong to the namespace ID specified, unless it is a core data type.
+        name:
+          type: string
+          description: Alphanumeric common name of the data type, cannot start with a number.
+          maxLength: 80
+          pattern: '^[A-Za-z][A-Za-z0-9]*$'
+        description:
+          type: string
+          description: A short description describing the data type.
+          maxLength: 4096
+        defaultValue:
+          type: string
+          description: The default value assigned to this field; can be overridden when used in conjuction with a property.
+        enabled:
+          type: boolean
+          description: An enabled flag - `true` indicates the field is active, `false` otherwise.
+          default: true
         createDate:
           type: string
           format: date-time
