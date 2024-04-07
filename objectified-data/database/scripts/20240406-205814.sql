@@ -21,8 +21,8 @@ DROP INDEX IF EXISTS idx_link_unique_name;
 
 CREATE TABLE obj.link (
     int SERIAL NOT NULL PRIMARY KEY,
-    name VARCHAR(80) NOT NULL,
     link_def_id INT NOT NULL REFERENCES obj.link_def(id),
+    name VARCHAR(80) NOT NULL,
     t1 INT NOT NULL REFERENCES obj.instance(id),
     t2 INT NOT NULL REFERENCES obj.instance(id),
     t3 JSON,

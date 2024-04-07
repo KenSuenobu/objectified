@@ -85,6 +85,13 @@ tags:
       Instances are records created using Class definitions as templates.
       
       Instance data contains data associated with an instance, organized by version number and record date.
+  - name: Links
+    description: |
+      Links describe data between Classes that have a commonality or logical relationship.
+      
+      For instance, a `Car` might link a `Dealership` together, or an `Owner`.  `House`s may have
+      `Mortgage`s, and so on.  Links contain a left side and a right side, and link two `Class`es together.
+      Links may contain links to themselves (ie. a parent/child relationship.)
 paths:
   /auth/login:
     post:
@@ -130,6 +137,22 @@ paths:
       responses:
         '204':
           description: No content
+  /auth/refresh:
+    get:
+      tags:
+        - Authentication
+      summary: Refreshes JWT access token
+      operationId: logout
+      description: Refreshes the current session for the JWT access token, refreshing its timeout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
   /namespaces/list:
     get:
       tags:
@@ -150,12 +173,12 @@ paths:
                   $ref: '#/components/schemas/Namespace'
         '401':
           description: Unauthorized
-  /namespaces/{id}:
+  /namespaces/by-id/{id}:
     get:
       tags:
         - Namespaces
       summary: Retrieves a namespace by ID.
-      operationId: getNamespace
+      operationId: getNamespaceById
       description: Gets a namespace by its serial ID.
       security:
         - bearerAuth: []
@@ -166,6 +189,35 @@ paths:
           schema:
             type: integer
           description: The ID of the namespace to retrieve.
+      responses:
+        '200':
+          description: OK, returns the `Namespace` object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Namespace'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /namespaces/by-name/{name}:
+    get:
+      tags:
+        - Namespaces
+      summary: Retrieves a namespace by name.
+      operationId: getNamespaceByName
+      description: Gets a namespace by its name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: The name of the namespace to retrieve.
       responses:
         '200':
           description: OK, returns the `Namespace` object.
@@ -307,6 +359,33 @@ paths:
                   $ref: '#/components/schemas/User'
         '401':
           description: Unauthorized
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Returns a user by ID.
+      operationId: getUserById
+      description: Retrieves a user by its user ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the user.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
   /users/create:
     post:
       tags:
@@ -465,11 +544,11 @@ paths:
                   $ref: '#/components/schemas/Class'
         '401':
           description: Unauthorized
-  /classes/{classId}:
+  /classes/by-id/{classId}:
     get:
       tags:
         - Classes
-      summary: Returns a class definition.
+      summary: Returns a class definition by ID.
       operationId: getClassById
       description: Returns a class definition including the class and its properties.
       security:
@@ -481,6 +560,36 @@ paths:
           schema:
             type: integer
           description: The ID of the class.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/ClassDefinition'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /classes/by-name/{name}:
+    get:
+      tags:
+        - Classes
+      summary: Returns a class definition by name.
+      operationId: getClassByName
+      description: Returns a class definition including the class and its properties.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: The name of the class.
       responses:
         '200':
           description: OK
@@ -628,6 +737,56 @@ paths:
                   $ref: '#/components/schemas/Property'
         '401':
           description: Unauthorized
+  /properties/by-id/{id}:
+    get:
+      tags:
+        - Properties
+      summary: Returns a property by ID.
+      operationId: getPropertyById
+      description: Returns a property by its ID.
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the property.
+      responses:
+        '200':
+          description: An array of properties.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '401':
+          description: Unauthorized
+  /properties/by-name/{name}:
+    get:
+      tags:
+        - Properties
+      summary: Returns a property by name.
+      operationId: getPropertyByName
+      description: Returns a property by its name.
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: The name of the property.
+      responses:
+        '200':
+          description: An array of properties.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '401':
+          description: Unauthorized
   /properties/create:
     post:
       tags:
@@ -759,6 +918,56 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/DataType'
+        '401':
+          description: Unauthorized
+  /data-types/by-id/{id}:
+    get:
+      tags:
+        - DataTypes
+      summary: Returns a data type by ID.
+      operationId: getDataTypeById
+      description: Returns the data type by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the data type.
+      responses:
+        '200':
+          description: A data types.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataType'
+        '401':
+          description: Unauthorized
+  /data-types/by-name/{name}:
+    get:
+      tags:
+        - DataTypes
+      summary: Returns a data type by name.
+      operationId: getDataTypeByName
+      description: Returns the data type by its name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: name
+          description: The name of the data type.
+      responses:
+        '200':
+          description: A data types.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataType'
         '401':
           description: Unauthorized
   /data-types/create:
@@ -894,6 +1103,56 @@ paths:
                   $ref: '#/components/schemas/Field'
         '401':
           description: Unauthorized
+  /fields/by-id/{id}:
+    get:
+      tags:
+        - Fields
+      summary: Returns a field by ID.
+      operationId: getFieldById
+      description: Returns a field by its field ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the field.
+      responses:
+        '200':
+          description: A field record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Field'
+        '401':
+          description: Unauthorized
+  /fields/by-name/{name}:
+    get:
+      tags:
+        - Fields
+      summary: Returns a field by name.
+      operationId: getFieldByName
+      description: Returns a field by its field name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: The name of the field.
+      responses:
+        '200':
+          description: A field record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Field'
+        '401':
+          description: Unauthorized
   /fields/create:
     post:
       tags:
@@ -1025,6 +1284,56 @@ paths:
           description: Forbidden
         '409':
           description: Conflict
+  /instances/by-id/{id}:
+    get:
+      tags:
+        - Instances
+      summary: Returns the instance by ID.
+      operationId: getInstanceById
+      description: Returns the instance record based on its instance ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the instance.
+      responses:
+        '200':
+          description: An instance.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceData'
+        '401':
+          description: Unauthorized
+  /instances/by-name/{name}:
+    get:
+      tags:
+        - Instances
+      summary: Returns the instance by name.
+      operationId: getInstanceByName
+      description: Returns the instance record based on its instance name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: The name of the instance.
+      responses:
+        '200':
+          description: An instance.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceData'
+        '401':
+          description: Unauthorized
   /instances/delete/{id}:
     delete:
       tags:
@@ -1162,6 +1471,226 @@ paths:
           description: OK
         '401':
           description: Unauthorized
+  /link/create/definition:
+    post:
+      tags:
+        - Links
+      summary: Creates a new link definition.
+      operationId: createLinkDefinition
+      description: Creates a link definition object that links two classes between each other.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The link definition object to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkDef'
+      responses:
+        '201':
+          description: Created successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+  /link/definition/by-id/{id}:
+    get:
+      tags:
+        - Links
+      summary: Retrieves a link definition by ID.
+      operationId: getLinkDefinitionById
+      description: Retrieves a link definition by its link definition ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the link definition to retrieve.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkDef'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /link/by-id/{id}:
+    get:
+      tags:
+        - Links
+      summary: Retrieves a link by ID.
+      operationId: getLinkById
+      description: Retrieves a link by its link ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the link to retrieve.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /link/definition/by-name/{name}:
+    get:
+      tags:
+        - Links
+      summary: Retrieves a link definition by name.
+      operationId: getLinkDefinitionByName
+      description: Retrieves a link definition by its link definition name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: The name of the link definition to retrieve.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkDef'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /link/by-name/{name}:
+    get:
+      tags:
+        - Links
+      summary: Retrieves a link by name.
+      operationId: getLinkByName
+      description: Retrieves a link by its link name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: The name of the link to retrieve.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /link/create:
+    post:
+      tags:
+        - Links
+      summary: Creates a new link.
+      operationId: createLink
+      description: Creates a link object that links two classes between each other.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The link object to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Link'
+      responses:
+        '201':
+          description: Created successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+  /link/delete/definition/{id}:
+    delete:
+      tags:
+        - Links
+      summary: Deletes a link definition.
+      operationId: deleteLinkDefinition
+      description: Deletes a link definition and any links associated with it.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the link definition to disable.
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /link/delete/{id}:
+    delete:
+      tags:
+        - Links
+      summary: Deletes a link.
+      operationId: disableLink
+      description: Deletes a link entry.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the link to disable.
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
 components:
   securitySchemes:
     bearerAuth:
@@ -1539,3 +2068,63 @@ components:
           description: The properties associated with the class.
           items:
             $ref: '#/components/schemas/Property'
+    LinkDef:
+      type: object
+      required:
+        - namespaceId
+        - t1
+        - t2
+      properties:
+        id:
+          type: integer
+          description: The numerical ID of the link definition.  (Auto-numbering, ignored on create.)
+        namespaceId:
+          type: integer
+          description: The numerical ID of the namespace to which this link definition belongs.
+        t1:
+          type: integer
+          description: The numerical ID of the class on the left side to link from.
+        t2:
+          type: integer
+          description: The numerical ID of the class on the right side to link to.
+        name:
+          type: string
+          description: Alphanumeric common name of the data type, cannot start with a number.
+          maxLength: 80
+          pattern: '^[A-Za-z][A-Za-z0-9]*$'
+        description:
+          type: string
+          description: A short description describing the data type.
+          maxLength: 4096
+    Link:
+      type: object
+      required:
+        - linkDefId
+        - name
+        - t1
+        - t2
+      properties:
+        id:
+          type: integer
+          description: The numerical ID of the link.  (Auto-numbering, ignored on create.)
+        linkDefId:
+          type: integer
+          description: The numerical ID of the link definition to which this link belongs.
+        name:
+          type: string
+          description: Alphanumeric common name of the linked objects, cannot start with a number.
+          maxLength: 80
+          pattern: '^[A-Za-z][A-Za-z0-9]*$'
+        t1:
+          type: integer
+          description: The left side object to link
+        t2:
+          type: integer
+          description: The right side object to link
+        t3:
+          type: object
+          description: The link decoration describing the link metadata
+        createDate:
+          type: string
+          format: date-time
+          description: Creation date and time.  Ignored if supplied, handled by the service.
