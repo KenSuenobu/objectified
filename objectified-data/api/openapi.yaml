@@ -40,6 +40,15 @@ tags:
       
       Services require a JWT authentication token to be active for services to respond to requests.
       If authentication is missing, a `401 Unauthorized` response will occur.
+  - name: Groups
+    description: |
+      Groups are membership tables that join users and namespaces to common logical groupings.
+      
+      Groups are also referred to as tenancy identifiers.  Users and namespaces can be members of multiple
+      groups, but cannot join the same group twice.
+      
+      __NOTE:__  If a user or namespace is not part of a group, that user and/or namespace will not be
+      visible within Objectified.
   - name: Classes
     description: |
       Classes are templates that define the shape of data that can be contained in a record.  For more
@@ -515,6 +524,144 @@ paths:
           description: Forbidden
         '404':
           description: Not found
+        '409':
+          description: Conflict
+  /groups/list:
+    get:
+      tags:
+        - Groups
+      summary: Returns a list of groups.
+      operationId: listGroups
+      description: Returns a list of all groups registered.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: An array of groups.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+        '401':
+          description: Unauthorized
+  /groups/create:
+    post:
+      tags:
+        - Groups
+      summary: Creates a new group.
+      operationId: createGroup
+      description: Creates a new group.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The group object to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+      responses:
+        '201':
+          description: Created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+  /groups/by-id/{id}:
+    post:
+      tags:
+        - Groups
+      summary: Returns a group by ID.
+      operationId: getGroupById
+      description: Returns a group object by its group ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the group.
+      responses:
+        '200':
+          description: A group object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /groups/add/namespace:
+    post:
+      tags:
+        - Groups
+      summary: Adds a namespace to a group.
+      operationId: addNamespaceToGroup
+      description: Adds a namespace by ID to a group membership by the group ID.
+      type: object
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The parameters containing the namespace and group IDs.
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                namespaceId:
+                  type: integer
+                  description: The namespace ID.
+                groupId:
+                  type: integer
+                  description: The group ID.
+      responses:
+        '201':
+          description: Created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+  /groups/add/user:
+    post:
+      tags:
+        - Groups
+      summary: Adds a user to a group.
+      operationId: addUserToGroup
+      description: Adds a user by ID to a group membership by the group ID.
+      type: object
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: The parameters containing the user and group IDs.
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                userId:
+                  type: integer
+                  description: The user ID.
+                groupId:
+                  type: integer
+                  description: The group ID.
+      responses:
+        '201':
+          description: Created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '409':
           description: Conflict
   /classes/list/{namespaceId}:
@@ -2128,3 +2275,21 @@ components:
           type: string
           format: date-time
           description: Creation date and time.  Ignored if supplied, handled by the service.
+    Group:
+      type: object
+      required:
+        - name
+        - description
+      properties:
+        id:
+          type: integer
+          description: The numerical ID of the group.  (Auto-numbering, ignored on create.)
+        name:
+          type: string
+          description: Alphanumeric common name of the group, cannot start with a number.
+          maxLength: 80
+          pattern: '^[A-Za-z][A-Za-z0-9]*$'
+        description:
+          type: string
+          description: A short description describing the group.
+          maxLength: 4096
