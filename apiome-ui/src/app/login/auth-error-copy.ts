@@ -99,6 +99,10 @@ export const AUTH_ERROR_COPY: Readonly<Record<string, AuthErrorCopy>> = {
     type: 'error',
     text: 'Your account could not be found or the credentials provided were incorrect. Please check your email and password, or sign up for a new account.',
   },
+  TwoFactorInvalid: {
+    type: 'error',
+    text: 'That authentication code was not accepted. Check your authenticator app and try again.',
+  },
 };
 
 /**

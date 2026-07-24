@@ -24,10 +24,11 @@ env the server under test boots with. Production deployments never set these var
 
 ## 2FA legs
 
-There is no 2FA UX yet (the `twoFactor` plugin is foundation-only, #5005), so the enroll /
-login-with-code / backup-code legs drive Better Auth's `two-factor` HTTP endpoints directly over
-the browser context's session cookies, generating live TOTP codes with the dependency-free
-`support/totp.ts` helper (RFC 6238, matching the plugin's SHA1/6-digit/30s defaults).
+Profile enrollment + `/login/2fa` UI shipped in OLO-9.13 (#5014). The journey suite still drives
+Better Auth's `two-factor` HTTP endpoints directly over the browser context's session cookies
+(stable acceptance gate), generating live TOTP codes with the dependency-free `support/totp.ts`
+helper (RFC 6238, matching the plugin's SHA1/6-digit/30s defaults). Backup-code / trusted-device
+UX remains OLO-9.14 (#5006).
 
 ## Running locally
 

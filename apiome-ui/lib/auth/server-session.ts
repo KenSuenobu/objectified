@@ -4,10 +4,10 @@
  * The whole server — ~106 API route handlers plus the server components/actions that guard protected
  * routes — reads the current session through this one helper. It reads the Better Auth database session
  * (`auth.api.getSession`) and maps it onto the app contract (`session.user.user_id` /
- * `current_tenant_id`) via `toAppSessionUser` (`user_id` = `user.id`, `current_tenant_id` derived from
- * the validated last-active cookie). The mapping is applied here rather than relying on the server
- * `customSession` plugin so a direct `auth.api.getSession()` call is shaped identically to the browser's
- * `/get-session`.
+ * `current_tenant_id` / 2FA markers) via `toAppSession` (`user_id` = `user.id`, `current_tenant_id`
+ * derived from the validated last-active cookie, `twoFactorElevated` from enrollment). The mapping is
+ * applied here rather than relying on the server `customSession` plugin so a direct
+ * `auth.api.getSession()` call is shaped identically to the browser's `/get-session`.
  *
  * Before the cutover this dispatched by `AUTH_ENGINE` (NextAuth `getServerSession` vs Better Auth); the
  * NextAuth branch and the flag were removed with the rest of the parallel-run scaffolding in OLO-10.14.
@@ -35,14 +35,11 @@ export type AuthSession = AppSession;
 export async function getAuthSession(): Promise<AuthSession | null> {
   const { headers } = await import('next/headers');
   const { auth } = await import('./auth');
-  const { toAppSessionUser } = await import('./better-auth-session-shape');
+  const { toAppSession } = await import('./better-auth-session-shape');
 
   const result = await auth.api.getSession({ headers: await headers() });
   if (!result?.user) {
     return null;
   }
-  return {
-    user: await toAppSessionUser(result.user),
-    expires: new Date(result.session.expiresAt).toISOString(),
-  };
+  return toAppSession(result.user, result.session.expiresAt);
 }

@@ -26,6 +26,7 @@ import {
   dashboardPanelClass,
 } from '@/app/components/ade/dashboard/dashboardScreenClasses';
 import { cn } from '../../../../../lib/utils';
+import { TwoFactorSettings } from './TwoFactorSettings';
 
 const Profile = () => {
   const { data: session, update } = useAuthSession();
@@ -360,11 +361,14 @@ const Profile = () => {
                   </CardTitle>
                   <CardDescription>Password and account security</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Use a strong, unique password. Change it periodically or if you suspect it has
-                    been compromised.
-                  </p>
+                <CardContent className="space-y-6">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Use a strong, unique password. Change it periodically or if you suspect it has
+                      been compromised.
+                    </p>
+                  </div>
+                  <TwoFactorSettings />
                 </CardContent>
                 <CardFooter>
                   <Button size="sm" className="w-full" onClick={handlePasswordChangeClick}>

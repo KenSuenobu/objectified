@@ -23,6 +23,11 @@ export function createAuthClient(): unknown {
     },
     signOut: async () => ({ data: null, error: null }),
     updateUser: async () => ({ data: null, error: null }),
-    twoFactor: {},
+    twoFactor: {
+      enable: async () => ({ data: null, error: null }),
+      disable: async () => ({ data: null, error: null }),
+      verifyTotp: async () => ({ data: null, error: null }),
+      getTotpUri: async () => ({ data: null, error: null }),
+    },
   };
 }

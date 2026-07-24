@@ -6,6 +6,7 @@ We continue to improve the platform based on your feedback with improvements and
 
 ## Features
 
+- Auth: TOTP 2FA — enroll via QR on Profile, verify at login, password-gated disable; session exposes `twoFactorElevated`
 - Tenants: MCP policy history with who/when and before/after tool enablement
 - Tenants: confirm before disabling MCP toolsets used by active keys (shows key count + prefixes)
 - Tenants: per-key MCP capability editor (inherit vs custom enable-set, ceiling locks, effective preview)

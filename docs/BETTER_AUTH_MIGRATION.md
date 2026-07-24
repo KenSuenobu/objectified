@@ -243,8 +243,7 @@ plugin and any future email-verification/OTP flow have their store:
 | `lockedUntil` | datetime (nullable) | lockout expiry; null = not locked |
 
 Plus `user.twoFactorEnabled boolean` (§2.1). Registered via `twoFactor()` on the server instance
-(`appName`/`issuer` = the app name) and `twoFactorClient()` on the client. **No enrollment/login UX
-here** — that is OLO-9.13 (#5014) / OLO-9.14 (#5006).
+(`appName`/`issuer` = the app name) and `twoFactorClient()` on the client.
 
 > **✅ 2FA foundation implemented (10.10 #5005).** `V201__better_auth_two_factor_5005.sql` creates
 > `apiome.two_factor` (the plugin's native quoted camelCase columns; `"userId"` a UUID FK →
@@ -259,6 +258,13 @@ here** — that is OLO-9.13 (#5014) / OLO-9.14 (#5006).
 > symmetric encryption, keyed on the Better Auth secret (`BETTER_AUTH_SECRET`) — chosen over a bespoke
 > OLO-8.3 `AUTH_CONFIG_ENC_KEY` envelope so the one auth key already protecting sessions/cookies covers
 > 2FA too, adding no new key-management surface.
+>
+> **✅ TOTP UX implemented (OLO-9.13 #5014).** Password-gated enroll/disable on Profile Security,
+> `/login/2fa` after `twoFactorRedirect`, and `AppSession.twoFactorElevated` /
+> `user.twoFactorEnabled` for downstream consumers. Better Auth's stock after-hook only challenges
+> `/sign-in/email|username|phone-number` — OAuth/SSO second-factor is deferred. Backup-code login,
+> trusted devices, and lockout UX remain OLO-9.14 (#5006); fuller profile multi-method management is
+> OLO-9.15 (#5015).
 
 ### 2.6 Tables that stay as-is
 

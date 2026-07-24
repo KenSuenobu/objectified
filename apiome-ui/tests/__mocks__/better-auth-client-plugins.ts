@@ -7,6 +7,8 @@
  * own `jest.mock`, which takes precedence.
  */
 
-export const twoFactorClient = (): { id: string } => ({ id: 'two-factor-client' });
+export const twoFactorClient = (
+  _options?: { onTwoFactorRedirect?: () => void | Promise<void> }
+): { id: string } => ({ id: 'two-factor-client' });
 export const customSessionClient = (): { id: string } => ({ id: 'custom-session-client' });
 export const genericOAuthClient = (): { id: string } => ({ id: 'generic-oauth-client' });

@@ -168,6 +168,21 @@ exports[`every known auth error code renders its own banner (OLO-3.2) renders th
 </div>
 `;
 
+exports[`every known auth error code renders its own banner (OLO-3.2) renders the banner for TwoFactorInvalid 1`] = `
+<div
+  aria-live="assertive"
+  class="mb-6 rounded-2xl border p-4 backdrop-blur-sm border-red-200 bg-red-50/80 text-red-800 dark:border-red-700/60 dark:bg-red-900/30 dark:text-red-200"
+  data-testid="login-banner"
+  role="alert"
+>
+  <p
+    class="text-sm font-medium"
+  >
+    That authentication code was not accepted. Check your authenticator app and try again.
+  </p>
+</div>
+`;
+
 exports[`every known auth error code renders its own banner (OLO-3.2) renders the banner for account-disabled 1`] = `
 <div
   aria-live="assertive"

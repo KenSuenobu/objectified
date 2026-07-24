@@ -54,6 +54,7 @@ Not part of the resolution contract, but they arrive on the same query param:
 | Code | Source |
 |------|--------|
 | `AccessDenied`, `CredentialsSignin` | NextAuth built-ins |
+| `TwoFactorInvalid` | TOTP second-step failure (OLO-9.13 #5014) |
 | `OAuthAccountExists` | Signup flow (`lib/auth/oauth-signup-actions.ts`) |
 | `SignupSessionExpired` | OAuth signup completion page (`src/app/signup/oauth/page.tsx`) |
 

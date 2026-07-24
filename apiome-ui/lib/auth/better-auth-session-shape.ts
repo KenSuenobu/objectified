@@ -1,5 +1,5 @@
 /**
- * Better Auth → apiome session shape (OLO-10.12, #5007).
+ * Better Auth → apiome session shape (OLO-10.12, #5007; 2FA marker OLO-9.13 #5014).
  *
  * The whole app consumes a NextAuth-shaped session: `session.user.user_id` and
  * `session.user.current_tenant_id`, not Better Auth's native `session.user.id` (and no tenant at
@@ -8,7 +8,8 @@
  * contract:
  *
  * ```
- * { user: { user_id, email, name, image?, current_tenant_id? }, expires }
+ * { user: { user_id, email, name, image?, current_tenant_id?, twoFactorEnabled },
+ *   expires, twoFactorElevated }
  * ```
  *
  * - `user_id` is Better Auth's `user.id`.
@@ -16,6 +17,9 @@
  *   (OLO-6.1), re-validated against the user's live memberships — the exact logic the legacy NextAuth
  *   `jwt` callback ran at login (removed at the OLO-10.14 cutover), moved to read time because a Better
  *   Auth database session carries no custom claim. No schema change is needed.
+ * - `twoFactorEnabled` / `twoFactorElevated` (OLO-9.13): Better Auth 1.6 has no
+ *   `session.twoFactorVerified`. Until trusted devices (#5006), every session for a 2FA user is
+ *   issued only after TOTP verify, so elevation mirrors enrollment (`twoFactorEnabled`).
  *
  * Consumed by the Better Auth `customSession` plugin (`auth.ts`), so `auth.api.getSession()` and the
  * browser `/api/auth/get-session` both return the contract shape from one source, and by the
@@ -37,6 +41,11 @@ export interface AppSessionUser {
   image?: string | null;
   /** The active tenant, validated against live memberships; absent for tenant-less users. */
   current_tenant_id?: string;
+  /**
+   * Whether the account has completed TOTP enrollment (Better Auth `user.twoFactorEnabled`).
+   * Surfaced for Profile status and for downstream elevation checks (OLO-9.13 #5014).
+   */
+  twoFactorEnabled: boolean;
 }
 
 /** The app-contract session shape (matches the NextAuth `Session` the UI already consumes). */
@@ -44,6 +53,12 @@ export interface AppSession {
   user: AppSessionUser;
   /** ISO-8601 expiry, mirroring NextAuth's `session.expires`. */
   expires: string;
+  /**
+   * True when this session cleared 2FA at issuance (OLO-9.13 #5014).
+   * Until trusted devices (#5006) refine this, equals `user.twoFactorEnabled` — BA only issues a
+   * session for enrolled users after TOTP verify on the password path.
+   */
+  twoFactorElevated: boolean;
 }
 
 /**
@@ -55,6 +70,8 @@ export interface BetterAuthUserLike {
   email: string;
   name?: string | null;
   image?: string | null;
+  /** Present when the twoFactor plugin is registered; absent/false for non-enrolled users. */
+  twoFactorEnabled?: boolean | null;
 }
 
 /**
@@ -95,7 +112,27 @@ export async function toAppSessionUser(user: BetterAuthUserLike): Promise<AppSes
     email: user.email,
     name: user.name ?? null,
     image: user.image ?? null,
+    twoFactorEnabled: Boolean(user.twoFactorEnabled),
     ...(current_tenant_id ? { current_tenant_id } : {}),
+  };
+}
+
+/**
+ * Build the full app-contract session from a Better Auth `{ user, session }` payload.
+ *
+ * @param user The Better Auth session user (may include `twoFactorEnabled`).
+ * @param expiresAt Session expiry from Better Auth (`session.expiresAt`).
+ * @returns The {@link AppSession} the app and suite consumers expect.
+ */
+export async function toAppSession(
+  user: BetterAuthUserLike,
+  expiresAt: string | Date
+): Promise<AppSession> {
+  const appUser = await toAppSessionUser(user);
+  return {
+    user: appUser,
+    expires: new Date(expiresAt).toISOString(),
+    twoFactorElevated: appUser.twoFactorEnabled,
   };
 }
 

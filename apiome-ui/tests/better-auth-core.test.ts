@@ -305,6 +305,9 @@ describe('lib/auth/auth-client.ts (Better Auth browser client)', () => {
       ],
     });
     expect(mockTwoFactorClient).toHaveBeenCalledTimes(1);
+    expect(mockTwoFactorClient).toHaveBeenCalledWith(
+      expect.objectContaining({ onTwoFactorRedirect: expect.any(Function) })
+    );
     expect(mockCustomSessionClient).toHaveBeenCalledTimes(1);
     expect(mockGenericOAuthClient).toHaveBeenCalledTimes(1);
     expect(authClient).toBeDefined();
