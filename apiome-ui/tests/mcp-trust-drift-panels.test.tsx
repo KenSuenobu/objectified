@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import { TrustDriftAlertsPanel } from '../src/app/components/ui/mcp/TrustDriftAlertsPanel';
@@ -63,7 +63,7 @@ describe('TrustDriftAlertsPanel', () => {
 });
 
 describe('ShadowedNamesPanel', () => {
-  it('groups a shadowed name with its host scope', async () => {
+  it('renders a compact bell alert and expands to the shadowed groups', async () => {
     global.fetch = mockFetch(200, {
       advisory: true,
       group_count: 1,
@@ -83,13 +83,24 @@ describe('ShadowedNamesPanel', () => {
       ],
     }) as unknown as typeof fetch;
     render(<ShadowedNamesPanel />);
+    await waitFor(() => expect(screen.getByText(/1 shadowed name/i)).toBeInTheDocument());
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByText(/tool:search/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /1 shadowed name/i }));
     await waitFor(() => expect(screen.getByText(/tool:search/)).toBeInTheDocument());
     expect(screen.getByText(/Cross host/i)).toBeInTheDocument();
   });
 
-  it('renders a clean state when nothing is shadowed', async () => {
-    global.fetch = mockFetch(200, { advisory: true, group_count: 0, groups: [] }) as unknown as typeof fetch;
-    render(<ShadowedNamesPanel />);
-    await waitFor(() => expect(screen.getByText(/No shadowed names/i)).toBeInTheDocument());
+  it('renders nothing when the catalog has no shadowed names', async () => {
+    global.fetch = mockFetch(200, {
+      advisory: true,
+      group_count: 0,
+      groups: [],
+    }) as unknown as typeof fetch;
+    const { container } = render(<ShadowedNamesPanel />);
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    await waitFor(() => expect(container).toBeEmptyDOMElement());
+    expect(screen.queryByText(/No shadowed names/i)).not.toBeInTheDocument();
   });
 });

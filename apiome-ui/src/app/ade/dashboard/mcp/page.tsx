@@ -216,20 +216,20 @@ export default function McpBrowsePage() {
               <div className="border-b border-gray-200 bg-white px-6 py-3 dark:border-gray-700 dark:bg-gray-800">
                 <McpCollectionsPanel selectedEndpointIds={visibleEndpointIds} />
               </div>
-              {/* Shadowed / duplicate tool names across the enabled host scope (CLX-3.4, #4858). */}
-              <div className="border-b border-gray-200 bg-white px-6 py-3 dark:border-gray-700 dark:bg-gray-800">
-                <ShadowedNamesPanel />
-              </div>
             </>
           ) : null}
 
           {hasAnyEndpoints && !error ? (
-            <div className="flex flex-wrap items-center gap-2 px-6 text-sm text-gray-500 dark:text-gray-400">
-              <span>{totals.hostCount} hosts</span>
-              <span aria-hidden>·</span>
-              <span>{totals.endpointCount} endpoints</span>
-              <span aria-hidden>·</span>
-              <span>{totals.capabilityCount} capabilities</span>
+            <div className="space-y-2 px-6">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <span>{totals.hostCount} hosts</span>
+                <span aria-hidden>·</span>
+                <span>{totals.endpointCount} endpoints</span>
+                <span aria-hidden>·</span>
+                <span>{totals.capabilityCount} capabilities</span>
+              </div>
+              {/* Compact alert only when collisions exist (CLX-3.4, #4858) — silent when clean. */}
+              <ShadowedNamesPanel />
             </div>
           ) : null}
 
