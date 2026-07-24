@@ -261,9 +261,29 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
     expect(customSessionIndex).toBeLessThan(nextCookiesIndex);
   });
 
+  it('prefers BETTER_AUTH_URL over NEXTAUTH_URL for the base URL', async () => {
+    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.BETTER_AUTH_URL = 'https://preferred.example.test';
+    process.env.NEXTAUTH_URL = 'https://legacy.example.test';
+
+    await import('@lib/auth/auth');
+
+    expect(mockBetterAuth.mock.calls[0][0].baseURL).toBe('https://preferred.example.test');
+  });
+
   it('falls back to NEXTAUTH_URL for the base URL when BETTER_AUTH_URL is unset', async () => {
     process.env.NEXTAUTH_SECRET = 'test-secret';
     delete process.env.BETTER_AUTH_URL;
+    process.env.NEXTAUTH_URL = 'https://legacy.example.test';
+
+    await import('@lib/auth/auth');
+
+    expect(mockBetterAuth.mock.calls[0][0].baseURL).toBe('https://legacy.example.test');
+  });
+
+  it('treats a blank BETTER_AUTH_URL as unset and falls back to NEXTAUTH_URL', async () => {
+    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.BETTER_AUTH_URL = '   ';
     process.env.NEXTAUTH_URL = 'https://legacy.example.test';
 
     await import('@lib/auth/auth');

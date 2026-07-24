@@ -65,6 +65,19 @@ export function resolveBetterAuthSecret(): string | undefined {
 }
 
 /**
+ * Resolve Better Auth's public `baseURL` (the origin OAuth callback URLs are built from).
+ *
+ * Prefers `BETTER_AUTH_URL` when set and non-blank; otherwise falls back to the historical
+ * `NEXTAUTH_URL`. Blank/whitespace-only values count as unset so a commented-template line cannot
+ * pin an empty base URL.
+ *
+ * @returns The preferred public origin, or `undefined` when neither env var is set.
+ */
+export function resolveBetterAuthBaseUrl(): string | undefined {
+  return process.env.BETTER_AUTH_URL?.trim() || process.env.NEXTAUTH_URL;
+}
+
+/**
  * Build the Better Auth `session` options block.
  *
  * @returns The session lifetime, refresh cadence and cookie-cache configuration to pass to

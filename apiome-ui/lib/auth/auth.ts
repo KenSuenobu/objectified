@@ -9,6 +9,7 @@ import {
   buildBetterAuthAdvancedOptions,
   buildBetterAuthSessionOptions,
   buildBetterAuthTrustedOrigins,
+  resolveBetterAuthBaseUrl,
   resolveBetterAuthSecret,
 } from './better-auth-session';
 import {
@@ -68,7 +69,8 @@ const TWO_FACTOR_TABLE = 'two_factor';
  * - `secret` reuses `NEXTAUTH_SECRET` so existing tooling and the suite's shared-secret assumption
  *   hold at cutover; a dedicated `BETTER_AUTH_SECRET` (or versioned `BETTER_AUTH_SECRETS`) can take
  *   over without a code change (design §1, {@link resolveBetterAuthSecret}).
- * - `baseURL` uses `BETTER_AUTH_URL` when set, otherwise the existing `NEXTAUTH_URL`.
+ * - `baseURL` prefers `BETTER_AUTH_URL` when set (non-blank), otherwise the existing `NEXTAUTH_URL`
+ *   ({@link resolveBetterAuthBaseUrl}).
  * - `basePath` stays at the default `/api/auth`, matching the route the app already serves, so no
  *   client/cookie path churn is needed at cutover.
  * - `session` / `advanced` / `trustedOrigins` implement the OLO-10.3 session strategy & cookie
@@ -87,7 +89,7 @@ function buildBetterAuthConfig(oauthConfigs: GenericOAuthConfig[]) {
   appName: APP_NAME,
   database: connectionPool,
   secret: resolveBetterAuthSecret(),
-  baseURL: process.env.BETTER_AUTH_URL ?? process.env.NEXTAUTH_URL,
+  baseURL: resolveBetterAuthBaseUrl(),
   basePath: '/api/auth',
   trustedOrigins: buildBetterAuthTrustedOrigins(),
   session: buildBetterAuthSessionOptions(),
