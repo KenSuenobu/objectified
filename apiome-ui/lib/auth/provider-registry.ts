@@ -16,10 +16,10 @@
  *     fails startup — or warns, per `AUTH_PROVIDER_VALIDATION` — when a provider's env is
  *     only partially configured (OLO-7.2).
  *
- * Adding a provider later (Okta #241, AWS #68) means: one entry here, one generic-OAuth
- * config in `better-auth-oauth-providers.ts`, one brand icon in
+ * Adding a provider later (Keycloak #4988, Auth0 #4989, …) means: one entry here, one
+ * generic-OAuth config in `better-auth-oauth-providers.ts`, one brand icon in
  * `src/app/components/auth/provider-brand.tsx` — no archaeology across surfaces. Google
- * Workspace sign-in (OLO-9.2, #4985) followed exactly that path.
+ * Workspace (OLO-9.2), Okta (OLO-9.3), and Cognito (OLO-9.4) followed exactly that path.
  *
  * This module is intentionally free of React and auth-engine imports so both server code
  * (routes, server components) and client components can import it.
@@ -186,8 +186,14 @@ const PROVIDER_REGISTRY_ENTRIES: readonly Omit<ProviderDescriptor, 'requiredEnvK
   {
     id: 'aws',
     label: 'AWS',
-    status: 'coming-soon',
-    requiredFields: [],
+    status: 'available',
+    // Issuer-based Cognito (OLO-9.4): client credentials plus the user-pool issuer URL stored in
+    // config JSONB under COGNITO_ISSUER (OLO-9.1). Form:
+    // `https://cognito-idp.<region>.amazonaws.com/<userPoolId>`.
+    requiredFields: [
+      ...clientCredentialFields('COGNITO_CLIENT_ID', 'COGNITO_CLIENT_SECRET'),
+      { field: 'issuer', kind: 'config', envKey: 'COGNITO_ISSUER' },
+    ],
   },
 ];
 

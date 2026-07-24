@@ -50,8 +50,12 @@
     {
       "id": "aws",
       "label": "AWS",
-      "status": "coming-soon",
-      "required_fields": []
+      "status": "available",
+      "required_fields": [
+        { "field": "client_id", "kind": "client_id", "env_key": "COGNITO_CLIENT_ID" },
+        { "field": "client_secret", "kind": "client_secret", "env_key": "COGNITO_CLIENT_SECRET" },
+        { "field": "issuer", "kind": "config", "env_key": "COGNITO_ISSUER" }
+      ]
     }
   ]
 }

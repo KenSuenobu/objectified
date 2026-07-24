@@ -286,6 +286,7 @@ describe('resolveBetterAuthOAuthSignIn — decision tree', () => {
 
   test('the adapter dispatches every trusted OAuth provider (and not credentials)', () => {
     expect([...SUPPORTED_OAUTH_PROVIDERS].sort()).toEqual([
+      'aws',
       'azure',
       'github',
       'gitlab',

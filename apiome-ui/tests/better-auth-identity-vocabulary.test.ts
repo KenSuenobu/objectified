@@ -131,7 +131,14 @@ const makeCtx = (): BetterAuthOAuthContext => ({
 
 describe('slug vocabulary parity: registry & resolution gates ⊆ the DB CHECK', () => {
   test('the enabled registry ids are exactly the live available providers', () => {
-    expect([...ENABLED_IDS].sort()).toEqual(['azure', 'github', 'gitlab', 'google', 'okta']);
+    expect([...ENABLED_IDS].sort()).toEqual([
+      'aws',
+      'azure',
+      'github',
+      'gitlab',
+      'google',
+      'okta',
+    ]);
   });
 
   test('every enabled registry id is permitted by the external_auth_providers CHECK', () => {

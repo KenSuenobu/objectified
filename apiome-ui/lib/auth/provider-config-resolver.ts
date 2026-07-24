@@ -62,6 +62,8 @@ export const PROVIDER_CRED_ENV_KEYS: Record<
   // Okta (OLO-9.3, #4986): issuer lives in config JSONB and overlays via the extras loop below;
   // credentials still need an explicit mapping so DB-over-env enablement works.
   okta: { clientId: 'OKTA_CLIENT_ID', clientSecret: 'OKTA_CLIENT_SECRET' },
+  // Cognito / aws (OLO-9.4, #4987): same issuer-in-config pattern as Okta.
+  aws: { clientId: 'COGNITO_CLIENT_ID', clientSecret: 'COGNITO_CLIENT_SECRET' },
 };
 
 /** Default TTL (ms) for the in-process cache; bounded so a DB change lands within ~a cache window. */

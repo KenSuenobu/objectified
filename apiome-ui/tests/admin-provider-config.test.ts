@@ -81,6 +81,7 @@ describe('PROVIDER_EXTRA_FIELDS metadata', () => {
       expect.arrayContaining(['GITHUB_OAUTH_BASE_URL', 'GITHUB_API_BASE_URL'])
     );
     expect(PROVIDER_EXTRA_FIELDS.okta.map((f) => f.envKey)).toEqual(['OKTA_ISSUER']);
+    expect(PROVIDER_EXTRA_FIELDS.aws.map((f) => f.envKey)).toEqual(['COGNITO_ISSUER']);
   });
 });
 
