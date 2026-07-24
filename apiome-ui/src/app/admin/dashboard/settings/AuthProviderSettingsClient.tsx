@@ -4,10 +4,9 @@
  * Sign-in provider configuration screen (OLO-8.7, #4973).
  *
  * The list shows only providers that are already configured (any field stored in the DB, or an
- * existing DB row). New providers are added via the header's "+ Add Provider" menu, which lists
- * the remaining registry providers (coming-soon entries as disabled items) — so the page stays
- * uncluttered no matter how many providers the registry grows. An added-but-unsaved provider
- * stays visible locally until its first save persists it.
+ * existing DB row). New providers are added via the header's "+ Add Provider" modal: the admin
+ * picks a registry provider, fills credentials/extras, and saves — the card only appears after a
+ * successful PUT. Coming-soon entries stay visible but disabled in the picker.
  *
  * Each card renders:
  *   - a three-way enablement control (Enabled / Disabled / Use .env) matching the V196
@@ -24,17 +23,19 @@
  * All reads/writes go through the super-admin proxy (`/api/admin/auth-providers`), gated by the
  * hardened session (OLO-8.1). Saves send only the fields the admin actually changed (partial
  * update). A blocked enable (incomplete or coming-soon provider) surfaces the structured 422
- * guidance from OLO-8.4 inline on the card.
+ * guidance from OLO-8.4 inline on the card (or in the Add modal).
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   AlertTriangle,
+  ArrowLeft,
   CheckCircle2,
   Loader2,
   Plus,
   RefreshCw,
   Search,
   ShieldCheck,
+  X,
 } from 'lucide-react';
 import { getProviderBrand } from '@/app/components/auth/provider-brand';
 import {
@@ -151,7 +152,7 @@ function EnablementOption({
  * True when any of its fields is stored in the database (rather than falling back to `.env`),
  * when non-secret extras are stored, or when a DB row exists at all (`updated_at` set) — a row
  * whose fields were all cleared back to fallback still shows, since an admin deliberately
- * touched it. Purely env-fallback providers stay hidden until added via the header menu.
+ * touched it. Purely env-fallback providers stay hidden until added via the Add Provider modal.
  */
 function isConfigured(view: AdminProviderConfigView): boolean {
   return (
@@ -182,77 +183,136 @@ function matchesProviderQuery(candidate: AdminProviderConfigView, query: string)
 }
 
 /**
- * The header's "+ Add Provider" affordance: a button opening a menu of every registry provider
- * not currently shown in the list. Available providers are selectable (adding their card to the
- * page); coming-soon providers appear as disabled entries so the roadmap stays discoverable.
+ * "+ Add Provider" modal: pick an unconfigured registry provider, fill credentials/extras, save.
  *
- * The panel is built for a large registry (the Better Auth catalog-parity waves, OLO-9.16–9.49,
- * grow it toward ~50 entries): a search box pinned at the top filters candidates by label or slug
- * ({@link matchesProviderQuery}), and the item list below it scrolls inside a capped-height region
- * so the menu never outgrows the viewport. Pressing Enter in the search box adds the first
- * *available* (non-coming-soon) match — the one-keystroke path for an exact search. The query
- * resets whenever the menu closes, so each open starts from the full list.
+ * The card only appears on the page after a successful PUT — there is no temporary unsaved card.
+ * Coming-soon providers stay in the picker as disabled teasers. Escape / backdrop / Cancel close
+ * without writing; Back returns from the form step to the searchable list.
  *
- * @param candidates Providers not currently visible, in registry order.
+ * @param candidates Providers not currently configured (any order; the modal sorts by label).
  * @param disabled Disables the trigger (while the list is loading or failed to load).
- * @param onAdd Called with the chosen provider id.
+ * @param onSaved Called with the server view after a successful first save.
  */
-function AddProviderMenu({
+function AddProviderModal({
   candidates,
   disabled,
-  onAdd,
+  onSaved,
 }: {
   candidates: AdminProviderConfigView[];
   disabled: boolean;
-  onAdd: (providerId: string) => void;
+  onSaved: (view: AdminProviderConfigView) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = useState<AdminProviderConfigView | null>(null);
+  const [enablement, setEnablement] = useState<EnablementChoice>('env');
+  const [clientId, setClientId] = useState('');
+  const [secretInput, setSecretInput] = useState('');
+  const [extras, setExtras] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [errorMissingFields, setErrorMissingFields] = useState<string[]>([]);
 
-  /**
-   * Close the menu and clear the query. Every close path runs through this so a fresh open always
-   * starts unfiltered — a stale query from a previous open would silently hide providers behind
-   * an easy-to-miss search box.
-   */
-  const closeMenu = useCallback(() => {
+  const closeModal = useCallback(() => {
     setOpen(false);
     setQuery('');
+    setSelected(null);
+    setEnablement('env');
+    setClientId('');
+    setSecretInput('');
+    setExtras({});
+    setSaving(false);
+    setSaveError(null);
+    setErrorMissingFields([]);
   }, []);
 
-  // Close on outside click / Escape, only while open.
   useEffect(() => {
     if (!open) return;
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) closeMenu();
-    };
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeMenu();
+      if (event.key === 'Escape') closeModal();
     };
-    document.addEventListener('mousedown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open, closeMenu]);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, closeModal]);
 
-  const filtered = candidates.filter((candidate) => matchesProviderQuery(candidate, query));
+  const filtered = candidates
+    .filter((candidate) => matchesProviderQuery(candidate, query))
+    .slice()
+    .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
 
-  /** Add a candidate and close the menu (shared by item click and the Enter shortcut). */
-  const choose = (providerId: string) => {
-    onAdd(providerId);
-    closeMenu();
+  const pick = (view: AdminProviderConfigView) => {
+    if (view.status !== 'available') return;
+    setSelected(view);
+    setEnablement(enablementFromView(view.enabled));
+    setClientId(view.client_id ?? '');
+    setSecretInput('');
+    setExtras(extrasFromView(view));
+    setSaveError(null);
+    setErrorMissingFields([]);
+    setQuery('');
+  };
+
+  const payload =
+    selected && selected.status === 'available'
+      ? buildProviderUpdatePayload(selected, {
+          enabled: enabledFromChoice(enablement),
+          clientId,
+          clientSecret: secretInput,
+          clearSecret: false,
+          extras,
+        })
+      : null;
+  const dirty = payload !== null;
+  const extraFields = selected ? (PROVIDER_EXTRA_FIELDS[selected.provider_id] ?? []) : [];
+
+  const handleSave = async () => {
+    if (!selected || !payload || saving) return;
+    setSaving(true);
+    setSaveError(null);
+    setErrorMissingFields([]);
+    try {
+      const response = await fetch(
+        `/api/admin/auth-providers/${encodeURIComponent(selected.provider_id)}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
+      const body: unknown = await response.json().catch(() => null);
+      if (response.ok) {
+        onSaved(body as AdminProviderConfigView);
+        closeModal();
+        return;
+      }
+      if (response.status === 401 || response.status === 403) {
+        setSaveError('Your admin session has expired. Sign out and back in, then retry.');
+        return;
+      }
+      setSaveError(
+        extractRestErrorMessage(body, 'Saving failed. Check the configuration service and retry.')
+      );
+      const detail =
+        body && typeof body === 'object'
+          ? (body as { detail?: { missing_fields?: unknown } }).detail
+          : undefined;
+      if (detail && typeof detail === 'object' && Array.isArray(detail.missing_fields)) {
+        setErrorMissingFields(detail.missing_fields.map(String));
+      }
+    } catch {
+      setSaveError('Saving failed: the server could not be reached.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div ref={containerRef} className="relative shrink-0">
+    <>
       <button
         type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
+        aria-haspopup="dialog"
         disabled={disabled}
-        onClick={() => (open ? closeMenu() : setOpen(true))}
+        onClick={() => setOpen(true)}
         className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Plus className="h-4 w-4" /> Add Provider
@@ -260,74 +320,322 @@ function AddProviderMenu({
 
       {open && (
         <div
-          role="menu"
-          aria-label="Add a sign-in provider"
-          className="absolute right-0 z-20 mt-2 w-64 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeModal();
+          }}
         >
-          {candidates.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
-              All providers are already configured.
-            </p>
-          ) : (
-            <>
-              <div className="border-b border-slate-200 p-2 dark:border-slate-700">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-                  <input
-                    type="text"
-                    autoFocus
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key !== 'Enter') return;
-                      event.preventDefault();
-                      const first = filtered.find(
-                        (candidate) => candidate.status === 'available'
-                      );
-                      if (first) choose(first.provider_id);
-                    }}
-                    placeholder="Search providers…"
-                    aria-label="Search providers"
-                    className="w-full rounded-md border border-slate-300 bg-white py-1.5 pl-8 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
-                  />
-                </div>
-              </div>
-              {/* Capped height keeps the grown registry usable: the list scrolls, the search stays pinned. */}
-              <div className="max-h-64 overflow-y-auto py-1">
-                {filtered.length === 0 ? (
-                  <p className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
-                    No providers match &ldquo;{query.trim()}&rdquo;.
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Add a sign-in provider"
+            className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                {selected ? `Configure ${selected.label}` : 'Add Provider'}
+              </h3>
+              <button
+                type="button"
+                aria-label="Close"
+                onClick={closeModal}
+                className="text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+              {!selected ? (
+                candidates.length === 0 ? (
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    All providers are already configured.
                   </p>
                 ) : (
-                  filtered.map((candidate) => {
-                    const brand = getProviderBrand(candidate.provider_id);
-                    const comingSoon = candidate.status !== 'available';
+                  <div className="flex flex-col gap-3">
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                      <input
+                        type="text"
+                        autoFocus
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key !== 'Enter') return;
+                          event.preventDefault();
+                          const first = filtered.find(
+                            (candidate) => candidate.status === 'available'
+                          );
+                          if (first) pick(first);
+                        }}
+                        placeholder="Search providers…"
+                        aria-label="Search providers"
+                        className="w-full rounded-md border border-slate-300 bg-white py-1.5 pl-8 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
+                      />
+                    </div>
+                    <div
+                      role="listbox"
+                      aria-label="Available providers"
+                      className="max-h-80 overflow-y-auto rounded-md border border-slate-200 dark:border-slate-700"
+                    >
+                      {filtered.length === 0 ? (
+                        <p className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
+                          No providers match &ldquo;{query.trim()}&rdquo;.
+                        </p>
+                      ) : (
+                        filtered.map((candidate) => {
+                          const brand = getProviderBrand(candidate.provider_id);
+                          const comingSoon = candidate.status !== 'available';
+                          return (
+                            <button
+                              key={candidate.provider_id}
+                              type="button"
+                              role="option"
+                              aria-selected={false}
+                              disabled={comingSoon}
+                              onClick={() => pick(candidate)}
+                              className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                            >
+                              <brand.Icon size={16} className={brand.iconClassName} />
+                              <span className="min-w-0 flex-1 truncate">{candidate.label}</span>
+                              <span className="truncate text-xs text-slate-400 dark:text-slate-500">
+                                {candidate.provider_id}
+                              </span>
+                              {comingSoon && (
+                                <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400">
+                                  Coming soon
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )
+              ) : (
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    {(() => {
+                      const brand = getProviderBrand(selected.provider_id);
+                      return (
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                          <brand.Icon size={20} className={brand.iconClassName} />
+                        </span>
+                      );
+                    })()}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {selected.label}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {selected.provider_id}
+                      </p>
+                    </div>
+                    <EnablementChip enabled={selected.enabled} />
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="w-32 shrink-0 text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Enablement
+                    </span>
+                    <div
+                      role="radiogroup"
+                      aria-label={`${selected.label} enablement`}
+                      className="inline-flex divide-x divide-slate-300 overflow-hidden rounded-md border border-slate-300 dark:divide-slate-700 dark:border-slate-700"
+                    >
+                      <EnablementOption
+                        label="Enabled"
+                        active={enablement === 'on'}
+                        disabled={saving}
+                        onSelect={() => {
+                          setSaveError(null);
+                          setEnablement('on');
+                        }}
+                      />
+                      <EnablementOption
+                        label="Disabled"
+                        active={enablement === 'off'}
+                        disabled={saving}
+                        onSelect={() => {
+                          setSaveError(null);
+                          setEnablement('off');
+                        }}
+                      />
+                      <EnablementOption
+                        label="Use .env"
+                        active={enablement === 'env'}
+                        disabled={saving}
+                        onSelect={() => {
+                          setSaveError(null);
+                          setEnablement('env');
+                        }}
+                      />
+                    </div>
+                    {selected.enabled === null && <FallbackBadge />}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <label
+                      htmlFor="add-provider-client-id"
+                      className="w-32 shrink-0 text-sm font-medium text-slate-700 dark:text-slate-300"
+                    >
+                      Client ID
+                    </label>
+                    <input
+                      id="add-provider-client-id"
+                      type="text"
+                      autoComplete="off"
+                      spellCheck={false}
+                      className={`${INPUT_CLASSES} max-w-md flex-1`}
+                      placeholder="Falls back to .env when blank"
+                      value={clientId}
+                      disabled={saving}
+                      onChange={(event) => {
+                        setSaveError(null);
+                        setClientId(event.target.value);
+                      }}
+                    />
+                    {selected.client_id_source === 'env-fallback' && <FallbackBadge />}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <label
+                      htmlFor="add-provider-client-secret"
+                      className="w-32 shrink-0 text-sm font-medium text-slate-700 dark:text-slate-300"
+                    >
+                      Client secret
+                    </label>
+                    <input
+                      id="add-provider-client-secret"
+                      type="password"
+                      autoComplete="new-password"
+                      spellCheck={false}
+                      className={`${INPUT_CLASSES} max-w-md flex-1`}
+                      placeholder="Enter client secret"
+                      value={secretInput}
+                      disabled={saving}
+                      onChange={(event) => {
+                        setSaveError(null);
+                        setSecretInput(event.target.value);
+                      }}
+                    />
+                    <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                      Secret: not set
+                    </span>
+                    {selected.secret_source === 'env-fallback' && <FallbackBadge />}
+                  </div>
+                  <p className="-mt-2 pl-32 text-xs text-slate-500 dark:text-slate-400">
+                    Write-only: the stored value is never shown.
+                  </p>
+
+                  {extraFields.map((field) => {
+                    const stored = selected.config[field.envKey];
+                    const storedInDb = typeof stored === 'string' && stored.trim().length > 0;
                     return (
-                      <button
-                        key={candidate.provider_id}
-                        type="button"
-                        role="menuitem"
-                        disabled={comingSoon}
-                        onClick={() => choose(candidate.provider_id)}
-                        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                      >
-                        <brand.Icon size={16} className={brand.iconClassName} />
-                        <span className="min-w-0 flex-1 truncate">{candidate.label}</span>
-                        {comingSoon && (
-                          <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400">
-                            Coming soon
-                          </span>
-                        )}
-                      </button>
+                      <div key={field.envKey} className="flex flex-wrap items-center gap-3">
+                        <label
+                          htmlFor={`add-provider-extra-${field.envKey}`}
+                          className="w-32 shrink-0 text-sm font-medium text-slate-700 dark:text-slate-300"
+                          title={field.envKey}
+                        >
+                          {field.label}
+                        </label>
+                        <div className="max-w-md flex-1">
+                          <input
+                            id={`add-provider-extra-${field.envKey}`}
+                            type="text"
+                            autoComplete="off"
+                            spellCheck={false}
+                            className={INPUT_CLASSES}
+                            placeholder={`Default: ${field.defaultValue}`}
+                            value={extras[field.envKey] ?? ''}
+                            disabled={saving}
+                            onChange={(event) => {
+                              setSaveError(null);
+                              setExtras((current) => ({
+                                ...current,
+                                [field.envKey]: event.target.value,
+                              }));
+                            }}
+                          />
+                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            {field.help} ({field.envKey})
+                          </p>
+                        </div>
+                        {!storedInDb && <FallbackBadge />}
+                      </div>
                     );
-                  })
-                )}
-              </div>
-            </>
-          )}
+                  })}
+
+                  {saveError && (
+                    <div
+                      role="alert"
+                      className="flex items-start gap-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
+                    >
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                      <div>
+                        <p>{saveError}</p>
+                        {errorMissingFields.length > 0 && (
+                          <p className="mt-1">
+                            Missing: {errorMissingFields.join(', ')}. Fill them in, then save
+                            again.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-3 border-t border-slate-200 px-6 py-4 dark:border-slate-800">
+              {selected ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelected(null);
+                      setSaveError(null);
+                      setErrorMissingFields([]);
+                    }}
+                    disabled={saving}
+                    className={SECONDARY_BUTTON_CLASSES}
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" /> Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleSave()}
+                    disabled={!dirty || saving}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    {saving ? 'Saving…' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    disabled={saving}
+                    className={`${SECONDARY_BUTTON_CLASSES} ml-auto`}
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className={`${SECONDARY_BUTTON_CLASSES} ml-auto`}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -344,18 +652,13 @@ interface ValidationResult {
  *
  * @param view The provider's server-confirmed masked view.
  * @param onViewChange Callback replacing the view after a save or validate refresh.
- * @param onDismiss When set, renders a Cancel button (bottom right) that dismisses the card.
- *   Passed only for cards added this session but not yet saved — a persisted provider would
- *   just reappear on the next load, so dismissing it would mislead.
  */
 function ProviderCard({
   view,
   onViewChange,
-  onDismiss,
 }: {
   view: AdminProviderConfigView;
   onViewChange: (view: AdminProviderConfigView) => void;
-  onDismiss?: () => void;
 }) {
   const brand = getProviderBrand(view.provider_id);
   const extraFields = PROVIDER_EXTRA_FIELDS[view.provider_id] ?? [];
@@ -813,16 +1116,6 @@ function ProviderCard({
                 {view.updated_by ? ` by ${view.updated_by}` : ''}
               </span>
             )}
-            {onDismiss && (
-              <button
-                type="button"
-                onClick={onDismiss}
-                disabled={saving}
-                className={`${SECONDARY_BUTTON_CLASSES} ml-auto`}
-              >
-                Cancel
-              </button>
-            )}
           </div>
         </div>
       )}
@@ -830,14 +1123,11 @@ function ProviderCard({
   );
 }
 
-/** The System Configuration screen: header plus one card per configured (or just-added) provider. */
+/** The System Configuration screen: header plus one card per configured provider. */
 export default function AuthProviderSettingsClient() {
   const [providers, setProviders] = useState<AdminProviderConfigView[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  // Providers added from the header menu this session; kept visible even before their first
-  // save persists them (after which isConfigured() takes over).
-  const [addedIds, setAddedIds] = useState<string[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -880,14 +1170,20 @@ export default function AuthProviderSettingsClient() {
     );
   };
 
-  // The list shows only configured providers plus any added (but not yet saved) this session;
-  // everything else is reachable through the header's Add menu.
-  const visibleProviders = (providers ?? []).filter(
-    (view) => isConfigured(view) || addedIds.includes(view.provider_id)
-  );
-  const addCandidates = (providers ?? []).filter(
-    (view) => !isConfigured(view) && !addedIds.includes(view.provider_id)
-  );
+  /** Merge a newly saved provider into list state (Add modal success path). */
+  const upsertView = (next: AdminProviderConfigView) => {
+    setProviders((current) => {
+      if (!current) return [next];
+      const exists = current.some((view) => view.provider_id === next.provider_id);
+      if (exists) {
+        return current.map((view) => (view.provider_id === next.provider_id ? next : view));
+      }
+      return [...current, next];
+    });
+  };
+
+  const visibleProviders = (providers ?? []).filter((view) => isConfigured(view));
+  const addCandidates = (providers ?? []).filter((view) => !isConfigured(view));
 
   return (
     <>
@@ -901,14 +1197,10 @@ export default function AuthProviderSettingsClient() {
               Sign-in providers — database values override .env; blank fields fall back to .env.
             </p>
           </div>
-          <AddProviderMenu
+          <AddProviderModal
             candidates={addCandidates}
             disabled={loading || providers === null}
-            onAdd={(providerId) =>
-              setAddedIds((current) =>
-                current.includes(providerId) ? current : [...current, providerId]
-              )
-            }
+            onSaved={upsertView}
           />
         </div>
       </header>
@@ -954,19 +1246,7 @@ export default function AuthProviderSettingsClient() {
           {!loading &&
             !loadError &&
             visibleProviders.map((view) => (
-              <ProviderCard
-                key={view.provider_id}
-                view={view}
-                onViewChange={replaceView}
-                onDismiss={
-                  isConfigured(view)
-                    ? undefined
-                    : () =>
-                        setAddedIds((current) =>
-                          current.filter((id) => id !== view.provider_id)
-                        )
-                }
-              />
+              <ProviderCard key={view.provider_id} view={view} onViewChange={replaceView} />
             ))}
         </div>
       </main>

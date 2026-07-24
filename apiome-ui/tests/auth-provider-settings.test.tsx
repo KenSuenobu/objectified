@@ -4,7 +4,7 @@
  * Integration tests (RTL) for `AuthProviderSettingsClient` against a mocked
  * `/api/admin/auth-providers` proxy, covering the issue's acceptance criteria:
  * only configured providers are listed (the rest are reachable via the header's
- * "+ Add Provider" menu, coming-soon entries disabled there), an empty-state card
+ * "+ Add Provider" modal, coming-soon entries disabled there), an empty-state card
  * when nothing is configured, write-only secret handling ("set / not set", never a
  * value), per-field ".env fallback" indicators, dirty-only partial saves,
  * blocked-enable 422 guidance, the Validate affordance, and the enablement
@@ -93,7 +93,7 @@ const AUTH0 = makeView({
   required_fields: ['client_id', 'client_secret', 'issuer'],
   missing_for_enable: ['client_id', 'client_secret', 'issuer'],
 });
-/** Synthetic coming-soon stand-in so the Add menu / keyboard tests keep covering that path. */
+/** Synthetic coming-soon stand-in so the Add picker / keyboard tests keep covering that path. */
 const ATLASSIAN = makeView({
   provider_id: 'atlassian',
   label: 'Atlassian',
@@ -143,15 +143,39 @@ async function card(label: string) {
   return within(region);
 }
 
-/**
- * Add an unconfigured provider's card to the list via the header's "+ Add Provider" menu.
- * Waits for the initial load first (the trigger is disabled until then).
- */
-async function addProvider(label: string) {
+/** Open the Add Provider modal (waiting for load) and return a `within` scope for the dialog. */
+async function openAddModal() {
   const trigger = await screen.findByRole('button', { name: 'Add Provider' });
   await waitFor(() => expect(trigger).toBeEnabled());
   fireEvent.click(trigger);
-  fireEvent.click(await screen.findByRole('menuitem', { name: new RegExp(label) }));
+  return within(screen.getByRole('dialog', { name: 'Add a sign-in provider' }));
+}
+
+/** Pick a provider in the open modal (moves to the configure step). */
+async function pickProviderInModal(label: string) {
+  const dialog = await openAddModal();
+  fireEvent.click(dialog.getByRole('option', { name: new RegExp(label) }));
+  return within(screen.getByRole('dialog', { name: 'Add a sign-in provider' }));
+}
+
+/**
+ * Configure and save a provider via the Add modal so its card appears on the page.
+ * Waits for the initial load first (the trigger is disabled until then).
+ */
+async function addAndSaveProvider(
+  label: string,
+  fill: (dialog: ReturnType<typeof within>) => void = (dialog) => {
+    fireEvent.change(dialog.getByLabelText('Client ID'), {
+      target: { value: `${label.toLowerCase()}-client-id` },
+    });
+  }
+) {
+  const dialog = await pickProviderInModal(label);
+  fill(dialog);
+  fireEvent.click(dialog.getByRole('button', { name: 'Save' }));
+  await waitFor(() =>
+    expect(screen.queryByRole('dialog', { name: 'Add a sign-in provider' })).not.toBeInTheDocument()
+  );
 }
 
 afterEach(() => {
@@ -167,7 +191,16 @@ describe('AuthProviderSettingsClient — rendering', () => {
     expect(
       await screen.findByRole('region', { name: 'GitLab provider configuration' })
     ).toBeInTheDocument();
-    for (const label of ['GitHub', 'Microsoft', 'Google', 'AWS', 'Keycloak', 'OIDC', 'Auth0', 'Atlassian']) {
+    for (const label of [
+      'GitHub',
+      'Microsoft',
+      'Google',
+      'AWS',
+      'Keycloak',
+      'OIDC',
+      'Auth0',
+      'Atlassian',
+    ]) {
       expect(
         screen.queryByRole('region', { name: `${label} provider configuration` })
       ).not.toBeInTheDocument();
@@ -185,45 +218,40 @@ describe('AuthProviderSettingsClient — rendering', () => {
     expect(screen.queryByRole('region')).not.toBeInTheDocument();
   });
 
-  it('offers unconfigured providers in the Add menu, coming-soon ones disabled', async () => {
+  it('offers unconfigured providers in the Add modal, coming-soon ones disabled', async () => {
     mockFetch();
     render(<AuthProviderSettingsClient />);
 
-    const trigger = await screen.findByRole('button', { name: 'Add Provider' });
-    await waitFor(() => expect(trigger).toBeEnabled());
-    fireEvent.click(trigger);
-
-    const menu = within(screen.getByRole('menu'));
+    const dialog = await openAddModal();
     // GitLab is configured, so it is not offered again.
-    expect(menu.queryByRole('menuitem', { name: /GitLab/ })).not.toBeInTheDocument();
-    expect(menu.getByRole('menuitem', { name: /GitHub/ })).toBeEnabled();
-    expect(menu.getByRole('menuitem', { name: /Microsoft/ })).toBeEnabled();
-    // Google (OLO-9.2) through Auth0 (OLO-9.7) are available/selectable; only the synthetic
-    // Atlassian stand-in stays coming-soon/disabled.
-    expect(menu.getByRole('menuitem', { name: /Google/ })).toBeEnabled();
-    expect(menu.getByRole('menuitem', { name: /Okta/ })).toBeEnabled();
-    expect(menu.getByRole('menuitem', { name: /AWS/ })).toBeEnabled();
-    expect(menu.getByRole('menuitem', { name: /Keycloak/ })).toBeEnabled();
-    expect(menu.getByRole('menuitem', { name: /OIDC/ })).toBeEnabled();
-    expect(menu.getByRole('menuitem', { name: /Auth0/ })).toBeEnabled();
-    expect(menu.getByRole('menuitem', { name: /Atlassian/ })).toBeDisabled();
+    expect(dialog.queryByRole('option', { name: /GitLab/ })).not.toBeInTheDocument();
+    expect(dialog.getByRole('option', { name: /GitHub/ })).toBeEnabled();
+    expect(dialog.getByRole('option', { name: /Microsoft/ })).toBeEnabled();
+    expect(dialog.getByRole('option', { name: /Google/ })).toBeEnabled();
+    expect(dialog.getByRole('option', { name: /Okta/ })).toBeEnabled();
+    expect(dialog.getByRole('option', { name: /AWS/ })).toBeEnabled();
+    expect(dialog.getByRole('option', { name: /Keycloak/ })).toBeEnabled();
+    expect(dialog.getByRole('option', { name: /OIDC/ })).toBeEnabled();
+    expect(dialog.getByRole('option', { name: /Auth0/ })).toBeEnabled();
+    expect(dialog.getByRole('option', { name: /Atlassian/ })).toBeDisabled();
   });
 
-  it('dismisses an added-but-unsaved card via Cancel, returning it to the Add menu', async () => {
+  it('closes the Add modal via Cancel without adding a card', async () => {
     mockFetch();
     render(<AuthProviderSettingsClient />);
 
-    await addProvider('GitHub');
-    const github = await card('GitHub');
-    fireEvent.click(github.getByRole('button', { name: 'Cancel' }));
+    const dialog = await pickProviderInModal('GitHub');
+    fireEvent.click(dialog.getByRole('button', { name: 'Cancel' }));
 
+    expect(
+      screen.queryByRole('dialog', { name: 'Add a sign-in provider' })
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('region', { name: 'GitHub provider configuration' })
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Add Provider' }));
-    expect(
-      within(screen.getByRole('menu')).getByRole('menuitem', { name: /GitHub/ })
-    ).toBeEnabled();
+
+    const reopened = await openAddModal();
+    expect(reopened.getByRole('option', { name: /GitHub/ })).toBeEnabled();
   });
 
   it('offers no Cancel on a persisted provider card', async () => {
@@ -234,31 +262,37 @@ describe('AuthProviderSettingsClient — rendering', () => {
     expect(gitlab.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
   });
 
-  it('adds a provider card from the menu and stops offering it there', async () => {
-    mockFetch();
+  it('saves from the Add modal and stops offering that provider there', async () => {
+    mockFetch((_url, body) => ({
+      status: 200,
+      body: makeView({
+        client_id: String(body.client_id),
+        client_id_source: 'db',
+        updated_at: '2026-07-24T12:00:00Z',
+      }),
+    }));
     render(<AuthProviderSettingsClient />);
 
-    await addProvider('GitHub');
+    await addAndSaveProvider('GitHub');
     expect(
       await screen.findByRole('region', { name: 'GitHub provider configuration' })
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add Provider' }));
-    const menu = within(screen.getByRole('menu'));
-    expect(menu.queryByRole('menuitem', { name: /GitHub/ })).not.toBeInTheDocument();
-    expect(menu.getByRole('menuitem', { name: /Microsoft/ })).toBeEnabled();
+    const dialog = await openAddModal();
+    expect(dialog.queryByRole('option', { name: /GitHub/ })).not.toBeInTheDocument();
+    expect(dialog.getByRole('option', { name: /Microsoft/ })).toBeEnabled();
   });
 
   it('shows per-field "using .env fallback" indicators exactly where no DB value is set', async () => {
     mockFetch();
     render(<AuthProviderSettingsClient />);
 
-    // GitHub stores nothing: enablement, client id, secret, and both extras fall back.
-    await addProvider('GitHub');
-    const github = await card('GitHub');
-    expect(github.getAllByText('using .env fallback').length).toBe(5);
+    // GitHub stores nothing: enablement, client id, secret, and both extras fall back (modal form).
+    const dialog = await pickProviderInModal('GitHub');
+    expect(dialog.getAllByText('using .env fallback').length).toBe(5);
 
     // GitLab stores everything it renders: no fallback badges at all.
+    fireEvent.click(dialog.getByRole('button', { name: 'Cancel' }));
     const gitlab = await card('GitLab');
     expect(gitlab.queryByText('using .env fallback')).not.toBeInTheDocument();
   });
@@ -274,9 +308,8 @@ describe('AuthProviderSettingsClient — rendering', () => {
     expect(secretInput.value).toBe('');
     expect(secretInput.placeholder).toMatch(/Secret is set/);
 
-    await addProvider('GitHub');
-    const github = await card('GitHub');
-    expect(github.getByText('Secret: not set')).toBeInTheDocument();
+    const dialog = await pickProviderInModal('GitHub');
+    expect(dialog.getByText('Secret: not set')).toBeInTheDocument();
   });
 
   it('reflects stored state: enablement chip, client id value, extras from config JSONB', async () => {
@@ -293,9 +326,8 @@ describe('AuthProviderSettingsClient — rendering', () => {
     );
     expect(gitlab.getByText(/Last changed/)).toBeInTheDocument();
 
-    await addProvider('GitHub');
-    const github = await card('GitHub');
-    expect(github.getByText('Env-derived')).toBeInTheDocument();
+    const dialog = await pickProviderInModal('GitHub');
+    expect(dialog.getByText('Env-derived')).toBeInTheDocument();
   });
 
   it('surfaces a load failure with a retry affordance', async () => {
@@ -307,24 +339,32 @@ describe('AuthProviderSettingsClient — rendering', () => {
   });
 });
 
-describe('AuthProviderSettingsClient — Add menu search & scroll', () => {
-  /** Open the header's Add menu (waiting for load) and return a `within` scope for it. */
-  async function openAddMenu() {
-    const trigger = await screen.findByRole('button', { name: 'Add Provider' });
-    await waitFor(() => expect(trigger).toBeEnabled());
-    fireEvent.click(trigger);
-    return within(screen.getByRole('menu'));
-  }
-
-  it('shows a focused search box at the top of the menu', async () => {
+describe('AuthProviderSettingsClient — Add modal search & scroll', () => {
+  it('lists picker options alphabetically by label', async () => {
     mockFetch();
     render(<AuthProviderSettingsClient />);
 
-    const menu = await openAddMenu();
-    const search = menu.getByRole('textbox', { name: 'Search providers' });
+    const dialog = await openAddModal();
+    const labels = dialog
+      .getAllByRole('option')
+      .map((option) => option.querySelector('span.min-w-0')?.textContent?.trim() ?? '');
+    expect(labels).toEqual(
+      [...labels].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+    );
+    // Registry order starts with GitHub; alphabetical by label does not (Atlassian, Auth0, AWS, …).
+    expect(labels[0]).toBe('Atlassian');
+    expect(labels.indexOf('GitHub')).toBeGreaterThan(labels.indexOf('Auth0'));
+    expect(labels.indexOf('Microsoft')).toBeGreaterThan(labels.indexOf('Keycloak'));
+  });
+
+  it('shows a focused search box at the top of the picker', async () => {
+    mockFetch();
+    render(<AuthProviderSettingsClient />);
+
+    const dialog = await openAddModal();
+    const search = dialog.getByRole('textbox', { name: 'Search providers' });
     expect(search).toHaveFocus();
-    // The search stays pinned above the scroll region rather than scrolling away with the items.
-    const scrollRegion = screen.getByRole('menu').querySelector('.max-h-64.overflow-y-auto');
+    const scrollRegion = dialog.getByRole('listbox').closest('.max-h-80');
     expect(scrollRegion).not.toBeNull();
     expect(scrollRegion).not.toContainElement(search);
   });
@@ -333,155 +373,166 @@ describe('AuthProviderSettingsClient — Add menu search & scroll', () => {
     mockFetch();
     render(<AuthProviderSettingsClient />);
 
-    const menu = await openAddMenu();
-    const scrollRegion = screen.getByRole('menu').querySelector('.max-h-64.overflow-y-auto');
-    expect(scrollRegion).not.toBeNull();
-    expect(scrollRegion).toContainElement(menu.getByRole('menuitem', { name: /GitHub/ }));
+    const dialog = await openAddModal();
+    const listbox = dialog.getByRole('listbox');
+    expect(listbox.className).toMatch(/max-h-80/);
+    expect(listbox).toContainElement(dialog.getByRole('option', { name: /GitHub/ }));
   });
 
   it('filters candidates by name, case-insensitively', async () => {
     mockFetch();
     render(<AuthProviderSettingsClient />);
 
-    const menu = await openAddMenu();
-    fireEvent.change(menu.getByRole('textbox', { name: 'Search providers' }), {
+    const dialog = await openAddModal();
+    fireEvent.change(dialog.getByRole('textbox', { name: 'Search providers' }), {
       target: { value: 'GOO' },
     });
 
-    expect(menu.getByRole('menuitem', { name: /Google/ })).toBeInTheDocument();
-    expect(menu.queryByRole('menuitem', { name: /GitHub/ })).not.toBeInTheDocument();
-    expect(menu.queryByRole('menuitem', { name: /Microsoft/ })).not.toBeInTheDocument();
-    expect(menu.queryByRole('menuitem', { name: /AWS/ })).not.toBeInTheDocument();
+    expect(dialog.getByRole('option', { name: /Google/ })).toBeInTheDocument();
+    expect(dialog.queryByRole('option', { name: /GitHub/ })).not.toBeInTheDocument();
+    expect(dialog.queryByRole('option', { name: /Microsoft/ })).not.toBeInTheDocument();
+    expect(dialog.queryByRole('option', { name: /AWS/ })).not.toBeInTheDocument();
   });
 
   it('also matches the registry slug, not just the label', async () => {
     mockFetch();
     render(<AuthProviderSettingsClient />);
 
-    const menu = await openAddMenu();
+    const dialog = await openAddModal();
     // "azure" is the slug; the label is "Microsoft".
-    fireEvent.change(menu.getByRole('textbox', { name: 'Search providers' }), {
+    fireEvent.change(dialog.getByRole('textbox', { name: 'Search providers' }), {
       target: { value: 'azure' },
     });
 
-    expect(menu.getByRole('menuitem', { name: /Microsoft/ })).toBeInTheDocument();
-    expect(menu.queryByRole('menuitem', { name: /GitHub/ })).not.toBeInTheDocument();
+    expect(dialog.getByRole('option', { name: /Microsoft/ })).toBeInTheDocument();
+    expect(dialog.queryByRole('option', { name: /GitHub/ })).not.toBeInTheDocument();
   });
 
   it('shows a no-match message quoting the query, and recovers when cleared', async () => {
     mockFetch();
     render(<AuthProviderSettingsClient />);
 
-    const menu = await openAddMenu();
-    const search = menu.getByRole('textbox', { name: 'Search providers' });
+    const dialog = await openAddModal();
+    const search = dialog.getByRole('textbox', { name: 'Search providers' });
     fireEvent.change(search, { target: { value: 'zzz' } });
 
-    expect(menu.queryByRole('menuitem')).not.toBeInTheDocument();
-    expect(menu.getByText(/No providers match/)).toHaveTextContent('zzz');
+    expect(dialog.queryByRole('option')).not.toBeInTheDocument();
+    expect(dialog.getByText(/No providers match/)).toHaveTextContent('zzz');
 
     fireEvent.change(search, { target: { value: '' } });
-    expect(menu.getByRole('menuitem', { name: /GitHub/ })).toBeInTheDocument();
-    expect(menu.getByRole('menuitem', { name: /AWS/ })).toBeInTheDocument();
+    expect(dialog.getByRole('option', { name: /GitHub/ })).toBeInTheDocument();
+    expect(dialog.getByRole('option', { name: /AWS/ })).toBeInTheDocument();
   });
 
-  it('Enter adds the first available match and closes the menu', async () => {
+  it('Enter selects the first available match and opens the configure step', async () => {
     mockFetch();
     render(<AuthProviderSettingsClient />);
 
-    const menu = await openAddMenu();
-    const search = menu.getByRole('textbox', { name: 'Search providers' });
+    const dialog = await openAddModal();
+    const search = dialog.getByRole('textbox', { name: 'Search providers' });
     fireEvent.change(search, { target: { value: 'goo' } });
     fireEvent.keyDown(search, { key: 'Enter' });
 
-    expect(
-      await screen.findByRole('region', { name: 'Google provider configuration' })
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(await screen.findByText('Configure Google')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Google provider configuration' })).not.toBeInTheDocument();
   });
 
   it('Enter is a no-op when the only match is coming-soon', async () => {
     mockFetch();
     render(<AuthProviderSettingsClient />);
 
-    const menu = await openAddMenu();
-    const search = menu.getByRole('textbox', { name: 'Search providers' });
+    const dialog = await openAddModal();
+    const search = dialog.getByRole('textbox', { name: 'Search providers' });
     fireEvent.change(search, { target: { value: 'atlassian' } });
     fireEvent.keyDown(search, { key: 'Enter' });
 
-    // Nothing added, menu still open — coming-soon entries stay unselectable via keyboard too.
-    expect(
-      screen.queryByRole('region', { name: 'Atlassian provider configuration' })
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole('menu')).toBeInTheDocument();
+    expect(screen.queryByText('Configure Atlassian')).not.toBeInTheDocument();
+    expect(dialog.getByRole('option', { name: /Atlassian/ })).toBeDisabled();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   it('resets the query on close so a fresh open starts unfiltered', async () => {
     mockFetch();
     render(<AuthProviderSettingsClient />);
 
-    const menu = await openAddMenu();
-    fireEvent.change(menu.getByRole('textbox', { name: 'Search providers' }), {
+    const dialog = await openAddModal();
+    fireEvent.change(dialog.getByRole('textbox', { name: 'Search providers' }), {
       target: { value: 'goo' },
     });
-    expect(menu.queryByRole('menuitem', { name: /GitHub/ })).not.toBeInTheDocument();
+    expect(dialog.queryByRole('option', { name: /GitHub/ })).not.toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: 'Escape' });
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
-    const reopened = await openAddMenu();
+    const reopened = await openAddModal();
     expect(reopened.getByRole('textbox', { name: 'Search providers' })).toHaveValue('');
-    expect(reopened.getByRole('menuitem', { name: /GitHub/ })).toBeInTheDocument();
+    expect(reopened.getByRole('option', { name: /GitHub/ })).toBeInTheDocument();
   });
 });
 
 describe('AuthProviderSettingsClient — saving', () => {
-  it('saves only the fields the admin changed (partial update), then shows Saved', async () => {
+  it('saves only the fields the admin changed (partial update) from the Add modal', async () => {
     const puts: Array<{ url: string; body: Record<string, unknown> }> = [];
     mockFetch((url, body) => {
       puts.push({ url, body });
       return {
         status: 200,
-        body: makeView({ client_id: 'new-github-id', client_id_source: 'db' }),
+        body: makeView({
+          client_id: 'new-github-id',
+          client_id_source: 'db',
+          updated_at: '2026-07-24T12:00:00Z',
+        }),
       };
     });
     render(<AuthProviderSettingsClient />);
 
-    await addProvider('GitHub');
-    const github = await card('GitHub');
-    expect(github.getByRole('button', { name: 'Save' })).toBeDisabled();
+    const dialog = await pickProviderInModal('GitHub');
+    expect(dialog.getByRole('button', { name: 'Save' })).toBeDisabled();
 
-    fireEvent.change(github.getByLabelText('Client ID'), {
+    fireEvent.change(dialog.getByLabelText('Client ID'), {
       target: { value: 'new-github-id' },
     });
-    expect(github.getByRole('button', { name: 'Save' })).toBeEnabled();
-    fireEvent.click(github.getByRole('button', { name: 'Save' }));
+    expect(dialog.getByRole('button', { name: 'Save' })).toBeEnabled();
+    fireEvent.click(dialog.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => expect(github.getByText('Saved')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    );
     expect(puts).toEqual([
       {
         url: '/api/admin/auth-providers/github',
         body: { client_id: 'new-github-id' },
       },
     ]);
+    const github = await card('GitHub');
+    expect((github.getByLabelText('Client ID') as HTMLInputElement).value).toBe('new-github-id');
   });
 
-  it('sends a typed secret write-only and resets the input after saving', async () => {
+  it('sends a typed secret write-only from the Add modal', async () => {
     const puts: Array<Record<string, unknown>> = [];
     mockFetch((_url, body) => {
       puts.push(body);
-      return { status: 200, body: makeView({ secret_set: true, secret_source: 'db' }) };
+      return {
+        status: 200,
+        body: makeView({
+          secret_set: true,
+          secret_source: 'db',
+          updated_at: '2026-07-24T12:00:00Z',
+        }),
+      };
     });
     render(<AuthProviderSettingsClient />);
 
-    await addProvider('GitHub');
-    const github = await card('GitHub');
-    fireEvent.change(github.getByLabelText('Client secret'), {
+    const dialog = await pickProviderInModal('GitHub');
+    fireEvent.change(dialog.getByLabelText('Client secret'), {
       target: { value: 'super-secret-value' },
     });
-    fireEvent.click(github.getByRole('button', { name: 'Save' }));
+    fireEvent.click(dialog.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => expect(github.getByText('Saved')).toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(puts).toEqual([{ client_secret: 'super-secret-value' }]);
+    const github = await card('GitHub');
     expect((github.getByLabelText('Client secret') as HTMLInputElement).value).toBe('');
     expect(github.getByText('Secret: set')).toBeInTheDocument();
   });
@@ -543,45 +594,82 @@ describe('AuthProviderSettingsClient — saving', () => {
     }));
     render(<AuthProviderSettingsClient />);
 
-    await addProvider('GitHub');
-    const github = await card('GitHub');
-    fireEvent.click(github.getByRole('radio', { name: 'Enabled' }));
-    fireEvent.click(github.getByRole('button', { name: 'Save' }));
+    const dialog = await pickProviderInModal('GitHub');
+    fireEvent.click(dialog.getByRole('radio', { name: 'Enabled' }));
+    fireEvent.click(dialog.getByRole('button', { name: 'Save' }));
 
-    const alert = await waitFor(() => github.getByRole('alert'));
+    const alert = await waitFor(() => dialog.getByRole('alert'));
     expect(alert).toHaveTextContent(/Cannot enable 'github'/);
     expect(alert).toHaveTextContent(/Missing: client_id, client_secret/);
-    // The card still shows the stored (env-derived) state — nothing was written.
-    expect(github.getByText('Env-derived')).toBeInTheDocument();
+    // Modal stays open — nothing was written to the page list.
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('region', { name: 'GitHub provider configuration' })
+    ).not.toBeInTheDocument();
   });
 
   it('explains an expired session instead of a generic failure', async () => {
     mockFetch(() => ({ status: 401, body: { error: 'unauthorized' } }));
     render(<AuthProviderSettingsClient />);
 
-    await addProvider('GitHub');
-    const github = await card('GitHub');
-    fireEvent.change(github.getByLabelText('Client ID'), { target: { value: 'x' } });
-    fireEvent.click(github.getByRole('button', { name: 'Save' }));
+    const dialog = await pickProviderInModal('GitHub');
+    fireEvent.change(dialog.getByLabelText('Client ID'), { target: { value: 'x' } });
+    fireEvent.click(dialog.getByRole('button', { name: 'Save' }));
 
-    const alert = await waitFor(() => github.getByRole('alert'));
+    const alert = await waitFor(() => dialog.getByRole('alert'));
     expect(alert).toHaveTextContent(/session has expired/);
   });
 });
 
 describe('AuthProviderSettingsClient — validate affordance', () => {
   it('surfaces the server-computed completeness check (missing fields)', async () => {
-    mockFetch(undefined, [DEFAULT_LIST, DEFAULT_LIST]);
+    mockFetch(
+      (_url, body) => ({
+        status: 200,
+        body: makeView({
+          client_id: String(body.client_id),
+          client_id_source: 'db',
+          updated_at: '2026-07-24T12:00:00Z',
+          missing_for_enable: ['client_secret'],
+          can_enable: false,
+        }),
+      }),
+      [
+        DEFAULT_LIST,
+        {
+          providers: [
+            makeView({
+              client_id: 'gh-id',
+              client_id_source: 'db',
+              updated_at: '2026-07-24T12:00:00Z',
+              missing_for_enable: ['client_secret'],
+              can_enable: false,
+            }),
+            GITLAB,
+            AZURE,
+            GOOGLE,
+            OKTA,
+            AWS,
+            KEYCLOAK,
+            OIDC,
+            AUTH0,
+            ATLASSIAN,
+          ],
+        },
+      ]
+    );
     render(<AuthProviderSettingsClient />);
 
-    await addProvider('GitHub');
+    await addAndSaveProvider('GitHub', (dialog) => {
+      fireEvent.change(dialog.getByLabelText('Client ID'), { target: { value: 'gh-id' } });
+    });
     const github = await card('GitHub');
     fireEvent.click(github.getByRole('button', { name: /Validate/ }));
 
     await waitFor(() =>
       expect(github.getByText(/Not ready to enable/)).toBeInTheDocument()
     );
-    expect(github.getByText(/missing: client_id, client_secret/)).toBeInTheDocument();
+    expect(github.getByText(/missing: client_secret/)).toBeInTheDocument();
   });
 
   it('reports a complete configuration as enable-ready', async () => {
