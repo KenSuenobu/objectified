@@ -114,8 +114,8 @@ class ProviderDescriptor:
 
 # Every provider this codebase knows about, in display order — the server-side projection of
 # ``PROVIDER_REGISTRY`` (provider-registry.ts). ``google`` is available (OLO-9.2, #4985); ``okta``
-# is available (OLO-9.3, #4986) with an issuer config field; ``aws`` remains a ``coming-soon``
-# placeholder.
+# is available (OLO-9.3, #4986) with an issuer config field; ``aws`` (Cognito) is available
+# (OLO-9.4, #4987) with a user-pool issuer config field.
 PROVIDER_REGISTRY: Tuple[ProviderDescriptor, ...] = (
     ProviderDescriptor(
         "github", "GitHub", STATUS_AVAILABLE, client_credential_fields("GITHUB_ID", "GITHUB_SECRET")
@@ -145,7 +145,13 @@ PROVIDER_REGISTRY: Tuple[ProviderDescriptor, ...] = (
         client_credential_fields("OKTA_CLIENT_ID", "OKTA_CLIENT_SECRET")
         + (RequiredField("issuer", FIELD_KIND_CONFIG, "OKTA_ISSUER"),),
     ),
-    ProviderDescriptor("aws", "AWS", STATUS_COMING_SOON, ()),
+    ProviderDescriptor(
+        "aws",
+        "AWS",
+        STATUS_AVAILABLE,
+        client_credential_fields("COGNITO_CLIENT_ID", "COGNITO_CLIENT_SECRET")
+        + (RequiredField("issuer", FIELD_KIND_CONFIG, "COGNITO_ISSUER"),),
+    ),
 )
 
 _BY_ID: Dict[str, ProviderDescriptor] = {p.id: p for p in PROVIDER_REGISTRY}

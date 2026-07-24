@@ -40,6 +40,9 @@ const ALL_ENABLED_ENV = {
   OKTA_CLIENT_ID: 'ok-id',
   OKTA_CLIENT_SECRET: 'ok-secret',
   OKTA_ISSUER: 'https://example.okta.com/oauth2/default',
+  COGNITO_CLIENT_ID: 'cg-id',
+  COGNITO_CLIENT_SECRET: 'cg-secret',
+  COGNITO_ISSUER: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_AbCdEf',
 };
 
 describe('registry vocabulary', () => {
@@ -82,12 +85,18 @@ describe('registry vocabulary', () => {
       'OKTA_CLIENT_SECRET',
       'OKTA_ISSUER',
     ]);
+    expect(getProviderDescriptor('aws')?.requiredEnvKeys).toEqual([
+      'COGNITO_CLIENT_ID',
+      'COGNITO_CLIENT_SECRET',
+      'COGNITO_ISSUER',
+    ]);
   });
 
-  it('marks google (OLO-9.2) and okta (OLO-9.3) available; aws still coming-soon', () => {
+  it('marks google/okta/aws available (OLO-9.2–9.4); no coming-soon placeholders remain', () => {
     expect(getProviderDescriptor('google')?.status).toBe('available');
     expect(getProviderDescriptor('okta')?.status).toBe('available');
-    expect(getProviderDescriptor('aws')?.status).toBe('coming-soon');
+    expect(getProviderDescriptor('aws')?.status).toBe('available');
+    expect(PROVIDER_REGISTRY.every((p) => p.status === 'available')).toBe(true);
   });
 
   it('returns undefined for unknown ids', () => {
@@ -114,6 +123,7 @@ describe('isProviderEnabled', () => {
     expect(isProviderEnabled('azure', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('google', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('okta', ALL_ENABLED_ENV)).toBe(true);
+    expect(isProviderEnabled('aws', ALL_ENABLED_ENV)).toBe(true);
   });
 
   it('requires every env var — a missing secret disables the provider', () => {
@@ -145,8 +155,17 @@ describe('isProviderEnabled', () => {
     ).toBe(false);
   });
 
-  it('never enables coming-soon providers, regardless of env', () => {
-    expect(isProviderEnabled('aws', ALL_ENABLED_ENV)).toBe(false);
+  it('requires the Cognito issuer trio (OLO-9.4) — id+secret alone is not enough', () => {
+    expect(
+      isProviderEnabled('aws', {
+        COGNITO_CLIENT_ID: 'x',
+        COGNITO_CLIENT_SECRET: 'y',
+        COGNITO_ISSUER: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_AbCdEf',
+      })
+    ).toBe(true);
+    expect(
+      isProviderEnabled('aws', { COGNITO_CLIENT_ID: 'x', COGNITO_CLIENT_SECRET: 'y' })
+    ).toBe(false);
   });
 
   it('never enables unknown ids', () => {
@@ -162,6 +181,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'azure',
       'google',
       'okta',
+      'aws',
     ]);
     expect(enabledProviderIds({ GITHUB_ID: 'gh-id', GITHUB_SECRET: 'gh-secret' })).toEqual(['github']);
     expect(enabledProviderIds({})).toEqual([]);
@@ -169,7 +189,13 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
 
   it('disabling a provider via env removes it without code changes', () => {
     const withoutGitlab = { ...ALL_ENABLED_ENV, GITLAB_CLIENT_ID: '' };
-    expect(enabledProviderIds(withoutGitlab)).toEqual(['github', 'azure', 'google', 'okta']);
+    expect(enabledProviderIds(withoutGitlab)).toEqual([
+      'github',
+      'azure',
+      'google',
+      'okta',
+      'aws',
+    ]);
   });
 
   it('enabledProviders preserves registry display order', () => {
@@ -179,6 +205,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'azure',
       'google',
       'okta',
+      'aws',
     ]);
   });
 });
@@ -193,7 +220,7 @@ describe('providerSummaries', () => {
       { id: 'azure', label: 'Microsoft', status: 'available', enabled: false },
       { id: 'google', label: 'Google', status: 'available', enabled: false },
       { id: 'okta', label: 'Okta', status: 'available', enabled: false },
-      { id: 'aws', label: 'AWS', status: 'coming-soon', enabled: false },
+      { id: 'aws', label: 'AWS', status: 'available', enabled: false },
     ]);
     // Server → client props must survive serialization untouched.
     expect(JSON.parse(JSON.stringify(summaries))).toEqual(summaries);

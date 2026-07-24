@@ -42,6 +42,9 @@ const ALL_ENABLED_ENV = {
   OKTA_CLIENT_ID: 'ok-id',
   OKTA_CLIENT_SECRET: 'ok-secret',
   OKTA_ISSUER: 'https://example.okta.com/oauth2/default',
+  COGNITO_CLIENT_ID: 'cg-id',
+  COGNITO_CLIENT_SECRET: 'cg-secret',
+  COGNITO_ISSUER: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_AbCdEf',
 };
 
 describe('providerEnvIssues', () => {
@@ -79,9 +82,9 @@ describe('providerEnvIssues', () => {
     expect(issues.map((issue) => issue.providerId)).toEqual(['github', 'azure']);
   });
 
-  it('ignores extra unrelated env and coming-soon providers', () => {
-    // aws is coming-soon (no env contract) and AWS_ACCESS_KEY_ID / an unrelated var map to no
-    // required field, so neither can produce a partial-config issue.
+  it('ignores extra unrelated env vars that map to no required field', () => {
+    // AWS_ACCESS_KEY_ID / an unrelated var map to no Cognito required field, so neither can produce
+    // a partial-config issue when every required Cognito var is already set.
     const issues = providerEnvIssues({
       ...ALL_ENABLED_ENV,
       AWS_ACCESS_KEY_ID: 'aws-key',

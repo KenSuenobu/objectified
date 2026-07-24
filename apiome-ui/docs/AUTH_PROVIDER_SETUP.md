@@ -1,8 +1,8 @@
 # Sign-in Provider Setup & Secrets Guide (OLO-7.2)
 
 How to register the OAuth applications Apiome signs users in with (GitHub, GitLab,
-Microsoft Entra ID, Google Workspace, Okta), which environment variables each provider needs, and how
-boot-time validation reacts when a provider is misconfigured.
+Microsoft Entra ID, Google Workspace, Okta, Amazon Cognito), which environment variables each
+provider needs, and how boot-time validation reacts when a provider is misconfigured.
 
 The single source of truth for the provider list and each provider's env contract is the
 provider registry: [`lib/auth/provider-registry.ts`](../lib/auth/provider-registry.ts)
@@ -29,6 +29,9 @@ linked-accounts panel, Better Auth sign-in route). No code changes are needed ei
 | `OKTA_CLIENT_ID` | Okta | To enable Okta | OIDC application **Client ID** |
 | `OKTA_CLIENT_SECRET` | Okta | To enable Okta | OIDC application **Client secret** |
 | `OKTA_ISSUER` | Okta | To enable Okta | Org / authorization-server issuer (e.g. `https://acme.okta.com/oauth2/default`) |
+| `COGNITO_CLIENT_ID` | AWS Cognito | To enable AWS | App client **Client ID** |
+| `COGNITO_CLIENT_SECRET` | AWS Cognito | To enable AWS | App client **Client secret** |
+| `COGNITO_ISSUER` | AWS Cognito | To enable AWS | User-pool issuer (`https://cognito-idp.<region>.amazonaws.com/<userPoolId>`) |
 | `AUTH_PROVIDER_VALIDATION` | validation | No (default `strict`) | `strict` fails startup on partial provider config; `warn` logs and disables |
 
 Rules that apply to every provider:
@@ -44,7 +47,7 @@ Rules that apply to every provider:
 
 A registry entry declares its required fields structurally (`requiredFields`), each mapped to
 an env var. Most providers require exactly a **client id** and a **client secret**. Issuer-based
-providers (Okta today; Cognito, Keycloak, Auth0, and generic OIDC as they ship) additionally
+providers (Okta, Cognito today; Keycloak, Auth0, and generic OIDC as they ship) additionally
 require an OIDC **issuer** URL stored in the provider's `config` extras. Setting the id and secret
 but leaving the issuer unset is *partial config* and boot-time validation names the missing issuer
 var, exactly as it does for a missing secret. In the admin settings screen the same field is
@@ -211,6 +214,39 @@ required; setting only the client id and secret is *partial config* and boot / a
 The same issuer can also be set from **Admin → System Configuration** (stored under `config.OKTA_ISSUER`
 and overlaid onto the env var per OLO-8.5 / OLO-10.8).
 
+## Amazon Cognito — user pool + Hosted UI (OLO-9.4)
+
+1. In the [Amazon Cognito console](https://console.aws.amazon.com/cognito/), open (or create) a
+   **User pool**.
+2. Under **App integration → App clients → Create an app client**:
+   - **App type:** Confidential client (client secret generated)
+   - **Authentication flows:** allow the Authorization code grant
+   - **Allowed callback URLs:** `{BETTER_AUTH_URL}/api/auth/oauth2/callback/aws`
+     (e.g. `http://localhost:3000/api/auth/oauth2/callback/aws` for local dev)
+3. Under **App integration → Domain**, configure a Cognito domain (or custom domain) so Hosted UI
+   can serve the authorize endpoint discovered from the issuer.
+4. Copy the app client's **Client ID** and **Client secret**.
+5. Build the user-pool issuer URL:
+   `https://cognito-idp.<region>.amazonaws.com/<userPoolId>`
+   (Region and pool id are on the user-pool overview; the issuer is also the `issuer` claim in
+   Cognito id tokens.)
+6. Set the env vars:
+
+```bash
+COGNITO_CLIENT_ID=<Client ID>
+COGNITO_CLIENT_SECRET=<Client secret>
+COGNITO_ISSUER=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_AbCdEf
+```
+
+The sign-in flow discovers endpoints from `{COGNITO_ISSUER}/.well-known/openid-configuration`,
+uses PKCE, requests the `openid email profile` scopes, and reads Cognito's native `email_verified`
+claim (fail-closed — a missing or false claim is treated as unverified). All three variables are
+required; setting only the client id and secret is *partial config* and boot / admin Validate name
+`COGNITO_ISSUER`.
+
+The same issuer can also be set from **Admin → System Configuration** (stored under
+`config.COGNITO_ISSUER` and overlaid onto the env var per OLO-8.5 / OLO-10.8).
+
 ## Secrets handling
 
 - Never commit client secrets — `.env` files are gitignored; the checked-in
@@ -267,9 +303,11 @@ mock server via base-URL override env vars:
 | `AZURE_AD_AUTHORITY_BASE_URL` | Entra ID OIDC discovery authority | `https://login.microsoftonline.com` |
 | `GOOGLE_ISSUER` | Google OIDC discovery issuer | `https://accounts.google.com` |
 
-`OKTA_ISSUER` is a **required** production config var (not a test-only override) — see the
-[Okta](#okta--oidc-application-workforce-idp) section. Pointing it at a mock issuer for the e2e
-journey is fine in test; never point a real deployment's issuer at a non-Okta host.
+`OKTA_ISSUER` and `COGNITO_ISSUER` are **required** production config vars (not test-only
+overrides) — see the [Okta](#okta--oidc-application-workforce-idp) and
+[Cognito](#amazon-cognito--user-pool--hosted-ui-olo-94) sections. Pointing either at a mock
+issuer for the e2e journey is fine in test; never point a real deployment's issuer at a
+non-provider host.
 
 **Never set the GitHub / GitLab / Azure authority / Google issuer overrides in a real deployment** —
 they redirect the entire sign-in flow to the named host. Unset (the default) the real provider

@@ -33,18 +33,19 @@ def test_registry_ids_and_order_match_ui_and_v196():
 
 
 def test_available_vs_coming_soon_status():
-    """github/gitlab/azure/google/okta are available; aws is coming-soon."""
+    """github/gitlab/azure/google/okta/aws are available; no coming-soon placeholders remain."""
     status = {p.id: p.status for p in PROVIDER_REGISTRY}
     assert status["github"] == STATUS_AVAILABLE
     assert status["gitlab"] == STATUS_AVAILABLE
     assert status["azure"] == STATUS_AVAILABLE
     assert status["google"] == STATUS_AVAILABLE
     assert status["okta"] == STATUS_AVAILABLE
-    assert status["aws"] == STATUS_COMING_SOON
+    assert status["aws"] == STATUS_AVAILABLE
+    assert all(p.status == STATUS_AVAILABLE for p in PROVIDER_REGISTRY)
 
 
 def test_available_providers_require_client_id_and_secret():
-    """Most available providers require client_id + client_secret; Okta adds issuer; coming-soon none."""
+    """Most available providers require client_id + client_secret; Okta/AWS add issuer."""
     for provider in PROVIDER_REGISTRY:
         if provider.status == STATUS_COMING_SOON:
             assert provider.required_fields == ()
@@ -53,10 +54,11 @@ def test_available_providers_require_client_id_and_secret():
         assert names[0:2] == ["client_id", "client_secret"]
         kinds = [f.kind for f in provider.required_fields]
         assert kinds[0:2] == [FIELD_KIND_CLIENT_ID, FIELD_KIND_CLIENT_SECRET]
-        if provider.id == "okta":
+        if provider.id in ("okta", "aws"):
             assert names == ["client_id", "client_secret", "issuer"]
             assert kinds == [FIELD_KIND_CLIENT_ID, FIELD_KIND_CLIENT_SECRET, FIELD_KIND_CONFIG]
-            assert provider.required_fields[2].env_key == "OKTA_ISSUER"
+            expected_env = "OKTA_ISSUER" if provider.id == "okta" else "COGNITO_ISSUER"
+            assert provider.required_fields[2].env_key == expected_env
         else:
             assert names == ["client_id", "client_secret"]
 
@@ -74,6 +76,7 @@ def test_lookup_known_and_unknown():
     """Lookup returns the descriptor for a known slug and None otherwise."""
     assert get_provider_descriptor("github").label == "GitHub"
     assert get_provider_descriptor("okta").label == "Okta"
+    assert get_provider_descriptor("aws").label == "AWS"
     assert get_provider_descriptor("not-a-provider") is None
 
 

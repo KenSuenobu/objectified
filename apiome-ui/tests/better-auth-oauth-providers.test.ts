@@ -66,6 +66,9 @@ const ALL_ENABLED: Record<string, string> = {
   OKTA_CLIENT_ID: 'ok-id',
   OKTA_CLIENT_SECRET: 'ok-secret',
   OKTA_ISSUER: 'https://example.okta.com/oauth2/default',
+  COGNITO_CLIENT_ID: 'cg-id',
+  COGNITO_CLIENT_SECRET: 'cg-secret',
+  COGNITO_ISSUER: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_AbCdEf',
 };
 
 const OK_USER: ResolutionUser = {
@@ -157,7 +160,7 @@ async function runGetUserInfo(
 /* ── Config builder from the registry ──────────────────────────────────────────────────────── */
 
 describe('buildGenericOAuthConfigs — registry is the single source of the enabled set', () => {
-  test('builds one config per enabled provider, in registry display order; aws (coming-soon) omitted', () => {
+  test('builds one config per enabled provider, in registry display order', () => {
     const configs = buildGenericOAuthConfigs(ALL_ENABLED);
     expect(configs.map((c) => c.providerId)).toEqual([
       'github',
@@ -165,6 +168,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'azure',
       'google',
       'okta',
+      'aws',
     ]);
   });
 
@@ -176,6 +180,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'azure',
       'google',
       'okta',
+      'aws',
     ]);
   });
 
@@ -193,6 +198,9 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
     const okta = buildGenericOAuthConfig('okta', ALL_ENABLED)!;
     expect(okta.clientId).toBe('ok-id');
     expect(okta.clientSecret).toBe('ok-secret');
+    const aws = buildGenericOAuthConfig('aws', ALL_ENABLED)!;
+    expect(aws.clientId).toBe('cg-id');
+    expect(aws.clientSecret).toBe('cg-secret');
   });
 
   test('an unknown provider id yields null', () => {
@@ -270,6 +278,23 @@ describe('endpoint & issuer overrides (OLO-7.4)', () => {
     })!;
     expect(mock.discoveryUrl).toBe(
       'http://localhost:9006/okta/.well-known/openid-configuration'
+    );
+  });
+
+  test('aws: COGNITO_ISSUER drives OIDC discovery; PKCE on (OLO-9.4)', () => {
+    const cfg = buildGenericOAuthConfig('aws', ALL_ENABLED)!;
+    expect(cfg.discoveryUrl).toBe(
+      'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_AbCdEf/.well-known/openid-configuration'
+    );
+    expect(cfg.pkce).toBe(true);
+    expect(cfg.scopes).toEqual(['openid', 'email', 'profile']);
+
+    const mock = buildGenericOAuthConfig('aws', {
+      ...ALL_ENABLED,
+      COGNITO_ISSUER: 'http://localhost:9007/cognito/',
+    })!;
+    expect(mock.discoveryUrl).toBe(
+      'http://localhost:9007/cognito/.well-known/openid-configuration'
     );
   });
 
@@ -532,6 +557,121 @@ describe('getUserInfo — Okta email_verified fail-closed (OLO-9.3)', () => {
     expect(override).toBe('/signup/oauth?token=pending-1');
     expect(calls.createPendingSignup[0]).toMatchObject({
       provider: 'okta',
+      email: 'ada@example.com',
+    });
+  });
+});
+
+/* ── getUserInfo: Cognito native email_verified fail-closed (OLO-9.4) ───────────────────────── */
+
+describe('getUserInfo — Cognito email_verified fail-closed (OLO-9.4)', () => {
+  test('native email_verified=true → known identity signs in', async () => {
+    const { store, calls } = makeStore({
+      identityUserId: OK_USER.id,
+      usersById: { [OK_USER.id]: OK_USER },
+    });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'cognito-sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+        name: 'Ada',
+        'cognito:username': 'ada',
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('aws', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(override).toBeNull();
+    expect(result).toMatchObject({
+      id: 'cognito-sub-1',
+      email: 'ada@example.com',
+      emailVerified: true,
+      name: 'Ada',
+    });
+    expect(calls.recordUserLogin).toEqual([OK_USER.id]);
+  });
+
+  test('falls back to cognito:username when name claim is absent', async () => {
+    const { store } = makeStore({
+      identityUserId: OK_USER.id,
+      usersById: { [OK_USER.id]: OK_USER },
+    });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'cognito-sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+        'cognito:username': 'ada-user',
+      }),
+    };
+
+    const { result } = await runGetUserInfo('aws', tokens, { store, env: ALL_ENABLED });
+    expect(result).toMatchObject({ name: 'ada-user' });
+  });
+
+  test('email_verified=false → structured unverified-email rejection', async () => {
+    const { store, calls } = makeStore({ usersByEmail: { 'ada@example.com': OK_USER } });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'cognito-sub-1',
+        email: 'ada@example.com',
+        email_verified: false,
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('aws', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.UNVERIFIED_EMAIL}`);
+    expect(calls.linkIdentity).toHaveLength(0);
+  });
+
+  test('missing email_verified claim → fail-closed unverified rejection', async () => {
+    const { store } = makeStore({ usersByEmail: { 'ada@example.com': OK_USER } });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({ sub: 'cognito-sub-1', email: 'ada@example.com' }),
+    };
+
+    const { result, override } = await runGetUserInfo('aws', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.UNVERIFIED_EMAIL}`);
+  });
+
+  test('verified new email routes to onboarding (no auto-create)', async () => {
+    const { store, calls } = makeStore();
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'cognito-sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('aws', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe('/signup/oauth?token=pending-1');
+    expect(calls.createPendingSignup[0]).toMatchObject({
+      provider: 'aws',
       email: 'ada@example.com',
     });
   });

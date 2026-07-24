@@ -157,17 +157,17 @@ def test_list_returns_all_registry_providers(admin_headers):
     assert gh["client_id_source"] == "env-fallback"
     assert gh["secret_set"] is False
     assert gh["secret_source"] == "env-fallback"
-    # Issuer-based Okta lists issuer among required fields (OLO-9.3).
+    # Issuer-based Okta / Cognito list issuer among required fields (OLO-9.3 / OLO-9.4).
     okta = next(p for p in providers if p["provider_id"] == "okta")
     assert okta["status"] == "available"
     assert okta["required_fields"] == ["client_id", "client_secret", "issuer"]
     assert okta["can_enable"] is False
     assert "issuer" in okta["missing_for_enable"]
-    # coming-soon providers can never be enabled.
     aws = next(p for p in providers if p["provider_id"] == "aws")
-    assert aws["status"] == "coming-soon"
+    assert aws["status"] == "available"
+    assert aws["required_fields"] == ["client_id", "client_secret", "issuer"]
     assert aws["can_enable"] is False
-    assert aws["required_fields"] == []
+    assert "issuer" in aws["missing_for_enable"]
 
 
 def test_list_overlays_stored_row_and_masks_secret(admin_headers):
@@ -266,12 +266,43 @@ def test_put_enable_okta_incomplete_names_issuer(admin_headers):
     mock_db.upsert_auth_provider_config.assert_not_called()
 
 
-def test_put_enable_coming_soon_rejected(admin_headers):
-    """Enabling a coming-soon provider is a structured 422 (not_available)."""
+def test_put_enable_aws_incomplete_names_issuer(admin_headers):
+    """Enabling Cognito with credentials but no issuer is a structured 422 naming issuer (OLO-9.4)."""
     with patch("app.auth_provider_config_routes.db") as mock_db:
-        mock_db.get_auth_provider_config.return_value = None
+        mock_db.get_auth_provider_config.return_value = _row(
+            provider_id="aws",
+            enabled=None,
+            client_id="cg-id",
+            enc_key_id="k1",
+            config={},
+        )
         resp = client.put(
             "/v1/admin/auth-providers/aws", json={"enabled": True}, headers=admin_headers
+        )
+    assert resp.status_code == 422
+    detail = resp.json()["detail"]
+    assert detail["error"] == "provider_incomplete"
+    assert detail["missing_fields"] == ["issuer"]
+    mock_db.upsert_auth_provider_config.assert_not_called()
+
+
+def test_put_enable_coming_soon_rejected(admin_headers):
+    """Enabling a coming-soon provider is a structured 422 (not_available)."""
+    from app.auth_provider_registry import ProviderDescriptor, STATUS_COMING_SOON
+
+    fake = ProviderDescriptor("keycloak", "Keycloak", STATUS_COMING_SOON, ())
+    with (
+        patch(
+            "app.auth_provider_config_routes.get_provider_descriptor",
+            return_value=fake,
+        ),
+        patch("app.auth_provider_config_routes.db") as mock_db,
+    ):
+        mock_db.get_auth_provider_config.return_value = None
+        resp = client.put(
+            "/v1/admin/auth-providers/keycloak",
+            json={"enabled": True},
+            headers=admin_headers,
         )
     assert resp.status_code == 422
     assert resp.json()["detail"]["error"] == "provider_not_available"

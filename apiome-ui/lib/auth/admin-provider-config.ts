@@ -111,6 +111,7 @@ export interface ProviderExtraField {
  *     `AZURE_AD_AUTHORITY_BASE_URL`);
  *   - Google Workspace domain restriction: `google-workspace-domain.ts` (`GOOGLE_WORKSPACE_DOMAIN`).
  *   - Okta issuer (required): `okta-issuer.ts` (`OKTA_ISSUER`).
+ *   - Cognito user-pool issuer (required): `cognito-issuer.ts` (`COGNITO_ISSUER`).
  *
  * Providers without an entry (and coming-soon placeholders) simply render no extras.
  */
@@ -165,6 +166,14 @@ export const PROVIDER_EXTRA_FIELDS: Record<string, readonly ProviderExtraField[]
       label: 'Issuer',
       defaultValue: '(required)',
       help: 'Okta org or authorization-server issuer URL, e.g. https://acme.okta.com/oauth2/default.',
+    },
+  ],
+  aws: [
+    {
+      envKey: 'COGNITO_ISSUER',
+      label: 'Issuer',
+      defaultValue: '(required)',
+      help: 'Cognito user-pool issuer URL, e.g. https://cognito-idp.us-east-1.amazonaws.com/us-east-1_AbCdEf.',
     },
   ],
 };
