@@ -101,6 +101,7 @@ export default function McpServerComparePage() {
   const currentTenantId = sessionUser?.current_tenant_id;
 
   const [endpoints, setEndpoints] = useState<McpBrowseEndpoint[]>([]);
+  const [hasAnyServers, setHasAnyServers] = useState(false);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState<string | null>(null);
 
@@ -114,6 +115,7 @@ export default function McpServerComparePage() {
   const loadCatalog = useCallback(async () => {
     if (!currentTenantId) {
       setEndpoints([]);
+      setHasAnyServers(false);
       setCatalogLoading(false);
       return;
     }
@@ -126,6 +128,7 @@ export default function McpServerComparePage() {
         throw new Error(typeof data.error === 'string' ? data.error : res.statusText);
       }
       const groups = mcpBrowseGroupsFromPayload(data);
+      setHasAnyServers(groups.some((g) => g.endpoints.length > 0));
       const flat = groups
         .flatMap((g) => g.endpoints)
         .filter((e) => !!e.current_version_id)
@@ -133,6 +136,7 @@ export default function McpServerComparePage() {
       setEndpoints(flat);
     } catch (e) {
       setEndpoints([]);
+      setHasAnyServers(false);
       setCatalogError(e instanceof Error ? e.message : 'Could not load the MCP catalog.');
     } finally {
       setCatalogLoading(false);
@@ -206,7 +210,7 @@ export default function McpServerComparePage() {
               </Button>
             </div>
           </div>
-          <McpSectionTabs className="mt-4" />
+          <McpSectionTabs className="mt-4" hasServers={hasAnyServers} />
         </div>
       </header>
 

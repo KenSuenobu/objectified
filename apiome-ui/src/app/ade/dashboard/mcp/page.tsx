@@ -182,7 +182,7 @@ export default function McpBrowsePage() {
               </Button>
             </div>
           </div>
-          <McpSectionTabs className="mt-4" />
+          <McpSectionTabs className="mt-4" hasServers={hasAnyEndpoints} />
         </div>
       </header>
 

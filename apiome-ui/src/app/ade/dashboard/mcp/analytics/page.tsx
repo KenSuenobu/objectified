@@ -22,6 +22,7 @@ import { McpSectionTabs } from '@/app/components/ade/dashboard/mcp/McpSectionTab
 import { CatalogAnalyticsDashboard } from '@/app/components/ui/mcp/CatalogAnalyticsDashboard';
 import {
   mcpCatalogInsightFromPayload,
+  mcpCatalogIsEmpty,
   type McpCatalogInsight,
 } from '@/app/components/ade/dashboard/mcp/mcpCatalogInsightUi';
 
@@ -89,7 +90,10 @@ export default function McpCatalogAnalyticsPage() {
               </Button>
             </div>
           </div>
-          <McpSectionTabs className="mt-4" />
+          <McpSectionTabs
+            className="mt-4"
+            hasServers={insight != null && !mcpCatalogIsEmpty(insight)}
+          />
         </div>
       </header>
 

@@ -5,12 +5,18 @@
  * three related views (Capability Directory, Catalog Analytics, Server Comparison). Unlike
  * `CatalogDetailTabs`/`DetailTabs`, each "tab" here is a distinct route rather than a pane of one
  * page, so selection is driven by `usePathname()` and activation is a real navigation via `next/link`.
+ *
+ * Tabs stay hidden until the catalog has at least one MCP server — an empty workspace should not
+ * surface Capability Directory / Analytics / Comparison before there is anything to browse.
  */
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { BarChart3, GitCompareArrows, Layers, Server } from 'lucide-react';
+import { useAuthSession } from '@lib/auth/session-client';
 import { cn } from '@lib/utils';
+import { mcpBrowseGroupsFromPayload } from './mcpBrowseUi';
 
 interface McpSectionTab {
   href: string;
@@ -41,8 +47,57 @@ function isTabActive(tab: McpSectionTab, pathname: string): boolean {
   return false;
 }
 
-export function McpSectionTabs({ className }: { className?: string }) {
+function catalogHasServers(payload: unknown): boolean {
+  return mcpBrowseGroupsFromPayload(payload).some((group) => group.endpoints.length > 0);
+}
+
+export function McpSectionTabs({
+  className,
+  hasServers: hasServersProp,
+}: {
+  className?: string;
+  /**
+   * When the parent already knows whether the catalog has servers, pass it to skip the internal
+   * browse probe (and to keep the tabs in sync with the parent's loaded catalog).
+   */
+  hasServers?: boolean;
+}) {
   const pathname = usePathname();
+  const { data: session } = useAuthSession();
+  const currentTenantId = (session?.user as { current_tenant_id?: string } | undefined)
+    ?.current_tenant_id;
+
+  const [probedHasServers, setProbedHasServers] = useState(false);
+  const shouldProbe = hasServersProp === undefined;
+
+  useEffect(() => {
+    if (!shouldProbe || !currentTenantId) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch('/api/mcp/browse', { credentials: 'include' });
+        if (!res.ok) {
+          if (!cancelled) setProbedHasServers(false);
+          return;
+        }
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled) setProbedHasServers(catalogHasServers(data));
+      } catch {
+        if (!cancelled) setProbedHasServers(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [shouldProbe, currentTenantId]);
+
+  const hasServers =
+    hasServersProp !== undefined
+      ? hasServersProp
+      : Boolean(currentTenantId) && probedHasServers;
+  if (!hasServers) return null;
 
   return (
     <nav
