@@ -45,6 +45,9 @@ const ALL_ENABLED_ENV = {
   COGNITO_CLIENT_ID: 'cg-id',
   COGNITO_CLIENT_SECRET: 'cg-secret',
   COGNITO_ISSUER: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_AbCdEf',
+  KEYCLOAK_CLIENT_ID: 'kc-id',
+  KEYCLOAK_CLIENT_SECRET: 'kc-secret',
+  KEYCLOAK_ISSUER: 'https://kc.example.com/realms/apiome',
 };
 
 describe('providerEnvIssues', () => {

@@ -69,6 +69,9 @@ const ALL_ENABLED: Record<string, string> = {
   COGNITO_CLIENT_ID: 'cg-id',
   COGNITO_CLIENT_SECRET: 'cg-secret',
   COGNITO_ISSUER: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_AbCdEf',
+  KEYCLOAK_CLIENT_ID: 'kc-id',
+  KEYCLOAK_CLIENT_SECRET: 'kc-secret',
+  KEYCLOAK_ISSUER: 'https://kc.example.com/realms/apiome',
 };
 
 const OK_USER: ResolutionUser = {
@@ -169,6 +172,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'google',
       'okta',
       'aws',
+      'keycloak',
     ]);
   });
 
@@ -181,6 +185,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'google',
       'okta',
       'aws',
+      'keycloak',
     ]);
   });
 
@@ -201,6 +206,9 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
     const aws = buildGenericOAuthConfig('aws', ALL_ENABLED)!;
     expect(aws.clientId).toBe('cg-id');
     expect(aws.clientSecret).toBe('cg-secret');
+    const kc = buildGenericOAuthConfig('keycloak', ALL_ENABLED)!;
+    expect(kc.clientId).toBe('kc-id');
+    expect(kc.clientSecret).toBe('kc-secret');
   });
 
   test('an unknown provider id yields null', () => {
@@ -295,6 +303,23 @@ describe('endpoint & issuer overrides (OLO-7.4)', () => {
     })!;
     expect(mock.discoveryUrl).toBe(
       'http://localhost:9007/cognito/.well-known/openid-configuration'
+    );
+  });
+
+  test('keycloak: KEYCLOAK_ISSUER drives OIDC discovery; PKCE on (OLO-9.5)', () => {
+    const cfg = buildGenericOAuthConfig('keycloak', ALL_ENABLED)!;
+    expect(cfg.discoveryUrl).toBe(
+      'https://kc.example.com/realms/apiome/.well-known/openid-configuration'
+    );
+    expect(cfg.pkce).toBe(true);
+    expect(cfg.scopes).toEqual(['openid', 'email', 'profile']);
+
+    const mock = buildGenericOAuthConfig('keycloak', {
+      ...ALL_ENABLED,
+      KEYCLOAK_ISSUER: 'http://localhost:8080/realms/apiome/',
+    })!;
+    expect(mock.discoveryUrl).toBe(
+      'http://localhost:8080/realms/apiome/.well-known/openid-configuration'
     );
   });
 
@@ -672,6 +697,122 @@ describe('getUserInfo — Cognito email_verified fail-closed (OLO-9.4)', () => {
     expect(override).toBe('/signup/oauth?token=pending-1');
     expect(calls.createPendingSignup[0]).toMatchObject({
       provider: 'aws',
+      email: 'ada@example.com',
+    });
+  });
+});
+
+
+/* ── getUserInfo: keycloak (OLO-9.5) ───────────────────────────────────────────────────────── */
+
+describe('getUserInfo — keycloak (OLO-9.5)', () => {
+  test('verified email admits and returns Better Auth user info', async () => {
+    const { store } = makeStore({
+      identityUserId: OK_USER.id,
+      usersById: { [OK_USER.id]: OK_USER },
+    });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'kc-sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+        name: 'Ada Lovelace',
+        picture: 'http://img/kc.png',
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('keycloak', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(override).toBeNull();
+    expect(result).toEqual({
+      id: 'kc-sub-1',
+      email: 'ada@example.com',
+      emailVerified: true,
+      name: 'Ada Lovelace',
+      image: 'http://img/kc.png',
+    });
+  });
+
+  test('falls back to preferred_username when name claim is absent', async () => {
+    const { store } = makeStore({
+      identityUserId: OK_USER.id,
+      usersById: { [OK_USER.id]: OK_USER },
+    });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'kc-sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+        preferred_username: 'ada',
+      }),
+    };
+
+    const { result } = await runGetUserInfo('keycloak', tokens, { store, env: ALL_ENABLED });
+    expect(result?.name).toBe('ada');
+  });
+
+  test('missing / false email_verified fail-closes (unverified-email)', async () => {
+    const { store, calls } = makeStore({ usersByEmail: { 'ada@example.com': OK_USER } });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'kc-sub-1',
+        email: 'ada@example.com',
+        email_verified: false,
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('keycloak', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.UNVERIFIED_EMAIL}`);
+    expect(calls.linkIdentity).toHaveLength(0);
+  });
+
+  test('absent email_verified claim also fail-closes', async () => {
+    const { store } = makeStore({ usersByEmail: { 'ada@example.com': OK_USER } });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({ sub: 'kc-sub-1', email: 'ada@example.com' }),
+    };
+
+    const { result, override } = await runGetUserInfo('keycloak', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.UNVERIFIED_EMAIL}`);
+  });
+
+  test('unknown verified email creates pending signup (onboarding)', async () => {
+    const { store, calls } = makeStore();
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'kc-sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('keycloak', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe('/signup/oauth?token=pending-1');
+    expect(calls.createPendingSignup[0]).toMatchObject({
+      provider: 'keycloak',
       email: 'ada@example.com',
     });
   });

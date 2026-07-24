@@ -129,6 +129,7 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
       'github',
       'gitlab',
       'google',
+      'keycloak',
       'okta',
     ]);
     expect(auth).toBeDefined();

@@ -75,16 +75,22 @@ const AWS = makeView({
   required_fields: ['client_id', 'client_secret', 'issuer'],
   missing_for_enable: ['client_id', 'client_secret', 'issuer'],
 });
-/** Synthetic coming-soon stand-in so the Add menu / keyboard tests keep covering that path. */
 const KEYCLOAK = makeView({
   provider_id: 'keycloak',
   label: 'Keycloak',
+  required_fields: ['client_id', 'client_secret', 'issuer'],
+  missing_for_enable: ['client_id', 'client_secret', 'issuer'],
+});
+/** Synthetic coming-soon stand-in so the Add menu / keyboard tests keep covering that path. */
+const AUTH0 = makeView({
+  provider_id: 'auth0',
+  label: 'Auth0',
   status: 'coming-soon',
   required_fields: [],
   missing_for_enable: [],
 });
 
-const DEFAULT_LIST = { providers: [GITHUB, GITLAB, AZURE, GOOGLE, OKTA, AWS, KEYCLOAK] };
+const DEFAULT_LIST = { providers: [GITHUB, GITLAB, AZURE, GOOGLE, OKTA, AWS, KEYCLOAK, AUTH0] };
 
 /** Install a fetch mock; `putHandler` decides PUT responses, `listBodies` queues GET bodies. */
 function mockFetch(
@@ -147,7 +153,7 @@ describe('AuthProviderSettingsClient — rendering', () => {
     expect(
       await screen.findByRole('region', { name: 'GitLab provider configuration' })
     ).toBeInTheDocument();
-    for (const label of ['GitHub', 'Microsoft', 'Google', 'AWS', 'Keycloak']) {
+    for (const label of ['GitHub', 'Microsoft', 'Google', 'AWS', 'Keycloak', 'Auth0']) {
       expect(
         screen.queryByRole('region', { name: `${label} provider configuration` })
       ).not.toBeInTheDocument();
@@ -155,7 +161,7 @@ describe('AuthProviderSettingsClient — rendering', () => {
   });
 
   it('shows an empty-state card when no providers are configured', async () => {
-    mockFetch(undefined, [{ providers: [GITHUB, AZURE, GOOGLE, AWS, KEYCLOAK] }]);
+    mockFetch(undefined, [{ providers: [GITHUB, AZURE, GOOGLE, AWS, KEYCLOAK, AUTH0] }]);
     render(<AuthProviderSettingsClient />);
 
     expect(await screen.findByText('No providers configured.')).toBeInTheDocument();
@@ -176,12 +182,13 @@ describe('AuthProviderSettingsClient — rendering', () => {
     expect(menu.queryByRole('menuitem', { name: /GitLab/ })).not.toBeInTheDocument();
     expect(menu.getByRole('menuitem', { name: /GitHub/ })).toBeEnabled();
     expect(menu.getByRole('menuitem', { name: /Microsoft/ })).toBeEnabled();
-    // Google (OLO-9.2), Okta (OLO-9.3), and AWS Cognito (OLO-9.4) are available/selectable;
-    // only the synthetic Keycloak stand-in stays coming-soon/disabled.
+    // Google (OLO-9.2), Okta (OLO-9.3), AWS Cognito (OLO-9.4), and Keycloak (OLO-9.5) are
+    // available/selectable; only the synthetic Auth0 stand-in stays coming-soon/disabled.
     expect(menu.getByRole('menuitem', { name: /Google/ })).toBeEnabled();
     expect(menu.getByRole('menuitem', { name: /Okta/ })).toBeEnabled();
     expect(menu.getByRole('menuitem', { name: /AWS/ })).toBeEnabled();
-    expect(menu.getByRole('menuitem', { name: /Keycloak/ })).toBeDisabled();
+    expect(menu.getByRole('menuitem', { name: /Keycloak/ })).toBeEnabled();
+    expect(menu.getByRole('menuitem', { name: /Auth0/ })).toBeDisabled();
   });
 
   it('dismisses an added-but-unsaved card via Cancel, returning it to the Add menu', async () => {
@@ -380,12 +387,12 @@ describe('AuthProviderSettingsClient — Add menu search & scroll', () => {
 
     const menu = await openAddMenu();
     const search = menu.getByRole('textbox', { name: 'Search providers' });
-    fireEvent.change(search, { target: { value: 'keycloak' } });
+    fireEvent.change(search, { target: { value: 'auth0' } });
     fireEvent.keyDown(search, { key: 'Enter' });
 
     // Nothing added, menu still open — coming-soon entries stay unselectable via keyboard too.
     expect(
-      screen.queryByRole('region', { name: 'Keycloak provider configuration' })
+      screen.queryByRole('region', { name: 'Auth0 provider configuration' })
     ).not.toBeInTheDocument();
     expect(screen.getByRole('menu')).toBeInTheDocument();
   });

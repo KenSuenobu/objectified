@@ -82,6 +82,7 @@ describe('PROVIDER_EXTRA_FIELDS metadata', () => {
     );
     expect(PROVIDER_EXTRA_FIELDS.okta.map((f) => f.envKey)).toEqual(['OKTA_ISSUER']);
     expect(PROVIDER_EXTRA_FIELDS.aws.map((f) => f.envKey)).toEqual(['COGNITO_ISSUER']);
+    expect(PROVIDER_EXTRA_FIELDS.keycloak.map((f) => f.envKey)).toEqual(['KEYCLOAK_ISSUER']);
   });
 });
 

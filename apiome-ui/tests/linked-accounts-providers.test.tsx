@@ -36,8 +36,9 @@ jest.mock('../lib/db/helper', () => ({
 import LinkedAccountsClient from '../src/app/ade/dashboard/linked-accounts/LinkedAccountsClient';
 import type { ProviderSummary } from '../lib/auth/provider-registry';
 
-/** Summaries mirroring a deployment with GitHub + GitLab enabled; azure/google/okta/aws env-disabled.
- * A synthetic Keycloak entry keeps coming-soon teaser coverage (OLO-9.5 will own the real slug). */
+/** Summaries mirroring a deployment with GitHub + GitLab enabled; azure/google/okta/aws/keycloak
+ * env-disabled. A synthetic Auth0 entry keeps coming-soon teaser coverage (OLO-9.6 will own the
+ * real slug). */
 const GITHUB_GITLAB_ENABLED: ProviderSummary[] = [
   { id: 'github', label: 'GitHub', status: 'available', enabled: true },
   { id: 'gitlab', label: 'GitLab', status: 'available', enabled: true },
@@ -45,7 +46,8 @@ const GITHUB_GITLAB_ENABLED: ProviderSummary[] = [
   { id: 'google', label: 'Google', status: 'available', enabled: false },
   { id: 'okta', label: 'Okta', status: 'available', enabled: false },
   { id: 'aws', label: 'AWS', status: 'available', enabled: false },
-  { id: 'keycloak', label: 'Keycloak', status: 'coming-soon', enabled: false },
+  { id: 'keycloak', label: 'Keycloak', status: 'available', enabled: false },
+  { id: 'auth0', label: 'Auth0', status: 'coming-soon', enabled: false },
 ];
 
 /** One azure identity linked — used by the last-sign-in-method guard tests. */
@@ -78,13 +80,14 @@ describe('LinkedAccountsClient — provider cards from the registry (OLO-2.3)', 
 
     expect(screen.getByText('GitHub')).toBeInTheDocument();
     expect(screen.getByText('GitLab')).toBeInTheDocument();
-    expect(screen.getByText('Keycloak')).toBeInTheDocument();
-    // azure, google, okta, and aws are available-but-disabled in this deployment: no card at all.
+    expect(screen.getByText('Auth0')).toBeInTheDocument();
+    // azure, google, okta, aws, and keycloak are available-but-disabled: no card at all.
     expect(screen.queryByText('Microsoft')).not.toBeInTheDocument();
     expect(screen.queryByText('Google')).not.toBeInTheDocument();
     expect(screen.queryByText('Okta')).not.toBeInTheDocument();
     expect(screen.queryByText('AWS')).not.toBeInTheDocument();
-    // keycloak is the coming-soon teaser stand-in.
+    expect(screen.queryByText('Keycloak')).not.toBeInTheDocument();
+    // auth0 is the coming-soon teaser stand-in.
     expect(screen.getAllByText('Coming soon')).toHaveLength(1);
   });
 
@@ -96,7 +99,7 @@ describe('LinkedAccountsClient — provider cards from the registry (OLO-2.3)', 
     await waitFor(() => expect(mockGetLinkedAccounts).toHaveBeenCalled());
 
     expect(screen.getByText('Microsoft')).toBeInTheDocument();
-    // Three linkable providers → three enabled Link buttons; the keycloak teaser stays disabled.
+    // Three linkable providers → three enabled Link buttons; the auth0 teaser stays disabled.
     const linkButtons = screen.getAllByRole('button', { name: /Link$/ });
     expect(linkButtons.filter((button) => !button.hasAttribute('disabled'))).toHaveLength(3);
     expect(linkButtons.filter((button) => button.hasAttribute('disabled'))).toHaveLength(1);

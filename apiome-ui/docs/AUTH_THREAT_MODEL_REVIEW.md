@@ -66,6 +66,7 @@ for every provider, PKCE/nonce only when listed.
 | Google | ✅ | ✅ | n/a | Better Auth discovery (`GOOGLE_ISSUER`); Workspace `hd` gate (OLO-9.2). |
 | Okta | ✅ | ✅ | n/a | Better Auth discovery (`OKTA_ISSUER`); native `email_verified` fail-closed (OLO-9.3). |
 | AWS Cognito (`aws`) | ✅ | ✅ | n/a | Better Auth discovery (`COGNITO_ISSUER` user-pool issuer); native `email_verified` fail-closed (OLO-9.4). |
+| Keycloak | ✅ | ✅ | n/a | Better Auth discovery (`KEYCLOAK_ISSUER` realm issuer); native `email_verified` fail-closed (OLO-9.5). |
 
 No manual/hand-rolled OAuth flow bypasses NextAuth's checks machinery; the CLI is an API-key/bearer
 client with no PKCE flow, so it is out of scope.

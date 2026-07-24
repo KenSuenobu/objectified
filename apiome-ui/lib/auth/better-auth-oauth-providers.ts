@@ -1,9 +1,9 @@
 /**
  * Better Auth OAuth provider construction (OLO-10.7, #5002).
  *
- * Re-expresses the live sign-in providers — github, gitlab, azure, google, okta, aws — on Better
- * Auth's **generic OAuth2/OIDC** plugin, the Better Auth analogue of the NextAuth factory map in
- * `nextauth-oauth-providers.ts`. Every provider is driven from the shared provider registry
+ * Re-expresses the live sign-in providers — github, gitlab, azure, google, okta, aws, keycloak —
+ * on Better Auth's **generic OAuth2/OIDC** plugin, the Better Auth analogue of the NextAuth factory
+ * map in `nextauth-oauth-providers.ts`. Every provider is driven from the shared provider registry
  * (`provider-registry.ts`) exactly as the NextAuth path is, so the registry stays the single source
  * of the enabled set and the mirror tests (`provider-registry-mirror.test.ts`,
  * `test_auth_provider_registry.py`) keep holding with no registry change.
@@ -14,13 +14,13 @@
  * The generic plugin exposes `authorizationUrl`/`tokenUrl`/`userInfoUrl`/`discoveryUrl`, so every
  * endpoint stays overridable via the same env vars the NextAuth path reads (`GITHUB_OAUTH_BASE_URL`,
  * `GITHUB_API_BASE_URL`, `GITLAB_BASE_URL`, `GOOGLE_ISSUER`, `OKTA_ISSUER`, `COGNITO_ISSUER`,
- * `AZURE_AD_AUTHORITY_BASE_URL`, `AZURE_AD_TENANT`). The generic callback path
+ * `KEYCLOAK_ISSUER`, `AZURE_AD_AUTHORITY_BASE_URL`, `AZURE_AD_TENANT`). The generic callback path
  * (`/oauth2/callback/:id`) is exactly the prefix the OLO-10.6 resolution adapter already recognises.
  *
  * What each provider re-attaches (identical policy to the NextAuth engine, proven by tests):
  *  - **Verified-email parity (OLO-2.5):** GitHub `/user/emails` verified flags, GitLab `confirmed_at`,
- *    Google's / Okta's / Cognito's native `email_verified` — normalized onto the profile as
- *    `email_verified` before the resolution engine sees it (`verified-email.ts` pure helpers,
+ *    Google's / Okta's / Cognito's / Keycloak's native `email_verified` — normalized onto the profile
+ *    as `email_verified` before the resolution engine sees it (`verified-email.ts` pure helpers,
  *    reused verbatim).
  *  - **Google Workspace `hd` gate (OLO-9.2):** `assertGoogleHostedDomain` throws before resolution,
  *    so an out-of-domain account never lands an identity (`google-workspace-domain.ts`).
@@ -28,6 +28,8 @@
  *    `email_verified` fail-closed via `resolveOAuthEmailVerified` (`okta-issuer.ts`).
  *  - **Cognito issuer discovery (OLO-9.4):** `COGNITO_ISSUER` (user-pool issuer) drives OIDC
  *    discovery; PKCE on; native `email_verified` fail-closed (`cognito-issuer.ts`).
+ *  - **Keycloak issuer discovery (OLO-9.5):** `KEYCLOAK_ISSUER` (realm issuer) drives OIDC
+ *    discovery; PKCE on; native `email_verified` fail-closed (`keycloak-issuer.ts`).
  *  - **nOAuth hardening (OLO-1.4):** azure id-token claims (`oid`/`upn`/`xms_edov`/…) pass through
  *    untouched so the engine's `resolveEntraEmailVerified` still rejects a forged token.
  *  - **The account-resolution decision (OLO-1.x):** every callback runs through
@@ -89,6 +91,7 @@ import {
 } from './google-workspace-domain';
 import { oktaIssuerBaseUrl } from './okta-issuer';
 import { cognitoIssuerBaseUrl } from './cognito-issuer';
+import { keycloakIssuerBaseUrl } from './keycloak-issuer';
 import { entraAuthorityBaseUrl, entraIdProfile, type EntraIdProfile } from './entra-provider';
 
 /* ── Request-scoped redirect override ──────────────────────────────────────────────────────── */
@@ -399,6 +402,26 @@ function normalizeAws(tokens: OAuth2Tokens): NormalizedOAuthProfile {
   };
 }
 
+/**
+ * Normalize a Keycloak sign-in: decode the id-token claims (native `email_verified`) and pass
+ * them through so `resolveOAuthEmailVerified` fail-closes when the claim is absent/false
+ * (OLO-9.5). Discovery is pointed at `keycloakIssuerBaseUrl` (`KEYCLOAK_ISSUER` = realm issuer).
+ * Falls back to `preferred_username` when `name` is absent (common Keycloak default mapper set).
+ */
+function normalizeKeycloak(tokens: OAuth2Tokens): NormalizedOAuthProfile {
+  const claims = (decodeJwtClaims(tokens.idToken) ?? {}) as Record<string, unknown>;
+  return {
+    accountId: typeof claims.sub === 'string' ? claims.sub : '',
+    profile: claims,
+    email: typeof claims.email === 'string' ? claims.email : null,
+    name:
+      (typeof claims.name === 'string' && claims.name) ||
+      (typeof claims.preferred_username === 'string' && claims.preferred_username) ||
+      null,
+    image: typeof claims.picture === 'string' ? claims.picture : null,
+  };
+}
+
 /* ── getUserInfo runner: normalize → resolve → admit or override ────────────────────────────── */
 
 /**
@@ -430,6 +453,7 @@ const NORMALIZERS: Record<
   azure: (tokens) => normalizeAzure(tokens),
   okta: (tokens) => normalizeOkta(tokens),
   aws: (tokens) => normalizeAws(tokens),
+  keycloak: (tokens) => normalizeKeycloak(tokens),
 };
 
 /**
@@ -461,7 +485,7 @@ export async function resolveLinkIntentUserId(provider: string): Promise<string 
  * (`resolveEntraEmailVerified` for azure, `resolveOAuthEmailVerified` otherwise), so Better Auth's
  * own account handling sees the identical verified signal the engine decided over.
  *
- * @param provider The provider slug (github | gitlab | azure | google | okta | aws).
+ * @param provider The provider slug (github | gitlab | azure | google | okta | aws | keycloak).
  * @param deps Injectable dependencies (store, fetch, link-intent resolver, env).
  * @returns A `getUserInfo` function returning the Better Auth user info on admit, or null otherwise.
  */
@@ -645,6 +669,19 @@ export function buildGenericOAuthConfig(
         // Cognito user-pool issuer (required via OLO-9.1); discovery supplies authorize/token
         // (Hosted UI). Form: https://cognito-idp.<region>.amazonaws.com/<userPoolId>
         discoveryUrl: `${cognitoIssuerBaseUrl(env)}/.well-known/openid-configuration`,
+        scopes: ['openid', 'email', 'profile'],
+        pkce: true,
+        getUserInfo,
+      };
+    }
+    case 'keycloak': {
+      return {
+        providerId: 'keycloak',
+        clientId: readEnvString(env, 'KEYCLOAK_CLIENT_ID') ?? '',
+        clientSecret: readEnvString(env, 'KEYCLOAK_CLIENT_SECRET') ?? '',
+        // Realm issuer (required via OLO-9.1); discovery supplies authorize/token.
+        // Form: https://kc.example.com/realms/<realm>
+        discoveryUrl: `${keycloakIssuerBaseUrl(env)}/.well-known/openid-configuration`,
         scopes: ['openid', 'email', 'profile'],
         pkce: true,
         getUserInfo,
