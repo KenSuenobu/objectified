@@ -112,6 +112,7 @@ export interface ProviderExtraField {
  *   - Google Workspace domain restriction: `google-workspace-domain.ts` (`GOOGLE_WORKSPACE_DOMAIN`).
  *   - Okta issuer (required): `okta-issuer.ts` (`OKTA_ISSUER`).
  *   - Cognito user-pool issuer (required): `cognito-issuer.ts` (`COGNITO_ISSUER`).
+ *   - Keycloak realm issuer (required): `keycloak-issuer.ts` (`KEYCLOAK_ISSUER`).
  *
  * Providers without an entry (and coming-soon placeholders) simply render no extras.
  */
@@ -174,6 +175,14 @@ export const PROVIDER_EXTRA_FIELDS: Record<string, readonly ProviderExtraField[]
       label: 'Issuer',
       defaultValue: '(required)',
       help: 'Cognito user-pool issuer URL, e.g. https://cognito-idp.us-east-1.amazonaws.com/us-east-1_AbCdEf.',
+    },
+  ],
+  keycloak: [
+    {
+      envKey: 'KEYCLOAK_ISSUER',
+      label: 'Issuer',
+      defaultValue: '(required)',
+      help: 'Keycloak realm issuer URL, e.g. https://kc.example.com/realms/apiome.',
     },
   ],
 };

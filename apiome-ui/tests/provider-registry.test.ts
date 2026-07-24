@@ -43,6 +43,9 @@ const ALL_ENABLED_ENV = {
   COGNITO_CLIENT_ID: 'cg-id',
   COGNITO_CLIENT_SECRET: 'cg-secret',
   COGNITO_ISSUER: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_AbCdEf',
+  KEYCLOAK_CLIENT_ID: 'kc-id',
+  KEYCLOAK_CLIENT_SECRET: 'kc-secret',
+  KEYCLOAK_ISSUER: 'https://kc.example.com/realms/apiome',
 };
 
 describe('registry vocabulary', () => {
@@ -54,6 +57,7 @@ describe('registry vocabulary', () => {
       'google',
       'okta',
       'aws',
+      'keycloak',
     ]);
   });
 
@@ -64,6 +68,7 @@ describe('registry vocabulary', () => {
     expect(getProviderDescriptor('google')?.label).toBe('Google');
     expect(getProviderDescriptor('okta')?.label).toBe('Okta');
     expect(getProviderDescriptor('aws')?.label).toBe('AWS');
+    expect(getProviderDescriptor('keycloak')?.label).toBe('Keycloak');
   });
 
   it('pins each available provider env contract', () => {
@@ -90,12 +95,18 @@ describe('registry vocabulary', () => {
       'COGNITO_CLIENT_SECRET',
       'COGNITO_ISSUER',
     ]);
+    expect(getProviderDescriptor('keycloak')?.requiredEnvKeys).toEqual([
+      'KEYCLOAK_CLIENT_ID',
+      'KEYCLOAK_CLIENT_SECRET',
+      'KEYCLOAK_ISSUER',
+    ]);
   });
 
-  it('marks google/okta/aws available (OLO-9.2–9.4); no coming-soon placeholders remain', () => {
+  it('marks google/okta/aws/keycloak available (OLO-9.2–9.5); no coming-soon placeholders remain', () => {
     expect(getProviderDescriptor('google')?.status).toBe('available');
     expect(getProviderDescriptor('okta')?.status).toBe('available');
     expect(getProviderDescriptor('aws')?.status).toBe('available');
+    expect(getProviderDescriptor('keycloak')?.status).toBe('available');
     expect(PROVIDER_REGISTRY.every((p) => p.status === 'available')).toBe(true);
   });
 
@@ -124,6 +135,7 @@ describe('isProviderEnabled', () => {
     expect(isProviderEnabled('google', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('okta', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('aws', ALL_ENABLED_ENV)).toBe(true);
+    expect(isProviderEnabled('keycloak', ALL_ENABLED_ENV)).toBe(true);
   });
 
   it('requires every env var — a missing secret disables the provider', () => {
@@ -168,6 +180,19 @@ describe('isProviderEnabled', () => {
     ).toBe(false);
   });
 
+  it('requires the Keycloak issuer trio (OLO-9.5) — id+secret alone is not enough', () => {
+    expect(
+      isProviderEnabled('keycloak', {
+        KEYCLOAK_CLIENT_ID: 'x',
+        KEYCLOAK_CLIENT_SECRET: 'y',
+        KEYCLOAK_ISSUER: 'https://kc.example.com/realms/apiome',
+      })
+    ).toBe(true);
+    expect(
+      isProviderEnabled('keycloak', { KEYCLOAK_CLIENT_ID: 'x', KEYCLOAK_CLIENT_SECRET: 'y' })
+    ).toBe(false);
+  });
+
   it('never enables unknown ids', () => {
     expect(isProviderEnabled('not-a-provider', ALL_ENABLED_ENV)).toBe(false);
   });
@@ -182,6 +207,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'google',
       'okta',
       'aws',
+      'keycloak',
     ]);
     expect(enabledProviderIds({ GITHUB_ID: 'gh-id', GITHUB_SECRET: 'gh-secret' })).toEqual(['github']);
     expect(enabledProviderIds({})).toEqual([]);
@@ -195,6 +221,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'google',
       'okta',
       'aws',
+      'keycloak',
     ]);
   });
 
@@ -206,6 +233,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'google',
       'okta',
       'aws',
+      'keycloak',
     ]);
   });
 });
@@ -221,6 +249,7 @@ describe('providerSummaries', () => {
       { id: 'google', label: 'Google', status: 'available', enabled: false },
       { id: 'okta', label: 'Okta', status: 'available', enabled: false },
       { id: 'aws', label: 'AWS', status: 'available', enabled: false },
+      { id: 'keycloak', label: 'Keycloak', status: 'available', enabled: false },
     ]);
     // Server → client props must survive serialization untouched.
     expect(JSON.parse(JSON.stringify(summaries))).toEqual(summaries);

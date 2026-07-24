@@ -148,7 +148,7 @@ def test_list_returns_all_registry_providers(admin_headers):
     assert resp.status_code == 200
     providers = resp.json()["providers"]
     ids = [p["provider_id"] for p in providers]
-    assert ids == ["github", "gitlab", "azure", "google", "okta", "aws"]
+    assert ids == ["github", "gitlab", "azure", "google", "okta", "aws", "keycloak"]
     # With no rows, every field falls back to env and nothing is enabled/stored.
     gh = providers[0]
     assert gh["enabled"] is None
@@ -168,6 +168,11 @@ def test_list_returns_all_registry_providers(admin_headers):
     assert aws["required_fields"] == ["client_id", "client_secret", "issuer"]
     assert aws["can_enable"] is False
     assert "issuer" in aws["missing_for_enable"]
+    keycloak = next(p for p in providers if p["provider_id"] == "keycloak")
+    assert keycloak["status"] == "available"
+    assert keycloak["required_fields"] == ["client_id", "client_secret", "issuer"]
+    assert keycloak["can_enable"] is False
+    assert "issuer" in keycloak["missing_for_enable"]
 
 
 def test_list_overlays_stored_row_and_masks_secret(admin_headers):
@@ -286,11 +291,31 @@ def test_put_enable_aws_incomplete_names_issuer(admin_headers):
     mock_db.upsert_auth_provider_config.assert_not_called()
 
 
+def test_put_enable_keycloak_incomplete_names_issuer(admin_headers):
+    """Enabling Keycloak with credentials but no issuer is a structured 422 naming issuer (OLO-9.5)."""
+    with patch("app.auth_provider_config_routes.db") as mock_db:
+        mock_db.get_auth_provider_config.return_value = _row(
+            provider_id="keycloak",
+            enabled=None,
+            client_id="kc-id",
+            enc_key_id="k1",
+            config={},
+        )
+        resp = client.put(
+            "/v1/admin/auth-providers/keycloak", json={"enabled": True}, headers=admin_headers
+        )
+    assert resp.status_code == 422
+    detail = resp.json()["detail"]
+    assert detail["error"] == "provider_incomplete"
+    assert detail["missing_fields"] == ["issuer"]
+    mock_db.upsert_auth_provider_config.assert_not_called()
+
+
 def test_put_enable_coming_soon_rejected(admin_headers):
     """Enabling a coming-soon provider is a structured 422 (not_available)."""
     from app.auth_provider_registry import ProviderDescriptor, STATUS_COMING_SOON
 
-    fake = ProviderDescriptor("keycloak", "Keycloak", STATUS_COMING_SOON, ())
+    fake = ProviderDescriptor("auth0", "Auth0", STATUS_COMING_SOON, ())
     with (
         patch(
             "app.auth_provider_config_routes.get_provider_descriptor",
@@ -300,7 +325,7 @@ def test_put_enable_coming_soon_rejected(admin_headers):
     ):
         mock_db.get_auth_provider_config.return_value = None
         resp = client.put(
-            "/v1/admin/auth-providers/keycloak",
+            "/v1/admin/auth-providers/auth0",
             json={"enabled": True},
             headers=admin_headers,
         )

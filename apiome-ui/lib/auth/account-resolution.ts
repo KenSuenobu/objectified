@@ -99,9 +99,9 @@ export function isSignupDisabled(env: Record<string, string | undefined> = proce
  * are additionally subject to the nOAuth hardening rules (OLO-1.4) before `emailVerified` may be
  * set true. `google` (OLO-9.2) is trusted through the generic path: Google's id token carries a
  * native `email_verified` claim, and any Workspace-domain restriction is already enforced upstream
- * in the provider's profile callback (`google-workspace-domain.ts`). `okta` (OLO-9.3) and
- * `aws` / Cognito (OLO-9.4) are likewise trusted through the generic path: their id tokens carry
- * a native `email_verified` claim.
+ * in the provider's profile callback (`google-workspace-domain.ts`). `okta` (OLO-9.3),
+ * `aws` / Cognito (OLO-9.4), and `keycloak` (OLO-9.5) are likewise trusted through the generic
+ * path: their id tokens carry a native `email_verified` claim.
  */
 export const AUTO_LINK_TRUSTED_PROVIDERS: ReadonlySet<string> = new Set([
   'github',
@@ -110,6 +110,7 @@ export const AUTO_LINK_TRUSTED_PROVIDERS: ReadonlySet<string> = new Set([
   'google',
   'okta',
   'aws',
+  'keycloak',
 ]);
 
 /**
@@ -127,8 +128,8 @@ export const LINKABLE_PROVIDERS: ReadonlySet<string> = new Set([
   'google',
   'okta',
   'aws',
+  'keycloak',
 ]);
-
 /**
  * Canonicalize an email address to the stored/indexed form: trimmed and lower-cased.
  * Mirror of `normalize_email` in apiome-rest (OLO-1.1): case and surrounding whitespace never

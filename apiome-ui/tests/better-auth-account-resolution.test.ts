@@ -291,6 +291,7 @@ describe('resolveBetterAuthOAuthSignIn — decision tree', () => {
       'github',
       'gitlab',
       'google',
+      'keycloak',
       'okta',
     ]);
     expect(SUPPORTED_OAUTH_PROVIDERS.has('credentials')).toBe(false);

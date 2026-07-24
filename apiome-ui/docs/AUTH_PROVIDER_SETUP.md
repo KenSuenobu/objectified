@@ -1,8 +1,8 @@
 # Sign-in Provider Setup & Secrets Guide (OLO-7.2)
 
 How to register the OAuth applications Apiome signs users in with (GitHub, GitLab,
-Microsoft Entra ID, Google Workspace, Okta, Amazon Cognito), which environment variables each
-provider needs, and how boot-time validation reacts when a provider is misconfigured.
+Microsoft Entra ID, Google Workspace, Okta, Amazon Cognito, Keycloak), which environment variables
+each provider needs, and how boot-time validation reacts when a provider is misconfigured.
 
 The single source of truth for the provider list and each provider's env contract is the
 provider registry: [`lib/auth/provider-registry.ts`](../lib/auth/provider-registry.ts)
@@ -32,6 +32,9 @@ linked-accounts panel, Better Auth sign-in route). No code changes are needed ei
 | `COGNITO_CLIENT_ID` | AWS Cognito | To enable AWS | App client **Client ID** |
 | `COGNITO_CLIENT_SECRET` | AWS Cognito | To enable AWS | App client **Client secret** |
 | `COGNITO_ISSUER` | AWS Cognito | To enable AWS | User-pool issuer (`https://cognito-idp.<region>.amazonaws.com/<userPoolId>`) |
+| `KEYCLOAK_CLIENT_ID` | Keycloak | To enable Keycloak | Confidential client **Client ID** |
+| `KEYCLOAK_CLIENT_SECRET` | Keycloak | To enable Keycloak | Confidential client **Client secret** |
+| `KEYCLOAK_ISSUER` | Keycloak | To enable Keycloak | Realm issuer (`https://kc.example.com/realms/<realm>`) |
 | `AUTH_PROVIDER_VALIDATION` | validation | No (default `strict`) | `strict` fails startup on partial provider config; `warn` logs and disables |
 
 Rules that apply to every provider:
@@ -47,7 +50,7 @@ Rules that apply to every provider:
 
 A registry entry declares its required fields structurally (`requiredFields`), each mapped to
 an env var. Most providers require exactly a **client id** and a **client secret**. Issuer-based
-providers (Okta, Cognito today; Keycloak, Auth0, and generic OIDC as they ship) additionally
+providers (Okta, Cognito, Keycloak today; Auth0 and generic OIDC as they ship) additionally
 require an OIDC **issuer** URL stored in the provider's `config` extras. Setting the id and secret
 but leaving the issuer unset is *partial config* and boot-time validation names the missing issuer
 var, exactly as it does for a missing secret. In the admin settings screen the same field is
@@ -247,6 +250,73 @@ required; setting only the client id and secret is *partial config* and boot / a
 The same issuer can also be set from **Admin → System Configuration** (stored under
 `config.COGNITO_ISSUER` and overlaid onto the env var per OLO-8.5 / OLO-10.8).
 
+## Keycloak — realm OIDC client (OLO-9.5)
+
+1. In the Keycloak Admin Console, open (or create) a **realm** (e.g. `apiome`).
+2. Under **Clients → Create client**:
+   - **Client type:** OpenID Connect
+   - **Client authentication:** On (confidential client — secret generated)
+   - **Authentication flow:** Standard flow (authorization code)
+   - **Valid redirect URIs:** `{BETTER_AUTH_URL}/api/auth/oauth2/callback/keycloak`
+     (e.g. `http://localhost:3000/api/auth/oauth2/callback/keycloak` for local dev)
+3. Copy the client's **Client ID** and **Client secret** (Credentials tab).
+4. Build the realm issuer URL: `https://{keycloakHost}/realms/{realm}`
+   (also listed as the `issuer` in `{issuer}/.well-known/openid-configuration`).
+5. Ensure the client (or realm) mapper set includes `email`, `email verified`, and ideally
+   `preferred_username` / `name` claims on the ID token.
+6. Set the env vars:
+
+```bash
+KEYCLOAK_CLIENT_ID=<Client ID>
+KEYCLOAK_CLIENT_SECRET=<Client secret>
+KEYCLOAK_ISSUER=https://kc.example.com/realms/apiome
+```
+
+The sign-in flow discovers endpoints from `{KEYCLOAK_ISSUER}/.well-known/openid-configuration`,
+uses PKCE, requests the `openid email profile` scopes, and reads Keycloak's native `email_verified`
+claim (fail-closed — a missing or false claim is treated as unverified). All three variables are
+required; setting only the client id and secret is *partial config* and boot / admin Validate name
+`KEYCLOAK_ISSUER`.
+
+The same issuer can also be set from **Admin → System Configuration** (stored under
+`config.KEYCLOAK_ISSUER` and overlaid onto the env var per OLO-8.5 / OLO-10.8).
+
+### Local testing with Docker Compose
+
+A minimal Keycloak for local Apiome sign-in (dev credentials only — never reuse in production):
+
+```yaml
+# docker-compose.keycloak.yml
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 8080
+    ports:
+      - "8080:8080"
+```
+
+```bash
+docker compose -f docker-compose.keycloak.yml up -d
+```
+
+Then in the Admin Console (`http://localhost:8080`):
+
+1. Create realm `apiome`.
+2. Create a confidential OIDC client (e.g. `apiome-ui`) with redirect
+   `http://localhost:3000/api/auth/oauth2/callback/keycloak`.
+3. Create a user with a verified email.
+4. Point Apiome at:
+
+```bash
+KEYCLOAK_CLIENT_ID=apiome-ui
+KEYCLOAK_CLIENT_SECRET=<from Credentials tab>
+KEYCLOAK_ISSUER=http://localhost:8080/realms/apiome
+```
+
 ## Secrets handling
 
 - Never commit client secrets — `.env` files are gitignored; the checked-in
@@ -303,9 +373,10 @@ mock server via base-URL override env vars:
 | `AZURE_AD_AUTHORITY_BASE_URL` | Entra ID OIDC discovery authority | `https://login.microsoftonline.com` |
 | `GOOGLE_ISSUER` | Google OIDC discovery issuer | `https://accounts.google.com` |
 
-`OKTA_ISSUER` and `COGNITO_ISSUER` are **required** production config vars (not test-only
-overrides) — see the [Okta](#okta--oidc-application-workforce-idp) and
-[Cognito](#amazon-cognito--user-pool--hosted-ui-olo-94) sections. Pointing either at a mock
+`OKTA_ISSUER`, `COGNITO_ISSUER`, and `KEYCLOAK_ISSUER` are **required** production config vars
+(not test-only overrides) — see the [Okta](#okta--oidc-application-workforce-idp),
+[Cognito](#amazon-cognito--user-pool--hosted-ui-olo-94), and
+[Keycloak](#keycloak--realm-oidc-client-olo-95) sections. Pointing any of them at a mock
 issuer for the e2e journey is fine in test; never point a real deployment's issuer at a
 non-provider host.
 

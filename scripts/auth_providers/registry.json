@@ -56,6 +56,16 @@
         { "field": "client_secret", "kind": "client_secret", "env_key": "COGNITO_CLIENT_SECRET" },
         { "field": "issuer", "kind": "config", "env_key": "COGNITO_ISSUER" }
       ]
+    },
+    {
+      "id": "keycloak",
+      "label": "Keycloak",
+      "status": "available",
+      "required_fields": [
+        { "field": "client_id", "kind": "client_id", "env_key": "KEYCLOAK_CLIENT_ID" },
+        { "field": "client_secret", "kind": "client_secret", "env_key": "KEYCLOAK_CLIENT_SECRET" },
+        { "field": "issuer", "kind": "config", "env_key": "KEYCLOAK_ISSUER" }
+      ]
     }
   ]
 }
