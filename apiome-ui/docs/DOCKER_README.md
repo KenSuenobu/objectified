@@ -38,7 +38,7 @@ Create a `.env` file in the same directory as `docker-compose.yml`:
 NEXT_PUBLIC_REST_API_BASE_URL=http://localhost:8000/v1
 
 # NextAuth Configuration
-BETTER_AUTH_URL=http://localhost:3000/api/auth
+BETTER_AUTH_URL=http://localhost:3000
 BETTER_AUTH_SECRET=your-secure-secret-here
 
 # GitHub OAuth (Optional)
