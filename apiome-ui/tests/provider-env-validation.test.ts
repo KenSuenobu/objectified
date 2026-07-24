@@ -27,6 +27,7 @@ import {
   providerEnvIssues,
   providerValidationMode,
   validateProviderEnv,
+  validateOidcDiscoveryEnv,
 } from '../lib/auth/provider-registry';
 
 /** Env enabling every available provider. */
@@ -48,6 +49,9 @@ const ALL_ENABLED_ENV = {
   KEYCLOAK_CLIENT_ID: 'kc-id',
   KEYCLOAK_CLIENT_SECRET: 'kc-secret',
   KEYCLOAK_ISSUER: 'https://kc.example.com/realms/apiome',
+  OIDC_CLIENT_ID: 'oidc-id',
+  OIDC_CLIENT_SECRET: 'oidc-secret',
+  OIDC_ISSUER: 'https://auth.example.com',
 };
 
 describe('providerEnvIssues', () => {
@@ -234,6 +238,65 @@ describe('validateProviderEnv', () => {
   });
 });
 
+describe('validateOidcDiscoveryEnv (OLO-9.6)', () => {
+  const OIDC_ENABLED = {
+    OIDC_CLIENT_ID: 'oidc-id',
+    OIDC_CLIENT_SECRET: 'oidc-secret',
+    OIDC_ISSUER: 'https://auth.example.com',
+  };
+
+  let warnSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+  });
+
+  it('skips when oidc is disabled or only partially configured', async () => {
+    const probe = jest.fn(async () => ({ ok: false as const, message: 'should not run' }));
+    expect(await validateOidcDiscoveryEnv({}, probe)).toBeNull();
+    expect(await validateOidcDiscoveryEnv({ OIDC_CLIENT_ID: 'x' }, probe)).toBeNull();
+    expect(probe).not.toHaveBeenCalled();
+  });
+
+  it('strict mode throws when discovery probe fails', async () => {
+    await expect(
+      validateOidcDiscoveryEnv(OIDC_ENABLED, async () => ({
+        ok: false,
+        message: 'discovery failed: unreachable',
+      }))
+    ).rejects.toThrow(/Refusing to start: OIDC discovery failed/);
+    await expect(
+      validateOidcDiscoveryEnv(OIDC_ENABLED, async () => ({
+        ok: false,
+        message: 'discovery failed: unreachable',
+      }))
+    ).rejects.toThrow(/discovery failed: unreachable/);
+  });
+
+  it('warn mode logs and returns the probe message without throwing', async () => {
+    const message = 'Sign-in provider \'OIDC\' (oidc) discovery failed: GET returned HTTP 503.';
+    const result = await validateOidcDiscoveryEnv(
+      { ...OIDC_ENABLED, [PROVIDER_VALIDATION_ENV_KEY]: 'warn' },
+      async () => ({ ok: false, message })
+    );
+
+    expect(result).toBe(message);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][0]).toContain(message);
+  });
+
+  it('returns null on successful discovery', async () => {
+    expect(
+      await validateOidcDiscoveryEnv(OIDC_ENABLED, async () => ({ ok: true }))
+    ).toBeNull();
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+});
+
 describe('boot contract (source level)', () => {
   const read = (...segments: string[]) =>
     fs.readFileSync(path.resolve(__dirname, '..', ...segments), 'utf8');
@@ -244,6 +307,7 @@ describe('boot contract (source level)', () => {
     expect(instrumentation).toContain('export async function register');
     expect(instrumentation).toContain("process.env.NEXT_RUNTIME !== 'nodejs'");
     expect(instrumentation).toContain('validateProviderEnv()');
+    expect(instrumentation).toContain('validateOidcDiscoveryEnv');
   });
 });
 

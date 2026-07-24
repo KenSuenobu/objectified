@@ -315,9 +315,16 @@ def _provider_view(
         else []
     )
 
+    # Generic OIDC (OLO-9.6): operator-set OIDC_DISPLAY_NAME overrides the admin card title.
+    label = descriptor.label
+    if descriptor.id == "oidc":
+        display = config.get("OIDC_DISPLAY_NAME")
+        if isinstance(display, str) and display.strip():
+            label = display.strip()
+
     return ProviderConfigView(
         provider_id=descriptor.id,
-        label=descriptor.label,
+        label=label,
         status=descriptor.status,
         enabled=enabled,
         enabled_source=SOURCE_DB if enabled is not None else SOURCE_ENV_FALLBACK,

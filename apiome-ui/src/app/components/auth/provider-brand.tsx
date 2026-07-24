@@ -66,6 +66,8 @@ const PROVIDER_BRANDS: Record<string, ProviderBrand> = {
   okta: { Icon: SiOkta, iconClassName: 'text-[#007DC1]' },
   aws: { Icon: SiAmazon, iconClassName: 'text-orange-500' },
   keycloak: { Icon: SiKeycloak, iconClassName: 'text-[#008AAA]' },
+  // Generic OIDC (OLO-9.6): key-style mark — no single vendor brand.
+  oidc: { Icon: KeyRound, iconClassName: 'text-slate-600 dark:text-slate-300' },
 };
 /** Neutral fallback for provider ids without a brand entry (e.g. a legacy linked account). */
 const FALLBACK_BRAND: ProviderBrand = {

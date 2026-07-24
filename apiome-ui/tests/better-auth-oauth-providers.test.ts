@@ -72,6 +72,9 @@ const ALL_ENABLED: Record<string, string> = {
   KEYCLOAK_CLIENT_ID: 'kc-id',
   KEYCLOAK_CLIENT_SECRET: 'kc-secret',
   KEYCLOAK_ISSUER: 'https://kc.example.com/realms/apiome',
+  OIDC_CLIENT_ID: 'oidc-id',
+  OIDC_CLIENT_SECRET: 'oidc-secret',
+  OIDC_ISSUER: 'https://auth.example.com',
 };
 
 const OK_USER: ResolutionUser = {
@@ -173,6 +176,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'okta',
       'aws',
       'keycloak',
+      'oidc',
     ]);
   });
 
@@ -186,6 +190,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'okta',
       'aws',
       'keycloak',
+      'oidc',
     ]);
   });
 
@@ -209,6 +214,9 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
     const kc = buildGenericOAuthConfig('keycloak', ALL_ENABLED)!;
     expect(kc.clientId).toBe('kc-id');
     expect(kc.clientSecret).toBe('kc-secret');
+    const oidc = buildGenericOAuthConfig('oidc', ALL_ENABLED)!;
+    expect(oidc.clientId).toBe('oidc-id');
+    expect(oidc.clientSecret).toBe('oidc-secret');
   });
 
   test('an unknown provider id yields null', () => {
@@ -321,6 +329,29 @@ describe('endpoint & issuer overrides (OLO-7.4)', () => {
     expect(mock.discoveryUrl).toBe(
       'http://localhost:8080/realms/apiome/.well-known/openid-configuration'
     );
+  });
+
+  test('oidc: OIDC_ISSUER drives OIDC discovery; default scopes; custom OIDC_SCOPES (OLO-9.6)', () => {
+    const cfg = buildGenericOAuthConfig('oidc', ALL_ENABLED)!;
+    expect(cfg.discoveryUrl).toBe(
+      'https://auth.example.com/.well-known/openid-configuration'
+    );
+    expect(cfg.pkce).toBe(true);
+    expect(cfg.scopes).toEqual(['openid', 'profile', 'email']);
+
+    const mock = buildGenericOAuthConfig('oidc', {
+      ...ALL_ENABLED,
+      OIDC_ISSUER: 'http://localhost:9008/oidc/',
+    })!;
+    expect(mock.discoveryUrl).toBe(
+      'http://localhost:9008/oidc/.well-known/openid-configuration'
+    );
+
+    const customScopes = buildGenericOAuthConfig('oidc', {
+      ...ALL_ENABLED,
+      OIDC_SCOPES: 'openid groups profile',
+    })!;
+    expect(customScopes.scopes).toEqual(['openid', 'groups', 'profile']);
   });
 
   test('githubOauthWebBaseUrl strips a trailing slash', () => {

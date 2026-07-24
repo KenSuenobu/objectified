@@ -113,6 +113,8 @@ export interface ProviderExtraField {
  *   - Okta issuer (required): `okta-issuer.ts` (`OKTA_ISSUER`).
  *   - Cognito user-pool issuer (required): `cognito-issuer.ts` (`COGNITO_ISSUER`).
  *   - Keycloak realm issuer (required): `keycloak-issuer.ts` (`KEYCLOAK_ISSUER`).
+ *   - Generic OIDC issuer (required) + optional display name / scopes: `oidc-issuer.ts`
+ *     (`OIDC_ISSUER`, `OIDC_DISPLAY_NAME`, `OIDC_SCOPES`).
  *
  * Providers without an entry (and coming-soon placeholders) simply render no extras.
  */
@@ -183,6 +185,26 @@ export const PROVIDER_EXTRA_FIELDS: Record<string, readonly ProviderExtraField[]
       label: 'Issuer',
       defaultValue: '(required)',
       help: 'Keycloak realm issuer URL, e.g. https://kc.example.com/realms/apiome.',
+    },
+  ],
+  oidc: [
+    {
+      envKey: 'OIDC_ISSUER',
+      label: 'Issuer',
+      defaultValue: '(required)',
+      help: 'OIDC issuer URL (discovery at <issuer>/.well-known/openid-configuration).',
+    },
+    {
+      envKey: 'OIDC_DISPLAY_NAME',
+      label: 'Display name',
+      defaultValue: 'OIDC',
+      help: 'Login-button and admin-card label (e.g. Authentik, PingFederate).',
+    },
+    {
+      envKey: 'OIDC_SCOPES',
+      label: 'Scopes',
+      defaultValue: 'openid profile email',
+      help: 'Whitespace-separated OIDC scopes requested during authorize.',
     },
   ],
 };

@@ -16,11 +16,10 @@
  *     fails startup — or warns, per `AUTH_PROVIDER_VALIDATION` — when a provider's env is
  *     only partially configured (OLO-7.2).
  *
- * Adding a provider later (Auth0 #4989, generic OIDC #4990, …) means: one entry here, one
- * generic-OAuth config in `better-auth-oauth-providers.ts`, one brand icon in
- * `src/app/components/auth/provider-brand.tsx` — no archaeology across surfaces. Google
- * Workspace (OLO-9.2), Okta (OLO-9.3), Cognito (OLO-9.4), and Keycloak (OLO-9.5) followed
- * exactly that path.
+ * Adding a provider later (Auth0 #4990, …) means: one entry here, one generic-OAuth config in
+ * `better-auth-oauth-providers.ts`, one brand icon in `src/app/components/auth/provider-brand.tsx`
+ * — no archaeology across surfaces. Google Workspace (OLO-9.2), Okta (OLO-9.3), Cognito (OLO-9.4),
+ * Keycloak (OLO-9.5), and generic OIDC (OLO-9.6) followed exactly that path.
  *
  * This module is intentionally free of React and auth-engine imports so both server code
  * (routes, server components) and client components can import it.
@@ -207,6 +206,18 @@ const PROVIDER_REGISTRY_ENTRIES: readonly Omit<ProviderDescriptor, 'requiredEnvK
       { field: 'issuer', kind: 'config', envKey: 'KEYCLOAK_ISSUER' },
     ],
   },
+  {
+    id: 'oidc',
+    label: 'OIDC',
+    status: 'available',
+    // Catch-all OIDC (OLO-9.6): client credentials plus the IdP issuer URL stored in config JSONB
+    // under OIDC_ISSUER (OLO-9.1). Optional OIDC_DISPLAY_NAME / OIDC_SCOPES are extras, not required.
+    // v1: exactly one generic OIDC IdP per deployment.
+    requiredFields: [
+      ...clientCredentialFields('OIDC_CLIENT_ID', 'OIDC_CLIENT_SECRET'),
+      { field: 'issuer', kind: 'config', envKey: 'OIDC_ISSUER' },
+    ],
+  },
 ];
 
 export const PROVIDER_REGISTRY: readonly ProviderDescriptor[] =
@@ -295,12 +306,17 @@ export function enabledProviderIds(
 export function providerSummaries(
   env: Record<string, string | undefined> = process.env
 ): ProviderSummary[] {
-  return PROVIDER_REGISTRY.map((provider) => ({
-    id: provider.id,
-    label: provider.label,
-    status: provider.status,
-    enabled: isProviderEnabled(provider.id, env),
-  }));
+  return PROVIDER_REGISTRY.map((provider) => {
+    // Generic OIDC (OLO-9.6): operator-set OIDC_DISPLAY_NAME overrides the login-button label.
+    const displayOverride =
+      provider.id === 'oidc' ? readEnvString(env, 'OIDC_DISPLAY_NAME') : null;
+    return {
+      id: provider.id,
+      label: displayOverride ?? provider.label,
+      status: provider.status,
+      enabled: isProviderEnabled(provider.id, env),
+    };
+  });
 }
 
 /* ── Boot-time env validation (OLO-7.2, #4224) ──────────────────────────────────────────── */
@@ -431,4 +447,40 @@ export function validateProviderEnv(
     console.warn(`[provider-registry] ${issue.message} (provider disabled)`);
   }
   return issues;
+}
+
+/**
+ * Probe OIDC discovery when the generic OIDC provider is fully configured (OLO-9.6).
+ *
+ * Called from `instrumentation.ts` after {@link validateProviderEnv} so a reachable but
+ * non-conformant (or unreachable) issuer fails loud at boot instead of leaving a broken login
+ * page. Skipped when oidc is disabled or only partially configured (partial config is already
+ * handled by {@link validateProviderEnv}). Honours the same `AUTH_PROVIDER_VALIDATION` mode.
+ *
+ * @param env Environment to read (injectable for tests; defaults to `process.env`).
+ * @param probe Injectable discovery probe (defaults to `probeOidcDiscovery` from oidc-issuer).
+ * @returns The failure message when discovery failed in warn mode, or null on success / skip.
+ * @throws Error in strict mode when discovery fails.
+ */
+export async function validateOidcDiscoveryEnv(
+  env: Record<string, string | undefined> = process.env,
+  probe?: (
+    issuer: string
+  ) => Promise<{ ok: true } | { ok: false; message: string }>
+): Promise<string | null> {
+  if (!isProviderEnabled('oidc', env)) return null;
+  const { oidcIssuerBaseUrl, probeOidcDiscovery } = await import('./oidc-issuer');
+  const probeFn = probe ?? probeOidcDiscovery;
+  const issuer = oidcIssuerBaseUrl(env);
+  const result = await probeFn(issuer);
+  if (result.ok) return null;
+  const mode = providerValidationMode(env);
+  if (mode === 'strict') {
+    throw new Error(
+      `Refusing to start: OIDC discovery failed.\n  - ${result.message}\n` +
+        `Set ${PROVIDER_VALIDATION_ENV_KEY}=warn to log instead and leave the provider disabled.`
+    );
+  }
+  console.warn(`[provider-registry] ${result.message} (provider may fail at login)`);
+  return result.message;
 }
