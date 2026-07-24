@@ -3,10 +3,11 @@
 /**
  * Better Auth browser transport for the engine-aware session compat layer (OLO-10.12, #5007).
  *
- * The Better Auth counterpart of `next-auth-client-compat.ts`: it drives `authClient.*` for the swap
- * of `signIn` / `signOut` / session-update. The session **read** is a React hook
- * (`authClient.useSession`) consumed directly in `session-client.tsx`; this module carries the pure
- * session mapper plus the imperative mutations. Used only when `NEXT_PUBLIC_AUTH_ENGINE=better-auth`.
+ * The browser transport behind `session-client.tsx`: it drives `authClient.*` for `signIn` /
+ * `signOut` / session-update. The session **read** is a React hook (`authClient.useSession`) consumed
+ * directly in `session-client.tsx`; this module carries the pure session mapper plus the imperative
+ * mutations. (Before the OLO-10.14 cutover this was the Better Auth half of an engine-dispatched pair
+ * whose NextAuth counterpart, `next-auth-client-compat.ts`, was removed with the flag.)
  */
 
 import { authClient } from './auth-client';

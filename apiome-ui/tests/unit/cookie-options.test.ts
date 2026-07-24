@@ -1,5 +1,4 @@
 import {
-  buildAuthCookieOverrides,
   canonicalizeCrossAppCallback,
   getSharedCookieDomain,
   isAllowedCallbackUrl,
@@ -25,7 +24,6 @@ describe('cookie-options', () => {
     process.env.NEXTAUTH_URL = 'https://main.apiome.dev';
 
     expect(getSharedCookieDomain()).toBe('.apiome.dev');
-    expect(buildAuthCookieOverrides().cookies.sessionToken.options.domain).toBe('.apiome.dev');
   });
 
   it('allows studio callbacks when the studio URL is configured', () => {
@@ -132,6 +130,5 @@ describe('cookie-options', () => {
     process.env.NEXTAUTH_URL = 'http://localhost:3000';
 
     expect(getSharedCookieDomain()).toBeUndefined();
-    expect(buildAuthCookieOverrides().cookies.sessionToken.options.domain).toBeUndefined();
   });
 });

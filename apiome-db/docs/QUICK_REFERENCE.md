@@ -6,7 +6,7 @@
 |------|-------|-----|
 | **Feature Page** | Dashboard → Linked Accounts | http://localhost:3000/ade/dashboard/linked-accounts |
 | **Login Page** | Main Login | http://localhost:3000/login |
-| **GitHub OAuth** | OAuth Callback | http://localhost:3000/api/auth/callback/github |
+| **GitHub OAuth** | OAuth Callback | http://localhost:3000/api/auth/oauth2/callback/github |
 
 ## 🗂️ Database
 

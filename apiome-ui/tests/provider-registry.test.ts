@@ -179,11 +179,18 @@ describe('route contracts (source level)', () => {
   const APP_ROOT = path.resolve(__dirname, '..', 'src', 'app');
   const read = (file: string) => fs.readFileSync(file, 'utf8');
 
-  it('the NextAuth route registers providers from the registry', () => {
-    const route = read(path.join(APP_ROOT, 'api', 'auth', '[...nextauth]', 'route.ts'));
-    expect(route).toContain('configuredOAuthProviders(');
+  it('the auth route delegates to the Better Auth handler (no per-provider factories)', () => {
+    const route = read(path.join(APP_ROOT, 'api', 'auth', '[...all]', 'route.ts'));
+    expect(route).toContain('betterAuthHandler');
     expect(route).not.toContain('GithubProvider(');
     expect(route).not.toContain('GitlabProvider(');
+  });
+
+  it('the Better Auth provider set is built from the registry', () => {
+    const providers = read(
+      path.join(__dirname, '..', 'lib', 'auth', 'better-auth-oauth-providers.ts')
+    );
+    expect(providers).toContain('enabledProviders(');
   });
 
   it('the signup-intent route gates on registry enablement', () => {

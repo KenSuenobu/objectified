@@ -1,20 +1,16 @@
 'use client';
 
 /**
- * Engine-aware browser session layer (OLO-10.12, #5007).
+ * Browser session layer (OLO-10.12 #5007; Better-Auth-only since the OLO-10.14 cutover #5009).
  *
  * The single entry point the UI uses in place of `next-auth/react` — no component imports
- * `next-auth/react` any more. It presents the legacy `{ data, status, update }` shape (so component
- * bodies barely change) while dispatching to the right transport by engine (`NEXT_PUBLIC_AUTH_ENGINE`,
- * mirrored from `AUTH_ENGINE` by `next.config.ts`):
+ * `next-auth/react`. It presents the legacy `{ data, status, update }` shape (so component bodies
+ * barely change) while driving Better Auth's reactive client (`authClient.useSession()` for reads,
+ * `authClient.*` for mutations, `better-auth-client-compat.ts`).
  *
- * - **better-auth** → `authClient.useSession()` for reads, `authClient.*` for mutations
- *   (`better-auth-client-compat.ts`).
- * - **next-auth** → plain fetches to NextAuth's own HTTP endpoints (`next-auth-client-compat.ts`), so
- *   the default engine keeps working in the browser with zero `next-auth/react` imports.
- *
- * The engine is a build-time constant, so `AuthSessionProvider` picks one concrete provider component
- * up front — each calls its own hooks unconditionally (no rules-of-hooks violation).
+ * Before the cutover this dispatched by engine (`NEXT_PUBLIC_AUTH_ENGINE`): Better Auth's client vs
+ * plain fetches to NextAuth's HTTP endpoints. The NextAuth transport and the flag were removed with the
+ * rest of the parallel-run scaffolding in OLO-10.14.
  *
  * `useAuthSession()` also exposes `signIn`/`signOut` helpers so callers never touch a transport
  * directly; `signIn`/`signOut` are also re-exported for the few non-hook call sites.
@@ -24,11 +20,8 @@ import React, {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
 } from 'react';
-import { isBetterAuthEngineClient } from './auth-engine';
 import type { AppSession } from './better-auth-session-shape';
 import { setActiveTenant } from './last-active-tenant-actions';
 import { authClient } from './auth-client';
@@ -38,12 +31,6 @@ import {
   signOutBetterAuth,
   updateUserNameBetterAuth,
 } from './better-auth-client-compat';
-import {
-  getNextAuthSession,
-  signInNextAuth,
-  signOutNextAuth,
-  updateNextAuthSession,
-} from './next-auth-client-compat';
 
 /** Session status, mirroring NextAuth's `useSession().status`. */
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -80,8 +67,15 @@ interface AuthSessionContextValue {
 
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
 
-/** Better Auth provider: reads the reactive `authClient.useSession()` store. */
-function BetterAuthSessionProvider({ children }: { children: React.ReactNode }): React.ReactElement {
+/**
+ * Provider for the session — the replacement for NextAuth's `SessionProvider`.
+ *
+ * Reads the reactive `authClient.useSession()` store and shares it (with an on-demand refetch) through
+ * the context {@link useAuthSession} consumes.
+ *
+ * @param children The app subtree that consumes {@link useAuthSession}.
+ */
+export function AuthSessionProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   const { data, isPending, refetch } = authClient.useSession();
   const session = useMemo(() => mapBetterAuthSession(data as never), [data]);
   const status: AuthStatus = isPending ? 'loading' : session ? 'authenticated' : 'unauthenticated';
@@ -92,83 +86,30 @@ function BetterAuthSessionProvider({ children }: { children: React.ReactNode }):
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>;
 }
 
-/** NextAuth provider: fetches `/api/auth/session` once and shares it, with on-demand refetch. */
-function NextAuthSessionProvider({ children }: { children: React.ReactNode }): React.ReactElement {
-  const [data, setData] = useState<AppSession | null>(null);
-  const [status, setStatus] = useState<AuthStatus>('loading');
-  const refetch = useCallback(async () => {
-    const next = await getNextAuthSession();
-    setData(next);
-    setStatus(next ? 'authenticated' : 'unauthenticated');
-  }, []);
-  // Initial load: fetch the session once on mount. The state writes happen after the async fetch
-  // resolves (and are skipped if the provider unmounted first), so this is an external-system
-  // subscription rather than a synchronous setState-in-effect.
-  useEffect(() => {
-    let active = true;
-    void (async () => {
-      const next = await getNextAuthSession();
-      if (!active) {
-        return;
-      }
-      setData(next);
-      setStatus(next ? 'authenticated' : 'unauthenticated');
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
-  const value = useMemo<AuthSessionContextValue>(
-    () => ({ data, status, refetch }),
-    [data, status, refetch]
-  );
-  return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>;
-}
-
 /**
- * Provider for the engine-aware session — the replacement for NextAuth's `SessionProvider`.
- *
- * @param children The app subtree that consumes {@link useAuthSession}.
- */
-export function AuthSessionProvider({ children }: { children: React.ReactNode }): React.ReactElement {
-  // Evaluated per render (the engine is a build-time constant in practice, so the chosen provider is
-  // stable across renders); reading it here rather than at module load keeps the layer testable.
-  return isBetterAuthEngineClient() ? (
-    <BetterAuthSessionProvider>{children}</BetterAuthSessionProvider>
-  ) : (
-    <NextAuthSessionProvider>{children}</NextAuthSessionProvider>
-  );
-}
-
-/**
- * Sign in on the active engine, navigating on completion (the `redirect: true` contract).
+ * Sign in, navigating on completion (the `redirect: true` contract).
  *
  * @param provider `'credentials'` or an OAuth provider id.
  * @param options `callbackUrl` and, for credentials, the `payload` blob.
  */
 export function signIn(provider: string, options: AuthSignInOptions = {}): Promise<void> {
-  return isBetterAuthEngineClient()
-    ? signInBetterAuth(provider, options)
-    : signInNextAuth(provider, options);
+  return signInBetterAuth(provider, options);
 }
 
 /**
- * Sign out on the active engine and navigate to `callbackUrl`.
+ * Sign out and navigate to `callbackUrl`.
  *
  * @param callbackUrl Where to land after sign-out.
  */
 export function signOut(callbackUrl: string): Promise<void> {
-  return isBetterAuthEngineClient()
-    ? signOutBetterAuth(callbackUrl)
-    : signOutNextAuth(callbackUrl);
+  return signOutBetterAuth(callbackUrl);
 }
 
 /**
- * The engine-aware replacement for `next-auth/react`'s `useSession()`.
+ * The replacement for `next-auth/react`'s `useSession()`.
  *
  * @returns `{ data, status, update, signIn, signOut }` — `data`/`status` mirror NextAuth; `update`
- *   persists a tenant switch (validated) or a name change on either engine; `signIn`/`signOut` are the
- *   engine-aware helpers.
+ *   persists a tenant switch (validated) or a name change; `signIn`/`signOut` are the sign-in helpers.
  */
 export function useAuthSession(): {
   data: AppSession | null;
@@ -185,29 +126,19 @@ export function useAuthSession(): {
 
   const update = useCallback(
     async (payload: AuthUpdatePayload): Promise<void> => {
-      const betterAuth = isBetterAuthEngineClient();
-
       // Tenant switch: passed top-level by the switcher / onboarding wizard. Persist through the
-      // validated server action; the cookie is the source of truth for the derived tenant on either
-      // engine, and NextAuth additionally needs its JWT refreshed so the change lands mid-session.
+      // validated server action; the cookie is the source of truth for the derived tenant.
       const tenantId = typeof payload.current_tenant_id === 'string' ? payload.current_tenant_id : undefined;
       if (tenantId) {
-        const validated = await setActiveTenant(tenantId);
-        if (!betterAuth && validated) {
-          await updateNextAuthSession({ current_tenant_id: validated });
-        }
+        await setActiveTenant(tenantId);
       }
 
-      // Name change: profile passes it under `user.name` (NextAuth reads `session.user.name`).
+      // Name change: profile passes it under `user.name` (the session reads `session.user.name`).
       const name =
         (typeof payload.user?.name === 'string' ? payload.user.name : undefined) ??
         (typeof payload.name === 'string' ? payload.name : undefined);
       if (name) {
-        if (betterAuth) {
-          await updateUserNameBetterAuth(name);
-        } else {
-          await updateNextAuthSession({ user: { name } });
-        }
+        await updateUserNameBetterAuth(name);
       }
 
       await refetch();

@@ -4,11 +4,10 @@
  * Single logout entry point for every "Sign out" control.
  *
  * Runs the deterministic server-side cookie clear (serverLogout) *before*
- * handing off to the engine-aware client `signOut`, so the session cookie is
- * gone regardless of the active engine's own cookie handling, and the durable
- * last-active-tenant cookie is cleared too. The engine `signOut`
- * (`session-client.tsx`, OLO-10.12) then clears the Better Auth / NextAuth
- * session and performs the redirect.
+ * handing off to the client `signOut`, so the durable last-active-tenant cookie
+ * (and any lingering legacy session cookie) is cleared too. The client `signOut`
+ * (`session-client.tsx`) then clears the Better Auth session and performs the
+ * redirect.
  */
 
 import { signOut } from './session-client';

@@ -363,7 +363,7 @@ localhost:3000
     │   ├─ GITLAB_CLIENT_ID
     │   └─ GITLAB_CLIENT_SECRET
     ├─ GitLab OAuth App (Development)
-    │   └─ Redirect URI: http://localhost:3000/api/auth/callback/gitlab
+    │   └─ Redirect URI: http://localhost:3000/api/auth/oauth2/callback/gitlab
     └─ npm run dev
 ```
 
@@ -375,7 +375,7 @@ your-domain.com
     │   ├─ GITLAB_CLIENT_SECRET
     │   └─ NEXTAUTH_URL
     ├─ GitLab OAuth App (Production)
-    │   └─ Redirect URI: https://your-domain.com/api/auth/callback/gitlab
+    │   └─ Redirect URI: https://your-domain.com/api/auth/oauth2/callback/gitlab
     └─ Deployed Application
 ```
 

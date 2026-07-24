@@ -125,9 +125,9 @@ test.describe('Login a11y (OLO-3.5)', () => {
     await expect(email).toHaveValue('user@example.com');
     await expect(password).toHaveValue('correct-horse-battery');
 
-    // Activating submit fires the credentials sign-in request.
+    // Activating submit fires the credentials sign-in request (Better Auth email/password endpoint).
     const signInRequest = page.waitForRequest(
-      (req) => req.url().includes('/api/auth/callback/credentials'),
+      (req) => req.url().includes('/api/auth/sign-in/email'),
       { timeout: 10_000 },
     );
     await page.keyboard.press('Enter');
@@ -148,7 +148,8 @@ test.describe('Login visual snapshots (OLO-3.5)', () => {
   test('loading state (SSO "Connecting…")', async ({ page }) => {
     // Hold the provider sign-in request open so the redirect never completes and the
     // "Connecting…" spinner stays on screen long enough to snapshot deterministically.
-    await page.route('**/api/auth/signin/**', () => {
+    // (Better Auth's generic-OAuth sign-in posts to /api/auth/sign-in/oauth2.)
+    await page.route('**/api/auth/sign-in/**', () => {
       /* intentionally never resolved — keeps the request pending */
     });
 

@@ -13,12 +13,11 @@
  *      forwarded to the response by the `nextCookies()` plugin (why it must stay last in `auth.ts`);
  *   2. writes the app-owned durable last-active-tenant cookie to the pending tenant the code carried,
  *      so the session's `current_tenant_id` — derived at read time from that cookie
- *      (`better-auth-session-shape.ts`) — matches what the NextAuth `jwt` callback set from
- *      `pending_tenant_id` (`credentials.ts`).
+ *      (`better-auth-session-shape.ts`) — matches what the legacy NextAuth `jwt` callback set from
+ *      `pending_tenant_id` before the OLO-10.14 cutover.
  *
- * `auth` is imported lazily so the Better Auth module graph is never loaded on the default NextAuth
- * engine (this action is only reached when `NEXT_PUBLIC_AUTH_ENGINE=better-auth`), matching the route
- * handler's lazy import.
+ * `auth` is imported lazily so the Better Auth module graph is only loaded on the code paths that need
+ * it, matching the route handler's lazy import.
  */
 
 import { cookies, headers } from 'next/headers';

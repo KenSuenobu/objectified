@@ -8,14 +8,14 @@ The single source of truth for the provider list and each provider's env contrac
 provider registry: [`lib/auth/provider-registry.ts`](../lib/auth/provider-registry.ts)
 (OLO-2.3). A provider is **enabled** only when *all* of its required env vars are set and
 non-blank; unsetting them all **cleanly disables** it everywhere at once (login button,
-linked-accounts panel, NextAuth sign-in route). No code changes are needed either way.
+linked-accounts panel, Better Auth sign-in route). No code changes are needed either way.
 
 ## Environment variable matrix
 
 | Variable | Provider / scope | Required | Purpose |
 |---|---|---|---|
-| `NEXTAUTH_URL` | all | Yes | Public base URL of the app; every OAuth callback URL below derives from it |
-| `NEXTAUTH_SECRET` | all | Yes | Session/JWT signing secret (`openssl rand -base64 32`) |
+| `NEXTAUTH_URL` | all | Yes | Public base URL of the app; every OAuth callback URL below derives from it (also the default Better Auth base URL; keeps its historical `NEXTAUTH_` name) |
+| `NEXTAUTH_SECRET` | all | Yes | Shared signing secret for the Better Auth session and the downstream REST JWT (`openssl rand -base64 32`; keeps its historical name) |
 | `GITHUB_ID` | GitHub | To enable GitHub | OAuth app **Client ID** |
 | `GITHUB_SECRET` | GitHub | To enable GitHub | OAuth app **Client secret** |
 | `GITLAB_CLIENT_ID` | GitLab | To enable GitLab | Application **Application ID** |
@@ -61,7 +61,7 @@ var name or a secret that never reached the deployment — is reported per
   the missing and present vars and both ways to resolve (set them all, or unset them all).
   Misconfiguration fails loud at boot, not silently at first login.
 - **`warn`**: each issue is logged via `console.warn` and the provider stays **cleanly
-  disabled** (a provider missing any required var is never registered with NextAuth).
+  disabled** (a provider missing any required var is never registered as a sign-in provider).
 
 Any other value of `AUTH_PROVIDER_VALIDATION` is itself a startup error, so a typo cannot
 silently weaken validation.
@@ -83,8 +83,8 @@ Set AUTH_PROVIDER_VALIDATION=warn to log instead and leave the provider(s) disab
 2. Fill in:
    - **Application name:** `Apiome` (or your deployment's name)
    - **Homepage URL:** your `NEXTAUTH_URL`, e.g. `https://app.apiome.app`
-   - **Authorization callback URL:** `{NEXTAUTH_URL}/api/auth/callback/github`
-     (e.g. `http://localhost:3000/api/auth/callback/github` for local dev)
+   - **Authorization callback URL:** `{NEXTAUTH_URL}/api/auth/oauth2/callback/github`
+     (e.g. `http://localhost:3000/api/auth/oauth2/callback/github` for local dev)
 3. Click **Register application**, then **Generate a new client secret**. Copy the secret
    immediately — GitHub shows it only once.
 4. Set the env vars:
@@ -105,7 +105,7 @@ profile email is hidden (OLO-2.5).
    application for team use — and click **Add new application**.
 2. Fill in:
    - **Name:** `Apiome`
-   - **Redirect URI:** `{NEXTAUTH_URL}/api/auth/callback/gitlab`
+   - **Redirect URI:** `{NEXTAUTH_URL}/api/auth/oauth2/callback/gitlab`
    - **Confidential:** checked
    - **Scopes:** `read_user` (the sign-in flow requests `read_user` — email verification is
      read from the GitLab profile, OLO-2.5)
@@ -129,7 +129,7 @@ Step-by-step walkthrough with screenshots and self-managed-instance notes:
    - **Supported account types:** multi-tenant (any directory) unless you want to restrict
      sign-in to one tenant — then single-tenant and set `AZURE_AD_TENANT` to your tenant id
      or domain.
-   - **Redirect URI:** platform **Web**, value `{NEXTAUTH_URL}/api/auth/callback/azure`
+   - **Redirect URI:** platform **Web**, value `{NEXTAUTH_URL}/api/auth/oauth2/callback/azure`
 3. Under **Certificates & secrets**, create a **client secret** and copy its **Value**
    (not the Secret ID) — it is shown only once.
 4. **Required — enable the `xms_edov` optional claim** (OLO-1.4): under **Token
@@ -154,8 +154,8 @@ AZURE_AD_CLIENT_SECRET=<client secret Value>
    screen** first if prompted — **Internal** for a single Workspace org, **External** otherwise.
 2. Click **Create credentials → OAuth client ID**:
    - **Application type:** **Web application**
-   - **Authorized redirect URI:** `{NEXTAUTH_URL}/api/auth/callback/google`
-     (e.g. `http://localhost:3000/api/auth/callback/google` for local dev)
+   - **Authorized redirect URI:** `{NEXTAUTH_URL}/api/auth/oauth2/callback/google`
+     (e.g. `http://localhost:3000/api/auth/oauth2/callback/google` for local dev)
 3. Click **Create**, then copy the **Client ID** and **Client secret**.
 4. Set the env vars:
 

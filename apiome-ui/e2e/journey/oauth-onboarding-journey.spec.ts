@@ -2,8 +2,8 @@
  * OLO end-to-end journey — the MVP acceptance gate for the OAuth Login & Onboarding roadmap
  * (#4184 / epic #4222), rebuilt on **Better Auth** for OLO-10.13 (#5008).
  *
- * The dedicated UI dev server boots with `AUTH_ENGINE=better-auth` (`support/env.ts`), so this whole
- * story exercises the migrated engine end to end. It covers the full auth regression the ticket
+ * The dedicated UI dev server boots on Better Auth (the only engine since the OLO-10.14 cutover), so
+ * this whole story exercises the migrated engine end to end. It covers the full auth regression the ticket
  * requires — **credentials, all four providers (github/gitlab/azure/google), linking, and 2FA**:
  *
  *   1. New user signs up via mocked **GitHub** → OAuth signup wizard → first tenant

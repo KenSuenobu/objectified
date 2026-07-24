@@ -61,7 +61,7 @@ services:
     environment:
       # Turn on REST's fail-closed production checks (insecure JWT default is refused, etc.).
       APIOME_ENV: production
-      # Shared session/JWT secret (HS256). Must match whatever issues the NextAuth session.
+      # Shared session/JWT secret (HS256). Signs the Better Auth UI session and the downstream REST JWT.
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set NEXTAUTH_SECRET in your .env (openssl rand -base64 32)}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in your .env}
       # Browser origins allowed to call the API. Lock this to your real UI origin(s).

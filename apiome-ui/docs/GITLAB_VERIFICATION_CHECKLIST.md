@@ -133,10 +133,10 @@
 ### URLs to Verify
 ```
 Development Redirect URI:
-  http://localhost:3000/api/auth/callback/gitlab
+  http://localhost:3000/api/auth/oauth2/callback/gitlab
 
 Production Redirect URI:
-  https://your-domain.com/api/auth/callback/gitlab
+  https://your-domain.com/api/auth/oauth2/callback/gitlab
 ```
 
 ### Environment Variables to Verify

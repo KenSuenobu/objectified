@@ -1,6 +1,6 @@
 {
   "name": "apiome-ui",
-  "version": "0.156.0",
+  "version": "0.157.0",
   "private": true,
   "scripts": {
     "dev": "./scripts/run.sh dev",
@@ -84,7 +84,6 @@
     "monaco-yaml": "^5.5.1",
     "mustache": "^4.2.0",
     "next": "^16.2.3",
-    "next-auth": "^4.24.14",
     "next-themes": "^0.4.6",
     "pg": "^8.20.0",
     "react": "^19.2.5",

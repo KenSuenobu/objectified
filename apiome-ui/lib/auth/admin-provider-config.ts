@@ -12,7 +12,7 @@
  *     the card renders from / writes to the `config` JSONB. Extras are **env-var-keyed** — the
  *     merge resolver (OLO-8.5, `provider-config-resolver.ts`) overlays each `config` entry onto
  *     the env key of the same name, so the keys here MUST be real env var names the auth stack
- *     reads (`nextauth-oauth-providers.ts`, `entra-provider.ts`);
+ *     reads (`better-auth-oauth-providers.ts`, `entra-provider.ts`);
  *   - `buildProviderUpdatePayload`, the pure builder that turns a card's edits into the minimal
  *     partial PUT body (the REST side interprets fields by presence, so only changed fields may
  *     be sent).
@@ -105,12 +105,11 @@ export interface ProviderExtraField {
  * Provider-specific extra config fields, per provider id.
  *
  * Each `envKey` matches an env var the auth stack actually reads:
- *   - GitHub endpoint overrides: `nextauth-oauth-providers.ts` (`githubOAuthBaseUrl` /
- *     `githubApiBaseUrl`);
- *   - GitLab self-hosted base URL: `nextauth-oauth-providers.ts` (`GITLAB_BASE_URL`);
+ *   - GitHub / GitLab endpoint overrides: `better-auth-oauth-providers.ts` (`githubApiBaseUrl`,
+ *     the `GITLAB_BASE_URL` override);
  *   - Azure tenant + authority: `entra-provider.ts` (`AZURE_AD_TENANT`,
  *     `AZURE_AD_AUTHORITY_BASE_URL`);
- *   - Google Workspace domain restriction: `google-provider.ts` (`GOOGLE_WORKSPACE_DOMAIN`).
+ *   - Google Workspace domain restriction: `google-workspace-domain.ts` (`GOOGLE_WORKSPACE_DOMAIN`).
  *
  * Providers without an entry (and coming-soon placeholders) simply render no extras.
  */

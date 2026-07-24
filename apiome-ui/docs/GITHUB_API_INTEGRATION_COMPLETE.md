@@ -357,7 +357,7 @@ Scopes:
 - user:email
 
 Callback URL:
-- https://yourdomain.com/api/auth/callback/github
+- https://yourdomain.com/api/auth/oauth2/callback/github
 ```
 
 ---

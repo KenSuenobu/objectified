@@ -14,7 +14,7 @@ async function setupChangeReportRouteMocks(page: Page) {
   let patchedBody = '## E2E seeded report\n\nOriginal body.';
 
   /** Ensures Versions page does not block on an empty `current_tenant_id` (dev DB may omit it). */
-  await page.route('**/api/auth/session', async (route) => {
+  await page.route('**/api/auth/get-session', async (route) => {
     if (route.request().method() !== 'GET') {
       await route.continue();
       return;

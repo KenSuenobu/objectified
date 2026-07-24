@@ -15,7 +15,7 @@ services:
       - APIOME_MOCK_PUBLIC_BASE_URL=${APIOME_MOCK_PUBLIC_BASE_URL:-http://localhost:8775}
       # Public API browser (apiome-browse)
       - NEXT_PUBLIC_BROWSE_URL=${NEXT_PUBLIC_BROWSE_URL:-https://browse.apiome.app}
-      # NextAuth Configuration
+      # Auth (Better Auth) — app base URL + shared signing secret (historical NEXTAUTH_ names)
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       # Cross-app URLs — required for studio login callbacks in production.

@@ -6,8 +6,8 @@
  * non-blank) — no code changes are needed to add or remove a provider from a deployment.
  *
  * Consumers:
- *   - the NextAuth route registers exactly the enabled providers
- *     (`nextauth-oauth-providers.ts` → `[...nextauth]/route.ts`);
+ *   - the Better Auth generic-OAuth provider set registers exactly the enabled providers
+ *     (`better-auth-oauth-providers.ts` → the `/api/auth/[...all]` route);
  *   - the login page renders one SSO button per enabled provider (OLO-3.1, `login/page.tsx`);
  *   - the linked-accounts panel offers exactly the enabled providers for linking (OLO-2.4);
  *   - the signup-intent and link routes refuse providers that are not enabled;
@@ -16,12 +16,12 @@
  *     fails startup — or warns, per `AUTH_PROVIDER_VALIDATION` — when a provider's env is
  *     only partially configured (OLO-7.2).
  *
- * Adding a provider later (Okta #241, AWS #68) means: one entry here, one NextAuth
- * factory in `nextauth-oauth-providers.ts`, one brand icon in
+ * Adding a provider later (Okta #241, AWS #68) means: one entry here, one generic-OAuth
+ * config in `better-auth-oauth-providers.ts`, one brand icon in
  * `src/app/components/auth/provider-brand.tsx` — no archaeology across surfaces. Google
  * Workspace sign-in (OLO-9.2, #4985) followed exactly that path.
  *
- * This module is intentionally free of React and next-auth imports so both server code
+ * This module is intentionally free of React and auth-engine imports so both server code
  * (routes, server components) and client components can import it.
  */
 

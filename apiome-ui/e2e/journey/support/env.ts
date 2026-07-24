@@ -95,12 +95,9 @@ export function journeyServerEnv(): Record<string, string> {
     ...dotEnvValues(),
     ...fromProcess,
     APIOME_LOAD_DOTENV: '0',
-    // OLO-10.13: the journey is the Better Auth acceptance gate, so it runs on the migrated engine.
-    // `AUTH_ENGINE=better-auth` selects Better Auth server-side and (via next.config.ts) propagates to
-    // the build-time-inlined `NEXT_PUBLIC_AUTH_ENGINE` the browser session compat layer reads. The
-    // secret/baseURL fall back to the NEXTAUTH_* values set below (see better-auth-session.ts), so no
-    // extra Better-Auth-specific env is required for the mocked stack.
-    AUTH_ENGINE: 'better-auth',
+    // Better Auth is the only engine since the OLO-10.14 cutover (no engine flag). Its secret/baseURL
+    // fall back to the NEXTAUTH_* values set below (see better-auth-session.ts), so no extra
+    // Better-Auth-specific env is required for the mocked stack.
     NEXTAUTH_URL: BASE_URL,
     NEXTAUTH_SECRET:
       process.env.NEXTAUTH_SECRET || dotEnvValues().NEXTAUTH_SECRET || 'olo-journey-secret',

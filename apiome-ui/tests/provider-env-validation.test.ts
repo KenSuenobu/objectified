@@ -259,9 +259,9 @@ describe('docs contract (OLO-7.2 acceptance: guides published, env matrix docume
   it('the setup guide covers each provider callback URL and the Entra xms_edov claim', () => {
     const guide = read('docs', 'AUTH_PROVIDER_SETUP.md');
 
-    expect(guide).toContain('/api/auth/callback/github');
-    expect(guide).toContain('/api/auth/callback/gitlab');
-    expect(guide).toContain('/api/auth/callback/azure');
+    expect(guide).toContain('/api/auth/oauth2/callback/github');
+    expect(guide).toContain('/api/auth/oauth2/callback/gitlab');
+    expect(guide).toContain('/api/auth/oauth2/callback/azure');
     expect(guide).toContain('xms_edov');
     expect(guide).toContain('ENTRA_ID_APP_REGISTRATION.md');
     expect(guide).toContain('GITLAB_SSO_SETUP.md');

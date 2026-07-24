@@ -46,7 +46,8 @@ import { resolutionStore } from './resolution-store';
  * vocabulary (`LINKABLE_PROVIDERS`: github | gitlab | azure | google). `credentials` is not here: it
  * is a sign-in method handled by the Better Auth `emailAndPassword` path (OLO-10.5), not a resolvable
  * OAuth identity. A callback for any slug outside this set is refused with the stable
- * `provider-not-configured` code, mirroring the NextAuth dispatch (`credentials.ts:signInForProvider`).
+ * `provider-not-configured` code — the same dispatch contract the removed NextAuth `signInForProvider`
+ * enforced before the OLO-10.14 cutover.
  */
 export const SUPPORTED_OAUTH_PROVIDERS: ReadonlySet<string> = LINKABLE_PROVIDERS;
 
@@ -141,7 +142,8 @@ export function mapBetterAuthOAuthPayload(
 /**
  * Resolve a Better Auth OAuth sign-in end to end through the shared account-resolution engine.
  *
- * Mirrors the NextAuth entry points (`credentials.ts:signInForProvider` + `oauthProviderSignIn`): an
+ * Carries the resolution contract the removed NextAuth entry points (`signInForProvider` +
+ * `oauthProviderSignIn`) enforced before the OLO-10.14 cutover: an
  * unsupported slug is refused with the stable `provider-not-configured` code; otherwise the context
  * is mapped and run through `resolveOAuthSignIn`, which applies the whole policy (known identity →
  * sign in; verified-email match → auto-link; verified new email → onboarding; unverified/forged →

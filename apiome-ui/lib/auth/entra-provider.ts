@@ -1,31 +1,35 @@
 /**
- * Microsoft Entra ID (azure) NextAuth provider (OLO-2.1, #4193).
+ * Microsoft Entra ID (azure) provider helpers (OLO-2.1, #4193).
  *
- * A custom OIDC provider definition instead of next-auth's built-in `azure-ad` for three reasons:
+ * The engine-neutral core of Entra ID sign-in — the provider slug, the OIDC authority base URL, the
+ * id-token claim mapping, and the config-detection check. The live sign-in provider is built on Better
+ * Auth's generic-OIDC plugin from these helpers (`better-auth-oauth-providers.ts`, OLO-10.7); before
+ * the OLO-10.14 cutover the NextAuth `entraIdProvider`/`entraIdProviderIfConfigured` factories lived
+ * here too and were removed with the rest of the NextAuth scaffolding.
+ *
+ * Three design decisions the helpers encode:
  *
  *   1. **Provider id must be `azure`.** The account-resolution engine gates Entra sign-ins behind
  *      the nOAuth hardening rules on `provider === 'azure'` (OLO-1.4), the auto-link trust list
  *      names `azure` (OLO-1.3), and `apiome.external_auth_providers` stores the identity under
- *      that value (OLO-1.2/2.2). The built-in id is `azure-ad`, which would silently miss all of
- *      those gates.
+ *      that value (OLO-1.2/2.2). Microsoft's built-in id is `azure-ad`, which would silently miss
+ *      all of those gates.
  *   2. **`oid` → provider_user_id.** The `oid` claim is the user's immutable directory object id;
- *      `sub` (the built-in's choice) is scoped per app registration, so rotating the registration
- *      would orphan every linked identity.
- *   3. **No Microsoft Graph photo fetch.** The built-in downloads the profile photo into a base64
- *      data-URI on every sign-in — an extra outbound call whose payload can overflow the session
- *      cookie. Identity resolution never needs the avatar.
+ *      `sub` is scoped per app registration, so rotating the registration would orphan every linked
+ *      identity.
+ *   3. **No Microsoft Graph photo fetch.** Identity resolution never needs the avatar, so the claim
+ *      mapping returns a null image rather than downloading a base64 data-URI on every sign-in.
  *
  * Env contract: `AZURE_AD_CLIENT_ID`, `AZURE_AD_CLIENT_SECRET`, and optional `AZURE_AD_TENANT`
  * (an Entra tenant id/domain, defaulting to `common` for multi-tenant sign-in). The provider is
- * only registered when the deployment configures it (see `entraIdProviderIfConfigured`), so an
- * unconfigured deployment never exposes a sign-in route that would redirect to Microsoft with an
- * undefined client id.
+ * only registered when the deployment configures it (see `isEntraIdConfigured`), so an unconfigured
+ * deployment never exposes a sign-in route that would redirect to Microsoft with an undefined client
+ * id.
  *
- * Trust boundary: this module only maps the OIDC response onto a NextAuth user. Whether the
- * token's email claim may be believed is decided later by `resolveEntraEmailVerified`
- * (OLO-1.4, `account-resolution.ts`) inside the shared signIn callback — never here.
+ * Trust boundary: these helpers only map the OIDC response onto an app user. Whether the token's
+ * email claim may be believed is decided later by `resolveEntraEmailVerified`
+ * (OLO-1.4, `account-resolution.ts`) inside the shared sign-in hook — never here.
  */
-import type { OAuthConfig } from 'next-auth/providers/oauth';
 import { isProviderEnabled, readEnvString } from './provider-registry';
 
 /**
@@ -34,9 +38,6 @@ import { isProviderEnabled, readEnvString } from './provider-registry';
  * bypass the nOAuth hardening (OLO-1.4) and orphan persisted identities.
  */
 export const ENTRA_ID_PROVIDER_ID = 'azure';
-
-/** Multi-tenant app registrations sign in through the `common` endpoint. */
-const DEFAULT_TENANT = 'common';
 
 /** The real Entra ID authority host (production default for {@link entraAuthorityBaseUrl}). */
 const DEFAULT_AUTHORITY_BASE_URL = 'https://login.microsoftonline.com';
@@ -83,15 +84,16 @@ export function isEntraIdConfigured(
 }
 
 /**
- * Map the raw Entra ID id-token claims onto the NextAuth user shape.
+ * Map the raw Entra ID id-token claims onto the app user shape (consumed by the Better Auth
+ * generic-OIDC provider's `getUserInfo`, OLO-10.7).
  *
- * `id` becomes `account.providerAccountId`, which the resolution engine persists as
+ * `id` becomes the account's provider-side id, which the resolution engine persists as
  * `provider_user_id` — so it must be the immutable `oid` (falling back to `sub` only when a
  * token carries no `oid`, e.g. some personal-account variants). The raw claims themselves still
- * reach the signIn callback as `profile`, where the nOAuth email rules read them (OLO-1.4).
+ * reach the sign-in hook as `profile`, where the nOAuth email rules read them (OLO-1.4).
  *
  * @param profile Raw claims from the Entra ID id token.
- * @returns The NextAuth user: stable id, display name, email (untrusted until 1.4 proves it),
+ * @returns The app user: stable id, display name, email (untrusted until 1.4 proves it),
  *   and a null image (no Graph photo fetch — see the module doc).
  */
 export function entraIdProfile(profile: EntraIdProfile) {
@@ -101,52 +103,4 @@ export function entraIdProfile(profile: EntraIdProfile) {
     email: profile.email ?? null,
     image: null,
   };
-}
-
-/**
- * Build the Entra ID OAuth provider config (OIDC authorization-code flow).
- *
- * Uses tenant-scoped OIDC discovery (the same `wellKnown` shape as next-auth's built-in
- * `azure-ad` provider, including the `appid` hint) and enforces PKCE plus the `state` and
- * `nonce` checks on every round-trip.
- *
- * @param env Environment to read (injectable for tests; defaults to `process.env`).
- * @returns A NextAuth OAuth provider with id `azure`.
- */
-export function entraIdProvider(
-  env: Record<string, string | undefined> = process.env
-): OAuthConfig<EntraIdProfile> {
-  const clientId = readEnvString(env, 'AZURE_AD_CLIENT_ID') ?? '';
-  const tenant = readEnvString(env, 'AZURE_AD_TENANT') ?? DEFAULT_TENANT;
-
-  return {
-    id: ENTRA_ID_PROVIDER_ID,
-    name: 'Microsoft Entra ID',
-    type: 'oauth',
-    wellKnown: `${entraAuthorityBaseUrl(env)}/${tenant}/v2.0/.well-known/openid-configuration?appid=${clientId}`,
-    // `offline_access` makes Microsoft issue a refresh token on the code exchange, so the azure
-    // identity row carries token-refresh data like the other providers (OLO-2.2, #4194).
-    authorization: { params: { scope: 'openid profile email offline_access' } },
-    idToken: true,
-    checks: ['pkce', 'state', 'nonce'],
-    clientId,
-    clientSecret: readEnvString(env, 'AZURE_AD_CLIENT_SECRET') ?? '',
-    profile: entraIdProfile,
-  };
-}
-
-/**
- * The Entra ID provider as a spreadable list: `[provider]` when the deployment configured it,
- * `[]` otherwise. Keeps the NextAuth config declarative
- * (`providers: [github, gitlab, ...entraIdProviderIfConfigured()]`) while guaranteeing an
- * unconfigured deployment registers no `azure` sign-in route at all — such attempts then fall to
- * NextAuth's unknown-provider handling rather than a broken Microsoft redirect.
- *
- * @param env Environment to read (injectable for tests; defaults to `process.env`).
- * @returns A zero- or one-element provider list for spreading into `authOptions.providers`.
- */
-export function entraIdProviderIfConfigured(
-  env: Record<string, string | undefined> = process.env
-): OAuthConfig<EntraIdProfile>[] {
-  return isEntraIdConfigured(env) ? [entraIdProvider(env)] : [];
 }

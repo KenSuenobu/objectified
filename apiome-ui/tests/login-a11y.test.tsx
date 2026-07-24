@@ -20,7 +20,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-jest.mock('next-auth/react', () => ({
+jest.mock('@lib/auth/session-client', () => ({
   signIn: jest.fn(),
 }));
 

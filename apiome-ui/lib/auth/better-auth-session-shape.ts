@@ -13,9 +13,9 @@
  *
  * - `user_id` is Better Auth's `user.id`.
  * - `current_tenant_id` is **derived at read time** from the durable last-active-tenant cookie
- *   (OLO-6.1), re-validated against the user's live memberships — the exact logic the NextAuth `jwt`
- *   callback ran at login (`[...nextauth]/route.ts`), moved to read time because a Better Auth
- *   database session carries no custom claim. No schema change is needed.
+ *   (OLO-6.1), re-validated against the user's live memberships — the exact logic the legacy NextAuth
+ *   `jwt` callback ran at login (removed at the OLO-10.14 cutover), moved to read time because a Better
+ *   Auth database session carries no custom claim. No schema change is needed.
  *
  * Consumed by the Better Auth `customSession` plugin (`auth.ts`), so `auth.api.getSession()` and the
  * browser `/api/auth/get-session` both return the contract shape from one source, and by the

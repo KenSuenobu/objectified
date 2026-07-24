@@ -1,14 +1,14 @@
 /**
  * Contract tests for auth-surface rate limiting in the UI route handlers (OLO-7.1, #4223).
  *
- * Standing up the full NextAuth + fetch stack for these handlers is heavy, so — like the
+ * Standing up the full auth + fetch stack for these handlers is heavy, so — like the
  * catalog-proxy contract tests — these assert the source-level contract the auth surface
  * depends on: the link-intent and signup-intent routes consume the shared request budget
  * (per-IP, and per-account where a session exists) and answer over-budget calls with a
- * structured 429 + `Retry-After`; the credentials authorize path receives the caller's IP;
- * and the super-admin form keys off the shared IP resolver. The budget/lockout behavior
- * itself is covered by real unit tests in `tests/lib/login-rate-limit.test.ts`,
- * `tests/lib/client-ip.test.ts`, and `tests/credentials-ip-rate-limit.test.ts`.
+ * structured 429 + `Retry-After`; and the super-admin form keys off the shared IP resolver.
+ * The budget/lockout behavior itself is covered by real unit tests in
+ * `tests/lib/login-rate-limit.test.ts`, `tests/lib/client-ip.test.ts`, and (for the Better Auth
+ * credential sign-in hooks) `tests/better-auth-credentials.test.ts`.
  */
 
 import * as fs from 'fs';
@@ -17,7 +17,6 @@ import * as path from 'path';
 const APP_API = path.resolve(__dirname, '..', '..', 'src', 'app', 'api');
 const LINK_ROUTE = path.join(APP_API, 'auth', 'link', '[provider]', 'route.ts');
 const SIGNUP_INTENT_ROUTE = path.join(APP_API, 'auth', 'signup-intent', 'route.ts');
-const NEXTAUTH_ROUTE = path.join(APP_API, 'auth', '[...nextauth]', 'route.ts');
 const ADMIN_AUTH_ROUTE = path.join(APP_API, 'admin', 'auth', 'route.ts');
 
 function read(file: string): string {
@@ -57,15 +56,6 @@ describe('signup-intent route (POST /api/auth/signup-intent)', () => {
     expect(src).toContain('AUTH_RATE_LIMITED_CODE');
     expect(src).toMatch(/status: 429/);
     expect(src).toMatch(/'Retry-After'/);
-  });
-});
-
-describe('credentials authorize wiring (app/api/auth/[...nextauth])', () => {
-  const src = read(NEXTAUTH_ROUTE);
-
-  it('resolves the client IP and hands it to credentialsAuthorize', () => {
-    expect(src).toMatch(/resolveClientIp\(req\?\.headers\)/);
-    expect(src).toMatch(/credentialsAuthorize\(credentialPayload as ICredentials, clientIp\)/);
   });
 });
 

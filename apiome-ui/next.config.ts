@@ -17,14 +17,6 @@ const allowedDevOrigins = (process.env.NEXT_ALLOWED_DEV_ORIGINS ?? "")
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  // Mirror the server-only AUTH_ENGINE flag (lib/auth/auth-engine.ts) into a build-time public var so
-  // the browser session compat layer (OLO-10.12) can pick its transport — Better Auth's `authClient.*`
-  // vs NextAuth's HTTP endpoints — client-side. Derived from the single source `AUTH_ENGINE` so an
-  // operator sets only one variable; anything but the literal `better-auth` falls back to next-auth
-  // (matching `getAuthEngine()`).
-  env: {
-    NEXT_PUBLIC_AUTH_ENGINE: process.env.AUTH_ENGINE ?? "next-auth",
-  },
   // Enable standalone output for Docker
   output: "standalone",
   outputFileTracingRoot: monorepoRoot,

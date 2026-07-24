@@ -24,8 +24,16 @@ import {
 } from '../lib/auth/account-resolution';
 import { AUTH_ERROR_COPY, getAuthErrorCopy } from '../src/app/login/auth-error-copy';
 
-// helper.ts (transitively imported by credentials.ts) opens a pg pool at import time; mock it away.
+// The resolution store (transitively imported by better-auth-account-resolution) opens a pg pool at
+// import time; mock it away.
 jest.mock('../lib/db/db', () => ({ query: jest.fn() }));
+
+// `better-auth/api` is ESM-only; stub createAuthMiddleware to return the bare handler so
+// `better-auth-account-resolution` (imported below for the provider-not-configured check) loads under
+// ts-jest.
+jest.mock('better-auth/api', () => ({
+  createAuthMiddleware: (handler: unknown) => handler,
+}));
 
 // ---------------------------------------------------------------------------
 // 1. Value stability
@@ -49,7 +57,7 @@ describe('AUTH_ERROR_CODES — value stability', () => {
     });
   });
 
-  test('the redirect transport is the NextAuth error param on the login page', () => {
+  test('the redirect transport is the login page error query param', () => {
     expect(loginErrorRedirect(AUTH_ERROR_CODES.UNVERIFIED_EMAIL)).toBe(
       '/login?error=unverified-email'
     );
@@ -231,19 +239,12 @@ describe('each contract code has an emission path forcing it', () => {
   });
 
   test('provider-not-configured: an unknown provider is refused by the sign-in dispatch', async () => {
-    const { signInForProvider } = await import('../lib/auth/credentials');
-    expect(await signInForProvider('bitbucket', makePayload())).toBe(
+    // The Better Auth OAuth dispatch refuses any slug outside the supported set before touching the
+    // context (account-disabled / account-not-verified are forced above via resolveAccountDecision,
+    // the engine-neutral account gate both the credential and OAuth paths run through).
+    const { resolveBetterAuthOAuthSignIn } = await import('../lib/auth/better-auth-account-resolution');
+    expect(await resolveBetterAuthOAuthSignIn('bitbucket', {} as never)).toBe(
       '/login?error=provider-not-configured'
-    );
-  });
-
-  test('account-disabled / account-not-verified: the credentials path emits the same codes', async () => {
-    const { credentialsSignIn } = await import('../lib/auth/credentials');
-    expect(await credentialsSignIn({ user: { enabled: false, verified: true } })).toBe(
-      '/login?error=account-disabled'
-    );
-    expect(await credentialsSignIn({ user: { enabled: true, verified: false } })).toBe(
-      '/login?error=account-not-verified'
     );
   });
 });

@@ -92,54 +92,6 @@ export function getSharedCookieDomain(): string | undefined {
 }
 
 /**
- * Cookie overrides for NextAuth when sharing sessions across subdomains
- * (e.g. app + studio on *.apiome.dev). Must mirror the studio's
- * private-suite/suite/designer/lib/auth/cookie-options.ts so both apps
- * read and write the same cookies.
- */
-export function buildAuthCookieOverrides() {
-  const cookieDomain = getSharedCookieDomain();
-  const sharedCookieOptions = {
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    path: '/',
-    secure: process.env.NODE_ENV === 'production',
-    ...(cookieDomain ? { domain: cookieDomain } : {}),
-  };
-
-  return {
-    cookies: {
-      sessionToken: {
-        name:
-          process.env.NODE_ENV === 'production'
-            ? '__Secure-next-auth.session-token'
-            : 'next-auth.session-token',
-        options: sharedCookieOptions,
-      },
-      callbackUrl: {
-        name:
-          process.env.NODE_ENV === 'production'
-            ? '__Secure-next-auth.callback-url'
-            : 'next-auth.callback-url',
-        options: sharedCookieOptions,
-      },
-      csrfToken: {
-        name:
-          process.env.NODE_ENV === 'production'
-            ? '__Host-next-auth.csrf-token'
-            : 'next-auth.csrf-token',
-        options: {
-          httpOnly: true,
-          sameSite: 'lax' as const,
-          path: '/',
-          secure: process.env.NODE_ENV === 'production',
-        },
-      },
-    },
-  };
-}
-
-/**
  * True when a callback value is a same-origin relative path that a browser
  * cannot reinterpret as an absolute URL.
  *

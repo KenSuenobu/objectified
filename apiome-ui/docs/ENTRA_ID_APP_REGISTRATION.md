@@ -12,7 +12,7 @@ the deployment configures it:
 | `AZURE_AD_TENANT` | no | Tenant id/domain to restrict sign-in to one directory; defaults to `common` (multi-tenant). |
 
 In the app registration, add the web redirect URI
-`{NEXTAUTH_URL}/api/auth/callback/azure` (e.g. `http://localhost:3000/api/auth/callback/azure`).
+`{NEXTAUTH_URL}/api/auth/oauth2/callback/azure` (e.g. `http://localhost:3000/api/auth/oauth2/callback/azure`).
 The provider uses the OIDC authorization-code flow with PKCE, `state`, and `nonce` checks, and
 maps the token's immutable `oid` claim to the stored `provider_user_id`.
 

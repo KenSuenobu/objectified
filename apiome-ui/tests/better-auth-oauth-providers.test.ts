@@ -31,10 +31,10 @@ jest.mock('better-auth/api', () => ({
 // default with an inert stub to keep the suite hermetic.
 jest.mock('../lib/auth/resolution-store', () => ({ resolutionStore: {} }));
 
-// `resolveLinkIntentUserId` lazily imports `./credentials` (which pulls the db + credential stack) to
-// read the one-shot link-intent cookie. Stub it to "no link intent" so the default path stays
-// hermetic; the explicit-link test injects its own `resolveLinkToUserId`.
-jest.mock('../lib/auth/credentials', () => ({ checkLinkingIntent: async () => null }));
+// `resolveLinkIntentUserId` lazily imports `./oauth-link-intent` (which reads `next/headers`) to read
+// the one-shot link-intent cookie. Stub it to "no link intent" so the default path stays hermetic; the
+// explicit-link test injects its own `resolveLinkToUserId`.
+jest.mock('../lib/auth/oauth-link-intent', () => ({ checkLinkingIntent: async () => null }));
 
 import { describe, test, expect } from '@jest/globals';
 

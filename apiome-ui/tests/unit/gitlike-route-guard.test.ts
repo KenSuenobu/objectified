@@ -65,7 +65,7 @@ describe('isGitlikePath (FEATURE_GITLIKE=false guard)', () => {
     const cases: Array<[string, string]> = [
       ['/api/versions/sunset-timeline', 'GET'],
       ['/api/versions/sunset-timeline/something', 'GET'],
-      ['/api/auth/session', 'GET'],
+      ['/api/auth/get-session', 'GET'],
       ['/api/projects', 'GET'],
       ['/api/projects/proj-1', 'GET'],
       ['/api/projects/proj-1', 'PUT'],

@@ -400,6 +400,13 @@ gate.
 
 ### Decision: **parallel-run behind a feature flag, with an additive (dual-source) data migration.**
 
+> **✅ Cutover completed (10.14 #5009).** Better Auth is now the only engine: `next-auth`, the
+> `[...nextauth]` route (now `[...all]`), the `AUTH_ENGINE`/`NEXT_PUBLIC_AUTH_ENGINE` flag, and the
+> NextAuth compat layer were removed. The additive schema and the legacy `users.password` /
+> `external_auth_providers` columns were **kept** (not dropped) so a redeploy of the prior release
+> remains a valid rollback. The parallel-run mechanics below are retained as the historical record of
+> how the cutover was reached.
+
 Not a hard swap. Both engines coexist; a flag selects which one serves auth; the schema move is
 forward-additive so the legacy columns/tables remain intact for rollback until the epic's final
 ticket removes them.
@@ -423,14 +430,23 @@ flag off, NextAuth flows are byte-for-byte unchanged; with it on, new sign-ins u
    `external_auth_providers` identity).
 2. Flip `AUTH_ENGINE=better-auth` for a canary, then fleet-wide, with the e2e journey suite green
    (10.13 #5008) including a TOTP path.
-3. Bake period. Then remove `next-auth`, the `[...nextauth]` route, and the dead legacy columns;
-   update `AUTH_PROVIDER_SETUP.md`, `.env.example`, and docs.
+3. Bake period. Then remove `next-auth`, the `[...nextauth]` route, and the engine flag; update
+   `AUTH_PROVIDER_SETUP.md`, `.env.example`, and docs. **✅ Done in 10.14 (#5009)** — the legacy
+   `users.password` / `external_auth_providers` columns were deliberately **kept** (not dropped) to
+   preserve a redeploy-based rollback (see below); dropping them is deferred to a later, separate
+   cleanup once the bake on Better Auth is proven in production.
 
-**Rollback.** Flip `AUTH_ENGINE=next-auth`. Because the legacy columns/tables were never dropped and
-existing JWE session cookies remain valid (30-day TTL), users fall back onto the old engine with no
-data loss. **Divergence window:** anything created *only* under Better Auth after the flip — new 2FA
+**Rollback.**
+- **During parallel-run (pre-10.14):** flip `AUTH_ENGINE=next-auth`. Because the legacy columns/tables
+  were never dropped and existing JWE session cookies remain valid (30-day TTL), users fall back onto
+  the old engine with no data loss.
+- **After the 10.14 cutover:** the flag no longer exists, so rollback is **redeploying the prior
+  release** (which still bundles `next-auth` and the `[...nextauth]` route) — the retained additive
+  schema and legacy columns make that image fully functional. A pre-cutover DB snapshot backs it.
+
+**Divergence window:** anything created *only* under Better Auth after the cutover — new 2FA
 enrollments, password changes, newly-linked identities, brand-new signups — does not exist in the
-legacy columns. Mitigations: (i) keep the bake period short and the canary small; (ii) **dual-write**
+legacy columns. Mitigations: (i) keep the bake short and the canary small; (ii) **dual-write**
 credential-password changes and new identity links back to the legacy columns during parallel-run so
 a rollback loses nothing but 2FA enrollment (2FA doesn't exist in the old engine anyway); (iii)
 snapshot the DB immediately before the fleet flip. This divergence is Risk R1.

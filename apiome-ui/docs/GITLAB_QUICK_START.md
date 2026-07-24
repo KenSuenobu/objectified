@@ -25,7 +25,7 @@ Your application now supports GitLab login. The following changes have been made
 2. Click "Add new application"
 3. Fill in:
    - **Name**: `Apiome`
-   - **Redirect URI**: `https://yourdomain.com/api/auth/callback/gitlab`
+   - **Redirect URI**: `https://yourdomain.com/api/auth/oauth2/callback/gitlab`
    - **Scopes**: Select `api`, `read_user` 
    - **Confidential**: ✓ Check this box
 4. Click "Save application"

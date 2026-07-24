@@ -38,7 +38,7 @@ To get GitHub OAuth credentials:
 3. Fill in:
    - Application name: `Apiome (Local Dev)`
    - Homepage URL: `http://localhost:3000`
-   - Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
+   - Authorization callback URL: `http://localhost:3000/api/auth/oauth2/callback/github`
 4. Click "Register application"
 5. Copy Client ID and generate Client Secret
 
@@ -134,7 +134,7 @@ ORDER BY eap.created_at DESC;
 
 **Solution**:
 1. Check `.env.local` has correct `GITHUB_ID` and `GITHUB_SECRET`
-2. Verify callback URL in GitHub OAuth app matches: `http://localhost:3000/api/auth/callback/github`
+2. Verify callback URL in GitHub OAuth app matches: `http://localhost:3000/api/auth/oauth2/callback/github`
 3. Restart Next.js server after changing .env.local
 
 ### "Not authenticated" error in console

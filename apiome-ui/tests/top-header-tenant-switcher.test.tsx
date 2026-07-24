@@ -23,11 +23,6 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: mockRouterRefresh, push: jest.fn() }),
 }));
 
-jest.mock('next-auth/react', () => ({
-  useSession: () => ({ data: null, update: jest.fn() }),
-  signOut: jest.fn(),
-}));
-
 jest.mock('@/app/hooks/useDarkMode', () => ({
   useDarkMode: () => false,
 }));
@@ -97,7 +92,7 @@ jest.mock('next/link', () => ({
 }));
 
 import TopHeader, { type TopHeaderTenantContext } from '../src/app/components/ade/TopHeader';
-import type { Session } from 'next-auth';
+import type { AppSession } from '@lib/auth/better-auth-session-shape';
 
 const CURRENT_TENANT_ID = 'tenant-acme';
 
@@ -108,7 +103,7 @@ const session = {
     email: 'kenji@example.com',
     current_tenant_id: CURRENT_TENANT_ID,
   },
-} as unknown as Session;
+} as unknown as AppSession;
 
 /** Enriched three-tenant context matching the issue's mockup. */
 function enrichedContext(overrides: Partial<TopHeaderTenantContext> = {}): TopHeaderTenantContext {

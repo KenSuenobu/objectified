@@ -167,8 +167,8 @@ function stripTrailingSlash(url: string): string {
 /**
  * Base URL of GitHub's OAuth **web** endpoints (`/login/oauth/authorize`, `…/access_token`).
  * Overridable via `GITHUB_OAUTH_BASE_URL` for the mocked-provider e2e journey (OLO-7.4); defaults
- * to the real host. Mirrors `nextauth-oauth-providers.githubOauthBaseUrl` (the NextAuth module cannot
- * be imported here — it pulls next-auth at runtime, which is removed at cutover, 10.14).
+ * to the real host. (This was the sole GitHub base-URL helper once NextAuth and its provider factory
+ * were removed at the OLO-10.14 cutover.)
  *
  * @param env Environment to read (injectable for tests; defaults to `process.env`).
  * @returns The base URL without a trailing slash.
@@ -389,16 +389,16 @@ const NORMALIZERS: Record<
 
 /**
  * Read apiome's one-shot `oauth_link_intent` cookie to decide whether this callback is an explicit
- * "link another provider" action for `provider`. Reuses the exact NextAuth-path helper
- * (`credentials.checkLinkingIntent`) via a lazy import so this module's static graph stays free of
- * the credential stack. Fail-soft: any error yields null (a normal sign-in).
+ * "link another provider" action for `provider`. Delegates to the shared link-intent reader
+ * (`oauth-link-intent.checkLinkingIntent`) via a lazy import so this module's static graph stays free
+ * of `next/headers`. Fail-soft: any error yields null (a normal sign-in).
  *
  * @param provider The provider slug reported by the callback.
  * @returns The session user id to link to, or null.
  */
 export async function resolveLinkIntentUserId(provider: string): Promise<string | null> {
   try {
-    const { checkLinkingIntent } = await import('./credentials');
+    const { checkLinkingIntent } = await import('./oauth-link-intent');
     const intent = await checkLinkingIntent();
     return intent && intent.provider === provider && intent.userId ? intent.userId : null;
   } catch {

@@ -6,7 +6,7 @@ It is located outside the main source directory, restricting direct application 
 
 ## Auth
 
-The `auth` directory contains authentication directives for `next-auth` sign-in functions.
+The `auth` directory contains authentication directives for the Better Auth sign-in stack.
 
 | Name | Description |
 | ---- | ----------- |

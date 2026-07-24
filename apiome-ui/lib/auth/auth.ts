@@ -216,8 +216,8 @@ export type BetterAuthInstance = ReturnType<typeof buildBetterAuthInstance>;
  * here. Starting a sign-in goes through {@link betterAuthHandler}, which resolves the DB-over-env
  * provider set per request (OLO-10.8). See `docs/BETTER_AUTH_MIGRATION.md`.
  *
- * The instance is only exercised when `AUTH_ENGINE=better-auth`; with the default `next-auth` flag it
- * is never constructed (the catch-all route imports this module lazily — see the route handler).
+ * Since the OLO-10.14 cutover Better Auth is the only engine, so this instance is constructed at module
+ * load and backs every session read (`server-session.ts`) and the `/api/auth/[...all]` route.
  */
 export const auth = buildBetterAuthInstance(process.env);
 
@@ -284,8 +284,7 @@ export async function resolveRequestAuthInstance(
  * The instance is resolved per request from the DB-over-env merged config (OLO-10.8), so toggling a
  * provider from the admin settings screen takes effect on the next sign-in without a redeploy.
  * `instance.handler` dispatches on the request method and path internally, so a single function serves
- * every Better Auth endpoint (GET and POST alike). The parallel-run route delegates to this when the
- * `AUTH_ENGINE` flag selects Better Auth.
+ * every Better Auth endpoint (GET and POST alike). The `/api/auth/[...all]` route delegates to this.
  *
  * The call is wrapped in a per-request redirect-override scope (OLO-10.7): an OAuth provider's
  * `getUserInfo` runs the account-resolution engine and, on any non-admit outcome, publishes the

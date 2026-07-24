@@ -17,13 +17,11 @@
  * To re-enable git-like APIs, flip `FEATURE_GITLIKE` in `lib/feature-flags.ts`.
  */
 import { NextResponse, type NextRequest } from 'next/server';
-import { clearStaleSessionCookieIfNeeded } from '@lib/auth/stale-session-cookie';
 import { FEATURE_GITLIKE } from '@lib/feature-flags';
 import { isGitlikePath } from '@lib/gitlike-route-guard';
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const response = NextResponse.next();
-  await clearStaleSessionCookieIfNeeded(request, response);
 
   if (FEATURE_GITLIKE) {
     return response;
@@ -49,9 +47,9 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 }
 
 /**
- * Run on pages and API routes so stale NextAuth cookies are cleared before
- * server components call getServerSession. Static assets are excluded.
- * (Next.js requires `matcher` to be statically analyzable.)
+ * Run on pages and API routes so the git-like route guard covers direct API
+ * fetches. Static assets are excluded. (Next.js requires `matcher` to be
+ * statically analyzable.)
  */
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],

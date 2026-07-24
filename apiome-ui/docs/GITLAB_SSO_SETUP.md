@@ -30,7 +30,7 @@ Apiome
 
 **Redirect URI:**
 ```
-https://your-domain.com/api/auth/callback/gitlab
+https://your-domain.com/api/auth/oauth2/callback/gitlab
 ```
 *Replace `your-domain.com` with your actual domain*
 
@@ -119,7 +119,7 @@ Redirected to GitLab authorization page
     ↓
 User approves permissions
     ↓
-GitLab redirects to /api/auth/callback/gitlab with auth code
+GitLab redirects to /api/auth/oauth2/callback/gitlab with auth code
     ↓
 NextAuth exchanges code for access token
     ↓

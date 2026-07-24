@@ -5,7 +5,7 @@ import { getSharedCookieDomain, trustedAppOrigins } from './cookie-options';
  *
  * The 10.1 decision record chose Better Auth's native **database sessions** over the legacy stateless
  * JWT-only model. This module realises the concrete session parameters that decision left to 10.3 so
- * that flipping `AUTH_ENGINE=better-auth` does **not** change what a signed-in user experiences:
+ * that the cutover to Better Auth did **not** change what a signed-in user experiences:
  *
  * - the session lifetime and refresh cadence match NextAuth v4's JWT defaults, so no user is logged
  *   out early at cutover;
@@ -106,7 +106,7 @@ export function buildBetterAuthCrossSubDomainCookies():
  *
  * Only cross-subdomain cookie scoping is set here; every other cookie attribute (`httpOnly`,
  * `sameSite=lax`, `secure` in production, and the `__Secure-`/`__Host-` prefixes) is already Better
- * Auth's default and matches the legacy `buildAuthCookieOverrides()`, so it is left untouched.
+ * Auth's default and matched the legacy NextAuth cookie overrides, so it is left untouched.
  *
  * @returns The `advanced` config, carrying `crossSubDomainCookies` only when a shared parent domain
  *   applies; an empty object otherwise.

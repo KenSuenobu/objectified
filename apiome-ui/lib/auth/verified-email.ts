@@ -20,7 +20,7 @@
  * resolves to unverified, which the engine classifies under OLO-1.3 rule 4 (structured
  * `UNVERIFIED_EMAIL` rejection) — never as a distinct account and never as trusted.
  *
- * Server-only helpers; the NextAuth wiring lives in `nextauth-oauth-providers.ts`.
+ * Server-only helpers; the provider wiring that calls them lives in `better-auth-oauth-providers.ts`.
  */
 
 /** GitHub OAuth scopes: profile read plus the emails API (OLO-2.5). */
@@ -96,8 +96,9 @@ export interface VerifiedEmailResolution {
 }
 
 /**
- * Minimal slice of next-auth's userinfo request context that these hooks need: an
- * openid-client instance able to perform the userinfo exchange, and the token set.
+ * Minimal slice of the userinfo request context these hooks need: an openid-client instance able to
+ * perform the userinfo exchange, and the token set. (The `{ client, tokens }` shape originated with
+ * next-auth's userinfo request; the Better Auth provider hooks pass the same slice.)
  */
 export interface UserinfoContext {
   client: { userinfo: (accessToken: string) => Promise<Record<string, unknown>> };
@@ -210,7 +211,7 @@ export function resolveGitlabEmailVerified(profile: unknown): boolean {
  * `/user/emails`, and stamp the resolved address + `email_verified` onto the raw profile
  * (the object the signIn callback, and therefore `resolveOAuthEmailVerified`, receives).
  *
- * @param context next-auth userinfo request context ({ client, tokens }).
+ * @param context userinfo request context ({ client, tokens }).
  * @param fetchImpl Fetch implementation for the emails API (injectable for tests).
  * @returns The raw GitHub profile with `email`/`email_verified` normalized.
  */
@@ -234,7 +235,7 @@ export async function githubUserinfoRequest(
  * NextAuth userinfo hook for GitLab: perform the standard `/api/v4/user` exchange and stamp
  * `email_verified` from the `confirmed_at` evidence onto the raw profile.
  *
- * @param context next-auth userinfo request context ({ client, tokens }).
+ * @param context userinfo request context ({ client, tokens }).
  * @returns The raw GitLab profile with `email_verified` normalized.
  */
 export async function gitlabUserinfoRequest(

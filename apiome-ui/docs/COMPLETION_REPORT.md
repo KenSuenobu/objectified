@@ -118,7 +118,7 @@ Lines Changed: ~10
 1. **Create GitLab OAuth Application**
    - Visit: https://gitlab.com/-/user_settings/applications
    - Application Name: `Apiome`
-   - Redirect URI: `https://your-domain.com/api/auth/callback/gitlab`
+   - Redirect URI: `https://your-domain.com/api/auth/oauth2/callback/gitlab`
    - Scopes: `api`, `read_user`
    - Check: "Confidential"
    - Save and copy credentials

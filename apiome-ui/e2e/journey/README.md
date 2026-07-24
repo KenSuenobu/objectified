@@ -5,10 +5,9 @@ Playwright journey through login (all four providers, mocked), the account-resol
 invariants, first-tenant onboarding, Free-license limits, the tenant switcher, credentials
 sign-in, and 2FA (TOTP + backup code).
 
-The suite runs entirely on the **Better Auth engine** — the dedicated dev server boots with
-`AUTH_ENGINE=better-auth` (`support/env.ts`), which is the OLO-10.13 acceptance gate for the
-migration cutover (OLO-10.14). It covers the full auth regression: credentials, all four OAuth
-providers, account linking, and 2FA.
+The suite runs entirely on the **Better Auth engine** — the only engine since the OLO-10.14 cutover
+(`support/env.ts`). Built as the OLO-10.13 acceptance gate for the migration, it covers the full auth
+regression: credentials, all four OAuth providers, account linking, and 2FA.
 
 ## What is real, what is mocked
 
@@ -21,8 +20,7 @@ providers, account linking, and 2FA.
 The app is pointed at the mock via the base-URL overrides
 (`GITHUB_OAUTH_BASE_URL`, `GITHUB_API_BASE_URL`, `GITLAB_BASE_URL`,
 `AZURE_AD_AUTHORITY_BASE_URL`, `GOOGLE_ISSUER`) — see `e2e/journey/support/env.ts` for the full
-env the server under test boots with (including `AUTH_ENGINE=better-auth`). Production
-deployments never set these vars.
+env the server under test boots with. Production deployments never set these vars.
 
 ## 2FA legs
 
@@ -51,8 +49,8 @@ so repeated runs against the same database never collide.
 
 - `oauth-onboarding-journey.spec.ts` — the eleven-step journey (serial): four OAuth providers,
   invariants, onboarding, license, switcher, credentials sign-in, and the 2FA legs.
-- `support/env.ts` — ports, URLs, and the app-under-test environment (`AUTH_ENGINE=better-auth`,
-  the four provider mock overrides).
+- `support/env.ts` — ports, URLs, and the app-under-test environment (the four provider mock
+  overrides).
 - `support/mock-oauth.ts` — persona control client for the mock provider.
 - `support/db.ts` — seeding (zero-tenant user, credential user, invite targets) and storage-layer
   invariant checks (no-duplicate-account, linked identities, 2FA state).

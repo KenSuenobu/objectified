@@ -243,7 +243,7 @@ printf '\n'
 info "UI (apiome-ui)"
 prompt UI_PORT "UI dev server port" "3000"
 DEFAULT_NEXTAUTH_URL="http://localhost:${UI_PORT}"
-prompt NEXTAUTH_URL "NextAuth site URL (OAuth redirect base)" "$DEFAULT_NEXTAUTH_URL"
+prompt NEXTAUTH_URL "App site URL (OAuth redirect base)" "$DEFAULT_NEXTAUTH_URL"
 
 while true; do
   prompt_secret ADMIN_PASSWORD "Super admin password (ADMIN_PASSWORD)"

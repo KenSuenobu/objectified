@@ -28,8 +28,15 @@ import {
   type ResolutionUser,
 } from '../lib/auth/account-resolution';
 
-// helper.ts (transitively imported by credentials.ts) opens a pg pool at import time; mock it away.
+// The resolution store (transitively imported by the resolution modules) opens a pg pool at import
+// time; mock it away.
 jest.mock('../lib/db/db', () => ({ query: jest.fn() }));
+
+// `better-auth/api` is ESM-only; stub createAuthMiddleware to return the bare handler so
+// `better-auth-account-resolution` (imported below for the OAuth vocabulary check) loads under ts-jest.
+jest.mock('better-auth/api', () => ({
+  createAuthMiddleware: (handler: unknown) => handler,
+}));
 
 /** A full Entra id-token claim set, verified via xms_edov. */
 const ENTRA_CLAIMS = {
@@ -258,12 +265,14 @@ describe('linkable-provider vocabulary', () => {
     }
   });
 
-  test('the signIn dispatch supports exactly credentials + the linkable providers', async () => {
-    const { SUPPORTED_LOGIN_PROVIDERS } = await import('../lib/auth/credentials');
-    expect(SUPPORTED_LOGIN_PROVIDERS.size).toBe(LINKABLE_PROVIDERS.size + 1);
-    expect(SUPPORTED_LOGIN_PROVIDERS.has('credentials')).toBe(true);
+  test('the OAuth sign-in dispatch supports exactly the linkable providers', async () => {
+    // Credentials are handled by the Better Auth `emailAndPassword` path, not the OAuth dispatch, so
+    // the OAuth vocabulary is exactly `LINKABLE_PROVIDERS` (no `credentials`).
+    const { SUPPORTED_OAUTH_PROVIDERS } = await import('../lib/auth/better-auth-account-resolution');
+    expect(SUPPORTED_OAUTH_PROVIDERS.size).toBe(LINKABLE_PROVIDERS.size);
+    expect(SUPPORTED_OAUTH_PROVIDERS.has('credentials')).toBe(false);
     for (const provider of LINKABLE_PROVIDERS) {
-      expect(SUPPORTED_LOGIN_PROVIDERS.has(provider)).toBe(true);
+      expect(SUPPORTED_OAUTH_PROVIDERS.has(provider)).toBe(true);
     }
   });
 });

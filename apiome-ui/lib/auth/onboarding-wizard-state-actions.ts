@@ -1,7 +1,7 @@
 'use server';
 
 // Imported via the alias so the jest `auth/server-session` mock mapping applies
-// (a relative `./server-session` would pull real next-auth into tests).
+// (a relative `./server-session` would pull the real Better Auth / DB stack into tests).
 import { getAuthSession } from '@lib/auth/server-session';
 import {
   clearWizardStateViaRest,
