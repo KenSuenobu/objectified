@@ -66,6 +66,8 @@ export const PROVIDER_CRED_ENV_KEYS: Record<
   aws: { clientId: 'COGNITO_CLIENT_ID', clientSecret: 'COGNITO_CLIENT_SECRET' },
   // Keycloak (OLO-9.5, #4988): realm issuer lives in config JSONB; credentials overlay env.
   keycloak: { clientId: 'KEYCLOAK_CLIENT_ID', clientSecret: 'KEYCLOAK_CLIENT_SECRET' },
+  // Generic OIDC (OLO-9.6, #4989): issuer (+ optional display name / scopes) in config JSONB.
+  oidc: { clientId: 'OIDC_CLIENT_ID', clientSecret: 'OIDC_CLIENT_SECRET' },
 };
 
 /** Default TTL (ms) for the in-process cache; bounded so a DB change lands within ~a cache window. */

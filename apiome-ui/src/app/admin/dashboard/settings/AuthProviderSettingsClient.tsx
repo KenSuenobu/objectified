@@ -335,6 +335,8 @@ function AddProviderMenu({
 interface ValidationResult {
   canEnable: boolean;
   missing: string[];
+  /** OIDC discovery failure message (OLO-9.6); set only when the probe ran and failed. */
+  discoveryError?: string | null;
 }
 
 /**
@@ -469,7 +471,44 @@ function ProviderCard({
       }
       // Refresh the stored view (badges, timestamps) but leave any unsaved edits in place.
       onViewChange(fresh);
-      setValidation({ canEnable: fresh.can_enable, missing: fresh.missing_for_enable });
+
+      let discoveryError: string | null = null;
+      // Generic OIDC (OLO-9.6): also probe discovery so a bad issuer fails here, not at login.
+      if (view.provider_id === 'oidc') {
+        const editedIssuer = (extras.OIDC_ISSUER ?? '').trim();
+        const storedIssuer =
+          typeof fresh.config.OIDC_ISSUER === 'string' ? fresh.config.OIDC_ISSUER.trim() : '';
+        const issuer = editedIssuer || storedIssuer || undefined;
+        try {
+          const probeResponse = await fetch('/api/admin/auth-providers/oidc/probe-discovery', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(issuer ? { issuer } : {}),
+            cache: 'no-store',
+          });
+          const probeBody: unknown = await probeResponse.json().catch(() => null);
+          if (
+            probeBody &&
+            typeof probeBody === 'object' &&
+            (probeBody as { ok?: unknown }).ok === false &&
+            typeof (probeBody as { message?: unknown }).message === 'string'
+          ) {
+            discoveryError = (probeBody as { message: string }).message;
+          } else if (!probeResponse.ok) {
+            discoveryError =
+              'OIDC discovery probe failed: the validation service could not be reached.';
+          }
+        } catch {
+          discoveryError =
+            'OIDC discovery probe failed: the validation service could not be reached.';
+        }
+      }
+
+      setValidation({
+        canEnable: fresh.can_enable && !discoveryError,
+        missing: fresh.missing_for_enable,
+        discoveryError,
+      });
     } catch {
       setSaveError('Validation failed: the server could not be reached.');
     } finally {
@@ -718,7 +757,12 @@ function ProviderCard({
 
           {/* Validation result */}
           {validation &&
-            (validation.canEnable ? (
+            (validation.discoveryError ? (
+              <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <p>{validation.discoveryError}</p>
+              </div>
+            ) : validation.canEnable ? (
               <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
                 <p>Database configuration is complete — this provider can be enabled.</p>

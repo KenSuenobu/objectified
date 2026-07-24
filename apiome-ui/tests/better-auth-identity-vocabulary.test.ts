@@ -138,6 +138,7 @@ describe('slug vocabulary parity: registry & resolution gates ⊆ the DB CHECK',
       'gitlab',
       'google',
       'keycloak',
+      'oidc',
       'okta',
     ]);
   });
@@ -190,7 +191,7 @@ describe('identities persist under the correct slug on the Better Auth path', ()
   });
 
   test('a slug outside the linkable vocabulary is refused, never persisted', async () => {
-    // `auth0` is in the DB CHECK (forward-looking for OLO-9.6) but not yet linkable, so the
+    // `auth0` is in the DB CHECK (forward-looking) but not yet linkable, so the
     // adapter refuses it before any write — LINKABLE_PROVIDERS, not the CHECK, is the dispatch gate.
     const { store, calls } = makeStore({ identityUserId: OK_USER.id });
 

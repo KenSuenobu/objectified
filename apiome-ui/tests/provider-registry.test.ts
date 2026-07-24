@@ -46,6 +46,9 @@ const ALL_ENABLED_ENV = {
   KEYCLOAK_CLIENT_ID: 'kc-id',
   KEYCLOAK_CLIENT_SECRET: 'kc-secret',
   KEYCLOAK_ISSUER: 'https://kc.example.com/realms/apiome',
+  OIDC_CLIENT_ID: 'oidc-id',
+  OIDC_CLIENT_SECRET: 'oidc-secret',
+  OIDC_ISSUER: 'https://auth.example.com',
 };
 
 describe('registry vocabulary', () => {
@@ -58,6 +61,7 @@ describe('registry vocabulary', () => {
       'okta',
       'aws',
       'keycloak',
+      'oidc',
     ]);
   });
 
@@ -69,6 +73,7 @@ describe('registry vocabulary', () => {
     expect(getProviderDescriptor('okta')?.label).toBe('Okta');
     expect(getProviderDescriptor('aws')?.label).toBe('AWS');
     expect(getProviderDescriptor('keycloak')?.label).toBe('Keycloak');
+    expect(getProviderDescriptor('oidc')?.label).toBe('OIDC');
   });
 
   it('pins each available provider env contract', () => {
@@ -100,13 +105,19 @@ describe('registry vocabulary', () => {
       'KEYCLOAK_CLIENT_SECRET',
       'KEYCLOAK_ISSUER',
     ]);
+    expect(getProviderDescriptor('oidc')?.requiredEnvKeys).toEqual([
+      'OIDC_CLIENT_ID',
+      'OIDC_CLIENT_SECRET',
+      'OIDC_ISSUER',
+    ]);
   });
 
-  it('marks google/okta/aws/keycloak available (OLO-9.2–9.5); no coming-soon placeholders remain', () => {
+  it('marks google/okta/aws/keycloak/oidc available (OLO-9.2–9.6); no coming-soon placeholders remain', () => {
     expect(getProviderDescriptor('google')?.status).toBe('available');
     expect(getProviderDescriptor('okta')?.status).toBe('available');
     expect(getProviderDescriptor('aws')?.status).toBe('available');
     expect(getProviderDescriptor('keycloak')?.status).toBe('available');
+    expect(getProviderDescriptor('oidc')?.status).toBe('available');
     expect(PROVIDER_REGISTRY.every((p) => p.status === 'available')).toBe(true);
   });
 
@@ -136,6 +147,7 @@ describe('isProviderEnabled', () => {
     expect(isProviderEnabled('okta', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('aws', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('keycloak', ALL_ENABLED_ENV)).toBe(true);
+    expect(isProviderEnabled('oidc', ALL_ENABLED_ENV)).toBe(true);
   });
 
   it('requires every env var — a missing secret disables the provider', () => {
@@ -193,6 +205,19 @@ describe('isProviderEnabled', () => {
     ).toBe(false);
   });
 
+  it('requires the OIDC issuer trio (OLO-9.6) — id+secret alone is not enough', () => {
+    expect(
+      isProviderEnabled('oidc', {
+        OIDC_CLIENT_ID: 'x',
+        OIDC_CLIENT_SECRET: 'y',
+        OIDC_ISSUER: 'https://auth.example.com',
+      })
+    ).toBe(true);
+    expect(
+      isProviderEnabled('oidc', { OIDC_CLIENT_ID: 'x', OIDC_CLIENT_SECRET: 'y' })
+    ).toBe(false);
+  });
+
   it('never enables unknown ids', () => {
     expect(isProviderEnabled('not-a-provider', ALL_ENABLED_ENV)).toBe(false);
   });
@@ -208,6 +233,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'okta',
       'aws',
       'keycloak',
+      'oidc',
     ]);
     expect(enabledProviderIds({ GITHUB_ID: 'gh-id', GITHUB_SECRET: 'gh-secret' })).toEqual(['github']);
     expect(enabledProviderIds({})).toEqual([]);
@@ -222,6 +248,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'okta',
       'aws',
       'keycloak',
+      'oidc',
     ]);
   });
 
@@ -234,6 +261,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'okta',
       'aws',
       'keycloak',
+      'oidc',
     ]);
   });
 });
@@ -250,9 +278,18 @@ describe('providerSummaries', () => {
       { id: 'okta', label: 'Okta', status: 'available', enabled: false },
       { id: 'aws', label: 'AWS', status: 'available', enabled: false },
       { id: 'keycloak', label: 'Keycloak', status: 'available', enabled: false },
+      { id: 'oidc', label: 'OIDC', status: 'available', enabled: false },
     ]);
     // Server → client props must survive serialization untouched.
     expect(JSON.parse(JSON.stringify(summaries))).toEqual(summaries);
+  });
+
+  it('overrides the oidc label from OIDC_DISPLAY_NAME when set (OLO-9.6)', () => {
+    const summaries = providerSummaries({
+      OIDC_DISPLAY_NAME: 'Authentik',
+    });
+    const oidc = summaries.find((s) => s.id === 'oidc');
+    expect(oidc?.label).toBe('Authentik');
   });
 });
 

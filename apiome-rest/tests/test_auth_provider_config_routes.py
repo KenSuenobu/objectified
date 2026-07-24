@@ -148,7 +148,7 @@ def test_list_returns_all_registry_providers(admin_headers):
     assert resp.status_code == 200
     providers = resp.json()["providers"]
     ids = [p["provider_id"] for p in providers]
-    assert ids == ["github", "gitlab", "azure", "google", "okta", "aws", "keycloak"]
+    assert ids == ["github", "gitlab", "azure", "google", "okta", "aws", "keycloak", "oidc"]
     # With no rows, every field falls back to env and nothing is enabled/stored.
     gh = providers[0]
     assert gh["enabled"] is None
@@ -173,6 +173,11 @@ def test_list_returns_all_registry_providers(admin_headers):
     assert keycloak["required_fields"] == ["client_id", "client_secret", "issuer"]
     assert keycloak["can_enable"] is False
     assert "issuer" in keycloak["missing_for_enable"]
+    oidc = next(p for p in providers if p["provider_id"] == "oidc")
+    assert oidc["status"] == "available"
+    assert oidc["required_fields"] == ["client_id", "client_secret", "issuer"]
+    assert oidc["can_enable"] is False
+    assert "issuer" in oidc["missing_for_enable"]
 
 
 def test_list_overlays_stored_row_and_masks_secret(admin_headers):
@@ -303,6 +308,26 @@ def test_put_enable_keycloak_incomplete_names_issuer(admin_headers):
         )
         resp = client.put(
             "/v1/admin/auth-providers/keycloak", json={"enabled": True}, headers=admin_headers
+        )
+    assert resp.status_code == 422
+    detail = resp.json()["detail"]
+    assert detail["error"] == "provider_incomplete"
+    assert detail["missing_fields"] == ["issuer"]
+    mock_db.upsert_auth_provider_config.assert_not_called()
+
+
+def test_put_enable_oidc_incomplete_names_issuer(admin_headers):
+    """Enabling OIDC with credentials but no issuer is a structured 422 naming issuer (OLO-9.6)."""
+    with patch("app.auth_provider_config_routes.db") as mock_db:
+        mock_db.get_auth_provider_config.return_value = _row(
+            provider_id="oidc",
+            enabled=None,
+            client_id="oidc-id",
+            enc_key_id="k1",
+            config={},
+        )
+        resp = client.put(
+            "/v1/admin/auth-providers/oidc", json={"enabled": True}, headers=admin_headers
         )
     assert resp.status_code == 422
     detail = resp.json()["detail"]
