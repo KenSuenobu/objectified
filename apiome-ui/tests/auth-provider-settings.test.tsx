@@ -266,6 +266,133 @@ describe('AuthProviderSettingsClient — rendering', () => {
   });
 });
 
+describe('AuthProviderSettingsClient — Add menu search & scroll', () => {
+  /** Open the header's Add menu (waiting for load) and return a `within` scope for it. */
+  async function openAddMenu() {
+    const trigger = await screen.findByRole('button', { name: 'Add Provider' });
+    await waitFor(() => expect(trigger).toBeEnabled());
+    fireEvent.click(trigger);
+    return within(screen.getByRole('menu'));
+  }
+
+  it('shows a focused search box at the top of the menu', async () => {
+    mockFetch();
+    render(<AuthProviderSettingsClient />);
+
+    const menu = await openAddMenu();
+    const search = menu.getByRole('textbox', { name: 'Search providers' });
+    expect(search).toHaveFocus();
+    // The search stays pinned above the scroll region rather than scrolling away with the items.
+    const scrollRegion = screen.getByRole('menu').querySelector('.max-h-64.overflow-y-auto');
+    expect(scrollRegion).not.toBeNull();
+    expect(scrollRegion).not.toContainElement(search);
+  });
+
+  it('renders the item list inside a capped-height scrollable region', async () => {
+    mockFetch();
+    render(<AuthProviderSettingsClient />);
+
+    const menu = await openAddMenu();
+    const scrollRegion = screen.getByRole('menu').querySelector('.max-h-64.overflow-y-auto');
+    expect(scrollRegion).not.toBeNull();
+    expect(scrollRegion).toContainElement(menu.getByRole('menuitem', { name: /GitHub/ }));
+  });
+
+  it('filters candidates by name, case-insensitively', async () => {
+    mockFetch();
+    render(<AuthProviderSettingsClient />);
+
+    const menu = await openAddMenu();
+    fireEvent.change(menu.getByRole('textbox', { name: 'Search providers' }), {
+      target: { value: 'GOO' },
+    });
+
+    expect(menu.getByRole('menuitem', { name: /Google/ })).toBeInTheDocument();
+    expect(menu.queryByRole('menuitem', { name: /GitHub/ })).not.toBeInTheDocument();
+    expect(menu.queryByRole('menuitem', { name: /Microsoft/ })).not.toBeInTheDocument();
+    expect(menu.queryByRole('menuitem', { name: /AWS/ })).not.toBeInTheDocument();
+  });
+
+  it('also matches the registry slug, not just the label', async () => {
+    mockFetch();
+    render(<AuthProviderSettingsClient />);
+
+    const menu = await openAddMenu();
+    // "azure" is the slug; the label is "Microsoft".
+    fireEvent.change(menu.getByRole('textbox', { name: 'Search providers' }), {
+      target: { value: 'azure' },
+    });
+
+    expect(menu.getByRole('menuitem', { name: /Microsoft/ })).toBeInTheDocument();
+    expect(menu.queryByRole('menuitem', { name: /GitHub/ })).not.toBeInTheDocument();
+  });
+
+  it('shows a no-match message quoting the query, and recovers when cleared', async () => {
+    mockFetch();
+    render(<AuthProviderSettingsClient />);
+
+    const menu = await openAddMenu();
+    const search = menu.getByRole('textbox', { name: 'Search providers' });
+    fireEvent.change(search, { target: { value: 'zzz' } });
+
+    expect(menu.queryByRole('menuitem')).not.toBeInTheDocument();
+    expect(menu.getByText(/No providers match/)).toHaveTextContent('zzz');
+
+    fireEvent.change(search, { target: { value: '' } });
+    expect(menu.getByRole('menuitem', { name: /GitHub/ })).toBeInTheDocument();
+    expect(menu.getByRole('menuitem', { name: /AWS/ })).toBeInTheDocument();
+  });
+
+  it('Enter adds the first available match and closes the menu', async () => {
+    mockFetch();
+    render(<AuthProviderSettingsClient />);
+
+    const menu = await openAddMenu();
+    const search = menu.getByRole('textbox', { name: 'Search providers' });
+    fireEvent.change(search, { target: { value: 'goo' } });
+    fireEvent.keyDown(search, { key: 'Enter' });
+
+    expect(
+      await screen.findByRole('region', { name: 'Google provider configuration' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('Enter is a no-op when the only match is coming-soon', async () => {
+    mockFetch();
+    render(<AuthProviderSettingsClient />);
+
+    const menu = await openAddMenu();
+    const search = menu.getByRole('textbox', { name: 'Search providers' });
+    fireEvent.change(search, { target: { value: 'aws' } });
+    fireEvent.keyDown(search, { key: 'Enter' });
+
+    // Nothing added, menu still open — coming-soon entries stay unselectable via keyboard too.
+    expect(
+      screen.queryByRole('region', { name: 'AWS provider configuration' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+  });
+
+  it('resets the query on close so a fresh open starts unfiltered', async () => {
+    mockFetch();
+    render(<AuthProviderSettingsClient />);
+
+    const menu = await openAddMenu();
+    fireEvent.change(menu.getByRole('textbox', { name: 'Search providers' }), {
+      target: { value: 'goo' },
+    });
+    expect(menu.queryByRole('menuitem', { name: /GitHub/ })).not.toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+
+    const reopened = await openAddMenu();
+    expect(reopened.getByRole('textbox', { name: 'Search providers' })).toHaveValue('');
+    expect(reopened.getByRole('menuitem', { name: /GitHub/ })).toBeInTheDocument();
+  });
+});
+
 describe('AuthProviderSettingsClient — saving', () => {
   it('saves only the fields the admin changed (partial update), then shows Saved', async () => {
     const puts: Array<{ url: string; body: Record<string, unknown> }> = [];
