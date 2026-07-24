@@ -148,7 +148,7 @@ def test_list_returns_all_registry_providers(admin_headers):
     assert resp.status_code == 200
     providers = resp.json()["providers"]
     ids = [p["provider_id"] for p in providers]
-    assert ids == ["github", "gitlab", "azure", "google", "aws"]
+    assert ids == ["github", "gitlab", "azure", "google", "okta", "aws"]
     # With no rows, every field falls back to env and nothing is enabled/stored.
     gh = providers[0]
     assert gh["enabled"] is None
@@ -157,6 +157,12 @@ def test_list_returns_all_registry_providers(admin_headers):
     assert gh["client_id_source"] == "env-fallback"
     assert gh["secret_set"] is False
     assert gh["secret_source"] == "env-fallback"
+    # Issuer-based Okta lists issuer among required fields (OLO-9.3).
+    okta = next(p for p in providers if p["provider_id"] == "okta")
+    assert okta["status"] == "available"
+    assert okta["required_fields"] == ["client_id", "client_secret", "issuer"]
+    assert okta["can_enable"] is False
+    assert "issuer" in okta["missing_for_enable"]
     # coming-soon providers can never be enabled.
     aws = next(p for p in providers if p["provider_id"] == "aws")
     assert aws["status"] == "coming-soon"
@@ -207,7 +213,9 @@ def test_put_unknown_provider_404(admin_headers):
     """An id outside the registry is a 404."""
     with patch("app.auth_provider_config_routes.db"):
         resp = client.put(
-            "/v1/admin/auth-providers/okta", json={"enabled": False}, headers=admin_headers
+            "/v1/admin/auth-providers/not-a-provider",
+            json={"enabled": False},
+            headers=admin_headers,
         )
     assert resp.status_code == 404
 
@@ -235,6 +243,26 @@ def test_put_enable_incomplete_rejected(admin_headers):
     assert detail["error"] == "provider_incomplete"
     assert set(detail["missing_fields"]) == {"client_id", "client_secret"}
     # No write happened.
+    mock_db.upsert_auth_provider_config.assert_not_called()
+
+
+def test_put_enable_okta_incomplete_names_issuer(admin_headers):
+    """Enabling Okta with credentials but no issuer is a structured 422 naming issuer (OLO-9.3)."""
+    with patch("app.auth_provider_config_routes.db") as mock_db:
+        mock_db.get_auth_provider_config.return_value = _row(
+            provider_id="okta",
+            enabled=None,
+            client_id="ok-id",
+            enc_key_id="k1",
+            config={},
+        )
+        resp = client.put(
+            "/v1/admin/auth-providers/okta", json={"enabled": True}, headers=admin_headers
+        )
+    assert resp.status_code == 422
+    detail = resp.json()["detail"]
+    assert detail["error"] == "provider_incomplete"
+    assert detail["missing_fields"] == ["issuer"]
     mock_db.upsert_auth_provider_config.assert_not_called()
 
 

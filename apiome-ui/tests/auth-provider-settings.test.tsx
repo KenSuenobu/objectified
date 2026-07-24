@@ -63,6 +63,12 @@ const GOOGLE = makeView({
   provider_id: 'google',
   label: 'Google',
 });
+const OKTA = makeView({
+  provider_id: 'okta',
+  label: 'Okta',
+  required_fields: ['client_id', 'client_secret', 'issuer'],
+  missing_for_enable: ['client_id', 'client_secret', 'issuer'],
+});
 const AWS = makeView({
   provider_id: 'aws',
   label: 'AWS',
@@ -71,7 +77,7 @@ const AWS = makeView({
   missing_for_enable: [],
 });
 
-const DEFAULT_LIST = { providers: [GITHUB, GITLAB, AZURE, GOOGLE, AWS] };
+const DEFAULT_LIST = { providers: [GITHUB, GITLAB, AZURE, GOOGLE, OKTA, AWS] };
 
 /** Install a fetch mock; `putHandler` decides PUT responses, `listBodies` queues GET bodies. */
 function mockFetch(
@@ -163,8 +169,10 @@ describe('AuthProviderSettingsClient — rendering', () => {
     expect(menu.queryByRole('menuitem', { name: /GitLab/ })).not.toBeInTheDocument();
     expect(menu.getByRole('menuitem', { name: /GitHub/ })).toBeEnabled();
     expect(menu.getByRole('menuitem', { name: /Microsoft/ })).toBeEnabled();
-    // Google is available (OLO-9.2), so it is selectable; only aws stays coming-soon/disabled.
+    // Google (OLO-9.2) and Okta (OLO-9.3) are available, so they are selectable; only aws stays
+    // coming-soon/disabled.
     expect(menu.getByRole('menuitem', { name: /Google/ })).toBeEnabled();
+    expect(menu.getByRole('menuitem', { name: /Okta/ })).toBeEnabled();
     expect(menu.getByRole('menuitem', { name: /AWS/ })).toBeDisabled();
   });
 

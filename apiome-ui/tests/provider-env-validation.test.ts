@@ -39,6 +39,9 @@ const ALL_ENABLED_ENV = {
   AZURE_AD_CLIENT_SECRET: 'az-secret',
   GOOGLE_CLIENT_ID: 'gg-id',
   GOOGLE_CLIENT_SECRET: 'gg-secret',
+  OKTA_CLIENT_ID: 'ok-id',
+  OKTA_CLIENT_SECRET: 'ok-secret',
+  OKTA_ISSUER: 'https://example.okta.com/oauth2/default',
 };
 
 describe('providerEnvIssues', () => {

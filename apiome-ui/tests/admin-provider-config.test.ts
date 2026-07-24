@@ -80,6 +80,7 @@ describe('PROVIDER_EXTRA_FIELDS metadata', () => {
     expect(PROVIDER_EXTRA_FIELDS.github.map((f) => f.envKey)).toEqual(
       expect.arrayContaining(['GITHUB_OAUTH_BASE_URL', 'GITHUB_API_BASE_URL'])
     );
+    expect(PROVIDER_EXTRA_FIELDS.okta.map((f) => f.envKey)).toEqual(['OKTA_ISSUER']);
   });
 });
 

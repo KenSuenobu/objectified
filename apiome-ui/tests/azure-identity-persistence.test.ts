@@ -257,9 +257,22 @@ describe('linkable-provider vocabulary', () => {
     expect(LINKABLE_PROVIDERS.has('azure-ad')).toBe(false);
   });
 
-  test('every linkable provider is within the V181 DB vocabulary', () => {
-    // The check constraint pinned by V181__provider_identity_uniqueness_4187.sql.
-    const dbVocabulary = new Set(['github', 'gitlab', 'azure', 'aws', 'gcp', 'bitbucket', 'google']);
+  test('every linkable provider is within the V198 DB vocabulary', () => {
+    // Widened by V198__auth_provider_vocabulary_4984.sql (includes okta and upcoming issuer IdPs).
+    const dbVocabulary = new Set([
+      'github',
+      'gitlab',
+      'azure',
+      'aws',
+      'gcp',
+      'bitbucket',
+      'google',
+      'okta',
+      'keycloak',
+      'auth0',
+      'oidc',
+      'atlassian',
+    ]);
     for (const provider of LINKABLE_PROVIDERS) {
       expect(dbVocabulary.has(provider)).toBe(true);
     }

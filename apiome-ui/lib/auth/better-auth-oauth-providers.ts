@@ -1,28 +1,30 @@
 /**
  * Better Auth OAuth provider construction (OLO-10.7, #5002).
  *
- * Re-expresses the four live sign-in providers — github, gitlab, azure, google — on Better Auth's
+ * Re-expresses the live sign-in providers — github, gitlab, azure, google, okta — on Better Auth's
  * **generic OAuth2/OIDC** plugin, the Better Auth analogue of the NextAuth factory map in
  * `nextauth-oauth-providers.ts`. Every provider is driven from the shared provider registry
  * (`provider-registry.ts`) exactly as the NextAuth path is, so the registry stays the single source
  * of the enabled set and the mirror tests (`provider-registry-mirror.test.ts`,
  * `test_auth_provider_registry.py`) keep holding with no registry change.
  *
- * All four use `genericOAuth` (not Better Auth's built-in `socialProviders`) for one decisive
+ * All use `genericOAuth` (not Better Auth's built-in `socialProviders`) for one decisive
  * reason: the built-in social providers hard-code their authorization/token endpoints, so they
  * cannot honour the OLO-7.4 endpoint/issuer overrides the mocked-provider e2e journey depends on.
  * The generic plugin exposes `authorizationUrl`/`tokenUrl`/`userInfoUrl`/`discoveryUrl`, so every
  * endpoint stays overridable via the same env vars the NextAuth path reads (`GITHUB_OAUTH_BASE_URL`,
- * `GITHUB_API_BASE_URL`, `GITLAB_BASE_URL`, `GOOGLE_ISSUER`, `AZURE_AD_AUTHORITY_BASE_URL`,
+ * `GITHUB_API_BASE_URL`, `GITLAB_BASE_URL`, `GOOGLE_ISSUER`, `OKTA_ISSUER`, `AZURE_AD_AUTHORITY_BASE_URL`,
  * `AZURE_AD_TENANT`). The generic callback path (`/oauth2/callback/:id`) is exactly the prefix the
  * OLO-10.6 resolution adapter already recognises.
  *
  * What each provider re-attaches (identical policy to the NextAuth engine, proven by tests):
  *  - **Verified-email parity (OLO-2.5):** GitHub `/user/emails` verified flags, GitLab `confirmed_at`,
- *    Google's native `email_verified` — normalized onto the profile as `email_verified` before the
- *    resolution engine sees it (`verified-email.ts` pure helpers, reused verbatim).
+ *    Google's / Okta's native `email_verified` — normalized onto the profile as `email_verified`
+ *    before the resolution engine sees it (`verified-email.ts` pure helpers, reused verbatim).
  *  - **Google Workspace `hd` gate (OLO-9.2):** `assertGoogleHostedDomain` throws before resolution,
  *    so an out-of-domain account never lands an identity (`google-workspace-domain.ts`).
+ *  - **Okta issuer discovery (OLO-9.3):** `OKTA_ISSUER` drives OIDC discovery; PKCE on; native
+ *    `email_verified` fail-closed via `resolveOAuthEmailVerified` (`okta-issuer.ts`).
  *  - **nOAuth hardening (OLO-1.4):** azure id-token claims (`oid`/`upn`/`xms_edov`/…) pass through
  *    untouched so the engine's `resolveEntraEmailVerified` still rejects a forged token.
  *  - **The account-resolution decision (OLO-1.x):** every callback runs through
@@ -82,6 +84,7 @@ import {
   googleWorkspaceDomain,
   type GoogleProfile,
 } from './google-workspace-domain';
+import { oktaIssuerBaseUrl } from './okta-issuer';
 import { entraAuthorityBaseUrl, entraIdProfile, type EntraIdProfile } from './entra-provider';
 
 /* ── Request-scoped redirect override ──────────────────────────────────────────────────────── */
@@ -356,6 +359,22 @@ function normalizeAzure(tokens: OAuth2Tokens): NormalizedOAuthProfile {
   };
 }
 
+/**
+ * Normalize an Okta sign-in: decode the id-token claims (native `email_verified`) and pass them
+ * through so `resolveOAuthEmailVerified` fail-closes when the claim is absent/false (OLO-9.3).
+ * Discovery is pointed at `oktaIssuerBaseUrl` (`OKTA_ISSUER`).
+ */
+function normalizeOkta(tokens: OAuth2Tokens): NormalizedOAuthProfile {
+  const claims = (decodeJwtClaims(tokens.idToken) ?? {}) as Record<string, unknown>;
+  return {
+    accountId: typeof claims.sub === 'string' ? claims.sub : '',
+    profile: claims,
+    email: typeof claims.email === 'string' ? claims.email : null,
+    name: typeof claims.name === 'string' ? claims.name : null,
+    image: typeof claims.picture === 'string' ? claims.picture : null,
+  };
+}
+
 /* ── getUserInfo runner: normalize → resolve → admit or override ────────────────────────────── */
 
 /**
@@ -376,7 +395,7 @@ export interface OAuthRunnerDeps {
   env?: Record<string, string | undefined>;
 }
 
-/** The four providers this module builds, mapped to their normalizer. */
+/** The providers this module builds, mapped to their normalizer. */
 const NORMALIZERS: Record<
   string,
   (tokens: OAuth2Tokens, env: Record<string, string | undefined>, fetchImpl: FetchLike) => Promise<NormalizedOAuthProfile> | NormalizedOAuthProfile
@@ -385,6 +404,7 @@ const NORMALIZERS: Record<
   gitlab: normalizeGitlab,
   google: (tokens, env) => normalizeGoogle(tokens, env),
   azure: (tokens) => normalizeAzure(tokens),
+  okta: (tokens) => normalizeOkta(tokens),
 };
 
 /**
@@ -416,7 +436,7 @@ export async function resolveLinkIntentUserId(provider: string): Promise<string 
  * (`resolveEntraEmailVerified` for azure, `resolveOAuthEmailVerified` otherwise), so Better Auth's
  * own account handling sees the identical verified signal the engine decided over.
  *
- * @param provider The provider slug (github | gitlab | azure | google).
+ * @param provider The provider slug (github | gitlab | azure | google | okta).
  * @param deps Injectable dependencies (store, fetch, link-intent resolver, env).
  * @returns A `getUserInfo` function returning the Better Auth user info on admit, or null otherwise.
  */
@@ -502,8 +522,8 @@ export function makeOAuthGetUserInfo(
 /* ── Config builder ────────────────────────────────────────────────────────────────────────── */
 
 /**
- * Build one {@link GenericOAuthConfig} for a provider id, or null when the id is not one of the four
- * this module implements. Wires the client credentials (from the resolved env), the endpoint/issuer
+ * Build one {@link GenericOAuthConfig} for a provider id, or null when the id is not one this
+ * module implements. Wires the client credentials (from the resolved env), the endpoint/issuer
  * overrides (OLO-7.4), the scopes and PKCE posture that match the NextAuth providers, and the
  * `getUserInfo` hook that carries verified-email normalization + the `hd` gate + the resolution
  * decision.
@@ -576,6 +596,18 @@ export function buildGenericOAuthConfig(
         // AZURE_AD_AUTHORITY_BASE_URL); `offline_access` makes Microsoft issue a refresh token.
         discoveryUrl: `${entraAuthorityBaseUrl(env)}/${tenant}/v2.0/.well-known/openid-configuration`,
         scopes: ['openid', 'profile', 'email', 'offline_access'],
+        pkce: true,
+        getUserInfo,
+      };
+    }
+    case 'okta': {
+      return {
+        providerId: 'okta',
+        clientId: readEnvString(env, 'OKTA_CLIENT_ID') ?? '',
+        clientSecret: readEnvString(env, 'OKTA_CLIENT_SECRET') ?? '',
+        // Org / authorization-server issuer (required via OLO-9.1); discovery supplies authorize/token.
+        discoveryUrl: `${oktaIssuerBaseUrl(env)}/.well-known/openid-configuration`,
+        scopes: ['openid', 'email', 'profile'],
         pkce: true,
         getUserInfo,
       };

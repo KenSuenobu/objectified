@@ -274,7 +274,7 @@ describe('resolveBetterAuthOAuthSignIn — decision tree', () => {
 
   test('an unsupported provider slug is refused with provider-not-configured', async () => {
     const { store } = makeStore();
-    expect(await resolveBetterAuthOAuthSignIn('okta', makeCtx(), null, store)).toBe(
+    expect(await resolveBetterAuthOAuthSignIn('not-a-provider', makeCtx(), null, store)).toBe(
       '/login?error=provider-not-configured'
     );
   });
@@ -285,7 +285,13 @@ describe('resolveBetterAuthOAuthSignIn — decision tree', () => {
   });
 
   test('the adapter dispatches every trusted OAuth provider (and not credentials)', () => {
-    expect([...SUPPORTED_OAUTH_PROVIDERS].sort()).toEqual(['azure', 'github', 'gitlab', 'google']);
+    expect([...SUPPORTED_OAUTH_PROVIDERS].sort()).toEqual([
+      'azure',
+      'github',
+      'gitlab',
+      'google',
+      'okta',
+    ]);
     expect(SUPPORTED_OAUTH_PROVIDERS.has('credentials')).toBe(false);
   });
 });

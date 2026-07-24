@@ -12,6 +12,7 @@ from pathlib import Path
 from app.auth_provider_registry import (
     FIELD_KIND_CLIENT_ID,
     FIELD_KIND_CLIENT_SECRET,
+    FIELD_KIND_CONFIG,
     PROVIDER_REGISTRY,
     STATUS_AVAILABLE,
     STATUS_COMING_SOON,
@@ -28,28 +29,36 @@ _SNAPSHOT_PATH = (
 
 def test_registry_ids_and_order_match_ui_and_v196():
     """Slugs and display order mirror PROVIDER_REGISTRY (UI) and the V196 CHECK list."""
-    assert known_provider_ids() == ["github", "gitlab", "azure", "google", "aws"]
+    assert known_provider_ids() == ["github", "gitlab", "azure", "google", "okta", "aws"]
 
 
 def test_available_vs_coming_soon_status():
-    """github/gitlab/azure/google are available (google: OLO-9.2); aws is coming-soon."""
+    """github/gitlab/azure/google/okta are available; aws is coming-soon."""
     status = {p.id: p.status for p in PROVIDER_REGISTRY}
     assert status["github"] == STATUS_AVAILABLE
     assert status["gitlab"] == STATUS_AVAILABLE
     assert status["azure"] == STATUS_AVAILABLE
     assert status["google"] == STATUS_AVAILABLE
+    assert status["okta"] == STATUS_AVAILABLE
     assert status["aws"] == STATUS_COMING_SOON
 
 
 def test_available_providers_require_client_id_and_secret():
-    """Available providers require client_id + client_secret; coming-soon require nothing."""
+    """Most available providers require client_id + client_secret; Okta adds issuer; coming-soon none."""
     for provider in PROVIDER_REGISTRY:
-        if provider.status == STATUS_AVAILABLE:
-            assert provider.required_field_names() == ["client_id", "client_secret"]
-            kinds = [f.kind for f in provider.required_fields]
-            assert kinds == [FIELD_KIND_CLIENT_ID, FIELD_KIND_CLIENT_SECRET]
-        else:
+        if provider.status == STATUS_COMING_SOON:
             assert provider.required_fields == ()
+            continue
+        names = provider.required_field_names()
+        assert names[0:2] == ["client_id", "client_secret"]
+        kinds = [f.kind for f in provider.required_fields]
+        assert kinds[0:2] == [FIELD_KIND_CLIENT_ID, FIELD_KIND_CLIENT_SECRET]
+        if provider.id == "okta":
+            assert names == ["client_id", "client_secret", "issuer"]
+            assert kinds == [FIELD_KIND_CLIENT_ID, FIELD_KIND_CLIENT_SECRET, FIELD_KIND_CONFIG]
+            assert provider.required_fields[2].env_key == "OKTA_ISSUER"
+        else:
+            assert names == ["client_id", "client_secret"]
 
 
 def test_client_credential_fields_helper():
@@ -64,7 +73,8 @@ def test_client_credential_fields_helper():
 def test_lookup_known_and_unknown():
     """Lookup returns the descriptor for a known slug and None otherwise."""
     assert get_provider_descriptor("github").label == "GitHub"
-    assert get_provider_descriptor("okta") is None
+    assert get_provider_descriptor("okta").label == "Okta"
+    assert get_provider_descriptor("not-a-provider") is None
 
 
 def test_registry_mirrors_canonical_snapshot():
