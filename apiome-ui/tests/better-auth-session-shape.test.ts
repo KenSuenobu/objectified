@@ -77,8 +77,24 @@ describe('toAppSessionUser', () => {
       email: 'a@b.co',
       name: 'Ada',
       image: 'http://img',
+      twoFactorEnabled: false,
       current_tenant_id: 't1',
     });
+  });
+
+  it('maps twoFactorEnabled and supports toAppSession elevation (OLO-9.13)', async () => {
+    mockReadLastActive.mockResolvedValue(null);
+    mockResolveActiveTenant.mockResolvedValue(null);
+
+    const { toAppSession } = await import('@lib/auth/better-auth-session-shape');
+    const session = await toAppSession(
+      { id: 'u1', email: 'a@b.co', twoFactorEnabled: true },
+      '2030-01-02T03:04:05.000Z'
+    );
+
+    expect(session.user.twoFactorEnabled).toBe(true);
+    expect(session.twoFactorElevated).toBe(true);
+    expect(session.expires).toBe('2030-01-02T03:04:05.000Z');
   });
 
   it('omits current_tenant_id entirely when none resolves', async () => {
@@ -88,7 +104,13 @@ describe('toAppSessionUser', () => {
     const user = await toAppSessionUser({ id: 'u1', email: 'a@b.co', name: null });
 
     expect(user).not.toHaveProperty('current_tenant_id');
-    expect(user).toEqual({ user_id: 'u1', email: 'a@b.co', name: null, image: null });
+    expect(user).toEqual({
+      user_id: 'u1',
+      email: 'a@b.co',
+      name: null,
+      image: null,
+      twoFactorEnabled: false,
+    });
   });
 });
 

@@ -1,7 +1,8 @@
 'use client';
 
 /**
- * Better Auth browser transport for the engine-aware session compat layer (OLO-10.12, #5007).
+ * Better Auth browser transport for the engine-aware session compat layer (OLO-10.12, #5007;
+ * 2FA login branch OLO-9.13 #5014).
  *
  * The browser transport behind `session-client.tsx`: it drives `authClient.*` for `signIn` /
  * `signOut` / session-update. The session **read** is a React hook (`authClient.useSession`) consumed
@@ -12,6 +13,11 @@
 
 import { authClient } from './auth-client';
 import type { AppSession } from './better-auth-session-shape';
+import { browserNavigate } from './browser-navigate';
+import {
+  storeTwoFactorCallbackUrl,
+  twoFactorLoginPath,
+} from './two-factor-callback';
 
 /** The `{ user, session }` payload `authClient.useSession()` exposes as `data` (or `null`). */
 interface BetterAuthSessionData {
@@ -22,6 +28,7 @@ interface BetterAuthSessionData {
     name?: string | null;
     image?: string | null;
     current_tenant_id?: string;
+    twoFactorEnabled?: boolean | null;
   } | null;
   session?: { expiresAt?: string | Date } | null;
 }
@@ -30,7 +37,8 @@ interface BetterAuthSessionData {
  * Map a Better Auth session payload onto the app contract.
  *
  * The server `customSession` plugin already injects `user_id`/`current_tenant_id` onto the user, so
- * this is mostly a re-key; `user.id` is the fallback for `user_id`.
+ * this is mostly a re-key; `user.id` is the fallback for `user_id`. `twoFactorEnabled` /
+ * `twoFactorElevated` come from the twoFactor plugin user flag (OLO-9.13).
  *
  * @param data The `data` from `authClient.useSession()`.
  * @returns The app-shaped session, or `null` when signed out.
@@ -44,17 +52,20 @@ export function mapBetterAuthSession(data: BetterAuthSessionData | null | undefi
   if (!userId) {
     return null;
   }
+  const twoFactorEnabled = Boolean(user.twoFactorEnabled);
   return {
     user: {
       user_id: userId,
       email: user.email ?? '',
       name: user.name ?? null,
       image: user.image ?? null,
+      twoFactorEnabled,
       ...(user.current_tenant_id ? { current_tenant_id: user.current_tenant_id } : {}),
     },
     expires: data?.session?.expiresAt
       ? new Date(data.session.expiresAt).toISOString()
       : '',
+    twoFactorElevated: twoFactorEnabled,
   };
 }
 
@@ -62,8 +73,9 @@ export function mapBetterAuthSession(data: BetterAuthSessionData | null | undefi
  * Sign in via Better Auth and navigate on completion, matching the `signIn(provider, …)` contract.
  *
  * - OAuth provider → `authClient.signIn.oauth2` (generic-OAuth plugin) initiates the redirect flow.
- * - credentials with a password → `authClient.signIn.email`; navigate to `callbackUrl` on success or
- *   `/login?error=CredentialsSignin` on failure (preserving the login page's error contract).
+ * - credentials with a password → `authClient.signIn.email`; on `twoFactorRedirect` stop and let the
+ *   `twoFactorClient` hook send the user to `/login/2fa` (OLO-9.13); otherwise navigate to
+ *   `callbackUrl` on success or `/login?error=CredentialsSignin` on failure.
  * - credentials with only a `oneTimeCode` → redeemed through the `completeOneTimeCodeSignIn` server
  *   action (OLO-10.13), which drives the Better Auth `/one-time-code/verify` endpoint to establish the
  *   session and seed the active tenant. On success navigate to `callbackUrl`; on failure land on the
@@ -82,7 +94,7 @@ export async function signInBetterAuth(
     const res = await authClient.signIn.oauth2({ providerId: provider, callbackURL: callbackUrl });
     const url = (res?.data as { url?: string } | undefined)?.url;
     if (url) {
-      window.location.href = url;
+      browserNavigate(url);
     }
     return;
   }
@@ -99,18 +111,21 @@ export async function signInBetterAuth(
     // missing/invalid code lands on the same login error contract as a bad password.
     const oneTimeCode = parsed.oneTimeCode?.trim();
     if (!oneTimeCode) {
-      window.location.href = `/login?error=CredentialsSignin&callbackUrl=${encodeURIComponent(callbackUrl)}`;
+      browserNavigate(`/login?error=CredentialsSignin&callbackUrl=${encodeURIComponent(callbackUrl)}`);
       return;
     }
     const { completeOneTimeCodeSignIn } = await import('./better-auth-one-time-code-actions');
     const result = await completeOneTimeCodeSignIn(oneTimeCode);
     if (!result.ok) {
-      window.location.href = `/login?error=CredentialsSignin&callbackUrl=${encodeURIComponent(callbackUrl)}`;
+      browserNavigate(`/login?error=CredentialsSignin&callbackUrl=${encodeURIComponent(callbackUrl)}`);
       return;
     }
-    window.location.href = callbackUrl;
+    browserNavigate(callbackUrl);
     return;
   }
+
+  // Stash callback before sign-in so onTwoFactorRedirect can build /login/2fa?callbackUrl=…
+  storeTwoFactorCallbackUrl(callbackUrl);
 
   const res = await authClient.signIn.email({
     email: parsed.email ?? '',
@@ -118,11 +133,16 @@ export async function signInBetterAuth(
     callbackURL: callbackUrl,
   });
   if (res?.error) {
-    const target = `/login?error=CredentialsSignin&callbackUrl=${encodeURIComponent(callbackUrl)}`;
-    window.location.href = target;
+    browserNavigate(`/login?error=CredentialsSignin&callbackUrl=${encodeURIComponent(callbackUrl)}`);
     return;
   }
-  window.location.href = callbackUrl;
+  // Pending second factor: do not navigate to callbackUrl (no full session yet). The twoFactorClient
+  // onTwoFactorRedirect hook navigates to /login/2fa; if it did not run (e.g. tests), fall through here.
+  if ((res?.data as { twoFactorRedirect?: boolean } | null | undefined)?.twoFactorRedirect) {
+    browserNavigate(twoFactorLoginPath(callbackUrl));
+    return;
+  }
+  browserNavigate(callbackUrl);
 }
 
 /**
@@ -132,7 +152,7 @@ export async function signInBetterAuth(
  */
 export async function signOutBetterAuth(callbackUrl: string): Promise<void> {
   await authClient.signOut();
-  window.location.href = callbackUrl;
+  browserNavigate(callbackUrl);
 }
 
 /**
