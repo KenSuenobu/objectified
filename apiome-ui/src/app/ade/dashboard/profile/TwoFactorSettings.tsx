@@ -1,17 +1,23 @@
 'use client';
 
 /**
- * Profile TOTP settings (OLO-9.13 #5014).
+ * Profile TOTP settings (OLO-9.13 #5014 + OLO-9.15 #5015).
  *
- * Password-gated enable (QR + confirm code + one-time backup-code reveal) and disable.
- * Backup-code regenerate / trusted devices / Email OTP belong to #5006 / #5015.
+ * Password-gated enable (QR + confirm + one-time backup reveal) and disable, plus self-service
+ * management when enrolled: remaining backup-code count, password-gated regenerate, forget-this-
+ * device (per-browser trust cookie), and recovery guidance.
  */
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
-import { ShieldCheck, Copy, Check } from 'lucide-react';
+import { ShieldCheck, Copy, Check, KeyRound, MonitorSmartphone } from 'lucide-react';
 import { authClient } from '@lib/auth/auth-client';
 import { useAuthSession } from '@lib/auth/session-client';
+import {
+  getBackupCodeStatus,
+  getTrustedDeviceStatus,
+  revokeThisTrustedDevice,
+} from '@lib/auth/two-factor-profile-actions';
 import {
   Dialog,
   DialogContent,
@@ -27,6 +33,7 @@ import { Alert } from '@/app/components/ui/Alert';
 import { Badge } from '@/app/components/ui/Badge';
 
 type EnrollStep = 'password' | 'qr' | 'backup';
+type RegenStep = 'password' | 'reveal';
 
 interface TwoFactorSettingsProps {
   /** Optional class for the outer status block. */
@@ -34,7 +41,7 @@ interface TwoFactorSettingsProps {
 }
 
 /**
- * Status + enable/disable controls for authenticator (TOTP) 2FA on the Profile Security card.
+ * Status + enable/disable/self-service controls for authenticator (TOTP) 2FA on the Profile Security card.
  *
  * @param props.className Optional wrapper class.
  */
@@ -44,7 +51,9 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
 
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [disableOpen, setDisableOpen] = useState(false);
+  const [regenOpen, setRegenOpen] = useState(false);
   const [step, setStep] = useState<EnrollStep>('password');
+  const [regenStep, setRegenStep] = useState<RegenStep>('password');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [totpURI, setTotpURI] = useState('');
@@ -52,12 +61,50 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [trusted, setTrusted] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
+
+  const refreshManagementStatus = useCallback(async () => {
+    if (!enabled) {
+      setRemaining(null);
+      setTrusted(false);
+      return;
+    }
+    setStatusLoading(true);
+    try {
+      const [codes, device] = await Promise.all([
+        getBackupCodeStatus(),
+        getTrustedDeviceStatus(),
+      ]);
+      setRemaining(codes.remaining);
+      setTrusted(device.trusted);
+    } catch {
+      setRemaining(null);
+      setTrusted(false);
+    } finally {
+      setStatusLoading(false);
+    }
+  }, [enabled]);
+
+  useEffect(() => {
+    void refreshManagementStatus();
+  }, [refreshManagementStatus]);
 
   const resetEnroll = () => {
     setStep('password');
     setPassword('');
     setCode('');
     setTotpURI('');
+    setBackupCodes([]);
+    setError('');
+    setBusy(false);
+    setCopied(false);
+  };
+
+  const resetRegen = () => {
+    setRegenStep('password');
+    setPassword('');
     setBackupCodes([]);
     setError('');
     setBusy(false);
@@ -74,6 +121,11 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
     setError('');
     setBusy(false);
     setDisableOpen(true);
+  };
+
+  const openRegen = () => {
+    resetRegen();
+    setRegenOpen(true);
   };
 
   const refreshSessionFlag = async () => {
@@ -152,8 +204,58 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
       await refreshSessionFlag();
       setDisableOpen(false);
       setPassword('');
+      setRemaining(null);
+      setTrusted(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Disable failed.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRegenerate = async () => {
+    if (!password) {
+      setError('Enter your current password to regenerate backup codes.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    try {
+      const res = await authClient.twoFactor.generateBackupCodes({ password });
+      if (res?.error) {
+        setError(res.error.message || 'Could not regenerate codes. Check your password and try again.');
+        setBusy(false);
+        return;
+      }
+      const data = res.data as { backupCodes?: string[] } | null;
+      const nextCodes = Array.isArray(data?.backupCodes) ? data.backupCodes : [];
+      if (nextCodes.length === 0) {
+        setError('No backup codes were returned. Please try again.');
+        setBusy(false);
+        return;
+      }
+      setBackupCodes(nextCodes);
+      setRemaining(nextCodes.length);
+      setRegenStep('reveal');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Regenerate failed.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleForgetDevice = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      const res = await revokeThisTrustedDevice();
+      if (!res.ok) {
+        setError('Could not forget this device. Try again.');
+        return;
+      }
+      setTrusted(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not forget this device.');
     } finally {
       setBusy(false);
     }
@@ -168,6 +270,30 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
       // ignore
     }
   };
+
+  const backupCodesList = (
+    <div className="space-y-3">
+      <ul
+        className="grid grid-cols-2 gap-2 rounded-lg border border-gray-200 dark:border-gray-700 p-3 font-mono text-sm"
+        data-testid="two-factor-backup-codes"
+      >
+        {backupCodes.map((c) => (
+          <li key={c}>{c}</li>
+        ))}
+      </ul>
+      <Button type="button" size="sm" variant="outline" className="w-full" onClick={handleCopyBackupCodes}>
+        {copied ? (
+          <>
+            <Check className="h-4 w-4 mr-2" /> Copied
+          </>
+        ) : (
+          <>
+            <Copy className="h-4 w-4 mr-2" /> Copy codes
+          </>
+        )}
+      </Button>
+    </div>
+  );
 
   return (
     <div className={className} data-testid="two-factor-settings">
@@ -187,22 +313,82 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
       </div>
 
       {enabled ? (
-        <Button
-          size="sm"
-          variant="outline"
-          className="w-full"
-          onClick={openDisable}
-          data-testid="two-factor-disable-open"
-        >
-          Disable 2FA
-        </Button>
+        <div className="space-y-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400" data-testid="two-factor-methods">
+            Enrolled method: Authenticator app (TOTP)
+          </p>
+
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
+              <KeyRound className="h-4 w-4 text-amber-500" aria-hidden />
+              Backup codes
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400" data-testid="two-factor-backup-remaining">
+              {statusLoading
+                ? 'Checking remaining codes…'
+                : remaining === null
+                  ? 'Remaining count unavailable'
+                  : `${remaining} remaining`}
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full"
+              onClick={openRegen}
+              data-testid="two-factor-regen-open"
+            >
+              Regenerate backup codes
+            </Button>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
+              <MonitorSmartphone className="h-4 w-4 text-sky-500" aria-hidden />
+              Trusted device
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400" data-testid="two-factor-trusted-status">
+              {statusLoading
+                ? 'Checking this browser…'
+                : trusted
+                  ? 'This browser is trusted (skips 2FA for ~30 days when signing in).'
+                  : 'This browser is not marked as trusted.'}
+            </p>
+            {trusted && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                onClick={handleForgetDevice}
+                disabled={busy}
+                data-testid="two-factor-forget-device"
+              >
+                {busy ? 'Working…' : 'Forget this device'}
+              </Button>
+            )}
+          </div>
+
+          <Alert data-testid="two-factor-recovery-guidance">
+            Store backup codes somewhere safe. If you lose your authenticator, use a backup code at
+            sign-in (when available) or contact an admin. After recovery, regenerate codes so old ones
+            cannot be reused.
+          </Alert>
+
+          {error && !disableOpen && !regenOpen && !enrollOpen && (
+            <Alert variant="error">{error}</Alert>
+          )}
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full"
+            onClick={openDisable}
+            data-testid="two-factor-disable-open"
+          >
+            Disable 2FA
+          </Button>
+        </div>
       ) : (
-        <Button
-          size="sm"
-          className="w-full"
-          onClick={openEnroll}
-          data-testid="two-factor-enable-open"
-        >
+        <Button size="sm" className="w-full" onClick={openEnroll} data-testid="two-factor-enable-open">
           Enable 2FA
         </Button>
       )}
@@ -213,7 +399,10 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
         onOpenChange={(open) => {
           if (busy) return;
           setEnrollOpen(open);
-          if (!open) resetEnroll();
+          if (!open) {
+            resetEnroll();
+            void refreshManagementStatus();
+          }
         }}
       >
         <DialogContent className="max-w-md">
@@ -232,7 +421,7 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
               {step === 'qr' &&
                 'Scan this QR with Authy or Google Authenticator, then enter the 6-digit code.'}
               {step === 'backup' &&
-                'Store these one-time codes somewhere safe. They will not be shown again here until regenerate lands in a later release.'}
+                'Store these one-time codes somewhere safe. You can regenerate a new set later from this page.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -257,15 +446,10 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
 
             {step === 'qr' && (
               <>
-                <div
-                  className="mx-auto rounded-xl bg-white p-4 w-fit"
-                  data-testid="two-factor-qr"
-                >
+                <div className="mx-auto rounded-xl bg-white p-4 w-fit" data-testid="two-factor-qr">
                   <QRCode value={totpURI} size={180} />
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 break-all font-mono">
-                  {totpURI}
-                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 break-all font-mono">{totpURI}</p>
                 <div className="space-y-2">
                   <Label htmlFor="tfa-enroll-code">Authentication code</Label>
                   <Input
@@ -285,35 +469,7 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
               </>
             )}
 
-            {step === 'backup' && (
-              <div className="space-y-3">
-                <ul
-                  className="grid grid-cols-2 gap-2 rounded-lg border border-gray-200 dark:border-gray-700 p-3 font-mono text-sm"
-                  data-testid="two-factor-backup-codes"
-                >
-                  {backupCodes.map((c) => (
-                    <li key={c}>{c}</li>
-                  ))}
-                </ul>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleCopyBackupCodes}
-                >
-                  {copied ? (
-                    <>
-                      <Check className="h-4 w-4 mr-2" /> Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4 mr-2" /> Copy codes
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+            {step === 'backup' && backupCodesList}
           </div>
 
           <DialogFooter>
@@ -335,7 +491,11 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
               </Button>
             )}
             {step === 'qr' && (
-              <Button onClick={handleConfirmTotp} disabled={busy || code.length !== 6} data-testid="two-factor-enroll-verify">
+              <Button
+                onClick={handleConfirmTotp}
+                disabled={busy || code.length !== 6}
+                data-testid="two-factor-enroll-verify"
+              >
                 {busy ? 'Verifying…' : 'Confirm and enable'}
               </Button>
             )}
@@ -344,8 +504,77 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
                 onClick={() => {
                   setEnrollOpen(false);
                   resetEnroll();
+                  void refreshManagementStatus();
                 }}
                 data-testid="two-factor-enroll-done"
+              >
+                Done
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Regenerate backup codes */}
+      <Dialog
+        open={regenOpen}
+        onOpenChange={(open) => {
+          if (busy) return;
+          setRegenOpen(open);
+          if (!open) resetRegen();
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/40">
+                <KeyRound className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              {regenStep === 'password' ? 'Regenerate backup codes' : 'Save new backup codes'}
+            </DialogTitle>
+            <DialogDescription>
+              {regenStep === 'password'
+                ? 'Enter your password. This replaces your existing backup codes immediately.'
+                : 'Copy these codes now. The previous set is no longer valid.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {error && <Alert variant="error">{error}</Alert>}
+            {regenStep === 'password' && (
+              <div className="space-y-2">
+                <Label htmlFor="tfa-regen-password">Current password</Label>
+                <Input
+                  id="tfa-regen-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={busy}
+                  autoFocus
+                  data-testid="two-factor-regen-password"
+                  onKeyDown={(e) => e.key === 'Enter' && !busy && handleRegenerate()}
+                />
+              </div>
+            )}
+            {regenStep === 'reveal' && backupCodesList}
+          </div>
+          <DialogFooter>
+            {regenStep === 'password' && (
+              <>
+                <Button variant="outline" onClick={() => setRegenOpen(false)} disabled={busy}>
+                  Cancel
+                </Button>
+                <Button onClick={handleRegenerate} disabled={busy} data-testid="two-factor-regen-confirm">
+                  {busy ? 'Working…' : 'Regenerate'}
+                </Button>
+              </>
+            )}
+            {regenStep === 'reveal' && (
+              <Button
+                onClick={() => {
+                  setRegenOpen(false);
+                  resetRegen();
+                }}
+                data-testid="two-factor-regen-done"
               >
                 Done
               </Button>

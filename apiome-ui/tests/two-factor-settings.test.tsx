@@ -1,5 +1,6 @@
 /**
- * Profile TwoFactorSettings enrollment / disable UI (OLO-9.13 #5014).
+ * Profile TwoFactorSettings enrollment / disable / self-service UI
+ * (OLO-9.13 #5014 + OLO-9.15 #5015).
  */
 
 import React from 'react';
@@ -9,8 +10,12 @@ import { TwoFactorSettings } from '@/app/ade/dashboard/profile/TwoFactorSettings
 const mockEnable = jest.fn();
 const mockDisable = jest.fn();
 const mockVerifyTotp = jest.fn();
+const mockGenerateBackupCodes = jest.fn();
 const mockUpdate = jest.fn(async () => {});
 const mockUseAuthSession = jest.fn();
+const mockGetBackupCodeStatus = jest.fn(async () => ({ remaining: null as number | null }));
+const mockGetTrustedDeviceStatus = jest.fn(async () => ({ trusted: false }));
+const mockRevokeThisTrustedDevice = jest.fn(async () => ({ ok: true }));
 
 jest.mock('@lib/auth/auth-client', () => ({
   authClient: {
@@ -18,12 +23,19 @@ jest.mock('@lib/auth/auth-client', () => ({
       enable: (...args: unknown[]) => mockEnable(...args),
       disable: (...args: unknown[]) => mockDisable(...args),
       verifyTotp: (...args: unknown[]) => mockVerifyTotp(...args),
+      generateBackupCodes: (...args: unknown[]) => mockGenerateBackupCodes(...args),
     },
   },
 }));
 
 jest.mock('@lib/auth/session-client', () => ({
   useAuthSession: () => mockUseAuthSession(),
+}));
+
+jest.mock('@lib/auth/two-factor-profile-actions', () => ({
+  getBackupCodeStatus: (...args: unknown[]) => mockGetBackupCodeStatus(...args),
+  getTrustedDeviceStatus: (...args: unknown[]) => mockGetTrustedDeviceStatus(...args),
+  revokeThisTrustedDevice: (...args: unknown[]) => mockRevokeThisTrustedDevice(...args),
 }));
 
 jest.mock('react-qr-code', () => ({
@@ -34,6 +46,9 @@ jest.mock('react-qr-code', () => ({
 describe('TwoFactorSettings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetBackupCodeStatus.mockResolvedValue({ remaining: null });
+    mockGetTrustedDeviceStatus.mockResolvedValue({ trusted: false });
+    mockRevokeThisTrustedDevice.mockResolvedValue({ ok: true });
     mockUseAuthSession.mockReturnValue({
       data: {
         user: {
@@ -99,6 +114,7 @@ describe('TwoFactorSettings', () => {
       },
       update: mockUpdate,
     });
+    mockGetBackupCodeStatus.mockResolvedValue({ remaining: 8 });
     mockDisable.mockResolvedValue({ data: { status: true }, error: null });
 
     render(<TwoFactorSettings />);
@@ -112,6 +128,68 @@ describe('TwoFactorSettings', () => {
     await waitFor(() => {
       expect(mockDisable).toHaveBeenCalledWith({ password: 'secret' });
       expect(mockUpdate).toHaveBeenCalled();
+    });
+  });
+
+  it('shows remaining backup codes and regenerates with a password', async () => {
+    mockUseAuthSession.mockReturnValue({
+      data: {
+        user: { user_id: 'u1', email: 'a@b.co', twoFactorEnabled: true },
+        expires: '',
+        twoFactorElevated: true,
+      },
+      update: mockUpdate,
+    });
+    mockGetBackupCodeStatus.mockResolvedValue({ remaining: 7 });
+    mockGenerateBackupCodes.mockResolvedValue({
+      data: { backupCodes: ['CCCC-CCCC', 'DDDD-DDDD'] },
+      error: null,
+    });
+
+    render(<TwoFactorSettings />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('two-factor-backup-remaining')).toHaveTextContent('7 remaining');
+      expect(screen.getByTestId('two-factor-methods')).toHaveTextContent('Authenticator app (TOTP)');
+      expect(screen.getByTestId('two-factor-recovery-guidance')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('two-factor-regen-open'));
+    fireEvent.change(screen.getByTestId('two-factor-regen-password'), {
+      target: { value: 'secret' },
+    });
+    fireEvent.click(screen.getByTestId('two-factor-regen-confirm'));
+
+    await waitFor(() => {
+      expect(mockGenerateBackupCodes).toHaveBeenCalledWith({ password: 'secret' });
+      expect(screen.getByTestId('two-factor-backup-codes')).toHaveTextContent('CCCC-CCCC');
+      expect(screen.getByTestId('two-factor-backup-remaining')).toHaveTextContent('2 remaining');
+    });
+  });
+
+  it('forgets this trusted device when the browser is trusted', async () => {
+    mockUseAuthSession.mockReturnValue({
+      data: {
+        user: { user_id: 'u1', email: 'a@b.co', twoFactorEnabled: true },
+        expires: '',
+        twoFactorElevated: true,
+      },
+      update: mockUpdate,
+    });
+    mockGetBackupCodeStatus.mockResolvedValue({ remaining: 10 });
+    mockGetTrustedDeviceStatus.mockResolvedValue({ trusted: true });
+
+    render(<TwoFactorSettings />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('two-factor-trusted-status')).toHaveTextContent('This browser is trusted');
+    });
+
+    fireEvent.click(screen.getByTestId('two-factor-forget-device'));
+
+    await waitFor(() => {
+      expect(mockRevokeThisTrustedDevice).toHaveBeenCalled();
+      expect(screen.getByTestId('two-factor-trusted-status')).toHaveTextContent('not marked as trusted');
     });
   });
 });

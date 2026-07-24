@@ -262,9 +262,12 @@ Plus `user.twoFactorEnabled boolean` (§2.1). Registered via `twoFactor()` on th
 > **✅ TOTP UX implemented (OLO-9.13 #5014).** Password-gated enroll/disable on Profile Security,
 > `/login/2fa` after `twoFactorRedirect`, and `AppSession.twoFactorElevated` /
 > `user.twoFactorEnabled` for downstream consumers. Better Auth's stock after-hook only challenges
-> `/sign-in/email|username|phone-number` — OAuth/SSO second-factor is deferred. Backup-code login,
-> trusted devices, and lockout UX remain OLO-9.14 (#5006); fuller profile multi-method management is
-> OLO-9.15 (#5015).
+> `/sign-in/email|username|phone-number` — OAuth/SSO second-factor is deferred.
+>
+> **✅ Profile self-service implemented (OLO-9.15 #5015).** Remaining backup-code count (server-only
+> `viewBackupCodes`), password-gated regenerate, forget-this-browser (trust-device cookie), and
+> recovery guidance on Profile Security. Better Auth has no multi-device trust list — revoke is
+> per-browser. Backup-code login, trust-on-verify checkbox, and lockout UX remain OLO-9.14 (#5006).
 
 ### 2.6 Tables that stay as-is
 
