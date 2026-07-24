@@ -16,10 +16,11 @@
  *     fails startup — or warns, per `AUTH_PROVIDER_VALIDATION` — when a provider's env is
  *     only partially configured (OLO-7.2).
  *
- * Adding a provider later (Auth0 #4990, …) means: one entry here, one generic-OAuth config in
- * `better-auth-oauth-providers.ts`, one brand icon in `src/app/components/auth/provider-brand.tsx`
- * — no archaeology across surfaces. Google Workspace (OLO-9.2), Okta (OLO-9.3), Cognito (OLO-9.4),
- * Keycloak (OLO-9.5), and generic OIDC (OLO-9.6) followed exactly that path.
+ * Adding a provider later (Atlassian #4991, Bitbucket #4992, …) means: one entry here, one
+ * generic-OAuth config in `better-auth-oauth-providers.ts`, one brand icon in
+ * `src/app/components/auth/provider-brand.tsx` — no archaeology across surfaces. Google Workspace
+ * (OLO-9.2), Okta (OLO-9.3), Cognito (OLO-9.4), Keycloak (OLO-9.5), generic OIDC (OLO-9.6), and
+ * Auth0 (OLO-9.7) followed exactly that path.
  *
  * This module is intentionally free of React and auth-engine imports so both server code
  * (routes, server components) and client components can import it.
@@ -216,6 +217,17 @@ const PROVIDER_REGISTRY_ENTRIES: readonly Omit<ProviderDescriptor, 'requiredEnvK
     requiredFields: [
       ...clientCredentialFields('OIDC_CLIENT_ID', 'OIDC_CLIENT_SECRET'),
       { field: 'issuer', kind: 'config', envKey: 'OIDC_ISSUER' },
+    ],
+  },
+  {
+    id: 'auth0',
+    label: 'Auth0',
+    status: 'available',
+    // Issuer-based (OLO-9.7): client credentials plus the Auth0 tenant issuer URL stored in
+    // config JSONB under AUTH0_ISSUER (OLO-9.1). Form: `https://<tenant>.auth0.com`.
+    requiredFields: [
+      ...clientCredentialFields('AUTH0_CLIENT_ID', 'AUTH0_CLIENT_SECRET'),
+      { field: 'issuer', kind: 'config', envKey: 'AUTH0_ISSUER' },
     ],
   },
 ];

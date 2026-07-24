@@ -88,6 +88,7 @@ describe('PROVIDER_EXTRA_FIELDS metadata', () => {
       'OIDC_DISPLAY_NAME',
       'OIDC_SCOPES',
     ]);
+    expect(PROVIDER_EXTRA_FIELDS.auth0.map((f) => f.envKey)).toEqual(['AUTH0_ISSUER']);
   });
 });
 

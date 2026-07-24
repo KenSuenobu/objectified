@@ -49,6 +49,9 @@ const ALL_ENABLED_ENV = {
   OIDC_CLIENT_ID: 'oidc-id',
   OIDC_CLIENT_SECRET: 'oidc-secret',
   OIDC_ISSUER: 'https://auth.example.com',
+  AUTH0_CLIENT_ID: 'a0-id',
+  AUTH0_CLIENT_SECRET: 'a0-secret',
+  AUTH0_ISSUER: 'https://acme.auth0.com',
 };
 
 describe('registry vocabulary', () => {
@@ -62,6 +65,7 @@ describe('registry vocabulary', () => {
       'aws',
       'keycloak',
       'oidc',
+      'auth0',
     ]);
   });
 
@@ -74,6 +78,7 @@ describe('registry vocabulary', () => {
     expect(getProviderDescriptor('aws')?.label).toBe('AWS');
     expect(getProviderDescriptor('keycloak')?.label).toBe('Keycloak');
     expect(getProviderDescriptor('oidc')?.label).toBe('OIDC');
+    expect(getProviderDescriptor('auth0')?.label).toBe('Auth0');
   });
 
   it('pins each available provider env contract', () => {
@@ -110,14 +115,20 @@ describe('registry vocabulary', () => {
       'OIDC_CLIENT_SECRET',
       'OIDC_ISSUER',
     ]);
+    expect(getProviderDescriptor('auth0')?.requiredEnvKeys).toEqual([
+      'AUTH0_CLIENT_ID',
+      'AUTH0_CLIENT_SECRET',
+      'AUTH0_ISSUER',
+    ]);
   });
 
-  it('marks google/okta/aws/keycloak/oidc available (OLO-9.2–9.6); no coming-soon placeholders remain', () => {
+  it('marks google/okta/aws/keycloak/oidc/auth0 available (OLO-9.2–9.7); no coming-soon placeholders remain', () => {
     expect(getProviderDescriptor('google')?.status).toBe('available');
     expect(getProviderDescriptor('okta')?.status).toBe('available');
     expect(getProviderDescriptor('aws')?.status).toBe('available');
     expect(getProviderDescriptor('keycloak')?.status).toBe('available');
     expect(getProviderDescriptor('oidc')?.status).toBe('available');
+    expect(getProviderDescriptor('auth0')?.status).toBe('available');
     expect(PROVIDER_REGISTRY.every((p) => p.status === 'available')).toBe(true);
   });
 
@@ -148,6 +159,7 @@ describe('isProviderEnabled', () => {
     expect(isProviderEnabled('aws', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('keycloak', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('oidc', ALL_ENABLED_ENV)).toBe(true);
+    expect(isProviderEnabled('auth0', ALL_ENABLED_ENV)).toBe(true);
   });
 
   it('requires every env var — a missing secret disables the provider', () => {
@@ -218,6 +230,19 @@ describe('isProviderEnabled', () => {
     ).toBe(false);
   });
 
+  it('requires the Auth0 issuer trio (OLO-9.7) — id+secret alone is not enough', () => {
+    expect(
+      isProviderEnabled('auth0', {
+        AUTH0_CLIENT_ID: 'x',
+        AUTH0_CLIENT_SECRET: 'y',
+        AUTH0_ISSUER: 'https://acme.auth0.com',
+      })
+    ).toBe(true);
+    expect(
+      isProviderEnabled('auth0', { AUTH0_CLIENT_ID: 'x', AUTH0_CLIENT_SECRET: 'y' })
+    ).toBe(false);
+  });
+
   it('never enables unknown ids', () => {
     expect(isProviderEnabled('not-a-provider', ALL_ENABLED_ENV)).toBe(false);
   });
@@ -234,6 +259,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'aws',
       'keycloak',
       'oidc',
+      'auth0',
     ]);
     expect(enabledProviderIds({ GITHUB_ID: 'gh-id', GITHUB_SECRET: 'gh-secret' })).toEqual(['github']);
     expect(enabledProviderIds({})).toEqual([]);
@@ -249,6 +275,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'aws',
       'keycloak',
       'oidc',
+      'auth0',
     ]);
   });
 
@@ -262,6 +289,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'aws',
       'keycloak',
       'oidc',
+      'auth0',
     ]);
   });
 });
@@ -279,6 +307,7 @@ describe('providerSummaries', () => {
       { id: 'aws', label: 'AWS', status: 'available', enabled: false },
       { id: 'keycloak', label: 'Keycloak', status: 'available', enabled: false },
       { id: 'oidc', label: 'OIDC', status: 'available', enabled: false },
+      { id: 'auth0', label: 'Auth0', status: 'available', enabled: false },
     ]);
     // Server → client props must survive serialization untouched.
     expect(JSON.parse(JSON.stringify(summaries))).toEqual(summaries);

@@ -115,6 +115,7 @@ export interface ProviderExtraField {
  *   - Keycloak realm issuer (required): `keycloak-issuer.ts` (`KEYCLOAK_ISSUER`).
  *   - Generic OIDC issuer (required) + optional display name / scopes: `oidc-issuer.ts`
  *     (`OIDC_ISSUER`, `OIDC_DISPLAY_NAME`, `OIDC_SCOPES`).
+ *   - Auth0 tenant issuer (required): `auth0-issuer.ts` (`AUTH0_ISSUER`).
  *
  * Providers without an entry (and coming-soon placeholders) simply render no extras.
  */
@@ -205,6 +206,14 @@ export const PROVIDER_EXTRA_FIELDS: Record<string, readonly ProviderExtraField[]
       label: 'Scopes',
       defaultValue: 'openid profile email',
       help: 'Whitespace-separated OIDC scopes requested during authorize.',
+    },
+  ],
+  auth0: [
+    {
+      envKey: 'AUTH0_ISSUER',
+      label: 'Issuer',
+      defaultValue: '(required)',
+      help: 'Auth0 tenant issuer URL, e.g. https://acme.auth0.com.',
     },
   ],
 };

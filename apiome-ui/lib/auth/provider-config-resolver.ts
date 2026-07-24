@@ -68,6 +68,8 @@ export const PROVIDER_CRED_ENV_KEYS: Record<
   keycloak: { clientId: 'KEYCLOAK_CLIENT_ID', clientSecret: 'KEYCLOAK_CLIENT_SECRET' },
   // Generic OIDC (OLO-9.6, #4989): issuer (+ optional display name / scopes) in config JSONB.
   oidc: { clientId: 'OIDC_CLIENT_ID', clientSecret: 'OIDC_CLIENT_SECRET' },
+  // Auth0 (OLO-9.7, #4990): tenant issuer lives in config JSONB; credentials overlay env.
+  auth0: { clientId: 'AUTH0_CLIENT_ID', clientSecret: 'AUTH0_CLIENT_SECRET' },
 };
 
 /** Default TTL (ms) for the in-process cache; bounded so a DB change lands within ~a cache window. */

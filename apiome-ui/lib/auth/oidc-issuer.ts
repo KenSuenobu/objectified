@@ -8,8 +8,8 @@
  * mirror tests can share one implementation with no framework coupling.
  *
  * v1 supports exactly one generic OIDC IdP per deployment (PingFederate, Authentik, ZITADEL,
- * FusionAuth, Duende, OneLogin, JumpCloud, …). A first-class catalog entry (e.g. Auth0) is
- * preferred when one exists.
+ * FusionAuth, Duende, OneLogin, JumpCloud, …). Prefer a first-class catalog entry (Auth0, Okta,
+ * Keycloak, …) when one exists.
  */
 
 /** Default OIDC scopes when `OIDC_SCOPES` is unset. */

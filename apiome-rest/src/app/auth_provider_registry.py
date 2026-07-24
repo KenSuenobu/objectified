@@ -117,7 +117,8 @@ class ProviderDescriptor:
 # is available (OLO-9.3, #4986) with an issuer config field; ``aws`` (Cognito) is available
 # (OLO-9.4, #4987) with a user-pool issuer config field; ``keycloak`` is available (OLO-9.5,
 # #4988) with a realm issuer config field; ``oidc`` is available (OLO-9.6, #4989) as the catch-all
-# generic OIDC connector with an issuer config field.
+# generic OIDC connector with an issuer config field; ``auth0`` is available (OLO-9.7, #4990) with
+# a tenant-issuer config field.
 PROVIDER_REGISTRY: Tuple[ProviderDescriptor, ...] = (
     ProviderDescriptor(
         "github", "GitHub", STATUS_AVAILABLE, client_credential_fields("GITHUB_ID", "GITHUB_SECRET")
@@ -167,6 +168,13 @@ PROVIDER_REGISTRY: Tuple[ProviderDescriptor, ...] = (
         STATUS_AVAILABLE,
         client_credential_fields("OIDC_CLIENT_ID", "OIDC_CLIENT_SECRET")
         + (RequiredField("issuer", FIELD_KIND_CONFIG, "OIDC_ISSUER"),),
+    ),
+    ProviderDescriptor(
+        "auth0",
+        "Auth0",
+        STATUS_AVAILABLE,
+        client_credential_fields("AUTH0_CLIENT_ID", "AUTH0_CLIENT_SECRET")
+        + (RequiredField("issuer", FIELD_KIND_CONFIG, "AUTH0_ISSUER"),),
     ),
 )
 

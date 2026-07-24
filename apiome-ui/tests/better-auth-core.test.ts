@@ -124,6 +124,7 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
     // the resolution engine has already admitted a verified sign-in (OLO-10.7).
     expect(config.account.accountLinking.enabled).toBe(true);
     expect([...config.account.accountLinking.trustedProviders].sort()).toEqual([
+      'auth0',
       'aws',
       'azure',
       'github',

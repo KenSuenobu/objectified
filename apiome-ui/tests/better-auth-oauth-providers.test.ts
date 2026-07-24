@@ -75,6 +75,9 @@ const ALL_ENABLED: Record<string, string> = {
   OIDC_CLIENT_ID: 'oidc-id',
   OIDC_CLIENT_SECRET: 'oidc-secret',
   OIDC_ISSUER: 'https://auth.example.com',
+  AUTH0_CLIENT_ID: 'a0-id',
+  AUTH0_CLIENT_SECRET: 'a0-secret',
+  AUTH0_ISSUER: 'https://acme.auth0.com',
 };
 
 const OK_USER: ResolutionUser = {
@@ -177,6 +180,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'aws',
       'keycloak',
       'oidc',
+      'auth0',
     ]);
   });
 
@@ -191,6 +195,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'aws',
       'keycloak',
       'oidc',
+      'auth0',
     ]);
   });
 
@@ -217,6 +222,9 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
     const oidc = buildGenericOAuthConfig('oidc', ALL_ENABLED)!;
     expect(oidc.clientId).toBe('oidc-id');
     expect(oidc.clientSecret).toBe('oidc-secret');
+    const auth0 = buildGenericOAuthConfig('auth0', ALL_ENABLED)!;
+    expect(auth0.clientId).toBe('a0-id');
+    expect(auth0.clientSecret).toBe('a0-secret');
   });
 
   test('an unknown provider id yields null', () => {
@@ -352,6 +360,23 @@ describe('endpoint & issuer overrides (OLO-7.4)', () => {
       OIDC_SCOPES: 'openid groups profile',
     })!;
     expect(customScopes.scopes).toEqual(['openid', 'groups', 'profile']);
+  });
+
+  test('auth0: AUTH0_ISSUER drives OIDC discovery; PKCE on (OLO-9.7)', () => {
+    const cfg = buildGenericOAuthConfig('auth0', ALL_ENABLED)!;
+    expect(cfg.discoveryUrl).toBe(
+      'https://acme.auth0.com/.well-known/openid-configuration'
+    );
+    expect(cfg.pkce).toBe(true);
+    expect(cfg.scopes).toEqual(['openid', 'email', 'profile']);
+
+    const mock = buildGenericOAuthConfig('auth0', {
+      ...ALL_ENABLED,
+      AUTH0_ISSUER: 'http://localhost:9009/auth0/',
+    })!;
+    expect(mock.discoveryUrl).toBe(
+      'http://localhost:9009/auth0/.well-known/openid-configuration'
+    );
   });
 
   test('githubOauthWebBaseUrl strips a trailing slash', () => {
@@ -844,6 +869,122 @@ describe('getUserInfo — keycloak (OLO-9.5)', () => {
     expect(override).toBe('/signup/oauth?token=pending-1');
     expect(calls.createPendingSignup[0]).toMatchObject({
       provider: 'keycloak',
+      email: 'ada@example.com',
+    });
+  });
+});
+
+/* ── getUserInfo: Auth0 native email_verified fail-closed (OLO-9.7) ─────────────────────────── */
+
+describe('getUserInfo — Auth0 email_verified fail-closed (OLO-9.7)', () => {
+  test('native email_verified=true → known identity signs in', async () => {
+    const { store, calls } = makeStore({
+      identityUserId: OK_USER.id,
+      usersById: { [OK_USER.id]: OK_USER },
+    });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'auth0|sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+        name: 'Ada',
+        picture: 'http://img/auth0.png',
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('auth0', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(override).toBeNull();
+    expect(result).toMatchObject({
+      id: 'auth0|sub-1',
+      email: 'ada@example.com',
+      emailVerified: true,
+      name: 'Ada',
+      image: 'http://img/auth0.png',
+    });
+    expect(calls.recordUserLogin).toEqual([OK_USER.id]);
+  });
+
+  test('falls back to nickname when name claim is absent', async () => {
+    const { store } = makeStore({
+      identityUserId: OK_USER.id,
+      usersById: { [OK_USER.id]: OK_USER },
+    });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'auth0|sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+        nickname: 'ada',
+      }),
+    };
+
+    const { result } = await runGetUserInfo('auth0', tokens, { store, env: ALL_ENABLED });
+    expect(result?.name).toBe('ada');
+  });
+
+  test('email_verified=false → structured unverified-email rejection', async () => {
+    const { store, calls } = makeStore({ usersByEmail: { 'ada@example.com': OK_USER } });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'auth0|sub-1',
+        email: 'ada@example.com',
+        email_verified: false,
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('auth0', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.UNVERIFIED_EMAIL}`);
+    expect(calls.linkIdentity).toHaveLength(0);
+  });
+
+  test('missing email_verified claim → fail-closed unverified rejection', async () => {
+    const { store } = makeStore({ usersByEmail: { 'ada@example.com': OK_USER } });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({ sub: 'auth0|sub-1', email: 'ada@example.com' }),
+    };
+
+    const { result, override } = await runGetUserInfo('auth0', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.UNVERIFIED_EMAIL}`);
+  });
+
+  test('verified new email routes to onboarding (no auto-create)', async () => {
+    const { store, calls } = makeStore();
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'auth0|sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('auth0', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe('/signup/oauth?token=pending-1');
+    expect(calls.createPendingSignup[0]).toMatchObject({
+      provider: 'auth0',
       email: 'ada@example.com',
     });
   });
