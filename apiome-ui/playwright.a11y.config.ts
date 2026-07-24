@@ -25,9 +25,9 @@ function a11yServerEnv(): Record<string, string> {
     ...dotEnvValues(),
     // Stop scripts/run.sh from re-sourcing .env over these pins.
     APIOME_LOAD_DOTENV: '0',
-    NEXTAUTH_URL: BASE_URL,
-    NEXTAUTH_SECRET:
-      process.env.NEXTAUTH_SECRET || dotEnvValues().NEXTAUTH_SECRET || 'olo-a11y-secret',
+    BETTER_AUTH_URL: BASE_URL,
+    BETTER_AUTH_SECRET:
+      process.env.BETTER_AUTH_SECRET || dotEnvValues().BETTER_AUTH_SECRET || 'olo-a11y-secret',
     // Enable exactly GitHub + GitLab so the SSO-first layout renders the same in every env.
     GITHUB_ID: 'mock-github-client',
     GITHUB_SECRET: 'mock-github-secret',

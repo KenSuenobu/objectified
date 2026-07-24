@@ -18,30 +18,30 @@ describe('cookie-options', () => {
     process.env = env;
   });
 
-  it('infers the shared cookie domain from NEXTAUTH_URL in production', () => {
+  it('infers the shared cookie domain from BETTER_AUTH_URL in production', () => {
     process.env.NODE_ENV = 'production';
-    delete process.env.NEXTAUTH_COOKIE_DOMAIN;
-    process.env.NEXTAUTH_URL = 'https://main.apiome.dev';
+    delete process.env.BETTER_AUTH_COOKIE_DOMAIN;
+    process.env.BETTER_AUTH_URL = 'https://main.apiome.dev';
 
     expect(getSharedCookieDomain()).toBe('.apiome.dev');
   });
 
   it('allows studio callbacks when the studio URL is configured', () => {
     process.env.NODE_ENV = 'production';
-    delete process.env.NEXTAUTH_COOKIE_DOMAIN;
-    process.env.NEXTAUTH_URL = 'https://main.apiome.dev';
+    delete process.env.BETTER_AUTH_COOKIE_DOMAIN;
+    process.env.BETTER_AUTH_URL = 'https://main.apiome.dev';
     process.env.NEXT_PUBLIC_STUDIO_URL = 'https://suite.apiome.dev';
 
     const callback = 'https://suite.apiome.dev/editor';
-    expect(isAllowedCallbackUrl(callback, process.env.NEXTAUTH_URL)).toBe(true);
+    expect(isAllowedCallbackUrl(callback, process.env.BETTER_AUTH_URL)).toBe(true);
     expect(resolveCallbackUrl(callback)).toBe(callback);
   });
 
   it('allows studio callbacks from the inferred cookie domain without an explicit studio env', () => {
     process.env.NODE_ENV = 'production';
-    delete process.env.NEXTAUTH_COOKIE_DOMAIN;
+    delete process.env.BETTER_AUTH_COOKIE_DOMAIN;
     delete process.env.NEXT_PUBLIC_STUDIO_URL;
-    process.env.NEXTAUTH_URL = 'https://main.apiome.dev';
+    process.env.BETTER_AUTH_URL = 'https://main.apiome.dev';
 
     const callback = 'https://suite.apiome.dev/editor';
     expect(resolveCallbackUrl(callback)).toBe(callback);
@@ -49,16 +49,16 @@ describe('cookie-options', () => {
 
   it('rejects callbacks outside the deployment domain', () => {
     process.env.NODE_ENV = 'production';
-    delete process.env.NEXTAUTH_COOKIE_DOMAIN;
-    process.env.NEXTAUTH_URL = 'https://main.apiome.dev';
+    delete process.env.BETTER_AUTH_COOKIE_DOMAIN;
+    process.env.BETTER_AUTH_URL = 'https://main.apiome.dev';
 
     expect(resolveCallbackUrl('https://evil.example/phish')).toBe('/ade');
   });
 
   it('ignores a stale cookie domain that does not match the deployment hostnames', () => {
     process.env.NODE_ENV = 'production';
-    process.env.NEXTAUTH_COOKIE_DOMAIN = '.apiome.app';
-    process.env.NEXTAUTH_URL = 'https://main.apiome.dev';
+    process.env.BETTER_AUTH_COOKIE_DOMAIN = '.apiome.app';
+    process.env.BETTER_AUTH_URL = 'https://main.apiome.dev';
 
     expect(getSharedCookieDomain()).toBe('.apiome.dev');
     expect(resolveCallbackUrl('https://suite.apiome.dev/editor')).toBe(
@@ -68,8 +68,8 @@ describe('cookie-options', () => {
 
   it('rewrites stale studio hostnames to the configured studio origin', () => {
     process.env.NODE_ENV = 'production';
-    delete process.env.NEXTAUTH_COOKIE_DOMAIN;
-    process.env.NEXTAUTH_URL = 'https://main.apiome.dev';
+    delete process.env.BETTER_AUTH_COOKIE_DOMAIN;
+    process.env.BETTER_AUTH_URL = 'https://main.apiome.dev';
     process.env.NEXT_PUBLIC_STUDIO_URL = 'https://suite.apiome.dev';
 
     const stale = 'https://studio.apiome.dev/editor';
@@ -117,7 +117,7 @@ describe('cookie-options', () => {
 
     it('rejects external absolute URLs in production regardless of scheme', () => {
       process.env.NODE_ENV = 'production';
-      process.env.NEXTAUTH_URL = 'https://main.apiome.dev';
+      process.env.BETTER_AUTH_URL = 'https://main.apiome.dev';
 
       expect(resolveCallbackUrl('https://evil.example/phish')).toBe('/ade');
       expect(resolveCallbackUrl('http://main.apiome.dev.evil.example/')).toBe('/ade');
@@ -126,8 +126,8 @@ describe('cookie-options', () => {
 
   it('does not apply a production cookie domain on localhost', () => {
     process.env.NODE_ENV = 'development';
-    process.env.NEXTAUTH_COOKIE_DOMAIN = '.apiome.dev';
-    process.env.NEXTAUTH_URL = 'http://localhost:3000';
+    process.env.BETTER_AUTH_COOKIE_DOMAIN = '.apiome.dev';
+    process.env.BETTER_AUTH_URL = 'http://localhost:3000';
 
     expect(getSharedCookieDomain()).toBeUndefined();
   });

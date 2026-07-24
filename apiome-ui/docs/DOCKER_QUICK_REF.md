@@ -58,7 +58,7 @@ docker system prune -a                 # Clean up
 ## Environment Variables (Required)
 
 ```env
-NEXTAUTH_SECRET=<generate-random-32-chars>
+BETTER_AUTH_SECRET=<generate-random-32-chars>
 ADMIN_PASSWORD=<your-secure-password>
 PGHOST=localhost
 PGPORT=5432

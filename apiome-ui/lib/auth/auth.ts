@@ -9,6 +9,7 @@ import {
   buildBetterAuthAdvancedOptions,
   buildBetterAuthSessionOptions,
   buildBetterAuthTrustedOrigins,
+  resolveBetterAuthBaseUrl,
   resolveBetterAuthSecret,
 } from './better-auth-session';
 import {
@@ -65,17 +66,14 @@ const TWO_FACTOR_TABLE = 'two_factor';
  * `makeAuthOptions` split (OLO-8.6 → 10.8).
  *
  * Config notes:
- * - `secret` reuses `NEXTAUTH_SECRET` so existing tooling and the suite's shared-secret assumption
- *   hold at cutover; a dedicated `BETTER_AUTH_SECRET` (or versioned `BETTER_AUTH_SECRETS`) can take
- *   over without a code change (design §1, {@link resolveBetterAuthSecret}).
- * - `baseURL` uses `BETTER_AUTH_URL` when set, otherwise the existing `NEXTAUTH_URL`.
- * - `basePath` stays at the default `/api/auth`, matching the route the app already serves, so no
- *   client/cookie path churn is needed at cutover.
+ * - `secret` is `BETTER_AUTH_SECRET` ({@link resolveBetterAuthSecret}); versioned
+ *   `BETTER_AUTH_SECRETS` supports non-destructive rotation (design §1).
+ * - `baseURL` is `BETTER_AUTH_URL` ({@link resolveBetterAuthBaseUrl}).
+ * - `basePath` stays at the default `/api/auth`, matching the route the app already serves.
  * - `session` / `advanced` / `trustedOrigins` implement the OLO-10.3 session strategy & cookie
- *   parity: a 30-day DB session with 24h refresh (matching NextAuth v4 defaults), a short signed
- *   cookie cache, and cross-subdomain cookie scoping + trusted origins on the same shared parent
- *   domain the legacy engine uses — so sessions persist across the app's subdomains exactly as today
- *   (`better-auth-session.ts`, `docs/BETTER_AUTH_MIGRATION.md` §1).
+ *   parity: a 30-day DB session with 24h refresh, a short signed cookie cache, and cross-subdomain
+ *   cookie scoping + trusted origins on the shared parent domain (`better-auth-session.ts`,
+ *   `docs/BETTER_AUTH_MIGRATION.md` §1).
  * - `nextCookies()` must be the last plugin — it lets Better Auth set cookies from Next.js server
  *   actions (its standard App Router integration).
  *
@@ -87,7 +85,7 @@ function buildBetterAuthConfig(oauthConfigs: GenericOAuthConfig[]) {
   appName: APP_NAME,
   database: connectionPool,
   secret: resolveBetterAuthSecret(),
-  baseURL: process.env.BETTER_AUTH_URL ?? process.env.NEXTAUTH_URL,
+  baseURL: resolveBetterAuthBaseUrl(),
   basePath: '/api/auth',
   trustedOrigins: buildBetterAuthTrustedOrigins(),
   session: buildBetterAuthSessionOptions(),

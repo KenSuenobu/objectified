@@ -11,7 +11,7 @@ docker build -t apiome-ui .
 # Run the container
 docker run -p 3000:3000 \
   -e NEXT_PUBLIC_REST_API_BASE_URL=http://localhost:8000/v1 \
-  -e NEXTAUTH_SECRET=your-secret-here \
+  -e BETTER_AUTH_SECRET=your-secret-here \
   -e ADMIN_PASSWORD=your-admin-password \
   apiome-ui
 ```
@@ -38,8 +38,8 @@ Create a `.env` file in the same directory as `docker-compose.yml`:
 NEXT_PUBLIC_REST_API_BASE_URL=http://localhost:8000/v1
 
 # NextAuth Configuration
-NEXTAUTH_URL=http://localhost:3000/api/auth
-NEXTAUTH_SECRET=your-secure-secret-here
+BETTER_AUTH_URL=http://localhost:3000/api/auth
+BETTER_AUTH_SECRET=your-secure-secret-here
 
 # GitHub OAuth (Optional)
 GITHUB_ID=your-github-client-id
@@ -138,7 +138,7 @@ services:
       PGDATABASE: apiome
       PGUSER: postgres
       PGPASSWORD: your-db-password
-      NEXTAUTH_SECRET: your-secret
+      BETTER_AUTH_SECRET: your-secret
       ADMIN_PASSWORD: your-admin-password
     ports:
       - "3000:3000"
@@ -297,7 +297,7 @@ spec:
         ports:
         - containerPort: 3000
         env:
-        - name: NEXTAUTH_SECRET
+        - name: BETTER_AUTH_SECRET
           valueFrom:
             secretKeyRef:
               name: apiome-secrets

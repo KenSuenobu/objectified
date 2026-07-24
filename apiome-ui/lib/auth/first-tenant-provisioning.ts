@@ -11,7 +11,7 @@
  * partially created tenants.
  *
  * Misuse safeguards:
- * - Runs server-side only; the JWT is minted from `NEXTAUTH_SECRET` and no
+ * - Runs server-side only; the JWT is minted from `BETTER_AUTH_SECRET` and no
  *   REST topology or credentials reach the browser.
  * - Name/slug are validated here before the request, and the endpoint
  *   re-validates and enforces slug uniqueness plus the caller's

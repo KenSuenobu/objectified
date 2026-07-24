@@ -90,7 +90,7 @@ platform suffix and `https://attacker.vercel.app` would satisfy the trusted-depl
 ## 3. Session fixation on login + cookie hardening
 
 **Verdict: hardened.** Session strategy is **JWT** (no adapter), so the token is server-minted and
-signed with `NEXTAUTH_SECRET` at successful login — classic session fixation does not apply. Session
+signed with `BETTER_AUTH_SECRET` at successful login — classic session fixation does not apply. Session
 / callback cookies are `httpOnly`, `secure` (prod), `sameSite=lax`, `path=/`; prefixes are correct
 (`__Host-` on CSRF with no `Domain`, `__Secure-` on the subdomain-shared session/callback cookies).
 The one-shot `oauth_link_intent` / `oauth_signup_intent` cookies are consumed at sign-in and never

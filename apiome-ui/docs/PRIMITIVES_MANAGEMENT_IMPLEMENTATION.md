@@ -124,16 +124,16 @@ PostgreSQL Database (apiome.primitives table)
 1. User authenticates via NextAuth
 2. Session includes `current_tenant_id` and `user_id`
 3. API proxy extracts JWT token from NextAuth session using `getToken()`
-4. API proxy creates a new JWT signed with `NEXTAUTH_SECRET` containing user info
+4. API proxy creates a new JWT signed with `BETTER_AUTH_SECRET` containing user info
 5. JWT is sent to REST API in `Authorization: Bearer` header
-6. REST API validates JWT using the same `NEXTAUTH_SECRET`
+6. REST API validates JWT using the same `BETTER_AUTH_SECRET`
 7. REST API verifies user has access to the requested tenant
 8. Operations are tenant-scoped
 
 ### JWT Configuration
-Both `apiome-ui` and `apiome-rest` must share the same `NEXTAUTH_SECRET`:
-- In `apiome-ui/.env.local`: `NEXTAUTH_SECRET=your-secret-here`
-- In `apiome-rest/.env`: `NEXTAUTH_SECRET=your-secret-here`
+Both `apiome-ui` and `apiome-rest` must share the same `BETTER_AUTH_SECRET`:
+- In `apiome-ui/.env.local`: `BETTER_AUTH_SECRET=your-secret-here`
+- In `apiome-rest/.env`: `BETTER_AUTH_SECRET=your-secret-here`
 
 ### Type Safety
 - All components use TypeScript with strict typing

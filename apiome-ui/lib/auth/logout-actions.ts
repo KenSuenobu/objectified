@@ -16,7 +16,7 @@
  *      tidy. Safe to drop once the cutover bake window has passed.
  *
  * Shared-cookie aware: a plain host-only expiry does not remove a cookie scoped to
- * `NEXTAUTH_COOKIE_DOMAIN`, so both a host-only and a domain-scoped expiry are emitted in production.
+ * `BETTER_AUTH_COOKIE_DOMAIN`, so both a host-only and a domain-scoped expiry are emitted in production.
  */
 
 import { cookies } from 'next/headers';

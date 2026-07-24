@@ -45,7 +45,7 @@ docker build -t apiome-ui:latest .
 
 # Run the container
 docker run -p 3000:3000 \
-  -e NEXTAUTH_SECRET=your-secret \
+  -e BETTER_AUTH_SECRET=your-secret \
   -e ADMIN_PASSWORD=your-password \
   --name apiome-ui \
   apiome-ui:latest
@@ -96,13 +96,13 @@ Required variables in `.env`:
 
 ```env
 # Critical - Must Set
-NEXTAUTH_SECRET=<random-32-char-string>
+BETTER_AUTH_SECRET=<random-32-char-string>
 ADMIN_PASSWORD=<secure-password>
 PGPASSWORD=<database-password>
 
 # Configuration
 NEXT_PUBLIC_REST_API_BASE_URL=http://localhost:8000/v1
-NEXTAUTH_URL=http://localhost:3000/api/auth
+BETTER_AUTH_URL=http://localhost:3000/api/auth
 
 # Database
 PGHOST=localhost
@@ -141,7 +141,7 @@ services:
       - postgres
     environment:
       PGHOST: postgres
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     ports:
       - "3000:3000"
@@ -178,7 +178,7 @@ spec:
         ports:
         - containerPort: 3000
         env:
-        - name: NEXTAUTH_SECRET
+        - name: BETTER_AUTH_SECRET
           valueFrom:
             secretKeyRef:
               name: apiome-secrets
@@ -293,7 +293,7 @@ RUN apk add --no-cache python3 make g++
 docker logs apiome-ui
 
 # Common causes:
-# - Missing NEXTAUTH_SECRET
+# - Missing BETTER_AUTH_SECRET
 # - Database connection failed
 # - Port 3000 already in use
 ```

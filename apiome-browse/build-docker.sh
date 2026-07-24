@@ -128,7 +128,7 @@ test_image() {
     docker run -d \
         --name "$test_container" \
         -p 3001:3000 \
-        -e NEXTAUTH_SECRET="test-secret-key-for-testing-only" \
+        -e BETTER_AUTH_SECRET="test-secret-key-for-testing-only" \
         -e ADMIN_PASSWORD="test-password" \
         "${IMAGE_NAME}:${TAG}" > /dev/null
 
@@ -298,8 +298,8 @@ services:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_REST_API_BASE_URL=\${NEXT_PUBLIC_REST_API_BASE_URL}
-      - NEXTAUTH_URL=\${NEXTAUTH_URL}
-      - NEXTAUTH_SECRET=\${NEXTAUTH_SECRET}
+      - BETTER_AUTH_URL=\${BETTER_AUTH_URL}
+      - BETTER_AUTH_SECRET=\${BETTER_AUTH_SECRET}
       - GITHUB_ID=\${GITHUB_ID}
       - GITHUB_SECRET=\${GITHUB_SECRET}
       - GITHUB_TOKEN=\${GITHUB_TOKEN}

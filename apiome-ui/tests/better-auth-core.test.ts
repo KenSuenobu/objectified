@@ -4,7 +4,7 @@
  *
  * `better-auth` ships ESM-only, which ts-jest's CommonJS transform cannot `require`, so the package
  * (and the Postgres pool) are mocked. That is sufficient here: the goal is to prove *our* modules
- * pass the intended configuration to Better Auth — the shared pool, `NEXTAUTH_SECRET`, the
+ * pass the intended configuration to Better Auth — the shared pool, `BETTER_AUTH_SECRET`, the
  * `/api/auth` base path, and the `nextCookies` plugin — not to exercise Better Auth itself.
  */
 
@@ -72,11 +72,10 @@ jest.mock('better-auth/api', () => ({
 jest.mock('@lib/db/db', () => ({ query: jest.fn() }));
 
 describe('lib/auth/auth.ts (Better Auth server instance)', () => {
-  const originalSecret = process.env.NEXTAUTH_SECRET;
+  const originalSecret = process.env.BETTER_AUTH_SECRET;
   const originalBetterAuthUrl = process.env.BETTER_AUTH_URL;
-  const originalNextAuthUrl = process.env.NEXTAUTH_URL;
   const originalNodeEnv = process.env.NODE_ENV;
-  const originalCookieDomain = process.env.NEXTAUTH_COOKIE_DOMAIN;
+  const originalCookieDomain = process.env.BETTER_AUTH_COOKIE_DOMAIN;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -84,11 +83,10 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
   });
 
   afterEach(() => {
-    restoreEnv('NEXTAUTH_SECRET', originalSecret);
+    restoreEnv('BETTER_AUTH_SECRET', originalSecret);
     restoreEnv('BETTER_AUTH_URL', originalBetterAuthUrl);
-    restoreEnv('NEXTAUTH_URL', originalNextAuthUrl);
     restoreEnv('NODE_ENV', originalNodeEnv);
-    restoreEnv('NEXTAUTH_COOKIE_DOMAIN', originalCookieDomain);
+    restoreEnv('BETTER_AUTH_COOKIE_DOMAIN', originalCookieDomain);
   });
 
   function restoreEnv(key: string, value: string | undefined): void {
@@ -99,8 +97,8 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
     }
   }
 
-  it('constructs Better Auth with the shared pool, NEXTAUTH_SECRET and /api/auth base path', async () => {
-    process.env.NEXTAUTH_SECRET = 'test-secret';
+  it('constructs Better Auth with the shared pool, BETTER_AUTH_SECRET and /api/auth base path', async () => {
+    process.env.BETTER_AUTH_SECRET = 'test-secret';
     process.env.BETTER_AUTH_URL = 'https://app.example.test';
 
     const { auth } = await import('@lib/auth/auth');
@@ -136,10 +134,10 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
   });
 
   it('passes the OLO-10.3 session strategy, cookie parity and trusted origins', async () => {
-    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.BETTER_AUTH_SECRET = 'test-secret';
     process.env.NODE_ENV = 'production';
-    process.env.NEXTAUTH_URL = 'https://main.apiome.dev';
-    process.env.NEXTAUTH_COOKIE_DOMAIN = '.apiome.dev';
+    process.env.BETTER_AUTH_URL = 'https://main.apiome.dev';
+    process.env.BETTER_AUTH_COOKIE_DOMAIN = '.apiome.dev';
 
     await import('@lib/auth/auth');
 
@@ -158,7 +156,7 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
   });
 
   it('keeps apiome.users as the user model via field mapping (design §2.1)', async () => {
-    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.BETTER_AUTH_SECRET = 'test-secret';
 
     await import('@lib/auth/auth');
 
@@ -174,7 +172,7 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
   });
 
   it('enables credential sign-in with bcrypt hashing/verification (OLO-10.5)', async () => {
-    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.BETTER_AUTH_SECRET = 'test-secret';
 
     await import('@lib/auth/auth');
 
@@ -189,7 +187,7 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
   });
 
   it('wires the per-account/per-IP credential rate-limit hooks (OLO-10.5)', async () => {
-    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.BETTER_AUTH_SECRET = 'test-secret';
 
     await import('@lib/auth/auth');
 
@@ -199,7 +197,7 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
   });
 
   it('registers the twoFactor plugin with the app name as issuer and the two_factor table (OLO-10.10)', async () => {
-    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.BETTER_AUTH_SECRET = 'test-secret';
 
     await import('@lib/auth/auth');
 
@@ -221,7 +219,7 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
   });
 
   it('registers the one-time-code sign-in plugin before nextCookies (OLO-10.13)', async () => {
-    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.BETTER_AUTH_SECRET = 'test-secret';
 
     await import('@lib/auth/auth');
 
@@ -240,7 +238,7 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
   });
 
   it('registers the customSession plugin with a transform function, before nextCookies (OLO-10.12)', async () => {
-    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.BETTER_AUTH_SECRET = 'test-secret';
 
     await import('@lib/auth/auth');
 
@@ -261,14 +259,13 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
     expect(customSessionIndex).toBeLessThan(nextCookiesIndex);
   });
 
-  it('falls back to NEXTAUTH_URL for the base URL when BETTER_AUTH_URL is unset', async () => {
-    process.env.NEXTAUTH_SECRET = 'test-secret';
+  it('leaves baseURL undefined when BETTER_AUTH_URL is unset', async () => {
+    process.env.BETTER_AUTH_SECRET = 'test-secret';
     delete process.env.BETTER_AUTH_URL;
-    process.env.NEXTAUTH_URL = 'https://legacy.example.test';
 
     await import('@lib/auth/auth');
 
-    expect(mockBetterAuth.mock.calls[0][0].baseURL).toBe('https://legacy.example.test');
+    expect(mockBetterAuth.mock.calls[0][0].baseURL).toBeUndefined();
   });
 
   it('betterAuthHandler delegates the request to auth.handler', async () => {

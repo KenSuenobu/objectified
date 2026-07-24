@@ -53,10 +53,16 @@ class Settings(BaseSettings):
         ),
     )
 
-    # JWT settings (should match NextAuth secret)
-    # Can be set via JWT_SECRET or NEXTAUTH_SECRET env var
+    # JWT settings — must match apiome-ui's BETTER_AUTH_SECRET.
+    # Prefer BETTER_AUTH_SECRET; JWT_SECRET remains a secondary fallback.
     jwt_secret: Optional[str] = None
-    nextauth_secret: Optional[str] = None
+    better_auth_secret: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "BETTER_AUTH_SECRET",
+            "better_auth_secret",
+        ),
+    )
     jwt_algorithm: str = "HS256"
 
     # CORS allow-list. Comma-separated exact origins via APIOME_CORS_ALLOWED_ORIGINS
@@ -942,7 +948,7 @@ class Settings(BaseSettings):
     @property
     def effective_jwt_secret(self) -> str:
         """
-        Get the JWT secret, preferring NEXTAUTH_SECRET over JWT_SECRET.
+        Get the JWT secret, preferring BETTER_AUTH_SECRET over JWT_SECRET.
 
         Fail-closed in production: if neither secret is configured we refuse to fall back
         to the insecure built-in default (which would let anyone forge JWTs). In
@@ -952,16 +958,16 @@ class Settings(BaseSettings):
         Raises:
             RuntimeError: in production when no JWT secret is configured.
         """
-        secret = self.nextauth_secret or self.jwt_secret
+        secret = self.better_auth_secret or self.jwt_secret
         if secret:
             return secret
         if self.is_production:
             raise RuntimeError(
-                "JWT secret is not configured. Set NEXTAUTH_SECRET (or JWT_SECRET) before "
+                "JWT secret is not configured. Set BETTER_AUTH_SECRET (or JWT_SECRET) before "
                 "starting apiome-rest in production; refusing to use the insecure default."
             )
         logger.warning(
-            "Using the insecure built-in JWT secret. Set NEXTAUTH_SECRET (or JWT_SECRET) "
+            "Using the insecure built-in JWT secret. Set BETTER_AUTH_SECRET (or JWT_SECRET) "
             "for any non-local deployment."
         )
         return INSECURE_JWT_SECRET_FALLBACK

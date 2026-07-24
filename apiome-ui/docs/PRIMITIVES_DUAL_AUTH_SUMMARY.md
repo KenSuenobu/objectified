@@ -18,7 +18,7 @@ This allows seamless integration with the UI (via JWT) while maintaining compati
 
 ### 2. Configuration
 **File**: `apiome-rest/src/app/config.py`
-- Added `jwt_secret`: JWT secret key (reads from `NEXTAUTH_SECRET` or `JWT_SECRET` env var)
+- Added `jwt_secret`: JWT secret key (reads from `BETTER_AUTH_SECRET` or `JWT_SECRET` env var)
 - Added `jwt_algorithm`: JWT algorithm (default: HS256)
 - Configured to use the same secret as NextAuth for token validation
 
@@ -36,7 +36,7 @@ Created comprehensive authentication module with:
 
 #### Authentication Flow:
 1. **JWT First**: If `Authorization: Bearer <token>` header exists:
-   - Decode and validate JWT using NEXTAUTH_SECRET
+   - Decode and validate JWT using BETTER_AUTH_SECRET
    - Extract user_id from token
    - Verify user belongs to tenant via `tenant_users` table
    - Return auth data with user information
@@ -128,7 +128,7 @@ Add to `apiome-rest/.env`:
 
 ```bash
 # Must match the secret in apiome-ui NextAuth configuration
-NEXTAUTH_SECRET=your-nextauth-secret-here
+BETTER_AUTH_SECRET=your-nextauth-secret-here
 
 # Alternative name (either works)
 JWT_SECRET=your-nextauth-secret-here
@@ -231,7 +231,7 @@ This table is queried during JWT authentication to verify the user has access to
 2. **Configure environment**:
    ```bash
    # Add to .env
-   echo "NEXTAUTH_SECRET=your-nextauth-secret" >> .env
+   echo "BETTER_AUTH_SECRET=your-nextauth-secret" >> .env
    ```
 
 3. **Restart service**:

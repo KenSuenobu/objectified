@@ -71,7 +71,7 @@ GITLAB_CLIENT_ID=your-app-id-here
 GITLAB_CLIENT_SECRET=your-secret-here
 
 # Optional - set if not using default domain
-NEXTAUTH_URL=https://yourdomain.com
+BETTER_AUTH_URL=https://yourdomain.com
 ```
 
 ---

@@ -6,7 +6,7 @@
  * user who abandons mid-wizard reopens on the same step after logging back in,
  * and each forward step records a funnel event for onboarding metrics. This
  * mirrors `first-tenant-provisioning.ts`: it runs server-side only, mints the
- * REST JWT from `NEXTAUTH_SECRET`, and never throws — persistence and telemetry
+ * REST JWT from `BETTER_AUTH_SECRET`, and never throws — persistence and telemetry
  * are best-effort and must never break the wizard the user is actively using.
  */
 

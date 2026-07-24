@@ -14,7 +14,7 @@ uv pip install -r requirements.txt
 Create or update `apiome-rest/.env`:
 ```bash
 DATABASE_URL=postgresql://user:password@localhost:5432/apiome
-NEXTAUTH_SECRET=your-nextauth-secret-here  # Must match apiome-ui
+BETTER_AUTH_SECRET=your-nextauth-secret-here  # Must match apiome-ui
 JWT_ALGORITHM=HS256
 ```
 

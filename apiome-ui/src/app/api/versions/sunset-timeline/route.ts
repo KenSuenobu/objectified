@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthSession } from '@lib/auth/server-session';
 import jwt from 'jsonwebtoken';
 import { getTenantById } from '@lib/db/helper';
+import { getJwtSigningSecret } from '@lib/rest-auth';
 
 const REST_API_BASE_URL = process.env.NEXT_PUBLIC_REST_API_BASE_URL || 'http://localhost:8000/v1';
 
@@ -21,9 +22,9 @@ function createAuthHeaders(user: SessionUser): Record<string, string> {
   if (!user.user_id) {
     throw new Error('Unable to create authorization token: session user_id is missing');
   }
-  const secret = process.env.NEXTAUTH_SECRET;
+  const secret = getJwtSigningSecret();
   if (!secret) {
-    throw new Error('Unable to create authorization token: NEXTAUTH_SECRET is not configured');
+    throw new Error('Unable to create authorization token: BETTER_AUTH_SECRET is not configured');
   }
   const encodedToken = jwt.sign(
     {

@@ -373,7 +373,7 @@ your-domain.com
     ├─ Environment Variables (Deployment Platform)
     │   ├─ GITLAB_CLIENT_ID
     │   ├─ GITLAB_CLIENT_SECRET
-    │   └─ NEXTAUTH_URL
+    │   └─ BETTER_AUTH_URL
     ├─ GitLab OAuth App (Production)
     │   └─ Redirect URI: https://your-domain.com/api/auth/oauth2/callback/gitlab
     └─ Deployed Application
