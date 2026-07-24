@@ -33,6 +33,7 @@ import {
   Loader2,
   Plus,
   RefreshCw,
+  Search,
   ShieldCheck,
 } from 'lucide-react';
 import { getProviderBrand } from '@/app/components/auth/provider-brand';
@@ -163,9 +164,34 @@ function isConfigured(view: AdminProviderConfigView): boolean {
 }
 
 /**
+ * Case/whitespace-insensitive match of a picker candidate against the search query. Matches the
+ * human-facing label ("Microsoft") and the registry slug ("azure") so admins can search by either
+ * name. A blank query matches everything.
+ *
+ * @param candidate The provider view offered by the picker.
+ * @param query The raw search-box value.
+ * @returns True when the candidate should stay visible for this query.
+ */
+function matchesProviderQuery(candidate: AdminProviderConfigView, query: string): boolean {
+  const needle = query.trim().toLowerCase();
+  if (needle.length === 0) return true;
+  return (
+    candidate.label.toLowerCase().includes(needle) ||
+    candidate.provider_id.toLowerCase().includes(needle)
+  );
+}
+
+/**
  * The header's "+ Add Provider" affordance: a button opening a menu of every registry provider
  * not currently shown in the list. Available providers are selectable (adding their card to the
  * page); coming-soon providers appear as disabled entries so the roadmap stays discoverable.
+ *
+ * The panel is built for a large registry (the Better Auth catalog-parity waves, OLO-9.16–9.49,
+ * grow it toward ~50 entries): a search box pinned at the top filters candidates by label or slug
+ * ({@link matchesProviderQuery}), and the item list below it scrolls inside a capped-height region
+ * so the menu never outgrows the viewport. Pressing Enter in the search box adds the first
+ * *available* (non-coming-soon) match — the one-keystroke path for an exact search. The query
+ * resets whenever the menu closes, so each open starts from the full list.
  *
  * @param candidates Providers not currently visible, in registry order.
  * @param disabled Disables the trigger (while the list is loading or failed to load).
@@ -181,16 +207,27 @@ function AddProviderMenu({
   onAdd: (providerId: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Close the menu and clear the query. Every close path runs through this so a fresh open always
+   * starts unfiltered — a stale query from a previous open would silently hide providers behind
+   * an easy-to-miss search box.
+   */
+  const closeMenu = useCallback(() => {
+    setOpen(false);
+    setQuery('');
+  }, []);
 
   // Close on outside click / Escape, only while open.
   useEffect(() => {
     if (!open) return;
     const handlePointerDown = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!containerRef.current?.contains(event.target as Node)) closeMenu();
     };
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key === 'Escape') closeMenu();
     };
     document.addEventListener('mousedown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
@@ -198,7 +235,15 @@ function AddProviderMenu({
       document.removeEventListener('mousedown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open]);
+  }, [open, closeMenu]);
+
+  const filtered = candidates.filter((candidate) => matchesProviderQuery(candidate, query));
+
+  /** Add a candidate and close the menu (shared by item click and the Enter shortcut). */
+  const choose = (providerId: string) => {
+    onAdd(providerId);
+    closeMenu();
+  };
 
   return (
     <div ref={containerRef} className="relative shrink-0">
@@ -207,7 +252,7 @@ function AddProviderMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         disabled={disabled}
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => (open ? closeMenu() : setOpen(true))}
         className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Plus className="h-4 w-4" /> Add Provider
@@ -217,38 +262,68 @@ function AddProviderMenu({
         <div
           role="menu"
           aria-label="Add a sign-in provider"
-          className="absolute right-0 z-20 mt-2 w-64 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+          className="absolute right-0 z-20 mt-2 w-64 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
         >
           {candidates.length === 0 ? (
             <p className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
               All providers are already configured.
             </p>
           ) : (
-            candidates.map((candidate) => {
-              const brand = getProviderBrand(candidate.provider_id);
-              const comingSoon = candidate.status !== 'available';
-              return (
-                <button
-                  key={candidate.provider_id}
-                  type="button"
-                  role="menuitem"
-                  disabled={comingSoon}
-                  onClick={() => {
-                    onAdd(candidate.provider_id);
-                    setOpen(false);
-                  }}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                >
-                  <brand.Icon size={16} className={brand.iconClassName} />
-                  <span className="min-w-0 flex-1 truncate">{candidate.label}</span>
-                  {comingSoon && (
-                    <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400">
-                      Coming soon
-                    </span>
-                  )}
-                </button>
-              );
-            })
+            <>
+              <div className="border-b border-slate-200 p-2 dark:border-slate-700">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                  <input
+                    type="text"
+                    autoFocus
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Enter') return;
+                      event.preventDefault();
+                      const first = filtered.find(
+                        (candidate) => candidate.status === 'available'
+                      );
+                      if (first) choose(first.provider_id);
+                    }}
+                    placeholder="Search providers…"
+                    aria-label="Search providers"
+                    className="w-full rounded-md border border-slate-300 bg-white py-1.5 pl-8 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
+                  />
+                </div>
+              </div>
+              {/* Capped height keeps the grown registry usable: the list scrolls, the search stays pinned. */}
+              <div className="max-h-64 overflow-y-auto py-1">
+                {filtered.length === 0 ? (
+                  <p className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
+                    No providers match &ldquo;{query.trim()}&rdquo;.
+                  </p>
+                ) : (
+                  filtered.map((candidate) => {
+                    const brand = getProviderBrand(candidate.provider_id);
+                    const comingSoon = candidate.status !== 'available';
+                    return (
+                      <button
+                        key={candidate.provider_id}
+                        type="button"
+                        role="menuitem"
+                        disabled={comingSoon}
+                        onClick={() => choose(candidate.provider_id)}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        <brand.Icon size={16} className={brand.iconClassName} />
+                        <span className="min-w-0 flex-1 truncate">{candidate.label}</span>
+                        {comingSoon && (
+                          <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400">
+                            Coming soon
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </>
           )}
         </div>
       )}
