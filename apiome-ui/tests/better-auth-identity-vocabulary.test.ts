@@ -130,8 +130,8 @@ const makeCtx = (): BetterAuthOAuthContext => ({
 /* ── 1. The TS slug sets are all within the DB CHECK vocabulary ───────────────────────────────── */
 
 describe('slug vocabulary parity: registry & resolution gates ⊆ the DB CHECK', () => {
-  test('the enabled registry ids are exactly the four live providers', () => {
-    expect([...ENABLED_IDS].sort()).toEqual(['azure', 'github', 'gitlab', 'google']);
+  test('the enabled registry ids are exactly the live available providers', () => {
+    expect([...ENABLED_IDS].sort()).toEqual(['azure', 'github', 'gitlab', 'google', 'okta']);
   });
 
   test('every enabled registry id is permitted by the external_auth_providers CHECK', () => {
@@ -181,12 +181,12 @@ describe('identities persist under the correct slug on the Better Auth path', ()
     expect(calls.linkIdentity[0].identity).toMatchObject({ provider: 'github' });
   });
 
-  test('a slug outside the vocabulary is refused, never persisted', async () => {
-    // `okta` is in the DB CHECK (forward-looking) but not registry-enabled, so the adapter refuses it
-    // before any write — the registry, not the CHECK, is the real enablement gate.
+  test('a slug outside the linkable vocabulary is refused, never persisted', async () => {
+    // `keycloak` is in the DB CHECK (forward-looking for OLO-9.5) but not yet linkable, so the
+    // adapter refuses it before any write — LINKABLE_PROVIDERS, not the CHECK, is the dispatch gate.
     const { store, calls } = makeStore({ identityUserId: OK_USER.id });
 
-    const result = await resolveBetterAuthOAuthSignIn('okta', makeCtx(), null, store);
+    const result = await resolveBetterAuthOAuthSignIn('keycloak', makeCtx(), null, store);
 
     expect(result).toBe('/login?error=provider-not-configured');
     expect(calls.recordIdentityLogin).toHaveLength(0);

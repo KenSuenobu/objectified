@@ -38,6 +38,16 @@
       ]
     },
     {
+      "id": "okta",
+      "label": "Okta",
+      "status": "available",
+      "required_fields": [
+        { "field": "client_id", "kind": "client_id", "env_key": "OKTA_CLIENT_ID" },
+        { "field": "client_secret", "kind": "client_secret", "env_key": "OKTA_CLIENT_SECRET" },
+        { "field": "issuer", "kind": "config", "env_key": "OKTA_ISSUER" }
+      ]
+    },
+    {
       "id": "aws",
       "label": "AWS",
       "status": "coming-soon",

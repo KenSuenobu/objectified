@@ -173,6 +173,17 @@ const PROVIDER_REGISTRY_ENTRIES: readonly Omit<ProviderDescriptor, 'requiredEnvK
     requiredFields: clientCredentialFields('GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'),
   },
   {
+    id: 'okta',
+    label: 'Okta',
+    status: 'available',
+    // Issuer-based (OLO-9.3): client credentials plus the Okta org/authorization-server issuer URL
+    // stored in config JSONB under OKTA_ISSUER (OLO-9.1).
+    requiredFields: [
+      ...clientCredentialFields('OKTA_CLIENT_ID', 'OKTA_CLIENT_SECRET'),
+      { field: 'issuer', kind: 'config', envKey: 'OKTA_ISSUER' },
+    ],
+  },
+  {
     id: 'aws',
     label: 'AWS',
     status: 'coming-soon',

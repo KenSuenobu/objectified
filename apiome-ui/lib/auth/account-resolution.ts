@@ -99,13 +99,15 @@ export function isSignupDisabled(env: Record<string, string | undefined> = proce
  * are additionally subject to the nOAuth hardening rules (OLO-1.4) before `emailVerified` may be
  * set true. `google` (OLO-9.2) is trusted through the generic path: Google's id token carries a
  * native `email_verified` claim, and any Workspace-domain restriction is already enforced upstream
- * in the provider's profile callback (`google-provider.ts`).
+ * in the provider's profile callback (`google-workspace-domain.ts`). `okta` (OLO-9.3) is likewise
+ * trusted through the generic path: Okta's id token carries a native `email_verified` claim.
  */
 export const AUTO_LINK_TRUSTED_PROVIDERS: ReadonlySet<string> = new Set([
   'github',
   'gitlab',
   'azure',
   'google',
+  'okta',
 ]);
 
 /**
@@ -121,6 +123,7 @@ export const LINKABLE_PROVIDERS: ReadonlySet<string> = new Set([
   'gitlab',
   'azure',
   'google',
+  'okta',
 ]);
 
 /**

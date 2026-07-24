@@ -63,6 +63,9 @@ const ALL_ENABLED: Record<string, string> = {
   AZURE_AD_CLIENT_SECRET: 'az-secret',
   GOOGLE_CLIENT_ID: 'go-id',
   GOOGLE_CLIENT_SECRET: 'go-secret',
+  OKTA_CLIENT_ID: 'ok-id',
+  OKTA_CLIENT_SECRET: 'ok-secret',
+  OKTA_ISSUER: 'https://example.okta.com/oauth2/default',
 };
 
 const OK_USER: ResolutionUser = {
@@ -156,7 +159,13 @@ async function runGetUserInfo(
 describe('buildGenericOAuthConfigs — registry is the single source of the enabled set', () => {
   test('builds one config per enabled provider, in registry display order; aws (coming-soon) omitted', () => {
     const configs = buildGenericOAuthConfigs(ALL_ENABLED);
-    expect(configs.map((c) => c.providerId)).toEqual(['github', 'gitlab', 'azure', 'google']);
+    expect(configs.map((c) => c.providerId)).toEqual([
+      'github',
+      'gitlab',
+      'azure',
+      'google',
+      'okta',
+    ]);
   });
 
   test('unsetting a provider env removes exactly that provider', () => {
@@ -166,6 +175,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'gitlab',
       'azure',
       'google',
+      'okta',
     ]);
   });
 
@@ -180,10 +190,13 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
     const azure = buildGenericOAuthConfig('azure', ALL_ENABLED)!;
     expect(azure.clientId).toBe('az-id');
     expect(azure.clientSecret).toBe('az-secret');
+    const okta = buildGenericOAuthConfig('okta', ALL_ENABLED)!;
+    expect(okta.clientId).toBe('ok-id');
+    expect(okta.clientSecret).toBe('ok-secret');
   });
 
   test('an unknown provider id yields null', () => {
-    expect(buildGenericOAuthConfig('okta', ALL_ENABLED)).toBeNull();
+    expect(buildGenericOAuthConfig('not-a-provider', ALL_ENABLED)).toBeNull();
   });
 });
 
@@ -241,6 +254,23 @@ describe('endpoint & issuer overrides (OLO-7.4)', () => {
       'http://localhost:9005/contoso/v2.0/.well-known/openid-configuration'
     );
     expect(scoped.scopes).toContain('offline_access');
+  });
+
+  test('okta: OKTA_ISSUER drives OIDC discovery; PKCE on (OLO-9.3)', () => {
+    const cfg = buildGenericOAuthConfig('okta', ALL_ENABLED)!;
+    expect(cfg.discoveryUrl).toBe(
+      'https://example.okta.com/oauth2/default/.well-known/openid-configuration'
+    );
+    expect(cfg.pkce).toBe(true);
+    expect(cfg.scopes).toEqual(['openid', 'email', 'profile']);
+
+    const mock = buildGenericOAuthConfig('okta', {
+      ...ALL_ENABLED,
+      OKTA_ISSUER: 'http://localhost:9006/okta/',
+    })!;
+    expect(mock.discoveryUrl).toBe(
+      'http://localhost:9006/okta/.well-known/openid-configuration'
+    );
   });
 
   test('githubOauthWebBaseUrl strips a trailing slash', () => {
@@ -407,6 +437,103 @@ describe('getUserInfo — Google Workspace hd gate (OLO-9.2)', () => {
 
     expect(result).toBeNull();
     expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.SIGN_IN_FAILED}`);
+  });
+});
+
+/* ── getUserInfo: Okta native email_verified fail-closed (OLO-9.3) ──────────────────────────── */
+
+describe('getUserInfo — Okta email_verified fail-closed (OLO-9.3)', () => {
+  test('native email_verified=true → known identity signs in', async () => {
+    const { store, calls } = makeStore({
+      identityUserId: OK_USER.id,
+      usersById: { [OK_USER.id]: OK_USER },
+    });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'okta-sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+        name: 'Ada',
+        picture: 'http://img/okta.png',
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('okta', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(override).toBeNull();
+    expect(result).toMatchObject({
+      id: 'okta-sub-1',
+      email: 'ada@example.com',
+      emailVerified: true,
+      name: 'Ada',
+      image: 'http://img/okta.png',
+    });
+    expect(calls.recordUserLogin).toEqual([OK_USER.id]);
+  });
+
+  test('email_verified=false → structured unverified-email rejection', async () => {
+    const { store, calls } = makeStore({ usersByEmail: { 'ada@example.com': OK_USER } });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'okta-sub-1',
+        email: 'ada@example.com',
+        email_verified: false,
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('okta', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.UNVERIFIED_EMAIL}`);
+    expect(calls.linkIdentity).toHaveLength(0);
+  });
+
+  test('missing email_verified claim → fail-closed unverified rejection', async () => {
+    const { store } = makeStore({ usersByEmail: { 'ada@example.com': OK_USER } });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({ sub: 'okta-sub-1', email: 'ada@example.com' }),
+    };
+
+    const { result, override } = await runGetUserInfo('okta', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.UNVERIFIED_EMAIL}`);
+  });
+
+  test('verified new email routes to onboarding (no auto-create)', async () => {
+    const { store, calls } = makeStore();
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'okta-sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('okta', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe('/signup/oauth?token=pending-1');
+    expect(calls.createPendingSignup[0]).toMatchObject({
+      provider: 'okta',
+      email: 'ada@example.com',
+    });
   });
 });
 

@@ -36,12 +36,13 @@ jest.mock('../lib/db/helper', () => ({
 import LinkedAccountsClient from '../src/app/ade/dashboard/linked-accounts/LinkedAccountsClient';
 import type { ProviderSummary } from '../lib/auth/provider-registry';
 
-/** Summaries mirroring a deployment with GitHub + GitLab enabled; azure + google env-disabled. */
+/** Summaries mirroring a deployment with GitHub + GitLab enabled; azure/google/okta env-disabled. */
 const GITHUB_GITLAB_ENABLED: ProviderSummary[] = [
   { id: 'github', label: 'GitHub', status: 'available', enabled: true },
   { id: 'gitlab', label: 'GitLab', status: 'available', enabled: true },
   { id: 'azure', label: 'Microsoft', status: 'available', enabled: false },
   { id: 'google', label: 'Google', status: 'available', enabled: false },
+  { id: 'okta', label: 'Okta', status: 'available', enabled: false },
   { id: 'aws', label: 'AWS', status: 'coming-soon', enabled: false },
 ];
 
@@ -76,9 +77,10 @@ describe('LinkedAccountsClient — provider cards from the registry (OLO-2.3)', 
     expect(screen.getByText('GitHub')).toBeInTheDocument();
     expect(screen.getByText('GitLab')).toBeInTheDocument();
     expect(screen.getByText('AWS')).toBeInTheDocument();
-    // azure and google are available-but-disabled in this deployment: no card at all.
+    // azure, google, and okta are available-but-disabled in this deployment: no card at all.
     expect(screen.queryByText('Microsoft')).not.toBeInTheDocument();
     expect(screen.queryByText('Google')).not.toBeInTheDocument();
+    expect(screen.queryByText('Okta')).not.toBeInTheDocument();
     // aws is the only remaining coming-soon teaser.
     expect(screen.getAllByText('Coming soon')).toHaveLength(1);
   });

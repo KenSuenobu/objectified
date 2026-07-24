@@ -37,6 +37,9 @@ const ALL_ENABLED_ENV = {
   AZURE_AD_CLIENT_SECRET: 'az-secret',
   GOOGLE_CLIENT_ID: 'gg-id',
   GOOGLE_CLIENT_SECRET: 'gg-secret',
+  OKTA_CLIENT_ID: 'ok-id',
+  OKTA_CLIENT_SECRET: 'ok-secret',
+  OKTA_ISSUER: 'https://example.okta.com/oauth2/default',
 };
 
 describe('registry vocabulary', () => {
@@ -46,6 +49,7 @@ describe('registry vocabulary', () => {
       'gitlab',
       'azure',
       'google',
+      'okta',
       'aws',
     ]);
   });
@@ -55,6 +59,7 @@ describe('registry vocabulary', () => {
     expect(getProviderDescriptor('gitlab')?.label).toBe('GitLab');
     expect(getProviderDescriptor('azure')?.label).toBe('Microsoft');
     expect(getProviderDescriptor('google')?.label).toBe('Google');
+    expect(getProviderDescriptor('okta')?.label).toBe('Okta');
     expect(getProviderDescriptor('aws')?.label).toBe('AWS');
   });
 
@@ -72,15 +77,21 @@ describe('registry vocabulary', () => {
       'GOOGLE_CLIENT_ID',
       'GOOGLE_CLIENT_SECRET',
     ]);
+    expect(getProviderDescriptor('okta')?.requiredEnvKeys).toEqual([
+      'OKTA_CLIENT_ID',
+      'OKTA_CLIENT_SECRET',
+      'OKTA_ISSUER',
+    ]);
   });
 
-  it('marks google available (OLO-9.2) and aws still coming-soon', () => {
+  it('marks google (OLO-9.2) and okta (OLO-9.3) available; aws still coming-soon', () => {
     expect(getProviderDescriptor('google')?.status).toBe('available');
+    expect(getProviderDescriptor('okta')?.status).toBe('available');
     expect(getProviderDescriptor('aws')?.status).toBe('coming-soon');
   });
 
   it('returns undefined for unknown ids', () => {
-    expect(getProviderDescriptor('okta')).toBeUndefined();
+    expect(getProviderDescriptor('not-a-provider')).toBeUndefined();
   });
 });
 
@@ -102,6 +113,7 @@ describe('isProviderEnabled', () => {
     expect(isProviderEnabled('gitlab', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('azure', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('google', ALL_ENABLED_ENV)).toBe(true);
+    expect(isProviderEnabled('okta', ALL_ENABLED_ENV)).toBe(true);
   });
 
   it('requires every env var — a missing secret disables the provider', () => {
@@ -120,25 +132,44 @@ describe('isProviderEnabled', () => {
     expect(isProviderEnabled('google', { GOOGLE_CLIENT_ID: 'x' })).toBe(false);
   });
 
+  it('requires the Okta issuer trio (OLO-9.3) — id+secret alone is not enough', () => {
+    expect(
+      isProviderEnabled('okta', {
+        OKTA_CLIENT_ID: 'x',
+        OKTA_CLIENT_SECRET: 'y',
+        OKTA_ISSUER: 'https://acme.okta.com/oauth2/default',
+      })
+    ).toBe(true);
+    expect(
+      isProviderEnabled('okta', { OKTA_CLIENT_ID: 'x', OKTA_CLIENT_SECRET: 'y' })
+    ).toBe(false);
+  });
+
   it('never enables coming-soon providers, regardless of env', () => {
     expect(isProviderEnabled('aws', ALL_ENABLED_ENV)).toBe(false);
   });
 
   it('never enables unknown ids', () => {
-    expect(isProviderEnabled('okta', ALL_ENABLED_ENV)).toBe(false);
+    expect(isProviderEnabled('not-a-provider', ALL_ENABLED_ENV)).toBe(false);
   });
 });
 
 describe('acceptance: env alone adds/removes providers everywhere', () => {
   it('renders exactly the enabled providers', () => {
-    expect(enabledProviderIds(ALL_ENABLED_ENV)).toEqual(['github', 'gitlab', 'azure', 'google']);
+    expect(enabledProviderIds(ALL_ENABLED_ENV)).toEqual([
+      'github',
+      'gitlab',
+      'azure',
+      'google',
+      'okta',
+    ]);
     expect(enabledProviderIds({ GITHUB_ID: 'gh-id', GITHUB_SECRET: 'gh-secret' })).toEqual(['github']);
     expect(enabledProviderIds({})).toEqual([]);
   });
 
   it('disabling a provider via env removes it without code changes', () => {
     const withoutGitlab = { ...ALL_ENABLED_ENV, GITLAB_CLIENT_ID: '' };
-    expect(enabledProviderIds(withoutGitlab)).toEqual(['github', 'azure', 'google']);
+    expect(enabledProviderIds(withoutGitlab)).toEqual(['github', 'azure', 'google', 'okta']);
   });
 
   it('enabledProviders preserves registry display order', () => {
@@ -147,6 +178,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'gitlab',
       'azure',
       'google',
+      'okta',
     ]);
   });
 });
@@ -160,6 +192,7 @@ describe('providerSummaries', () => {
       { id: 'gitlab', label: 'GitLab', status: 'available', enabled: false },
       { id: 'azure', label: 'Microsoft', status: 'available', enabled: false },
       { id: 'google', label: 'Google', status: 'available', enabled: false },
+      { id: 'okta', label: 'Okta', status: 'available', enabled: false },
       { id: 'aws', label: 'AWS', status: 'coming-soon', enabled: false },
     ]);
     // Server → client props must survive serialization untouched.

@@ -1,7 +1,7 @@
 # Sign-in Provider Setup & Secrets Guide (OLO-7.2)
 
 How to register the OAuth applications Apiome signs users in with (GitHub, GitLab,
-Microsoft Entra ID, Google Workspace), which environment variables each provider needs, and how
+Microsoft Entra ID, Google Workspace, Okta), which environment variables each provider needs, and how
 boot-time validation reacts when a provider is misconfigured.
 
 The single source of truth for the provider list and each provider's env contract is the
@@ -26,6 +26,9 @@ linked-accounts panel, Better Auth sign-in route). No code changes are needed ei
 | `GOOGLE_CLIENT_ID` | Google | To enable Google | OAuth client **Client ID** |
 | `GOOGLE_CLIENT_SECRET` | Google | To enable Google | OAuth client **Client secret** |
 | `GOOGLE_WORKSPACE_DOMAIN` | Google | No (default: any account) | Restrict sign-in to one Workspace domain (`hd` param + verified claim) |
+| `OKTA_CLIENT_ID` | Okta | To enable Okta | OIDC application **Client ID** |
+| `OKTA_CLIENT_SECRET` | Okta | To enable Okta | OIDC application **Client secret** |
+| `OKTA_ISSUER` | Okta | To enable Okta | Org / authorization-server issuer (e.g. `https://acme.okta.com/oauth2/default`) |
 | `AUTH_PROVIDER_VALIDATION` | validation | No (default `strict`) | `strict` fails startup on partial provider config; `warn` logs and disables |
 
 Rules that apply to every provider:
@@ -40,14 +43,13 @@ Rules that apply to every provider:
 ### Required fields beyond client id/secret (OLO-9.1)
 
 A registry entry declares its required fields structurally (`requiredFields`), each mapped to
-an env var. Today every provider requires exactly a **client id** and a **client secret**, but
-the model also supports fields that live in a provider's `config` extras — notably an OIDC
-**issuer**/**domain** URL that issuer-based providers (Okta, Cognito, Keycloak, Auth0, generic
-OIDC) need before their sign-in factory can be built. When such an entry ships, its issuer env
-var joins the trio: setting the id and secret but leaving the issuer unset is *partial config*
-and boot-time validation names the missing issuer var, exactly as it does for a missing secret.
-In the admin settings screen the same field is required before the provider can be enabled from
-the database (the issuer is stored in the `config` JSONB and overlaid onto its env var).
+an env var. Most providers require exactly a **client id** and a **client secret**. Issuer-based
+providers (Okta today; Cognito, Keycloak, Auth0, and generic OIDC as they ship) additionally
+require an OIDC **issuer** URL stored in the provider's `config` extras. Setting the id and secret
+but leaving the issuer unset is *partial config* and boot-time validation names the missing issuer
+var, exactly as it does for a missing secret. In the admin settings screen the same field is
+required before the provider can be enabled from the database (the issuer is stored in the
+`config` JSONB and overlaid onto its env var).
 
 ## Boot-time validation
 
@@ -177,6 +179,38 @@ user can still complete the flow with a personal or foreign-domain account — s
 the real boundary (per Google's OIDC docs). Leave the variable unset to allow any Google account,
 including personal `@gmail.com` addresses.
 
+## Okta — OIDC application (workforce IdP)
+
+1. In the [Okta Admin Console](https://login.okta.com/), go to **Applications → Applications →
+   Create App Integration**.
+2. Choose **OIDC - OpenID Connect**, then **Web Application**.
+3. Configure:
+   - **Sign-in redirect URIs:** `{NEXTAUTH_URL}/api/auth/oauth2/callback/okta`
+     (e.g. `http://localhost:3000/api/auth/oauth2/callback/okta` for local dev)
+   - **Controlled access:** assign the groups / people who may sign in
+4. After creation, copy the **Client ID** and **Client secret**.
+5. Determine the issuer URL for the authorization server you want to use:
+   - Org authorization server (default): `https://{yourOktaDomain}/oauth2/default`
+   - Custom authorization server: `https://{yourOktaDomain}/oauth2/{authServerId}`
+   - The issuer is also listed under **Security → API → Authorization Servers** (the
+     **Issuer URI** column).
+6. Set the env vars:
+
+```bash
+OKTA_CLIENT_ID=<Client ID>
+OKTA_CLIENT_SECRET=<Client secret>
+OKTA_ISSUER=https://acme.okta.com/oauth2/default
+```
+
+The sign-in flow discovers endpoints from `{OKTA_ISSUER}/.well-known/openid-configuration`,
+uses PKCE, requests the `openid email profile` scopes, and reads Okta's native `email_verified`
+claim (fail-closed — a missing or false claim is treated as unverified). All three variables are
+required; setting only the client id and secret is *partial config* and boot / admin Validate name
+`OKTA_ISSUER`.
+
+The same issuer can also be set from **Admin → System Configuration** (stored under `config.OKTA_ISSUER`
+and overlaid onto the env var per OLO-8.5 / OLO-10.8).
+
 ## Secrets handling
 
 - Never commit client secrets — `.env` files are gitignored; the checked-in
@@ -233,6 +267,10 @@ mock server via base-URL override env vars:
 | `AZURE_AD_AUTHORITY_BASE_URL` | Entra ID OIDC discovery authority | `https://login.microsoftonline.com` |
 | `GOOGLE_ISSUER` | Google OIDC discovery issuer | `https://accounts.google.com` |
 
-**Never set these in a real deployment** — they redirect the entire sign-in flow to the
-named host. Unset (the default) the real provider endpoints are used; the boot-time
-validation matrix above is unaffected by them.
+`OKTA_ISSUER` is a **required** production config var (not a test-only override) — see the
+[Okta](#okta--oidc-application-workforce-idp) section. Pointing it at a mock issuer for the e2e
+journey is fine in test; never point a real deployment's issuer at a non-Okta host.
+
+**Never set the GitHub / GitLab / Azure authority / Google issuer overrides in a real deployment** —
+they redirect the entire sign-in flow to the named host. Unset (the default) the real provider
+endpoints are used; the boot-time validation matrix above is unaffected by them.

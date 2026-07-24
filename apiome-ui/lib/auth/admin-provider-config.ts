@@ -110,6 +110,7 @@ export interface ProviderExtraField {
  *   - Azure tenant + authority: `entra-provider.ts` (`AZURE_AD_TENANT`,
  *     `AZURE_AD_AUTHORITY_BASE_URL`);
  *   - Google Workspace domain restriction: `google-workspace-domain.ts` (`GOOGLE_WORKSPACE_DOMAIN`).
+ *   - Okta issuer (required): `okta-issuer.ts` (`OKTA_ISSUER`).
  *
  * Providers without an entry (and coming-soon placeholders) simply render no extras.
  */
@@ -156,6 +157,14 @@ export const PROVIDER_EXTRA_FIELDS: Record<string, readonly ProviderExtraField[]
       label: 'Workspace domain',
       defaultValue: '(any Google account)',
       help: 'Restrict sign-in to one Workspace domain (e.g. example.com); blank allows any account.',
+    },
+  ],
+  okta: [
+    {
+      envKey: 'OKTA_ISSUER',
+      label: 'Issuer',
+      defaultValue: '(required)',
+      help: 'Okta org or authorization-server issuer URL, e.g. https://acme.okta.com/oauth2/default.',
     },
   ],
 };
