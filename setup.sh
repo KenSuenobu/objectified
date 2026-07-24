@@ -209,18 +209,18 @@ DATABASE_URL="postgresql://${POSTGRES_USER}:${ENCODED_PASSWORD}@${POSTGRES_HOST}
 
 printf '\n'
 info "Authentication secret (must match across apiome-rest and apiome-ui)"
-DEFAULT_NEXTAUTH_SECRET="$(generate_secret 32)"
-prompt_yes_no use_generated_secret "Generate NEXTAUTH_SECRET automatically?" "y"
+DEFAULT_BETTER_AUTH_SECRET="$(generate_secret 32)"
+prompt_yes_no use_generated_secret "Generate BETTER_AUTH_SECRET automatically?" "y"
 if [[ "$use_generated_secret" == true ]]; then
-  NEXTAUTH_SECRET="$DEFAULT_NEXTAUTH_SECRET"
-  ok "  generated NEXTAUTH_SECRET"
+  BETTER_AUTH_SECRET="$DEFAULT_BETTER_AUTH_SECRET"
+  ok "  generated BETTER_AUTH_SECRET"
 else
   while true; do
-    prompt_secret NEXTAUTH_SECRET "NEXTAUTH_SECRET"
-    if [[ -n "$NEXTAUTH_SECRET" ]]; then
+    prompt_secret BETTER_AUTH_SECRET "BETTER_AUTH_SECRET"
+    if [[ -n "$BETTER_AUTH_SECRET" ]]; then
       break
     fi
-    warn "NEXTAUTH_SECRET is required."
+    warn "BETTER_AUTH_SECRET is required."
   done
 fi
 
@@ -242,8 +242,8 @@ prompt APIOME_BASE_URL "CLI REST base URL (no /v1 suffix)" "$DEFAULT_APIOME_BASE
 printf '\n'
 info "UI (apiome-ui)"
 prompt UI_PORT "UI dev server port" "3000"
-DEFAULT_NEXTAUTH_URL="http://localhost:${UI_PORT}"
-prompt NEXTAUTH_URL "App site URL (OAuth redirect base)" "$DEFAULT_NEXTAUTH_URL"
+DEFAULT_BETTER_AUTH_URL="http://localhost:${UI_PORT}"
+prompt BETTER_AUTH_URL "App site URL (OAuth redirect base)" "$DEFAULT_BETTER_AUTH_URL"
 
 while true; do
   prompt_secret ADMIN_PASSWORD "Super admin password (ADMIN_PASSWORD)"
@@ -336,8 +336,8 @@ HOST=$(format_env_value "$REST_HOST")
 PORT=$(format_env_value "$REST_PORT")
 RELOAD=$(format_env_value "$REST_RELOAD")
 
-# JWT Authentication (must match apiome-ui NEXTAUTH_SECRET)
-NEXTAUTH_SECRET=$(format_env_value "$NEXTAUTH_SECRET")
+# JWT Authentication (must match apiome-ui BETTER_AUTH_SECRET)
+BETTER_AUTH_SECRET=$(format_env_value "$BETTER_AUTH_SECRET")
 
 # Public mock runtime URL (must match apiome-ui and apiome-browse)
 APIOME_MOCK_PUBLIC_BASE_URL=$(format_env_value "$APIOME_MOCK_PUBLIC_BASE_URL")
@@ -364,8 +364,8 @@ DATABASE_URL=$(format_env_value "$DATABASE_URL")
 
 # Public API browser (apiome-browse)
 NEXT_PUBLIC_BROWSE_URL=$(format_env_value "$NEXT_PUBLIC_BROWSE_URL")
-NEXTAUTH_URL=$(format_env_value "$NEXTAUTH_URL")
-NEXTAUTH_SECRET=$(format_env_value "$NEXTAUTH_SECRET")
+BETTER_AUTH_URL=$(format_env_value "$BETTER_AUTH_URL")
+BETTER_AUTH_SECRET=$(format_env_value "$BETTER_AUTH_SECRET")
 
 # Beta Mode - Set to any value to enable beta indicator on login screen
 NEXT_PUBLIC_BETA_MODE=$(format_env_value "$NEXT_PUBLIC_BETA_MODE")

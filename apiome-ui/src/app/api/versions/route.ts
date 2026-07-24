@@ -1,7 +1,7 @@
 /**
  * API Proxy for Versions Management
  *
- * Proxies requests to the REST API with JWT authentication from NextAuth session.
+ * Proxies requests to the REST API with JWT authentication from authenticated session.
  * This ensures the UI application uses the REST API for all version operations.
  */
 
@@ -14,6 +14,7 @@ import {
   collectRecentRevisionsOnLineage,
   type VersionLineageRow,
 } from '@lib/version-lineage';
+import { getJwtSigningSecret } from '@lib/rest-auth';
 
 const REST_API_BASE_URL = process.env.NEXT_PUBLIC_REST_API_BASE_URL || 'http://localhost:8000/v1';
 
@@ -40,9 +41,9 @@ function createAuthHeaders(user: SessionUser): Record<string, string> {
     return { 'Content-Type': 'application/json' };
   }
 
-  const secret = process.env.NEXTAUTH_SECRET;
+  const secret = getJwtSigningSecret();
   if (!secret) {
-    console.error('[versions] NEXTAUTH_SECRET not configured');
+    console.error('[versions] BETTER_AUTH_SECRET not configured');
     return { 'Content-Type': 'application/json' };
   }
 

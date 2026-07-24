@@ -143,7 +143,7 @@ Production Redirect URI:
 ```env
 ✓ GITLAB_CLIENT_ID=your-application-id
 ✓ GITLAB_CLIENT_SECRET=your-client-secret
-✓ NEXTAUTH_URL=your-deployment-url (if needed)
+✓ BETTER_AUTH_URL=your-deployment-url (if needed)
 ```
 
 ---

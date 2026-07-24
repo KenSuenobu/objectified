@@ -171,14 +171,14 @@ Lines Changed: ~10
 ```env
 GITLAB_CLIENT_ID=1234567890abcdef
 GITLAB_CLIENT_SECRET=glsoat-xxxx...
-NEXTAUTH_URL=http://localhost:3000
+BETTER_AUTH_URL=http://localhost:3000
 ```
 
 ### Production
 ```env
 GITLAB_CLIENT_ID=your-prod-id
 GITLAB_CLIENT_SECRET=your-prod-secret
-NEXTAUTH_URL=https://your-domain.com
+BETTER_AUTH_URL=https://your-domain.com
 ```
 
 ---

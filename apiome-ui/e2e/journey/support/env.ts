@@ -96,11 +96,11 @@ export function journeyServerEnv(): Record<string, string> {
     ...fromProcess,
     APIOME_LOAD_DOTENV: '0',
     // Better Auth is the only engine since the OLO-10.14 cutover (no engine flag). Its secret/baseURL
-    // fall back to the NEXTAUTH_* values set below (see better-auth-session.ts), so no extra
+    // fall back to the BETTER_AUTH_* values set below (see better-auth-session.ts), so no extra
     // Better-Auth-specific env is required for the mocked stack.
-    NEXTAUTH_URL: BASE_URL,
-    NEXTAUTH_SECRET:
-      process.env.NEXTAUTH_SECRET || dotEnvValues().NEXTAUTH_SECRET || 'olo-journey-secret',
+    BETTER_AUTH_URL: BASE_URL,
+    BETTER_AUTH_SECRET:
+      process.env.BETTER_AUTH_SECRET || dotEnvValues().BETTER_AUTH_SECRET || 'olo-journey-secret',
     DATABASE_URL: databaseUrl(),
     NEXT_PUBLIC_REST_API_BASE_URL: restApiBaseUrl(),
     // Every MVP provider is enabled with mock credentials; the URL overrides (OLO-7.4)

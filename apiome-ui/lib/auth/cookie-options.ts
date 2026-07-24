@@ -2,7 +2,7 @@
 export const DEFAULT_LOGIN_LANDING = '/ade';
 
 const TRUSTED_URL_ENVS = [
-  'NEXTAUTH_URL',
+  'BETTER_AUTH_URL',
   'NEXT_PUBLIC_STUDIO_URL',
   'NEXT_PUBLIC_MAIN_APP_URL',
 ] as const;
@@ -31,7 +31,7 @@ function tryOrigin(raw: string | undefined): string | null {
   }
 }
 
-/** Origins of the main app, studio, and NextAuth base — always trusted callback targets. */
+/** Origins of the main app, studio, and Better Auth base — always trusted callback targets. */
 export function trustedAppOrigins(): Set<string> {
   const origins = new Set<string>();
   for (const key of TRUSTED_URL_ENVS) {
@@ -75,7 +75,7 @@ function inferCookieDomain(): string | undefined {
 export function getSharedCookieDomain(): string | undefined {
   if (process.env.NODE_ENV !== 'production') return undefined;
 
-  const configured = process.env.NEXTAUTH_COOKIE_DOMAIN?.trim();
+  const configured = process.env.BETTER_AUTH_COOKIE_DOMAIN?.trim();
   const inferred = inferCookieDomain();
 
   if (configured) {
@@ -134,7 +134,7 @@ export function canonicalizeCrossAppCallback(url: string): string {
     return url;
   }
 
-  const mainOrigin = tryOrigin(process.env.NEXTAUTH_URL);
+  const mainOrigin = tryOrigin(process.env.BETTER_AUTH_URL);
   const studioOrigin = tryOrigin(process.env.NEXT_PUBLIC_STUDIO_URL);
   const targetDomain = registrableDomain(target.hostname);
   if (!targetDomain) return url;
@@ -219,7 +219,7 @@ export function resolveCallbackUrl(url: string | undefined | null, baseUrl?: str
   if (!trimmed) return DEFAULT_LOGIN_LANDING;
 
   const canonical = canonicalizeCrossAppCallback(trimmed);
-  return isAllowedCallbackUrl(canonical, baseUrl ?? process.env.NEXTAUTH_URL)
+  return isAllowedCallbackUrl(canonical, baseUrl ?? process.env.BETTER_AUTH_URL)
     ? canonical
     : DEFAULT_LOGIN_LANDING;
 }

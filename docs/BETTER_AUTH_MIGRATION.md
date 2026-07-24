@@ -30,6 +30,20 @@ them as anchors, not guarantees, once implementation starts.
 
 ---
 
+## Env rename (operators)
+
+**Breaking:** the legacy NextAuth-named env vars were purged. Rename before deploy/restart:
+
+| Old | New |
+|-----|-----|
+| `NEXTAUTH_URL` | `BETTER_AUTH_URL` (required; no fallback) |
+| `NEXTAUTH_SECRET` | `BETTER_AUTH_SECRET` (required shared UI/REST signing secret; no fallback) |
+| `NEXTAUTH_COOKIE_DOMAIN` | `BETTER_AUTH_COOKIE_DOMAIN` (optional parent cookie domain) |
+
+`BETTER_AUTH_SECRETS` (versioned rotation) is unchanged. REST still accepts `JWT_SECRET` as a secondary fallback after `BETTER_AUTH_SECRET`.
+
+---
+
 ## 0. Current-state summary (what we are migrating *from*)
 
 The single most important, and initially surprising, fact: **apiome does not use the NextAuth/Auth.js
@@ -43,7 +57,7 @@ the migration is a **restructure**, not a column rename.
 | Library | `next-auth@^4.24.14` | `apiome-ui/package.json` |
 | Config factory | `makeAuthOptions()` — one factory for the static and per-request builds so they can't drift (OLO-8.6) | `apiome-ui/src/app/api/auth/[...nextauth]/route.ts:41` |
 | Session strategy | **Implicit JWT** — no `session:` and no `adapter:` key ⇒ NextAuth v4 defaults (JWT, `maxAge` 30d, `updateAge` 24h). Stateless JWE cookie; **no session table** | `route.ts:42-199` |
-| Session secret | `NEXTAUTH_SECRET`; JWE also decoded manually via HKDF for stale-cookie cleanup | `route.ts:43`, `apiome-ui/lib/auth/stale-session-cookie.ts:11-13` |
+| Session secret | `BETTER_AUTH_SECRET`; JWE also decoded manually via HKDF for stale-cookie cleanup | `route.ts:43`, `apiome-ui/lib/auth/stale-session-cookie.ts:11-13` |
 | Cookie | `__Secure-next-auth.session-token` (prod), `httpOnly`, `sameSite=lax`, `secure`, `domain=.apiome.app` for cross-subdomain sharing with the studio | `apiome-ui/lib/auth/cookie-options.ts:100-140` |
 | Backend bridge | Server routes read `getServerSession`, then **mint a separate `sub=user_id` JWT** to call apiome-rest; the studio's `designer` mints the same shared-secret JWT for `spire` | `apiome-ui/src/app/api/projects/route.ts:30-59`; alignment roadmap BAA-1.4/1.5 |
 | Users | `apiome.users` — `password` (bcrypt hash), `verified` (bool, **not** `emailVerified` timestamp), `enabled`, `deleted_at`, case-insensitive unique `lower(email)` where live | `apiome-db/scripts/V001__…sql:16`, `V180:102` |
@@ -98,13 +112,13 @@ Realised in `apiome-ui/lib/auth/better-auth-session.ts` (pure env-driven builder
 - **`session.expiresIn`** = **30 days** (`SESSION_EXPIRES_IN_SECONDS`), **`updateAge`/refresh = 24 h**
   (`SESSION_UPDATE_AGE_SECONDS`) — match NextAuth v4 defaults so no user is logged out early at
   cutover.
-- **Secret:** `resolveBetterAuthSecret()` reuses `NEXTAUTH_SECRET` by default so existing tooling and
+- **Secret:** `resolveBetterAuthSecret()` reuses `BETTER_AUTH_SECRET` by default so existing tooling and
   the suite's shared-secret assumption hold; `BETTER_AUTH_SECRET` overrides it to migrate onto a
   dedicated secret, and Better Auth's native versioned `BETTER_AUTH_SECRETS` (`2:new,1:old`) is the
   **non-destructive rotation path** — because sessions are DB rows, rotating only invalidates the
   signed cookie cache (one extra DB read, ≤ 60 s window) and logs nobody out.
 - **Cookie:** `buildBetterAuthAdvancedOptions()` sets `crossSubDomainCookies` scoped to the same
-  shared parent domain the legacy engine uses (`getSharedCookieDomain()` → `NEXTAUTH_COOKIE_DOMAIN`
+  shared parent domain the legacy engine uses (`getSharedCookieDomain()` → `BETTER_AUTH_COOKIE_DOMAIN`
   in prod, inferred otherwise; host-only in dev). Every other attribute (`sameSite=lax`, `secure`,
   `httpOnly`, `__Secure-`/`__Host-` prefixes) is already Better Auth's default and matches
   `buildAuthCookieOverrides()`. Better Auth's cookie name differs (`better-auth.session_token` /
@@ -242,7 +256,7 @@ here** — that is OLO-9.13 (#5014) / OLO-9.14 (#5006).
 > (`apiome-ui/lib/auth/auth-client.ts`). Migration is additive/idempotent/reversible (rollback =
 > `DROP TABLE apiome.two_factor; ALTER TABLE apiome.users DROP COLUMN "twoFactorEnabled";`).
 > **R11 resolved:** the TOTP `secret` and `backupCodes` are encrypted at rest by the plugin's own
-> symmetric encryption, keyed on the Better Auth secret (`NEXTAUTH_SECRET`) — chosen over a bespoke
+> symmetric encryption, keyed on the Better Auth secret (`BETTER_AUTH_SECRET`) — chosen over a bespoke
 > OLO-8.3 `AUTH_CONFIG_ENC_KEY` envelope so the one auth key already protecting sessions/cookies covers
 > 2FA too, adding no new key-management surface.
 
@@ -470,7 +484,7 @@ ticket is assigned).
 | **R8** | **Provider-config resolver credential drift** — `PROVIDER_CRED_ENV_KEYS` (`provider-config-resolver.ts:52-59`) covers only github/gitlab/azure; **google/aws are missing**, so a DB-stored Google client id/secret is not overlaid onto env (Google `config` extras still overlay) | Med × Med | Fix the gap while re-pointing the resolver (10.8); add a resolver test asserting every `available` registry provider has cred-env keys | 10.8 (#5003) |
 | **R9** | **Session-read hot-path cost** — DB sessions add a per-request lookup vs today's stateless read | Low × Med | Enable Better Auth cookie cache (short TTL) to match today's zero-DB reads for most requests (§1) | 10.3 (#4998) |
 | **R10** | **Registry mirror drift** — TS/Python registries + `registry.json` fall out of sync while providers are re-expressed | Low × Med | Keep the mirror tests (`provider-registry-mirror.test.ts`, `test_auth_provider_registry.py`) as a CI gate through 10.7/10.9 | 10.7 (#5002) |
-| **R11** | ✅ **Resolved (10.10 #5005).** **TOTP secret encryption choice** — the plugin's `two_factor.secret` needs at-rest encryption | Low × Med | **Resolved:** use the twoFactor plugin's built-in symmetric encryption (keyed on the Better Auth secret `NEXTAUTH_SECRET`) for both `secret` and `backupCodes` — no bespoke OLO-8.3 envelope, so no new key-management surface (§2.5) | 10.10 (#5005) ✅ |
+| **R11** | ✅ **Resolved (10.10 #5005).** **TOTP secret encryption choice** — the plugin's `two_factor.secret` needs at-rest encryption | Low × Med | **Resolved:** use the twoFactor plugin's built-in symmetric encryption (keyed on the Better Auth secret `BETTER_AUTH_SECRET`) for both `secret` and `backupCodes` — no bespoke OLO-8.3 envelope, so no new key-management surface (§2.5) | 10.10 (#5005) ✅ |
 
 ---
 

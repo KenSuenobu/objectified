@@ -14,7 +14,7 @@ The Primitives API now supports **dual authentication**, allowing clients to aut
 
 **How It Works**:
 - JWT token is passed in the `Authorization` header as a Bearer token
-- Token is validated using the same secret as NextAuth (`NEXTAUTH_SECRET`)
+- Token is validated using the same secret as NextAuth (`BETTER_AUTH_SECRET`)
 - User ID is extracted from the token (`user_id` or `sub` claim)
 - System verifies the user belongs to the requested tenant via `tenant_users` table
 - The `created_by` field is automatically set to the authenticated user
@@ -59,7 +59,7 @@ Add to your `.env` file in `apiome-rest`:
 
 ```bash
 # JWT Configuration (must match NextAuth secret)
-NEXTAUTH_SECRET=your-nextauth-secret-here
+BETTER_AUTH_SECRET=your-nextauth-secret-here
 JWT_SECRET=your-nextauth-secret-here  # Alternative name
 JWT_ALGORITHM=HS256
 
@@ -67,7 +67,7 @@ JWT_ALGORITHM=HS256
 DATABASE_URL=postgresql://user:password@localhost:5432/apiome
 ```
 
-**Important**: The `NEXTAUTH_SECRET` or `JWT_SECRET` must match the secret configured in your NextAuth setup in `apiome-ui`.
+**Important**: The `BETTER_AUTH_SECRET` or `JWT_SECRET` must match the secret configured in your NextAuth setup in `apiome-ui`.
 
 ## JWT Token Structure
 
@@ -90,7 +90,7 @@ The JWT token from NextAuth should contain these claims:
 
 1. Client sends request with `Authorization: Bearer <token>` header
 2. `auth.py` extracts and decodes the JWT
-3. Validates token signature using `NEXTAUTH_SECRET`
+3. Validates token signature using `BETTER_AUTH_SECRET`
 4. Extracts `user_id` from token
 5. Queries `tenant_users` table to verify user belongs to tenant
 6. Returns authentication data with user information
@@ -268,7 +268,7 @@ If you have existing code using API keys, **no changes are required**. The API k
 
 To add JWT authentication support to your UI:
 
-1. Ensure `NEXTAUTH_SECRET` is set in `apiome-rest/.env`
+1. Ensure `BETTER_AUTH_SECRET` is set in `apiome-rest/.env`
 2. Extract JWT from NextAuth session
 3. Pass JWT in `Authorization: Bearer` header instead of API key
 
@@ -276,7 +276,7 @@ To add JWT authentication support to your UI:
 
 ### JWT Token Not Working
 
-1. **Check the secret matches**: Verify `NEXTAUTH_SECRET` in both `apiome-ui` and `apiome-rest` are identical
+1. **Check the secret matches**: Verify `BETTER_AUTH_SECRET` in both `apiome-ui` and `apiome-rest` are identical
 2. **Check token expiration**: JWT tokens expire, ensure the token is still valid
 3. **Check user-tenant relationship**: Verify the user is in the `tenant_users` table for the requested tenant
 

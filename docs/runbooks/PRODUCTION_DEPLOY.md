@@ -75,7 +75,7 @@ Generate each secret with the commands documented inline in
 
 ```bash
 openssl rand -base64 24   # POSTGRES_PASSWORD, APIOME_MCP_INTERNAL_SECRET
-openssl rand -base64 32   # NEXTAUTH_SECRET  (must match the UI's NextAuth secret)
+openssl rand -base64 32   # BETTER_AUTH_SECRET  (must match apiome-ui)
 openssl rand -hex 32      # APIOME_BACKUP_KEY → store in the secret manager, NOT on this host
 ```
 

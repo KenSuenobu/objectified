@@ -9,7 +9,7 @@
  * `POST /v1/onboarding/membership-activation`.
  *
  * Misuse safeguards:
- * - Runs server-side only; the JWT is minted from `NEXTAUTH_SECRET` and no
+ * - Runs server-side only; the JWT is minted from `BETTER_AUTH_SECRET` and no
  *   REST topology or credentials reach the browser.
  * - The endpoint only activates the *caller's own* membership, and only when
  *   it is `pending` — a suspended membership is never reactivated by a login.

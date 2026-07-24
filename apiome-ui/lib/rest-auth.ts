@@ -1,15 +1,26 @@
 /**
  * Build Authorization header for server-side calls to apiome-rest.
- * Uses NEXTAUTH_SECRET to sign a JWT with user/tenant from session.
+ * Uses `BETTER_AUTH_SECRET` to sign a JWT with user/tenant from session.
  */
 
 import jwt from 'jsonwebtoken';
+
+import { resolveBetterAuthSecret } from './auth/better-auth-session';
 
 export interface SessionUserForRest {
   user_id?: string;
   email?: string | null;
   name?: string | null;
   current_tenant_id?: string;
+}
+
+/**
+ * The shared JWT signing secret for minting apiome-rest Bearer tokens.
+ *
+ * @returns The trimmed `BETTER_AUTH_SECRET`, or `undefined` when unset/blank.
+ */
+export function getJwtSigningSecret(): string | undefined {
+  return resolveBetterAuthSecret();
 }
 
 /**
@@ -20,7 +31,7 @@ export function createRestAuthHeaders(user: SessionUserForRest): Record<string, 
   if (!user?.user_id) {
     return { 'Content-Type': 'application/json' };
   }
-  const secret = process.env.NEXTAUTH_SECRET;
+  const secret = getJwtSigningSecret();
   if (!secret) {
     return { 'Content-Type': 'application/json' };
   }

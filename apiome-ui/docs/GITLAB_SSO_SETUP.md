@@ -159,7 +159,7 @@ User is authenticated
 If you're running on a different port or subdomain:
 
 ```env
-NEXTAUTH_URL=https://your-domain.com/
+BETTER_AUTH_URL=https://your-domain.com/
 GITLAB_CLIENT_ID=your-app-id
 GITLAB_CLIENT_SECRET=your-secret
 ```
@@ -168,7 +168,7 @@ GITLAB_CLIENT_SECRET=your-secret
 For localhost development:
 
 ```env
-NEXTAUTH_URL=http://localhost:3000
+BETTER_AUTH_URL=http://localhost:3000
 GITLAB_CLIENT_ID=your-app-id
 GITLAB_CLIENT_SECRET=your-secret
 ```

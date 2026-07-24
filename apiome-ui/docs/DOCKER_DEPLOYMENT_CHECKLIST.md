@@ -13,7 +13,7 @@
 
 ### 2. Environment Setup
 - [ ] Copy `.env.docker` to `.env`
-- [ ] Update `NEXTAUTH_SECRET` (generate random 32 chars)
+- [ ] Update `BETTER_AUTH_SECRET` (generate random 32 chars)
 - [ ] Update `ADMIN_PASSWORD` (secure password)
 - [ ] Update `PGPASSWORD` (database password)
 - [ ] Set `NEXT_PUBLIC_REST_API_BASE_URL` (API endpoint)
@@ -106,7 +106,7 @@ curl http://localhost:3000
 
 ### Container Won't Start
 - [ ] Check environment variables in .env
-- [ ] Verify NEXTAUTH_SECRET is set
+- [ ] Verify BETTER_AUTH_SECRET is set
 - [ ] Check port 3000 is not in use: `lsof -i :3000`
 - [ ] Review logs: `docker-compose logs apiome-ui`
 
@@ -152,7 +152,7 @@ curl http://localhost:3000
 
 ### Before Production
 - [ ] Change all default passwords
-- [ ] Use strong NEXTAUTH_SECRET (32+ characters)
+- [ ] Use strong BETTER_AUTH_SECRET (32+ characters)
 - [ ] Use strong ADMIN_PASSWORD
 - [ ] Enable HTTPS/SSL (reverse proxy)
 - [ ] Configure firewall rules

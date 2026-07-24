@@ -14,8 +14,8 @@ linked-accounts panel, Better Auth sign-in route). No code changes are needed ei
 
 | Variable | Provider / scope | Required | Purpose |
 |---|---|---|---|
-| `NEXTAUTH_URL` | all | Yes | Public base URL of the app; every OAuth callback URL below derives from it (also the default Better Auth base URL; keeps its historical `NEXTAUTH_` name) |
-| `NEXTAUTH_SECRET` | all | Yes | Shared signing secret for the Better Auth session and the downstream REST JWT (`openssl rand -base64 32`; keeps its historical name) |
+| `BETTER_AUTH_URL` | all | Yes | Public base URL of the app; every OAuth callback URL below derives from it |
+| `BETTER_AUTH_SECRET` | all | Yes | Shared signing secret for the Better Auth session and the downstream REST JWT (`openssl rand -base64 32`) |
 | `GITHUB_ID` | GitHub | To enable GitHub | OAuth app **Client ID** |
 | `GITHUB_SECRET` | GitHub | To enable GitHub | OAuth app **Client secret** |
 | `GITLAB_CLIENT_ID` | GitLab | To enable GitLab | Application **Application ID** |
@@ -84,8 +84,8 @@ Set AUTH_PROVIDER_VALIDATION=warn to log instead and leave the provider(s) disab
    **Settings → Developer settings**) and click **New OAuth App**.
 2. Fill in:
    - **Application name:** `Apiome` (or your deployment's name)
-   - **Homepage URL:** your `NEXTAUTH_URL`, e.g. `https://app.apiome.app`
-   - **Authorization callback URL:** `{NEXTAUTH_URL}/api/auth/oauth2/callback/github`
+   - **Homepage URL:** your `BETTER_AUTH_URL`, e.g. `https://app.apiome.app`
+   - **Authorization callback URL:** `{BETTER_AUTH_URL}/api/auth/oauth2/callback/github`
      (e.g. `http://localhost:3000/api/auth/oauth2/callback/github` for local dev)
 3. Click **Register application**, then **Generate a new client secret**. Copy the secret
    immediately — GitHub shows it only once.
@@ -107,7 +107,7 @@ profile email is hidden (OLO-2.5).
    application for team use — and click **Add new application**.
 2. Fill in:
    - **Name:** `Apiome`
-   - **Redirect URI:** `{NEXTAUTH_URL}/api/auth/oauth2/callback/gitlab`
+   - **Redirect URI:** `{BETTER_AUTH_URL}/api/auth/oauth2/callback/gitlab`
    - **Confidential:** checked
    - **Scopes:** `read_user` (the sign-in flow requests `read_user` — email verification is
      read from the GitLab profile, OLO-2.5)
@@ -131,7 +131,7 @@ Step-by-step walkthrough with screenshots and self-managed-instance notes:
    - **Supported account types:** multi-tenant (any directory) unless you want to restrict
      sign-in to one tenant — then single-tenant and set `AZURE_AD_TENANT` to your tenant id
      or domain.
-   - **Redirect URI:** platform **Web**, value `{NEXTAUTH_URL}/api/auth/oauth2/callback/azure`
+   - **Redirect URI:** platform **Web**, value `{BETTER_AUTH_URL}/api/auth/oauth2/callback/azure`
 3. Under **Certificates & secrets**, create a **client secret** and copy its **Value**
    (not the Secret ID) — it is shown only once.
 4. **Required — enable the `xms_edov` optional claim** (OLO-1.4): under **Token
@@ -156,7 +156,7 @@ AZURE_AD_CLIENT_SECRET=<client secret Value>
    screen** first if prompted — **Internal** for a single Workspace org, **External** otherwise.
 2. Click **Create credentials → OAuth client ID**:
    - **Application type:** **Web application**
-   - **Authorized redirect URI:** `{NEXTAUTH_URL}/api/auth/oauth2/callback/google`
+   - **Authorized redirect URI:** `{BETTER_AUTH_URL}/api/auth/oauth2/callback/google`
      (e.g. `http://localhost:3000/api/auth/oauth2/callback/google` for local dev)
 3. Click **Create**, then copy the **Client ID** and **Client secret**.
 4. Set the env vars:
@@ -185,7 +185,7 @@ including personal `@gmail.com` addresses.
    Create App Integration**.
 2. Choose **OIDC - OpenID Connect**, then **Web Application**.
 3. Configure:
-   - **Sign-in redirect URIs:** `{NEXTAUTH_URL}/api/auth/oauth2/callback/okta`
+   - **Sign-in redirect URIs:** `{BETTER_AUTH_URL}/api/auth/oauth2/callback/okta`
      (e.g. `http://localhost:3000/api/auth/oauth2/callback/okta` for local dev)
    - **Controlled access:** assign the groups / people who may sign in
 4. After creation, copy the **Client ID** and **Client secret**.

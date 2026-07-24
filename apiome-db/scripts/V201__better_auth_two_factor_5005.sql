@@ -25,7 +25,7 @@
 --
 -- SECRET & BACKUP CODES ARE ENCRYPTED AT REST BY THE PLUGIN (resolves design R11).
 --   The plugin encrypts the TOTP `"secret"` and the `"backupCodes"` set with symmetric encryption keyed
---   on the Better Auth secret (`NEXTAUTH_SECRET` via resolveBetterAuthSecret) before they are written
+--   on the Better Auth secret (`BETTER_AUTH_SECRET` via resolveBetterAuthSecret) before they are written
 --   here — so these columns hold ciphertext, never a plaintext secret. OLO-10.10 deliberately chooses
 --   the plugin's built-in encryption over a bespoke OLO-8.3 `AUTH_CONFIG_ENC_KEY` envelope: it reuses
 --   the one auth key already protecting sessions/cookies and adds no new key-management surface. TEXT is

@@ -4,6 +4,7 @@
 import { getAuthSession } from '@lib/auth/server-session';
 import jwt from 'jsonwebtoken';
 import { getTenantById } from '@lib/db/helper';
+import { getJwtSigningSecret } from '@lib/rest-auth';
 
 const REST_API_BASE_URL = process.env.NEXT_PUBLIC_REST_API_BASE_URL || 'http://localhost:8000/v1';
 
@@ -31,7 +32,7 @@ export async function resolveIdentityProxyContext(): Promise<
   if (!tenant?.slug) {
     return { error: 'Tenant not found', status: 404 };
   }
-  const secret = process.env.NEXTAUTH_SECRET;
+  const secret = getJwtSigningSecret();
   if (!user.user_id || !secret) {
     return { error: 'Unauthorized', status: 401 };
   }

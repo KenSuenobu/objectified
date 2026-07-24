@@ -46,7 +46,7 @@ jobs:
       # DATABASE_URL and NEXT_PUBLIC_REST_API_BASE_URL are computed at runtime
       # from free host ports (see "Pick free host ports"); the runner is shared
       # with local dev, so the compose defaults (5432/8000) are often taken.
-      NEXTAUTH_SECRET: olo-journey-ci-secret
+      BETTER_AUTH_SECRET: olo-journey-ci-secret
       NEXT_TELEMETRY_DISABLED: "1"
 
     steps:

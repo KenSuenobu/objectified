@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthSession } from '@lib/auth/server-session';
 import jwt from 'jsonwebtoken';
 import { getTenantById } from '@lib/db/helper';
+import { getJwtSigningSecret } from '@lib/rest-auth';
 
 const REST_API_BASE_URL = process.env.NEXT_PUBLIC_REST_API_BASE_URL || 'http://localhost:8000/v1';
 
@@ -31,7 +32,7 @@ interface SessionUser {
 
 /** Build a Bearer JWT from the session for the REST call (HS256, 1h), matching the other proxies. */
 function createAuthHeaders(user: SessionUser): Record<string, string> {
-  const secret = process.env.NEXTAUTH_SECRET;
+  const secret = getJwtSigningSecret();
   if (!user.user_id || !secret) {
     return { 'Content-Type': 'application/json' };
   }

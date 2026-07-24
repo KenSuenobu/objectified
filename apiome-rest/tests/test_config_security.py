@@ -13,32 +13,32 @@ from app.config import (
 )
 
 
-def test_effective_jwt_secret_prefers_nextauth_over_jwt():
-    s = Settings(nextauth_secret="nextauth-value", jwt_secret="jwt-value")
-    assert s.effective_jwt_secret == "nextauth-value"
+def test_effective_jwt_secret_prefers_better_auth_over_jwt():
+    s = Settings(better_auth_secret="better-auth-value", jwt_secret="jwt-value")
+    assert s.effective_jwt_secret == "better-auth-value"
 
 
 def test_effective_jwt_secret_falls_back_to_jwt_secret():
-    s = Settings(nextauth_secret=None, jwt_secret="jwt-value")
+    s = Settings(better_auth_secret=None, jwt_secret="jwt-value")
     assert s.effective_jwt_secret == "jwt-value"
 
 
 def test_effective_jwt_secret_dev_uses_insecure_default():
-    s = Settings(nextauth_secret=None, jwt_secret=None, app_env="development")
+    s = Settings(better_auth_secret=None, jwt_secret=None, app_env="development")
     assert s.is_production is False
     assert s.effective_jwt_secret == INSECURE_JWT_SECRET_FALLBACK
 
 
 @pytest.mark.parametrize("env", ["production", "PRODUCTION", "prod", " Prod "])
 def test_effective_jwt_secret_production_fails_closed(env):
-    s = Settings(nextauth_secret=None, jwt_secret=None, app_env=env)
+    s = Settings(better_auth_secret=None, jwt_secret=None, app_env=env)
     assert s.is_production is True
     with pytest.raises(RuntimeError, match="JWT secret is not configured"):
         _ = s.effective_jwt_secret
 
 
 def test_effective_jwt_secret_production_with_secret_is_ok():
-    s = Settings(nextauth_secret="real-secret", app_env="production")
+    s = Settings(better_auth_secret="real-secret", app_env="production")
     assert s.effective_jwt_secret == "real-secret"
 
 
