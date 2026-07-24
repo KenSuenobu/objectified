@@ -52,6 +52,9 @@ const ALL_ENABLED_ENV = {
   OIDC_CLIENT_ID: 'oidc-id',
   OIDC_CLIENT_SECRET: 'oidc-secret',
   OIDC_ISSUER: 'https://auth.example.com',
+  AUTH0_CLIENT_ID: 'a0-id',
+  AUTH0_CLIENT_SECRET: 'a0-secret',
+  AUTH0_ISSUER: 'https://acme.auth0.com',
 };
 
 describe('providerEnvIssues', () => {

@@ -1,7 +1,7 @@
 # Sign-in Provider Setup & Secrets Guide (OLO-7.2)
 
 How to register the OAuth applications Apiome signs users in with (GitHub, GitLab,
-Microsoft Entra ID, Google Workspace, Okta, Amazon Cognito, Keycloak, generic OIDC), which
+Microsoft Entra ID, Google Workspace, Okta, Amazon Cognito, Keycloak, generic OIDC, Auth0), which
 environment variables each provider needs, and how boot-time validation reacts when a provider is
 misconfigured.
 
@@ -41,6 +41,9 @@ linked-accounts panel, Better Auth sign-in route). No code changes are needed ei
 | `OIDC_ISSUER` | Generic OIDC | To enable OIDC | IdP issuer URL (discovery at `<issuer>/.well-known/openid-configuration`) |
 | `OIDC_DISPLAY_NAME` | Generic OIDC | No (default `OIDC`) | Login-button and admin-card label (e.g. `Authentik`) |
 | `OIDC_SCOPES` | Generic OIDC | No (default `openid profile email`) | Whitespace-separated scopes requested at authorize |
+| `AUTH0_CLIENT_ID` | Auth0 | To enable Auth0 | Application **Client ID** |
+| `AUTH0_CLIENT_SECRET` | Auth0 | To enable Auth0 | Application **Client Secret** |
+| `AUTH0_ISSUER` | Auth0 | To enable Auth0 | Tenant issuer (`https://<tenant>.auth0.com`) |
 | `AUTH_PROVIDER_VALIDATION` | validation | No (default `strict`) | `strict` fails startup on partial provider config; `warn` logs and disables |
 
 Rules that apply to every provider:
@@ -56,7 +59,7 @@ Rules that apply to every provider:
 
 A registry entry declares its required fields structurally (`requiredFields`), each mapped to
 an env var. Most providers require exactly a **client id** and a **client secret**. Issuer-based
-providers (Okta, Cognito, Keycloak, generic OIDC today; Auth0 as it ships) additionally
+providers (Okta, Cognito, Keycloak, generic OIDC, Auth0) additionally
 require an OIDC **issuer** URL stored in the provider's `config` extras. Setting the id and secret
 but leaving the issuer unset is *partial config* and boot-time validation names the missing issuer
 var, exactly as it does for a missing secret. In the admin settings screen the same field is
@@ -366,6 +369,35 @@ an unreachable or non-conformant issuer surfaces a clear error instead of a brok
 The same issuer / display name / scopes can also be set from **Admin → System Configuration**
 (stored under `config.OIDC_*` and overlaid onto the env vars per OLO-8.5 / OLO-10.8).
 
+## Auth0 — Regular Web Application (OLO-9.7)
+
+1. In the [Auth0 Dashboard](https://manage.auth0.com/), go to **Applications → Applications →
+   Create Application**.
+2. Choose **Regular Web Applications**, then create.
+3. On the **Settings** tab, configure:
+   - **Allowed Callback URLs:** `{BETTER_AUTH_URL}/api/auth/oauth2/callback/auth0`
+     (e.g. `http://localhost:3000/api/auth/oauth2/callback/auth0` for local dev)
+   - **Allowed Logout URLs** / **Allowed Web Origins:** your app origin as needed
+4. Copy the **Client ID** and **Client Secret**.
+5. The tenant issuer is `https://{yourTenant}.auth0.com` (shown as **Domain** on Settings —
+   prefix with `https://`). Custom domains use that hostname instead.
+6. Set the env vars:
+
+```bash
+AUTH0_CLIENT_ID=<Client ID>
+AUTH0_CLIENT_SECRET=<Client Secret>
+AUTH0_ISSUER=https://acme.auth0.com
+```
+
+The sign-in flow discovers endpoints from `{AUTH0_ISSUER}/.well-known/openid-configuration`,
+uses PKCE, requests the `openid email profile` scopes, and reads Auth0's native `email_verified`
+claim (fail-closed — a missing or false claim is treated as unverified). All three variables are
+required; setting only the client id and secret is *partial config* and boot / admin Validate name
+`AUTH0_ISSUER`.
+
+The same issuer can also be set from **Admin → System Configuration** (stored under
+`config.AUTH0_ISSUER` and overlaid onto the env var per OLO-8.5 / OLO-10.8).
+
 ## Secrets handling
 
 - Never commit client secrets — `.env` files are gitignored; the checked-in
@@ -422,11 +454,13 @@ mock server via base-URL override env vars:
 | `AZURE_AD_AUTHORITY_BASE_URL` | Entra ID OIDC discovery authority | `https://login.microsoftonline.com` |
 | `GOOGLE_ISSUER` | Google OIDC discovery issuer | `https://accounts.google.com` |
 
-`OKTA_ISSUER`, `COGNITO_ISSUER`, `KEYCLOAK_ISSUER`, and `OIDC_ISSUER` are **required** production
-config vars (not test-only overrides) — see the [Okta](#okta--oidc-application-workforce-idp),
+`OKTA_ISSUER`, `COGNITO_ISSUER`, `KEYCLOAK_ISSUER`, `OIDC_ISSUER`, and `AUTH0_ISSUER` are
+**required** production config vars (not test-only overrides) — see the
+[Okta](#okta--oidc-application-workforce-idp),
 [Cognito](#amazon-cognito--user-pool--hosted-ui-olo-94),
-[Keycloak](#keycloak--realm-oidc-client-olo-95), and
-[Generic OIDC](#generic-oidc--any-conformant-openid-provider-olo-96) sections. Pointing any of them
+[Keycloak](#keycloak--realm-oidc-client-olo-95),
+[Generic OIDC](#generic-oidc--any-conformant-openid-provider-olo-96), and
+[Auth0](#auth0--regular-web-application-olo-97) sections. Pointing any of them
 at a mock issuer for the e2e journey is fine in test; never point a real deployment's issuer at a
 non-provider host.
 

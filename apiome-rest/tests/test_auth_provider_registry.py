@@ -29,11 +29,11 @@ _SNAPSHOT_PATH = (
 
 def test_registry_ids_and_order_match_ui_and_v196():
     """Slugs and display order mirror PROVIDER_REGISTRY (UI) and the V196 CHECK list."""
-    assert known_provider_ids() == ["github", "gitlab", "azure", "google", "okta", "aws", "keycloak", "oidc"]
+    assert known_provider_ids() == ["github", "gitlab", "azure", "google", "okta", "aws", "keycloak", "oidc", "auth0"]
 
 
 def test_available_vs_coming_soon_status():
-    """github/gitlab/azure/google/okta/aws/keycloak/oidc are available; no coming-soon placeholders remain."""
+    """github/gitlab/azure/google/okta/aws/keycloak/oidc/auth0 are available; no coming-soon placeholders remain."""
     status = {p.id: p.status for p in PROVIDER_REGISTRY}
     assert status["github"] == STATUS_AVAILABLE
     assert status["gitlab"] == STATUS_AVAILABLE
@@ -43,11 +43,12 @@ def test_available_vs_coming_soon_status():
     assert status["aws"] == STATUS_AVAILABLE
     assert status["keycloak"] == STATUS_AVAILABLE
     assert status["oidc"] == STATUS_AVAILABLE
+    assert status["auth0"] == STATUS_AVAILABLE
     assert all(p.status == STATUS_AVAILABLE for p in PROVIDER_REGISTRY)
 
 
 def test_available_providers_require_client_id_and_secret():
-    """Most available providers require client_id + client_secret; Okta/AWS/Keycloak/OIDC add issuer."""
+    """Most available providers require client_id + client_secret; issuer-based providers add issuer."""
     for provider in PROVIDER_REGISTRY:
         if provider.status == STATUS_COMING_SOON:
             assert provider.required_fields == ()
@@ -56,7 +57,7 @@ def test_available_providers_require_client_id_and_secret():
         assert names[0:2] == ["client_id", "client_secret"]
         kinds = [f.kind for f in provider.required_fields]
         assert kinds[0:2] == [FIELD_KIND_CLIENT_ID, FIELD_KIND_CLIENT_SECRET]
-        if provider.id in ("okta", "aws", "keycloak", "oidc"):
+        if provider.id in ("okta", "aws", "keycloak", "oidc", "auth0"):
             assert names == ["client_id", "client_secret", "issuer"]
             assert kinds == [FIELD_KIND_CLIENT_ID, FIELD_KIND_CLIENT_SECRET, FIELD_KIND_CONFIG]
             expected_env = {
@@ -64,6 +65,7 @@ def test_available_providers_require_client_id_and_secret():
                 "aws": "COGNITO_ISSUER",
                 "keycloak": "KEYCLOAK_ISSUER",
                 "oidc": "OIDC_ISSUER",
+                "auth0": "AUTH0_ISSUER",
             }[provider.id]
             assert provider.required_fields[2].env_key == expected_env
         else:
@@ -86,6 +88,7 @@ def test_lookup_known_and_unknown():
     assert get_provider_descriptor("aws").label == "AWS"
     assert get_provider_descriptor("keycloak").label == "Keycloak"
     assert get_provider_descriptor("oidc").label == "OIDC"
+    assert get_provider_descriptor("auth0").label == "Auth0"
     assert get_provider_descriptor("not-a-provider") is None
 
 
