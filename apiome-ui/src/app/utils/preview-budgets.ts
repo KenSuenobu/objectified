@@ -38,6 +38,19 @@ export const TREE_VIRTUALIZE_ABOVE = 50;
 export const FINDINGS_VIRTUALIZE_ABOVE = 50;
 
 /**
+ * Export artifact-explorer tree rows (IXH-4.1) beyond this count are windowed, not all
+ * mounted — the export twin of {@link TREE_VIRTUALIZE_ABOVE}, kept as its own budget so
+ * the two surfaces can diverge without a silent coupling.
+ */
+export const EXPORT_MANIFEST_TREE_VIRTUALIZE_ABOVE = 50;
+
+/**
+ * Export preview-manifest pages one "Load more entities" click walks before pausing —
+ * the export twin of {@link LOAD_ALL_PAGE_CAP} (the same 1000-entity server pages).
+ */
+export const EXPORT_MANIFEST_PAGES_PER_WINDOW = 5;
+
+/**
  * Projection-map SVG draw budget (IXH-3.3): at most this many view entries are drawn as
  * graph nodes. Entries are selected worst-first (severity, then how lossy the status is),
  * so dropped and critical evidence is never what the cap removes. Above the budget the
@@ -120,6 +133,24 @@ export const PREVIEW_BUDGETS: readonly PreviewBudget[] = [
     unit: 'pages per click',
     mechanism: 'truncated',
     aboveBudget: 'The walk pauses; the banner stays up with the loaded-of-total counts.',
+    fullDataPath: 'Click "Load more entities" again to walk the next pages.',
+  },
+  {
+    id: 'EXPORT_MANIFEST_TREE_VIRTUALIZE_ABOVE',
+    surface: 'Export artifact-explorer tree (IXH-4.1)',
+    budget: EXPORT_MANIFEST_TREE_VIRTUALIZE_ABOVE,
+    unit: 'visible tree rows',
+    mechanism: 'windowed',
+    aboveBudget: 'Rows are windowed around the viewport; the focused row is pinned so it never unmounts.',
+    fullDataPath: 'Scroll the tree — every loaded row is reachable; the list itself is complete.',
+  },
+  {
+    id: 'EXPORT_MANIFEST_PAGES_PER_WINDOW',
+    surface: 'Export preview-manifest page walk (IXH-4.1)',
+    budget: EXPORT_MANIFEST_PAGES_PER_WINDOW,
+    unit: 'pages per load',
+    mechanism: 'truncated',
+    aboveBudget: 'The walk pauses; the truncation banner states the loaded-of-total entity counts.',
     fullDataPath: 'Click "Load more entities" again to walk the next pages.',
   },
   {

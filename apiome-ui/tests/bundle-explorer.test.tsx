@@ -76,6 +76,10 @@ import {
   buildBundleManifest,
   countFindingsByFile,
 } from '../src/app/components/ade/dashboard/export/exportBundle';
+import {
+  ENTITY_LINE_CLASS,
+  type ExportManifestEntity,
+} from '../src/app/components/ade/dashboard/export/exportPreviewManifest';
 
 /** The spy harness the Monaco mock exposes (fake editor/monaco + line-click simulation). */
 const { __harness: monacoHarness } = jest.requireMock('@monaco-editor/react') as {
@@ -266,5 +270,116 @@ describe('BundleExplorer — problem markers (MFX-43.3)', () => {
     expect(screen.getByTestId('bundle-file-editor')).toHaveTextContent('message Timestamp');
     expect(screen.getByTestId('verify-problem-lint-1')).toHaveAttribute('data-selected', 'true');
     expect(monacoHarness.editor.revealLineInCenter).toHaveBeenCalledWith(1);
+  });
+});
+
+describe('BundleExplorer — manifest entities (IXH-4.1)', () => {
+  const entityManifest = buildBundleManifest([
+    { path: 'petstore.proto', text: 'syntax = "proto3";\npackage example;\nmessage Pet {}' },
+    { path: 'google/protobuf/timestamp.proto', text: 'message Timestamp {}' },
+  ]);
+
+  function entity(overrides: Partial<ExportManifestEntity>): ExportManifestEntity {
+    return {
+      key: 'Entity',
+      name: 'Entity',
+      entity_kind: 'type',
+      parent_key: null,
+      order: 0,
+      description: null,
+      deprecated: false,
+      status: 'retained',
+      reason: null,
+      severity: 'info',
+      detail: 'carried faithfully',
+      target_mapping: null,
+      emitted: true,
+      location: null,
+      aggregated: false,
+      reported: true,
+      native_name: null,
+      native_id: null,
+      source_location: null,
+      ...overrides,
+    };
+  }
+
+  const manifestEntities: ExportManifestEntity[] = [
+    entity({
+      key: 'Pet',
+      name: 'Pet',
+      entity_kind: 'type',
+      order: 0,
+      location: { file: 'petstore.proto', line: 3, pointer: null },
+    }),
+    entity({
+      key: 'Timestamp',
+      name: 'Timestamp',
+      entity_kind: 'type',
+      order: 1,
+      location: { file: 'google/protobuf/timestamp.proto', line: 1, pointer: null },
+    }),
+  ];
+
+  it('resolves a clicked editor line to its entity (code → entity)', () => {
+    const onEntityLineClick = jest.fn();
+    render(
+      <BundleExplorer
+        manifest={entityManifest}
+        countsByPath={emptyCounts}
+        targetKey="protobuf"
+        manifestEntities={manifestEntities}
+        onEntityLineClick={onEntityLineClick}
+      />,
+    );
+
+    // A click at/below the declaration resolves to the active file's entity.
+    act(() => monacoHarness.fireLineClick(3));
+    expect(onEntityLineClick).toHaveBeenCalledWith(expect.objectContaining({ key: 'Pet' }));
+
+    // A line above every declaration in the active file resolves to nothing.
+    onEntityLineClick.mockClear();
+    act(() => monacoHarness.fireLineClick(1));
+    expect(onEntityLineClick).not.toHaveBeenCalled();
+  });
+
+  it('honours an entity reveal: opens the entity’s bundle file and scrolls its line (entity → code)', () => {
+    render(
+      <BundleExplorer
+        manifest={entityManifest}
+        countsByPath={emptyCounts}
+        targetKey="protobuf"
+        manifestEntities={manifestEntities}
+        selectedEntityKey="Timestamp"
+        entityReveal={{ entity: manifestEntities[1], nonce: 1 }}
+      />,
+    );
+
+    // The nested file became active (tab + viewer) and its declaration line was revealed.
+    expect(screen.getByTestId('bundle-tab-google/protobuf/timestamp.proto')).toHaveAttribute('data-active', 'true');
+    expect(screen.getByTestId('bundle-file-editor')).toHaveTextContent('message Timestamp');
+    expect(monacoHarness.editor.revealLineInCenter).toHaveBeenCalledWith(1);
+  });
+
+  it('decorates the selected entity’s declaration line in the active file only', () => {
+    render(
+      <BundleExplorer
+        manifest={entityManifest}
+        countsByPath={emptyCounts}
+        targetKey="protobuf"
+        manifestEntities={manifestEntities}
+        selectedEntityKey="Pet"
+      />,
+    );
+
+    const decorationCalls = monacoHarness.editor.createDecorationsCollection.mock.calls;
+    const entityDecorations = decorationCalls
+      .flatMap((call) => call[0] as { options?: { className?: string } }[])
+      .filter((decoration) => decoration?.options?.className === ENTITY_LINE_CLASS);
+    expect(entityDecorations).toHaveLength(1);
+    expect(entityDecorations[0]).toMatchObject({
+      range: { startLineNumber: 3, endLineNumber: 3 },
+      options: { isWholeLine: true },
+    });
   });
 });

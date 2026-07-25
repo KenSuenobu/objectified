@@ -206,6 +206,27 @@ function downloadResponse(target: string, bundle = false) {
   };
 }
 
+/** One IXH-4.1 manifest entity row with sensible retained defaults. */
+function entityRow(overrides: Record<string, unknown>): Record<string, unknown> {
+  return {
+    parent_key: null,
+    description: null,
+    deprecated: false,
+    status: 'retained',
+    reason: null,
+    severity: 'info',
+    detail: 'carried faithfully',
+    target_mapping: null,
+    emitted: true,
+    aggregated: false,
+    reported: true,
+    native_name: null,
+    native_id: null,
+    source_location: null,
+    ...overrides,
+  };
+}
+
 function mockFetch(
   opts: {
     invalidVerify?: boolean;
@@ -220,6 +241,50 @@ function mockFetch(
     const url = typeof input === 'string' ? input : String(input);
     if (url.includes('/api/export/targets')) {
       return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, ...TARGETS }) });
+    }
+    // IXH-4.1 structural manifest — MUST be matched before the '/api/export/preview'
+    // substring branch below, which this URL also contains.
+    if (url.includes('/api/export/preview-manifest') && init?.method === 'POST') {
+      const target = String(JSON.parse(init?.body ?? '{}').target);
+      const proto = target !== 'openapi';
+      const entities = proto
+        ? [
+            entityRow({ key: 'PetService', name: 'PetService', entity_kind: 'service', order: 0, aggregated: true, location: { file: 'petstore.proto', line: 1, pointer: null } }),
+            entityRow({ key: 'Timestamp', name: 'Timestamp', entity_kind: 'type', order: 1, location: { file: 'google/protobuf/timestamp.proto', line: 1, pointer: null } }),
+            entityRow({ key: 'pet/created', name: 'pet/created', entity_kind: 'channel', order: 2, status: 'dropped', reason: 'destination_unsupported', severity: 'warn', detail: 'protobuf has no event channels', emitted: false, location: null }),
+          ]
+        : [
+            entityRow({ key: 'GET /pets', name: 'listPets', entity_kind: 'operation', order: 0, location: { file: 'petstore.json', line: 1, pointer: '/openapi' } }),
+          ];
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            success: true,
+            artifact: 'proj-petstore',
+            version: null,
+            version_record_id: 'rev-1',
+            version_label: '1.2.0',
+            manifest: {
+              manifest_hash: 'manifest-hash-1',
+              target: { key: target, format: target, label: target, emitter_version: '1', apiome_version: '1.6.5', registry_version: '1' },
+              status_counts: { retained: entities.filter((e) => e.status === 'retained').length, dropped: entities.filter((e) => e.status === 'dropped').length },
+              reason_counts: {},
+              entities,
+              total_entities: entities.length,
+              dropped_entities: entities.filter((e) => !e.emitted).length,
+              files: proto
+                ? [
+                    { path: 'petstore.proto', media_type: 'text/plain', line_count: 1, entity_count: 1 },
+                    { path: 'google/protobuf/timestamp.proto', media_type: 'text/plain', line_count: 1, entity_count: 1 },
+                  ]
+                : [{ path: 'petstore.json', media_type: 'application/json', line_count: 1, entity_count: 1 }],
+              page_size: 1000,
+              next_cursor: null,
+              truncated: false,
+            },
+          }),
+      });
     }
     if (url.includes('/api/export/preview') && init?.method === 'POST') {
       const target = String(JSON.parse(init?.body ?? '{}').target);
@@ -897,6 +962,65 @@ describe('ExportStudio — Verify workbench gate + generate (MFX-42.1)', () => {
     expect(screen.getByTestId('bundle-tab-google/protobuf/timestamp.proto')).toHaveAttribute('data-active', 'true');
     expect(screen.getByTestId('bundle-file-editor')).toHaveTextContent('message Timestamp');
     expect(screen.getByTestId('verify-problem-lint-1')).toHaveAttribute('data-selected', 'true');
+  });
+
+  it('renders the artifact manifest tree beside the bundle explorer (IXH-4.1)', async () => {
+    await advanceToVerify(mockFetch({ bundle: true }), 'proto');
+    await runVerification();
+    fireEvent.click(within(screen.getByTestId('verify-panel-fidelity')).getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: /continue to review/i }));
+    fireEvent.click(screen.getByTestId('export-studio-generate'));
+    await screen.findByTestId('bundle-explorer');
+
+    // The manifest panel loads lazily on the Review step and lists the entity tree.
+    const panel = await screen.findByTestId('export-manifest-panel');
+    await waitFor(() => expect(within(panel).getAllByTestId('export-manifest-entity').length).toBeGreaterThan(0));
+    const summary = within(panel).getByTestId('export-manifest-summary');
+    expect(summary).toHaveTextContent('3 entities');
+
+    // Sections render with the loaded entities beneath them (sections default expanded).
+    const sections = within(panel).getAllByTestId('export-manifest-section');
+    expect(sections.map((s) => s.textContent)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/Services/i), expect.stringMatching(/Channels/i), expect.stringMatching(/Types/i)]),
+    );
+
+    // AC: the dropped channel is listed, badged dropped — never hidden.
+    const rows = within(panel).getAllByTestId('export-manifest-entity');
+    const droppedRow = rows.find((row) => row.textContent?.includes('pet/created'));
+    expect(droppedRow).toBeDefined();
+    expect(within(droppedRow!).getByTestId('export-manifest-status')).toHaveAttribute('data-status', 'dropped');
+
+    // Selecting the dropped channel spells out its drop reason in the detail strip.
+    fireEvent.click(droppedRow!);
+    const detail = within(panel).getByTestId('export-manifest-detail');
+    expect(within(detail).getByTestId('export-manifest-reason')).toHaveTextContent('destination_unsupported');
+    expect(detail).toHaveTextContent('protobuf has no event channels');
+    expect(detail).toHaveTextContent(/not in artifact/i);
+  });
+
+  it('reveals an entity across bundle files from the manifest tree (IXH-4.1 two-way)', async () => {
+    await advanceToVerify(mockFetch({ bundle: true }), 'proto');
+    await runVerification();
+    fireEvent.click(within(screen.getByTestId('verify-panel-fidelity')).getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: /continue to review/i }));
+    fireEvent.click(screen.getByTestId('export-studio-generate'));
+    await screen.findByTestId('bundle-explorer');
+    const panel = await screen.findByTestId('export-manifest-panel');
+    await waitFor(() => expect(within(panel).getAllByTestId('export-manifest-entity').length).toBeGreaterThan(0));
+
+    // The primary file is active to start.
+    expect(screen.getByTestId('bundle-tab-petstore.proto')).toHaveAttribute('data-active', 'true');
+
+    // Selecting the Timestamp type (located in the nested import file) opens that file in
+    // the viewer — entity → code selection synchronized across bundle files.
+    const rows = within(panel).getAllByTestId('export-manifest-entity');
+    const timestampRow = rows.find((row) => row.textContent?.includes('Timestamp'));
+    expect(timestampRow).toBeDefined();
+    fireEvent.click(timestampRow!);
+    expect(screen.getByTestId('bundle-tab-google/protobuf/timestamp.proto')).toHaveAttribute('data-active', 'true');
+    expect(await screen.findByTestId('bundle-file-editor')).toHaveTextContent('message Timestamp');
+    // The tree row reflects the shared selection.
+    expect(timestampRow).toHaveAttribute('aria-selected', 'true');
   });
 });
 

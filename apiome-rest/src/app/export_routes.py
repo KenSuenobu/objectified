@@ -68,6 +68,11 @@ from .export_preflight import (
     ExportPreflightRequest,
     run_export_preflight,
 )
+from .export_preview_manifest import (
+    ExportPreviewManifestRequest,
+    ExportPreviewManifestResponse,
+    run_export_preview_manifest,
+)
 from .export_projection import (
     DEFAULT_EVIDENCE_PAGE_SIZE,
     MAX_EVIDENCE_PAGE_SIZE,
@@ -696,6 +701,61 @@ async def preview_export_fidelity(
         fidelity=fidelity,
         guard=guard,
     )
+
+
+@router.post(
+    "/{tenant_slug}/preview-manifest",
+    response_model=ExportPreviewManifestResponse,
+    summary="Structural manifest of the emitted artifact: entities, fidelity, locations",
+    description=(
+        "Describe the emitted artifact **structurally** (IXH-4.1): every canonical entity "
+        "(services → operations, channels, types → fields) with its stable canonical key, its "
+        "per-entity fidelity status and reason from the shared CPDO-1.3 taxonomy, and — for "
+        "entities the artifact carries — its location in the bundle (file, 1-based line in the "
+        "download-serialized text, and a JSON Pointer where derivable). Entities the source has "
+        "but the artifact does not carry are listed with their drop reason, never hidden. The "
+        "emit runs read-only in a temporary buffer (no artifact, no job row, no field-identity "
+        "persistence — the verify route's discipline) and a severe conversion is described, not "
+        "blocked. Deterministic: identical (revision, target, options) yield an identical "
+        "``manifest_hash``; entities are cursor-paginated (codec shared with the import preview "
+        "manifest) and the full manifest is cached per (tenant, revision, target, options) so "
+        "paging re-emits nothing. Backs the Export Studio's structural artifact explorer with "
+        "two-way entity ↔ code selection."
+    ),
+)
+async def preview_export_manifest(
+    tenant_slug: str,
+    request: ExportPreviewManifestRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> ExportPreviewManifestResponse:
+    """Return one page of the structural export preview manifest for a (source, target) pair.
+
+    Args:
+        tenant_slug: The tenant slug (scopes the artifact lookup).
+        request: Source coordinates + chosen target + emit options + entity page window.
+        auth_data: Authenticated tenant context (JWT or API key).
+
+    Returns:
+        The :class:`~app.export_preview_manifest.ExportPreviewManifestResponse` with the
+        requested entity page.
+
+    Raises:
+        HTTPException: 404 when the artifact/version is unknown; 422 when the revision has no
+            reconstructable source, the emit options are invalid, or the emitter produced no
+            document; 400 when the target or the request's cursor is malformed/unsupported.
+    """
+    tenant_id = auth_data["tenant_id"]
+    try:
+        source = load_export_source(tenant_id, request.artifact, request.version)
+    except ExportSourceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+
+    try:
+        return run_export_preview_manifest(source, request, tenant_id=str(tenant_id))
+    except ExportError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+    except ValueError as exc:  # malformed page cursor
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 #: Placeholder written over redacted source-native evidence values (EFP-2.1 / EFP-3.2).

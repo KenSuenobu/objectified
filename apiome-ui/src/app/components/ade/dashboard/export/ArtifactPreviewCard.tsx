@@ -7,8 +7,14 @@ import { cn } from '@lib/utils';
 import { ReadOnlyCodeViewer } from './ReadOnlyCodeViewer';
 import { ProblemsPanel } from './ProblemsPanel';
 import { useProblemMarkers } from './useProblemMarkers';
+import { useEntityMarkers } from './useEntityMarkers';
 import type { LossinessReport } from './exportFidelityPreview';
 import type { LocatedProblem, ProblemRevealRequest } from './exportProblemMarkers';
+import {
+  normalizedLocationFile,
+  type EntityRevealRequest,
+  type ExportManifestEntity,
+} from './exportPreviewManifest';
 import {
   artifactBadgeClass,
   buildArtifactBadge,
@@ -38,6 +44,18 @@ interface ArtifactPreviewCardProps {
    * problem and reveals its line. Repeat requests re-trigger via nonce.
    */
   reveal?: ProblemRevealRequest | null;
+  /**
+   * The export preview manifest's entities (IXH-4.1): located entities drive the line-click →
+   * entity resolution and the selected entity's declaration-line highlight. For a single
+   * document every located entity lives in the manifest's one file.
+   */
+  manifestEntities?: ExportManifestEntity[];
+  /** The selected entity's canonical key (shared with the manifest tree). */
+  selectedEntityKey?: string | null;
+  /** A "reveal this entity in the code" request (a manifest tree click); nonce re-triggers. */
+  entityReveal?: EntityRevealRequest | null;
+  /** A line click resolved to a located entity (code → entity direction). */
+  onEntityLineClick?: (entity: ExportManifestEntity) => void;
   className?: string;
 }
 
@@ -60,6 +78,10 @@ export function ArtifactPreviewCard({
   targetKey,
   problems = [],
   reveal = null,
+  manifestEntities = [],
+  selectedEntityKey = null,
+  entityReveal = null,
+  onEntityLineClick,
   className,
 }: ArtifactPreviewCardProps) {
   const [copied, setCopied] = useState(false);
@@ -97,6 +119,28 @@ export function ArtifactPreviewCard({
     selectedProblemId,
     onMarkerSelect: (problem) => setSelectedProblemId(problem.id),
     reveal,
+  });
+
+  // IXH-4.1: a single document holds every located entity in the manifest's one file —
+  // that file's (normalized) path is the card's "active file" for click resolution.
+  const manifestFile = useMemo(() => {
+    const located = manifestEntities.find((entity) => entity.location != null);
+    return located ? normalizedLocationFile(located) : null;
+  }, [manifestEntities]);
+  const selectedEntity = useMemo(
+    () =>
+      selectedEntityKey
+        ? manifestEntities.find((entity) => entity.key === selectedEntityKey) ?? null
+        : null,
+    [manifestEntities, selectedEntityKey],
+  );
+  const entityMarkers = useEntityMarkers({
+    entities: manifestEntities,
+    activeFile: manifestFile,
+    text: artifact.text,
+    selectedEntity,
+    onEntityLineClick,
+    reveal: entityReveal,
   });
 
   const openProblem = useCallback(
@@ -167,7 +211,10 @@ export function ArtifactPreviewCard({
         value={artifact.text}
         language={language}
         overlay={copyButton}
-        onMount={markers.onEditorMount}
+        onMount={(editorInstance, monaco) => {
+          markers.onEditorMount(editorInstance, monaco);
+          entityMarkers.onEditorMount(editorInstance, monaco);
+        }}
         height={360}
         className="mt-2 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
         editorTestId="export-artifact-editor"
