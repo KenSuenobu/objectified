@@ -5,6 +5,53 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.174.0] - 2026-07-24
+
+### Security
+- **Hardened XML intake (#5090, IXH-1.4)** — all six XML-based adapters (XSD, WSDL,
+  WADL, OData/EDMX, ISO 20022, XML-RPC) now parse through `src/app/secure_xml.py`,
+  which refuses DTDs, entity definitions/references, external `SYSTEM`/`PUBLIC`
+  identifiers, and XInclude directives, and bounds document size and element depth.
+  Previously every one used bare `ElementTree`, which expands internal entities — a
+  billion-laughs document expanded during *format detection*. `defusedxml` is now a
+  declared dependency rather than a pyx12 transitive.
+- **Intake resource guards (#5090)** — new `src/app/intake_resource_guard.py` applies
+  the published `oas_resource_limits.json` bounds (which already list `import` in
+  `appliesTo`) at the intake parse seam: document size, YAML alias-expansion cost,
+  and nesting depth, plus alias-cycle rejection. `import_ingestion.parse_document`
+  had no caps at all, so an alias bomb was an out-of-memory and a deep flow document
+  a stack exhaustion. Reuses `safe_oas_parse`'s analysis primitives, now exported.
+- **Secret scrubbing on intake (#5090, nucleus of MFI-29.6)** — new
+  `src/app/intake_secret_scrub.py` redacts credential *values* (AWS keys, GitHub /
+  Slack / Google / Stripe tokens, JWTs, private-key blocks, URL-embedded basic-auth
+  and connection strings, cookie jars, secret-named assignments) from the persisted source, job
+  event messages and contexts, leaving document structure byte-for-byte intact. The
+  job summary gains a `secret_scrub` report (types and line numbers, never values)
+  and a `SECRETS_REDACTED` warning event. Archives, whose stored blob cannot be
+  rewritten safely, withhold the verbatim source when a member carries a secret.
+  Detection logging no longer echoes exception messages, which quote source spans.
+- **Archive intake hardening (#5090)** — zip and tar members are screened on their
+  declared size *and* read through a hard ceiling, so a header that under-declares
+  its size cannot materialize past the per-file limit; corrupt-member faults now
+  surface as `ArchiveIntakeError` instead of escaping as internal errors. Fixes a
+  latent bug where `tarfile.SkipHeader` (which does not exist) made any tar
+  containing a directory entry raise `AttributeError` out of intake.
+
+### Added
+- **Adversarial corpus (#5090, IXH-1.4)** — new `adversarial/` corpus tier with a
+  `guard` field naming the defense each entry targets: 11 committed fixtures (XML
+  entity expansion, XXE file and SSRF reads, parameter-entity indirection, XInclude,
+  deep nesting, secret-bearing OpenAPI and Postman documents) plus 11 built at test
+  time by the committed `scripts/generate_adversarial_corpus.py` (zip/tar bombs,
+  path-traversal archives, a 10^5-node document, 5000-deep nesting, a 200-link `$ref`
+  cycle, a YAML alias bomb, two credential-bearing documents, and a 1 GiB sparse
+  document), keeping repo size flat and credential-shaped literals out of the repo.
+  New taxonomy codes `INPUT_UNSAFE_CONSTRUCT`, `INPUT_TOO_LARGE`, `INPUT_DEPTH_LIMIT`,
+  `INPUT_EXPANSION_LIMIT`. Tests: `test_corpus_adversarial.py` (per-fixture wall-clock
+  and `tracemalloc` peak budgets, no persistence, traversal refused before extraction,
+  secrets absent from source/events/logs), `test_secure_xml.py` (per-adapter
+  assertions), `test_intake_resource_guard.py`, `test_intake_secret_scrub.py`.
+
 ## [1.173.0] - 2026-07-24
 
 ### Added

@@ -39,7 +39,7 @@ class IntakeErrorCategory(str, Enum):
     FORMAT = "format"  # document/format routing is at fault (wrong or unsupported format)
     CAPABILITY = "capability"  # this deployment cannot service the request (missing tool)
     POLICY = "policy"  # rejected by tenant/instance policy (reserved for IXH-6.4)
-    RESOURCE = "resource"  # a limit was exceeded (reserved for IXH-6.5)
+    RESOURCE = "resource"  # a limit was exceeded (IXH-1.4; IXH-6.5 extends)
     TRANSPORT = "transport"  # upstream fetch/delivery fault (reserved for IXH-6.4)
     INTERNAL = "internal"  # our fault: unexpected exception, worker fault, storage fault
 
@@ -128,6 +128,40 @@ INTAKE_ERROR_TAXONOMY: Dict[str, IntakeErrorDescriptor] = {
             "The uploaded archive could not be unpacked (corrupt, unsupported layout, "
             "or missing the expected root document). Re-create the archive and try "
             "again.",
+        ),
+        _d(
+            "INPUT_UNSAFE_CONSTRUCT",
+            IntakeErrorCategory.INPUT,
+            False,
+            "The document uses a construct that is not allowed on import for "
+            "security reasons (an XML DTD, an entity definition, an external "
+            "reference, or an archive entry pointing outside its root). Remove the "
+            "construct — inline what it referenced — and try again.",
+        ),
+        # --- resource: a limit was exceeded (IXH-1.4; IXH-6.5 extends this set) --
+        _d(
+            "INPUT_TOO_LARGE",
+            IntakeErrorCategory.RESOURCE,
+            False,
+            "The document is larger than the import size limit. Split it into "
+            "smaller documents, or remove embedded data such as inline examples, "
+            "and try again.",
+        ),
+        _d(
+            "INPUT_DEPTH_LIMIT",
+            IntakeErrorCategory.RESOURCE,
+            False,
+            "The document nests more deeply than the import limit allows. Flatten "
+            "the deepest structures — or replace a recursive chain of references "
+            "with a bounded one — and try again.",
+        ),
+        _d(
+            "INPUT_EXPANSION_LIMIT",
+            IntakeErrorCategory.RESOURCE,
+            False,
+            "Expanding the document's aliases, references, or entities would "
+            "produce far more content than the import limit allows. Inline the "
+            "repeated content directly instead of aliasing it, and try again.",
         ),
         # --- format: routing between document and adapter is at fault -----------
         _d(

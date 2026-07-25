@@ -43,6 +43,7 @@ __all__ = [
     "ExpectedOutcome",
     "FailureClass",
     "FilesetRole",
+    "IntakeGuard",
     "Rung",
     "ValidityClass",
     "corpus_files",
@@ -113,6 +114,24 @@ class FilesetRole(str, Enum):
     MEMBER = "member"
 
 
+class IntakeGuard(str, Enum):
+    """The intake guard an adversarial example targets — IXH-1.4 (#5090).
+
+    Every ``adversarial`` corpus entry names exactly one guard, so a fixture is
+    traceable to the defense it proves and a guard with no fixture is visible.
+    """
+
+    XML_ENTITY_EXPANSION = "xml-entity-expansion"
+    XML_EXTERNAL_ENTITY = "xml-external-entity"
+    DOCUMENT_SIZE = "document-size"
+    NESTING_DEPTH = "nesting-depth"
+    ALIAS_EXPANSION = "alias-expansion"
+    REFERENCE_RECURSION = "reference-recursion"
+    ARCHIVE_BOMB = "archive-bomb"
+    ARCHIVE_PATH_TRAVERSAL = "archive-path-traversal"
+    SECRET_SCRUBBING = "secret-scrubbing"
+
+
 class FailureClass(str, Enum):
     """IXH-1.3 failure-taxonomy class a negative example exercises (#5089).
 
@@ -178,7 +197,10 @@ class CorpusEntry(BaseModel):
         failure_class: IXH-1.3 failure-taxonomy class (required on invalid
             entries, omitted otherwise).
         expected_error_code: Stable intake-taxonomy code the import job must
-            fail with (required on invalid entries, omitted otherwise).
+            fail with (required on invalid entries and on rejecting adversarial
+            entries, omitted otherwise).
+        guard: IXH-1.4 intake guard the entry targets (required on adversarial
+            entries, omitted otherwise).
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -198,6 +220,7 @@ class CorpusEntry(BaseModel):
     fileset_role: Optional[FilesetRole] = None
     failure_class: Optional[FailureClass] = None
     expected_error_code: Optional[str] = None
+    guard: Optional[IntakeGuard] = None
 
     @property
     def absolute_path(self) -> Path:
@@ -272,6 +295,7 @@ def load_corpus(
     adapter_key: Optional[str] = None,
     rung: Optional[Rung | str] = None,
     failure_class: Optional[FailureClass | str] = None,
+    guard: Optional[IntakeGuard | str] = None,
 ) -> List[CorpusEntry]:
     """Return the corpus entries matching every given filter (AND semantics).
 
@@ -282,6 +306,7 @@ def load_corpus(
         adapter_key: ImportSource registry key the entry must map to.
         rung: Ladder rung to match, as enum or string.
         failure_class: IXH-1.3 failure class to match, as enum or string.
+        guard: IXH-1.4 intake guard to match, as enum or string.
 
     Returns:
         Matching entries in manifest (path-sorted) order; empty list when
@@ -290,6 +315,7 @@ def load_corpus(
     wanted_class = ValidityClass(validity_class) if validity_class is not None else None
     wanted_rung = Rung(rung) if rung is not None else None
     wanted_failure = FailureClass(failure_class) if failure_class is not None else None
+    wanted_guard = IntakeGuard(guard) if guard is not None else None
     entries = load_manifest().entries
     return [
         entry
@@ -300,6 +326,7 @@ def load_corpus(
         and (adapter_key is None or entry.adapter_key == adapter_key)
         and (wanted_rung is None or entry.rung is wanted_rung)
         and (wanted_failure is None or entry.failure_class is wanted_failure)
+        and (wanted_guard is None or entry.guard is wanted_guard)
     ]
 
 

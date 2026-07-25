@@ -11,6 +11,8 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
+from .secure_xml import SecureXmlError, parse_xml
+
 __all__ = [
     "Iso20022ParseError",
     "Iso20022Element",
@@ -68,8 +70,8 @@ def is_iso20022(content: str) -> bool:
     if not _ISO20022_NS_RE.search(trimmed):
         return False
     try:
-        root = ET.fromstring(trimmed)
-    except ET.ParseError:
+        root = parse_xml(trimmed)
+    except SecureXmlError:
         return False
     if _local(root.tag) != "Document":
         return False
@@ -110,13 +112,20 @@ def parse_iso20022(content: str, *, source_label: Optional[str] = None) -> Iso20
     """Parse ISO 20022 XML into an :class:`Iso20022Document`."""
     if not content or not content.strip():
         raise Iso20022ParseError("Invalid or empty ISO 20022 content")
+
+    # Parse before the shape check: ``is_iso20022`` needs a *successful* secure parse
+    # to inspect the root tag, so asking it first would report a hostile document
+    # (DTD, entity, external reference, over-deep nesting) as merely "not ISO 20022"
+    # and lose the security code (IXH-1.4).
+    try:
+        xml_root = parse_xml(content, source_label=source_label)
+    except SecureXmlError as exc:
+        if exc.code == "INPUT_MALFORMED":
+            raise Iso20022ParseError(f"Invalid XML: {exc}") from exc
+        raise
+
     if not is_iso20022(content):
         raise Iso20022ParseError("Content does not appear to be an ISO 20022 XML message")
-
-    try:
-        xml_root = ET.fromstring(content)
-    except ET.ParseError as exc:
-        raise Iso20022ParseError(f"Invalid XML: {exc}") from exc
 
     namespace = _namespace_uri(xml_root.tag) or xml_root.attrib.get("xmlns")
     if not namespace or not _ISO20022_NS_RE.search(namespace):

@@ -70,11 +70,14 @@ def _safe_detect(adapter: "ImportSource", payload: DetectionInput) -> DetectionR
     """
     try:
         return adapter.detect(payload)
-    except Exception:  # noqa: BLE001 - a broken sniffer must not break detection
+    except Exception as exc:  # noqa: BLE001 - a broken sniffer must not break detection
+        # Log the exception *type* only, never its message or traceback: a parser
+        # error quotes the offending source span, which may carry a credential
+        # (IXH-1.4). The adapter key plus type is enough to find the bug.
         logger.warning(
-            "import-source adapter %r raised during detect(); treating as no-match",
+            "import-source adapter %r raised %s during detect(); treating as no-match",
             adapter.key,
-            exc_info=True,
+            type(exc).__name__,
         )
         return NO_MATCH
     from .schema_lint import LintResult

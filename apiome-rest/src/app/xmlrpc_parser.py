@@ -10,6 +10,8 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
+from .secure_xml import SecureXmlError, parse_xml
+
 __all__ = [
     "XmlRpcParseError",
     "XmlRpcMember",
@@ -174,9 +176,11 @@ def parse_xmlrpc(content: str, *, source_label: Optional[str] = None) -> XmlRpcD
     if not content or not content.strip():
         raise XmlRpcParseError("Invalid or empty XML-RPC document")
     try:
-        root = ET.fromstring(content)
-    except ET.ParseError as exc:
-        raise XmlRpcParseError(f"Malformed XML-RPC document: {exc}") from exc
+        root = parse_xml(content, source_label=source_label)
+    except SecureXmlError as exc:
+        if exc.code == "INPUT_MALFORMED":
+            raise XmlRpcParseError(f"Malformed XML-RPC document: {exc}") from exc
+        raise
 
     root_tag = _local(root.tag)
     if root_tag == "methodCall":

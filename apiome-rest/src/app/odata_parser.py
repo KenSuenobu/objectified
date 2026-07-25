@@ -12,6 +12,8 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
+from .secure_xml import SecureXmlError, parse_xml
+
 __all__ = [
     "ODataParseError",
     "ODataProperty",
@@ -272,10 +274,12 @@ def parse_odata(content: str, *, source_label: Optional[str] = None) -> ODataDoc
         raise ODataParseError("Content does not appear to be an OData EDMX / CSDL document")
 
     try:
-        root = ET.fromstring(content)
-    except ET.ParseError as exc:
-        label = f" ({source_label})" if source_label else ""
-        raise ODataParseError(f"Malformed OData XML{label}: {exc}") from exc
+        root = parse_xml(content, source_label=source_label)
+    except SecureXmlError as exc:
+        if exc.code == "INPUT_MALFORMED":
+            label = f" ({source_label})" if source_label else ""
+            raise ODataParseError(f"Malformed OData XML{label}: {exc}") from exc
+        raise
 
     if _local(root.tag) != "Edmx":
         label = f" ({source_label})" if source_label else ""

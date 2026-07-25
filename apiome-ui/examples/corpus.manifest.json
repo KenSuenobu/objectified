@@ -4380,6 +4380,29 @@
       "rung": "real-world"
     },
     {
+      "path": "iso20022/adversarial/01-billion-laughs-pain001.xml",
+      "format": "iso20022",
+      "adapter_key": "iso20022",
+      "validity_class": "adversarial",
+      "expected_detection": {
+        "format": "iso20022",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "adversarial",
+        "billion-laughs",
+        "entity-expansion",
+        "pain.001"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored entity expansion inside a pain.001 credit-transfer message.",
+      "guard": "xml-entity-expansion",
+      "expected_error_code": "INPUT_UNSAFE_CONSTRUCT",
+      "notes": "parse_iso20022 parses before its shape check (IXH-1.4) because is_iso20022 needs a successful secure parse; without that order the security code would be masked as a format mismatch."
+    },
+    {
       "path": "iso20022/negative/01-syntactic-unclosed-tag.xml",
       "format": "iso20022",
       "adapter_key": "iso20022",
@@ -5424,6 +5447,28 @@
       "license": "Apache-2.0",
       "provenance": "Hand-authored faithful reconstruction of the shape of the OData TripPin reference service; no third-party text copied.",
       "rung": "real-world"
+    },
+    {
+      "path": "odata/adversarial/01-external-dtd-entity.xml",
+      "format": "odata",
+      "adapter_key": "odata",
+      "validity_class": "adversarial",
+      "expected_detection": {
+        "format": "odata",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "adversarial",
+        "xxe",
+        "external-entity",
+        "edmx"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored EDMX whose DTD declares an external entity reading /proc/self/environ.",
+      "guard": "xml-external-entity",
+      "expected_error_code": "INPUT_UNSAFE_CONSTRUCT"
     },
     {
       "path": "odata/negative/01-syntactic-mismatched-tag.edmx",
@@ -8379,6 +8424,28 @@
       "rung": "typical"
     },
     {
+      "path": "wadl/adversarial/01-billion-laughs.wadl",
+      "format": "wadl",
+      "adapter_key": "wadl",
+      "validity_class": "adversarial",
+      "expected_detection": {
+        "format": "wadl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "adversarial",
+        "billion-laughs",
+        "entity-expansion",
+        "dtd"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored entity expansion in a WADL doc element.",
+      "guard": "xml-entity-expansion",
+      "expected_error_code": "INPUT_UNSAFE_CONSTRUCT"
+    },
+    {
       "path": "wadl/negative/01-syntactic-mismatched-close-tag.wadl",
       "format": "wadl",
       "adapter_key": "wadl",
@@ -8617,6 +8684,51 @@
       "rung": "typical"
     },
     {
+      "path": "wsdl/adversarial/01-external-entity-ssrf.wsdl",
+      "format": "wsdl",
+      "adapter_key": "wsdl",
+      "validity_class": "adversarial",
+      "expected_detection": {
+        "format": "wsdl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "adversarial",
+        "xxe",
+        "external-entity",
+        "ssrf",
+        "instance-metadata"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored XXE pointed at the cloud instance-metadata endpoint, the SSRF-via-XML shape.",
+      "guard": "xml-external-entity",
+      "expected_error_code": "INPUT_UNSAFE_CONSTRUCT"
+    },
+    {
+      "path": "wsdl/adversarial/02-parameter-entity-dtd.wsdl",
+      "format": "wsdl",
+      "adapter_key": "wsdl",
+      "validity_class": "adversarial",
+      "expected_detection": {
+        "format": "wsdl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "adversarial",
+        "parameter-entity",
+        "blind-xxe",
+        "dtd"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored parameter-entity indirection pulling an external DTD (the blind-XXE exfiltration shape).",
+      "guard": "xml-entity-expansion",
+      "expected_error_code": "INPUT_UNSAFE_CONSTRUCT"
+    },
+    {
       "path": "wsdl/negative/01-syntactic-mismatched-close-tag.wsdl",
       "format": "wsdl",
       "adapter_key": "wsdl",
@@ -8846,6 +8958,50 @@
       "license": "Apache-2.0",
       "provenance": "Hand-authored faithful reconstruction of the shape of the WordPress XML-RPC wp.getPost call; no third-party text copied.",
       "rung": "real-world"
+    },
+    {
+      "path": "xml-rpc/adversarial/01-xinclude-file-read.xml",
+      "format": "xmlrpc",
+      "adapter_key": "xmlrpc",
+      "validity_class": "adversarial",
+      "expected_detection": {
+        "format": "xmlrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "adversarial",
+        "xinclude",
+        "external-reference",
+        "file-disclosure"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored XInclude directive naming a local file; ElementTree leaves it inert, so secure_xml rejects the directive explicitly rather than relying on that accident.",
+      "guard": "xml-external-entity",
+      "expected_error_code": "INPUT_UNSAFE_CONSTRUCT"
+    },
+    {
+      "path": "xml-rpc/adversarial/02-deep-struct-nesting.xml",
+      "format": "xmlrpc",
+      "adapter_key": "xmlrpc",
+      "validity_class": "adversarial",
+      "expected_detection": {
+        "format": "xmlrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "adversarial",
+        "nesting-depth",
+        "stack-exhaustion",
+        "recursive-walker"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Generated 400-level nested struct chain; the XML-RPC value parser recurses per level, so the depth ceiling is what prevents a RecursionError.",
+      "guard": "nesting-depth",
+      "expected_error_code": "INPUT_DEPTH_LIMIT"
     },
     {
       "path": "xml-rpc/negative/01-syntactic-unclosed-value-tag.xml",
@@ -9083,6 +9239,50 @@
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "rung": "typical"
+    },
+    {
+      "path": "xsd/adversarial/01-billion-laughs.xsd",
+      "format": "xsd",
+      "adapter_key": "xsd",
+      "validity_class": "adversarial",
+      "expected_detection": {
+        "format": "xsd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "adversarial",
+        "billion-laughs",
+        "entity-expansion",
+        "dtd"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored billion-laughs entity chain inside a plausible XSD; the xs:schema marker makes the sniffer claim it so the rejection comes from the hardened parser.",
+      "guard": "xml-entity-expansion",
+      "expected_error_code": "INPUT_UNSAFE_CONSTRUCT"
+    },
+    {
+      "path": "xsd/adversarial/02-external-entity-file-read.xsd",
+      "format": "xsd",
+      "adapter_key": "xsd",
+      "validity_class": "adversarial",
+      "expected_detection": {
+        "format": "xsd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "adversarial",
+        "xxe",
+        "external-entity",
+        "file-disclosure"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored XXE reading file:///etc/passwd through a documentation element.",
+      "guard": "xml-external-entity",
+      "expected_error_code": "INPUT_UNSAFE_CONSTRUCT"
     },
     {
       "path": "xsd/negative/01-syntactic-mismatched-close-tag.xsd",

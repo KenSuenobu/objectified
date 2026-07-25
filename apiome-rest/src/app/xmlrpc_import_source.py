@@ -19,6 +19,7 @@ from .import_source import (
     ImportSourceError,
     InputKind,
 )
+from .secure_xml import SecureXmlError
 from .xmlrpc_parser import (
     XmlRpcDocument,
     XmlRpcParseError,
@@ -65,8 +66,10 @@ class XmlRpcImportSource(ImportSource, register=True):
     def parse(self, raw: str, *, source_label: Optional[str] = None) -> XmlRpcDocument:
         try:
             return parse_xmlrpc(raw, source_label=source_label)
-        except XmlRpcParseError as exc:
-            raise ImportSourceError(str(exc)) from exc
+        except (XmlRpcParseError, SecureXmlError) as exc:
+            # SecureXmlError carries the taxonomy code for a rejected DTD /
+            # entity / external reference or an exceeded size or depth limit.
+            raise ImportSourceError(str(exc), code=getattr(exc, "code", None)) from exc
 
     def parse_fileset(
         self,

@@ -19,6 +19,11 @@ from urllib.parse import urlparse
 import httpx
 import yaml
 
+from .intake_resource_guard import (
+    IntakeLimitError,
+    guard_document_text,
+    guard_parsed_document,
+)
 from .repository_file_scan import fetch_github_repository_file_text
 from .repository_validation import parse_github_owner_repo_from_url
 from .ssrf_guard import SSRFError, build_guarded_client, validate_url
@@ -69,6 +74,13 @@ def parse_document(text: str, *, source_label: Optional[str] = None) -> Dict[str
     YAML-authored OpenAPI / JSON Schema documents ingest without a separate flag.
     A YAML document is itself a superset of JSON, so this never loses a JSON parse.
 
+    Resource guards run first and again after parsing (IXH-1.4): an oversized
+    document, a YAML alias bomb, or a pathologically deep structure is rejected
+    by :mod:`app.intake_resource_guard` before it can exhaust memory or the
+    stack. Those violations raise :class:`IntakeLimitError`, which carries the
+    intake-taxonomy code and is *not* wrapped in :class:`IngestionError` so the
+    specific limit survives to the job status.
+
     Args:
         text: The raw document text.
         source_label: Optional label used only to make error messages specific.
@@ -79,9 +91,12 @@ def parse_document(text: str, *, source_label: Optional[str] = None) -> Dict[str
     Raises:
         IngestionError: If the text is empty, unparseable as JSON or YAML, or
             does not parse to a JSON object / YAML mapping at the top level.
+        IntakeLimitError: If the document breaches an intake resource limit.
     """
     if text is None or not text.strip():
         raise IngestionError("Source document is empty")
+
+    guard_document_text(text, source_label=source_label)
 
     parsed: Any
     try:
@@ -92,6 +107,16 @@ def parse_document(text: str, *, source_label: Optional[str] = None) -> Dict[str
         except yaml.YAMLError as exc:
             where = f" ({source_label})" if source_label else ""
             raise IngestionError(f"Source document is not valid JSON or YAML{where}: {exc}")
+        except RecursionError as exc:
+            # A deeply nested flow document can still exhaust the stack inside
+            # PyYAML's recursive composer, below the pre-parse depth bound.
+            raise IntakeLimitError(
+                f"Source document nests too deeply to parse"
+                f"{f' ({source_label})' if source_label else ''}",
+                code="INPUT_DEPTH_LIMIT",
+            ) from exc
+
+    guard_parsed_document(parsed, source_label=source_label)
 
     if not isinstance(parsed, dict):
         where = f" ({source_label})" if source_label else ""

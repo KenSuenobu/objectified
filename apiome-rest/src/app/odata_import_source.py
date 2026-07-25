@@ -20,6 +20,7 @@ from .import_source import (
     InputKind,
 )
 from .odata_parser import ODataDocument, ODataParseError, is_odata, parse_odata
+from .secure_xml import SecureXmlError
 
 __all__ = ["ODataImportSource"]
 
@@ -54,8 +55,10 @@ class ODataImportSource(ImportSource, register=True):
     def parse(self, raw: str, *, source_label: Optional[str] = None) -> ODataDocument:
         try:
             return parse_odata(raw, source_label=source_label)
-        except ODataParseError as exc:
-            raise ImportSourceError(str(exc)) from exc
+        except (ODataParseError, SecureXmlError) as exc:
+            # SecureXmlError carries the taxonomy code for a rejected DTD /
+            # entity / external reference or an exceeded size or depth limit.
+            raise ImportSourceError(str(exc), code=getattr(exc, "code", None)) from exc
 
     def parse_fileset(
         self,

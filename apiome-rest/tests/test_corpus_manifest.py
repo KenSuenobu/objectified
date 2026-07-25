@@ -32,6 +32,7 @@ from corpus_loader import (
     CorpusEntry,
     ExpectedOutcome,
     FilesetRole,
+    IntakeGuard,
     Rung,
     ValidityClass,
     corpus_files,
@@ -308,14 +309,15 @@ def test_fileset_entries_are_consistent():
 
     Every nested entry must carry a ``fileset_role`` and sit on the
     ``multi-file`` rung; flat entries must not carry a role; and every set
-    directory must contain exactly one ``root``. The ``negative/`` tier
-    directory (IXH-1.3) is not a set: its files behave like flat entries.
+    directory must contain exactly one ``root``. The ``negative/`` (IXH-1.3)
+    and ``adversarial/`` (IXH-1.4) tier directories are not sets: their files
+    behave like flat entries.
     """
     problems = []
     roots_by_set: dict[str, int] = {}
     for entry in load_corpus():
         segments = entry.path.split("/")
-        nested = len(segments) == 3 and segments[1] != "negative"
+        nested = len(segments) == 3 and segments[1] not in ("negative", "adversarial")
         if nested:
             set_dir = entry.path.rsplit("/", 1)[0]
             roots_by_set.setdefault(set_dir, 0)
@@ -353,8 +355,14 @@ def test_invalid_entries_declare_failure_class_and_error_code():
         else:
             if entry.failure_class is not None:
                 problems.append(f"{entry.path}: failure_class on a non-invalid entry")
-            if entry.expected_error_code is not None:
-                problems.append(f"{entry.path}: expected_error_code on a non-invalid entry")
+            if (
+                entry.expected_error_code is not None
+                and entry.validity_class is not ValidityClass.ADVERSARIAL
+            ):
+                problems.append(
+                    f"{entry.path}: expected_error_code on a non-invalid, "
+                    "non-adversarial entry"
+                )
     assert not problems, "negative-contract problems:\n  " + "\n  ".join(problems)
 
 
@@ -364,8 +372,9 @@ def test_expected_error_codes_are_registered_taxonomy_codes():
     unknown = sorted(
         {
             f"{entry.path}: {entry.expected_error_code}"
-            for entry in load_corpus(validity_class=ValidityClass.INVALID)
-            if entry.expected_error_code not in INTAKE_ERROR_TAXONOMY
+            for entry in load_corpus()
+            if entry.expected_error_code is not None
+            and entry.expected_error_code not in INTAKE_ERROR_TAXONOMY
         }
     )
     assert not unknown, (
@@ -435,3 +444,69 @@ def test_readme_matches_manifest_rendering():
         "apiome-ui/examples/README.md has drifted from corpus.manifest.json; "
         "run `python3 scripts/generate_examples_readme.py` to regenerate it."
     )
+
+
+# ---------------------------------------------------------------------------
+# Adversarial tier (IXH-1.4, #5090)
+# ---------------------------------------------------------------------------
+
+
+def test_adversarial_entries_declare_a_guard_and_live_in_their_tier():
+    """Every adversarial entry names the guard it targets, lives under
+    ``<format>/adversarial/``, and nothing else claims that tier."""
+    problems = []
+    for entry in load_corpus():
+        segments = entry.path.split("/")
+        in_tier = len(segments) == 3 and segments[1] == "adversarial"
+        adversarial = entry.validity_class is ValidityClass.ADVERSARIAL
+        if adversarial:
+            if entry.guard is None:
+                problems.append(f"{entry.path}: adversarial entry missing guard")
+            if not in_tier:
+                problems.append(
+                    f"{entry.path}: adversarial entry outside an adversarial/ tier directory"
+                )
+            if entry.expected_outcome is ExpectedOutcome.IMPORTS:
+                problems.append(
+                    f"{entry.path}: adversarial entry must reject or import with warnings"
+                )
+            if entry.rung is not None:
+                problems.append(f"{entry.path}: adversarial entry must not declare a rung")
+        else:
+            if entry.guard is not None:
+                problems.append(f"{entry.path}: guard on a non-adversarial entry")
+            if in_tier:
+                problems.append(f"{entry.path}: adversarial/ tier file not classified adversarial")
+    assert not problems, "adversarial-tier problems:\n  " + "\n  ".join(problems)
+
+
+def test_rejecting_adversarial_entries_declare_an_error_code():
+    """An adversarial entry expected to reject must say which code it rejects with;
+    one expected to import with warnings must not."""
+    problems = []
+    for entry in load_corpus(validity_class=ValidityClass.ADVERSARIAL):
+        if entry.expected_outcome is ExpectedOutcome.REJECTS:
+            if entry.expected_error_code is None:
+                problems.append(f"{entry.path}: rejecting entry missing expected_error_code")
+        elif entry.expected_error_code is not None:
+            problems.append(
+                f"{entry.path}: expected_error_code on an entry that imports with warnings"
+            )
+    assert not problems, "adversarial error-code problems:\n  " + "\n  ".join(problems)
+
+
+def test_every_intake_guard_has_corpus_coverage():
+    """Each guard in the vocabulary is exercised by at least one fixture.
+
+    Guards whose fixtures are *generated* (archive bombs, path traversal, huge and
+    deeply nested documents, alias bombs) are covered by
+    ``scripts/generate_adversarial_corpus.py``; the rest appear in the manifest.
+    Together they must span the whole vocabulary, so adding a guard without a
+    fixture fails here.
+    """
+    from generated_corpus_spec import generated_guards
+
+    covered = {entry.guard for entry in load_corpus(validity_class=ValidityClass.ADVERSARIAL)}
+    covered |= generated_guards()
+    missing = sorted(guard.value for guard in set(IntakeGuard) - covered)
+    assert not missing, f"intake guards with no adversarial fixture: {missing}"

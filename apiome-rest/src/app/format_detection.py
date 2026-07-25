@@ -44,6 +44,7 @@ from .import_source import (
     DetectionResult,
     detect_import_source_candidates,
 )
+from .intake_resource_guard import IntakeLimitError
 
 logger = logging.getLogger(__name__)
 
@@ -573,12 +574,16 @@ def _ensure_document(payload: DetectionInput) -> DetectionInput:
     document supplied as raw text is sniffed just like one supplied pre-parsed.
     Text-only formats (protobuf, GraphQL, RAML, …) simply fail to parse, which is
     harmless — their sniffers read the raw text.
+
+    A document that breaches an intake resource limit (IXH-1.4) is likewise left
+    unparsed: detection is best-effort and must never raise, so the text-based
+    sniffers still get their chance and the limit is reported by the parse phase.
     """
     if payload.document is not None or not payload.text:
         return payload
     try:
         document = parse_document(payload.text, source_label=payload.filename)
-    except IngestionError:
+    except (IngestionError, IntakeLimitError):
         return payload
     return replace(payload, document=document)
 
@@ -648,8 +653,14 @@ def detect_format(
     for sniffer in _SNIFFERS:
         try:
             result = sniffer(enriched)
-        except Exception:  # noqa: BLE001 - a broken sniffer must not break detection
-            logger.warning("format sniffer %r raised; treating as no-match", sniffer, exc_info=True)
+        except Exception as exc:  # noqa: BLE001 - a broken sniffer must not break detection
+            # Type only, no message/traceback: parser errors quote source spans that
+            # may carry credentials (IXH-1.4).
+            logger.warning(
+                "format sniffer %r raised %s; treating as no-match",
+                getattr(sniffer, "__name__", sniffer),
+                type(exc).__name__,
+            )
             continue
         if result.matched and result.format is not None:
             candidates.append(

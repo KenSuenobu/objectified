@@ -39,7 +39,10 @@ from .oas_resource_limits import OasResourceLimitValues, resource_limit_values
 __all__ = [
     "OasParseDiagnostic",
     "SafeOasParseResult",
+    "analyze_nesting",
+    "pre_scan_depth_bound",
     "safe_oas_parse",
+    "yaml_alias_expansion_cost",
 ]
 
 
@@ -282,6 +285,69 @@ def _count_yaml_stream(text: str, max_alias_count: int) -> Tuple[int, int, Optio
             col=col,
         )
     return document_count, alias_cost, None
+
+
+# ===========================================================================
+# Shared limit primitives (IXH-1.4)
+# ===========================================================================
+#
+# The three checks below are the reusable core of this module: a pre-parse depth
+# bound, a YAML alias-expansion cost, and an exact post-parse depth/circularity
+# analysis. :mod:`app.intake_resource_guard` applies the same primitives to
+# *import* intake (the resource-limits artifact lists ``import`` in its
+# ``appliesTo``), so they are exported rather than duplicated there.
+
+
+def pre_scan_depth_bound(text: str) -> int:
+    """Conservative pre-parse upper bound on a document's nesting depth.
+
+    Args:
+        text: Raw JSON/YAML source text.
+
+    Returns:
+        An over-estimate of the collection nesting depth, cheap enough to run
+        before parsing. Callers apply slack (see :data:`PRE_SCAN_DEPTH_SLACK`)
+        because block scalars and brackets in plain scalars inflate it.
+    """
+    return _pre_scan_depth_bound(text)
+
+
+#: Slack factor callers apply to :func:`pre_scan_depth_bound` results.
+PRE_SCAN_DEPTH_SLACK = _PRE_SCAN_DEPTH_SLACK
+
+
+def yaml_alias_expansion_cost(text: str, max_alias_count: int) -> Tuple[int, int, bool]:
+    """Scan a YAML stream for document count and alias-expansion cost.
+
+    Each ``*alias`` is weighted by the event count of the subtree its anchor
+    recorded, so an anchor-in-anchor "billion laughs" chain exceeds the bound
+    within a few levels instead of after materialization.
+
+    Args:
+        text: Raw YAML source text.
+        max_alias_count: Bound at which scanning stops early.
+
+    Returns:
+        ``(document_count, alias_cost, scan_failed)``. ``scan_failed`` is ``True``
+        when the stream is not valid YAML, in which case the counts are partial
+        and the caller should fall through to its own syntax handling.
+    """
+    document_count, alias_cost, diagnostic = _count_yaml_stream(text, max_alias_count)
+    return document_count, alias_cost, diagnostic is not None
+
+
+def analyze_nesting(root: Any) -> Tuple[int, bool]:
+    """Exact nesting depth and circularity of an already-parsed value.
+
+    Args:
+        root: A parsed JSON/YAML value.
+
+    Returns:
+        ``(depth, circular)``; depth counts collection levels (a scalar is 0),
+        and ``circular`` is ``True`` for a self-referential (alias cycle)
+        structure. Iterative, so analyzing hostile input cannot recurse.
+    """
+    return _analyze_materialized(root)
 
 
 def safe_oas_parse(

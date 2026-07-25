@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Adversarial: an EDMX document whose DTD declares an external entity. The
+     edmx:Edmx marker makes the sniffer claim it, so the rejection must come from
+     the hardened parser rather than from format mismatch. -->
+<!DOCTYPE edmx:Edmx [
+  <!ENTITY leak SYSTEM "file:///proc/self/environ">
+]>
+<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">
+  <edmx:DataServices>
+    <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="Leak">
+      <EntityType Name="Item">
+        <Key><PropertyRef Name="Id"/></Key>
+        <Property Name="Id" Type="Edm.String" Nullable="false"/>
+        <Property Name="Note" Type="Edm.String"/>
+      </EntityType>
+      <EntityContainer Name="Container">
+        <EntitySet Name="Items" EntityType="Leak.Item"/>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
