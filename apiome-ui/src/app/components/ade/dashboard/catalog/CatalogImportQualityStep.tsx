@@ -55,23 +55,29 @@ import {
   type PreflightRequest,
 } from '@/app/utils/import-preflight';
 import { clampRowIndex, computeCenteredLineRange, computeWindowedRange } from '@/app/utils/windowed-rows';
+import {
+  FINDINGS_VIRTUALIZE_ABOVE,
+  RAW_VIEWER_CONTEXT,
+} from '@/app/utils/preview-budgets';
 import { CatalogImportPreviewPanel } from './CatalogImportPreviewPanel';
 
 /** SVG progress-ring geometry, matching `CatalogLintPanel`'s gauge (viewBox 0 0 40 40, r 16). */
 const GAUGE_R = 16;
 const GAUGE_C = 2 * Math.PI * GAUGE_R;
 
-/** Findings beyond this count are windowed rather than all mounted. */
-export const VIRTUALIZE_ABOVE = 50;
+// Budgets live in the central registry (IXH-3.6, #5108); `VIRTUALIZE_ABOVE` keeps its
+// historical exported name for the step's callers and tests.
+export { FINDINGS_VIRTUALIZE_ABOVE as VIRTUALIZE_ABOVE } from '@/app/utils/preview-budgets';
 
-/** Uniform finding-row height (px) the windowing arithmetic assumes; matches `h-[76px]` below. */
-const ROW_HEIGHT = 76;
+/**
+ * Uniform finding-row pitch (px) the windowing arithmetic assumes; matches the `h-20` row
+ * class (a full-height button inside 4px of vertical padding). The pitch and the row class
+ * must agree exactly, or the spacer arithmetic drifts by the difference on every row.
+ */
+const ROW_HEIGHT = 80;
 
 /** Height (px) of the findings viewport; matches the `h-[380px]` list class. */
 const LIST_HEIGHT = 380;
-
-/** Raw-source lines rendered around a linked location. The viewer is a locator, not an editor. */
-const RAW_VIEWER_CONTEXT = 400;
 
 export interface CatalogImportQualityStepProps {
   /** The candidate document's bytes, base64-encoded — exactly what the commit would send. */
@@ -176,28 +182,39 @@ function FindingRow({
   finding,
   line,
   selected,
+  setSize,
+  posInSet,
   onSelect,
   registerRef,
+  pinnedStyle,
 }: {
   finding: PreflightFinding;
   line: number | null;
   selected: boolean;
+  /** Total findings → `aria-setsize`, so a windowed listbox still reports its true size. */
+  setSize: number;
+  /** 1-based position → `aria-posinset`. */
+  posInSet: number;
   onSelect: () => void;
   registerRef: (node: HTMLButtonElement | null) => void;
+  /** Absolute-position style when the row is pinned (focused but scrolled out of the window). */
+  pinnedStyle?: React.CSSProperties;
 }) {
   return (
-    <li className="px-1" role="presentation">
+    <li className="h-20 px-1 py-0.5" role="presentation" style={pinnedStyle}>
       <button
         type="button"
         ref={registerRef}
         role="option"
         aria-selected={selected}
+        aria-setsize={setSize}
+        aria-posinset={posInSet}
         tabIndex={selected ? 0 : -1}
         onClick={onSelect}
         onFocus={onSelect}
         data-testid="import-quality-finding"
         className={cn(
-          'flex h-[76px] w-full flex-col justify-center gap-1 rounded-lg border px-3 text-left transition',
+          'flex h-full w-full flex-col justify-center gap-1 rounded-lg border px-3 text-left motion-safe:transition',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
           selected
             ? 'border-indigo-400 bg-indigo-50 dark:border-indigo-600 dark:bg-indigo-950/40'
@@ -384,12 +401,32 @@ export function CatalogImportQualityStep({
     setPreviewLine(null);
   }, []);
 
+  // Imperative focus after the window/selection state from a keyboard move has rendered, so
+  // the target row is mounted (windowed in, or pinned) before `.focus()` runs. A counter
+  // (not a boolean) so consecutive moves each fire; guarded so unrelated re-renders never
+  // steal focus (the tree explorer's pattern, IXH-3.2).
+  const [focusArm, setFocusArm] = useState(0);
+  const focusArmHandled = useRef(0);
+  useEffect(() => {
+    if (focusArm === focusArmHandled.current) return;
+    focusArmHandled.current = focusArm;
+    rowRefs.current.get(selectedIndex)?.focus();
+  }, [focusArm, selectedIndex]);
+
   const focusRow = useCallback(
     (index: number) => {
+      // Scroll the target into the window and mirror it into state in the same tick, so the
+      // post-render focus effect finds the row mounted rather than racing the scroll event.
+      const target = Math.max(
+        0,
+        Math.min(index * ROW_HEIGHT, findings.length * ROW_HEIGHT - LIST_HEIGHT),
+      );
+      if (listRef.current) listRef.current.scrollTop = target;
+      setScrollTop(target);
       selectFinding(index);
-      rowRefs.current.get(index)?.focus();
+      setFocusArm((n) => n + 1);
     },
-    [selectFinding],
+    [findings.length, selectFinding],
   );
 
   const handleListKeyDown = useCallback(
@@ -407,13 +444,6 @@ export function CatalogImportQualityStep({
               : findings.length - 1;
       const clamped = clampRowIndex(next, findings.length);
       if (clamped === null) return;
-      // Keep the target row mounted before focusing it, so windowing cannot swallow the keystroke.
-      if (listRef.current) {
-        listRef.current.scrollTop = Math.max(
-          0,
-          Math.min(clamped * ROW_HEIGHT, findings.length * ROW_HEIGHT - LIST_HEIGHT),
-        );
-      }
       focusRow(clamped);
     },
     [findings.length, focusRow, selectedIndex],
@@ -424,7 +454,7 @@ export function CatalogImportQualityStep({
     lineRef.current?.scrollIntoView({ block: 'center' });
   }, [selectedLine]);
 
-  const virtualized = findings.length > VIRTUALIZE_ABOVE;
+  const virtualized = findings.length > FINDINGS_VIRTUALIZE_ABOVE;
   const rowWindow = useMemo(
     () =>
       virtualized
@@ -437,6 +467,15 @@ export function CatalogImportQualityStep({
         : { startIndex: 0, endIndex: findings.length, paddingTop: 0, paddingBottom: 0 },
     [findings.length, scrollTop, virtualized],
   );
+  // Focus pinning: the selected row (the listbox's only Tab stop) must stay mounted even
+  // when scrolled out of the window, or keyboard focus would fall off the list. It renders
+  // absolutely at its true offset so the spacer arithmetic is untouched.
+  const pinnedFindingIndex =
+    virtualized &&
+    findings.length > 0 &&
+    (selectedIndex < rowWindow.startIndex || selectedIndex >= rowWindow.endIndex)
+      ? selectedIndex
+      : null;
 
   // The viewer mounts a bounded window of lines *around* the selected location (IXH-3.2) rather
   // than only the head of the document, so a preview-manifest link to line 12,000 still resolves.
@@ -466,7 +505,7 @@ export function CatalogImportQualityStep({
           className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center"
           data-testid="import-quality-loading"
         >
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" aria-hidden />
+          <Loader2 className="h-8 w-8 motion-safe:animate-spin text-indigo-500" aria-hidden />
           <div className="text-sm text-gray-700 dark:text-gray-200">
             Scoring this source before import — nothing has been written yet.
           </div>
@@ -608,7 +647,9 @@ export function CatalogImportQualityStep({
                       onKeyDown={handleListKeyDown}
                       className="h-[380px] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
                     >
-                      <ul role="listbox" aria-label="Ranked lint findings" className="space-y-1 py-1">
+                      {/* No inter-row margins: the row pitch must equal ROW_HEIGHT exactly
+                          or the windowing spacer arithmetic drifts on every row. */}
+                      <ul role="listbox" aria-label="Ranked lint findings" className="relative">
                         {rowWindow.paddingTop > 0 && (
                           <li aria-hidden role="presentation" style={{ height: rowWindow.paddingTop }} />
                         )}
@@ -620,6 +661,8 @@ export function CatalogImportQualityStep({
                               finding={finding}
                               line={findingLines[index] ?? null}
                               selected={index === selectedIndex}
+                              setSize={findings.length}
+                              posInSet={index + 1}
                               onSelect={() => selectFinding(index)}
                               registerRef={(node) => {
                                 if (node) rowRefs.current.set(index, node);
@@ -631,6 +674,27 @@ export function CatalogImportQualityStep({
                         {rowWindow.paddingBottom > 0 && (
                           <li aria-hidden role="presentation" style={{ height: rowWindow.paddingBottom }} />
                         )}
+                        {pinnedFindingIndex !== null && findings[pinnedFindingIndex] ? (
+                          <FindingRow
+                            key="pinned-finding"
+                            finding={findings[pinnedFindingIndex]}
+                            line={findingLines[pinnedFindingIndex] ?? null}
+                            selected
+                            setSize={findings.length}
+                            posInSet={pinnedFindingIndex + 1}
+                            onSelect={() => selectFinding(pinnedFindingIndex)}
+                            registerRef={(node) => {
+                              if (node) rowRefs.current.set(pinnedFindingIndex, node);
+                              else rowRefs.current.delete(pinnedFindingIndex);
+                            }}
+                            pinnedStyle={{
+                              position: 'absolute',
+                              top: pinnedFindingIndex * ROW_HEIGHT,
+                              left: 0,
+                              right: 0,
+                            }}
+                          />
+                        ) : null}
                       </ul>
                     </div>
                     {findings[selectedIndex]?.remediation && (

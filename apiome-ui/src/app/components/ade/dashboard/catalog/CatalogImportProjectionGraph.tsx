@@ -13,37 +13,56 @@
  *  - a deterministic **SVG graph** (hand-computed layout, no Mermaid — the EFP-2.2
  *    precedent this component shares its primitives with): source construct → canonical
  *    entity → outcome, laned by family; nodes are focusable `role="button"` groups with
- *    roving tabindex;
+ *    roving tabindex and a drawn focus outline;
  *  - an **evidence card** for the selected node: coverage class, status, reason code,
  *    detail, source location (linked into the quality step's raw viewer), native
  *    provenance, capability reference, and remediation;
  *  - a synchronized, always-rendered **table** — the text alternative with identical
  *    content, whose caption is the graph's accessible name (`aria-labelledby`); aggregate
- *    rows expand in place, the explicit expansion path for large manifests.
+ *    rows expand in place, the explicit expansion path that keeps large manifests bounded
+ *    without ever hiding dropped evidence.
  *
  * The view model, lanes, and layout come from `importProjectionGraph.ts`, which reuses
  * the export projection-map primitives (`../export/projectionGraph.ts`) — shared, not
- * duplicated, per the IXH-3.3 acceptance criterion. Rendering stays bounded through the
- * shared aggregation (which never hides dropped or non-info evidence) plus scroll-capped
- * containers.
+ * duplicated, per the IXH-3.3 acceptance criterion.
+ *
+ * Bounds (IXH-3.6, #5108 — budgets live in `preview-budgets.ts`):
+ *
+ *  - the SVG draws at most {@link GRAPH_DRAW_BUDGET} entries, selected **worst-first**
+ *    (`selectDrawnGraphEntries`) so the cap can only remove clean evidence; when it
+ *    applies, a visible note states drawn-of-total and points at the table, which always
+ *    lists every construct;
+ *  - the table windows its display rows above {@link PROJECTION_TABLE_VIRTUALIZE_ABOVE},
+ *    keeping `aria-rowcount`/`aria-rowindex` correct and pinning the row that holds
+ *    keyboard focus so windowing never drops it.
+ *
+ * Motion: all transitions are `motion-safe:` so `prefers-reduced-motion` is honoured.
  */
 
-import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { cn } from '@lib/utils';
 import type { ProjectionEdge, ProjectionNode } from '../export/projectionEvidence';
 import type { PlacedEntry, StatusPresentation } from '../export/projectionGraph';
 import {
   buildImportEvidenceRows,
   buildImportProjectionView,
+  buildProjectionTableRows,
   IMPORT_FAMILY_LANES,
   importEntryAriaLabel,
   projectionGraphLayout,
+  selectDrawnGraphEntries,
   statusPresentation,
   viewStatusCounts,
   type ImportEvidenceRow,
   type ImportFamilyKey,
+  type ProjectionTableRow,
   type ProjectionViewEntry,
 } from './importProjectionGraph';
+import {
+  GRAPH_DRAW_BUDGET,
+  PROJECTION_TABLE_VIRTUALIZE_ABOVE,
+} from '@/app/utils/preview-budgets';
+import { computeWindowedRange } from '@/app/utils/windowed-rows';
 import {
   parseSourceLocation,
   PREVIEW_COVERAGE_LABEL,
@@ -52,6 +71,12 @@ import {
   type ImportPreviewCoverageEntry,
   type PreviewCoverageClass,
 } from '@/app/utils/import-preview-manifest';
+
+/** Uniform evidence-table row height (px) the windowing assumes; matches the `h-9` row class. */
+const TABLE_ROW_HEIGHT = 36;
+
+/** Height (px) of the windowed table viewport; matches the `h-72` container class. */
+const TABLE_HEIGHT = 288;
 
 export interface CatalogImportProjectionGraphProps {
   /** The manifest's graph nodes (accumulated across loaded pages). */
@@ -70,6 +95,13 @@ export interface CatalogImportProjectionGraphProps {
   onSelectSourceLine: (line: number) => void;
   /** Aggregation threshold override; tests pass a small value. */
   aggregationThreshold?: number;
+  /** SVG draw-budget override; tests pass a small value. */
+  drawBudget?: number;
+  /** Table windowing threshold override; tests pass a small value. */
+  tableVirtualizeAbove?: number;
+  /** Table viewport height override; tests pass a small value to exercise real windowing
+   *  (jsdom reports element heights as 0, so the height cannot be measured). */
+  tableViewportHeight?: number;
 }
 
 /** Human remediation guidance per coverage class (the evidence card's last line). */
@@ -107,10 +139,18 @@ export function CatalogImportProjectionGraph({
   rawLineCount,
   onSelectSourceLine,
   aggregationThreshold,
+  drawBudget = GRAPH_DRAW_BUDGET,
+  tableVirtualizeAbove = PROJECTION_TABLE_VIRTUALIZE_ABOVE,
+  tableViewportHeight = TABLE_HEIGHT,
 }: CatalogImportProjectionGraphProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [focusIndex, setFocusIndex] = useState(0);
+  /** The node whose SVG group currently holds DOM focus, for the drawn focus outline. */
+  const [focusedNodeKey, setFocusedNodeKey] = useState<string | null>(null);
   const [expandedAggregates, setExpandedAggregates] = useState<Set<string>>(new Set());
+  const [tableScrollTop, setTableScrollTop] = useState(0);
+  /** Display-row index of the table row whose button holds focus, for focus pinning. */
+  const [focusedTableIndex, setFocusedTableIndex] = useState<number | null>(null);
   const nodeRefs = useRef<Map<string, SVGGElement>>(new Map());
   const captionId = useId();
 
@@ -122,10 +162,16 @@ export function CatalogImportProjectionGraph({
     () => buildImportProjectionView(rows, aggregationThreshold),
     [rows, aggregationThreshold],
   );
-  const layout = useMemo(
-    () => projectionGraphLayout(view.entries, IMPORT_FAMILY_LANES),
-    [view.entries],
+  // The SVG draws a worst-first bounded subset; the table below always carries everything.
+  const drawnSelection = useMemo(
+    () => selectDrawnGraphEntries(view.entries, drawBudget),
+    [view.entries, drawBudget],
   );
+  const layout = useMemo(
+    () => projectionGraphLayout(drawnSelection.drawn, IMPORT_FAMILY_LANES),
+    [drawnSelection.drawn],
+  );
+  // Legend counts stay over the FULL view — the cap bounds drawing, never the statement.
   const counts = useMemo(() => viewStatusCounts(view.entries), [view.entries]);
 
   const selectedEntry = useMemo(
@@ -133,12 +179,16 @@ export function CatalogImportProjectionGraph({
     [view.entries, selectedKey],
   );
 
-  /** Roving-tabindex keyboard handling over the graph nodes, in view order. */
+  // The drawn entry holding the roving tabindex, clamped in case the drawn set shrank.
+  const graphFocusIndex = Math.min(focusIndex, Math.max(0, drawnSelection.drawn.length - 1));
+
+  /** Roving-tabindex keyboard handling over the drawn graph nodes, in view order. */
   const handleNodeKeyDown = (event: KeyboardEvent<SVGGElement>, index: number) => {
     const { key } = event;
+    const drawn = drawnSelection.drawn;
     if (key === 'Enter' || key === ' ') {
       event.preventDefault();
-      setSelectedKey(view.entries[index].key);
+      setSelectedKey(drawn[index].key);
       return;
     }
     const delta =
@@ -150,12 +200,12 @@ export function CatalogImportProjectionGraph({
     let next: number | null = null;
     if (delta !== null) next = index + delta;
     else if (key === 'Home') next = 0;
-    else if (key === 'End') next = view.entries.length - 1;
+    else if (key === 'End') next = drawn.length - 1;
     if (next === null) return;
     event.preventDefault();
-    const clamped = Math.max(0, Math.min(next, view.entries.length - 1));
+    const clamped = Math.max(0, Math.min(next, drawn.length - 1));
     setFocusIndex(clamped);
-    nodeRefs.current.get(view.entries[clamped].key)?.focus();
+    nodeRefs.current.get(drawn[clamped].key)?.focus();
   };
 
   const toggleAggregate = (key: string) => {
@@ -166,6 +216,35 @@ export function CatalogImportProjectionGraph({
       return nextSet;
     });
   };
+
+  // The table's flat display rows (entries + expanded members), windowed above the budget.
+  const tableRows = useMemo(
+    () => buildProjectionTableRows(view.entries, expandedAggregates),
+    [view.entries, expandedAggregates],
+  );
+  const tableVirtualized = tableRows.length > tableVirtualizeAbove;
+  const tableWindow = useMemo(
+    () =>
+      tableVirtualized
+        ? computeWindowedRange({
+            rowCount: tableRows.length,
+            rowHeight: TABLE_ROW_HEIGHT,
+            viewportHeight: tableViewportHeight,
+            scrollTop: tableScrollTop,
+          })
+        : { startIndex: 0, endIndex: tableRows.length, paddingTop: 0, paddingBottom: 0 },
+    [tableRows.length, tableScrollTop, tableViewportHeight, tableVirtualized],
+  );
+  // Focus pinning: the display row whose button holds focus must stay mounted even when
+  // scrolled out of the window, or focus (and the Tab stop) would fall off the table. It
+  // renders in DOM order between split spacers, so `aria-rowindex` order stays truthful.
+  const pinnedTableIndex =
+    tableVirtualized &&
+    focusedTableIndex !== null &&
+    focusedTableIndex < tableRows.length &&
+    (focusedTableIndex < tableWindow.startIndex || focusedTableIndex >= tableWindow.endIndex)
+      ? focusedTableIndex
+      : null;
 
   if (rows.length === 0) {
     return (
@@ -181,11 +260,83 @@ export function CatalogImportProjectionGraph({
     );
   }
 
+  /** One spacer row standing in for `height` px of unmounted display rows. */
+  const spacerRow = (key: string, height: number): ReactNode =>
+    height > 0 ? (
+      <tr key={key} aria-hidden style={{ height }} data-testid="import-projection-table-spacer">
+        <td colSpan={5} className="p-0" />
+      </tr>
+    ) : null;
+
+  /** Render one display row (entry, aggregate toggle, or expanded member). */
+  const renderTableRow = (row: ProjectionTableRow<ImportFamilyKey>, index: number): ReactNode => {
+    const ariaRowIndex = row.bodyRowIndex + 1; // +1 for the header row.
+    if (row.kind === 'member') {
+      return (
+        <MemberRow
+          key={row.key}
+          entry={row.entry}
+          member={row.member!}
+          ariaRowIndex={ariaRowIndex}
+          onFocusRow={() => setFocusedTableIndex(index)}
+        />
+      );
+    }
+    if (row.entry.kind === 'aggregate') {
+      return (
+        <AggregateToggleRow
+          key={row.key}
+          entry={row.entry}
+          expanded={expandedAggregates.has(row.entry.key)}
+          onToggle={() => toggleAggregate(row.entry.key)}
+          ariaRowIndex={ariaRowIndex}
+          onFocusRow={() => setFocusedTableIndex(index)}
+        />
+      );
+    }
+    return (
+      <EvidenceTableRow
+        key={row.key}
+        entry={row.entry}
+        selected={row.entry.key === selectedKey}
+        onSelect={() => setSelectedKey(row.entry.key)}
+        ariaRowIndex={ariaRowIndex}
+        onFocusRow={() => setFocusedTableIndex(index)}
+      />
+    );
+  };
+
+  // Split the spacers around a pinned row so it renders at its true offset in DOM order.
+  const bodyRows: ReactNode[] = [];
+  if (pinnedTableIndex !== null && pinnedTableIndex < tableWindow.startIndex) {
+    bodyRows.push(spacerRow('spacer-top-a', pinnedTableIndex * TABLE_ROW_HEIGHT));
+    bodyRows.push(renderTableRow(tableRows[pinnedTableIndex], pinnedTableIndex));
+    bodyRows.push(
+      spacerRow('spacer-top-b', (tableWindow.startIndex - pinnedTableIndex - 1) * TABLE_ROW_HEIGHT),
+    );
+  } else {
+    bodyRows.push(spacerRow('spacer-top', tableWindow.paddingTop));
+  }
+  tableRows
+    .slice(tableWindow.startIndex, tableWindow.endIndex)
+    .forEach((row, offset) => bodyRows.push(renderTableRow(row, tableWindow.startIndex + offset)));
+  if (pinnedTableIndex !== null && pinnedTableIndex >= tableWindow.endIndex) {
+    bodyRows.push(
+      spacerRow('spacer-bottom-a', (pinnedTableIndex - tableWindow.endIndex) * TABLE_ROW_HEIGHT),
+    );
+    bodyRows.push(renderTableRow(tableRows[pinnedTableIndex], pinnedTableIndex));
+    bodyRows.push(
+      spacerRow('spacer-bottom-b', (tableRows.length - pinnedTableIndex - 1) * TABLE_ROW_HEIGHT),
+    );
+  } else {
+    bodyRows.push(spacerRow('spacer-bottom', tableWindow.paddingBottom));
+  }
+
   return (
     <section className="projection-panel space-y-3" data-testid="import-projection-graph">
       <SectionHeading />
 
-      {/* Legend: every status present, as text + symbol + count. */}
+      {/* Legend: every status present, as text + symbol + count — always full-view counts. */}
       <div className="flex flex-wrap items-center gap-1.5" data-testid="import-projection-legend">
         {(Object.entries(counts) as [Parameters<typeof statusPresentation>[0], number][]).map(
           ([status, count]) => {
@@ -211,6 +362,19 @@ export function CatalogImportProjectionGraph({
         >
           Clean rows are aggregated to keep the map readable; expand them in the table below.
           Dropped and partial evidence is never aggregated.
+        </p>
+      )}
+
+      {/* The draw budget is never silent: state drawn-of-total and the path to everything. */}
+      {drawnSelection.truncated && (
+        <p
+          role="status"
+          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+          data-testid="import-projection-draw-cap"
+        >
+          Drawing {drawnSelection.drawnRowCount.toLocaleString()} of{' '}
+          {drawnSelection.totalRowCount.toLocaleString()} constructs (worst first) to keep the map
+          responsive — the table below lists every construct.
         </p>
       )}
 
@@ -255,7 +419,7 @@ export function CatalogImportProjectionGraph({
                 data-testid={`import-projection-node-${entry.key}`}
                 data-status={entry.status}
                 role="button"
-                tabIndex={index === focusIndex ? 0 : -1}
+                tabIndex={index === graphFocusIndex ? 0 : -1}
                 aria-label={importEntryAriaLabel(entry)}
                 aria-pressed={isSelected}
                 ref={(el) => {
@@ -263,10 +427,33 @@ export function CatalogImportProjectionGraph({
                   else nodeRefs.current.delete(entry.key);
                 }}
                 onClick={() => setSelectedKey(entry.key)}
-                onFocus={() => setFocusIndex(index)}
+                onFocus={() => {
+                  setFocusIndex(index);
+                  setFocusedNodeKey(entry.key);
+                }}
+                onBlur={() => setFocusedNodeKey((prev) => (prev === entry.key ? null : prev))}
                 onKeyDown={(event) => handleNodeKeyDown(event, index)}
                 className="cursor-pointer outline-none"
               >
+                {/* Visible keyboard-focus outline (WCAG 2.4.7) — outline-none removes the UA's. */}
+                {focusedNodeKey === entry.key && (
+                  <rect
+                    data-testid="import-projection-focus-ring"
+                    x={(placed.sourceBox ?? placed.canonicalBox).x - 3}
+                    y={placed.canonicalBox.y - 3}
+                    width={
+                      placed.outcomeBox.x +
+                      placed.outcomeBox.width -
+                      (placed.sourceBox ?? placed.canonicalBox).x +
+                      6
+                    }
+                    height={placed.canonicalBox.height + 6}
+                    rx={8}
+                    fill="none"
+                    strokeWidth={2}
+                    className="stroke-indigo-500 dark:stroke-indigo-400"
+                  />
+                )}
                 {placed.sourceBox && (
                   <NodeBox box={placed.sourceBox} label={entry.row?.sourceLabel ?? ''} mono muted />
                 )}
@@ -291,16 +478,39 @@ export function CatalogImportProjectionGraph({
         )}
       </div>
 
-      {/* The text alternative: identical content, identical aria labels, expandable aggregates. */}
-      <div className="max-h-72 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
-        <table className="w-full text-left text-xs" data-testid="import-projection-table">
+      {/* The text alternative: identical content, identical aria labels, expandable
+          aggregates, windowed above the budget with truthful aria-rowcount/rowindex. */}
+      <div
+        className={cn(
+          'overflow-auto rounded-lg border border-gray-100 dark:border-gray-800',
+          tableVirtualized ? 'h-72' : 'max-h-72',
+        )}
+        style={
+          tableVirtualized && tableViewportHeight !== TABLE_HEIGHT
+            ? { height: tableViewportHeight }
+            : undefined
+        }
+        onScroll={(event) => setTableScrollTop(event.currentTarget.scrollTop)}
+        tabIndex={tableVirtualized ? 0 : undefined}
+        role={tableVirtualized ? 'region' : undefined}
+        aria-labelledby={tableVirtualized ? captionId : undefined}
+        data-testid="import-projection-table-viewport"
+      >
+        <table
+          className="w-full text-left text-xs"
+          data-testid="import-projection-table"
+          aria-rowcount={tableRows.length + 1}
+        >
           <caption id={captionId} className="sr-only">
             Import projection evidence — the accessible equivalent of the import projection
             graph. Every graph node has one row here with the same status, construct, family,
             and reason.
           </caption>
           <thead>
-            <tr className="border-b border-gray-200 text-[10px] uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+            <tr
+              aria-rowindex={1}
+              className="border-b border-gray-200 text-[10px] uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400"
+            >
               <th scope="col" className="px-2 py-1.5">Status</th>
               <th scope="col" className="px-2 py-1.5">Source construct</th>
               <th scope="col" className="px-2 py-1.5">Canonical entity</th>
@@ -308,27 +518,15 @@ export function CatalogImportProjectionGraph({
               <th scope="col" className="px-2 py-1.5">Reason</th>
             </tr>
           </thead>
-          <tbody>
-            {view.entries.map((entry) =>
-              entry.kind === 'aggregate' ? (
-                <AggregateRows
-                  key={entry.key}
-                  entry={entry}
-                  expanded={expandedAggregates.has(entry.key)}
-                  onToggle={() => toggleAggregate(entry.key)}
-                />
-              ) : (
-                <EvidenceTableRow
-                  key={entry.key}
-                  entry={entry}
-                  selected={entry.key === selectedKey}
-                  onSelect={() => setSelectedKey(entry.key)}
-                />
-              ),
-            )}
-          </tbody>
+          <tbody>{bodyRows}</tbody>
         </table>
       </div>
+      {tableVirtualized && (
+        <p className="text-[10px] text-gray-500 dark:text-gray-400" data-testid="import-projection-table-windowed">
+          The table is windowed — every one of its {tableRows.length.toLocaleString()} rows is
+          reachable by scrolling.
+        </p>
+      )}
     </section>
   );
 }
@@ -576,17 +774,22 @@ function EvidenceTableRow({
   entry,
   selected,
   onSelect,
+  ariaRowIndex,
+  onFocusRow,
 }: {
   entry: ProjectionViewEntry<ImportFamilyKey>;
   selected: boolean;
   onSelect: () => void;
+  ariaRowIndex: number;
+  onFocusRow: () => void;
 }) {
   const row = entry.row as ImportEvidenceRow;
   const presentation = statusPresentation(entry.status);
   return (
     <tr
+      aria-rowindex={ariaRowIndex}
       className={cn(
-        'border-b border-gray-100 last:border-0 dark:border-gray-800',
+        'h-9 whitespace-nowrap border-b border-gray-100 last:border-0 dark:border-gray-800',
         selected && 'bg-indigo-50 dark:bg-indigo-950/30',
       )}
       data-testid={`import-projection-table-row-${entry.key}`}
@@ -598,82 +801,104 @@ function EvidenceTableRow({
         <button
           type="button"
           onClick={onSelect}
+          onFocus={onFocusRow}
           aria-pressed={selected}
           aria-label={importEntryAriaLabel(entry)}
-          className="font-mono text-gray-800 underline-offset-2 hover:underline dark:text-gray-100"
+          className="max-w-56 truncate font-mono text-gray-800 underline-offset-2 hover:underline dark:text-gray-100"
         >
           {row.sourceLabel ?? row.construct}
         </button>
       </td>
-      <td className="px-2 py-1.5 font-mono text-gray-600 dark:text-gray-300">
+      <td className="max-w-56 truncate px-2 py-1.5 font-mono text-gray-600 dark:text-gray-300">
         {row.canonicalKind ? row.construct : '—'}
       </td>
       <td className="px-2 py-1.5 text-gray-600 dark:text-gray-300">
         {familyLabel(entry.lane)}
       </td>
       <td className="px-2 py-1.5 text-gray-600 dark:text-gray-300">
-        {row.reason ? <span className="font-mono">{row.reason}</span> : null}
-        {row.reason ? ' — ' : ''}
-        {row.reasonSummary}
+        <span className="block max-w-md truncate">
+          {row.reason ? <span className="font-mono">{row.reason}</span> : null}
+          {row.reason ? ' — ' : ''}
+          {row.reasonSummary}
+        </span>
       </td>
     </tr>
   );
 }
 
-/** An aggregate's toggle row plus, when expanded, one row per member — in place. */
-function AggregateRows({
+/** An aggregate's toggle row; its members render as their own display rows when expanded. */
+function AggregateToggleRow({
   entry,
   expanded,
   onToggle,
+  ariaRowIndex,
+  onFocusRow,
 }: {
   entry: ProjectionViewEntry<ImportFamilyKey>;
   expanded: boolean;
   onToggle: () => void;
+  ariaRowIndex: number;
+  onFocusRow: () => void;
 }) {
   const presentation = statusPresentation(entry.status);
   const members = entry.members ?? [];
   return (
-    <>
-      <tr className="border-b border-gray-100 dark:border-gray-800">
-        <td className="px-2 py-1.5">
-          <StatusText presentation={presentation} />
-        </td>
-        <td className="px-2 py-1.5" colSpan={4}>
-          <button
-            type="button"
-            aria-expanded={expanded}
-            onClick={onToggle}
-            aria-label={importEntryAriaLabel(entry)}
-            data-testid={`import-projection-aggregate-toggle-${entry.lane}-${entry.status}`}
-            className="text-gray-700 underline-offset-2 hover:underline dark:text-gray-200"
-          >
-            {members.length} construct{members.length === 1 ? '' : 's'}{' '}
-            {presentation.label.toLowerCase()} in {familyLabel(entry.lane)} (aggregated) —{' '}
-            {expanded ? 'collapse' : 'expand'}
-          </button>
-        </td>
-      </tr>
-      {expanded &&
-        members.map((member) => (
-          <tr
-            key={member.id}
-            className="border-b border-gray-50 bg-gray-50/50 dark:border-gray-800/50 dark:bg-gray-900/30"
-            data-testid={`import-projection-aggregate-member-${member.id}`}
-          >
-            <td className="px-2 py-1" />
-            <td className="px-2 py-1 font-mono text-gray-600 dark:text-gray-300">
-              {member.sourceLabel ?? member.construct}
-            </td>
-            <td className="px-2 py-1 font-mono text-gray-600 dark:text-gray-300">
-              {member.construct}
-            </td>
-            <td className="px-2 py-1 text-gray-500 dark:text-gray-400">
-              {familyLabel(entry.lane)}
-            </td>
-            <td className="px-2 py-1 text-gray-500 dark:text-gray-400">{member.reasonSummary}</td>
-          </tr>
-        ))}
-    </>
+    <tr aria-rowindex={ariaRowIndex} className="h-9 whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
+      <td className="px-2 py-1.5">
+        <StatusText presentation={presentation} />
+      </td>
+      <td className="px-2 py-1.5" colSpan={4}>
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={onToggle}
+          onFocus={onFocusRow}
+          aria-label={importEntryAriaLabel(entry)}
+          data-testid={`import-projection-aggregate-toggle-${entry.lane}-${entry.status}`}
+          className="text-gray-700 underline-offset-2 hover:underline dark:text-gray-200"
+        >
+          {members.length} construct{members.length === 1 ? '' : 's'}{' '}
+          {presentation.label.toLowerCase()} in {familyLabel(entry.lane)} (aggregated) —{' '}
+          {expanded ? 'collapse' : 'expand'}
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+/** One expanded aggregate member's display row. */
+function MemberRow({
+  entry,
+  member,
+  ariaRowIndex,
+  onFocusRow,
+}: {
+  entry: ProjectionViewEntry<ImportFamilyKey>;
+  member: NonNullable<ProjectionViewEntry<ImportFamilyKey>['members']>[number];
+  ariaRowIndex: number;
+  onFocusRow: () => void;
+}) {
+  return (
+    <tr
+      aria-rowindex={ariaRowIndex}
+      onFocus={onFocusRow}
+      className="h-9 whitespace-nowrap border-b border-gray-50 bg-gray-50/50 dark:border-gray-800/50 dark:bg-gray-900/30"
+      data-testid={`import-projection-aggregate-member-${member.id}`}
+    >
+      <td className="px-2 py-1" />
+      <td className="max-w-56 truncate px-2 py-1 font-mono text-gray-600 dark:text-gray-300">
+        {member.sourceLabel ?? member.construct}
+      </td>
+      <td className="max-w-56 truncate px-2 py-1 font-mono text-gray-600 dark:text-gray-300">
+        {member.construct}
+      </td>
+      <td className="px-2 py-1 text-gray-500 dark:text-gray-400">
+        {familyLabel(entry.lane)}
+      </td>
+      <td className="px-2 py-1 text-gray-500 dark:text-gray-400">
+        <span className="block max-w-md truncate">{member.reasonSummary}</span>
+      </td>
+    </tr>
   );
 }
 
