@@ -90,6 +90,7 @@ function mockPreflight(
   response: PreflightReport | { failWith: string },
   waiverFailure?: string,
   previewLocation = '3:1',
+  reimport: unknown = null,
 ): jest.Mock {
   return jest.fn((url: unknown) => {
     if (String(url).includes('/api/quality-policy/waivers')) {
@@ -121,6 +122,7 @@ function mockPreflight(
             success: true,
             ok: response.ok,
             preflight: response,
+            reimport,
             manifest: response.ok
               ? {
                   manifest_hash: 'mh-1',
@@ -191,8 +193,14 @@ async function renderStep(
   props: Partial<React.ComponentProps<typeof CatalogImportQualityStep>> = {},
   waiverFailure?: string,
   previewLocation?: string,
+  reimport: unknown = null,
 ): Promise<Handlers> {
-  global.fetch = mockPreflight(response, waiverFailure, previewLocation) as unknown as typeof fetch;
+  global.fetch = mockPreflight(
+    response,
+    waiverFailure,
+    previewLocation,
+    reimport,
+  ) as unknown as typeof fetch;
   const handlers: Handlers = {
     onCommit: jest.fn(),
     onBack: jest.fn(),
@@ -705,6 +713,42 @@ describe('CatalogImportQualityStep — entity preview integration (IXH-3.2)', ()
     await waitFor(() =>
       expect(screen.getByTestId('import-quality-raw-line-active')).toHaveTextContent('type Query {'),
     );
+  });
+
+  it('threads the commit-time slug into the manifest request (IXH-3.4)', async () => {
+    await renderStep(buildReport(), { projectSlug: 'orders' });
+    const manifestCall = callsTo('/api/import/preview-manifest')[0];
+    const body = JSON.parse(String((manifestCall[1] as RequestInit).body));
+    expect(body.project_slug).toBe('orders');
+  });
+
+  it('lets a no-op re-import skip the commit via the wizard cancel exit (IXH-3.4)', async () => {
+    const handlers = await renderStep(
+      buildReport(),
+      { projectSlug: 'orders' },
+      undefined,
+      undefined,
+      {
+        target_item_id: 'item-1',
+        target_item_name: 'Orders',
+        target_item_slug: 'orders',
+        current_version_record_id: 'rev-1',
+        noop: true,
+        candidate_fingerprint: 'fp-same',
+        current_fingerprint: 'fp-same',
+        entries: [],
+        counts: { added: 0, removed: 0, changed: 0 },
+        counts_by_entity: {},
+        classifier: null,
+        classifier_format_pack: false,
+        overall_severity: null,
+        severity_counts: {},
+      },
+    );
+    expect(screen.getByTestId('import-reimport-noop')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('import-reimport-skip'));
+    expect(handlers.onCancel).toHaveBeenCalledTimes(1);
+    expect(handlers.onCommit).not.toHaveBeenCalled();
   });
 
   it('keeps the raw viewer available for preview links when there are no findings', async () => {

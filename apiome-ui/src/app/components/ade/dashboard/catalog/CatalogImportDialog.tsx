@@ -178,6 +178,13 @@ export function CatalogImportDialog({
 
   const detectedFormat = detection?.detected?.format || metadata?.format || null;
   const effectiveFormat = formatOverride ?? detectedFormat;
+  // The catalog identity the commit will use, hoisted from `storeCatalog` so the quality
+  // step's re-import delta (IXH-3.4) resolves the exact item the commit would reuse.
+  const importName = useMemo(
+    () => (metadata?.title || baseName(fileName) || 'Imported source').trim(),
+    [metadata, fileName],
+  );
+  const importSlug = useMemo(() => generateSlug(importName) || 'imported-source', [importName]);
   const routing = useMemo(() => decideCatalogImportRouting(effectiveFormat), [effectiveFormat]);
   // The paradigm the source's adapter emits (matches the server's routing_decision), resolved to a
   // display label via the shared protocol registry, for the "· paradigm Y" note (MFI-26.3).
@@ -383,8 +390,10 @@ export function CatalogImportDialog({
     setState('storing');
     setError(null);
     try {
-      const name = (metadata?.title || baseName(fileName) || 'Imported source').trim();
-      const slug = generateSlug(name) || 'imported-source';
+      // The hoisted identity (importName/importSlug) — one derivation for the commit and
+      // for the quality step's re-import delta, so the two can never diverge.
+      const name = importName;
+      const slug = importSlug;
       const options: Record<string, string> = { input_kind: sourceMethod };
       if (archiveRoot) {
         options.archive_root = archiveRoot;
@@ -437,7 +446,7 @@ export function CatalogImportDialog({
       setState('idle');
       setStep('options');
     }
-  }, [archiveRoot, content, documentBase64, fileName, metadata, onSuccess, sourceMethod]);
+  }, [archiveRoot, content, documentBase64, fileName, importName, importSlug, metadata, onSuccess, sourceMethod]);
 
   /**
    * Leave the options step (IXH-2.2).
@@ -837,6 +846,7 @@ export function CatalogImportDialog({
             onCommit={handleQualityCommit}
             onBack={() => setStep('options')}
             onCancel={handleClose}
+            projectSlug={importSlug}
           />
         )}
 

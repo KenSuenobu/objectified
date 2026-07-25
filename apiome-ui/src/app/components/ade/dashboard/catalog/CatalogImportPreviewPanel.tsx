@@ -18,7 +18,10 @@
  *  - a **truncation banner** whenever pages remain server-side, with a "Load all entities" path to
  *    the full data;
  *  - the **projection map** (IXH-3.3, `CatalogImportProjectionGraph`) — what the source lost or
- *    kept becoming canonical, rendered from the same manifest's graph and coverage ledger.
+ *    kept becoming canonical, rendered from the same manifest's graph and coverage ledger;
+ *  - the **re-import delta** (IXH-3.4, `CatalogImportReimportDelta`) — when the commit would land
+ *    in an existing catalog item, what it would change there, with an explicit no-op verdict and
+ *    drill-down into this panel's entity tree.
  *
  * The panel is mounted by `CatalogImportQualityStep`, which the wizard mounts only when the quality
  * step is reached — so the manifest request fires lazily, on first arrival at the step.
@@ -44,6 +47,7 @@ import { Button } from '../../../ui/Button';
 import { gradeChipClass } from '@/app/utils/version-lint-report';
 import { parsedTagToneClass } from './CatalogParsedModel';
 import { CatalogImportProjectionGraph } from './CatalogImportProjectionGraph';
+import { CatalogImportReimportDelta } from './CatalogImportReimportDelta';
 import { clampRowIndex, computeWindowedRange } from '@/app/utils/windowed-rows';
 import type { PreflightRequest } from '@/app/utils/import-preflight';
 import {
@@ -59,6 +63,7 @@ import {
   PREVIEW_COVERAGE_LABEL,
   PREVIEW_COVERAGE_TONE,
   PREVIEW_PAGE_SIZE,
+  PREVIEW_SECTION_KEYS,
   type ImportPreviewManifest,
   type ImportPreviewManifestResponse,
   type PreviewTreeRow,
@@ -89,6 +94,12 @@ export interface CatalogImportPreviewPanelProps {
   rawLineCount: number;
   /** Jump the step's raw viewer to a 1-based source line. */
   onSelectSourceLine: (line: number) => void;
+  /** The catalog project slug the commit would use (the wizard's own derivation). When set,
+   *  the manifest request carries it and the response may include the IXH-3.4 re-import
+   *  delta against the existing item under that slug. */
+  projectSlug?: string | null;
+  /** Abandon the import from the re-import delta's no-op banner. */
+  onSkipCommit?: () => void;
   /** Tree viewport height override; tests pass a small value to exercise real windowing (jsdom
    *  reports element heights as 0, so the height cannot be measured). */
   viewportHeight?: number;
@@ -133,6 +144,8 @@ export function CatalogImportPreviewPanel({
   rawSourceAvailable,
   rawLineCount,
   onSelectSourceLine,
+  projectSlug = null,
+  onSkipCommit,
   viewportHeight = TREE_HEIGHT,
 }: CatalogImportPreviewPanelProps) {
   // One manifest run's outcome, tagged with the run it belongs to (the quality step's pattern):
@@ -173,7 +186,14 @@ export function CatalogImportPreviewPanel({
     const controller = new AbortController();
     abortRef.current = controller;
     let live = true;
-    fetchImportPreviewManifest({ ...request, page_size: PREVIEW_PAGE_SIZE }, controller.signal)
+    fetchImportPreviewManifest(
+      {
+        ...request,
+        page_size: PREVIEW_PAGE_SIZE,
+        ...(projectSlug ? { project_slug: projectSlug } : {}),
+      },
+      controller.signal,
+    )
       .then((result) => {
         if (!live) return;
         setOutcome({ runId, response: result, manifest: result.manifest, error: null });
@@ -195,7 +215,7 @@ export function CatalogImportPreviewPanel({
       live = false;
       controller.abort();
     };
-  }, [request, runId]);
+  }, [request, runId, projectSlug]);
 
   const rows = useMemo(
     () =>
@@ -276,6 +296,31 @@ export function CatalogImportPreviewPanel({
       if (line !== null) onSelectSourceLine(line);
     },
     [linkableLine, onSelectSourceLine, rows, toggleExpanded],
+  );
+
+  /**
+   * Reveal an entity named by the re-import delta (IXH-3.4 drill-down): clear the filter,
+   * expand the entity's ancestors, and select + scroll its tree row. An entity on a page
+   * not yet loaded (truncated manifest) still records the selection so the row highlights
+   * once its page arrives.
+   */
+  const revealEntity = useCallback(
+    (key: string) => {
+      if (!manifest) return;
+      const entity = manifest.entities.find((candidate) => candidate.key === key);
+      const nextExpanded = new Set(expandedKeys);
+      for (const section of Object.values(PREVIEW_SECTION_KEYS)) nextExpanded.add(section);
+      if (entity?.entity_kind === 'operation' && entity.parent_key) {
+        nextExpanded.add(entity.parent_key);
+      }
+      setFilter('');
+      setExpandedKeys(nextExpanded);
+      const nextRows = buildPreviewTreeRows(manifest.entities, manifest.counts, nextExpanded, '');
+      const index = nextRows.findIndex((row) => row.key === key);
+      if (index >= 0) focusRow(index, nextRows);
+      else setSelectedKey(key);
+    },
+    [expandedKeys, focusRow, manifest],
   );
 
   const handleTreeKeyDown = useCallback(
@@ -692,6 +737,14 @@ export function CatalogImportPreviewPanel({
               </Button>
             </div>
           ) : null}
+
+          {/* IXH-3.4: what a re-import would change on the existing item; renders nothing
+              for a first-time import (`reimport` null). */}
+          <CatalogImportReimportDelta
+            delta={response?.reimport ?? null}
+            onSkipCommit={onSkipCommit}
+            onRevealEntity={revealEntity}
+          />
 
           {rows.length > 0 ? (
             <div

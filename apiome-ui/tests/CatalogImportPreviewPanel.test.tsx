@@ -607,3 +607,80 @@ describe('CatalogImportPreviewPanel — projection map integration (IXH-3.3)', (
     expect(screen.getByTestId('import-projection-empty')).toBeInTheDocument();
   });
 });
+
+describe('CatalogImportPreviewPanel — re-import delta integration (IXH-3.4)', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  function reimportDelta() {
+    return {
+      target_item_id: 'item-1',
+      target_item_name: 'Orders',
+      target_item_slug: 'orders',
+      current_version_record_id: 'rev-1',
+      noop: false,
+      candidate_fingerprint: 'fp-a',
+      current_fingerprint: 'fp-b',
+      entries: [
+        { entity: 'type', key: 'type:Owner', change: 'changed' as const, severity: null },
+      ],
+      counts: { added: 0, removed: 0, changed: 1 },
+      counts_by_entity: { type: { changed: 1 } },
+      classifier: null,
+      classifier_format_pack: false,
+      overall_severity: null,
+      severity_counts: {},
+    };
+  }
+
+  it('sends the commit-time project slug with the manifest request', async () => {
+    const fetchMock = mockManifestFetch(() => buildResponse());
+    await renderPanel({ projectSlug: 'orders' });
+    const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
+    expect(body.project_slug).toBe('orders');
+  });
+
+  it('omits the slug when none is known, and renders no delta for a null reimport', async () => {
+    const fetchMock = mockManifestFetch(() => buildResponse());
+    await renderPanel();
+    const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
+    expect(body.project_slug).toBeUndefined();
+    expect(screen.queryByTestId('import-reimport-delta')).not.toBeInTheDocument();
+  });
+
+  it('renders the delta and drills down into the entity tree', async () => {
+    mockManifestFetch(() => ({ ...buildResponse(), reimport: reimportDelta() }));
+    await renderPanel({ projectSlug: 'orders' });
+
+    const delta = screen.getByTestId('import-reimport-delta');
+    expect(delta).toHaveTextContent('against Orders');
+
+    // Drill-down: the delta names the entity by its manifest key; clicking reveals and
+    // selects its row in the IXH-3.2 tree.
+    fireEvent.click(within(delta).getByTestId('import-reimport-reveal'));
+    await waitFor(() =>
+      expect(itemByName(/Owner/)).toHaveAttribute('aria-selected', 'true'),
+    );
+    expect(itemByName(/Owner/).tabIndex).toBe(0);
+  });
+
+  it('offers to skip a no-op re-import through the panel’s skip callback', async () => {
+    mockManifestFetch(() => ({
+      ...buildResponse(),
+      reimport: {
+        ...reimportDelta(),
+        noop: true,
+        entries: [],
+        counts: { added: 0, removed: 0, changed: 0 },
+        current_fingerprint: 'fp-a',
+      },
+    }));
+    const onSkipCommit = jest.fn();
+    await renderPanel({
+      projectSlug: 'orders',
+      onSkipCommit: onSkipCommit as unknown as () => void,
+    });
+    expect(screen.getByTestId('import-reimport-noop')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('import-reimport-skip'));
+    expect(onSkipCommit).toHaveBeenCalledTimes(1);
+  });
+});

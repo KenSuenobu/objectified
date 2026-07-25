@@ -137,10 +137,52 @@ export interface ImportPreviewManifest {
   truncated: boolean;
 }
 
-/** The candidate to preview: the pre-flight request plus pagination. */
+/** The candidate to preview: the pre-flight request plus pagination and, for re-imports,
+ *  the catalog project slug the commit would use (IXH-3.4). */
 export interface ImportPreviewManifestRequest extends PreflightRequest {
   cursor?: string | null;
   page_size?: number;
+  project_slug?: string | null;
+}
+
+/** How a change grades for compatibility (REST `Severity` — shared with version diffs). */
+export type ReimportSeverity = 'safe' | 'dangerous' | 'breaking';
+
+/** One identity-keyed change a re-import would make (REST `ReimportDeltaEntry`). */
+export interface ImportReimportDeltaEntry {
+  /** Entity family: root/service/operation/type/channel. */
+  entity: string;
+  /** The entity's stable canonical key (empty for `root`). */
+  key: string;
+  change: 'added' | 'removed' | 'changed';
+  /** Breaking-change grade, when the classifier graded this key; null when unannotated. */
+  severity?: ReimportSeverity | null;
+  rule_id?: string | null;
+  rationale?: string | null;
+}
+
+/** What re-importing the candidate would change on an existing item (REST `ImportReimportDelta`). */
+export interface ImportReimportDelta {
+  target_item_id: string;
+  target_item_name?: string | null;
+  target_item_slug: string;
+  current_version_record_id?: string | null;
+  /** True when the fingerprints match — the re-import would create an empty revision. */
+  noop: boolean;
+  candidate_fingerprint: string;
+  current_fingerprint: string;
+  /** Every change, sorted (entity, key, change); empty for a no-op. */
+  entries: ImportReimportDeltaEntry[];
+  /** Total changes per kind (added/removed/changed, zero-filled). */
+  counts: Record<string, number>;
+  /** Per entity family, the added/removed/changed tallies. */
+  counts_by_entity: Record<string, Record<string, number>>;
+  /** Classifier id that graded the diff, or null when NO entry carries a severity. */
+  classifier?: string | null;
+  /** Whether a format-specific pack (not the structural baseline) graded the diff. */
+  classifier_format_pack: boolean;
+  overall_severity?: ReimportSeverity | null;
+  severity_counts: Record<string, number>;
 }
 
 /** The manifest verdict for one candidate (REST `ImportPreviewManifestResponse`). */
@@ -149,6 +191,8 @@ export interface ImportPreviewManifestResponse {
   ok: boolean;
   preflight: PreflightReport;
   manifest: ImportPreviewManifest | null;
+  /** IXH-3.4 re-import delta; null for first-time imports (the panel is skipped). */
+  reimport?: ImportReimportDelta | null;
 }
 
 /** Page size the panel requests — the server maximum, so big specs need few round trips. */
@@ -518,4 +562,95 @@ export function coverageDetailByEntityKey(
     if (entry.entity_key && !byKey.has(entry.entity_key)) byKey.set(entry.entity_key, entry);
   }
   return byKey;
+}
+
+// ---------------------------------------------------------------------------
+// Re-import delta presentation (IXH-3.4)
+// ---------------------------------------------------------------------------
+
+/** The change kinds in presentation order, with their colour-independent symbols. */
+export const REIMPORT_CHANGE_KINDS = ['added', 'removed', 'changed'] as const;
+export type ReimportChangeKind = (typeof REIMPORT_CHANGE_KINDS)[number];
+
+/** Symbol per change kind — always printed beside the label, never colour alone. */
+export const REIMPORT_CHANGE_SYMBOL: Record<ReimportChangeKind, string> = {
+  added: '+',
+  removed: '−',
+  changed: 'Δ',
+};
+
+/** Tone classes per change kind (full Tailwind literals so they survive purging). */
+export const REIMPORT_CHANGE_TONE: Record<ReimportChangeKind, string> = {
+  added: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
+  removed: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
+  changed: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+};
+
+/** Tone classes per breaking-change severity (matches the version-diff vocabulary). */
+export const REIMPORT_SEVERITY_TONE: Record<ReimportSeverity, string> = {
+  safe: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
+  dangerous: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+  breaking: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
+};
+
+/** The entity families in presentation order, with their headings. */
+export const REIMPORT_FAMILY_ORDER: readonly { key: string; label: string }[] = [
+  { key: 'service', label: 'Services' },
+  { key: 'operation', label: 'Operations' },
+  { key: 'channel', label: 'Channels' },
+  { key: 'type', label: 'Types' },
+  { key: 'root', label: 'Document' },
+];
+
+/** One family's grouped changes for the delta panel. */
+export interface ReimportFamilyGroup {
+  /** The entity family key (service/operation/channel/type/root, or unknown-as-sent). */
+  family: string;
+  /** The family's heading. */
+  label: string;
+  /** The family's entries, in the server's sorted order. */
+  entries: ImportReimportDeltaEntry[];
+  /** added/removed/changed tallies for the family (zero-filled). */
+  counts: Record<ReimportChangeKind, number>;
+}
+
+/**
+ * Group a delta's entries by entity family, in presentation order.
+ *
+ * Families with no changes are omitted; a family the presentation order does not know
+ * (future server vocabulary) is appended last under its own key so nothing is dropped.
+ *
+ * @param delta The re-import delta from the manifest response.
+ * @returns The non-empty family groups, each with zero-filled change tallies.
+ */
+export function groupReimportEntries(delta: ImportReimportDelta): ReimportFamilyGroup[] {
+  const byFamily = new Map<string, ImportReimportDeltaEntry[]>();
+  for (const entry of delta.entries) {
+    const list = byFamily.get(entry.entity) ?? [];
+    list.push(entry);
+    byFamily.set(entry.entity, list);
+  }
+
+  const knownKeys = new Set(REIMPORT_FAMILY_ORDER.map((family) => family.key));
+  const orderedKeys = [
+    ...REIMPORT_FAMILY_ORDER.map((family) => family.key),
+    ...[...byFamily.keys()].filter((key) => !knownKeys.has(key)).sort(),
+  ];
+
+  const groups: ReimportFamilyGroup[] = [];
+  for (const key of orderedKeys) {
+    const entries = byFamily.get(key);
+    if (!entries || entries.length === 0) continue;
+    const counts: Record<ReimportChangeKind, number> = { added: 0, removed: 0, changed: 0 };
+    for (const entry of entries) {
+      if (entry.change in counts) counts[entry.change as ReimportChangeKind] += 1;
+    }
+    groups.push({
+      family: key,
+      label: REIMPORT_FAMILY_ORDER.find((family) => family.key === key)?.label ?? key,
+      entries,
+      counts,
+    });
+  }
+  return groups;
 }

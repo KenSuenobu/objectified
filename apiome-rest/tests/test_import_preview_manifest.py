@@ -53,6 +53,8 @@ from app.export_projection import (
     decode_page_cursor,
     encode_page_cursor,
 )
+from app.breaking_change import ChangeClassification, ClassificationResult, Severity
+from app.diff import ChangeKind, EntityCategory
 from app.import_preflight import clear_preflight_cache
 from app.import_preview_manifest import (
     KNOWN_PARSER_LIMITS,
@@ -654,3 +656,270 @@ def test_counts_are_zero_filled_over_the_full_shared_vocabulary():
 def test_request_model_rejects_unknown_fields():
     with pytest.raises(Exception):
         ImportPreviewManifestRequest(document_base64=_b64("x"), unknown_field=1)
+
+
+# ---------------------------------------------------------------------------
+# Re-import delta (IXH-3.4, #5106)
+# ---------------------------------------------------------------------------
+
+REIMPORT_SLUG = "orders"
+
+#: The stored doc with an operation removed, a type changed, and a type added.
+CHANGED_GRAPHQL_DOC = """
+type Query {
+  order(id: ID!): Order
+}
+
+type Order {
+  id: ID!
+}
+
+type Customer {
+  id: ID!
+}
+""".strip()
+
+#: The stored doc with declarations and fields re-ordered but structurally identical.
+REORDERED_GRAPHQL_DOC = """
+type Order {
+  total: Float
+  id: ID!
+}
+
+type Query {
+  orders: [Order]
+  order(id: ID!): Order
+}
+""".strip()
+
+
+def _catalog_item_row(stored_doc: str = GRAPHQL_DOC, **overrides: Any) -> Dict[str, Any]:
+    """A fabricated catalog item row, shaped like ``db.get_catalog_item_by_id``'s."""
+    row: Dict[str, Any] = {
+        "id": "770e8400-e29b-41d4-a716-446655440002",
+        "name": "Orders",
+        "slug": REIMPORT_SLUG,
+        "publishable": False,
+        "source_format": "graphql",
+        "format_metadata": {"sourceContent": stored_doc, "sourceLabel": "orders.graphql"},
+        "version_record_id": "880e8400-e29b-41d4-a716-446655440003",
+    }
+    row.update(overrides)
+    return row
+
+
+@pytest.fixture
+def _reimport_target(monkeypatch):
+    """Route the delta's item lookup at a settable fabricated row (no DB)."""
+    holder: Dict[str, Any] = {"row": None}
+    monkeypatch.setattr(
+        manifest_module, "_load_reimport_target", lambda tenant_id, slug: holder["row"]
+    )
+
+    def _set(row: Optional[Dict[str, Any]]) -> None:
+        holder["row"] = row
+
+    return _set
+
+
+@pytest.fixture
+def _stub_classification(monkeypatch):
+    """Replace ``classify_models`` with a deterministic stub (no external tooling)."""
+    holder: Dict[str, Any] = {"result": None, "raise": False}
+
+    def _fake(base: Any, target: Any) -> ClassificationResult:
+        if holder["raise"]:
+            raise RuntimeError("classifier exploded")
+        if holder["result"] is not None:
+            return holder["result"]
+        return ClassificationResult(
+            format=target.format,
+            classifier="stub",
+            overall_severity=Severity.SAFE,
+            classifications=[],
+            counts_by_severity={},
+        )
+
+    monkeypatch.setattr(manifest_module, "classify_models", _fake)
+    return holder
+
+
+def test_reimport_is_null_without_a_project_slug(_reimport_target, _stub_classification):
+    _reimport_target(_catalog_item_row())
+    body = _post(_graphql_payload()).json()
+    assert body["ok"] is True
+    assert body["reimport"] is None
+
+
+def test_reimport_is_null_for_a_first_time_import(_reimport_target, _stub_classification):
+    _reimport_target(None)  # no existing catalog item under the slug
+    body = _post(_graphql_payload(project_slug=REIMPORT_SLUG)).json()
+    assert body["ok"] is True
+    assert body["manifest"] is not None
+    assert body["reimport"] is None
+
+
+def test_identical_reimport_is_an_explicit_noop(_reimport_target, _stub_classification):
+    _reimport_target(_catalog_item_row(stored_doc=GRAPHQL_DOC))
+    body = _post(_graphql_payload(project_slug=REIMPORT_SLUG)).json()
+    delta = body["reimport"]
+    assert delta is not None
+    assert delta["noop"] is True
+    assert delta["entries"] == []
+    assert delta["counts"] == {"added": 0, "removed": 0, "changed": 0}
+    # The matching fingerprint is the pre-flight's own revision fingerprint (the AC).
+    assert delta["candidate_fingerprint"] == delta["current_fingerprint"]
+    assert delta["candidate_fingerprint"] == body["preflight"]["fingerprint"]
+    assert delta["target_item_id"] == "770e8400-e29b-41d4-a716-446655440002"
+    assert delta["target_item_slug"] == REIMPORT_SLUG
+    assert delta["current_version_record_id"] == "880e8400-e29b-41d4-a716-446655440003"
+
+
+def test_changed_reimport_groups_entries_by_entity_kind(_reimport_target, _stub_classification):
+    _reimport_target(_catalog_item_row(stored_doc=GRAPHQL_DOC))
+    body = _post(
+        {
+            "document_base64": _b64(CHANGED_GRAPHQL_DOC),
+            "filename": "orders.graphql",
+            "project_slug": REIMPORT_SLUG,
+        }
+    ).json()
+    delta = body["reimport"]
+    assert delta is not None and delta["noop"] is False
+    changes = {(e["entity"], e["key"], e["change"]) for e in delta["entries"]}
+    assert ("type", "Customer", "added") in changes
+    assert ("operation", "Query.orders", "removed") in changes
+    assert ("type", "Order", "changed") in changes
+    # Counts reconcile with the entries, per kind and per family.
+    assert delta["counts"]["added"] == sum(1 for e in delta["entries"] if e["change"] == "added")
+    assert delta["counts"]["removed"] == sum(
+        1 for e in delta["entries"] if e["change"] == "removed"
+    )
+    assert delta["counts"]["changed"] == sum(
+        1 for e in delta["entries"] if e["change"] == "changed"
+    )
+    assert delta["counts_by_entity"]["type"]["added"] == 1
+    assert delta["counts_by_entity"]["operation"]["removed"] >= 1
+
+
+def test_reimport_diff_is_structural_not_textual(_reimport_target, _stub_classification):
+    """A re-ordered but structurally identical source is a no-op, not a wall of changes."""
+    _reimport_target(_catalog_item_row(stored_doc=REORDERED_GRAPHQL_DOC))
+    body = _post(_graphql_payload(project_slug=REIMPORT_SLUG)).json()
+    delta = body["reimport"]
+    assert delta is not None
+    assert delta["noop"] is True
+    assert delta["entries"] == []
+
+
+def test_reimport_joins_classifier_grades_onto_matching_entries(
+    _reimport_target, _stub_classification
+):
+    _reimport_target(_catalog_item_row(stored_doc=GRAPHQL_DOC))
+    _stub_classification["result"] = ClassificationResult(
+        format="graphql",
+        classifier="graphql-inspector-stub",
+        overall_severity=Severity.BREAKING,
+        classifications=[
+            ChangeClassification(
+                category=EntityCategory("operation"),
+                kind=ChangeKind.REMOVED,
+                key="Query.orders",
+                severity=Severity.BREAKING,
+                rule_id="removed-entity",
+                rationale="Removing an operation breaks existing callers.",
+            ),
+            ChangeClassification(
+                category=EntityCategory("type"),
+                kind=ChangeKind.MODIFIED,
+                key="Order",
+                severity=Severity.DANGEROUS,
+                rule_id="type-narrowed",
+                rationale="A field was removed from the type.",
+            ),
+        ],
+        counts_by_severity={"breaking": 1, "dangerous": 1},
+    )
+    body = _post(
+        {
+            "document_base64": _b64(CHANGED_GRAPHQL_DOC),
+            "filename": "orders.graphql",
+            "project_slug": REIMPORT_SLUG,
+        }
+    ).json()
+    delta = body["reimport"]
+    assert delta["classifier"] == "graphql-inspector-stub"
+    assert delta["classifier_format_pack"] is True  # graphql has a registered pack
+    assert delta["overall_severity"] == "breaking"
+    assert delta["severity_counts"] == {"breaking": 1, "dangerous": 1}
+    by_key = {(e["change"], e["key"]): e for e in delta["entries"]}
+    removed = by_key[("removed", "Query.orders")]
+    assert removed["severity"] == "breaking"
+    assert removed["rule_id"] == "removed-entity"
+    assert "breaks existing callers" in removed["rationale"]
+    changed = by_key[("changed", "Order")]
+    assert changed["severity"] == "dangerous"
+    # The added type was not graded by the (stub) classifier: it stays unannotated.
+    assert by_key[("added", "Customer")]["severity"] is None
+
+
+def test_reimport_states_when_classification_is_unavailable(
+    _reimport_target, _stub_classification
+):
+    """A classifier fault loses the grades, never the delta — and says so."""
+    _reimport_target(_catalog_item_row(stored_doc=GRAPHQL_DOC))
+    _stub_classification["raise"] = True
+    body = _post(
+        {
+            "document_base64": _b64(CHANGED_GRAPHQL_DOC),
+            "filename": "orders.graphql",
+            "project_slug": REIMPORT_SLUG,
+        }
+    ).json()
+    delta = body["reimport"]
+    assert delta is not None
+    assert delta["entries"], "the structural delta must survive a classifier fault"
+    assert delta["classifier"] is None
+    assert delta["overall_severity"] is None
+    assert all(e["severity"] is None for e in delta["entries"])
+
+
+def test_reimport_is_null_when_the_current_source_is_unreconstructable(
+    _reimport_target, _stub_classification
+):
+    _reimport_target(_catalog_item_row(format_metadata={}))
+    body = _post(_graphql_payload(project_slug=REIMPORT_SLUG)).json()
+    assert body["ok"] is True
+    assert body["manifest"] is not None
+    assert body["reimport"] is None
+
+
+def test_reimport_is_fresh_on_the_cached_manifest_path(_reimport_target, _stub_classification):
+    """The manifest is cached; the delta is recomputed per request against the moving item."""
+    _reimport_target(_catalog_item_row(stored_doc=GRAPHQL_DOC))
+    first = _post(_graphql_payload(project_slug=REIMPORT_SLUG)).json()
+    assert first["reimport"]["noop"] is True
+    assert preview_manifest_cache_size() == 1
+
+    # The item's current revision moves between requests; the cached manifest is reused
+    # but the delta follows the new current source.
+    _reimport_target(_catalog_item_row(stored_doc=CHANGED_GRAPHQL_DOC))
+    second = _post(_graphql_payload(project_slug=REIMPORT_SLUG)).json()
+    assert preview_manifest_cache_size() == 1
+    delta = second["reimport"]
+    assert delta["noop"] is False
+    changes = {(e["entity"], e["key"], e["change"]) for e in delta["entries"]}
+    # Relative to the *changed* stored doc, the original candidate re-adds what changed.
+    assert ("operation", "Query.orders", "added") in changes
+    assert ("type", "Customer", "removed") in changes
+
+
+@pytest.mark.anyio
+async def test_reimport_delta_never_persists(
+    _no_persistence, _reimport_target, _stub_classification
+):
+    _reimport_target(_catalog_item_row(stored_doc=CHANGED_GRAPHQL_DOC))
+    response = _post(_graphql_payload(project_slug=REIMPORT_SLUG))
+    assert response.status_code == 200
+    assert response.json()["reimport"] is not None
+    assert _no_persistence == [], "re-import delta reached a persistence hook"

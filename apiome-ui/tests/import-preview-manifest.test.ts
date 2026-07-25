@@ -16,8 +16,10 @@ import {
   entityKindTag,
   fetchImportPreviewManifest,
   findTypeaheadIndex,
+  groupReimportEntries,
   mergeManifestPages,
   parseSourceLocation,
+  REIMPORT_CHANGE_SYMBOL,
   previewEntityMatchesFilter,
   PREVIEW_COVERAGE_CLASSES,
   PREVIEW_COVERAGE_LABEL,
@@ -318,6 +320,56 @@ describe('fetchImportPreviewManifest', () => {
     await expect(fetchImportPreviewManifest({ document_base64: 'abc' })).rejects.toThrow(
       'incomplete',
     );
+  });
+});
+
+describe('groupReimportEntries (IXH-3.4)', () => {
+  function delta(entries: Array<{ entity: string; key: string; change: 'added' | 'removed' | 'changed' }>) {
+    return {
+      target_item_id: 'item-1',
+      target_item_slug: 'orders',
+      noop: false,
+      candidate_fingerprint: 'a',
+      current_fingerprint: 'b',
+      entries,
+      counts: {},
+      counts_by_entity: {},
+      classifier: null,
+      classifier_format_pack: false,
+      severity_counts: {},
+    };
+  }
+
+  it('groups by family in presentation order with zero-filled tallies', () => {
+    const groups = groupReimportEntries(
+      delta([
+        { entity: 'type', key: 'Order', change: 'changed' },
+        { entity: 'operation', key: 'Query.orders', change: 'removed' },
+        { entity: 'type', key: 'Customer', change: 'added' },
+      ]),
+    );
+    expect(groups.map((group) => group.family)).toEqual(['operation', 'type']);
+    expect(groups[0].label).toBe('Operations');
+    expect(groups[0].counts).toEqual({ added: 0, removed: 1, changed: 0 });
+    expect(groups[1].counts).toEqual({ added: 1, removed: 0, changed: 1 });
+    expect(groups[1].entries.map((entry) => entry.key)).toEqual(['Order', 'Customer']);
+  });
+
+  it('omits empty families and appends unknown families last instead of dropping them', () => {
+    const groups = groupReimportEntries(
+      delta([
+        { entity: 'mystery', key: 'X', change: 'added' },
+        { entity: 'service', key: 'Query', change: 'changed' },
+      ]),
+    );
+    expect(groups.map((group) => group.family)).toEqual(['service', 'mystery']);
+    expect(groups[1].label).toBe('mystery');
+  });
+
+  it('pairs every change kind with a non-empty, distinct symbol', () => {
+    const symbols = Object.values(REIMPORT_CHANGE_SYMBOL);
+    expect(symbols.every((symbol) => symbol.length > 0)).toBe(true);
+    expect(new Set(symbols).size).toBe(symbols.length);
   });
 });
 
