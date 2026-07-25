@@ -118,6 +118,7 @@ def test_convert_dry_run_returns_report_and_document():
         body = response.json()
         assert body["target"] == "openapi"
         assert body["sourceFormat"] == "graphql"
+        assert body["conversionMode"] == "lossy"
         assert body["report"]["grade"] in {"A", "B", "C", "D", "F"}
         assert body["openapi"]["openapi"].startswith("3.1")
         # No commit side effect.
@@ -167,6 +168,7 @@ def test_convert_query_param_overrides_body_dry_run():
         body = response.json()
         assert body["projectId"] == "proj-9"
         assert body["versionId"] == "1.0.0"
+        assert body["conversionMode"] == "lossy"
         assert body["versionRecordId"] == "ver-9"
         assert body["createdProject"] is True
         assert body["provenanceId"] == "prov-9"

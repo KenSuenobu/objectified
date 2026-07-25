@@ -369,7 +369,6 @@ Filter: [`milestone:RC4 is:open`](https://github.com/apiome/apiome/milestone/1).
 | 4220 | OLO-6.3 Member management / license alignment |
 | 4221 | OLO-6.4 Multi-tenant e2e fixtures & tests |
 | 4225 | OLO-7.3 Auth threat-model checklist review |
-| 4008 | MFI-22.7 OpenAPI-native passthrough detection |
 | 4794 | CPDO-1.1 Revision-scoped payload analysis contract |
 | 4795 | CPDO-1.2 Native-analysis extractors and import integration |
 | 4800 | CPDO-1.3 Projection manifest and graph API |

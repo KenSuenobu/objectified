@@ -1654,6 +1654,12 @@ class ConvertDryRunResponse(BaseModel):
         description="The source format that was converted (e.g. 'graphql'), echoed for display.",
     )
     target: str = Field(default="openapi", description="The conversion target (only 'openapi' today).")
+    conversion_mode: str = Field(
+        default="lossy",
+        serialization_alias="conversionMode",
+        description="How the document was produced: passthrough (OpenAPI/Swagger), "
+        "typespec_native, or lossy (MFI-22.7).",
+    )
 
 
 class ConvertCommitResponse(BaseModel):
@@ -1685,6 +1691,12 @@ class ConvertCommitResponse(BaseModel):
         serialization_alias="provenanceId", description="Id of the persisted conversion_provenance row."
     )
     report: Dict[str, Any] = Field(description="The serialized fidelity report (MFI-22.3).")
+    conversion_mode: str = Field(
+        default="lossy",
+        serialization_alias="conversionMode",
+        description="How the document was produced: passthrough (OpenAPI/Swagger), "
+        "typespec_native, or lossy (MFI-22.7).",
+    )
 
 
 class ProjectCreateRequest(BaseModel):

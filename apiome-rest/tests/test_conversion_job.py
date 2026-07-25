@@ -390,8 +390,11 @@ def test_next_version_label(prior: Optional[Dict[str, Any]], expected: str) -> N
 
 def test_converter_tool_versions_keys() -> None:
     tv = converter_tool_versions()
-    assert set(tv) >= {"apiome-rest", "emitter", "fidelity-analyzer"}
+    assert set(tv) >= {"apiome-rest", "emitter", "fidelity-analyzer", "conversion-mode"}
     assert tv["emitter"] == "openapi-3.1"
+    assert tv["conversion-mode"] == "lossy"
+    assert converter_tool_versions(conversion_mode="passthrough")["emitter"] == "passthrough"
+    assert converter_tool_versions(conversion_mode="typespec_native")["emitter"] == "typespec-native"
 
 
 def test_slugify_and_identity_are_deterministic() -> None:

@@ -150,4 +150,5 @@ def build_conversion_source(
         source_protocol=item.get("protocol") or api.protocol,
         source_version_label=api.version,
         source_tool_versions=item.get("tool_versions") or {},
+        source_text=raw,
     )
