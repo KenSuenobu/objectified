@@ -293,14 +293,25 @@ export function buildEvidenceRows(
 }
 
 // ---------------------------------------------------------------------------
-// Destination lanes + deterministic ordering + aggregation
+// Lanes + deterministic ordering + aggregation
 // ---------------------------------------------------------------------------
 
-/** The destination-side lane a row lands in. */
+/** The destination-side lane a row lands in (the export surfaces' default lane set). */
 export type ProjectionLaneKey = 'target' | 'omitted' | 'unavailable';
 
-/** The lanes, in render order, with their user-facing headings. */
-export const PROJECTION_LANES: readonly { key: ProjectionLaneKey; label: string }[] = [
+/**
+ * One lane of the graph/table: a stable key plus its user-facing heading. The lane set is
+ * a parameter of the view/layout builders (IXH-3.3 shares them with the import projection
+ * map, which lanes by source construct family instead of destination outcome); the export
+ * surfaces pass nothing and get {@link PROJECTION_LANES}.
+ */
+export interface ProjectionLane<LaneKey extends string = ProjectionLaneKey> {
+  key: LaneKey;
+  label: string;
+}
+
+/** The destination lanes, in render order, with their user-facing headings. */
+export const PROJECTION_LANES: readonly ProjectionLane[] = [
   { key: 'target', label: 'In the destination' },
   { key: 'omitted', label: 'Omitted from the destination' },
   { key: 'unavailable', label: 'Unavailable' },
@@ -349,15 +360,16 @@ const AGGREGATABLE_STATUSES: ReadonlySet<ProjectionStatus> = new Set([
 ]);
 
 /** One entry of the shared view: an individual evidence row or a deterministic aggregate. */
-export interface ProjectionViewEntry {
-  /** Stable entry key: the row id, or `aggregate:<status>` for an aggregate. */
+export interface ProjectionViewEntry<LaneKey extends string = ProjectionLaneKey> {
+  /** Stable entry key: the row id; `aggregate:<status>` for a default-lane aggregate, or
+   *  `aggregate:<lane>:<status>` when a custom lane set is in play. */
   key: string;
   kind: 'row' | 'aggregate';
   status: ProjectionStatus;
   /** Worst member severity for an aggregate; the row's own severity otherwise. */
   severity: LossinessSeverity;
-  /** The destination lane the entry renders in. */
-  lane: ProjectionLaneKey;
+  /** The lane the entry renders in. */
+  lane: LaneKey;
   /** Display label: the construct label, or `N constructs` for an aggregate. */
   label: string;
   /** The underlying row (kind `row` only). */
@@ -367,13 +379,23 @@ export interface ProjectionViewEntry {
 }
 
 /** The shared view model both the SVG graph and the accessible table render from. */
-export interface ProjectionView {
+export interface ProjectionView<LaneKey extends string = ProjectionLaneKey> {
   /** The entries, in final render order (lane order, then worst-first within a lane). */
-  entries: ProjectionViewEntry[];
+  entries: ProjectionViewEntry<LaneKey>[];
   /** True when at least one aggregate entry was formed. */
   aggregated: boolean;
   /** Total individual evidence rows represented (aggregate members included). */
   rowCount: number;
+}
+
+/** Options for {@link buildProjectionView}; the lane set/assignment defaults to export's. */
+export interface BuildProjectionViewOptions<LaneKey extends string = ProjectionLaneKey> {
+  /** Row count above which aggregation applies (default {@link GRAPH_AGGREGATION_THRESHOLD}). */
+  aggregationThreshold?: number;
+  /** The lane set, in render order (default {@link PROJECTION_LANES}). */
+  lanes?: readonly ProjectionLane<LaneKey>[];
+  /** Which lane a row belongs to (default {@link laneForStatus} on the row's status). */
+  laneOf?: (row: ProjectionEvidenceRow) => LaneKey;
 }
 
 /** Deterministic row order: severity (worst first), then construct label, then row id. */
@@ -398,53 +420,63 @@ function compareRows(a: ProjectionEvidenceRow, b: ProjectionEvidenceRow): number
  * The same input always yields the same output (no randomness, total ordering), so the
  * graph is reproducible across sessions and screenshots.
  *
- * @param rows The evidence rows from {@link buildEvidenceRows}.
- * @param options.aggregationThreshold Row count above which aggregation applies
- *   (default {@link GRAPH_AGGREGATION_THRESHOLD}); tests pass a small value.
+ * @param rows The evidence rows from {@link buildEvidenceRows} (or another builder that
+ *   produces the same row shape, e.g. the import projection map's).
+ * @param options Threshold and, for non-export surfaces, the lane set/assignment
+ *   ({@link BuildProjectionViewOptions}); tests pass a small threshold.
  * @returns The ordered entries plus aggregation metadata.
  */
-export function buildProjectionView(
+export function buildProjectionView<LaneKey extends string = ProjectionLaneKey>(
   rows: ProjectionEvidenceRow[],
-  options?: { aggregationThreshold?: number },
-): ProjectionView {
+  options?: BuildProjectionViewOptions<LaneKey>,
+): ProjectionView<LaneKey> {
   const threshold = options?.aggregationThreshold ?? GRAPH_AGGREGATION_THRESHOLD;
+  // With the default lane set, a status maps to exactly one lane, so the historical
+  // `aggregate:<status>` keys stay stable; custom lanes qualify the key by lane instead.
+  const customLanes = options?.lanes != null || options?.laneOf != null;
+  const lanes = (options?.lanes ?? PROJECTION_LANES) as readonly ProjectionLane<LaneKey>[];
+  const laneOf =
+    options?.laneOf ?? ((row: ProjectionEvidenceRow) => laneForStatus(row.status) as LaneKey);
   const shouldAggregate = rows.length > threshold;
 
   const individual: ProjectionEvidenceRow[] = [];
-  const aggregates = new Map<ProjectionStatus, ProjectionEvidenceRow[]>();
+  /** `<lane> <status>` → member rows; per-lane buckets so an aggregate stays in its lane. */
+  const aggregates = new Map<string, { lane: LaneKey; status: ProjectionStatus; members: ProjectionEvidenceRow[] }>();
   for (const row of rows) {
     if (shouldAggregate && AGGREGATABLE_STATUSES.has(row.status) && row.severity === 'info') {
-      const bucket = aggregates.get(row.status) ?? [];
-      bucket.push(row);
-      aggregates.set(row.status, bucket);
+      const lane = laneOf(row);
+      const bucketKey = `${lane} ${row.status}`;
+      const bucket = aggregates.get(bucketKey) ?? { lane, status: row.status, members: [] };
+      bucket.members.push(row);
+      aggregates.set(bucketKey, bucket);
     } else {
       individual.push(row);
     }
   }
 
-  const entries: ProjectionViewEntry[] = individual.map((row) => ({
+  const entries: ProjectionViewEntry<LaneKey>[] = individual.map((row) => ({
     key: row.id,
     kind: 'row',
     status: row.status,
     severity: row.severity,
-    lane: laneForStatus(row.status),
+    lane: laneOf(row),
     label: row.construct,
     row,
   }));
-  for (const [status, members] of aggregates) {
+  for (const { lane, status, members } of aggregates.values()) {
     members.sort(compareRows);
     entries.push({
-      key: `aggregate:${status}`,
+      key: customLanes ? `aggregate:${lane}:${status}` : `aggregate:${status}`,
       kind: 'aggregate',
       status,
       severity: 'info',
-      lane: laneForStatus(status),
+      lane,
       label: `${members.length} construct${members.length === 1 ? '' : 's'}`,
       members,
     });
   }
 
-  const laneRank = new Map(PROJECTION_LANES.map((lane, index) => [lane.key, index]));
+  const laneRank = new Map(lanes.map((lane, index) => [lane.key, index]));
   entries.sort((a, b) => {
     const byLane = (laneRank.get(a.lane) ?? 0) - (laneRank.get(b.lane) ?? 0);
     if (byLane !== 0) return byLane;
@@ -465,7 +497,7 @@ export function buildProjectionView(
  * what guarantees the two surfaces expose identical counts.
  */
 export function viewStatusCounts(
-  entries: ProjectionViewEntry[],
+  entries: ProjectionViewEntry<string>[],
 ): Partial<Record<ProjectionStatus, number>> {
   const counts: Partial<Record<ProjectionStatus, number>> = {};
   for (const entry of entries) {
@@ -485,7 +517,7 @@ export function viewStatusCounts(
  * surfaces *say* the same thing too (EFP-2.2 acceptance: source construct, result status,
  * target location when present, reason summary).
  */
-export function entryAriaLabel(entry: ProjectionViewEntry): string {
+export function entryAriaLabel(entry: ProjectionViewEntry<string>): string {
   const status = statusPresentation(entry.status);
   if (entry.kind === 'aggregate') {
     const count = entry.members?.length ?? 0;
@@ -539,8 +571,8 @@ export interface PlacedBox {
 }
 
 /** One entry's placed band: its boxes plus the connector geometry between them. */
-export interface PlacedEntry {
-  entry: ProjectionViewEntry;
+export interface PlacedEntry<LaneKey extends string = ProjectionLaneKey> {
+  entry: ProjectionViewEntry<LaneKey>;
   /** The source/native column box; null when the row has no captured native provenance. */
   sourceBox: PlacedBox | null;
   /** The canonical column box (always present). */
@@ -549,9 +581,9 @@ export interface PlacedEntry {
   outcomeBox: PlacedBox;
 }
 
-/** One destination lane's placed band. */
-export interface PlacedLane {
-  key: ProjectionLaneKey;
+/** One lane's placed band. */
+export interface PlacedLane<LaneKey extends string = ProjectionLaneKey> {
+  key: LaneKey;
   label: string;
   /** Lane heading baseline y. */
   headerY: number;
@@ -563,26 +595,31 @@ export interface PlacedLane {
 }
 
 /** The full deterministic layout the SVG renderer draws verbatim. */
-export interface ProjectionGraphLayout {
+export interface ProjectionGraphLayout<LaneKey extends string = ProjectionLaneKey> {
   width: number;
   height: number;
   /** x of each column's left edge. */
   columns: { source: number; canonical: number; outcome: number };
-  entries: PlacedEntry[];
-  lanes: PlacedLane[];
+  entries: PlacedEntry<LaneKey>[];
+  lanes: PlacedLane<LaneKey>[];
 }
 
 /**
  * Compute the deterministic three-column layout for a view.
  *
- * Columns: source/native → canonical → destination; the destination column is banded into
- * the three lanes ({@link PROJECTION_LANES}), each with a heading. Entries keep the view
- * order. Pure geometry over the entry list — same entries, same picture, every time.
+ * Columns: source/native → canonical → outcome; the outcome column is banded into the
+ * given lanes (default: the destination lanes, {@link PROJECTION_LANES}), each with a
+ * heading. Entries keep the view order. Pure geometry over the entry list — same entries,
+ * same picture, every time.
  *
  * @param entries The ordered entries from {@link buildProjectionView}.
+ * @param lanes The lane set the entries were built against (default {@link PROJECTION_LANES}).
  * @returns Placed boxes, lane bands, and the overall canvas size.
  */
-export function projectionGraphLayout(entries: ProjectionViewEntry[]): ProjectionGraphLayout {
+export function projectionGraphLayout<LaneKey extends string = ProjectionLaneKey>(
+  entries: ProjectionViewEntry<LaneKey>[],
+  lanes: readonly ProjectionLane<LaneKey>[] = PROJECTION_LANES as readonly ProjectionLane<LaneKey>[],
+): ProjectionGraphLayout<LaneKey> {
   const g = GRAPH_GEOMETRY;
   const columns = {
     source: g.padding,
@@ -591,10 +628,10 @@ export function projectionGraphLayout(entries: ProjectionViewEntry[]): Projectio
   };
   const width = columns.outcome + g.columnWidth + g.padding;
 
-  const placed: PlacedEntry[] = [];
-  const lanes: PlacedLane[] = [];
+  const placed: PlacedEntry<LaneKey>[] = [];
+  const placedLanes: PlacedLane<LaneKey>[] = [];
   let y = g.padding;
-  for (const lane of PROJECTION_LANES) {
+  for (const lane of lanes) {
     const laneEntries = entries.filter((entry) => entry.lane === lane.key);
     if (laneEntries.length === 0) continue;
     const headerY = y + g.laneHeaderHeight - 8;
@@ -613,10 +650,10 @@ export function projectionGraphLayout(entries: ProjectionViewEntry[]): Projectio
       });
       y += g.rowHeight;
     }
-    lanes.push({ key: lane.key, label: lane.label, headerY, top, bottom: y, count: laneEntries.length });
+    placedLanes.push({ key: lane.key, label: lane.label, headerY, top, bottom: y, count: laneEntries.length });
     y += g.laneGap;
   }
   const height = Math.max(y - g.laneGap + g.padding, g.padding * 2 + g.rowHeight);
 
-  return { width, height, columns, entries: placed, lanes };
+  return { width, height, columns, entries: placed, lanes: placedLanes };
 }

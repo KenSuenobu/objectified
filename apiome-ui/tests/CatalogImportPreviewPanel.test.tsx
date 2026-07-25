@@ -524,3 +524,86 @@ describe('CatalogImportPreviewPanel — degradation', () => {
     expect(screen.queryByTestId('import-preview-error')).not.toBeInTheDocument();
   });
 });
+
+describe('CatalogImportPreviewPanel — projection map integration (IXH-3.3)', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  /** A manifest whose graph carries one located service plus an adapter parser limit. */
+  function manifestWithGraph() {
+    return buildManifest({
+      nodes: [
+        {
+          id: 'native:svc:pets',
+          kind: 'native',
+          label: 'PetService',
+          construct_key: 'svc:pets',
+          native: { native_id: 'id-1', native_name: 'PetService', source_location: '3:1' },
+        },
+        {
+          id: 'canonical:svc:pets',
+          kind: 'canonical',
+          label: 'svc:pets',
+          construct_key: 'svc:pets',
+          canonical_kind: 'service',
+        },
+      ],
+      edges: [
+        {
+          id: 'projects:svc:pets#0',
+          relation: 'projects',
+          source: 'native:svc:pets',
+          target: 'canonical:svc:pets',
+          status: 'retained',
+          reason: null,
+          severity: 'info',
+          detail: 'fully represented',
+        },
+      ],
+      coverage: [
+        {
+          source_construct: 'graphql-directives',
+          coverage: 'not-parsed-by-adapter',
+          status: 'dropped',
+          reason: 'source_parse_limit',
+          detail: 'Custom directives are not read.',
+          entity_key: null,
+          document_scoped: false,
+          capability_reference: {
+            format: 'graphql',
+            mode: 'native',
+            importable: true,
+            related_issues: ['CLX-77'],
+            notes: null,
+          },
+        },
+      ],
+    });
+  }
+
+  it('renders the projection map from the manifest graph, sharing the raw-viewer link', async () => {
+    mockManifestFetch(() => buildResponse(manifestWithGraph()));
+    const onSelectSourceLine = await renderPanel();
+
+    const section = screen.getByTestId('import-projection-graph');
+    expect(within(section).getByTestId('import-projection-svg')).toBeInTheDocument();
+    expect(within(section).getByTestId('import-projection-table')).toBeInTheDocument();
+    // Both the entity graph row and the ledger-only parser limit are drawn.
+    expect(
+      within(section).getByTestId('import-projection-node-projects:svc:pets#0'),
+    ).toBeInTheDocument();
+    expect(
+      within(section).getByTestId('import-projection-node-ledger:graphql-directives'),
+    ).toBeInTheDocument();
+
+    // Selecting the located service links into the same raw viewer as the entity tree.
+    fireEvent.click(within(section).getByTestId('import-projection-node-projects:svc:pets#0'));
+    fireEvent.click(within(section).getByTestId('import-projection-source-link'));
+    expect(onSelectSourceLine).toHaveBeenCalledWith(3);
+  });
+
+  it('shows the projection empty state when the manifest carried no graph', async () => {
+    mockManifestFetch(() => buildResponse());
+    await renderPanel();
+    expect(screen.getByTestId('import-projection-empty')).toBeInTheDocument();
+  });
+});

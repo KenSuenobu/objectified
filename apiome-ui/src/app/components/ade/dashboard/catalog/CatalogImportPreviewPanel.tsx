@@ -16,7 +16,9 @@
  *  - a **provenance strip** for the selected entity — native name/id, unmodeled facets, and the
  *    coverage ledger's explanation;
  *  - a **truncation banner** whenever pages remain server-side, with a "Load all entities" path to
- *    the full data.
+ *    the full data;
+ *  - the **projection map** (IXH-3.3, `CatalogImportProjectionGraph`) — what the source lost or
+ *    kept becoming canonical, rendered from the same manifest's graph and coverage ledger.
  *
  * The panel is mounted by `CatalogImportQualityStep`, which the wizard mounts only when the quality
  * step is reached — so the manifest request fires lazily, on first arrival at the step.
@@ -41,6 +43,7 @@ import { cn } from '@lib/utils';
 import { Button } from '../../../ui/Button';
 import { gradeChipClass } from '@/app/utils/version-lint-report';
 import { parsedTagToneClass } from './CatalogParsedModel';
+import { CatalogImportProjectionGraph } from './CatalogImportProjectionGraph';
 import { clampRowIndex, computeWindowedRange } from '@/app/utils/windowed-rows';
 import type { PreflightRequest } from '@/app/utils/import-preflight';
 import {
@@ -753,6 +756,17 @@ export function CatalogImportPreviewPanel({
               ) : null}
             </div>
           ) : null}
+
+          {/* IXH-3.3: what the source lost or kept becoming canonical, from the same manifest. */}
+          <CatalogImportProjectionGraph
+            nodes={manifest.nodes}
+            edges={manifest.edges}
+            coverage={manifest.coverage}
+            capability={manifest.adapter.capability}
+            rawSourceAvailable={rawSourceAvailable}
+            rawLineCount={rawLineCount}
+            onSelectSourceLine={onSelectSourceLine}
+          />
         </div>
       )}
     </section>
