@@ -1,12 +1,17 @@
 /**
- * Unit tests for the TOTP second-step helpers and session mapper (OLO-9.13 #5014).
+ * Unit tests for the 2FA second-step helpers and session mapper (OLO-9.13 #5014 + OLO-9.50 #5070).
  */
 
 import {
   TWO_FACTOR_CALLBACK_STORAGE_KEY,
+  TWO_FACTOR_METHODS_STORAGE_KEY,
   storeTwoFactorCallbackUrl,
   peekTwoFactorCallbackUrl,
   takeTwoFactorCallbackUrl,
+  storeTwoFactorMethods,
+  peekTwoFactorMethods,
+  takeTwoFactorMethods,
+  normalizeTwoFactorMethods,
   twoFactorLoginPath,
 } from '@lib/auth/two-factor-callback';
 import { mapBetterAuthSession } from '@lib/auth/better-auth-client-compat';
@@ -23,6 +28,25 @@ describe('two-factor-callback', () => {
     expect(takeTwoFactorCallbackUrl()).toBe('/ade/dashboard');
     expect(window.sessionStorage.getItem(TWO_FACTOR_CALLBACK_STORAGE_KEY)).toBeNull();
     expect(takeTwoFactorCallbackUrl('/fallback')).toBe('/fallback');
+  });
+
+  it('stores, peeks, and takes twoFactorMethods', () => {
+    storeTwoFactorMethods(['totp', 'otp', 'totp', 'sms']);
+    expect(peekTwoFactorMethods()).toEqual(['totp', 'otp']);
+    expect(JSON.parse(window.sessionStorage.getItem(TWO_FACTOR_METHODS_STORAGE_KEY)!)).toEqual([
+      'totp',
+      'otp',
+    ]);
+    expect(takeTwoFactorMethods()).toEqual(['totp', 'otp']);
+    expect(window.sessionStorage.getItem(TWO_FACTOR_METHODS_STORAGE_KEY)).toBeNull();
+    expect(peekTwoFactorMethods()).toEqual(['totp']);
+  });
+
+  it('normalizeTwoFactorMethods defaults empty / unknown to totp', () => {
+    expect(normalizeTwoFactorMethods(undefined)).toEqual(['totp']);
+    expect(normalizeTwoFactorMethods([])).toEqual(['totp']);
+    expect(normalizeTwoFactorMethods(['sms'])).toEqual(['totp']);
+    expect(normalizeTwoFactorMethods(['otp'])).toEqual(['otp']);
   });
 
   it('builds the /login/2fa path with an encoded callbackUrl', () => {

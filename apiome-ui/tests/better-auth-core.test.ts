@@ -76,10 +76,14 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
   const originalBetterAuthUrl = process.env.BETTER_AUTH_URL;
   const originalNodeEnv = process.env.NODE_ENV;
   const originalCookieDomain = process.env.BETTER_AUTH_COOKIE_DOMAIN;
+  const originalSendgridKey = process.env.SENDGRID_API_KEY;
+  const originalEmailFrom = process.env.EMAIL_FROM;
 
   beforeEach(() => {
     jest.clearAllMocks();
     jest.resetModules();
+    delete process.env.SENDGRID_API_KEY;
+    delete process.env.EMAIL_FROM;
   });
 
   afterEach(() => {
@@ -87,6 +91,8 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
     restoreEnv('BETTER_AUTH_URL', originalBetterAuthUrl);
     restoreEnv('NODE_ENV', originalNodeEnv);
     restoreEnv('BETTER_AUTH_COOKIE_DOMAIN', originalCookieDomain);
+    restoreEnv('SENDGRID_API_KEY', originalSendgridKey);
+    restoreEnv('EMAIL_FROM', originalEmailFrom);
   });
 
   function restoreEnv(key: string, value: string | undefined): void {
@@ -210,6 +216,7 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
 
     // Issuer = the app name (the label an authenticator app shows), table mapped to snake_case
     // `two_factor` (the plugin keeps its native camelCase field names — design §2.5).
+    // Without SendGrid, otpOptions is omitted so deployments stay TOTP-only (OLO-9.50).
     expect(mockTwoFactor).toHaveBeenCalledTimes(1);
     expect(mockTwoFactor).toHaveBeenCalledWith({ issuer: 'apiome', twoFactorTable: 'two_factor' });
 
@@ -223,6 +230,24 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
     );
     expect(twoFactorIndex).toBeGreaterThanOrEqual(0);
     expect(twoFactorIndex).toBeLessThan(nextCookiesIndex);
+  });
+
+  it('registers twoFactor otpOptions.sendOTP when SendGrid is configured (OLO-9.50)', async () => {
+    process.env.BETTER_AUTH_SECRET = 'test-secret';
+    process.env.SENDGRID_API_KEY = 'sg-test-key';
+    process.env.EMAIL_FROM = 'noreply@example.com';
+
+    await import('@lib/auth/auth');
+
+    expect(mockTwoFactor).toHaveBeenCalledTimes(1);
+    const opts = mockTwoFactor.mock.calls[0][0] as {
+      issuer: string;
+      twoFactorTable: string;
+      otpOptions?: { sendOTP?: unknown };
+    };
+    expect(opts.issuer).toBe('apiome');
+    expect(opts.twoFactorTable).toBe('two_factor');
+    expect(typeof opts.otpOptions?.sendOTP).toBe('function');
   });
 
   it('registers the one-time-code sign-in plugin before nextCookies (OLO-10.13)', async () => {

@@ -1,6 +1,6 @@
 /**
  * Profile TwoFactorSettings enrollment / disable / self-service UI
- * (OLO-9.13 #5014 + OLO-9.15 #5015).
+ * (OLO-9.13 #5014 + OLO-9.15 #5015 + OLO-9.50 #5070).
  */
 
 import React from 'react';
@@ -16,6 +16,7 @@ const mockUseAuthSession = jest.fn();
 const mockGetBackupCodeStatus = jest.fn(async () => ({ remaining: null as number | null }));
 const mockGetTrustedDeviceStatus = jest.fn(async () => ({ trusted: false }));
 const mockRevokeThisTrustedDevice = jest.fn(async () => ({ ok: true }));
+const mockGetEmailOtpAvailability = jest.fn(async () => ({ available: false }));
 
 jest.mock('@lib/auth/auth-client', () => ({
   authClient: {
@@ -36,6 +37,7 @@ jest.mock('@lib/auth/two-factor-profile-actions', () => ({
   getBackupCodeStatus: (...args: unknown[]) => mockGetBackupCodeStatus(...args),
   getTrustedDeviceStatus: (...args: unknown[]) => mockGetTrustedDeviceStatus(...args),
   revokeThisTrustedDevice: (...args: unknown[]) => mockRevokeThisTrustedDevice(...args),
+  getEmailOtpAvailability: (...args: unknown[]) => mockGetEmailOtpAvailability(...args),
 }));
 
 jest.mock('react-qr-code', () => ({
@@ -49,6 +51,7 @@ describe('TwoFactorSettings', () => {
     mockGetBackupCodeStatus.mockResolvedValue({ remaining: null });
     mockGetTrustedDeviceStatus.mockResolvedValue({ trusted: false });
     mockRevokeThisTrustedDevice.mockResolvedValue({ ok: true });
+    mockGetEmailOtpAvailability.mockResolvedValue({ available: false });
     mockUseAuthSession.mockReturnValue({
       data: {
         user: {
@@ -190,6 +193,26 @@ describe('TwoFactorSettings', () => {
     await waitFor(() => {
       expect(mockRevokeThisTrustedDevice).toHaveBeenCalled();
       expect(screen.getByTestId('two-factor-trusted-status')).toHaveTextContent('not marked as trusted');
+    });
+  });
+
+  it('surfaces email OTP when SendGrid is configured (OLO-9.50)', async () => {
+    mockUseAuthSession.mockReturnValue({
+      data: {
+        user: { user_id: 'u1', email: 'a@b.co', twoFactorEnabled: true },
+        expires: '',
+        twoFactorElevated: true,
+      },
+      update: mockUpdate,
+    });
+    mockGetBackupCodeStatus.mockResolvedValue({ remaining: 5 });
+    mockGetEmailOtpAvailability.mockResolvedValue({ available: true });
+
+    render(<TwoFactorSettings />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('two-factor-method-email-otp')).toBeInTheDocument();
+      expect(screen.getByTestId('two-factor-email-otp-info')).toHaveTextContent(/email/i);
     });
   });
 });
