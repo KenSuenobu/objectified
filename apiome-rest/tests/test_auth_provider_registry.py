@@ -29,11 +29,11 @@ _SNAPSHOT_PATH = (
 
 def test_registry_ids_and_order_match_ui_and_v196():
     """Slugs and display order mirror PROVIDER_REGISTRY (UI) and the V196 CHECK list."""
-    assert known_provider_ids() == ["github", "gitlab", "azure", "google", "okta", "aws", "keycloak", "oidc", "auth0", "line", "vk"]
+    assert known_provider_ids() == ["github", "gitlab", "azure", "google", "okta", "aws", "keycloak", "oidc", "auth0", "line", "vk", "wechat"]
 
 
 def test_available_vs_coming_soon_status():
-    """github/gitlab/azure/google/okta/aws/keycloak/oidc/auth0/line/vk are available; no coming-soon placeholders remain."""
+    """github/gitlab/azure/google/okta/aws/keycloak/oidc/auth0/line/vk/wechat are available; no coming-soon placeholders remain."""
     status = {p.id: p.status for p in PROVIDER_REGISTRY}
     assert status["github"] == STATUS_AVAILABLE
     assert status["gitlab"] == STATUS_AVAILABLE
@@ -46,6 +46,7 @@ def test_available_vs_coming_soon_status():
     assert status["auth0"] == STATUS_AVAILABLE
     assert status["line"] == STATUS_AVAILABLE
     assert status["vk"] == STATUS_AVAILABLE
+    assert status["wechat"] == STATUS_AVAILABLE
     assert all(p.status == STATUS_AVAILABLE for p in PROVIDER_REGISTRY)
 
 
@@ -93,6 +94,7 @@ def test_lookup_known_and_unknown():
     assert get_provider_descriptor("auth0").label == "Auth0"
     assert get_provider_descriptor("line").label == "LINE"
     assert get_provider_descriptor("vk").label == "VK"
+    assert get_provider_descriptor("wechat").label == "WeChat"
     assert get_provider_descriptor("not-a-provider") is None
 
 

@@ -1,7 +1,7 @@
 # Sign-in Provider Setup & Secrets Guide (OLO-7.2)
 
 How to register the OAuth applications Apiome signs users in with (GitHub, GitLab,
-Microsoft Entra ID, Google Workspace, Okta, Amazon Cognito, Keycloak, generic OIDC, Auth0, LINE, VK), which
+Microsoft Entra ID, Google Workspace, Okta, Amazon Cognito, Keycloak, generic OIDC, Auth0, LINE, VK, WeChat), which
 environment variables each provider needs, and how boot-time validation reacts when a provider is
 misconfigured.
 
@@ -48,6 +48,9 @@ linked-accounts panel, Better Auth sign-in route). No code changes are needed ei
 | `LINE_CLIENT_SECRET` | LINE | To enable LINE | LINE Login channel **Channel secret** |
 | `VK_CLIENT_ID` | VK | To enable VK | VK ID application **App ID** |
 | `VK_CLIENT_SECRET` | VK | To enable VK | VK ID application **Secure key** |
+| `WECHAT_CLIENT_ID` | WeChat | To enable WeChat | WeChat Open Platform Website App **AppID** |
+| `WECHAT_CLIENT_SECRET` | WeChat | To enable WeChat | WeChat Open Platform Website App **AppSecret** |
+| `WECHAT_LANG` | WeChat | No (default `cn`) | QR page language: `cn` or `en` |
 | `AUTH_PROVIDER_VALIDATION` | validation | No (default `strict`) | `strict` fails startup on partial provider config; `warn` logs and disables |
 
 Rules that apply to every provider:
@@ -471,6 +474,52 @@ RU/CIS region when enabling VK so identity traffic and personal data stay aligne
 compliance expectations. Enabling VK from a non-RU/CIS deployment is technically possible but
 should be a deliberate operator choice.
 
+## WeChat Open Platform (OLO-9.43 — China country MVP)
+
+1. In the [WeChat Open Platform](https://open.weixin.qq.com/) console, create a **Website App**
+   (网站应用) — the QR web login flow Apiome uses.
+2. Set the **Authorized callback domain / redirect URI** to:
+   - `{BETTER_AUTH_URL}/api/auth/oauth2/callback/wechat`
+     (e.g. `http://localhost:3000/api/auth/oauth2/callback/wechat` for local dev)
+3. Copy the **AppID** and **AppSecret**.
+4. Set the env vars:
+
+```bash
+WECHAT_CLIENT_ID=<AppID>
+WECHAT_CLIENT_SECRET=<AppSecret>
+# Optional: QR page language (cn | en). Defaults to cn.
+# WECHAT_LANG=en
+```
+
+The sign-in flow mirrors Better Auth's `wechat()` helper:
+
+- Authorize: `https://open.weixin.qq.com/connect/qrconnect` (QR scan) with scope `snsapi_login`,
+  credential param `appid`, and hash `#wechat_redirect`
+- Token: GET `https://api.weixin.qq.com/sns/oauth2/access_token` with `appid` / `secret` / `code`
+  (custom `getToken` — WeChat does not use a standard POST client_id exchange)
+- User info: GET `https://api.weixin.qq.com/sns/userinfo` with `access_token` + `openid`
+
+**Email / trust class:** WeChat exposes **no email address**. Sign-in is **link-only** — users must
+already have an Apiome account and **explicitly link** WeChat from linked accounts; subsequent
+sign-in works via the bound `(wechat, openid|unionid)` identity. Fresh sign-in without a prior link
+is rejected with the structured `OAuthEmailRequired` code.
+
+### UnionID (multi-app deployments)
+
+WeChat issues an **openid** per app and, when the developer account has bound multiple apps under
+the same open-platform subject, a stable **unionid** across those apps. Apiome keys the identity on
+`unionid` when present, otherwise `openid` (matching Better Auth's `wechat()` helper). Prefer
+binding every Apiome-related WeChat app under one open-platform account so the same person keeps a
+single identity across environments; otherwise each app's openid is a separate identity and users
+must re-link.
+
+### Hosting / compliance (CN)
+
+WeChat is the country-MVP SSO provider for China. Prefer hosting Apiome in the CN region when
+enabling WeChat so identity traffic and personal data stay aligned with local compliance
+expectations. Enabling WeChat from a non-CN deployment is technically possible but should be a
+deliberate operator choice.
+
 ## Secrets handling
 
 - Never commit client secrets — `.env` files are gitignored; the checked-in
@@ -534,8 +583,9 @@ mock server via base-URL override env vars:
 [Keycloak](#keycloak--realm-oidc-client-olo-95),
 [Generic OIDC](#generic-oidc--any-conformant-openid-provider-olo-96), and
 [Auth0](#auth0--regular-web-application-olo-97),
-[LINE](#line-login-olo-941--japan--taiwan--thailand-country-mvp), and
-[VK](#vk-id-olo-942--russia--cis-country-mvp) sections. Pointing any of them
+[LINE](#line-login-olo-941--japan--taiwan--thailand-country-mvp),
+[VK](#vk-id-olo-942--russia--cis-country-mvp), and
+[WeChat](#wechat-open-platform-olo-943--china-country-mvp) sections. Pointing any of them
 at a mock issuer for the e2e journey is fine in test; never point a real deployment's issuer at a
 non-provider host.
 

@@ -148,7 +148,7 @@ def test_list_returns_all_registry_providers(admin_headers):
     assert resp.status_code == 200
     providers = resp.json()["providers"]
     ids = [p["provider_id"] for p in providers]
-    assert ids == ["github", "gitlab", "azure", "google", "okta", "aws", "keycloak", "oidc", "auth0", "line", "vk"]
+    assert ids == ["github", "gitlab", "azure", "google", "okta", "aws", "keycloak", "oidc", "auth0", "line", "vk", "wechat"]
     # With no rows, every field falls back to env and nothing is enabled/stored.
     gh = providers[0]
     assert gh["enabled"] is None
@@ -188,9 +188,13 @@ def test_list_returns_all_registry_providers(admin_headers):
     assert line["required_fields"] == ["client_id", "client_secret"]
     assert line["can_enable"] is False
     vk = next(p for p in providers if p["provider_id"] == "vk")
+    wechat = next(p for p in providers if p["provider_id"] == "wechat")
     assert vk["status"] == "available"
     assert vk["required_fields"] == ["client_id", "client_secret"]
     assert vk["can_enable"] is False
+    assert wechat["status"] == "available"
+    assert wechat["required_fields"] == ["client_id", "client_secret"]
+    assert wechat["can_enable"] is False
 
 
 def test_list_overlays_stored_row_and_masks_secret(admin_headers):

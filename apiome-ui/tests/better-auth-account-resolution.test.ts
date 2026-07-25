@@ -297,6 +297,7 @@ describe('resolveBetterAuthOAuthSignIn — decision tree', () => {
       'oidc',
       'okta',
       'vk',
+      'wechat',
     ]);
     expect(SUPPORTED_OAUTH_PROVIDERS.has('credentials')).toBe(false);
   });
