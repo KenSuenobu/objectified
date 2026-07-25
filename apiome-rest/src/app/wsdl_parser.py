@@ -11,6 +11,8 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
+from .secure_xml import SecureXmlError, parse_xml
+
 __all__ = [
     "WsdlParseError",
     "WsdlField",
@@ -248,9 +250,11 @@ def parse_wsdl(content: str, *, source_label: Optional[str] = None) -> WsdlDocum
         raise WsdlParseError("Content does not appear to be a WSDL document")
 
     try:
-        root = ET.fromstring(content)
-    except ET.ParseError as exc:
-        raise WsdlParseError(f"Malformed XML: {exc}") from exc
+        root = parse_xml(content, source_label=source_label)
+    except SecureXmlError as exc:
+        if exc.code == "INPUT_MALFORMED":
+            raise WsdlParseError(f"Malformed XML: {exc}") from exc
+        raise
 
     if _local(root.tag) != "definitions":
         raise WsdlParseError("WSDL root element must be `definitions`")

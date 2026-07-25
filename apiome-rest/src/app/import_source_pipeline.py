@@ -59,7 +59,7 @@ import json
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
 from .archive_intake import ArchiveIntakeError, is_archive_payload, unpack_archive
 from .canonical_model import CanonicalApi
@@ -73,12 +73,20 @@ from .import_source import (
     detect_import_source,
 )
 from .intake_error_taxonomy import descriptor_for, resolve_intake_error_code
+from .intake_resource_guard import IntakeLimitError, guard_payload_bytes
+from .intake_secret_scrub import (
+    ScrubFinding,
+    ScrubOutcome,
+    scrub_document_text,
+    scrub_message,
+)
 from .models import (
     SpecImportEvent,
     SpecImportJobError,
     SpecImportJobResult,
     SpecImportJobStatus,
 )
+from .secure_xml import SecureXmlError
 from .style_guide_engine import (
     FALLBACK_GUIDE_SOURCE,
     apply_style_guide_to_lint_report,
@@ -108,6 +116,7 @@ ADAPTER_PHASE_EVENT_CODES = frozenset(
         "DRY_RUN",
         "LINT_COMPLETED",
         "QUALITY_CAPTURED",
+        "SECRETS_REDACTED",
         "IMPORT_COMPLETED",
     }
 )
@@ -121,6 +130,26 @@ _PCT_NORMALIZED = 55
 _PCT_VERSIONED = 75
 _PCT_LINTED = 90
 _PCT_DONE = 100
+
+
+def _scrub_event_context(context: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Scrub credential-shaped spans from an event context's string values.
+
+    Contexts carry adapter-supplied detail (member paths, reasons, fingerprints).
+    Only string values are rewritten; other types cannot embed a token.
+
+    Args:
+        context: The event context, or ``None``.
+
+    Returns:
+        The scrubbed context, or ``None`` when ``context`` was ``None``.
+    """
+    if not context:
+        return context
+    return {
+        key: (scrub_message(value) if isinstance(value, str) else value)
+        for key, value in context.items()
+    }
 
 
 class _AdapterRunState:
@@ -145,7 +174,12 @@ class _AdapterRunState:
         level: str = "info",
         context: Optional[Dict[str, Any]] = None,
     ) -> None:
-        """Append one structured event to the run's log."""
+        """Append one structured event to the run's log.
+
+        The message is scrubbed of credential-shaped spans (IXH-1.4) before it is
+        retained: parser errors quote the offending source line, so a secret on a
+        malformed line would otherwise reach every status poll and the server log.
+        """
         self._seq += 1
         self._events.append(
             SpecImportEvent(
@@ -153,8 +187,8 @@ class _AdapterRunState:
                 ts=int(time.time() * 1000),
                 level=level,  # type: ignore[arg-type]
                 code=code,
-                message=message,
-                context=context,
+                message=scrub_message(message) or "",
+                context=_scrub_event_context(context),
             )
         )
 
@@ -308,6 +342,14 @@ def _resolve_intake(payload: Dict[str, Any], options: Dict[str, Any]) -> _Resolv
         archive_root = None
 
     if not is_archive_payload(raw_bytes, source_label if isinstance(source_label, str) else None):
+        # IXH-1.4: cap the single-document payload on its *bytes*, before decoding
+        # to text (which would double the footprint) and before any adapter sees
+        # it — text-only formats never reach the JSON/YAML guard in parse_document.
+        # Archives keep their own, larger budget enforced inside unpack_archive.
+        guard_payload_bytes(
+            raw_bytes,
+            source_label=source_label if isinstance(source_label, str) else None,
+        )
         return _ResolvedIntake(
             raw_bytes=raw_bytes,
             text=raw_bytes.decode("utf-8", errors="replace"),
@@ -333,18 +375,64 @@ def _resolve_intake(payload: Dict[str, Any], options: Dict[str, Any]) -> _Resolv
     )
 
 
-def _source_content_for_persist(intake: _ResolvedIntake) -> Dict[str, Any]:
-    """Build format_metadata source fields preserving the original upload verbatim."""
+def scrub_intake_source(intake: _ResolvedIntake) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """Build the persisted source fields with credentials removed (IXH-1.4).
+
+    Intake stores the upload verbatim so it can be converted later (MFI-23.9), which
+    means a document carrying a live token would persist that token. Every source
+    is therefore scrubbed first (:mod:`app.intake_secret_scrub`):
+
+    * **single document** — secret *values* are replaced in place, so the stored
+      source stays parseable and structurally identical (values only);
+    * **archive** — the stored blob is the original bytes, which cannot be rewritten
+      safely, so when any member carries a secret the verbatim blob is **withheld**
+      rather than persisted. The member list and root still persist, so the catalog
+      item is complete; only the re-downloadable source is dropped.
+
+    Args:
+        intake: The resolved intake (single text document or unpacked fileset).
+
+    Returns:
+        ``(source_fields, scrub_report)`` — the ``format_metadata`` source fields to
+        persist, and the report (types and line numbers, never values) recorded on
+        the job summary.
+    """
     if intake.fileset is not None:
-        return {
-            "sourceContent": base64.standard_b64encode(intake.raw_bytes).decode("ascii"),
-            "sourceEncoding": "base64",
+        findings: List[ScrubFinding] = []
+        for member_path in sorted(intake.fileset.members):
+            outcome = scrub_document_text(intake.fileset.members[member_path])
+            findings.extend(outcome.findings)
+        combined = ScrubOutcome(text="", findings=findings)
+        fields: Dict[str, Any] = {
             "intakeKind": "archive",
             "filesetRoot": intake.fileset.root,
             "filesetMembers": sorted(intake.fileset.members.keys()),
         }
+        if combined.scrubbed:
+            fields["sourceContent"] = None
+            fields["sourceWithheld"] = "secrets-detected"
+        else:
+            fields["sourceContent"] = base64.standard_b64encode(intake.raw_bytes).decode("ascii")
+            fields["sourceEncoding"] = "base64"
+        report = combined.report()
+        report["source_withheld"] = combined.scrubbed
+        return fields, report
+
     assert intake.text is not None
-    return {"sourceContent": intake.text, "intakeKind": "file"}
+    outcome = scrub_document_text(intake.text)
+    report = outcome.report()
+    report["source_withheld"] = False
+    return {"sourceContent": outcome.text, "intakeKind": "file"}, report
+
+
+def _source_content_for_persist(intake: _ResolvedIntake) -> Dict[str, Any]:
+    """Build format_metadata source fields, credentials scrubbed.
+
+    Thin wrapper over :func:`scrub_intake_source` for callers that do not need the
+    scrub report.
+    """
+    fields, _report = scrub_intake_source(intake)
+    return fields
 
 
 def capture_canonical_quality_score(
@@ -730,6 +818,7 @@ def _build_summary(
     options: Dict[str, Any],
     persisted: bool = False,
     types_outcome: Optional[Dict[str, Any]] = None,
+    scrub_report: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Assemble the completed-job summary for an adapter import.
 
@@ -741,6 +830,8 @@ def _build_summary(
     non-OpenAPI formats, keeping the original source verbatim). When the JSON Schema
     "as current" branch (MFI-26.8) ran, a ``types_import`` block reports the per-outcome
     registry counts (imported / overwritten / renamed / identical / skipped / errors).
+    When intake redacted credentials (IXH-1.4), a ``secret_scrub`` block reports what
+    was redacted and where — types and line numbers only, never the values.
     """
     summary: Dict[str, Any] = {
         "source": adapter.key,
@@ -777,6 +868,8 @@ def _build_summary(
                 "errors",
             )
         }
+    if scrub_report is not None:
+        summary["secret_scrub"] = scrub_report
     return summary
 
 
@@ -843,8 +936,14 @@ async def run_adapter_import_job(
         else:
             assert intake.text is not None
             native_ast = adapter.parse(intake.text, source_label=source_label)
-    except ImportSourceError as exc:
-        error_code = _classify_parse_failure(
+    except (ImportSourceError, IntakeLimitError, SecureXmlError) as exc:
+        # A resource-limit or unsafe-construct rejection (IXH-1.4) already knows
+        # its taxonomy code and must not be re-classified as a malformed document.
+        error_code = (
+            resolve_intake_error_code(getattr(exc, "code", None))
+            if isinstance(exc, (IntakeLimitError, SecureXmlError))
+            else None
+        ) or _classify_parse_failure(
             exc, adapter, intake.text if intake is not None else None, source_label
         )
         state.event("PARSE_ERROR", str(exc), level="error", context={"error_code": error_code})
@@ -861,7 +960,7 @@ async def run_adapter_import_job(
     # --- normalize ------------------------------------------------------------
     try:
         model = adapter.normalize(native_ast, include_raw=True)
-    except ImportSourceError as exc:
+    except (ImportSourceError, IntakeLimitError, SecureXmlError) as exc:
         error_code = resolve_intake_error_code(getattr(exc, "code", None)) or (
             "INPUT_SEMANTIC_INVALID"
         )
@@ -1019,6 +1118,19 @@ async def run_adapter_import_job(
             )
 
     # --- finalize -------------------------------------------------------------
+    # Report what intake redacted (IXH-1.4). The scrub itself happens inside the
+    # persistence hook — this recomputes the report so a dry run surfaces the same
+    # findings without writing, and so the summary records them either way.
+    _fields, scrub_report = scrub_intake_source(intake)
+    if scrub_report.get("scrubbed"):
+        state.event(
+            "SECRETS_REDACTED",
+            f"Redacted {scrub_report['redactions']} credential value(s) from the stored "
+            f"source ({', '.join(scrub_report['secret_types'])})"
+            + ("; the verbatim archive was withheld." if scrub_report.get("source_withheld") else "."),
+            level="warn",
+            context={"secret_types": scrub_report["secret_types"]},
+        )
     summary = _build_summary(
         adapter=adapter,
         model=model,
@@ -1028,6 +1140,7 @@ async def run_adapter_import_job(
         options=options,
         persisted=result is not None or types_outcome is not None,
         types_outcome=types_outcome,
+        scrub_report=scrub_report,
     )
     if options.get("dry_run"):
         state.event("DRY_RUN", "Dry run: the normalized model was not persisted.")

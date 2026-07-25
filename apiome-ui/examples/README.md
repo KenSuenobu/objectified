@@ -4,7 +4,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Generated file — do not edit.** This README is the human index of [`corpus.manifest.json`](corpus.manifest.json) (schema: [`corpus.schema.json`](corpus.schema.json)). Edit the manifest, then run `python3 scripts/generate_examples_readme.py` from the repo root; CI fails on drift.
 
-The corpus holds **430 files** across **36 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **439 files** across **36 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -20,14 +20,14 @@ The corpus holds **430 files** across **36 format directories**. Every file has 
 | --- | --- | --- | --- | --- |
 | `api-blueprint/` | API Blueprint | rest | `FORMAT: 1A` metadata line | 11 |
 | `arazzo/` | Arazzo workflows | rest | top-level `arazzo:` version | 11 |
-| `odata/` | OData v4 (EDMX) | rest | `<edmx:Edmx>` root | 11 |
+| `odata/` | OData v4 (EDMX) | rest | `<edmx:Edmx>` root | 12 |
 | `openapi/` | OpenAPI 3.x | rest | top-level `openapi:` version | 37 |
 | `postman/` | Postman v2.1 | rest | collection `info.schema` URL | 11 |
 | `raml/` | RAML 1.0 | rest | `#%RAML 1.0` header | 11 |
 | `swagger/` | Swagger 2.0 | rest | `swagger: "2.0"` | 1 |
 | `typespec/` | TypeSpec | rest | `import "@typespec/..."` | 11 |
-| `wadl/` | WADL | rest | `<application>` root (WADL namespace) | 11 |
-| `wsdl/` | WSDL 1.1 (SOAP) | soap | `<wsdl:definitions>` root | 11 |
+| `wadl/` | WADL | rest | `<application>` root (WADL namespace) | 12 |
+| `wsdl/` | WSDL 1.1 (SOAP) | soap | `<wsdl:definitions>` root | 13 |
 | `zos-connect/` | z/OS Connect | rest | `apiRequester` / `apiProvider` descriptor | 11 |
 
 ### RPC
@@ -41,7 +41,7 @@ The corpus holds **430 files** across **36 format directories**. Every file has 
 | `protobuf/` | Protobuf / gRPC | rpc | `syntax = "proto3"` | 12 |
 | `smithy/` | Smithy 2.0 | rpc | `$version` + Smithy shapes | 11 |
 | `thrift/` | Apache Thrift | rpc | `service` / `struct` shapes | 11 |
-| `xml-rpc/` | XML-RPC | rpc | `<methodCall>` / `<methodResponse>` root | 11 |
+| `xml-rpc/` | XML-RPC | rpc | `<methodCall>` / `<methodResponse>` root | 13 |
 
 ### Event / messaging
 
@@ -67,7 +67,7 @@ The corpus holds **430 files** across **36 format directories**. Every file has 
 | `flatbuffers/` | FlatBuffers | data_schema | `table`/`struct` + `root_type` | 11 |
 | `json-schema/` | JSON Schema | data_schema | `$schema` / `type` + `properties` | 16 |
 | `jtd/` | JSON Type Definition | data_schema | `properties`/`optionalProperties` | 11 |
-| `xsd/` | XML Schema (XSD) | data_schema | `xs:schema` root element | 11 |
+| `xsd/` | XML Schema (XSD) | data_schema | `xs:schema` root element | 13 |
 
 ### Industry / domain messaging
 
@@ -77,7 +77,7 @@ The corpus holds **430 files** across **36 format directories**. Every file has 
 | `fhir/` | FHIR R4 | data_schema | `resourceType` (+ StructureDefinition) | 11 |
 | `fix/` | FIX / FIX Orchestra | message | `8=FIX.` tags / `<fixr:repository>` | 11 |
 | `hl7v2/` | HL7 v2.x | message | `MSH\|^~\&\|` message header | 11 |
-| `iso20022/` | ISO 20022 | message | `urn:iso:std:iso:20022` XML namespace | 11 |
+| `iso20022/` | ISO 20022 | message | `urn:iso:std:iso:20022` XML namespace | 12 |
 | `iso8583/` | ISO 8583 | message | `mti` + numbered `dataElements` | 11 |
 
 ## File index
@@ -420,11 +420,14 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `04-pain.008-direct-debit.xml` | composition | `iso20022` ≥ 0.95 | valid | `pain.008`, `group-header`, `component-reuse`, `sepa-mandate` |
 | `05-camt.054-notification.xml` | stress | `iso20022` ≥ 0.95 | valid | `camt.054`, `prefixed-namespace`, `supplementary-data`, `currency-attributes` |
 | `06-pacs.008-interbank-transfer.xml` | real-world | `iso20022` ≥ 0.95 | valid | `pacs.008`, `group-header`, `settlement-information`, `uetr` |
+| `adversarial/01-billion-laughs-pain001.xml` ⚠ | — | `iso20022` (no guarantee) | adversarial | `adversarial`, `billion-laughs`, `entity-expansion`, `pain.001` |
 | `negative/01-syntactic-unclosed-tag.xml` | — | `iso20022` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-tag` |
 | `negative/02-semantic-empty-document.xml` | — | `iso20022` (no guarantee) | invalid | `negative`, `semantic`, `empty-document` |
 | `negative/03-truncated-mid-tag.xml` | — | `iso20022` (no guarantee) | invalid | `negative`, `truncated`, `mid-tag` |
 | `negative/04-wrong-format-xsd-schema.xsd` | — | `iso20022` (no guarantee) | invalid | `negative`, `wrong-format`, `xsd-schema` |
 | `negative/05-encoding-utf16-event.xml` | — | `iso20022` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
+
+> ⚠ **`adversarial/01-billion-laughs-pain001.xml`** — parse_iso20022 parses before its shape check (IXH-1.4) because is_iso20022 needs a successful secure parse; without that order the security code would be masked as a format mismatch.
 
 ### `iso8583/` — ISO 8583
 
@@ -495,6 +498,7 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `04-inheritance-two-schemas.edmx` | composition | `odata` ≥ 0.95 | valid | `inheritance`, `base-type`, `multiple-schemas`, `complex-type`, `navigation` |
 | `05-stress-service-surface.edmx` | stress | `odata` ≥ 0.95 | valid | `enum-type`, `type-definition`, `singleton`, `function`, `action`, `annotations` |
 | `06-trippin-reference.edmx` | real-world | `odata` ≥ 0.95 | valid | `entity-type`, `complex-type`, `enum-type`, `singleton`, `navigation` |
+| `adversarial/01-external-dtd-entity.xml` | — | `odata` (no guarantee) | adversarial | `adversarial`, `xxe`, `external-entity`, `edmx` |
 | `negative/01-syntactic-mismatched-tag.edmx` | — | `odata` (no guarantee) | invalid | `negative`, `syntactic`, `mismatched-tag` |
 | `negative/02-semantic-no-schema.edmx` | — | `odata` (no guarantee) | invalid | `negative`, `semantic`, `empty-data-services` |
 | `negative/03-truncated-mid-tag.edmx` | — | `odata` (no guarantee) | invalid | `negative`, `truncated`, `cut-mid-token` |
@@ -740,6 +744,7 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `04-kitchen-sink.wadl` | stress | `wadl` ≥ 0.95 | valid | `params`, `matrix-params`, `header-params`, `status-codes`, `representations`, `doc` |
 | `05-yahoo-news-search.wadl` | real-world | `wadl` ≥ 0.95 | valid | `resources`, `methods`, `query-params`, `representations`, `grammars` |
 | `06-task-tracker.wadl` | typical | `wadl` ≥ 0.95 | valid | `resources`, `methods`, `params`, `representations` |
+| `adversarial/01-billion-laughs.wadl` | — | `wadl` (no guarantee) | adversarial | `adversarial`, `billion-laughs`, `entity-expansion`, `dtd` |
 | `negative/01-syntactic-mismatched-close-tag.wadl` | — | `wadl` (no guarantee) | invalid | `negative`, `syntactic`, `mismatched-close-tag` |
 | `negative/02-semantic-no-resources.wadl` | — | `wadl` (no guarantee) | invalid | `negative`, `semantic`, `no-resources` |
 | `negative/03-truncated-mid-element.wadl` | — | `wadl` (no guarantee) | invalid | `negative`, `truncated`, `mid-element` |
@@ -756,6 +761,8 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `04-kitchen-sink.wsdl` | stress | `wsdl` ≥ 0.95 | valid | `rpc-style`, `one-way`, `soap12`, `multi-port`, `typed-parts`, `enumeration` |
 | `05-global-weather.wsdl` | real-world | `wsdl` ≥ 0.95 | valid | `port-type`, `binding`, `message`, `service`, `soap` |
 | `06-bank-transfer.wsdl` | typical | `wsdl` ≥ 0.95 | valid | `port-type`, `binding`, `message`, `service`, `faults` |
+| `adversarial/01-external-entity-ssrf.wsdl` | — | `wsdl` (no guarantee) | adversarial | `adversarial`, `xxe`, `external-entity`, `ssrf`, `instance-metadata` |
+| `adversarial/02-parameter-entity-dtd.wsdl` | — | `wsdl` (no guarantee) | adversarial | `adversarial`, `parameter-entity`, `blind-xxe`, `dtd` |
 | `negative/01-syntactic-mismatched-close-tag.wsdl` | — | `wsdl` (no guarantee) | invalid | `negative`, `syntactic`, `mismatched-close-tag` |
 | `negative/02-semantic-no-types-or-porttypes.wsdl` | — | `wsdl` (no guarantee) | invalid | `negative`, `semantic`, `no-types-or-porttypes` |
 | `negative/03-truncated-mid-element.wsdl` | — | `wsdl` (no guarantee) | invalid | `negative`, `truncated`, `mid-element` |
@@ -772,6 +779,8 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `04-system-multicall.xml` | composition | `xmlrpc` ≥ 0.95 | valid | `method-call`, `multicall`, `array`, `struct` |
 | `05-all-types-response.xml` | stress | `xmlrpc` ≥ 0.95 | valid | `method-response`, `scalar-types`, `base64`, `dateTime.iso8601`, `nil`, `nested-arrays` |
 | `06-wordpress-get-post.xml` | real-world | `xmlrpc` ≥ 0.95 | valid | `method-call`, `params`, `array` |
+| `adversarial/01-xinclude-file-read.xml` | — | `xmlrpc` (no guarantee) | adversarial | `adversarial`, `xinclude`, `external-reference`, `file-disclosure` |
+| `adversarial/02-deep-struct-nesting.xml` | — | `xmlrpc` (no guarantee) | adversarial | `adversarial`, `nesting-depth`, `stack-exhaustion`, `recursive-walker` |
 | `negative/01-syntactic-unclosed-value-tag.xml` | — | `xmlrpc` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-value-tag` |
 | `negative/02-semantic-missing-methodname.xml` | — | `xmlrpc` (no guarantee) | invalid | `negative`, `semantic`, `missing-methodname` |
 | `negative/03-truncated-mid-element.xml` | — | `xmlrpc` (no guarantee) | invalid | `negative`, `truncated`, `mid-element` |
@@ -790,6 +799,8 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `04-kitchen-sink.xsd` | stress | `xsd` ≥ 0.95 | valid | `restrictions`, `union`, `list`, `choice`, `wildcard`, `annotation` |
 | `05-ubl-invoice-shape.xsd` | real-world | `xsd` ≥ 0.95 | valid | `complex-type`, `attribute`, `enumeration`, `occurrence`, `sequence` |
 | `06-employee-directory.xsd` | typical | `xsd` ≥ 0.95 | valid | `complex-type`, `simple-type`, `enumeration`, `occurrence`, `attribute` |
+| `adversarial/01-billion-laughs.xsd` | — | `xsd` (no guarantee) | adversarial | `adversarial`, `billion-laughs`, `entity-expansion`, `dtd` |
+| `adversarial/02-external-entity-file-read.xsd` | — | `xsd` (no guarantee) | adversarial | `adversarial`, `xxe`, `external-entity`, `file-disclosure` |
 | `negative/01-syntactic-mismatched-close-tag.xsd` | — | `xsd` (no guarantee) | invalid | `negative`, `syntactic`, `mismatched-close-tag` |
 | `negative/02-semantic-no-types-or-elements.xsd` | — | `xsd` (no guarantee) | invalid | `negative`, `semantic`, `no-types-or-elements` |
 | `negative/03-truncated-mid-element.xsd` | — | `xsd` (no guarantee) | invalid | `negative`, `truncated`, `mid-element` |

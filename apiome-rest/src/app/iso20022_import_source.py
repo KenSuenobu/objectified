@@ -20,6 +20,7 @@ from .import_source import (
     InputKind,
 )
 from .iso20022_parser import Iso20022Document, Iso20022ParseError, is_iso20022, parse_iso20022
+from .secure_xml import SecureXmlError
 
 __all__ = ["Iso20022ImportSource"]
 
@@ -57,8 +58,10 @@ class Iso20022ImportSource(ImportSource, register=True):
     def parse(self, raw: str, *, source_label: Optional[str] = None) -> Iso20022Document:
         try:
             return parse_iso20022(raw, source_label=source_label)
-        except Iso20022ParseError as exc:
-            raise ImportSourceError(str(exc)) from exc
+        except (Iso20022ParseError, SecureXmlError) as exc:
+            # SecureXmlError carries the taxonomy code for a rejected DTD /
+            # entity / external reference or an exceeded size or depth limit.
+            raise ImportSourceError(str(exc), code=getattr(exc, "code", None)) from exc
 
     def parse_fileset(
         self,

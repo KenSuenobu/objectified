@@ -21,6 +21,7 @@ from .import_source import (
     InputKind,
 )
 from .wsdl_parser import WsdlDocument, WsdlParseError, is_wsdl, parse_wsdl
+from .secure_xml import SecureXmlError
 
 __all__ = ["WsdlImportSource"]
 
@@ -54,8 +55,10 @@ class WsdlImportSource(ImportSource, register=True):
     def parse(self, raw: str, *, source_label: Optional[str] = None) -> WsdlDocument:
         try:
             return parse_wsdl(raw, source_label=source_label)
-        except WsdlParseError as exc:
-            raise ImportSourceError(str(exc)) from exc
+        except (WsdlParseError, SecureXmlError) as exc:
+            # SecureXmlError carries the taxonomy code for a rejected DTD /
+            # entity / external reference or an exceeded size or depth limit.
+            raise ImportSourceError(str(exc), code=getattr(exc, "code", None)) from exc
 
     def parse_fileset(
         self,

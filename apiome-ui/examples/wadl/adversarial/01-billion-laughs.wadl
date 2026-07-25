@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Adversarial: entity expansion in a WADL description. The doc element expands
+     to ~10^5 characters from a few hundred bytes of declarations. -->
+<!DOCTYPE application [
+  <!ENTITY a "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa">
+  <!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">
+  <!ENTITY c "&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;">
+  <!ENTITY d "&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;">
+]>
+<application xmlns="http://wadl.dev.java.net/2009/02">
+  <doc title="Expansion">&d;</doc>
+  <resources base="https://api.example.com/">
+    <resource path="ping">
+      <method name="GET" id="ping">
+        <response status="200"/>
+      </method>
+    </resource>
+  </resources>
+</application>

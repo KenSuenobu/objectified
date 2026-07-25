@@ -10,6 +10,8 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
+from .secure_xml import SecureXmlError, parse_xml
+
 __all__ = [
     "XsdParseError",
     "XsdField",
@@ -82,8 +84,10 @@ def is_xsd(content: str) -> bool:
     if "<xs:schema" in trimmed or "<xsd:schema" in trimmed:
         return True
     try:
-        root = ET.fromstring(trimmed)
-    except ET.ParseError:
+        root = parse_xml(trimmed)
+    except SecureXmlError:
+        # Sniffers must never raise: an unsafe or malformed document is simply
+        # not a recognized XSD (the parse phase reports the real reason).
         return False
     return _local(root.tag) == "schema" and _XSD_NS in root.tag
 
@@ -184,9 +188,11 @@ def parse_xsd(content: str, *, source_label: Optional[str] = None) -> XsdDocumen
         label = f" ({source_label})" if source_label else ""
         raise XsdParseError(f"Content does not appear to be an XSD schema{label}")
     try:
-        root = ET.fromstring(content)
-    except ET.ParseError as exc:
-        raise XsdParseError(f"Malformed XSD document: {exc}") from exc
+        root = parse_xml(content, source_label=source_label)
+    except SecureXmlError as exc:
+        if exc.code == "INPUT_MALFORMED":
+            raise XsdParseError(f"Malformed XSD document: {exc}") from exc
+        raise
 
     if _local(root.tag) != "schema":
         raise XsdParseError("XSD root element must be `schema`")

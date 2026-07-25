@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Adversarial: classic "billion laughs" entity expansion inside an otherwise
+     plausible schema. Each entity references the previous one ten times, so a
+     parser that expands entities materializes 10^6 characters from ~1 KB. -->
+<!DOCTYPE xs:schema [
+  <!ENTITY lol "lollollollollollollollollollol">
+  <!ENTITY lol1 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+  <!ENTITY lol2 "&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;">
+  <!ENTITY lol3 "&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;">
+  <!ENTITY lol4 "&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;">
+  <!ENTITY lol5 "&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;">
+]>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="https://example.com/billion"
+           elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:documentation>&lol5;</xs:documentation>
+  </xs:annotation>
+  <xs:element name="Invoice" type="xs:string"/>
+</xs:schema>

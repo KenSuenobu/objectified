@@ -20,6 +20,7 @@ from .import_source import (
     InputKind,
 )
 from .wadl_parser import WadlDocument, WadlParseError, is_wadl, parse_wadl
+from .secure_xml import SecureXmlError
 
 __all__ = ["WadlImportSource"]
 
@@ -53,8 +54,10 @@ class WadlImportSource(ImportSource, register=True):
     def parse(self, raw: str, *, source_label: Optional[str] = None) -> WadlDocument:
         try:
             return parse_wadl(raw, source_label=source_label)
-        except WadlParseError as exc:
-            raise ImportSourceError(str(exc)) from exc
+        except (WadlParseError, SecureXmlError) as exc:
+            # SecureXmlError carries the taxonomy code for a rejected DTD /
+            # entity / external reference or an exceeded size or depth limit.
+            raise ImportSourceError(str(exc), code=getattr(exc, "code", None)) from exc
 
     def parse_fileset(
         self,

@@ -47,6 +47,21 @@ export type Rung =
 export type FilesetRole = 'root' | 'member';
 
 /**
+ * IXH-1.4 intake guard an adversarial example targets (#5090).
+ * Present on every `adversarial` entry, naming the defense the fixture proves.
+ */
+export type IntakeGuard =
+  | 'xml-entity-expansion'
+  | 'xml-external-entity'
+  | 'document-size'
+  | 'nesting-depth'
+  | 'alias-expansion'
+  | 'reference-recursion'
+  | 'archive-bomb'
+  | 'archive-path-traversal'
+  | 'secret-scrubbing';
+
+/**
  * IXH-1.3 failure-taxonomy class a negative example exercises (#5089).
  * Present on every `invalid` entry; the negative coverage test requires each
  * shipped adapter to span at least five distinct classes.
@@ -104,9 +119,12 @@ export interface CorpusEntry {
   failure_class?: FailureClass;
   /**
    * Stable intake-taxonomy error code the import job must fail with
-   * (apiome-rest `app/intake_error_taxonomy.py`; present on every invalid entry).
+   * (apiome-rest `app/intake_error_taxonomy.py`; present on every invalid entry
+   * and on every rejecting adversarial entry).
    */
   expected_error_code?: string;
+  /** Intake guard the entry targets (present on every adversarial entry). */
+  guard?: IntakeGuard;
 }
 
 /** Per-directory human-index metadata used to regenerate the README. */
@@ -144,6 +162,8 @@ export interface CorpusFilter {
   rung?: Rung;
   /** Failure-taxonomy class to match. */
   failureClass?: FailureClass;
+  /** Intake guard to match. */
+  guard?: IntakeGuard;
 }
 
 const VALIDITY_CLASSES: ReadonlySet<string> = new Set([
@@ -166,6 +186,17 @@ const RUNGS: ReadonlySet<string> = new Set([
   'multi-file',
 ]);
 const FILESET_ROLES: ReadonlySet<string> = new Set(['root', 'member']);
+const INTAKE_GUARDS: ReadonlySet<string> = new Set([
+  'xml-entity-expansion',
+  'xml-external-entity',
+  'document-size',
+  'nesting-depth',
+  'alias-expansion',
+  'reference-recursion',
+  'archive-bomb',
+  'archive-path-traversal',
+  'secret-scrubbing',
+]);
 const FAILURE_CLASSES: ReadonlySet<string> = new Set([
   'syntactic',
   'semantic',
@@ -248,6 +279,9 @@ function assertEntry(value: unknown, index: number): CorpusEntry {
   if (entry.failure_class !== undefined && !FAILURE_CLASSES.has(entry.failure_class as string)) {
     fail(context, `invalid failure_class ${JSON.stringify(entry.failure_class)}`);
   }
+  if (entry.guard !== undefined && !INTAKE_GUARDS.has(entry.guard as string)) {
+    fail(context, `invalid guard ${JSON.stringify(entry.guard)}`);
+  }
   if (
     entry.expected_error_code !== undefined &&
     (typeof entry.expected_error_code !== 'string' ||
@@ -314,7 +348,7 @@ export function loadManifest(): CorpusManifest {
  * @returns Matching entries in manifest (path-sorted) order.
  */
 export function loadCorpus(filter: CorpusFilter = {}): CorpusEntry[] {
-  const { format, validityClass, feature, adapterKey, rung, failureClass } = filter;
+  const { format, validityClass, feature, adapterKey, rung, failureClass, guard } = filter;
   return loadManifest().entries.filter(
     (entry) =>
       (format === undefined || entry.format === format) &&
@@ -322,7 +356,8 @@ export function loadCorpus(filter: CorpusFilter = {}): CorpusEntry[] {
       (feature === undefined || entry.features.includes(feature)) &&
       (adapterKey === undefined || entry.adapter_key === adapterKey) &&
       (rung === undefined || entry.rung === rung) &&
-      (failureClass === undefined || entry.failure_class === failureClass),
+      (failureClass === undefined || entry.failure_class === failureClass) &&
+      (guard === undefined || entry.guard === guard),
   );
 }
 

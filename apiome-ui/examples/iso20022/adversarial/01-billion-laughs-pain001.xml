@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Adversarial: entity expansion inside a pain.001 credit-transfer message.
+     Payment messages are machine-generated, so a DTD here is never legitimate. -->
+<!DOCTYPE Document [
+  <!ENTITY x "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+  <!ENTITY x1 "&x;&x;&x;&x;&x;&x;&x;&x;&x;&x;">
+  <!ENTITY x2 "&x1;&x1;&x1;&x1;&x1;&x1;&x1;&x1;&x1;&x1;">
+  <!ENTITY x3 "&x2;&x2;&x2;&x2;&x2;&x2;&x2;&x2;&x2;&x2;">
+]>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>&x3;</MsgId>
+      <CreDtTm>2026-07-24T12:00:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <InitgPty><Nm>Acme</Nm></InitgPty>
+    </GrpHdr>
+  </CstmrCdtTrfInitn>
+</Document>

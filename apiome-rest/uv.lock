@@ -36,13 +36,14 @@ wheels = [
 
 [[package]]
 name = "apiome-rest"
-version = "1.172.0"
+version = "1.174.0"
 source = { editable = "." }
 dependencies = [
     { name = "asn1tools" },
     { name = "bcrypt" },
     { name = "chevron" },
     { name = "cryptography" },
+    { name = "defusedxml" },
     { name = "email-validator" },
     { name = "fastapi" },
     { name = "fastavro" },
@@ -92,6 +93,7 @@ requires-dist = [
     { name = "bcrypt", specifier = "==4.2.0" },
     { name = "chevron", specifier = ">=0.14.0" },
     { name = "cryptography", specifier = ">=42.0.0" },
+    { name = "defusedxml", specifier = ">=0.7.1" },
     { name = "email-validator", specifier = "==2.2.0" },
     { name = "fastapi", specifier = ">=0.115.0" },
     { name = "fastavro", specifier = ">=1.9.0" },

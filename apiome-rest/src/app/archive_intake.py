@@ -142,6 +142,53 @@ def _decode_member_bytes(data: bytes, *, path: str, max_file_bytes: int, where: 
     return data.decode("utf-8", errors="replace")
 
 
+def _read_zip_member(
+    archive: zipfile.ZipFile,
+    info: zipfile.ZipInfo,
+    *,
+    name: str,
+    policy: ArchivePolicy,
+    where: str,
+) -> bytes:
+    """Decompress one zip member with a hard ceiling on bytes materialized.
+
+    ``ZipFile.read`` trusts nothing but also stops at nothing: it decompresses the
+    whole member into memory, so a header that under-declares its size (the
+    classic zip bomb) is only caught *after* the damage. Reading through the
+    member stream with an explicit cap keeps a lying header bounded to one byte
+    over the limit (IXH-1.4).
+
+    Args:
+        archive: The open zip archive.
+        info: The member being read.
+        name: The validated member path, for error messages.
+        policy: Limits in force.
+        where: Source-label suffix for error messages.
+
+    Returns:
+        The member's decompressed bytes.
+
+    Raises:
+        ArchiveIntakeError: If the member decompresses past the per-file limit, or
+            its stored data is corrupt (bad CRC, truncated deflate stream).
+    """
+    ceiling = policy.max_file_bytes + 1
+    try:
+        with archive.open(info) as stream:
+            data = stream.read(ceiling)
+    except (zipfile.BadZipFile, EOFError, OSError, ValueError) as exc:
+        # BadZipFile here means the member failed its own CRC/size check.
+        raise ArchiveIntakeError(
+            f"Archive member {name!r} could not be decompressed{where}: {exc}"
+        ) from exc
+    if len(data) >= ceiling:
+        raise ArchiveIntakeError(
+            f"Archive member {name!r} decompresses past the {policy.max_file_bytes}-byte "
+            f"per-file limit{where} (its declared size was {info.file_size} bytes)"
+        )
+    return data
+
+
 def _unpack_zip(
     raw: bytes,
     *,
@@ -175,12 +222,21 @@ def _unpack_zip(
             name = _validate_member_path(raw_name, max_depth=policy.max_depth, label="Archive member")
             if name in members:
                 raise ArchiveIntakeError(f"Archive defines member {name!r} more than once{where}")
+            # The declared size is attacker-controlled, so it is only a cheap first
+            # filter: reject an oversized *claim* before decompressing anything.
+            if info.file_size > policy.max_file_bytes:
+                raise ArchiveIntakeError(
+                    f"Archive member {name!r} declares {info.file_size} bytes, over the "
+                    f"{policy.max_file_bytes}-byte per-file limit{where}"
+                )
             total += info.file_size
             if total > policy.max_total_bytes:
                 raise ArchiveIntakeError(
                     f"Archive exceeds the {policy.max_total_bytes}-byte uncompressed limit{where}"
                 )
-            data = archive.read(info)
+            # Then decompress with a hard read ceiling, so a member whose header
+            # lies about its size (a zip bomb) cannot materialize past the limit.
+            data = _read_zip_member(archive, info, name=name, policy=policy, where=where)
             if len(data) > policy.max_file_bytes:
                 raise ArchiveIntakeError(
                     f"Archive member {name!r} exceeds the {policy.max_file_bytes}-byte "
@@ -197,15 +253,37 @@ def _unpack_zip(
     return members
 
 
+class _SkipTarMemberError(Exception):
+    """Internal signal: this tar member is not a file and is simply skipped.
+
+    Previously this raised ``tarfile.SkipHeader``, which does not exist — so any
+    archive containing a directory entry (that is, almost every real tar) raised
+    ``AttributeError`` out of intake instead of skipping the entry. Surfaced by the
+    IXH-1.4 adversarial corpus.
+    """
+
+
 def _tar_extract_filter(tarinfo: tarfile.TarInfo, dest: str) -> tarfile.TarInfo:
-    """Refuse symlinks, hard links, devices, and absolute paths in tar members."""
+    """Refuse symlinks, hard links, devices, and absolute paths in tar members.
+
+    Args:
+        tarinfo: The member header being screened.
+        dest: Unused; kept so the signature matches tarfile's filter protocol.
+
+    Returns:
+        The member, when it is an acceptable regular file.
+
+    Raises:
+        ArchiveIntakeError: For a link, device, or absolute-path member.
+        _SkipTarMemberError: For a directory or other non-file entry, which is skipped.
+    """
     name = tarinfo.name.replace("\\", "/")
     if tarinfo.issym() or tarinfo.islnk():
         raise ArchiveIntakeError(f"Archive member {name!r} is a link and is not allowed")
     if tarinfo.isdev() or tarinfo.isfifo() or tarinfo.ischr() or tarinfo.isblk():
         raise ArchiveIntakeError(f"Archive member {name!r} is not a regular file")
     if not tarinfo.isfile():
-        raise tarfile.SkipHeader
+        raise _SkipTarMemberError
     if name.startswith("/") or PurePosixPath(name).is_absolute():
         raise ArchiveIntakeError(f"Archive member {name!r} must be relative")
     return tarinfo
@@ -234,7 +312,7 @@ def _unpack_tar(
         for tarinfo in tar_members:
             try:
                 filtered = _tar_extract_filter(tarinfo, "")
-            except tarfile.SkipHeader:
+            except _SkipTarMemberError:
                 continue
             raw_name = filtered.name
             if _should_skip_member(raw_name):
@@ -242,15 +320,33 @@ def _unpack_tar(
             name = _validate_member_path(raw_name, max_depth=policy.max_depth, label="Archive member")
             if name in members:
                 raise ArchiveIntakeError(f"Archive defines member {name!r} more than once{where}")
+            # Same two-stage check as the zip path: reject an oversized declared
+            # size cheaply, then bound what the stream is actually allowed to yield.
+            if filtered.size > policy.max_file_bytes:
+                raise ArchiveIntakeError(
+                    f"Archive member {name!r} declares {filtered.size} bytes, over the "
+                    f"{policy.max_file_bytes}-byte per-file limit{where}"
+                )
             total += filtered.size
             if total > policy.max_total_bytes:
                 raise ArchiveIntakeError(
                     f"Archive exceeds the {policy.max_total_bytes}-byte uncompressed limit{where}"
                 )
-            extracted = archive.extractfile(filtered)
-            if extracted is None:
-                continue
-            data = extracted.read()
+            ceiling = policy.max_file_bytes + 1
+            try:
+                extracted = archive.extractfile(filtered)
+                if extracted is None:
+                    continue
+                data = extracted.read(ceiling)
+            except tarfile.TarError as exc:
+                raise ArchiveIntakeError(
+                    f"Archive member {name!r} could not be extracted{where}: {exc}"
+                ) from exc
+            if len(data) >= ceiling:
+                raise ArchiveIntakeError(
+                    f"Archive member {name!r} expands past the {policy.max_file_bytes}-byte "
+                    f"per-file limit{where} (its declared size was {filtered.size} bytes)"
+                )
             members[name] = _decode_member_bytes(
                 data, path=name, max_file_bytes=policy.max_file_bytes, where=where
             )

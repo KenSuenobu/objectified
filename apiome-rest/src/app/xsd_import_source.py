@@ -20,6 +20,7 @@ from .import_source import (
     InputKind,
 )
 from .xsd_parser import XsdDocument, XsdParseError, is_xsd, parse_xsd
+from .secure_xml import SecureXmlError
 
 __all__ = ["XsdImportSource"]
 
@@ -54,8 +55,10 @@ class XsdImportSource(ImportSource, register=True):
     def parse(self, raw: str, *, source_label: Optional[str] = None) -> XsdDocument:
         try:
             return parse_xsd(raw, source_label=source_label)
-        except XsdParseError as exc:
-            raise ImportSourceError(str(exc)) from exc
+        except (XsdParseError, SecureXmlError) as exc:
+            # SecureXmlError carries the taxonomy code for a rejected DTD /
+            # entity / external reference or an exceeded size or depth limit.
+            raise ImportSourceError(str(exc), code=getattr(exc, "code", None)) from exc
 
     def parse_fileset(
         self,

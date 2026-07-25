@@ -11,6 +11,8 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
+from .secure_xml import SecureXmlError, parse_xml
+
 __all__ = [
     "WadlParseError",
     "WadlField",
@@ -316,9 +318,11 @@ def parse_wadl(content: str, *, source_label: Optional[str] = None) -> WadlDocum
         raise WadlParseError("Content does not appear to be a WADL document")
 
     try:
-        root = ET.fromstring(content)
-    except ET.ParseError as exc:
-        raise WadlParseError(f"Malformed XML: {exc}") from exc
+        root = parse_xml(content, source_label=source_label)
+    except SecureXmlError as exc:
+        if exc.code == "INPUT_MALFORMED":
+            raise WadlParseError(f"Malformed XML: {exc}") from exc
+        raise
 
     if _local(root.tag) != "application":
         raise WadlParseError("WADL root element must be `application`")

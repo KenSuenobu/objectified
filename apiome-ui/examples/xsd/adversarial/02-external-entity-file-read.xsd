@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Adversarial: XXE file disclosure. The external entity points at a local file
+     and is referenced from documentation text, so a parser that resolves external
+     entities would embed /etc/passwd in the imported schema. -->
+<!DOCTYPE xs:schema [
+  <!ENTITY secret SYSTEM "file:///etc/passwd">
+]>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="https://example.com/xxe"
+           elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:documentation>&secret;</xs:documentation>
+  </xs:annotation>
+  <xs:element name="Account" type="xs:string"/>
+</xs:schema>

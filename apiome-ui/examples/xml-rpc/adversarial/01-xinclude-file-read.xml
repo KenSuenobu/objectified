@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Adversarial: XInclude file disclosure. XInclude is processed separately from
+     entity expansion, so a parser hardened only against DTDs can still be induced
+     to read a local file if it honours xi:include. -->
+<methodCall>
+  <methodName>system.describe</methodName>
+  <params>
+    <param>
+      <value>
+        <struct>
+          <member>
+            <name>leaked</name>
+            <value>
+              <string><xi:include xmlns:xi="http://www.w3.org/2001/XInclude"
+                                  href="file:///etc/passwd" parse="text"/></string>
+            </value>
+          </member>
+        </struct>
+      </value>
+    </param>
+  </params>
+</methodCall>
