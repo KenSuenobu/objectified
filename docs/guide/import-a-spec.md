@@ -51,6 +51,29 @@ POST /v1/tenants/{tenant_slug}/imports/upload
 Content-Type: multipart/form-data
 ```
 
+## Check quality before importing
+
+Pre-flight scores a document **without writing anything**, so you can decide whether it is worth
+importing (and fix it first if it is not):
+
+```http
+POST /v1/tenants/{tenant_slug}/import/preflight
+Content-Type: application/json
+X-API-Key: <your-api-key>
+
+{ "document_base64": "<base64 bytes>", "filename": "petstore.openapi.yaml" }
+```
+
+Returns **200** with the detected format and confidence, where the import would land
+(project / catalog / types), the entity counts, the lint **score and grade**, and the findings
+ranked worst-first — each with its rule id, severity, location, and how to fix it. Omit
+`source_kind` to auto-detect, or set it to force a specific importer.
+
+A document that cannot be imported is still a 200: `ok` is `false` and `error.code` carries a
+stable code (for example `INPUT_MALFORMED`, `FORMAT_UNRECOGNIZED`, `INPUT_TOO_LARGE`) plus
+remediation text — key your automation off the code, not the message. Pre-flighting the same bytes
+twice is served from cache and says so in `cache.hit`.
+
 ## Verify
 
 - **UI:** the imported classes are listed in the Designer.

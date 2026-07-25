@@ -173,6 +173,14 @@ INTAKE_ERROR_TAXONOMY: Dict[str, IntakeErrorDescriptor] = {
             "use auto-detection).",
         ),
         _d(
+            "FORMAT_UNRECOGNIZED",
+            IntakeErrorCategory.FORMAT,
+            False,
+            "No importer recognized this document's format. Select the format "
+            "explicitly if you know it, or convert the document to a supported "
+            "format and try again.",
+        ),
+        _d(
             "FORMAT_VERSION_UNSUPPORTED",
             IntakeErrorCategory.FORMAT,
             False,

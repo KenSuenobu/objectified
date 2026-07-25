@@ -25,8 +25,11 @@ from pydantic import ValidationError
 
 from .auth import get_authenticated_user_id, validate_authentication
 from .database import db
+from .import_preflight import run_import_preflight
 from .permissions import enforce_permission, Resource, Action
 from .models import (
+    ImportPreflightReport,
+    ImportPreflightRequest,
     SpecImportCommitResponse,
     SpecImportJobAccepted,
     SpecImportJobListResponse,
@@ -62,6 +65,39 @@ def _require_tenant_and_user(auth_data: Dict[str, Any]) -> tuple[str, str]:
     if not tid:
         raise HTTPException(status_code=403, detail="Tenant id missing from authentication context.")
     return str(tid), uid
+
+
+@router.post(
+    "/{tenant_slug}/import/preflight",
+    response_model=ImportPreflightReport,
+    summary="Pre-flight a candidate document (lint and rank, no write)",
+    description=(
+        "Score a candidate document **before** importing it (IXH-2.1). Runs the same "
+        "detect → parse → normalize → fingerprint → lint pipeline a real import runs, with "
+        "dry-run semantics, and returns the detected adapter and confidence, the routing "
+        "decision, canonical entity counts, the revision fingerprint, the full lint report "
+        "with findings ranked by severity then rule weight, the resolved style guide, and an "
+        "(advisory, until IXH-2.3) policy verdict. Nothing is persisted: no catalog item, "
+        "project, version, type row, or import job.\n\n"
+        "A document that cannot be imported is **not** an HTTP error — the response is a 200 "
+        "with ``ok: false`` and a stable intake-taxonomy ``error`` code plus remediation, so "
+        "callers key off the code rather than parsing exception strings. Repeated pre-flights "
+        "of identical bytes are served from a tenant-scoped cache and report ``cache.hit``."
+    ),
+)
+async def preflight_import_candidate(
+    tenant_slug: str,
+    body: ImportPreflightRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> ImportPreflightReport:
+    # Gated on ``imports:create`` rather than a view action: pre-flight is the first step of
+    # the import flow, and a caller who may not import has no use for its verdict. It writes
+    # nothing itself.
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.CREATE)
+    tenant_id, user_id = _require_tenant_and_user(auth_data)
+    return await run_import_preflight(
+        body, tenant_id=tenant_id, tenant_slug=tenant_slug, user_id=user_id
+    )
 
 
 @router.get(

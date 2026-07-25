@@ -17,6 +17,8 @@ convention from IXH-1.1.
 
 from __future__ import annotations
 
+import io
+import zipfile
 from functools import lru_cache
 from typing import Dict, List
 
@@ -35,6 +37,7 @@ __all__ = [
     "KNOWN_IMPORT_BUGS",
     "adapter_for",
     "build_fileset",
+    "build_fileset_archive",
     "missing_tools",
     "tool_available",
     "valid_entries",
@@ -151,3 +154,30 @@ def build_fileset(entry: CorpusEntry) -> IntakeFileset:
         if path.is_file()
     }
     return IntakeFileset.from_members(members, root=entry.absolute_path.name)
+
+
+def build_fileset_archive(entry: CorpusEntry) -> bytes:
+    """Zip a multi-file set into the archive bytes an intake endpoint would receive.
+
+    :func:`build_fileset` hands an adapter the already-assembled fileset; a *transport*
+    (the import job, the IXH-2.1 pre-flight endpoint) instead receives one blob and unpacks
+    it itself. This produces that blob for the same per-set subdirectory.
+
+    Member timestamps are pinned so the archive is byte-identical across runs — a
+    ``ZipInfo`` built from the filesystem would embed each file's mtime and make any
+    content-hash assertion (such as the pre-flight cache key) flaky.
+
+    Args:
+        entry: The set's ``root`` entry; every file beside it becomes an archive member.
+
+    Returns:
+        The ``.zip`` bytes, whose root document is the entry's own filename.
+    """
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+        for path in sorted(entry.absolute_path.parent.iterdir()):
+            if not path.is_file():
+                continue
+            info = zipfile.ZipInfo(path.name, date_time=(1980, 1, 1, 0, 0, 0))
+            archive.writestr(info, path.read_bytes())
+    return buffer.getvalue()
