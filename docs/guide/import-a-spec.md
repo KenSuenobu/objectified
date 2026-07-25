@@ -90,6 +90,48 @@ explicit import without a score.
 Tick **Skip this step for clean imports** to stop pausing here for documents that pass. The
 pre-flight still runs, and the step still stops whenever the verdict blocks or cannot be produced.
 
+### Set the tenant quality policy
+
+By default nothing is blocked: a fresh tenant scores every import and reports the result without
+refusing anything. To make the gate real, open **Governance → Style Guides** and edit **Import &
+export quality policy**:
+
+- **Minimum grade / minimum score / refuse findings at** — the three floors. Leave one blank to
+  not use it; a scope with no floor can never block.
+- **Refuse the import when a floor is missed** — off means *advisory* (the shortfall is reported,
+  the import proceeds); on means the commit is refused.
+- **Overrides** — whether a blocked user may proceed by recording a waiver, which role slugs may
+  (tenant administrators resolve to `owner`), and how long a waiver is honoured.
+- **Per-format overrides** — a format may tighten a floor without restating the rest; resolution is
+  *format override → tenant → default*, and the pre-flight verdict names the tier that won
+  (`policy.source`).
+
+Saving appends an immutable version, listed underneath with its fingerprint and author, and writes
+an audit entry. Every verdict names the `policyVersionId` it applied.
+
+The policy is enforced **on the server**, at `POST /v1/tenants/{tenant_slug}/imports` — not only in
+the wizard. An import that policy refuses comes back as **409** with
+`detail.code = QUALITY_POLICY_BLOCKED`, the reason, the remediation, and the full verdict, and no
+job is created. A dry run is never gated (it writes nothing).
+
+### Waivers
+
+"Import anyway" records a waiver in the tenant's ledger with the actor, the reason, the scope, and
+an expiry taken from the policy's waiver lifetime. It is matched on the candidate's content hash
+and the format it was granted for, so the same bytes commit through the gate until it expires — at
+which point the shared waiver-expiry sweep has already warned the tenant (`lint.waiver.expiring`,
+`kind: quality:import`). Active waivers are listed under the policy in Governance:
+
+```bash
+curl -X POST "$APIOME_API/v1/tenants/$TENANT/governance/quality-waivers" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"scope":"import","subjectKey":"<cache.content_hash from the pre-flight report>",
+       "formatKey":"openapi","reason":"vendor spec we do not control"}'
+```
+
+The grant is refused with **403** unless the policy permits overrides *and* names your role — the
+check is server-side, so a client cannot grant itself one.
+
 ## Verify
 
 - **UI:** the imported classes are listed in the Designer.

@@ -80,8 +80,31 @@ function buildReport(overrides: Partial<PreflightReport> = {}): PreflightReport 
 }
 
 /** Serve one pre-flight response (or reject the call to simulate a transport failure). */
-function mockPreflight(response: PreflightReport | { failWith: string }): jest.Mock {
-  return jest.fn(() => {
+/**
+ * Stub the two endpoints the step calls: the pre-flight report and, when the user overrides a
+ * blocking verdict, the tenant waiver ledger (IXH-2.3). `waiverFailure` makes the ledger refuse
+ * the grant the way a role the policy does not name would be refused.
+ */
+function mockPreflight(
+  response: PreflightReport | { failWith: string },
+  waiverFailure?: string,
+): jest.Mock {
+  return jest.fn((url: unknown) => {
+    if (String(url).includes('/api/quality-policy/waivers')) {
+      return waiverFailure
+        ? Promise.resolve({
+            ok: false,
+            json: () => Promise.resolve({ success: false, error: waiverFailure }),
+          })
+        : Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                success: true,
+                data: { id: 'waiver-1', expiresAt: '2026-08-01T00:00:00Z' },
+              }),
+          });
+    }
     if ('failWith' in response) {
       return Promise.resolve({
         ok: false,
@@ -103,8 +126,9 @@ interface Handlers {
 async function renderStep(
   response: PreflightReport | { failWith: string },
   props: Partial<React.ComponentProps<typeof CatalogImportQualityStep>> = {},
+  waiverFailure?: string,
 ): Promise<Handlers> {
-  global.fetch = mockPreflight(response) as unknown as typeof fetch;
+  global.fetch = mockPreflight(response, waiverFailure) as unknown as typeof fetch;
   const handlers: Handlers = {
     onCommit: jest.fn(),
     onBack: jest.fn(),
@@ -353,7 +377,19 @@ describe('CatalogImportQualityStep — warn, block, and override', () => {
     });
     fireEvent.click(screen.getByTestId('import-quality-override'));
 
-    expect(handlers.onCommit).toHaveBeenCalledTimes(1);
+    // The waiver reaches the tenant ledger before the commit: the server enforces the same
+    // policy at the import endpoint and matches the waiver on the candidate's content hash.
+    await waitFor(() => expect(handlers.onCommit).toHaveBeenCalledTimes(1));
+    const grant = (global.fetch as unknown as jest.Mock).mock.calls.find((call) =>
+      String(call[0]).includes('/api/quality-policy/waivers'),
+    );
+    expect(grant).toBeDefined();
+    expect(JSON.parse(String((grant![1] as RequestInit).body))).toMatchObject({
+      scope: 'import',
+      subjectKey: 'sha-256-abc',
+      formatKey: 'graphql',
+      reason: 'Vendor spec we do not control',
+    });
     const waivers = readImportQualityWaivers();
     expect(waivers).toHaveLength(1);
     expect(waivers[0]).toMatchObject({
@@ -367,6 +403,37 @@ describe('CatalogImportQualityStep — warn, block, and override', () => {
       justification: 'Vendor spec we do not control',
     });
     expect(handlers.onCommit.mock.calls[0][0]).toMatchObject({ policyVerdict: 'block' });
+  });
+
+  it('does not commit when the tenant ledger refuses the waiver (IXH-2.3)', async () => {
+    // The server enforces the policy at the import endpoint too, so a commit sent after a
+    // refused grant would only be rejected there — the step stops and states the reason.
+    const handlers = await renderStep(
+      blockReport,
+      {},
+      'Your role (editor) may not waive this policy; permitted roles: owner, admin',
+    );
+    fireEvent.change(screen.getByLabelText(/why is this import necessary/i), {
+      target: { value: 'Vendor spec we do not control' },
+    });
+    fireEvent.click(screen.getByTestId('import-quality-override'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('import-quality-waiver-error')).toHaveTextContent(
+        'may not waive this policy',
+      ),
+    );
+    expect(handlers.onCommit).not.toHaveBeenCalled();
+  });
+
+  it('names the roles permitted to waive so the user knows who to ask', async () => {
+    await renderStep(
+      buildReport({
+        lint: blockReport.lint,
+        policy: { ...blockReport.policy, override_roles: ['owner', 'admin'] },
+      }),
+    );
+    expect(screen.getByText(/only these roles may do: owner, admin/i)).toBeInTheDocument();
   });
 
   it('commits at most once even when an exit is clicked twice', async () => {

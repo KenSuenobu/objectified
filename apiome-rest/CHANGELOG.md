@@ -5,6 +5,42 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.177.0] - 2026-07-25
+
+### Added
+- **Tenant import/export quality policy and waivers (#5098, IXH-2.3)** — a
+  tenant-scoped, versioned policy now governs *intake* and *delivery*, not just
+  publishing. Per scope (`import` / `export`) it carries three independent floors —
+  minimum grade, minimum score, and a severity that must not appear — plus an
+  enforcement mode (`advisory` reports the shortfall, `block` refuses the
+  operation), per-format overrides, whether an override is permitted and by which
+  role slugs, and the waiver lifetime. Resolution is **format override → tenant →
+  default** and the winning tier is named on every verdict (`policy.source`).
+  - `GET/PUT /v1/tenants/{tenant_slug}/governance/quality-policy` (+ `/versions`)
+    manage it; writes are tenant-administrator-only, append an immutable version,
+    and are written to the access audit.
+  - `GET/POST /v1/tenants/{tenant_slug}/governance/quality-waivers` record and list
+    accepted risk with actor, reason, scope, and expiry. A grant is refused with
+    403 unless the policy permits overrides **and** names the caller's effective
+    role — enforcement is server-side, not UI-only.
+  - `POST …/import/preflight` (IXH-2.1) now returns the real verdict: `scope`,
+    `format_key`, `min_grade`, `block_on_severity`, `enforcement`, the `failures`
+    list, `override_roles`, the applied `policy_version_id`, and any honoured
+    `waiver_id`. A cached report re-evaluates policy on every response, so a waiver
+    recorded between two calls takes effect immediately.
+  - `POST …/imports` (both JSON and multipart) enforces the policy **before a job is
+    created**: a blocked import returns **409** with the new
+    `QUALITY_POLICY_BLOCKED` taxonomy code, its remediation, and the verdict. Dry
+    runs and repository auto-refreshes are not gated. A tenant on the default
+    policy pays nothing — the gate returns before it looks at the document.
+  - Quality waivers are swept by the **existing** CLX-4.2 waiver-expiry sweep, which
+    now claims both ledgers on one tick and emits `lint.waiver.expiring` with a
+    `kind` of `lint_finding` or `quality:import` / `quality:export`.
+  - `evaluate_export_quality()` ships the export half of the gate for IXH-2.4/2.5 to
+    call; nothing on the export path is gated yet.
+  - Default behaviour is unchanged for every existing tenant: no policy row means no
+    floors, advisory only, override permitted.
+
 ## [1.176.0] - 2026-07-25
 
 ### Added

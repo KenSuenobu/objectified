@@ -1,16 +1,19 @@
 /**
- * Import pre-flight client helpers (IXH-2.2, #5097).
+ * Import pre-flight client helpers (IXH-2.2, #5097; server-side waiver ledger IXH-2.3, #5098).
  *
  * Covers the rules the quality step delegates: the gate decision for every outcome (pass, warn,
  * block, block-without-override, unimportable candidate, transport failure, still-scoring), the
  * severity tally and its fallback, the threshold comparison, the finding→source-line resolution,
- * the waiver record, and the fetch's success/failure contract.
+ * the waiver record and its grant against the tenant ledger, and the fetch's success/failure
+ * contract.
  */
 
 import { describe, expect, it, jest, beforeEach, afterEach } from '@jest/globals';
 
 import {
   buildImportQualityWaiver,
+  buildImportQualityWaiverRequest,
+  cacheImportQualityWaiverLocally,
   decidePreflightGate,
   fetchImportPreflight,
   locateFindingLine,
@@ -387,9 +390,9 @@ describe('import quality waivers and preferences', () => {
     expect(waiver.justification).toBeNull();
   });
 
-  it('persists waivers newest first and caps the history', () => {
+  it('persists waivers newest first and caps the local history', () => {
     for (let i = 0; i < IMPORT_QUALITY_WAIVER_LIMIT + 5; i++) {
-      recordImportQualityWaiver(
+      cacheImportQualityWaiverLocally(
         buildImportQualityWaiver(report(), `file-${i}`, null, '2026-07-25T12:00:00.000Z'),
       );
     }
@@ -407,5 +410,114 @@ describe('import quality waivers and preferences', () => {
   it('falls back to defaults when stored preferences are corrupt', () => {
     window.localStorage.setItem('apiome.import-quality.v1', 'not json');
     expect(readImportQualityPreferences().skipQualityStep).toBe(false);
+  });
+});
+
+
+describe('recording a waiver in the tenant ledger (IXH-2.3, #5098)', () => {
+  beforeEach(() => window.localStorage.clear());
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  const blockingReport = () =>
+    report({
+      lint: { score: 41, grade: 'F', report_fingerprint: 'fp-9' },
+      policy: {
+        verdict: 'block',
+        blocking: true,
+        source: 'tenant',
+        reason: 'Grade F is below the required B.',
+        threshold_score: null,
+        min_grade: 'B',
+        enforcement: 'block',
+        override_roles: ['owner'],
+        failures: [{ kind: 'grade', required: 'B', actual: 'F' }],
+      },
+    });
+
+  it('projects the record onto the grant request the API expects', () => {
+    const waiver = buildImportQualityWaiver(
+      blockingReport(),
+      'vendor.graphql',
+      'vendor spec',
+      '2026-07-25T12:00:00.000Z',
+    );
+    expect(buildImportQualityWaiverRequest(waiver, 'graphql')).toEqual({
+      scope: 'import',
+      subjectKey: 'sha-1',
+      subjectLabel: 'vendor.graphql',
+      formatKey: 'graphql',
+      reportFingerprint: 'fp-9',
+      score: 41,
+      grade: 'F',
+      reason: 'vendor spec',
+    });
+  });
+
+  it('refuses to build a request without a content hash to match on', () => {
+    const waiver = buildImportQualityWaiver(
+      report({ cache: undefined }),
+      'a.graphql',
+      'why',
+      '2026-07-25T12:00:00.000Z',
+    );
+    expect(buildImportQualityWaiverRequest(waiver, 'graphql')).toBeNull();
+  });
+
+  it('posts the waiver to the ledger and reports the server record', async () => {
+    const fetchMock = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            success: true,
+            data: { id: 'w-1', expiresAt: '2026-08-01T00:00:00Z' },
+          }),
+      }),
+    );
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const waiver = buildImportQualityWaiver(
+      blockingReport(),
+      'vendor.graphql',
+      'vendor spec',
+      '2026-07-25T12:00:00.000Z',
+    );
+    const outcome = await recordImportQualityWaiver(waiver, 'graphql');
+
+    expect(outcome).toEqual({ recorded: true, id: 'w-1', expiresAt: '2026-08-01T00:00:00Z' });
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/quality-policy/waivers');
+    expect(JSON.parse(String(init.body))).toMatchObject({ subjectKey: 'sha-1', reason: 'vendor spec' });
+    // The local copy is kept as a fallback record either way.
+    expect(readImportQualityWaivers()).toHaveLength(1);
+  });
+
+  it('reports the server refusal rather than pretending the waiver exists', async () => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: false,
+        json: () =>
+          Promise.resolve({ success: false, error: 'Your role (editor) may not waive this policy' }),
+      }),
+    ) as unknown as typeof fetch;
+
+    const outcome = await recordImportQualityWaiver(
+      buildImportQualityWaiver(blockingReport(), 'v.graphql', 'why', '2026-07-25T12:00:00.000Z'),
+      'graphql',
+    );
+    expect(outcome.recorded).toBe(false);
+    expect(outcome.error).toContain('may not waive');
+  });
+
+  it('reports an unreachable ledger without throwing', async () => {
+    global.fetch = jest.fn(() => Promise.reject(new Error('offline'))) as unknown as typeof fetch;
+    const outcome = await recordImportQualityWaiver(
+      buildImportQualityWaiver(blockingReport(), 'v.graphql', 'why', '2026-07-25T12:00:00.000Z'),
+      'graphql',
+    );
+    expect(outcome.recorded).toBe(false);
+    expect(outcome.error).toBe('The waiver ledger could not be reached.');
   });
 });

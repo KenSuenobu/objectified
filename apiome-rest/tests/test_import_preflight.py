@@ -23,6 +23,7 @@ from typing import Any, Dict, Optional
 import pytest
 from fastapi.testclient import TestClient
 
+from app import import_export_quality_policy as quality_policy
 from app import import_preflight, import_source_pipeline
 from app.auth import validate_authentication
 from app.import_preflight import (
@@ -177,10 +178,10 @@ def test_preflight_route_returns_a_full_report():
 
 
 def test_preflight_policy_permits_override_while_nothing_blocks():
-    """The advisory verdict must never read as "override forbidden" (IXH-2.2).
+    """The default verdict must never read as "override forbidden" (IXH-2.2).
 
     The wizard's quality step only offers an "Import anyway" waiver path when policy
-    permits an override, so the placeholder verdict has to say so explicitly.
+    permits an override, so a tenant with no policy has to say so explicitly.
     """
     response = client.post(
         f"/v1/tenants/{TENANT_SLUG}/import/preflight",
@@ -190,6 +191,8 @@ def test_preflight_policy_permits_override_while_nothing_blocks():
     policy = response.json()["policy"]
     assert policy["blocking"] is False
     assert policy["allow_override"] is True
+    assert policy["source"] == "default"
+    assert policy["failures"] == []
 
 
 def test_preflight_rejects_unknown_request_fields():
@@ -594,3 +597,160 @@ async def test_cache_is_bounded_and_evicts_least_recently_used():
             tenant_slug=TENANT_SLUG,
         )
     assert preflight_cache_size() == PREFLIGHT_CACHE_MAX_ENTRIES
+
+
+# ---------------------------------------------------------------------------
+# Tenant quality policy (IXH-2.3, #5098)
+# ---------------------------------------------------------------------------
+
+
+def _policy_row(**overrides: Any) -> Dict[str, Any]:
+    """A stored quality-policy row that blocks anything below grade A by default."""
+    row: Dict[str, Any] = {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "tenant_id": TENANT_ID,
+        "version_number": 1,
+        "content_fingerprint": "fp-policy",
+        "import_min_grade": "A",
+        "import_min_score": None,
+        "import_block_on_severity": None,
+        "import_enforcement": "block",
+        "export_min_grade": None,
+        "export_min_score": None,
+        "export_block_on_severity": None,
+        "export_enforcement": "advisory",
+        "format_overrides": {},
+        "allow_override": True,
+        "override_roles": ["owner"],
+        "waiver_ttl_hours": 24,
+        "actor_user_id": None,
+        "actor_label": "admin@example.com",
+        "created_at": "2026-07-25T00:00:00+00:00",
+    }
+    row.update(overrides)
+    return row
+
+
+@pytest.fixture
+def _blocking_policy(monkeypatch):
+    """Point the policy engine at a blocking tenant policy with no waivers."""
+    monkeypatch.setattr(
+        quality_policy.db,
+        "get_latest_import_export_quality_policy",
+        lambda _tenant_id: _policy_row(),
+    )
+    monkeypatch.setattr(
+        quality_policy.db, "list_active_import_export_quality_waivers", lambda *_a, **_k: []
+    )
+
+
+async def test_preflight_reports_a_blocking_tenant_policy(_blocking_policy):
+    report = await run_import_preflight(
+        _request(), tenant_id=TENANT_ID, tenant_slug=TENANT_SLUG
+    )
+    assert report.ok is True, "the candidate is importable; only policy objects"
+    assert report.policy.verdict == "block"
+    assert report.policy.blocking is True
+    assert report.policy.source == "tenant"
+    assert report.policy.min_grade == "A"
+    assert report.policy.format_key == "graphql"
+    assert report.policy.override_roles == ["owner"]
+    assert [f.kind for f in report.policy.failures] == ["grade"]
+    assert report.policy.policy_version_id == "11111111-1111-1111-1111-111111111111"
+
+
+async def test_preflight_honours_an_active_waiver(monkeypatch):
+    monkeypatch.setattr(
+        quality_policy.db,
+        "get_latest_import_export_quality_policy",
+        lambda _tenant_id: _policy_row(),
+    )
+    monkeypatch.setattr(
+        quality_policy.db,
+        "list_active_import_export_quality_waivers",
+        lambda *_a, **_k: [
+            {
+                "id": "33333333-3333-3333-3333-333333333333",
+                "format_key": "graphql",
+                "expires_at": "2026-08-01T00:00:00+00:00",
+                "actor_label": "lead@example.com",
+            }
+        ],
+    )
+    report = await run_import_preflight(
+        _request(), tenant_id=TENANT_ID, tenant_slug=TENANT_SLUG
+    )
+    assert report.policy.verdict == "warn"
+    assert report.policy.blocking is False
+    assert report.policy.waiver_id == "33333333-3333-3333-3333-333333333333"
+
+
+async def test_a_format_override_can_gate_one_format_only(monkeypatch):
+    monkeypatch.setattr(
+        quality_policy.db,
+        "get_latest_import_export_quality_policy",
+        lambda _tenant_id: _policy_row(
+            import_min_grade=None,
+            import_enforcement="advisory",
+            format_overrides={
+                "graphql": {"import": {"minScore": 100, "enforcement": "block"}}
+            },
+        ),
+    )
+    monkeypatch.setattr(
+        quality_policy.db, "list_active_import_export_quality_waivers", lambda *_a, **_k: []
+    )
+    report = await run_import_preflight(
+        _request(), tenant_id=TENANT_ID, tenant_slug=TENANT_SLUG
+    )
+    assert report.policy.source == "format_override"
+    assert report.policy.threshold_score == 100
+    assert report.policy.blocking is True
+
+
+async def test_a_cached_report_re_evaluates_policy(monkeypatch):
+    """A waiver recorded between two pre-flights of the same bytes must take effect."""
+    monkeypatch.setattr(
+        quality_policy.db,
+        "get_latest_import_export_quality_policy",
+        lambda _tenant_id: _policy_row(),
+    )
+    waivers: list = []
+    monkeypatch.setattr(
+        quality_policy.db,
+        "list_active_import_export_quality_waivers",
+        lambda *_a, **_k: list(waivers),
+    )
+
+    first = await run_import_preflight(
+        _request(), tenant_id=TENANT_ID, tenant_slug=TENANT_SLUG
+    )
+    assert first.cache.hit is False and first.policy.blocking is True
+
+    waivers.append(
+        {
+            "id": "44444444-4444-4444-4444-444444444444",
+            "format_key": "graphql",
+            "expires_at": "2026-08-01T00:00:00+00:00",
+            "actor_label": "lead@example.com",
+        }
+    )
+    second = await run_import_preflight(
+        _request(), tenant_id=TENANT_ID, tenant_slug=TENANT_SLUG
+    )
+    assert second.cache.hit is True, "the lint verdict is still reusable"
+    assert second.policy.blocking is False
+    assert second.policy.waiver_id == "44444444-4444-4444-4444-444444444444"
+    assert second.lint is not None and second.lint.score == first.lint.score
+
+
+async def test_policy_never_blocks_an_unimportable_candidate(_blocking_policy):
+    """The taxonomy error is the answer for a broken document, not "quality policy"."""
+    report = await run_import_preflight(
+        _request(document_base64=_b64(BROKEN_GRAPHQL_DOC)),
+        tenant_id=TENANT_ID,
+        tenant_slug=TENANT_SLUG,
+    )
+    assert report.ok is False
+    assert report.error is not None and report.error.code == "INPUT_MALFORMED"
+    assert report.policy.blocking is False

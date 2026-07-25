@@ -70,6 +70,7 @@ from .properties_routes import router as properties_router
 from .push_webhook_crypto import validate_webhook_signing_key
 from .push_webhook_delivery import process_due_push_webhook_deliveries
 from .push_webhook_subscriptions_routes import router as push_webhook_subscriptions_router
+from .quality_policy_routes import router as quality_policy_router
 from .rate_limit import RateLimitMiddleware
 from .registry_audit_routes import router as registry_audit_router
 from .slate_agent_outputs_routes import router as slate_agent_outputs_router
@@ -103,7 +104,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.43.0",
+    version="1.44.0",
 )
 
 
@@ -254,6 +255,7 @@ app.include_router(lint_rules_router)
 app.include_router(lint_decisions_router)
 app.include_router(lint_workspace_router)
 app.include_router(style_guide_router)
+app.include_router(quality_policy_router)
 app.include_router(version_merge_router)
 app.include_router(workflow_audit_router)
 # version_changelog_router before versions_router so its literal

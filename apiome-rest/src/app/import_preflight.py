@@ -48,7 +48,7 @@ import logging
 from collections import OrderedDict
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 from .archive_intake import ArchiveIntakeError, detect_archive_format, is_archive_payload
 from .format_detection import FormatDetection, detect_format
@@ -59,6 +59,12 @@ from .import_source import (
     get_import_source,
     load_builtin_import_sources,
     resolve_import_source_key,
+)
+from .import_export_quality_policy import (
+    SCOPE_IMPORT,
+    evaluate_quality,
+    find_active_waiver,
+    load_tenant_policy,
 )
 from .import_source_pipeline import ImportRunArtifacts, build_job_error, run_adapter_import_job
 from .intake_error_taxonomy import resolve_intake_error_code
@@ -72,6 +78,7 @@ from .models import (
     ImportPreflightFinding,
     ImportPreflightLint,
     ImportPreflightPolicy,
+    ImportPreflightPolicyFailure,
     ImportPreflightReport,
     ImportPreflightRequest,
     ImportPreflightStyleGuide,
@@ -94,13 +101,6 @@ __all__ = [
 #: adapter, target) tuples, so this comfortably covers a wizard session or a CI batch
 #: while keeping the footprint bounded.
 PREFLIGHT_CACHE_MAX_ENTRIES = 256
-
-#: Advisory policy verdict shipped until IXH-2.3 introduces tenant quality policy.
-_POLICY_PLACEHOLDER_REASON = (
-    "No import quality policy is configured; the report is advisory only "
-    "(tenant policy and waivers arrive with IXH-2.3)."
-)
-
 
 @dataclass(frozen=True)
 class _CacheEntry:
@@ -386,40 +386,100 @@ def _failed_report(
     code: str,
     message: str,
     cache: ImportPreflightCache,
+    tenant_id: str = "",
 ) -> ImportPreflightReport:
     """Build an ``ok=false`` report carrying a taxonomy error and nothing else.
 
     The message is scrubbed of credential-shaped spans (IXH-1.4) before it leaves: a
     parser error quotes the offending source line, so a secret on a malformed line would
     otherwise travel back in the response and into every log that records it.
+
+    The policy block still reports the tenant's policy (evaluated against no score), because a
+    client renders it either way — but an unimportable candidate is never *blocked on quality*:
+    the taxonomy error is the real answer, and a floor cannot be missed by a document that
+    never produced a grade.
     """
     return ImportPreflightReport(
         ok=False,
         detection=detection,
-        policy=_policy_verdict(None),
+        policy=_policy_verdict(None, tenant_id=tenant_id),
         error=build_job_error(code, scrub_message(message) or ""),
         cache=cache,
     )
 
 
-def _policy_verdict(lint: Optional[LintReport]) -> ImportPreflightPolicy:
-    """Return the advisory policy verdict for a lint report (placeholder for IXH-2.3).
+def _policy_verdict(
+    lint: Optional[Union[LintReport, ImportPreflightLint]],
+    *,
+    tenant_id: str = "",
+    format_key: Optional[str] = None,
+    content_hash: Optional[str] = None,
+) -> ImportPreflightPolicy:
+    """Evaluate the tenant's import quality policy for a lint report (IXH-2.3).
 
-    Deliberately a no-op: until tenant quality policy exists, nothing may be blocked on
-    quality grounds, so every verdict is ``pass`` / non-blocking regardless of the score.
-    ``allow_override`` is true for the same reason — there is no gate to override, so no
-    client may conclude that overriding is forbidden. The ``lint`` argument is accepted
-    (and ignored) so 2.3 can implement the real thresholds here without changing a single
-    call site.
+    Resolution, thresholds, and the waiver lookup all live in
+    :mod:`app.import_export_quality_policy` so the pre-flight report, the server-side commit
+    gate, and the export half cannot disagree about what a policy means. A tenant with no
+    policy runs the advisory default, which passes everything — the shipped behaviour before
+    2.3 and therefore an upgrade nobody notices.
+
+    Args:
+        lint: The candidate's lint report, or ``None`` when the run never reached lint (an
+            unscored candidate cannot fall short of a floor, so the verdict is the policy's
+            no-floor answer).
+        tenant_id: The tenant whose policy governs.
+        format_key: The adapter key the candidate resolved to, for per-format overrides.
+        content_hash: SHA-256 of the candidate bytes — the waiver match key, so a report shown
+            after a waiver was recorded reports ``warn`` with the waiver rather than ``block``.
+
+    Returns:
+        The :class:`~app.models.ImportPreflightPolicy` verdict for the candidate.
     """
-    _ = lint
+    policy = load_tenant_policy(tenant_id)
+    waiver = (
+        find_active_waiver(
+            tenant_id=tenant_id,
+            scope=SCOPE_IMPORT,
+            subject_key=content_hash,
+            format_key=format_key,
+        )
+        if content_hash and not policy.is_default
+        else None
+    )
+    verdict = evaluate_quality(
+        policy=policy,
+        scope=SCOPE_IMPORT,
+        format_key=format_key,
+        score=lint.score if lint is not None else None,
+        grade=lint.grade if lint is not None else None,
+        severity_counts=dict(lint.severity_counts) if lint is not None else {},
+        waiver=waiver,
+    )
     return ImportPreflightPolicy(
-        verdict="pass",
-        blocking=False,
-        source="default",
-        reason=_POLICY_PLACEHOLDER_REASON,
-        threshold_score=None,
-        allow_override=True,
+        verdict=verdict.verdict,
+        blocking=verdict.blocking,
+        source=verdict.source,
+        reason=verdict.reason,
+        threshold_score=verdict.threshold_score,
+        allow_override=verdict.allow_override,
+        scope=SCOPE_IMPORT,
+        format_key=verdict.format_key,
+        min_grade=verdict.thresholds.min_grade,
+        block_on_severity=verdict.thresholds.block_on_severity,
+        enforcement=verdict.thresholds.enforcement,
+        failures=[
+            ImportPreflightPolicyFailure(
+                kind=failure["kind"],
+                required=failure.get("required"),
+                actual=failure.get("actual"),
+            )
+            for failure in verdict.failures
+        ],
+        override_roles=list(verdict.override_roles),
+        policy_version_id=verdict.policy_version_id,
+        policy_content_fingerprint=verdict.policy_content_fingerprint,
+        waiver_id=verdict.waiver_id,
+        waiver_expires_at=verdict.waiver_expires_at,
     )
 
 
@@ -569,14 +629,27 @@ async def run_import_preflight(
             code="INPUT_ENCODING_INVALID",
             message=f"document_base64 is not valid base64: {exc}",
             cache=ImportPreflightCache(hit=False, key="", content_hash=""),
+            tenant_id=tenant_id,
         )
 
     content_hash = hashlib.sha256(raw).hexdigest()
     key = _cache_key(tenant_id, content_hash, request)
     cached = _cache_lookup(key, tenant_id)
     if cached is not None:
+        # The lint verdict is reusable; the *policy* verdict is not. Policy is tenant state that
+        # can change between two pre-flights of the same bytes — and recording a waiver is
+        # exactly such a change — so the cached report's policy block is re-evaluated against
+        # the live policy rather than replayed.
         return cached.model_copy(
-            update={"cache": ImportPreflightCache(hit=True, key=key, content_hash=content_hash)}
+            update={
+                "cache": ImportPreflightCache(hit=True, key=key, content_hash=content_hash),
+                "policy": _policy_verdict(
+                    cached.lint,
+                    tenant_id=tenant_id,
+                    format_key=cached.detection.adapter_key,
+                    content_hash=content_hash,
+                ),
+            }
         )
     cache = ImportPreflightCache(hit=False, key=key, content_hash=content_hash)
 
@@ -588,6 +661,7 @@ async def run_import_preflight(
             code=resolve_intake_error_code(exc.code) or "INPUT_TOO_LARGE",
             message=str(exc),
             cache=cache,
+            tenant_id=tenant_id,
         )
         _cache_store(key, _CacheEntry(report=report, style_guide_fingerprint=None))
         return report
@@ -604,7 +678,11 @@ async def run_import_preflight(
     if adapter is None:
         assert failure is not None  # _resolve_adapter returns one or the other
         report = _failed_report(
-            detection=detection_model, code=failure[0], message=failure[1], cache=cache
+            detection=detection_model,
+            code=failure[0],
+            message=failure[1],
+            cache=cache,
+            tenant_id=tenant_id,
         )
         _cache_store(key, _CacheEntry(report=report, style_guide_fingerprint=None))
         return report
@@ -630,6 +708,7 @@ async def run_import_preflight(
             code="INTERNAL_ADAPTER_FAULT",
             message=f"The importer failed while evaluating the document: {exc}",
             cache=cache,
+            tenant_id=tenant_id,
         )
 
     report = _report_from_run(
@@ -637,6 +716,8 @@ async def run_import_preflight(
         artifacts=artifacts,
         detection=detection_model,
         cache=cache,
+        tenant_id=tenant_id,
+        content_hash=content_hash,
     )
     guide = artifacts.style_guide
     _cache_store(
@@ -657,6 +738,8 @@ def _report_from_run(
     artifacts: ImportRunArtifacts,
     detection: ImportPreflightDetection,
     cache: ImportPreflightCache,
+    tenant_id: str = "",
+    content_hash: Optional[str] = None,
 ) -> ImportPreflightReport:
     """Assemble the report from a finished pipeline run and its collected artifacts.
 
@@ -665,6 +748,8 @@ def _report_from_run(
         artifacts: The objects the run produced (model / fingerprint / lint / guide).
         detection: The detection block already built for the request.
         cache: Cache provenance for this response.
+        tenant_id: The tenant whose quality policy scores the verdict.
+        content_hash: SHA-256 of the candidate bytes, for the waiver lookup.
 
     Returns:
         The assembled report; ``ok`` is true only for a ``completed`` run.
@@ -718,7 +803,12 @@ def _report_from_run(
         fingerprint=artifacts.fingerprint,
         lint=lint_model,
         style_guide=_style_guide_model(artifacts.style_guide),
-        policy=_policy_verdict(lint),
+        policy=_policy_verdict(
+            lint,
+            tenant_id=tenant_id,
+            format_key=detection.adapter_key,
+            content_hash=content_hash,
+        ),
         secret_scrub=artifacts.scrub_report,
         error=error,
         cache=cache,
