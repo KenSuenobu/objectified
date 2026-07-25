@@ -86,6 +86,15 @@
         { "field": "client_secret", "kind": "client_secret", "env_key": "AUTH0_CLIENT_SECRET" },
         { "field": "issuer", "kind": "config", "env_key": "AUTH0_ISSUER" }
       ]
+    },
+    {
+      "id": "line",
+      "label": "LINE",
+      "status": "available",
+      "required_fields": [
+        { "field": "client_id", "kind": "client_id", "env_key": "LINE_CLIENT_ID" },
+        { "field": "client_secret", "kind": "client_secret", "env_key": "LINE_CLIENT_SECRET" }
+      ]
     }
   ]
 }

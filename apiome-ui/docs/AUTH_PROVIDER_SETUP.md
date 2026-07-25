@@ -1,7 +1,7 @@
 # Sign-in Provider Setup & Secrets Guide (OLO-7.2)
 
 How to register the OAuth applications Apiome signs users in with (GitHub, GitLab,
-Microsoft Entra ID, Google Workspace, Okta, Amazon Cognito, Keycloak, generic OIDC, Auth0), which
+Microsoft Entra ID, Google Workspace, Okta, Amazon Cognito, Keycloak, generic OIDC, Auth0, LINE), which
 environment variables each provider needs, and how boot-time validation reacts when a provider is
 misconfigured.
 
@@ -44,6 +44,8 @@ linked-accounts panel, Better Auth sign-in route). No code changes are needed ei
 | `AUTH0_CLIENT_ID` | Auth0 | To enable Auth0 | Application **Client ID** |
 | `AUTH0_CLIENT_SECRET` | Auth0 | To enable Auth0 | Application **Client Secret** |
 | `AUTH0_ISSUER` | Auth0 | To enable Auth0 | Tenant issuer (`https://<tenant>.auth0.com`) |
+| `LINE_CLIENT_ID` | LINE | To enable LINE | LINE Login channel **Channel ID** |
+| `LINE_CLIENT_SECRET` | LINE | To enable LINE | LINE Login channel **Channel secret** |
 | `AUTH_PROVIDER_VALIDATION` | validation | No (default `strict`) | `strict` fails startup on partial provider config; `warn` logs and disables |
 
 Rules that apply to every provider:
@@ -398,6 +400,45 @@ required; setting only the client id and secret is *partial config* and boot / a
 The same issuer can also be set from **Admin → System Configuration** (stored under
 `config.AUTH0_ISSUER` and overlaid onto the env var per OLO-8.5 / OLO-10.8).
 
+## LINE Login (OLO-9.41 — Japan / Taiwan / Thailand country MVP)
+
+1. In the [LINE Developers Console](https://developers.line.biz/console/), create a **LINE Login**
+   channel (or open an existing one).
+2. On the channel **LINE Login** settings, set:
+   - **Callback URL:** `{BETTER_AUTH_URL}/api/auth/oauth2/callback/line`
+     (e.g. `http://localhost:3000/api/auth/oauth2/callback/line` for local dev)
+3. Copy the **Channel ID** and **Channel secret**.
+4. To receive the user's email, apply for **email address permission** under OpenID Connect on the
+   channel's Basic settings. Until that permission is approved, LINE will not return an `email`
+   claim even if the `email` scope is requested.
+5. Set the env vars:
+
+```bash
+LINE_CLIENT_ID=<Channel ID>
+LINE_CLIENT_SECRET=<Channel secret>
+```
+
+The sign-in flow uses LINE Login v2.1 fixed endpoints (`https://access.line.me/oauth2/v2.1/authorize`,
+`https://api.line.me/oauth2/v2.1/token`, `https://api.line.me/oauth2/v2.1/userinfo`), PKCE, and the
+`openid profile email` scopes. Prefer the ID token for profile claims; fall back to userinfo when
+needed. **Email verified semantics:** when an `email_verified` claim arrives it is honored; when
+the claim is absent or false the engine fail-closes (**link-first** — explicit link intent or an
+already-bound identity). Missing email (permission not granted / user declined) surfaces
+`email-required`.
+
+### Multi-channel providerIds (JP / TW / TH)
+
+LINE requires a **separate OAuth channel** per country/market (Japan, Taiwan, Thailand, …), each
+with its own Channel ID and secret. Apiome's default registry entry uses a single `providerId`
+of `line` with `LINE_CLIENT_ID` / `LINE_CLIENT_SECRET` — correct for a single-country deployment.
+
+When one deployment must serve multiple LINE channels, mirror Better Auth's `line()` helper and
+register distinct generic-OAuth configs (e.g. `line-jp`, `line-tw`, `line-th`) each with that
+channel's credentials. Persist identities under those slugs; do not reuse a single `line` identity
+across countries. Contact the platform team before enabling multi-channel — the DB vocabulary and
+registry currently ship the single `line` slug (OLO-9.41); additional slug widenings land with
+OLO-9.16 / follow-up tickets.
+
 ## Secrets handling
 
 - Never commit client secrets — `.env` files are gitignored; the checked-in
@@ -460,7 +501,8 @@ mock server via base-URL override env vars:
 [Cognito](#amazon-cognito--user-pool--hosted-ui-olo-94),
 [Keycloak](#keycloak--realm-oidc-client-olo-95),
 [Generic OIDC](#generic-oidc--any-conformant-openid-provider-olo-96), and
-[Auth0](#auth0--regular-web-application-olo-97) sections. Pointing any of them
+[Auth0](#auth0--regular-web-application-olo-97), and
+[LINE](#line-login-olo-941--japan--taiwan--thailand-country-mvp) sections. Pointing any of them
 at a mock issuer for the e2e journey is fine in test; never point a real deployment's issuer at a
 non-provider host.
 

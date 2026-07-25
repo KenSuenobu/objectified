@@ -131,6 +131,7 @@ describe('lib/auth/auth.ts (Better Auth server instance)', () => {
       'gitlab',
       'google',
       'keycloak',
+      'line',
       'oidc',
       'okta',
     ]);

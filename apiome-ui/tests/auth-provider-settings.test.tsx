@@ -93,6 +93,12 @@ const AUTH0 = makeView({
   required_fields: ['client_id', 'client_secret', 'issuer'],
   missing_for_enable: ['client_id', 'client_secret', 'issuer'],
 });
+const LINE = makeView({
+  provider_id: 'line',
+  label: 'LINE',
+  required_fields: ['client_id', 'client_secret'],
+  missing_for_enable: ['client_id', 'client_secret'],
+});
 /** Synthetic coming-soon stand-in so the Add picker / keyboard tests keep covering that path. */
 const ATLASSIAN = makeView({
   provider_id: 'atlassian',
@@ -103,7 +109,7 @@ const ATLASSIAN = makeView({
 });
 
 const DEFAULT_LIST = {
-  providers: [GITHUB, GITLAB, AZURE, GOOGLE, OKTA, AWS, KEYCLOAK, OIDC, AUTH0, ATLASSIAN],
+  providers: [GITHUB, GITLAB, AZURE, GOOGLE, OKTA, AWS, KEYCLOAK, OIDC, AUTH0, LINE, ATLASSIAN],
 };
 
 /** Install a fetch mock; `putHandler` decides PUT responses, `listBodies` queues GET bodies. */
@@ -199,6 +205,7 @@ describe('AuthProviderSettingsClient — rendering', () => {
       'Keycloak',
       'OIDC',
       'Auth0',
+      'LINE',
       'Atlassian',
     ]) {
       expect(
@@ -209,7 +216,7 @@ describe('AuthProviderSettingsClient — rendering', () => {
 
   it('shows an empty-state card when no providers are configured', async () => {
     mockFetch(undefined, [
-      { providers: [GITHUB, AZURE, GOOGLE, AWS, KEYCLOAK, OIDC, AUTH0, ATLASSIAN] },
+      { providers: [GITHUB, AZURE, GOOGLE, AWS, KEYCLOAK, OIDC, AUTH0, LINE, ATLASSIAN] },
     ]);
     render(<AuthProviderSettingsClient />);
 
@@ -233,6 +240,7 @@ describe('AuthProviderSettingsClient — rendering', () => {
     expect(dialog.getByRole('option', { name: /Keycloak/ })).toBeEnabled();
     expect(dialog.getByRole('option', { name: /OIDC/ })).toBeEnabled();
     expect(dialog.getByRole('option', { name: /Auth0/ })).toBeEnabled();
+    expect(dialog.getByRole('option', { name: /LINE/ })).toBeEnabled();
     expect(dialog.getByRole('option', { name: /Atlassian/ })).toBeDisabled();
   });
 

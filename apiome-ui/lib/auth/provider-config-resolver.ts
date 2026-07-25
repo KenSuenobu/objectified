@@ -70,6 +70,8 @@ export const PROVIDER_CRED_ENV_KEYS: Record<
   oidc: { clientId: 'OIDC_CLIENT_ID', clientSecret: 'OIDC_CLIENT_SECRET' },
   // Auth0 (OLO-9.7, #4990): tenant issuer lives in config JSONB; credentials overlay env.
   auth0: { clientId: 'AUTH0_CLIENT_ID', clientSecret: 'AUTH0_CLIENT_SECRET' },
+  // LINE (OLO-9.41, #5054): credentials-only; no issuer extra.
+  line: { clientId: 'LINE_CLIENT_ID', clientSecret: 'LINE_CLIENT_SECRET' },
 };
 
 /** Default TTL (ms) for the in-process cache; bounded so a DB change lands within ~a cache window. */

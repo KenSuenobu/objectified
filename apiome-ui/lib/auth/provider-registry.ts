@@ -230,6 +230,15 @@ const PROVIDER_REGISTRY_ENTRIES: readonly Omit<ProviderDescriptor, 'requiredEnvK
       { field: 'issuer', kind: 'config', envKey: 'AUTH0_ISSUER' },
     ],
   },
+  {
+    id: 'line',
+    label: 'LINE',
+    status: 'available',
+    // LINE Login (OLO-9.41, #5054): credentials only. Email requires an approved channel
+    // permission; `email_verified` is honored when present, otherwise fail-closed link-first.
+    // Multi-channel JP/TW/TH setups use distinct providerIds — see AUTH_PROVIDER_SETUP.md.
+    requiredFields: clientCredentialFields('LINE_CLIENT_ID', 'LINE_CLIENT_SECRET'),
+  },
 ];
 
 export const PROVIDER_REGISTRY: readonly ProviderDescriptor[] =
