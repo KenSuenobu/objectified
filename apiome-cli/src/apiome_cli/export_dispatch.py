@@ -46,6 +46,7 @@ from apiome_cli.export_output import (
     enforce_export_fidelity_gate,
     format_export_fidelity_summary,
 )
+from apiome_cli.preflight_runner import gate_export_before_job
 from apiome_cli.spec_output import SpecExportMetadata, emit_download_metadata, write_document_bytes
 
 
@@ -176,8 +177,15 @@ def run_generic_export(
     confirm: bool,
     poll_interval: float,
     export_timeout_override: float | None,
+    min_grade: str | None = None,
+    fail_on: str | None = None,
 ) -> None:
-    """Resolve ``target_format``, run the async export job, and write the artifact."""
+    """Resolve ``target_format``, run the async export job, and write the artifact.
+
+    When ``--min-grade`` / ``--fail-on`` are supplied the export is pre-flighted first
+    (IXH-2.6) and a blocking verdict stops the run **before** the job is submitted, so a
+    gated pipeline never leaves a half-finished export job behind.
+    """
     settings = settings_from_context(ctx)
     require_api_key(settings)
 
@@ -210,6 +218,16 @@ def run_generic_export(
     except ValueError:
         typer.echo(unknown_export_target_message(target_format, targets), err=True)
         raise typer.Exit(EXIT_USAGE) from None
+
+    gate_export_before_job(
+        client,
+        tenant_slug,
+        artifact=str(project_id),
+        version=version,
+        targets=[target_key],
+        min_grade=min_grade,
+        fail_on=fail_on,
+    )
 
     options = parse_export_options(option_values)
     export_timeout = (

@@ -49,9 +49,22 @@ from apiome_cli.export_output import (
     format_projection_snapshot_lines,
     target_rows,
 )
+from apiome_cli.client.preflight import fetch_export_preflight
 from apiome_cli.import_.jobs import DEFAULT_POLL_INTERVAL
 from apiome_cli.help_util import group_callback_without_subcommand
 from apiome_cli.output import emit_json, emit_list_table
+from apiome_cli.preflight import (
+    FAIL_ON_HELP,
+    GATE_EXIT_CODE_HELP,
+    MIN_GRADE_HELP,
+    evaluate_export_gate,
+)
+from apiome_cli.preflight_runner import (
+    coerce_gate_flags,
+    emit_export_preflight,
+    enforce_gate,
+    gate_export_before_job,
+)
 from apiome_cli.spec_output import (
     SpecExportMetadata,
     build_spec_export_metadata,
@@ -139,6 +152,8 @@ def _build_generic_export_command(target_format: str) -> click.Command:
         default=DEFAULT_POLL_INTERVAL,
         help="Seconds between export job-status polls.",
     )
+    @click.option("--min-grade", "min_grade", default=None, help=MIN_GRADE_HELP)
+    @click.option("--fail-on", "fail_on", default=None, help=FAIL_ON_HELP)
     def _generic(
         artifact: str,
         version: str | None,
@@ -148,6 +163,8 @@ def _build_generic_export_command(target_format: str) -> click.Command:
         confirm: bool,
         export_timeout: float | None,
         poll_interval: float,
+        min_grade: str | None,
+        fail_on: str | None,
     ) -> None:
         run_generic_export(
             click.get_current_context(),
@@ -160,6 +177,8 @@ def _build_generic_export_command(target_format: str) -> click.Command:
             confirm=confirm,
             poll_interval=poll_interval,
             export_timeout_override=export_timeout,
+            min_grade=min_grade,
+            fail_on=fail_on,
         )
 
     return _generic
@@ -256,6 +275,8 @@ def export_openapi(
         "--force",
         help="Write and exit 0 even when the export loses fidelity (lossy/types-only).",
     ),
+    min_grade: str | None = typer.Option(None, "--min-grade", help=MIN_GRADE_HELP),
+    fail_on: str | None = typer.Option(None, "--fail-on", help=FAIL_ON_HELP),
 ) -> None:
     """Export a version as OpenAPI and surface the emitter registry's fidelity report."""
     output = output.strip()
@@ -271,6 +292,17 @@ def export_openapi(
 
     # The artifact (project) id the fidelity preview keys on; also drives browse-scope resolution.
     project_id = resolve_project_uuid(client, tenant_slug, project)
+
+    gate_export_before_job(
+        client,
+        tenant_slug,
+        artifact=str(project_id),
+        version=version,
+        targets=[_OPENAPI_TARGET],
+        min_grade=min_grade,
+        fail_on=fail_on,
+    )
+
     scope = resolve_browse_export_scope(
         client,
         settings,
@@ -348,6 +380,8 @@ def export_asyncapi(
         "--force",
         help="Write and exit 0 even when the export loses fidelity (lossy/types-only).",
     ),
+    min_grade: str | None = typer.Option(None, "--min-grade", help=MIN_GRADE_HELP),
+    fail_on: str | None = typer.Option(None, "--fail-on", help=FAIL_ON_HELP),
 ) -> None:
     """Export a version as AsyncAPI 3 and surface the emitter registry's fidelity report.
 
@@ -370,6 +404,16 @@ def export_asyncapi(
 
     # The artifact (project) id both the emit and the fidelity preview key on.
     project_id = resolve_project_uuid(client, tenant_slug, project)
+
+    gate_export_before_job(
+        client,
+        tenant_slug,
+        artifact=str(project_id),
+        version=version,
+        targets=[_ASYNCAPI_TARGET],
+        min_grade=min_grade,
+        fail_on=fail_on,
+    )
 
     document = fetch_export_document(
         client,
@@ -438,6 +482,8 @@ def export_grpc(
         "--force",
         help="Write and exit 0 even when the export loses fidelity (lossy/types-only).",
     ),
+    min_grade: str | None = typer.Option(None, "--min-grade", help=MIN_GRADE_HELP),
+    fail_on: str | None = typer.Option(None, "--fail-on", help=FAIL_ON_HELP),
 ) -> None:
     """Export a version as proto3 and surface the emitter registry's fidelity report.
 
@@ -458,6 +504,16 @@ def export_grpc(
     tenant_slug = resolve_tenant_slug(settings, client, tenant_override=tenant)
 
     project_id = resolve_project_uuid(client, tenant_slug, project)
+
+    gate_export_before_job(
+        client,
+        tenant_slug,
+        artifact=str(project_id),
+        version=version,
+        targets=[_PROTOBUF_TARGET],
+        min_grade=min_grade,
+        fail_on=fail_on,
+    )
 
     document = fetch_export_document(
         client,
@@ -524,6 +580,8 @@ def export_graphql(
         "--force",
         help="Write and exit 0 even when the export loses fidelity (lossy/types-only).",
     ),
+    min_grade: str | None = typer.Option(None, "--min-grade", help=MIN_GRADE_HELP),
+    fail_on: str | None = typer.Option(None, "--fail-on", help=FAIL_ON_HELP),
 ) -> None:
     """Export a version as GraphQL SDL and surface the emitter registry's fidelity report.
 
@@ -544,6 +602,16 @@ def export_graphql(
     tenant_slug = resolve_tenant_slug(settings, client, tenant_override=tenant)
 
     project_id = resolve_project_uuid(client, tenant_slug, project)
+
+    gate_export_before_job(
+        client,
+        tenant_slug,
+        artifact=str(project_id),
+        version=version,
+        targets=[_GRAPHQL_TARGET],
+        min_grade=min_grade,
+        fail_on=fail_on,
+    )
 
     document = fetch_export_document(
         client,
@@ -610,6 +678,8 @@ def export_avro(
         "--force",
         help="Write and exit 0 even when the export loses fidelity (lossy/types-only).",
     ),
+    min_grade: str | None = typer.Option(None, "--min-grade", help=MIN_GRADE_HELP),
+    fail_on: str | None = typer.Option(None, "--fail-on", help=FAIL_ON_HELP),
 ) -> None:
     """Export a version as Avro .avsc and surface the emitter registry's fidelity report.
 
@@ -630,6 +700,16 @@ def export_avro(
     tenant_slug = resolve_tenant_slug(settings, client, tenant_override=tenant)
 
     project_id = resolve_project_uuid(client, tenant_slug, project)
+
+    gate_export_before_job(
+        client,
+        tenant_slug,
+        artifact=str(project_id),
+        version=version,
+        targets=[_AVRO_TARGET],
+        min_grade=min_grade,
+        fail_on=fail_on,
+    )
 
     document = fetch_export_document(
         client,
@@ -729,6 +809,73 @@ def export_targets(
         min_width=100,
     )
 
+
+
+@app.command(
+    "preflight",
+    help=(
+        "Rank every export target for one revision — source lint, projected fidelity, "
+        "capability fit, and the tenant quality-policy verdict. Nothing is emitted and no "
+        f"export job is created. {GATE_EXIT_CODE_HELP}"
+    ),
+)
+def export_preflight(
+    ctx: typer.Context,
+    project: str = typer.Option(
+        ...,
+        "--project",
+        help="Project (artifact) UUID or slug to rank targets for.",
+    ),
+    version: str | None = typer.Option(
+        None,
+        "--version",
+        help="Revision UUID, slug, or version label (default: latest revision).",
+    ),
+    to: list[str] = typer.Option(
+        [],
+        "--to",
+        help=(
+            "Restrict the ranking to this target key (`openapi`) or format key "
+            "(`openapi-3.1`). Repeatable; omit to rank every registered target."
+        ),
+    ),
+    tenant: str | None = typer.Option(
+        None,
+        "--tenant",
+        help="Tenant UUID or slug (overrides APIOME_TENANT_ID).",
+    ),
+    min_grade: str | None = typer.Option(None, "--min-grade", help=MIN_GRADE_HELP),
+    fail_on: str | None = typer.Option(None, "--fail-on", help=FAIL_ON_HELP),
+) -> None:
+    """Pre-flight an export (``POST …/export/preflight``).
+
+    Lints the *source* revision under the tenant's resolved style guide and ranks every
+    export target by readiness — best first, with blocked and unavailable targets ranked
+    last and never hidden. ``--json`` (global flag) emits the API's report verbatim; without
+    it the report is a readable summary plus the ranked-target table.
+
+    The export is treated as refused only when **no** ranked target is selectable, so
+    narrowing with ``--to openapi`` turns the command into a gate on exactly that delivery
+    while an unfiltered run still passes as long as somewhere remains to export to.
+    """
+    min_grade, fail_on = coerce_gate_flags(min_grade, fail_on)
+
+    settings = settings_from_context(ctx)
+    require_api_key(settings)
+    client = _export_client(ctx)
+    tenant_slug = resolve_tenant_slug(settings, client, tenant_override=tenant)
+
+    project_id = resolve_project_uuid(client, tenant_slug, project)
+    report = fetch_export_preflight(
+        client,
+        tenant_slug,
+        artifact=str(project_id),
+        version=version,
+        targets=list(to) or None,
+    )
+
+    emit_export_preflight(report, json_mode=json_mode_from_context(ctx))
+    enforce_gate(evaluate_export_gate(report, min_grade=min_grade, fail_on=fail_on))
 
 
 @app.command(

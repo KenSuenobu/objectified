@@ -103,6 +103,31 @@ def test_readme_documents_repository_store_subcommands(readme: str) -> None:
     assert "add` → `scan` → `files` → `inspect` → `import` → `imports`" in repo_section
 
 
+def test_readme_documents_preflight_and_gate_exit_codes(readme: str) -> None:
+    """AC-5: both pre-flight commands and their exit codes are in the CLI reference."""
+    assert "### Pre-flight and CI quality gates" in readme
+    section_start = readme.index("### Pre-flight and CI quality gates")
+    section = readme[section_start : readme.index("### Import auto-detect")]
+
+    for command in (
+        "apiome import preflight",
+        "apiome --json import preflight",
+        "apiome export preflight",
+        "apiome --json export preflight",
+        "apiome import openapi ./payments.json --min-grade B",
+        "apiome export openapi --project payments-api",
+    ):
+        assert command in section, f"missing pre-flight example: {command}"
+
+    for flag in ("--min-grade", "--fail-on", "--to openapi"):
+        assert flag in section, f"missing pre-flight flag: {flag}"
+
+    # Each documented gate exit code, distinct from transport (1) and usage/auth (2).
+    for code in ("| `3` |", "| `4` |", "| `5` |"):
+        assert code in section, f"missing documented exit code row: {code}"
+    assert "Waivers." in section
+
+
 def test_readme_references_clig_dev(readme: str) -> None:
     """README cites clig.dev CLI guidelines."""
     assert "clig.dev" in readme

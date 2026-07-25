@@ -92,6 +92,31 @@ def tenant_imports_upload(tenant_slug: str) -> str:
     return f"{V1}/tenants/{tenant_slug}/imports/upload"
 
 
+def import_preflight(tenant_slug: str) -> str:
+    """Score a candidate document before importing it (IXH-2.1).
+
+    Drives ``import preflight`` and the ``--min-grade`` / ``--fail-on`` gate on the import
+    commands: ``POST`` the same intake payload the import job takes and receive an
+    ``ImportPreflightReport`` — detection, counts, the full lint verdict, and the tenant
+    quality-policy verdict. Nothing is persisted and no job is created.
+    """
+    return f"{V1}/tenants/{tenant_slug}/import/preflight"
+
+
+def export_preflight(tenant_slug: str) -> str:
+    """Rank every export target for one source revision before a job exists (IXH-2.4).
+
+    Drives ``export preflight`` and the ``--min-grade`` / ``--fail-on`` gate on the export
+    commands: ``POST`` the source coordinates (+ optional target filter) and receive an
+    ``ExportPreflightReport`` — the source lint verdict plus every target with its projected
+    fidelity, capability verdict, policy verdict, and readiness band. Nothing is emitted.
+
+    Mounted under ``/v1/tenants`` (not the historical ``/v1/export/{tenant}`` prefix) so it
+    sits beside :func:`import_preflight`.
+    """
+    return f"{V1}/tenants/{tenant_slug}/export/preflight"
+
+
 def catalog_convert(tenant_slug: str, item_id: str, *, dry_run: bool) -> str:
     """Catalog item → OpenAPI conversion (MFI-22.6).
 

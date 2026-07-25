@@ -246,6 +246,63 @@ files needs those resolved server-side. Importing from a **live gRPC Server
 Reflection endpoint** is a server-side crawl (not an HTTP document fetch), surfaced
 through the `grpc` source card's *discovery* input rather than this document seam.
 
+### Pre-flight and CI quality gates
+
+Score a payload **before** anything is created. `apiome import preflight` runs the same
+detect → parse → normalize → fingerprint → lint pipeline a real import runs (with dry-run
+semantics, nothing persisted) and reports the verdict; `apiome export preflight` lints the
+source revision and ranks every export target by readiness before a job exists. Both emit
+the API's report verbatim under the global `--json` flag, and a readable table without it.
+
+```bash
+# Score a candidate document — no catalog item, project, version, or job is created:
+apiome import preflight ./payments.json
+apiome import preflight --url https://example.com/openapi.yaml --format openapi
+apiome --json import preflight ./payments.json > preflight.json
+
+# Turn it into a CI gate (exit 4 when the threshold is missed):
+apiome import preflight ./payments.json --min-grade B
+apiome import preflight ./payments.json --fail-on error
+
+# Rank every export target for a revision before emitting anything:
+apiome export preflight --project payments-api --version 1.0.0
+apiome export preflight --project payments-api --to openapi --min-grade B
+apiome --json export preflight --project payments-api > targets.json
+
+# The same flags gate the real commands and short-circuit before the job is created:
+apiome import openapi ./payments.json --min-grade B
+apiome import graphql ./schema.graphql --fail-on error
+apiome export openapi --project payments-api --version 1.0.0 -o openapi.json --min-grade B
+apiome export protobuf my-grpc-api --out ./proto/ --fail-on warning
+```
+
+`--min-grade A..F` fails when the lint grade is worse than the given letter. `--fail-on
+error|warning|info` fails when the report has any finding at or above that severity.
+Independently of both, the tenant's import/export quality policy carries its own verdict,
+and a policy **block** fails whether or not you asked for a threshold.
+
+**Exit codes (pre-flight surface only).** These are deliberately distinct from transport
+and auth failures so a pipeline can tell a bad spec apart from a bad network:
+
+| Code | Meaning |
+|------|---------|
+| `0` | The pre-flight passed every gate. |
+| `1` | Transport failure or server error — unrelated to quality. |
+| `2` | Bad invocation, or a rejected request (any 4xx, **including authentication**). |
+| `3` | The tenant's quality policy **blocks** this payload. |
+| `4` | A `--min-grade` / `--fail-on` threshold you supplied was missed. |
+| `5` | Nothing gradable: the candidate cannot be imported, or no export target is usable. |
+
+**Waivers.** A tenant waiver (recorded in the Control Panel) downgrades a blocking policy
+verdict server-side, so a waived payload passes the policy gate — but never silently: the
+waiver id and expiry are printed and every covered floor is listed as a *waived floor*
+rather than dropped from the report. A waiver does **not** relax `--min-grade` /
+`--fail-on`; a tenant-side waiver cannot lower a bar your pipeline set for itself.
+
+**Without the flags nothing changes.** `import` and `export` only spend the extra
+pre-flight round trip when you pass `--min-grade` or `--fail-on`; the server still enforces
+its own policy at commit time either way.
+
 ### Import auto-detect
 
 Detect the document format from top-level headers (``openapi``, ``swagger``, ``arazzo``, ``$schema``) and run the matching importer:
@@ -487,9 +544,17 @@ always redacted server-side (`[redacted]`); statuses, reasons, and target locati
 remain. How to interpret the statuses, reason categories, and destination-documentation
 links is documented in [`docs/guide/export-fidelity.md`](../docs/guide/export-fidelity.md).
 
+`export preflight` ranks every target for a revision *before* a job exists — source lint
+grade, projected fidelity, capability fit, policy verdict, and a composite readiness band —
+and doubles as a CI gate; see
+[Pre-flight and CI quality gates](#pre-flight-and-ci-quality-gates).
+
 ```bash
 # List the emitter targets + per-source fidelity for a version:
 apiome export targets --project payments-api --version 1.0.0
+
+# Rank targets by readiness before emitting anything (blocked targets are shown, not hidden):
+apiome export preflight --project payments-api --version 1.0.0
 
 # Page the projection evidence for one configured export (JSON for automation):
 apiome export evidence --project payments-api --version 1.0.0 --target avro
