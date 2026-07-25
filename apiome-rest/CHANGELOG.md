@@ -5,6 +5,29 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.175.0] - 2026-07-25
+
+### Added
+- **Pre-flight lint and rank API (#5096, IXH-2.1)** — new
+  `POST /v1/tenants/{tenant_slug}/import/preflight` scores a candidate document
+  *before* anything is imported. It drives the existing
+  `run_adapter_import_job` pipeline with `dry_run` forced on (so no catalog item,
+  project, version, type row, or job artifact can be written) and returns an
+  `ImportPreflightReport`: detected adapter + confidence, routing decision,
+  canonical entity counts, revision fingerprint, the full lint report with
+  findings **ranked by severity then rule weight** (each carrying rule id,
+  severity, message, location, remediation, and a docs pointer), the resolved
+  style guide identity, the secret-scrub report, and an advisory policy verdict
+  (the shape IXH-2.3 will populate). A document that cannot be imported is a 200
+  with `ok: false` and an intake-taxonomy `error` code, never a 5xx.
+  New `src/app/import_preflight.py`; the pipeline gained an optional
+  `ImportRunArtifacts` out-parameter so pre-flight reads the *same* lint report a
+  commit would persist rather than recomputing it. Reports are cached per tenant
+  by content hash and invalidated when the tenant's style guide changes.
+- **`FORMAT_UNRECOGNIZED` intake error code** — reported when no registered
+  importer recognizes a document (distinct from `FORMAT_MISMATCH`, which means
+  the document is not the *selected* format).
+
 ## [1.174.2] - 2026-07-25
 
 ### Added

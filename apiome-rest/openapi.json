@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.41.2",
+    "version": "1.42.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -38690,6 +38690,105 @@
         }
       }
     },
+    "/v1/tenants/{tenant_slug}/import/preflight": {
+      "post": {
+        "tags": [
+          "spec-import"
+        ],
+        "summary": "Pre-flight a candidate document (lint and rank, no write)",
+        "description": "Score a candidate document **before** importing it (IXH-2.1). Runs the same detect \u2192 parse \u2192 normalize \u2192 fingerprint \u2192 lint pipeline a real import runs, with dry-run semantics, and returns the detected adapter and confidence, the routing decision, canonical entity counts, the revision fingerprint, the full lint report with findings ranked by severity then rule weight, the resolved style guide, and an (advisory, until IXH-2.3) policy verdict. Nothing is persisted: no catalog item, project, version, type row, or import job.\n\nA document that cannot be imported is **not** an HTTP error \u2014 the response is a 200 with ``ok: false`` and a stable intake-taxonomy ``error`` code plus remediation, so callers key off the code rather than parsing exception strings. Repeated pre-flights of identical bytes are served from a tenant-scoped cache and report ``cache.hit``.",
+        "operationId": "preflight_import_candidate_v1_tenants__tenant_slug__import_preflight_post",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Preflightacandidatedocumentlintandranknoauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Preflightacandidatedocumentlintandranknoauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Preflightacandidatedocumentlintandrankno Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Preflightacandidatedocumentlintandrankno Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportPreflightRequest",
+                "description": "Request body for preflightacandidatedocumentlintandranknorequest."
+              }
+            }
+          },
+          "description": "Request body for pre-flight a candidate document (lint and rank, no write)."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for pre-flight a candidate document (lint and rank, no write).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreflightReport",
+                  "description": "Response payload for preflightacandidatedocumentlintandranknoresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for preflightacandidatedocumentlintandranknoresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/tenants/{tenant_slug}/imports": {
       "get": {
         "tags": [
@@ -65472,6 +65571,784 @@
         ],
         "title": "IdentitySuggestionRef",
         "description": "A heuristic suggestion to link two artifacts (MFI-6.4, #4410).\n\nSuggestions are never auto-applied \u2014 the user must confirm a link action."
+      },
+      "ImportPreflightCache": {
+        "properties": {
+          "hit": {
+            "type": "boolean",
+            "title": "Hit",
+            "description": "True when identical bytes were pre-flighted before and reused.",
+            "example": false
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Tenant-scoped cache key (content hash + adapter + target).",
+            "example": "example"
+          },
+          "content_hash": {
+            "type": "string",
+            "title": "Content Hash",
+            "description": "SHA-256 of the submitted document bytes.",
+            "example": "a1b2c3d4e5f6789012345678901234ab"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "hit",
+          "key",
+          "content_hash"
+        ],
+        "title": "ImportPreflightCache",
+        "description": "Whether this report was served from the tenant-scoped pre-flight cache."
+      },
+      "ImportPreflightCounts": {
+        "properties": {
+          "services": {
+            "type": "integer",
+            "title": "Services",
+            "default": 0,
+            "description": "Services.",
+            "example": 1
+          },
+          "operations": {
+            "type": "integer",
+            "title": "Operations",
+            "default": 0,
+            "description": "Operations.",
+            "example": 1
+          },
+          "types": {
+            "type": "integer",
+            "title": "Types",
+            "default": 0,
+            "description": "Types.",
+            "example": 1
+          },
+          "channels": {
+            "type": "integer",
+            "title": "Channels",
+            "default": 0,
+            "description": "Channels.",
+            "example": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ImportPreflightCounts",
+        "description": "Canonical entity counts the candidate would contribute."
+      },
+      "ImportPreflightDetection": {
+        "properties": {
+          "adapter_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Detection schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Detection schema."
+              }
+            ],
+            "title": "Adapter Key",
+            "description": "Registry key of the adapter the pre-flight actually ran, or null."
+          },
+          "requested_adapter_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Detection schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Detection schema."
+              }
+            ],
+            "title": "Requested Adapter Key",
+            "description": "The caller's explicit ``source_kind``, resolved through registry aliases."
+          },
+          "detected_adapter_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Detection schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Detection schema."
+              }
+            ],
+            "title": "Detected Adapter Key",
+            "description": "Registry key auto-detection picked, or null when nothing importable matched."
+          },
+          "detected_format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Detection schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Detection schema."
+              }
+            ],
+            "title": "Detected Format",
+            "description": "Detected format key (for example asyncapi-2, openapi-3.1)."
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Detection certainty 0.0\u20131.0 for the detected format.",
+            "default": 0.0,
+            "example": 1.0
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Detection schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Detection schema."
+              }
+            ],
+            "title": "Reason",
+            "description": "Short human justification for the detection (the marker found)."
+          },
+          "matched": {
+            "type": "boolean",
+            "title": "Matched",
+            "description": "Whether any detector recognized the document.",
+            "default": false,
+            "example": false
+          },
+          "importable": {
+            "type": "boolean",
+            "title": "Importable",
+            "description": "Whether the detected format has a registered adapter today.",
+            "default": false,
+            "example": false
+          },
+          "ambiguous": {
+            "type": "boolean",
+            "title": "Ambiguous",
+            "description": "True when leading formats tie within the ambiguity margin.",
+            "default": false,
+            "example": false
+          },
+          "agrees_with_request": {
+            "type": "boolean",
+            "title": "Agrees With Request",
+            "description": "False when the caller named a ``source_kind`` that detection disagrees with \u2014 the pre-flight still runs the requested adapter.",
+            "default": true,
+            "example": false
+          },
+          "archive_root": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Detection schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Detection schema."
+              }
+            ],
+            "title": "Archive Root",
+            "description": "Chosen root member path when the payload was an archive."
+          },
+          "archive_members": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Archive Members",
+            "description": "Sorted archive member paths, when an archive was unpacked.",
+            "maxItems": 1000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ImportPreflightDetection",
+        "description": "Which importer the pre-flight ran, and how confident detection was."
+      },
+      "ImportPreflightFinding": {
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "title": "Rank",
+            "description": "1-based position in the ranked list.",
+            "example": 1
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Finding schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Finding schema."
+              }
+            ],
+            "title": "Id",
+            "description": "Stable finding id (survives re-lints)."
+          },
+          "rule": {
+            "type": "string",
+            "title": "Rule",
+            "description": "The rule id that fired.",
+            "example": "documentation.schema-missing-description"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "description": "error | warning | info, after style-guide remapping.",
+            "example": "warning"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Finding schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Finding schema."
+              }
+            ],
+            "title": "Category",
+            "description": "Rule category (naming/documentation/\u2026)."
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable explanation of the finding.",
+            "example": "Example validation message."
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Where the finding applies \u2014 a JSON pointer / canonical model path when the rule can locate it, otherwise an empty string.",
+            "example": "/resources/{id}"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight",
+            "description": "Score penalty this single finding contributes before per-rule capping.",
+            "example": 1.0
+          },
+          "rule_penalty": {
+            "type": "number",
+            "title": "Rule Penalty",
+            "description": "Total capped penalty its rule contributed to the score \u2014 the ranking key.",
+            "example": 1.0
+          },
+          "remediation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Finding schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Finding schema."
+              }
+            ],
+            "title": "Remediation",
+            "description": "Actionable guidance for clearing the finding, when the rule registry has it."
+          },
+          "docs_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Finding schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Finding schema."
+              }
+            ],
+            "title": "Docs Url",
+            "description": "Documentation pointer for the rule (page#anchor), when registered."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "rank",
+          "rule",
+          "severity",
+          "message",
+          "path",
+          "weight",
+          "rule_penalty"
+        ],
+        "title": "ImportPreflightFinding",
+        "description": "One ranked lint finding on a pre-flighted candidate.\n\nRanked by severity first, then by how much the finding's rule cost the score\n(``rule_penalty``), so the first entries are always the ones worth fixing first."
+      },
+      "ImportPreflightLint": {
+        "properties": {
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Import Preflight Lint schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Lint schema."
+              }
+            ],
+            "title": "Score",
+            "description": "0\u2013100 weighted quality score, or null when unscored."
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Lint schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Lint schema."
+              }
+            ],
+            "title": "Grade",
+            "description": "A\u2013F letter grade, or null when unscored."
+          },
+          "report_fingerprint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Lint schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Lint schema."
+              }
+            ],
+            "title": "Report Fingerprint",
+            "description": "Stable hash over score/grade/findings; identical for identical verdicts."
+          },
+          "severity_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Severity Counts",
+            "description": "Finding count per severity."
+          },
+          "rule_hits": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Rule Hits",
+            "description": "Finding count per rule id."
+          },
+          "categories": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Categories",
+            "description": "Per-category 0\u2013100 rollup scores.",
+            "maxItems": 1000
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/ImportPreflightFinding"
+            },
+            "type": "array",
+            "title": "Findings",
+            "description": "Every finding, ranked by severity then rule weight.",
+            "maxItems": 1000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ImportPreflightLint",
+        "description": "The full lint verdict for a candidate \u2014 identical to what a commit would persist."
+      },
+      "ImportPreflightPolicy": {
+        "properties": {
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "warn",
+              "block"
+            ],
+            "title": "Verdict",
+            "description": "Whether policy would allow the import.",
+            "default": "pass",
+            "example": "pass"
+          },
+          "blocking": {
+            "type": "boolean",
+            "title": "Blocking",
+            "description": "Whether the verdict blocks the commit.",
+            "default": false,
+            "example": false
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Where the policy came from ('default' until IXH-2.3 lands tenant policy).",
+            "default": "default",
+            "example": "human"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Human-readable justification for the verdict.",
+            "example": "example"
+          },
+          "threshold_score": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Import Preflight Policy schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Policy schema."
+              }
+            ],
+            "title": "Threshold Score",
+            "description": "Minimum score policy requires, or null when no threshold applies."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "ImportPreflightPolicy",
+        "description": "Policy verdict for the candidate.\n\nA placeholder until IXH-2.3 makes the gate tenant-configurable: the shipped verdict is\nalways advisory, so no caller is blocked by a policy that does not exist yet. The shape\nis the one 2.3 will populate, so clients written against it keep working."
+      },
+      "ImportPreflightReport": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "Whether the candidate is importable as submitted.",
+            "example": false
+          },
+          "detection": {
+            "$ref": "#/components/schemas/ImportPreflightDetection",
+            "description": "Which importer ran, and why."
+          },
+          "routing": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object",
+                "description": "Import Preflight Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Report schema."
+              }
+            ],
+            "title": "Routing",
+            "description": "The Project-vs-Catalog-vs-Types decision the commit would take, with its reason."
+          },
+          "paradigm": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Report schema."
+              }
+            ],
+            "title": "Paradigm",
+            "description": "Canonical paradigm of the normalized model."
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Report schema."
+              }
+            ],
+            "title": "Format",
+            "description": "Canonical format key of the normalized model."
+          },
+          "counts": {
+            "$ref": "#/components/schemas/ImportPreflightCounts",
+            "description": "Canonical entity counts."
+          },
+          "fingerprint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Report schema."
+              }
+            ],
+            "title": "Fingerprint",
+            "description": "Revision fingerprint the commit would record for this document."
+          },
+          "lint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImportPreflightLint"
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Report schema."
+              }
+            ],
+            "description": "The full lint verdict, or null when the candidate never reached lint."
+          },
+          "style_guide": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImportPreflightStyleGuide"
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Report schema."
+              }
+            ],
+            "description": "The style guide that governed the lint."
+          },
+          "policy": {
+            "$ref": "#/components/schemas/ImportPreflightPolicy",
+            "description": "Policy verdict (advisory until IXH-2.3)."
+          },
+          "secret_scrub": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object",
+                "description": "Import Preflight Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Report schema."
+              }
+            ],
+            "title": "Secret Scrub",
+            "description": "What intake would redact from the stored source (IXH-1.4) \u2014 types and line numbers only, never values."
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpecImportJobError"
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Report schema."
+              }
+            ],
+            "description": "Populated when ok is false: the stable taxonomy code and remediation."
+          },
+          "cache": {
+            "$ref": "#/components/schemas/ImportPreflightCache",
+            "description": "Cache provenance for this report."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ok",
+          "detection",
+          "policy",
+          "cache"
+        ],
+        "title": "ImportPreflightReport",
+        "description": "The verdict for a candidate document \u2014 computed without writing anything (IXH-2.1).\n\n``ok`` is the headline: ``true`` when the candidate parsed, normalized, and linted, so\na commit would produce the reported model; ``false`` when it failed, in which case\n``error`` carries the stable intake-taxonomy code and its remediation. Transport is a\n200 either way \u2014 evaluating a broken candidate is a *successful* pre-flight whose\nanswer is \"do not import this\"."
+      },
+      "ImportPreflightRequest": {
+        "properties": {
+          "document_base64": {
+            "type": "string",
+            "title": "Document Base64",
+            "description": "Standard base64 (RFC 4648) of the candidate document's bytes; no data: URL prefix.",
+            "example": "eyJvcGVuYXBpIjoiMy4xLjAifQ=="
+          },
+          "source_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for import preflight."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import preflight."
+              }
+            ],
+            "title": "Source Kind",
+            "description": "Importer discriminator to pre-flight against (for example openapi, asyncapi, protobuf). When omitted the format is auto-detected and the winning adapter is used; the detection verdict is reported either way."
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for import preflight."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import preflight."
+              }
+            ],
+            "title": "Filename",
+            "description": "Original filename for format sniffing when bytes alone are ambiguous."
+          },
+          "content_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for import preflight."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import preflight."
+              }
+            ],
+            "title": "Content Type",
+            "description": "Optional MIME type hint (for example application/yaml or application/json)."
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for import preflight."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import preflight."
+              }
+            ],
+            "title": "Url",
+            "description": "Source URL the document was fetched from, when the intake kind is 'url'."
+          },
+          "input_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "file",
+                  "url",
+                  "paste",
+                  "discovery",
+                  "fileset"
+                ],
+                "description": "Request body for import preflight."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import preflight."
+              }
+            ],
+            "title": "Input Kind",
+            "description": "How the document reached the importer; recorded on the report for parity with the import job's option of the same name."
+          },
+          "import_target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "catalog",
+                  "types",
+                  "project"
+                ],
+                "description": "Request body for import preflight."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import preflight."
+              }
+            ],
+            "title": "Import Target",
+            "description": "Destination the commit would request (MFI-26.8). Consulted only for JSON Schema, exactly as on the import job, so the reported routing decision matches what the commit would do."
+          },
+          "archive_root": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for import preflight."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import preflight."
+              }
+            ],
+            "title": "Archive Root",
+            "description": "Explicit module-relative root document inside an uploaded archive (.zip/.tar.gz); auto-selected when omitted."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document_base64"
+        ],
+        "title": "ImportPreflightRequest",
+        "description": "A candidate document to score **before** anything is imported (IXH-2.1).\n\nCarries the same intake payload as ``POST \u2026/imports`` \u2014 base64 document bytes plus\nthe filename/content-type hints \u2014 minus everything that only matters once something\nis written (project/version identity, naming conventions, incremental mode). The\nimporter is auto-detected unless ``source_kind`` names one explicitly."
+      },
+      "ImportPreflightStyleGuide": {
+        "properties": {
+          "guide_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Preflight Style Guide schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Style Guide schema."
+              }
+            ],
+            "title": "Guide Id",
+            "description": "style_guides.id, or null for the in-code fallback."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Display name of the resolved guide.",
+            "example": "Pet"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "builtin | custom (stored guides) or fallback (in-code defaults).",
+            "example": "human"
+          },
+          "fingerprint": {
+            "type": "string",
+            "title": "Fingerprint",
+            "description": "Content hash of the guide's effective rule set; changes when the guide changes.",
+            "example": "a1b2c3d4e5f6789012345678901234ab"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "source",
+          "fingerprint"
+        ],
+        "title": "ImportPreflightStyleGuide",
+        "description": "Identity of the style guide that governed the pre-flight lint."
       },
       "ImportResolution": {
         "properties": {

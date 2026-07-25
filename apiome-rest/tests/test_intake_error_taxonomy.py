@@ -26,6 +26,8 @@ SHIPPED_CODES = {
     "INPUT_ARCHIVE_INVALID",
     "FORMAT_MISMATCH",
     "FORMAT_VERSION_UNSUPPORTED",
+    # Added by IXH-2.1 (#5096): auto-detection found no importer for the document.
+    "FORMAT_UNRECOGNIZED",
     "ADAPTER_UNAVAILABLE",
     "INTERNAL_ADAPTER_FAULT",
     "INTERNAL_WORKER_FAULT",

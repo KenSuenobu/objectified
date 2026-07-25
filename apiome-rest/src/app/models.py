@@ -1310,6 +1310,265 @@ class SpecImportRollbackResponse(BaseModel):
     version_record_id: Optional[str] = None
 
 
+# ==================== Import Pre-flight Models (IXH-2.1) ====================
+
+
+class ImportPreflightRequest(BaseModel):
+    """A candidate document to score **before** anything is imported (IXH-2.1).
+
+    Carries the same intake payload as ``POST …/imports`` — base64 document bytes plus
+    the filename/content-type hints — minus everything that only matters once something
+    is written (project/version identity, naming conventions, incremental mode). The
+    importer is auto-detected unless ``source_kind`` names one explicitly.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    document_base64: str = Field(
+        ...,
+        description="Standard base64 (RFC 4648) of the candidate document's bytes; no data: URL prefix.",
+    )
+    source_kind: Optional[str] = Field(
+        None,
+        description=(
+            "Importer discriminator to pre-flight against (for example openapi, asyncapi, "
+            "protobuf). When omitted the format is auto-detected and the winning adapter is "
+            "used; the detection verdict is reported either way."
+        ),
+    )
+    filename: Optional[str] = Field(
+        None,
+        description="Original filename for format sniffing when bytes alone are ambiguous.",
+    )
+    content_type: Optional[str] = Field(
+        None,
+        description="Optional MIME type hint (for example application/yaml or application/json).",
+    )
+    url: Optional[str] = Field(
+        None,
+        description="Source URL the document was fetched from, when the intake kind is 'url'.",
+    )
+    input_kind: Optional[Literal["file", "url", "paste", "discovery", "fileset"]] = Field(
+        None,
+        description="How the document reached the importer; recorded on the report for parity "
+        "with the import job's option of the same name.",
+    )
+    import_target: Optional[Literal["catalog", "types", "project"]] = Field(
+        None,
+        description=(
+            "Destination the commit would request (MFI-26.8). Consulted only for JSON Schema, "
+            "exactly as on the import job, so the reported routing decision matches what the "
+            "commit would do."
+        ),
+    )
+    archive_root: Optional[str] = Field(
+        None,
+        description="Explicit module-relative root document inside an uploaded archive "
+        "(.zip/.tar.gz); auto-selected when omitted.",
+    )
+
+
+class ImportPreflightDetection(BaseModel):
+    """Which importer the pre-flight ran, and how confident detection was."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    adapter_key: Optional[str] = Field(
+        None, description="Registry key of the adapter the pre-flight actually ran, or null."
+    )
+    requested_adapter_key: Optional[str] = Field(
+        None, description="The caller's explicit ``source_kind``, resolved through registry aliases."
+    )
+    detected_adapter_key: Optional[str] = Field(
+        None, description="Registry key auto-detection picked, or null when nothing importable matched."
+    )
+    detected_format: Optional[str] = Field(
+        None, description="Detected format key (for example asyncapi-2, openapi-3.1)."
+    )
+    confidence: float = Field(
+        0.0, ge=0.0, le=1.0, description="Detection certainty 0.0–1.0 for the detected format."
+    )
+    reason: Optional[str] = Field(
+        None, description="Short human justification for the detection (the marker found)."
+    )
+    matched: bool = Field(
+        False, description="Whether any detector recognized the document."
+    )
+    importable: bool = Field(
+        False, description="Whether the detected format has a registered adapter today."
+    )
+    ambiguous: bool = Field(
+        False, description="True when leading formats tie within the ambiguity margin."
+    )
+    agrees_with_request: bool = Field(
+        True,
+        description="False when the caller named a ``source_kind`` that detection disagrees with — "
+        "the pre-flight still runs the requested adapter.",
+    )
+    archive_root: Optional[str] = Field(
+        None, description="Chosen root member path when the payload was an archive."
+    )
+    archive_members: List[str] = Field(
+        default_factory=list, description="Sorted archive member paths, when an archive was unpacked."
+    )
+
+
+class ImportPreflightCounts(BaseModel):
+    """Canonical entity counts the candidate would contribute."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    services: int = 0
+    operations: int = 0
+    types: int = 0
+    channels: int = 0
+
+
+class ImportPreflightFinding(BaseModel):
+    """One ranked lint finding on a pre-flighted candidate.
+
+    Ranked by severity first, then by how much the finding's rule cost the score
+    (``rule_penalty``), so the first entries are always the ones worth fixing first.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    rank: int = Field(description="1-based position in the ranked list.")
+    id: Optional[str] = Field(None, description="Stable finding id (survives re-lints).")
+    rule: str = Field(description="The rule id that fired.")
+    severity: str = Field(description="error | warning | info, after style-guide remapping.")
+    category: Optional[str] = Field(None, description="Rule category (naming/documentation/…).")
+    message: str = Field(description="Human-readable explanation of the finding.")
+    path: str = Field(
+        description="Where the finding applies — a JSON pointer / canonical model path when the "
+        "rule can locate it, otherwise an empty string."
+    )
+    weight: float = Field(
+        description="Score penalty this single finding contributes before per-rule capping."
+    )
+    rule_penalty: float = Field(
+        description="Total capped penalty its rule contributed to the score — the ranking key."
+    )
+    remediation: Optional[str] = Field(
+        None, description="Actionable guidance for clearing the finding, when the rule registry has it."
+    )
+    docs_url: Optional[str] = Field(
+        None, description="Documentation pointer for the rule (page#anchor), when registered."
+    )
+
+
+class ImportPreflightLint(BaseModel):
+    """The full lint verdict for a candidate — identical to what a commit would persist."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    score: Optional[int] = Field(None, description="0–100 weighted quality score, or null when unscored.")
+    grade: Optional[str] = Field(None, description="A–F letter grade, or null when unscored.")
+    report_fingerprint: Optional[str] = Field(
+        None, description="Stable hash over score/grade/findings; identical for identical verdicts."
+    )
+    severity_counts: Dict[str, int] = Field(
+        default_factory=dict, description="Finding count per severity."
+    )
+    rule_hits: Dict[str, int] = Field(default_factory=dict, description="Finding count per rule id.")
+    categories: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Per-category 0–100 rollup scores."
+    )
+    findings: List[ImportPreflightFinding] = Field(
+        default_factory=list, description="Every finding, ranked by severity then rule weight."
+    )
+
+
+class ImportPreflightStyleGuide(BaseModel):
+    """Identity of the style guide that governed the pre-flight lint."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    guide_id: Optional[str] = Field(None, description="style_guides.id, or null for the in-code fallback.")
+    name: str = Field(description="Display name of the resolved guide.")
+    source: str = Field(description="builtin | custom (stored guides) or fallback (in-code defaults).")
+    fingerprint: str = Field(
+        description="Content hash of the guide's effective rule set; changes when the guide changes."
+    )
+
+
+class ImportPreflightPolicy(BaseModel):
+    """Policy verdict for the candidate.
+
+    A placeholder until IXH-2.3 makes the gate tenant-configurable: the shipped verdict is
+    always advisory, so no caller is blocked by a policy that does not exist yet. The shape
+    is the one 2.3 will populate, so clients written against it keep working.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    verdict: Literal["pass", "warn", "block"] = Field(
+        "pass", description="Whether policy would allow the import."
+    )
+    blocking: bool = Field(False, description="Whether the verdict blocks the commit.")
+    source: str = Field(
+        "default", description="Where the policy came from ('default' until IXH-2.3 lands tenant policy)."
+    )
+    reason: str = Field(description="Human-readable justification for the verdict.")
+    threshold_score: Optional[int] = Field(
+        None, description="Minimum score policy requires, or null when no threshold applies."
+    )
+
+
+class ImportPreflightCache(BaseModel):
+    """Whether this report was served from the tenant-scoped pre-flight cache."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    hit: bool = Field(description="True when identical bytes were pre-flighted before and reused.")
+    key: str = Field(description="Tenant-scoped cache key (content hash + adapter + target).")
+    content_hash: str = Field(description="SHA-256 of the submitted document bytes.")
+
+
+class ImportPreflightReport(BaseModel):
+    """The verdict for a candidate document — computed without writing anything (IXH-2.1).
+
+    ``ok`` is the headline: ``true`` when the candidate parsed, normalized, and linted, so
+    a commit would produce the reported model; ``false`` when it failed, in which case
+    ``error`` carries the stable intake-taxonomy code and its remediation. Transport is a
+    200 either way — evaluating a broken candidate is a *successful* pre-flight whose
+    answer is "do not import this".
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    ok: bool = Field(description="Whether the candidate is importable as submitted.")
+    detection: ImportPreflightDetection = Field(description="Which importer ran, and why.")
+    routing: Optional[Dict[str, Any]] = Field(
+        None,
+        description="The Project-vs-Catalog-vs-Types decision the commit would take, with its reason.",
+    )
+    paradigm: Optional[str] = Field(None, description="Canonical paradigm of the normalized model.")
+    format: Optional[str] = Field(None, description="Canonical format key of the normalized model.")
+    counts: ImportPreflightCounts = Field(
+        default_factory=ImportPreflightCounts, description="Canonical entity counts."
+    )
+    fingerprint: Optional[str] = Field(
+        None, description="Revision fingerprint the commit would record for this document."
+    )
+    lint: Optional[ImportPreflightLint] = Field(
+        None, description="The full lint verdict, or null when the candidate never reached lint."
+    )
+    style_guide: Optional[ImportPreflightStyleGuide] = Field(
+        None, description="The style guide that governed the lint."
+    )
+    policy: ImportPreflightPolicy = Field(description="Policy verdict (advisory until IXH-2.3).")
+    secret_scrub: Optional[Dict[str, Any]] = Field(
+        None,
+        description="What intake would redact from the stored source (IXH-1.4) — types and line "
+        "numbers only, never values.",
+    )
+    error: Optional[SpecImportJobError] = Field(
+        None, description="Populated when ok is false: the stable taxonomy code and remediation."
+    )
+    cache: ImportPreflightCache = Field(description="Cache provenance for this report.")
+
+
 # ==================== Project Models ====================
 
 class ProjectSchema(BaseModel):

@@ -97,10 +97,12 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "ADAPTER_PHASE_EVENT_CODES",
+    "ImportRunArtifacts",
     "build_job_error",
     "capture_canonical_quality_score",
     "run_adapter_import_job",
 ]
+
 
 # Event codes the in-process adapter pipeline emits for each phase. Surfaced at INFO
 # by the engine's event logger (mirrors the worker's PHASE_TIMING/BENCHMARK codes) so
@@ -130,6 +132,43 @@ _PCT_NORMALIZED = 55
 _PCT_VERSIONED = 75
 _PCT_LINTED = 90
 _PCT_DONE = 100
+
+
+@dataclass
+class ImportRunArtifacts:
+    """Mutable collector for the in-flight objects one pipeline run produces (IXH-2.1).
+
+    The terminal :class:`SpecImportJobStatus` carries only a *rolled-up* summary — lint
+    score, grade, counts — because that is all a polling client needs. The pre-flight API
+    (IXH-2.1) needs the objects behind those roll-ups (the full lint report with its
+    findings, the canonical model, the resolved style guide) and must get them from the
+    **same** run as the committing import, not from a second code path.
+
+    Passing an instance to :func:`run_adapter_import_job` therefore has it record each
+    artifact as the phase that produces it completes. Every field stays ``None`` when the
+    run failed before that phase. Purely an out-parameter: the pipeline never *reads* it,
+    so collecting artifacts cannot change an import's outcome.
+
+    Attributes:
+        adapter_key: Registry key of the adapter that ran.
+        model: The normalized canonical model (after the normalize phase).
+        fingerprint: The revision fingerprint (after the version phase).
+        lint: The rolled-up lint report, already re-scored under the resolved style
+            guide — byte-identical to the report the committing import persists.
+        routing: The Project-vs-Catalog-vs-Types routing decision.
+        style_guide: The :class:`~app.style_guide_engine.CompiledStyleGuide` that governed
+            the lint (the in-code fallback guide when the tenant has none). Typed loosely
+            to keep the style-guide module off this module's import path.
+        scrub_report: The IXH-1.4 secret-scrub report for the intake.
+    """
+
+    adapter_key: Optional[str] = None
+    model: Optional[CanonicalApi] = None
+    fingerprint: Optional[str] = None
+    lint: Optional[LintReport] = None
+    routing: Optional[ImportRoutingDecision] = None
+    style_guide: Optional[Any] = None
+    scrub_report: Optional[Dict[str, Any]] = None
 
 
 def _scrub_event_context(context: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
@@ -879,6 +918,7 @@ async def run_adapter_import_job(
     *,
     on_snapshot: Optional[Callable[[SpecImportJobStatus], Awaitable[None]]] = None,
     is_canceled: Optional[Callable[[], bool]] = None,
+    artifacts: Optional[ImportRunArtifacts] = None,
 ) -> SpecImportJobStatus:
     """Drive one import-source adapter through the job lifecycle, in-process.
 
@@ -899,6 +939,10 @@ async def run_adapter_import_job(
         on_snapshot: Optional coroutine called with each intermediate snapshot.
         is_canceled: Optional predicate; when it returns ``True`` between phases the
             run stops and a ``canceled`` status is returned.
+        artifacts: Optional :class:`ImportRunArtifacts` out-parameter; when given, each
+            phase records the object it produced (model, fingerprint, lint report,
+            routing, style guide) so a caller such as the pre-flight API (IXH-2.1) sees
+            the full detail behind the summary without re-running the pipeline.
 
     Returns:
         The terminal :class:`SpecImportJobStatus` (``completed``/``failed``/``canceled``).
@@ -908,6 +952,8 @@ async def run_adapter_import_job(
     options = metadata.get("options") or {}
     source_label = payload.get("filename")
     state = _AdapterRunState(job_id)
+    if artifacts is not None:
+        artifacts.adapter_key = adapter.key
 
     async def publish(status: SpecImportJobStatus) -> None:
         if on_snapshot is not None:
@@ -972,6 +1018,8 @@ async def run_adapter_import_job(
             percent=_PCT_PARSED,
             error=build_job_error(error_code, str(exc)),
         )
+    if artifacts is not None:
+        artifacts.model = model
     state.event(
         "NORMALIZE_OK",
         f"Normalized into the canonical model ({model.paradigm.value}/{model.format}).",
@@ -990,6 +1038,8 @@ async def run_adapter_import_job(
     # ``decide_import_routing``), so OpenAPI/Arazzo routing cannot regress.
     requested_target = options.get("import_target") if isinstance(options, dict) else None
     routing = decide_import_routing(adapter, model, requested_target=requested_target)
+    if artifacts is not None:
+        artifacts.routing = routing
     state.event(
         "ROUTING_DECIDED",
         f"Routing → {routing.target.value}: {routing.reason}",
@@ -998,6 +1048,8 @@ async def run_adapter_import_job(
 
     # --- version (fingerprint) ------------------------------------------------
     fingerprint = adapter.fingerprint(model)
+    if artifacts is not None:
+        artifacts.fingerprint = fingerprint
     state.event(
         "VERSION_FINGERPRINT",
         f"Computed revision fingerprint {fingerprint}.",
@@ -1016,13 +1068,16 @@ async def run_adapter_import_job(
     # engine schedules it fire-and-forget and only awaits it opportunistically. Strictly
     # best-effort: any fault leaves the adapter's default-scored report untouched.
     guide_tenant_id = str(payload.get("tenant_id") or "")
-    if guide_tenant_id and lint.score is not None:
+    if guide_tenant_id:
         try:
             guide = resolve_style_guide(guide_tenant_id)
+            if artifacts is not None:
+                artifacts.style_guide = guide
             # Only a *resolved* guide re-scores. Under the in-code fallback the adapter's
             # own roll-up is already the default-guide score, and MFI-4.2 promises the
-            # adapter-produced report is persisted verbatim.
-            if guide.source != FALLBACK_GUIDE_SOURCE:
+            # adapter-produced report is persisted verbatim. An unscored report has
+            # nothing to re-score either (``apply`` returns it untouched).
+            if lint.score is not None and guide.source != FALLBACK_GUIDE_SOURCE:
                 lint = apply_style_guide_to_lint_report(lint, guide)
         except Exception:  # noqa: BLE001 - guide application must never fail the import
             logger.warning(
@@ -1030,6 +1085,8 @@ async def run_adapter_import_job(
                 job_id,
                 exc_info=True,
             )
+    if artifacts is not None:
+        artifacts.lint = lint
     state.event(
         "LINT_COMPLETED",
         f"Lint produced {len(lint.findings)} finding(s)"
@@ -1122,6 +1179,8 @@ async def run_adapter_import_job(
     # persistence hook — this recomputes the report so a dry run surfaces the same
     # findings without writing, and so the summary records them either way.
     _fields, scrub_report = scrub_intake_source(intake)
+    if artifacts is not None:
+        artifacts.scrub_report = scrub_report
     if scrub_report.get("scrubbed"):
         state.event(
             "SECRETS_REDACTED",
