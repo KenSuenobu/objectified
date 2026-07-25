@@ -22,12 +22,22 @@
  *    tree (`onRevealEntity`).
  *
  * Renders nothing at all for a first-time import (`delta` null) — the clean-skip AC.
+ *
+ * Bounds (IXH-3.6, #5108): a family's entry list is **windowed** above
+ * {@link DELTA_LIST_VIRTUALIZE_ABOVE} (budget in `preview-budgets.ts`) — only the rows
+ * near the viewport mount, a "windowed" note states the behavior, `aria-setsize` /
+ * `aria-posinset` keep the list semantics truthful, and the row holding keyboard focus is
+ * pinned so windowing never drops it. Nothing is truncated: every change stays reachable
+ * by scrolling, and the header chips always state the full counts. Motion is `motion-safe:`
+ * so `prefers-reduced-motion` is honoured.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ChevronRight, CircleSlash, GitCompareArrows } from 'lucide-react';
 import { cn } from '@lib/utils';
 import { Button } from '../../../ui/Button';
+import { computeWindowedRange } from '@/app/utils/windowed-rows';
+import { DELTA_LIST_VIRTUALIZE_ABOVE } from '@/app/utils/preview-budgets';
 import {
   groupReimportEntries,
   REIMPORT_CHANGE_KINDS,
@@ -39,6 +49,12 @@ import {
   type ReimportChangeKind,
 } from '@/app/utils/import-preview-manifest';
 
+/** Uniform delta-row height (px) the windowing arithmetic assumes; matches the `h-7` row class. */
+const DELTA_ROW_HEIGHT = 28;
+
+/** Height (px) of a windowed family list's viewport; matches the `h-56` container class. */
+const DELTA_LIST_HEIGHT = 224;
+
 export interface CatalogImportReimportDeltaProps {
   /** The server-computed delta; null renders nothing (a first-time import). */
   delta: ImportReimportDelta | null;
@@ -46,6 +62,11 @@ export interface CatalogImportReimportDeltaProps {
   onSkipCommit?: () => void;
   /** Reveal an entity (by its stable canonical key) in the preview tree. */
   onRevealEntity?: (key: string) => void;
+  /** Windowing threshold override; tests pass a small value. */
+  listVirtualizeAbove?: number;
+  /** List viewport height override; tests pass a small value to exercise real windowing
+   *  (jsdom reports element heights as 0, so the height cannot be measured). */
+  listViewportHeight?: number;
 }
 
 /** A change-kind chip: symbol + label (+ optional count), colour supplemental. */
@@ -68,13 +89,16 @@ export function CatalogImportReimportDelta({
   delta,
   onSkipCommit,
   onRevealEntity,
+  listVirtualizeAbove = DELTA_LIST_VIRTUALIZE_ABOVE,
+  listViewportHeight = DELTA_LIST_HEIGHT,
 }: CatalogImportReimportDeltaProps) {
   // Families with few entries default open; state tracks explicit toggles by family key.
   const [closedFamilies, setClosedFamilies] = useState<Set<string>>(new Set());
 
+  const groups = useMemo(() => (delta ? groupReimportEntries(delta) : []), [delta]);
+
   if (!delta) return null;
 
-  const groups = groupReimportEntries(delta);
   const graded = Boolean(delta.classifier);
   const targetLabel = delta.target_item_name || delta.target_item_slug;
 
@@ -163,6 +187,7 @@ export function CatalogImportReimportDelta({
           <div className="space-y-2">
             {groups.map((group) => {
               const open = !closedFamilies.has(group.family);
+              const windowed = group.entries.length > listVirtualizeAbove;
               return (
                 <div
                   key={group.family}
@@ -177,7 +202,7 @@ export function CatalogImportReimportDelta({
                   >
                     <ChevronRight
                       className={cn(
-                        'h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform',
+                        'h-3.5 w-3.5 shrink-0 text-gray-400 motion-safe:transition-transform',
                         open && 'rotate-90',
                       )}
                       aria-hidden
@@ -185,6 +210,14 @@ export function CatalogImportReimportDelta({
                     <span className="font-semibold text-gray-800 dark:text-gray-100">
                       {group.label}
                     </span>
+                    {windowed && (
+                      <span
+                        className="text-[10px] font-normal text-gray-500 dark:text-gray-400"
+                        data-testid="import-reimport-windowed"
+                      >
+                        windowed
+                      </span>
+                    )}
                     <span className="ml-auto flex items-center gap-1.5">
                       {REIMPORT_CHANGE_KINDS.filter((kind) => group.counts[kind] > 0).map(
                         (kind) => (
@@ -194,15 +227,14 @@ export function CatalogImportReimportDelta({
                     </span>
                   </button>
                   {open && (
-                    <ul className="border-t border-gray-100 px-2.5 py-1.5 dark:border-gray-800">
-                      {group.entries.map((entry) => (
-                        <DeltaEntryRow
-                          key={`${entry.change}:${entry.key}`}
-                          entry={entry}
-                          onRevealEntity={onRevealEntity}
-                        />
-                      ))}
-                    </ul>
+                    <FamilyEntriesList
+                      family={group.family}
+                      label={group.label}
+                      entries={group.entries}
+                      onRevealEntity={onRevealEntity}
+                      windowed={windowed}
+                      viewportHeight={listViewportHeight}
+                    />
                   )}
                 </div>
               );
@@ -214,13 +246,102 @@ export function CatalogImportReimportDelta({
   );
 }
 
+/**
+ * One family's entry list. Above the windowing budget only the rows near the viewport
+ * mount (spacer elements keep the scrollbar's true length), and the row holding keyboard
+ * focus is pinned — rendered absolutely at its true offset — so focus never unmounts.
+ */
+function FamilyEntriesList({
+  family,
+  label,
+  entries,
+  onRevealEntity,
+  windowed,
+  viewportHeight,
+}: {
+  family: string;
+  label: string;
+  entries: ImportReimportDeltaEntry[];
+  onRevealEntity?: (key: string) => void;
+  windowed: boolean;
+  viewportHeight: number;
+}) {
+  const [scrollTop, setScrollTop] = useState(0);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+
+  const rowWindow = windowed
+    ? computeWindowedRange({
+        rowCount: entries.length,
+        rowHeight: DELTA_ROW_HEIGHT,
+        viewportHeight,
+        scrollTop,
+      })
+    : { startIndex: 0, endIndex: entries.length, paddingTop: 0, paddingBottom: 0 };
+  const pinnedIndex =
+    windowed &&
+    focusedIndex !== null &&
+    focusedIndex < entries.length &&
+    (focusedIndex < rowWindow.startIndex || focusedIndex >= rowWindow.endIndex)
+      ? focusedIndex
+      : null;
+
+  const renderEntry = (entry: ImportReimportDeltaEntry, index: number, pinned: boolean) => (
+    <DeltaEntryRow
+      key={`${entry.change}:${entry.key}`}
+      entry={entry}
+      onRevealEntity={onRevealEntity}
+      setSize={entries.length}
+      posInSet={index + 1}
+      onFocusRow={() => setFocusedIndex(index)}
+      style={
+        pinned
+          ? { position: 'absolute', top: index * DELTA_ROW_HEIGHT, left: 0, right: 0 }
+          : undefined
+      }
+    />
+  );
+
+  return (
+    <div
+      className={cn('border-t border-gray-100 px-2.5 py-1.5 dark:border-gray-800', windowed && 'overflow-y-auto')}
+      style={windowed ? { height: viewportHeight } : undefined}
+      onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+      tabIndex={windowed ? 0 : undefined}
+      role={windowed ? 'region' : undefined}
+      aria-label={windowed ? `${label} changes (${entries.length}, windowed)` : undefined}
+      data-testid={`import-reimport-entries-${family}`}
+    >
+      <ul className="relative">
+        {rowWindow.paddingTop > 0 && (
+          <li aria-hidden style={{ height: rowWindow.paddingTop }} />
+        )}
+        {entries
+          .slice(rowWindow.startIndex, rowWindow.endIndex)
+          .map((entry, offset) => renderEntry(entry, rowWindow.startIndex + offset, false))}
+        {rowWindow.paddingBottom > 0 && (
+          <li aria-hidden style={{ height: rowWindow.paddingBottom }} />
+        )}
+        {pinnedIndex !== null ? renderEntry(entries[pinnedIndex], pinnedIndex, true) : null}
+      </ul>
+    </div>
+  );
+}
+
 /** One change row: change chip, key (click-through to the tree), grade + rationale. */
 function DeltaEntryRow({
   entry,
   onRevealEntity,
+  setSize,
+  posInSet,
+  onFocusRow,
+  style,
 }: {
   entry: ImportReimportDeltaEntry;
   onRevealEntity?: (key: string) => void;
+  setSize: number;
+  posInSet: number;
+  onFocusRow: () => void;
+  style?: React.CSSProperties;
 }) {
   const kind = entry.change as ReimportChangeKind;
   // A removed entity no longer exists in the candidate tree, so there is nothing to
@@ -228,21 +349,25 @@ function DeltaEntryRow({
   const revealable = Boolean(onRevealEntity) && entry.change !== 'removed' && entry.key !== '';
   return (
     <li
-      className="flex flex-wrap items-center gap-2 py-1 text-xs"
+      className="flex h-7 items-center gap-2 whitespace-nowrap text-xs"
       data-testid="import-reimport-entry"
+      aria-setsize={setSize}
+      aria-posinset={posInSet}
+      style={style}
     >
       <ChangeChip kind={kind} />
       {revealable ? (
         <button
           type="button"
           onClick={() => onRevealEntity?.(entry.key)}
+          onFocus={onFocusRow}
           data-testid="import-reimport-reveal"
-          className="font-mono text-indigo-600 underline decoration-dotted underline-offset-2 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+          className="max-w-72 truncate font-mono text-indigo-600 underline decoration-dotted underline-offset-2 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
         >
           {entry.key || '(document root)'}
         </button>
       ) : (
-        <span className="font-mono text-gray-700 dark:text-gray-200">
+        <span className="max-w-72 truncate font-mono text-gray-700 dark:text-gray-200">
           {entry.key || '(document root)'}
         </span>
       )}

@@ -49,6 +49,7 @@ import { parsedTagToneClass } from './CatalogParsedModel';
 import { CatalogImportProjectionGraph } from './CatalogImportProjectionGraph';
 import { CatalogImportReimportDelta } from './CatalogImportReimportDelta';
 import { clampRowIndex, computeWindowedRange } from '@/app/utils/windowed-rows';
+import { LOAD_ALL_PAGE_CAP, TREE_VIRTUALIZE_ABOVE } from '@/app/utils/preview-budgets';
 import type { PreflightRequest } from '@/app/utils/import-preflight';
 import {
   buildPreviewTreeRows,
@@ -69,17 +70,15 @@ import {
   type PreviewTreeRow,
 } from '@/app/utils/import-preview-manifest';
 
-/** Tree rows beyond this count are windowed rather than all mounted. */
-export const TREE_VIRTUALIZE_ABOVE = 50;
+// Budgets live in the central registry (IXH-3.6, #5108) and are re-exported here so the
+// panel's tests and callers keep their historical import paths.
+export { LOAD_ALL_PAGE_CAP, TREE_VIRTUALIZE_ABOVE } from '@/app/utils/preview-budgets';
 
 /** Uniform tree-row height (px) the windowing arithmetic assumes; matches the `h-8` row class. */
 const TREE_ROW_HEIGHT = 32;
 
 /** Height (px) of the tree viewport; matches the `h-[380px]` container class. */
 export const TREE_HEIGHT = 380;
-
-/** Pages one "Load all entities" click will walk before pausing (20k entities at max page size). */
-export const LOAD_ALL_PAGE_CAP = 20;
 
 /** How long (ms) the tree's type-ahead buffer keeps accumulating characters. */
 const TYPEAHEAD_RESET_MS = 500;
@@ -493,7 +492,7 @@ export function CatalogImportPreviewPanel({
           data-testid={row.kind === 'section' ? 'import-preview-section' : 'import-preview-entity'}
           style={{ '--tree-depth': row.depth } as React.CSSProperties}
           className={cn(
-            'flex h-8 w-full items-center gap-2 rounded-md pr-2 text-left text-xs transition',
+            'flex h-8 w-full items-center gap-2 rounded-md pr-2 text-left text-xs motion-safe:transition',
             'pl-[calc(0.5rem+(var(--tree-depth)-1)*1.125rem)]',
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
             selected
@@ -504,7 +503,7 @@ export function CatalogImportPreviewPanel({
           {row.hasChildren ? (
             <ChevronRight
               className={cn(
-                'h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform',
+                'h-3.5 w-3.5 shrink-0 text-gray-400 motion-safe:transition-transform',
                 row.expanded && 'rotate-90',
               )}
               aria-hidden
@@ -550,9 +549,11 @@ export function CatalogImportPreviewPanel({
                 <CoverageBadge coverage={row.entity!.coverage} />
                 {location ? (
                   line !== null ? (
+                    /* Not a nested interactive control (invalid inside the treeitem button):
+                       a styled span whose click is a pointer shortcut for what Enter on the
+                       row already does — activation follows the source link. */
                     <span
                       data-testid="import-preview-source-link"
-                      role="link"
                       onClick={(event) => {
                         event.stopPropagation();
                         setSelectedKey(row.key);
@@ -595,7 +596,7 @@ export function CatalogImportPreviewPanel({
           className="flex flex-col items-center justify-center gap-2 py-8 text-center"
           data-testid="import-preview-loading"
         >
-          <Loader2 className="h-6 w-6 animate-spin text-indigo-500" aria-hidden />
+          <Loader2 className="h-6 w-6 motion-safe:animate-spin text-indigo-500" aria-hidden />
           <span className="text-xs text-gray-600 dark:text-gray-300">
             Building the entity preview — nothing has been written yet.
           </span>
@@ -697,7 +698,7 @@ export function CatalogImportPreviewPanel({
                   data-testid="import-preview-filter-clear"
                   onClick={() => setFilter('')}
                   aria-label="Clear entity filter"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 transition-colors hover:text-gray-700 dark:hover:text-gray-200"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 motion-safe:transition-colors hover:text-gray-700 dark:hover:text-gray-200"
                 >
                   <X className="h-3.5 w-3.5" aria-hidden />
                 </button>
