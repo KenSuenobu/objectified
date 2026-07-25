@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -30,6 +30,11 @@ import {
 } from '../../../../utils/catalog-import-formats';
 import { resolveCatalogProtocol, resolveCatalogFormat } from '../../../../utils/catalog-format-registry';
 import { useCatalogImportAvailability } from './useCatalogImportAvailability';
+import { CatalogImportQualityStep } from './CatalogImportQualityStep';
+import {
+  persistImportQualityPreferences,
+  readImportQualityPreferences,
+} from '../../../../utils/import-quality-preferences';
 
 interface CatalogImportDialogProps {
   open: boolean;
@@ -45,7 +50,18 @@ export interface JsonSchemaHandoffPayload {
 }
 
 type SourceMethod = 'file' | 'url' | 'paste';
-type Step = 'source' | 'detect' | 'options' | 'import';
+/**
+ * The wizard rail (IXH-2.2). `quality` sits between `options` and `import`: the commit fires from
+ * the quality step's confirmation, never from `options`, so nothing reaches the catalog before the
+ * user has seen the pre-flight verdict.
+ */
+type Step = 'source' | 'detect' | 'options' | 'quality' | 'import';
+
+/** Rail order, shared by the step chips and the `stepIndex` progress calculation. */
+const STEP_ORDER: readonly Step[] = ['source', 'detect', 'options', 'quality', 'import'];
+
+/** Rail labels, index-aligned with {@link STEP_ORDER}. */
+const STEP_LABELS = ['Source', 'Detect & route', 'Options', 'Quality', 'Import'] as const;
 type ImportState = 'idle' | 'detecting' | 'fetching-url' | 'storing' | 'done';
 type JsonSchemaChoice = 'catalog' | 'types';
 
@@ -148,6 +164,10 @@ export function CatalogImportDialog({
   const [jsonSchemaChoice, setJsonSchemaChoice] = useState<JsonSchemaChoice>('catalog');
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  // Power-user preference: a clean, non-blocking pre-flight commits without stopping on the quality
+  // step. Read once per opening so a change made mid-wizard cannot retroactively skip the step the
+  // user is standing on.
+  const [skipQualityStep, setSkipQualityStep] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const availability = useCatalogImportAvailability(open);
   // The source grid is data-driven from `GET /v1/import/sources` (MFI-26.1). We render the
@@ -199,6 +219,21 @@ export function CatalogImportDialog({
   const canStoreCatalog = routing.destination === 'catalog' && adapter !== null && !adapterUnavailable;
   const canContinueFromDetect =
     routing.destination === 'catalog' || routing.destination === 'json-schema-choice';
+  // The importer the commit would run, and therefore the one the pre-flight must score. Null when
+  // the options step leads somewhere that never writes a catalog item (the JSON Schema → Types
+  // hand-off), in which case there is nothing to pre-flight.
+  const commitSourceKind = useMemo(() => {
+    if (routing.destination === 'catalog') return adapter?.sourceKind ?? null;
+    if (routing.destination === 'json-schema-choice' && jsonSchemaChoice === 'catalog') {
+      return 'json-schema';
+    }
+    return null;
+  }, [adapter, jsonSchemaChoice, routing.destination]);
+
+  useEffect(() => {
+    if (!open) return;
+    setSkipQualityStep(readImportQualityPreferences().skipQualityStep);
+  }, [open]);
 
   const reset = useCallback(() => {
     setStep('source');
@@ -404,28 +439,50 @@ export function CatalogImportDialog({
     }
   }, [archiveRoot, content, documentBase64, fileName, metadata, onSuccess, sourceMethod]);
 
-  const handleStoreCatalog = useCallback(() => {
-    if (!adapter || adapterUnavailable) return;
-    void storeCatalog(adapter.sourceKind);
-  }, [adapter, adapterUnavailable, storeCatalog]);
-
-  const handleJsonSchemaChoice = useCallback(() => {
-    // "Catalog" stores the schema verbatim as a non-publishable, schemas-only catalog item via the
-    // `json-schema` import adapter (MFI-26.7); "Types/Projects" hands the schema to the existing
-    // type-import review to be imported *as current* (MFI-26.8).
-    if (jsonSchemaChoice === 'catalog') {
-      void storeCatalog('json-schema');
+  /**
+   * Leave the options step (IXH-2.2).
+   *
+   * Everything that would write a catalog item now goes through `quality` first — the commit is the
+   * quality step's confirmation, not this button. The one exception is the JSON Schema
+   * "Types/Projects" choice (MFI-26.8), which writes no catalog item at all: it hands the schema to
+   * the existing type-import review and closes the wizard, so there is nothing to pre-flight.
+   */
+  const handleContinueFromOptions = useCallback(() => {
+    if (routing.destination === 'json-schema-choice' && jsonSchemaChoice === 'types') {
+      onJsonSchemaAsCurrent?.({
+        text: content,
+        label: fileName || 'JSON Schema',
+        document: parseJsonDocument(content),
+      });
+      handleClose();
       return;
     }
-    onJsonSchemaAsCurrent?.({
-      text: content,
-      label: fileName || 'JSON Schema',
-      document: parseJsonDocument(content),
-    });
-    handleClose();
-  }, [content, fileName, handleClose, jsonSchemaChoice, onJsonSchemaAsCurrent, storeCatalog]);
+    setError(null);
+    setStep('quality');
+  }, [
+    content,
+    fileName,
+    handleClose,
+    jsonSchemaChoice,
+    onJsonSchemaAsCurrent,
+    routing.destination,
+  ]);
 
-  const stepIndex = ['source', 'detect', 'options', 'import'].indexOf(step);
+  /**
+   * Commit from the quality step. The step has already recorded a waiver when the user imported
+   * against a blocking policy, so the parent only has to run the job it always ran.
+   */
+  const handleQualityCommit = useCallback(() => {
+    if (!commitSourceKind) return;
+    void storeCatalog(commitSourceKind);
+  }, [commitSourceKind, storeCatalog]);
+
+  const handleSkipPreferenceChange = useCallback((value: boolean) => {
+    setSkipQualityStep(value);
+    persistImportQualityPreferences({ skipQualityStep: value });
+  }, []);
+
+  const stepIndex = STEP_ORDER.indexOf(step);
   const detected = detection?.detected;
 
   return (
@@ -439,8 +496,8 @@ export function CatalogImportDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-3 grid grid-cols-4 gap-2 text-xs">
-          {(['Source', 'Detect & route', 'Options', 'Import'] as const).map((label, idx) => (
+        <div className="mt-3 grid grid-cols-5 gap-2 text-xs">
+          {STEP_LABELS.map((label, idx) => (
             <div
               key={label}
               className={`rounded-full border px-3 py-1.5 text-center ${
@@ -722,7 +779,8 @@ export function CatalogImportDialog({
                 <div className="font-medium">Store in catalog</div>
                 <div className="text-sm">
                   This source will be kept verbatim as {adapter?.label}. It will not create a
-                  Project or auto-convert to OpenAPI.
+                  Project or auto-convert to OpenAPI. Continue to review its quality score before
+                  anything is written.
                 </div>
               </Alert>
             )}
@@ -765,6 +823,23 @@ export function CatalogImportDialog({
           </div>
         )}
 
+        {step === 'quality' && (
+          <CatalogImportQualityStep
+            documentBase64={documentBase64 ?? toBase64(content)}
+            label={fileName || 'Imported source'}
+            sourceKind={commitSourceKind}
+            inputKind={sourceMethod}
+            url={sourceMethod === 'url' ? fileName : null}
+            rawSource={content}
+            autoAdvance={skipQualityStep}
+            skipPreference={skipQualityStep}
+            onSkipPreferenceChange={handleSkipPreferenceChange}
+            onCommit={handleQualityCommit}
+            onBack={() => setStep('options')}
+            onCancel={handleClose}
+          />
+        )}
+
         {step === 'import' && (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
             {state === 'done' ? (
@@ -785,36 +860,40 @@ export function CatalogImportDialog({
           </div>
         )}
 
-        <div className="mt-4 flex justify-between gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
-          <Button variant="outline" onClick={handleClose} disabled={state === 'storing'}>
-            {state === 'done' ? 'Close' : 'Cancel'}
-          </Button>
-          <div className="flex gap-2">
-            {step !== 'source' && step !== 'import' && (
-              <Button variant="outline" onClick={() => setStep(step === 'options' ? 'detect' : 'source')}>
-                Back
-              </Button>
-            )}
-            {step === 'detect' && (
-              <Button onClick={() => setStep('options')} disabled={!canContinueFromDetect || adapterUnavailable}>
-                Continue
-              </Button>
-            )}
-            {step === 'options' && routing.destination === 'catalog' && (
-              <Button onClick={handleStoreCatalog} disabled={!canStoreCatalog || state === 'storing'}>
-                Store in catalog
-              </Button>
-            )}
-            {step === 'options' && routing.destination === 'json-schema-choice' && (
-              <Button onClick={handleJsonSchemaChoice}>
-                Continue
-              </Button>
-            )}
-            {step === 'import' && state === 'done' && (
-              <Button onClick={handleClose}>Done</Button>
-            )}
+        {/* The quality step owns its own footer so all three of its exits — Cancel, Import anyway,
+            Import — sit on one row with the gate that governs them (IXH-2.2). */}
+        {step !== 'quality' && (
+          <div className="mt-4 flex justify-between gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
+            <Button variant="outline" onClick={handleClose} disabled={state === 'storing'}>
+              {state === 'done' ? 'Close' : 'Cancel'}
+            </Button>
+            <div className="flex gap-2">
+              {step !== 'source' && step !== 'import' && (
+                <Button variant="outline" onClick={() => setStep(step === 'options' ? 'detect' : 'source')}>
+                  Back
+                </Button>
+              )}
+              {step === 'detect' && (
+                <Button onClick={() => setStep('options')} disabled={!canContinueFromDetect || adapterUnavailable}>
+                  Continue
+                </Button>
+              )}
+              {step === 'options' && (routing.destination === 'catalog' || routing.destination === 'json-schema-choice') && (
+                <Button
+                  onClick={handleContinueFromOptions}
+                  disabled={
+                    routing.destination === 'catalog' && (!canStoreCatalog || state === 'storing')
+                  }
+                >
+                  Continue
+                </Button>
+              )}
+              {step === 'import' && state === 'done' && (
+                <Button onClick={handleClose}>Done</Button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );

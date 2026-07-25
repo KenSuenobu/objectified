@@ -407,8 +407,10 @@ def _policy_verdict(lint: Optional[LintReport]) -> ImportPreflightPolicy:
 
     Deliberately a no-op: until tenant quality policy exists, nothing may be blocked on
     quality grounds, so every verdict is ``pass`` / non-blocking regardless of the score.
-    The ``lint`` argument is accepted (and ignored) so 2.3 can implement the real
-    thresholds here without changing a single call site.
+    ``allow_override`` is true for the same reason — there is no gate to override, so no
+    client may conclude that overriding is forbidden. The ``lint`` argument is accepted
+    (and ignored) so 2.3 can implement the real thresholds here without changing a single
+    call site.
     """
     _ = lint
     return ImportPreflightPolicy(
@@ -417,6 +419,7 @@ def _policy_verdict(lint: Optional[LintReport]) -> ImportPreflightPolicy:
         source="default",
         reason=_POLICY_PLACEHOLDER_REASON,
         threshold_score=None,
+        allow_override=True,
     )
 
 

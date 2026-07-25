@@ -176,6 +176,22 @@ def test_preflight_route_returns_a_full_report():
     assert body["cache"]["content_hash"]
 
 
+def test_preflight_policy_permits_override_while_nothing_blocks():
+    """The advisory verdict must never read as "override forbidden" (IXH-2.2).
+
+    The wizard's quality step only offers an "Import anyway" waiver path when policy
+    permits an override, so the placeholder verdict has to say so explicitly.
+    """
+    response = client.post(
+        f"/v1/tenants/{TENANT_SLUG}/import/preflight",
+        json={"document_base64": _b64(GRAPHQL_DOC), "filename": "schema.graphql"},
+    )
+    assert response.status_code == 200, response.text
+    policy = response.json()["policy"]
+    assert policy["blocking"] is False
+    assert policy["allow_override"] is True
+
+
 def test_preflight_rejects_unknown_request_fields():
     response = client.post(
         f"/v1/tenants/{TENANT_SLUG}/import/preflight",

@@ -5,6 +5,17 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.176.0] - 2026-07-25
+
+### Added
+- **Pre-flight policy override flag (#5097, IXH-2.2)** — `ImportPreflightPolicy`
+  gained `allow_override`, which states whether a user may commit anyway against a
+  blocking verdict by recording a waiver. Only meaningful when `blocking` is true;
+  `false` means the gate is absolute and a client must not offer an override path.
+  The placeholder verdict returns `true` (nothing blocks yet), so the import
+  wizard's quality step never renders "override forbidden" for a policy that does
+  not exist. IXH-2.3 populates it from tenant policy.
+
 ## [1.175.0] - 2026-07-25
 
 ### Added
