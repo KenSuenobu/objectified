@@ -12,13 +12,17 @@ from apiome_cli.output import ListColumn, emit_json, emit_list_table
 GRADE_ORDER = ("A", "B", "C", "D", "F")
 
 
-def grade_rank(grade: str) -> int:
-    """Return the rank of ``grade`` (0 = best). Unknown grades rank worst."""
-    grade = (grade or "").strip().upper()
-    return GRADE_ORDER.index(grade) if grade in GRADE_ORDER else len(GRADE_ORDER)
+def grade_rank(grade: str | None) -> int:
+    """Return the rank of ``grade`` (0 = best).
+
+    An unknown, empty, or missing grade ranks **worst** — an unscored report must never
+    satisfy a ``--min-grade`` gate by being absent.
+    """
+    normalized = (grade or "").strip().upper()
+    return GRADE_ORDER.index(normalized) if normalized in GRADE_ORDER else len(GRADE_ORDER)
 
 
-def grade_meets_minimum(grade: str, minimum: str) -> bool:
+def grade_meets_minimum(grade: str | None, minimum: str) -> bool:
     """True when ``grade`` is at least as good as ``minimum`` (A best, F worst)."""
     return grade_rank(grade) <= grade_rank(minimum)
 

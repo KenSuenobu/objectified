@@ -89,10 +89,35 @@ from apiome_cli.output import (
     json_mode_from_context,
     merge_import_warnings,
 )
+from apiome_cli.preflight import (
+    FAIL_ON_HELP,
+    GATE_EXIT_CODE_HELP,
+    MIN_GRADE_HELP,
+    evaluate_import_gate,
+)
+from apiome_cli.client.preflight import build_import_preflight_body, fetch_import_preflight
+from apiome_cli.preflight_runner import (
+    coerce_gate_flags,
+    emit_import_preflight,
+    enforce_gate,
+    gate_import_before_job,
+)
 
 _REST_IMPORT_NOT_SUPPORTED = (
     "This import command is not supported via the /v1 REST API yet."
 )
+
+# The import-source *registry* key both OpenAPI and Swagger documents pre-flight against.
+# The spec-import job takes the legacy discriminators (``openapi-3`` / ``swagger-2``), which the
+# registry does not know; the pre-flight resolves ``source_kind`` through the adapter registry, so
+# forwarding a legacy value there would report FORMAT_UNRECOGNIZED for a perfectly good document.
+_OPENAPI_REGISTRY_KEY = "openapi"
+
+# Source-selection help shared by the registry-dispatch import (``import <format> <input>``)
+# and the pre-flight command, so both describe the same INPUT/--file/--url contract.
+_GENERIC_DRY_RUN_HELP = "Validate and preview the import without persisting changes."
+_GENERIC_FILE_HELP = "Local document path to import (alternative to the INPUT argument)."
+_GENERIC_URL_HELP = "http/https document URL to import (alternative to the INPUT argument)."
 
 PROJECT_NAME_FIELD_HELP = (
     "Dot path or JSON Pointer for the field used as the project name "
@@ -436,6 +461,116 @@ def _resolve_import_timeout(
     return import_timeout_from_context(ctx)
 
 
+@app.command(
+    "preflight",
+    help=(
+        "Score a candidate document before importing it — lint grade, ranked findings, and "
+        "the tenant quality-policy verdict. Nothing is persisted and no import job is "
+        f"created. {GATE_EXIT_CODE_HELP}"
+    ),
+)
+def import_preflight(
+    ctx: typer.Context,
+    source: str | None = typer.Argument(
+        None,
+        metavar="INPUT",
+        help="Document path, http/https URL, or '-' for stdin.",
+    ),
+    file_path: str | None = typer.Option(
+        None,
+        "--file",
+        metavar="PATH",
+        help=_GENERIC_FILE_HELP,
+    ),
+    url: str | None = typer.Option(
+        None,
+        "--url",
+        metavar="URL",
+        help=_GENERIC_URL_HELP,
+    ),
+    source_format: str | None = typer.Option(
+        None,
+        "--format",
+        metavar="KEY",
+        help=(
+            "Registry key of the adapter to score against (``source_kind``). "
+            "Omit to auto-detect; the detection verdict is reported either way."
+        ),
+    ),
+    archive_root: str | None = typer.Option(
+        None,
+        "--root",
+        metavar="PATH",
+        help="Root document path inside a .zip/.tar.gz archive (MFI-29.1).",
+    ),
+    import_target: str | None = typer.Option(
+        None,
+        "--target",
+        help=(
+            "Destination a commit would request: catalog, types, or project. "
+            "Consulted only for JSON Schema, exactly as on the import job."
+        ),
+    ),
+    min_grade: str | None = typer.Option(None, "--min-grade", help=MIN_GRADE_HELP),
+    fail_on: str | None = typer.Option(None, "--fail-on", help=FAIL_ON_HELP),
+) -> None:
+    """Pre-flight one candidate document (``POST …/import/preflight``).
+
+    Runs the same detect → parse → normalize → fingerprint → lint pipeline a real import
+    runs, with dry-run semantics, and reports the verdict. ``--json`` (global flag) emits the
+    API's report verbatim so CI can consume it; without it the report is a readable summary
+    plus the ranked findings table.
+
+    A candidate that cannot be imported is not an error from the API's point of view — it is
+    a successful pre-flight whose answer is "do not import this" — so the command reports the
+    intake-taxonomy error code and exits ``EXIT_PREFLIGHT_UNUSABLE``.
+    """
+    min_grade, fail_on = coerce_gate_flags(min_grade, fail_on)
+    if import_target is not None and import_target.strip().lower() not in {
+        "catalog",
+        "types",
+        "project",
+    }:
+        raise typer.BadParameter(
+            "must be one of catalog, types, project", param_hint="--target"
+        )
+
+    settings = settings_from_context(ctx)
+    require_api_key(settings)
+    resolved_source = _resolve_generic_source(source, file_path, url)
+    timeout = _resolve_import_timeout(ctx, None)
+    verify = not insecure_from_context(ctx)
+
+    client = RestClient(settings, timeout=timeout, verify=verify)
+
+    try:
+        raw_bytes, filename = load_document_bytes(
+            resolved_source,
+            timeout=timeout,
+            verify=verify,
+        )
+    except OSError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(EXIT_USAGE) from exc
+
+    is_url = not is_local_file_source(resolved_source) and resolved_source != "-"
+    body = build_import_preflight_body(
+        raw_bytes,
+        source_kind=source_format,
+        filename=filename or source_basename(resolved_source) or None,
+        url=resolved_source if is_url else None,
+        input_kind="url" if is_url else ("paste" if resolved_source == "-" else "file"),
+        import_target=import_target.strip().lower() if import_target else None,
+        archive_root=archive_root,
+    )
+
+    tenant_slug = require_tenant_slug(settings, client)
+    report = fetch_import_preflight(client, tenant_slug, body)
+
+    emit_import_preflight(report, json_mode=json_mode_from_context(ctx))
+    enforce_gate(evaluate_import_gate(report, min_grade=min_grade, fail_on=fail_on))
+
+
 def _run_openapi_import(
     ctx: typer.Context,
     *,
@@ -455,12 +590,15 @@ def _run_openapi_import(
     progress_label: str,
     attempted: str = "openapi",
     import_timeout_override: float | None = None,
+    min_grade: str | None = None,
+    fail_on: str | None = None,
 ) -> None:
     settings = settings_from_context(ctx)
     require_api_key(settings)
 
     # Resolve before uploading so invalid --publish/--visibility input fails fast.
     publish_visibility = _coerce_publish_visibility(publish=publish, visibility=visibility)
+    min_grade, fail_on = coerce_gate_flags(min_grade, fail_on)
 
     import_timeout = _resolve_import_timeout(ctx, import_timeout_override)
     no_progress = no_progress_from_context(ctx)
@@ -530,6 +668,22 @@ def _run_openapi_import(
         dry_run=dry_run,
     )
 
+    # The exact bytes the import submits, so the pre-flight grades the document that would
+    # actually be imported (after --project-name/--version overrides, not before).
+    file_bytes = document_bytes_from_spec(spec, filename=upload_name)
+    gate_import_before_job(
+        client,
+        tenant_slug,
+        document_bytes=file_bytes,
+        min_grade=min_grade,
+        fail_on=fail_on,
+        source_kind=_OPENAPI_REGISTRY_KEY,
+        filename=upload_name,
+        content_type="application/json",
+        url=path if not is_local_file_source(path) and path != "-" else None,
+        input_kind="file" if is_local_file_source(path) else None,
+    )
+
     if not no_progress:
         target_label = _format_openapi_import_target(
             spec,
@@ -551,7 +705,6 @@ def _run_openapi_import(
 
     import_started_at = time.monotonic()
     if use_multipart:
-        file_bytes = document_bytes_from_spec(spec, filename=upload_name)
         response = post_spec_import_multipart(
             client,
             tenant_slug,
@@ -560,7 +713,6 @@ def _run_openapi_import(
             filename=upload_name,
         )
     else:
-        file_bytes = document_bytes_from_spec(spec, filename=upload_name)
         body = build_spec_import_json_body(
             file_bytes,
             metadata,
@@ -699,6 +851,8 @@ def import_openapi(
         min=1.0,
         help=_IMPORT_TIMEOUT_HELP,
     ),
+    min_grade: str | None = typer.Option(None, "--min-grade", help=MIN_GRADE_HELP),
+    fail_on: str | None = typer.Option(None, "--fail-on", help=FAIL_ON_HELP),
 ) -> None:
     """Import an OpenAPI document from a file, URL, or stdin."""
     _run_openapi_import(
@@ -719,6 +873,8 @@ def import_openapi(
         progress_label="OpenAPI",
         attempted="openapi",
         import_timeout_override=import_timeout,
+        min_grade=min_grade,
+        fail_on=fail_on,
     )
 
 
@@ -799,6 +955,8 @@ def import_swagger(
         min=1.0,
         help=_IMPORT_TIMEOUT_HELP,
     ),
+    min_grade: str | None = typer.Option(None, "--min-grade", help=MIN_GRADE_HELP),
+    fail_on: str | None = typer.Option(None, "--fail-on", help=FAIL_ON_HELP),
 ) -> None:
     """Import a Swagger 2.0 document from a file, URL, or stdin."""
     _run_openapi_import(
@@ -819,6 +977,8 @@ def import_swagger(
         progress_label="Swagger",
         attempted="swagger",
         import_timeout_override=import_timeout,
+        min_grade=min_grade,
+        fail_on=fail_on,
     )
 
 
@@ -1210,6 +1370,8 @@ def import_auto(
         min=1.0,
         help=_IMPORT_TIMEOUT_HELP,
     ),
+    min_grade: str | None = typer.Option(None, "--min-grade", help=MIN_GRADE_HELP),
+    fail_on: str | None = typer.Option(None, "--fail-on", help=FAIL_ON_HELP),
 ) -> None:
     """Detect document format from headers and run the matching import."""
     import_timeout_override = import_timeout
@@ -1261,6 +1423,8 @@ def import_auto(
             progress_label="Swagger" if command == "swagger" else "OpenAPI",
             attempted=command,
             import_timeout_override=import_timeout_override,
+            min_grade=min_grade,
+            fail_on=fail_on,
         )
         return
 
@@ -1312,11 +1476,6 @@ def import_auto(
 # Generic registry dispatch: ``apiome import <format> <input>`` (MFI-1.4)
 # ---------------------------------------------------------------------------
 
-_GENERIC_DRY_RUN_HELP = "Validate and preview the import without persisting changes."
-_GENERIC_FILE_HELP = "Local document path to import (alternative to the INPUT argument)."
-_GENERIC_URL_HELP = "http/https document URL to import (alternative to the INPUT argument)."
-
-
 def _build_generic_import_command(source_format: str) -> click.Command:
     """Build a Click command that imports ``source_format`` via the registry seam.
 
@@ -1367,6 +1526,8 @@ def _build_generic_import_command(source_format: str) -> click.Command:
         default=DEFAULT_POLL_INTERVAL,
         help="Seconds between import job-status polls when waiting.",
     )
+    @click.option("--min-grade", "min_grade", default=None, help=MIN_GRADE_HELP)
+    @click.option("--fail-on", "fail_on", default=None, help=FAIL_ON_HELP)
     def _generic(
         source: str | None,
         file_path: str | None,
@@ -1376,6 +1537,8 @@ def _build_generic_import_command(source_format: str) -> click.Command:
         import_timeout: float | None,
         wait: bool,
         poll_interval: float,
+        min_grade: str | None,
+        fail_on: str | None,
     ) -> None:
         _run_generic_adapter_import(
             click.get_current_context(),
@@ -1388,6 +1551,8 @@ def _build_generic_import_command(source_format: str) -> click.Command:
             import_timeout_override=import_timeout,
             wait=wait,
             poll_interval=poll_interval,
+            min_grade=min_grade,
+            fail_on=fail_on,
         )
 
     return _generic
@@ -1433,6 +1598,8 @@ def _run_generic_adapter_import(
     import_timeout_override: float | None,
     wait: bool,
     poll_interval: float,
+    min_grade: str | None = None,
+    fail_on: str | None = None,
 ) -> None:
     """Resolve ``source_format`` against the registry and run the adapter import.
 
@@ -1442,6 +1609,7 @@ def _run_generic_adapter_import(
     """
     settings = settings_from_context(ctx)
     require_api_key(settings)
+    min_grade, fail_on = coerce_gate_flags(min_grade, fail_on)
     resolved_source = _resolve_generic_source(source, file_path, url)
     import_timeout = _resolve_import_timeout(ctx, import_timeout_override)
     no_progress = no_progress_from_context(ctx)
@@ -1476,6 +1644,20 @@ def _run_generic_adapter_import(
     )
 
     tenant_slug = require_tenant_slug(settings, client)
+
+    is_url = not is_local_file_source(resolved_source) and resolved_source != "-"
+    gate_import_before_job(
+        client,
+        tenant_slug,
+        document_bytes=raw_bytes,
+        min_grade=min_grade,
+        fail_on=fail_on,
+        source_kind=source_format,
+        filename=source_label,
+        url=resolved_source if is_url else None,
+        input_kind="url" if is_url else ("paste" if resolved_source == "-" else "file"),
+        archive_root=archive_root,
+    )
 
     if not no_progress:
         typer.echo(
