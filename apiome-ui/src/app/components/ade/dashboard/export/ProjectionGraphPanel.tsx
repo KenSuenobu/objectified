@@ -28,11 +28,16 @@ import {
   entryAriaLabel,
   projectionGraphLayout,
   statusPresentation,
-  type PlacedEntry,
   type ProjectionEvidenceRow,
   type ProjectionGraphLayout,
   type ProjectionViewEntry,
 } from './projectionGraph';
+import {
+  ProjectionColumnHeading,
+  ProjectionEntryConnectors,
+  ProjectionNodeBox,
+  ProjectionOutcomeBox,
+} from './projectionGraphSvg';
 import { useCapabilityReasons } from './useCapabilityReasons';
 import { useProjectionEvidence } from './useProjectionEvidence';
 import { trackProjectionMetric } from './projectionMetrics';
@@ -480,9 +485,9 @@ function ProjectionGraphSvg({
         className="block"
       >
         {/* Column headings. */}
-        <ColumnHeading x={layout.columns.source} label="Source" />
-        <ColumnHeading x={layout.columns.canonical} label="Canonical" />
-        <ColumnHeading x={layout.columns.outcome} label="Destination" />
+        <ProjectionColumnHeading x={layout.columns.source} label="Source" />
+        <ProjectionColumnHeading x={layout.columns.canonical} label="Canonical" />
+        <ProjectionColumnHeading x={layout.columns.outcome} label="Destination" />
 
         {/* Lane headings + separators. */}
         {layout.lanes.map((lane) => (
@@ -499,7 +504,7 @@ function ProjectionGraphSvg({
 
         {/* Connectors under the node boxes. */}
         {layout.entries.map((placed) => (
-          <EntryConnectors key={placed.entry.key} placed={placed} />
+          <ProjectionEntryConnectors key={placed.entry.key} placed={placed} />
         ))}
 
         {/* Node bands (focusable, selectable). */}
@@ -526,15 +531,25 @@ function ProjectionGraphSvg({
               className="cursor-pointer outline-none"
             >
               {placed.sourceBox && (
-                <NodeBox
+                <ProjectionNodeBox
                   box={placed.sourceBox}
                   label={entry.row?.sourceLabel ?? ''}
                   mono
                   muted
                 />
               )}
-              <NodeBox box={placed.canonicalBox} label={entry.label} mono selected={isSelected} />
-              <OutcomeBox placed={placed} presentation={p} selected={isSelected} />
+              <ProjectionNodeBox
+                box={placed.canonicalBox}
+                label={entry.label}
+                mono
+                selected={isSelected}
+              />
+              <ProjectionOutcomeBox
+                box={placed.outcomeBox}
+                presentation={p}
+                selected={isSelected}
+                location={outcomeLocation(entry)}
+              />
             </g>
           );
         })}
@@ -543,141 +558,13 @@ function ProjectionGraphSvg({
   );
 }
 
-/** A column heading text element. */
-function ColumnHeading({ x, label }: { x: number; label: string }) {
-  return (
-    <text
-      x={x}
-      y={10}
-      aria-hidden
-      className="fill-gray-400 text-[10px] font-semibold uppercase tracking-wide dark:fill-gray-500"
-    >
-      {label}
-    </text>
-  );
-}
-
-/** The derives (source→canonical) and projects (canonical→destination) connector lines. */
-function EntryConnectors({ placed }: { placed: PlacedEntry }) {
-  const p = statusPresentation(placed.entry.status);
-  const midY = placed.canonicalBox.y + placed.canonicalBox.height / 2;
-  return (
-    <g aria-hidden>
-      {placed.sourceBox && (
-        <line
-          x1={placed.sourceBox.x + placed.sourceBox.width}
-          y1={midY}
-          x2={placed.canonicalBox.x}
-          y2={midY}
-          strokeWidth={1.5}
-          className="stroke-gray-300 dark:stroke-gray-600"
-        />
-      )}
-      <line
-        x1={placed.canonicalBox.x + placed.canonicalBox.width}
-        y1={midY}
-        x2={placed.outcomeBox.x}
-        y2={midY}
-        strokeWidth={2}
-        strokeDasharray={p.dashArray ?? undefined}
-        className={p.strokeClass}
-      />
-    </g>
-  );
-}
-
-/** Truncate a label to what fits one node box (the full text lives in the aria-label/table). */
-function fitLabel(label: string, max = 26): string {
-  return label.length > max ? `${label.slice(0, max - 1)}…` : label;
-}
-
-/** One plain node box (source or canonical column). */
-function NodeBox({
-  box,
-  label,
-  mono = false,
-  muted = false,
-  selected = false,
-}: {
-  box: { x: number; y: number; width: number; height: number };
-  label: string;
-  mono?: boolean;
-  muted?: boolean;
-  selected?: boolean;
-}) {
-  return (
-    <g>
-      <rect
-        x={box.x}
-        y={box.y}
-        width={box.width}
-        height={box.height}
-        rx={6}
-        strokeWidth={selected ? 2 : 1}
-        className={`${
-          selected
-            ? 'stroke-indigo-500 dark:stroke-indigo-400'
-            : 'stroke-gray-300 dark:stroke-gray-600'
-        } fill-white dark:fill-gray-900 motion-safe:transition-colors`}
-      />
-      <text
-        x={box.x + 8}
-        y={box.y + box.height / 2 + 3.5}
-        className={`${mono ? 'font-mono' : ''} text-[11px] ${
-          muted ? 'fill-gray-500 dark:fill-gray-400' : 'fill-gray-900 dark:fill-gray-100'
-        }`}
-      >
-        {fitLabel(label)}
-      </text>
-    </g>
-  );
-}
-
-/** The destination-column box: status symbol + label, plus the landing location when present. */
-function OutcomeBox({
-  placed,
-  presentation,
-  selected,
-}: {
-  placed: PlacedEntry;
-  presentation: ReturnType<typeof statusPresentation>;
-  selected: boolean;
-}) {
-  const { entry, outcomeBox: box } = placed;
-  const location = entry.kind === 'row' ? entry.row?.targetLocation ?? entry.row?.targetLabel : null;
-  const heading = `${presentation.symbol} ${presentation.label}`;
-  return (
-    <g>
-      <rect
-        x={box.x}
-        y={box.y}
-        width={box.width}
-        height={box.height}
-        rx={6}
-        strokeWidth={selected ? 2.5 : 1.5}
-        strokeDasharray={presentation.dashArray ?? undefined}
-        className={`${
-          selected ? 'stroke-indigo-500 dark:stroke-indigo-400' : presentation.strokeClass
-        } fill-white dark:fill-gray-900 motion-safe:transition-colors`}
-      />
-      <text
-        x={box.x + 8}
-        y={box.y + (location ? 12.5 : box.height / 2 + 3.5)}
-        className="fill-gray-900 text-[10px] font-semibold dark:fill-gray-100"
-      >
-        {fitLabel(heading)}
-      </text>
-      {location && (
-        <text
-          x={box.x + 8}
-          y={box.y + 24}
-          className="fill-gray-500 font-mono text-[9px] dark:fill-gray-400"
-        >
-          {fitLabel(location, 32)}
-        </text>
-      )}
-    </g>
-  );
+/**
+ * Where an entry's outcome box prints its landing location: the destination pointer, else
+ * the destination node's label. Aggregates (many constructs in one box) print none.
+ */
+function outcomeLocation(entry: ProjectionViewEntry): string | null {
+  if (entry.kind !== 'row') return null;
+  return entry.row?.targetLocation ?? entry.row?.targetLabel ?? null;
 }
 
 interface ProjectionTableProps {

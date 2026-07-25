@@ -24,7 +24,8 @@
  *
  * The view model, lanes, and layout come from `importProjectionGraph.ts`, which reuses
  * the export projection-map primitives (`../export/projectionGraph.ts`) — shared, not
- * duplicated, per the IXH-3.3 acceptance criterion.
+ * duplicated, per the IXH-3.3 acceptance criterion; the SVG marks themselves come from
+ * `../export/projectionGraphSvg.tsx`, shared with both export maps (IXH-4.2).
  *
  * Bounds (IXH-3.6, #5108 — budgets live in `preview-budgets.ts`):
  *
@@ -42,7 +43,14 @@
 import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { cn } from '@lib/utils';
 import type { ProjectionEdge, ProjectionNode } from '../export/projectionEvidence';
-import type { PlacedEntry, StatusPresentation } from '../export/projectionGraph';
+import type { StatusPresentation } from '../export/projectionGraph';
+import {
+  ProjectionColumnHeading,
+  ProjectionEntryConnectors,
+  ProjectionFocusRing,
+  ProjectionNodeBox,
+  ProjectionOutcomeBox,
+} from '../export/projectionGraphSvg';
 import {
   buildImportEvidenceRows,
   buildImportProjectionView,
@@ -389,9 +397,9 @@ export function CatalogImportProjectionGraph({
           viewBox={`0 0 ${layout.width} ${layout.height}`}
           className="block"
         >
-          <ColumnHeading x={layout.columns.source} label="Source construct" />
-          <ColumnHeading x={layout.columns.canonical} label="Canonical entity" />
-          <ColumnHeading x={layout.columns.outcome} label="Outcome" />
+          <ProjectionColumnHeading x={layout.columns.source} label="Source construct" />
+          <ProjectionColumnHeading x={layout.columns.canonical} label="Canonical entity" />
+          <ProjectionColumnHeading x={layout.columns.outcome} label="Outcome" />
 
           {layout.lanes.map((lane) => (
             <g key={lane.key} aria-hidden>
@@ -406,7 +414,7 @@ export function CatalogImportProjectionGraph({
           ))}
 
           {layout.entries.map((placed) => (
-            <EntryConnectors key={placed.entry.key} placed={placed} />
+            <ProjectionEntryConnectors key={placed.entry.key} placed={placed} />
           ))}
 
           {layout.entries.map((placed, index) => {
@@ -437,28 +445,27 @@ export function CatalogImportProjectionGraph({
               >
                 {/* Visible keyboard-focus outline (WCAG 2.4.7) — outline-none removes the UA's. */}
                 {focusedNodeKey === entry.key && (
-                  <rect
-                    data-testid="import-projection-focus-ring"
-                    x={(placed.sourceBox ?? placed.canonicalBox).x - 3}
-                    y={placed.canonicalBox.y - 3}
-                    width={
-                      placed.outcomeBox.x +
-                      placed.outcomeBox.width -
-                      (placed.sourceBox ?? placed.canonicalBox).x +
-                      6
-                    }
-                    height={placed.canonicalBox.height + 6}
-                    rx={8}
-                    fill="none"
-                    strokeWidth={2}
-                    className="stroke-indigo-500 dark:stroke-indigo-400"
-                  />
+                  <ProjectionFocusRing placed={placed} testId="import-projection-focus-ring" />
                 )}
                 {placed.sourceBox && (
-                  <NodeBox box={placed.sourceBox} label={entry.row?.sourceLabel ?? ''} mono muted />
+                  <ProjectionNodeBox
+                    box={placed.sourceBox}
+                    label={entry.row?.sourceLabel ?? ''}
+                    mono
+                    muted
+                  />
                 )}
-                <NodeBox box={placed.canonicalBox} label={entry.label} mono selected={isSelected} />
-                <OutcomeBox box={placed.outcomeBox} presentation={p} selected={isSelected} />
+                <ProjectionNodeBox
+                  box={placed.canonicalBox}
+                  label={entry.label}
+                  mono
+                  selected={isSelected}
+                />
+                <ProjectionOutcomeBox
+                  box={placed.outcomeBox}
+                  presentation={p}
+                  selected={isSelected}
+                />
               </g>
             );
           })}
@@ -537,131 +544,6 @@ function SectionHeading() {
     <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
       What the source lost coming in
     </h4>
-  );
-}
-
-/** A column heading text element. */
-function ColumnHeading({ x, label }: { x: number; label: string }) {
-  return (
-    <text
-      x={x}
-      y={10}
-      aria-hidden
-      className="fill-gray-400 text-[10px] font-semibold uppercase tracking-wide dark:fill-gray-500"
-    >
-      {label}
-    </text>
-  );
-}
-
-/** The source→canonical and canonical→outcome connector lines (status-patterned). */
-function EntryConnectors({ placed }: { placed: PlacedEntry<ImportFamilyKey> }) {
-  const p = statusPresentation(placed.entry.status);
-  const midY = placed.canonicalBox.y + placed.canonicalBox.height / 2;
-  return (
-    <g aria-hidden>
-      {placed.sourceBox && (
-        <line
-          x1={placed.sourceBox.x + placed.sourceBox.width}
-          y1={midY}
-          x2={placed.canonicalBox.x}
-          y2={midY}
-          strokeWidth={1.5}
-          className="stroke-gray-300 dark:stroke-gray-600"
-        />
-      )}
-      <line
-        x1={placed.canonicalBox.x + placed.canonicalBox.width}
-        y1={midY}
-        x2={placed.outcomeBox.x}
-        y2={midY}
-        strokeWidth={2}
-        strokeDasharray={p.dashArray ?? undefined}
-        className={p.strokeClass}
-      />
-    </g>
-  );
-}
-
-/** Truncate a label to what fits one node box (the full text lives in the aria-label/table). */
-function fitLabel(label: string, max = 26): string {
-  return label.length > max ? `${label.slice(0, max - 1)}…` : label;
-}
-
-/** One plain node box (source or canonical column). */
-function NodeBox({
-  box,
-  label,
-  mono = false,
-  muted = false,
-  selected = false,
-}: {
-  box: { x: number; y: number; width: number; height: number };
-  label: string;
-  mono?: boolean;
-  muted?: boolean;
-  selected?: boolean;
-}) {
-  return (
-    <g>
-      <rect
-        x={box.x}
-        y={box.y}
-        width={box.width}
-        height={box.height}
-        rx={6}
-        strokeWidth={selected ? 2 : 1}
-        className={`${
-          selected
-            ? 'stroke-indigo-500 dark:stroke-indigo-400'
-            : 'stroke-gray-300 dark:stroke-gray-600'
-        } fill-white dark:fill-gray-900 motion-safe:transition-colors`}
-      />
-      <text
-        x={box.x + 8}
-        y={box.y + box.height / 2 + 3.5}
-        className={`${mono ? 'font-mono' : ''} text-[11px] ${
-          muted ? 'fill-gray-500 dark:fill-gray-400' : 'fill-gray-900 dark:fill-gray-100'
-        }`}
-      >
-        {fitLabel(label)}
-      </text>
-    </g>
-  );
-}
-
-/** The outcome-column box: status symbol + label, dash-patterned like its connector. */
-function OutcomeBox({
-  box,
-  presentation,
-  selected,
-}: {
-  box: { x: number; y: number; width: number; height: number };
-  presentation: StatusPresentation;
-  selected: boolean;
-}) {
-  return (
-    <g>
-      <rect
-        x={box.x}
-        y={box.y}
-        width={box.width}
-        height={box.height}
-        rx={6}
-        strokeWidth={selected ? 2.5 : 1.5}
-        strokeDasharray={presentation.dashArray ?? undefined}
-        className={`${
-          selected ? 'stroke-indigo-500 dark:stroke-indigo-400' : presentation.strokeClass
-        } fill-white dark:fill-gray-900 motion-safe:transition-colors`}
-      />
-      <text
-        x={box.x + 8}
-        y={box.y + box.height / 2 + 3.5}
-        className="fill-gray-900 text-[10px] font-semibold dark:fill-gray-100"
-      >
-        {fitLabel(`${presentation.symbol} ${presentation.label}`)}
-      </text>
-    </g>
   );
 }
 

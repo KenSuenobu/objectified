@@ -1022,6 +1022,47 @@ describe('ExportStudio — Verify workbench gate + generate (MFX-42.1)', () => {
     // The tree row reflects the shared selection.
     expect(timestampRow).toHaveAttribute('aria-selected', 'true');
   });
+
+  it('maps every canonical entity to the artifact beside the explorer (IXH-4.2)', async () => {
+    await advanceToVerify(mockFetch({ bundle: true }), 'proto');
+    await runVerification();
+    fireEvent.click(within(screen.getByTestId('verify-panel-fidelity')).getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: /continue to review/i }));
+    fireEvent.click(screen.getByTestId('export-studio-generate'));
+    await screen.findByTestId('bundle-explorer');
+
+    // The mapping graph reads the same manifest walk the explorer does.
+    const graph = await screen.findByTestId('export-mapping-graph');
+    await waitFor(() =>
+      expect(
+        graph.querySelectorAll('[data-testid^="export-mapping-table-row-"]'),
+      ).toHaveLength(3),
+    );
+
+    // The dropped channel is laned out of the target, with its reason spelled out.
+    const droppedRow = within(graph).getByTestId('export-mapping-table-row-entity:pet/created');
+    expect(droppedRow).toHaveTextContent('Dropped');
+    expect(droppedRow).toHaveTextContent('destination_unsupported');
+    expect(droppedRow).toHaveTextContent(/omitted from the destination/i);
+
+    // AC: the graph's statuses reconcile with the fidelity report for this same job.
+    expect(within(graph).getByTestId('export-mapping-reconciled')).toHaveTextContent(
+      '3 canonical entities, 1 not carried by the artifact',
+    );
+
+    // Selection is the step's: picking a node opens that entity's bundle file, exactly as
+    // picking its explorer row does, and the drawer explains the same entity.
+    fireEvent.click(within(graph).getByTestId('export-mapping-node-entity:Timestamp'));
+    expect(screen.getByTestId('bundle-tab-google/protobuf/timestamp.proto')).toHaveAttribute(
+      'data-active',
+      'true',
+    );
+    const treeRow = within(screen.getByTestId('export-manifest-panel'))
+      .getAllByTestId('export-manifest-entity')
+      .find((row) => row.textContent?.includes('Timestamp'));
+    expect(treeRow).toHaveAttribute('aria-selected', 'true');
+    expect(within(graph).getByTestId('projection-detail')).toHaveTextContent('Timestamp');
+  });
 });
 
 describe('ExportStudio — job progress & failure recovery (MFX-46.2)', () => {

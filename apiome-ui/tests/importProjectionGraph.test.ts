@@ -172,6 +172,11 @@ describe('shared graph primitives (IXH-3.3 AC: shared, not duplicated)', () => {
     expect(importMod.sanitizeProjectionLabel).toBe(exportMod.sanitizeProjectionLabel);
     expect(importMod.viewStatusCounts).toBe(exportMod.viewStatusCounts);
     expect(importMod.projectionGraphLayout).toBe(exportMod.projectionGraphLayout);
+    // The draw budget and the table flattening moved to the shared module with IXH-4.2,
+    // so the export mapping graph bounds itself the same way; the import map reaches
+    // them through this re-export.
+    expect(importMod.selectDrawnGraphEntries).toBe(exportMod.selectDrawnGraphEntries);
+    expect(importMod.buildProjectionTableRows).toBe(exportMod.buildProjectionTableRows);
   });
 
   it('builds its view through the shared builder (same aggregation guarantees)', () => {

@@ -38,6 +38,7 @@ import { ProjectionGraphPanel } from './ProjectionGraphPanel';
 import { ArtifactPreviewCard } from './ArtifactPreviewCard';
 import { BundleExplorer } from './BundleExplorer';
 import { ExportManifestPanel } from './ExportManifestPanel';
+import { ExportMappingGraphPanel } from './ExportMappingGraphPanel';
 import { useExportPreviewManifest } from './useExportPreviewManifest';
 import type { EntityRevealRequest, ExportManifestEntity } from './exportPreviewManifest';
 import { OriginalSourceOption } from './OriginalSourceOption';
@@ -592,6 +593,37 @@ export function ExportStudio({
     setSelectedEntityKey(entity.key);
   }, []);
 
+  /** Clear the shared entity selection (IXH-4.2: closing the mapping evidence drawer). */
+  const clearEntitySelection = useCallback(() => {
+    setSelectedEntityKey(null);
+    setEntityReveal(null);
+  }, []);
+
+  /**
+   * The canonical → target mapping graph (IXH-4.2), rendered under whichever artifact
+   * viewer the Review step is showing. It reads the same manifest walk the explorer does,
+   * so the graph, the tree, and the code viewer describe one snapshot and share one
+   * selection: a node click reveals the entity in the code, a code-line click highlights
+   * the node. The drawer's remediation navigates back to Target/Options, which resets the
+   * verify, the acknowledgement, and any generated artifact.
+   */
+  const mappingGraph = selected ? (
+    <ExportMappingGraphPanel
+      page={manifestPage}
+      entities={manifestEntities}
+      loading={manifestLoading}
+      error={manifestError}
+      complete={manifestComplete}
+      onLoadMore={manifestLoadMore}
+      targetLabel={selected.entry.descriptor.label}
+      selectedEntityKey={selectedEntityKey}
+      onSelectEntity={selectEntity}
+      onClearSelection={clearEntitySelection}
+      onChangeTarget={() => setStep('target')}
+      onChangeOptions={() => setStep('options')}
+    />
+  ) : null;
+
   /** Whether the current step permits advancing to the next one. */
   const canAdvance = useMemo(() => {
     switch (step) {
@@ -851,6 +883,8 @@ export function ExportStudio({
                       onEntityLineClick={handleEntityLineClick}
                     />
                   </div>
+                  {/* IXH-4.2: what became of each canonical entity in this bundle. */}
+                  {mappingGraph}
                 </div>
               ) : emitted ? (
                 <div className="flex min-h-0 flex-col gap-2">
@@ -883,6 +917,8 @@ export function ExportStudio({
                       onEntityLineClick={handleEntityLineClick}
                     />
                   </div>
+                  {/* IXH-4.2: what became of each canonical entity in this document. */}
+                  {mappingGraph}
                 </div>
               ) : job && jobStatus ? (
                 jobCompleted ? (
