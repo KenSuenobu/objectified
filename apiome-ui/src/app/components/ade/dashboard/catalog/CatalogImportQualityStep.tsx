@@ -244,6 +244,10 @@ export function CatalogImportQualityStep({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
   const [justification, setJustification] = useState('');
+  // Waiver-grant state: the server decides whether this user may waive, so the override exit has
+  // its own in-flight and failure state separate from the pre-flight run.
+  const [waiving, setWaiving] = useState(false);
+  const [waiverError, setWaiverError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const rowRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const lineRef = useRef<HTMLLIElement | null>(null);
@@ -311,21 +315,46 @@ export function CatalogImportQualityStep({
     onCommit(null);
   }, [autoAdvance, loading, onCommit, report]);
 
+  /**
+   * Commit the import, recording a waiver first when the user is overriding a block.
+   *
+   * The waiver has to reach the tenant's server-side ledger *before* the commit, because the
+   * server enforces the same policy at the import endpoint (IXH-2.3) and matches the waiver on
+   * the candidate's content hash. A refused grant — a role the policy does not name, or an
+   * unreachable ledger — therefore stops here with the server's reason rather than sending a
+   * commit that the gate would reject anyway.
+   */
   const commit = useCallback(
-    (waiver: ImportQualityWaiver | null) => {
+    async (waiver: ImportQualityWaiver | null) => {
       if (committed.current) return;
+      if (waiver) {
+        setWaiverError(null);
+        setWaiving(true);
+        const outcomeOfGrant = await recordImportQualityWaiver(
+          waiver,
+          report?.policy?.format_key ?? report?.detection?.adapter_key ?? null,
+        );
+        setWaiving(false);
+        if (!outcomeOfGrant.recorded) {
+          setWaiverError(
+            outcomeOfGrant.error ?? 'The waiver could not be recorded, so the import was not started.',
+          );
+          return;
+        }
+      }
       committed.current = true;
-      if (waiver) recordImportQualityWaiver(waiver);
       onCommit(waiver);
     },
-    [onCommit],
+    [onCommit, report],
   );
 
-  const handleImport = useCallback(() => commit(null), [commit]);
+  const handleImport = useCallback(() => {
+    void commit(null);
+  }, [commit]);
 
   const handleImportAnyway = useCallback(() => {
     if (!report) return;
-    commit(
+    void commit(
       buildImportQualityWaiver(report, label, justification, new Date().toISOString()),
     );
   }, [commit, justification, label, report]);
@@ -501,8 +530,21 @@ export function CatalogImportQualityStep({
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Importing anyway records a waiver against this report&apos;s fingerprint.
+                Importing anyway records a waiver against this report&apos;s fingerprint in your
+                tenant&apos;s ledger
+                {report?.policy?.override_roles?.length
+                  ? `, which only these roles may do: ${report.policy.override_roles.join(', ')}.`
+                  : '.'}
               </p>
+              {waiverError && (
+                <p
+                  className="text-xs font-medium text-rose-600 dark:text-rose-400"
+                  data-testid="import-quality-waiver-error"
+                  role="alert"
+                >
+                  {waiverError}
+                </p>
+              )}
             </div>
           )}
 
@@ -644,15 +686,16 @@ export function CatalogImportQualityStep({
             <Button
               variant="outline"
               onClick={handleImportAnyway}
+              disabled={waiving}
               data-testid="import-quality-override"
             >
               <AlertTriangle className="h-4 w-4" aria-hidden />
-              Import anyway
+              {waiving ? 'Recording waiver…' : 'Import anyway'}
             </Button>
           )}
           <Button
             onClick={handleImport}
-            disabled={loading || !gate.canImport}
+            disabled={loading || waiving || !gate.canImport}
             title={gate.canImport ? undefined : gate.reason}
             data-testid="import-quality-import"
           >

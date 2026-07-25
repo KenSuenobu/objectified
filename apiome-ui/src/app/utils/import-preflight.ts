@@ -77,10 +77,21 @@ export interface PreflightStyleGuide {
   fingerprint: string;
 }
 
-/** Policy verdict for the candidate (advisory until IXH-2.3 lands tenant policy). */
+/** One quality floor the candidate falls short of (REST `ImportPreflightPolicyFailure`). */
+export interface PreflightPolicyFailure {
+  /** `score` | `grade` | `severity`. */
+  kind: string;
+  /** What policy requires: a score, a grade, or a severity name. */
+  required?: number | string | null;
+  /** What the candidate has — for a severity floor, how many findings sit at or above it. */
+  actual?: number | string | null;
+}
+
+/** Policy verdict for the candidate, under the tenant's quality policy (IXH-2.3, #5098). */
 export interface PreflightPolicy {
   verdict: 'pass' | 'warn' | 'block';
   blocking: boolean;
+  /** Which tier resolved the thresholds: `format_override` | `tenant` | `default`. */
   source: string;
   reason: string;
   threshold_score?: number | null;
@@ -89,6 +100,26 @@ export interface PreflightPolicy {
    * Absent on reports from a pre-`allow_override` server — treated as permitted, never forbidden.
    */
   allow_override?: boolean;
+  /** `import` | `export` — always `import` on a pre-flight report. */
+  scope?: string;
+  /** Adapter key the thresholds were resolved for. */
+  format_key?: string | null;
+  /** Minimum letter grade policy requires, when it sets a grade floor. */
+  min_grade?: string | null;
+  /** Severity at or above which findings are unacceptable, when severity is gated. */
+  block_on_severity?: string | null;
+  /** `advisory` (report only) or `block` (refuse the commit). */
+  enforcement?: string;
+  /** Every floor the candidate misses; empty on a pass. */
+  failures?: PreflightPolicyFailure[];
+  /** Role slugs permitted to record a waiver for a blocking verdict. */
+  override_roles?: string[];
+  /** Tenant policy version applied, or null under the built-in default. */
+  policy_version_id?: string | null;
+  policy_content_fingerprint?: string | null;
+  /** An active waiver that already downgraded this verdict, when one applied. */
+  waiver_id?: string | null;
+  waiver_expires_at?: string | null;
 }
 
 /** Stable taxonomy error explaining why a candidate is not importable. */
@@ -361,9 +392,11 @@ export function locateFindingLine(path: string, source: string): number | null {
 /**
  * A recorded waiver: a user committed an import that policy would have blocked.
  *
- * Held client-side (localStorage) with enough provenance to be reconciled later — the report
- * fingerprint and content hash identify the exact verdict that was overridden. IXH-2.3 moves the
- * ledger server-side; the shape is deliberately the one a server record would carry.
+ * The ledger is server-side (IXH-2.3): {@link recordImportQualityWaiver} POSTs the record to
+ * `/api/quality-policy/waivers`, where the tenant policy decides whether the caller's role may
+ * waive at all and stamps the expiry. The same record is also kept in localStorage as a fallback,
+ * because a user who chose to import must never be stopped by an unreachable ledger — but only
+ * the server copy makes the server-side import gate let the commit through.
  */
 export interface ImportQualityWaiver {
   /** ISO-8601 instant the waiver was recorded. */
@@ -387,6 +420,44 @@ export interface ImportQualityWaiver {
 }
 
 const WAIVER_STORAGE_KEY = 'apiome.import-quality-waivers.v1';
+
+/** Request body for `POST /api/quality-policy/waivers` (REST `QualityWaiverCreateRequest`). */
+export interface ImportQualityWaiverRequest {
+  scope: 'import';
+  subjectKey: string;
+  subjectLabel?: string | null;
+  formatKey?: string | null;
+  reportFingerprint?: string | null;
+  score?: number | null;
+  grade?: string | null;
+  reason: string;
+}
+
+/**
+ * Project a waiver record onto the server's grant request.
+ *
+ * @param waiver The record built by {@link buildImportQualityWaiver}.
+ * @param formatKey Adapter key the verdict was resolved for, so the waiver cannot silently cover
+ *   another format's gate for the same bytes.
+ * @returns The request body, or `null` when the record carries no content hash — the server
+ *   matches waivers on that hash, so a record without one could never be honoured.
+ */
+export function buildImportQualityWaiverRequest(
+  waiver: ImportQualityWaiver,
+  formatKey?: string | null,
+): ImportQualityWaiverRequest | null {
+  if (!waiver.contentHash) return null;
+  return {
+    scope: 'import',
+    subjectKey: waiver.contentHash,
+    subjectLabel: waiver.label,
+    formatKey: formatKey ?? null,
+    reportFingerprint: waiver.reportFingerprint,
+    score: waiver.score,
+    grade: waiver.grade,
+    reason: waiver.justification || waiver.policyReason || 'Imported against a blocking quality policy',
+  };
+}
 
 /** Most recent waivers retained; older entries are dropped so the key cannot grow without bound. */
 export const IMPORT_QUALITY_WAIVER_LIMIT = 50;
@@ -435,17 +506,78 @@ export function readImportQualityWaivers(): ImportQualityWaiver[] {
 }
 
 /**
- * Persist one waiver, newest first, capped at {@link IMPORT_QUALITY_WAIVER_LIMIT}.
+ * Keep one waiver in the local fallback list, newest first, capped at
+ * {@link IMPORT_QUALITY_WAIVER_LIMIT}.
  *
  * Storage failures (quota, private mode) are swallowed: an unrecordable waiver must never block the
  * import the user explicitly chose to make.
  */
-export function recordImportQualityWaiver(waiver: ImportQualityWaiver): void {
+export function cacheImportQualityWaiverLocally(waiver: ImportQualityWaiver): void {
   if (typeof window === 'undefined') return;
   try {
     const next = [waiver, ...readImportQualityWaivers()].slice(0, IMPORT_QUALITY_WAIVER_LIMIT);
     window.localStorage.setItem(WAIVER_STORAGE_KEY, JSON.stringify(next));
   } catch {
     /* quota / private mode — the import still proceeds */
+  }
+}
+
+/** What recording a waiver produced, so the step can explain a refusal instead of silently failing. */
+export interface ImportQualityWaiverOutcome {
+  /** True when the server accepted and stored the waiver — the only case the import gate honours. */
+  recorded: boolean;
+  /** Server-issued waiver id, when it was recorded. */
+  id?: string | null;
+  /** When the waiver stops being honoured (ISO-8601), when the server said so. */
+  expiresAt?: string | null;
+  /** Why the grant failed — a role the policy does not name, or an unreachable ledger. */
+  error?: string;
+}
+
+/**
+ * Record one waiver in the tenant's server-side ledger, falling back to local storage.
+ *
+ * The server is the authority: it checks that the tenant's policy permits an override and names
+ * the caller's role, and it stamps the expiry from the policy's TTL. A rejected grant is reported
+ * back so the step can say *why* rather than pretending the waiver exists — the subsequent commit
+ * would be refused by the same policy anyway.
+ *
+ * @param waiver The record to store.
+ * @param formatKey Adapter key the verdict was resolved for.
+ * @returns The outcome; `recorded` is false when the server refused or could not be reached.
+ */
+export async function recordImportQualityWaiver(
+  waiver: ImportQualityWaiver,
+  formatKey?: string | null,
+): Promise<ImportQualityWaiverOutcome> {
+  cacheImportQualityWaiverLocally(waiver);
+  const body = buildImportQualityWaiverRequest(waiver, formatKey);
+  if (!body) {
+    return { recorded: false, error: 'This report carries no content hash to waive against.' };
+  }
+  try {
+    const res = await fetch('/api/quality-policy/waivers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const json = (await res.json().catch(() => ({}))) as {
+      success?: boolean;
+      data?: { id?: string; expiresAt?: string };
+      error?: unknown;
+    };
+    if (!res.ok || json.success === false) {
+      const error = json.error;
+      return {
+        recorded: false,
+        error:
+          typeof error === 'string' && error
+            ? error
+            : 'The waiver could not be recorded for this tenant.',
+      };
+    }
+    return { recorded: true, id: json.data?.id ?? null, expiresAt: json.data?.expiresAt ?? null };
+  } catch {
+    return { recorded: false, error: 'The waiver ledger could not be reached.' };
   }
 }

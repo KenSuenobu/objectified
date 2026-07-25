@@ -260,15 +260,23 @@ def notify_lint_waiver_expiring(
     db: Any,
     *,
     decision: Mapping[str, Any],
+    kind: str = "lint_finding",
+    href: Optional[str] = None,
 ) -> List[str]:
     """Notify that a granted waiver approaches (or passed) its expiry.
 
-    Called from the waiver-expiry sweep with a decision row already claimed via
-    :meth:`Database.claim_expiring_lint_waivers`, so each grant notifies exactly once.
+    Called from the waiver-expiry sweep with a row already claimed via
+    :meth:`Database.claim_expiring_lint_waivers` (a lint finding decision) or
+    :meth:`Database.claim_expiring_import_export_quality_waivers` (an IXH-2.3 import/export
+    quality waiver, projected onto the same shape), so each grant notifies exactly once.
 
     Args:
         db: Database handle for the fan-out.
-        decision: The ``lint_finding_decisions`` row (must carry ``tenant_id``).
+        decision: The waiver row (must carry ``tenant_id``).
+        kind: Which ledger the waiver came from — ``lint_finding`` (default) or
+            ``quality:import`` / ``quality:export``. Subscribers key off this rather than
+            guessing from the href.
+        href: API link to the waiver, when it is not a lint decision.
 
     Returns:
         Enqueued delivery-event ids (empty when the row has no tenant).
@@ -278,9 +286,11 @@ def notify_lint_waiver_expiring(
         logger.warning("lint.waiver.expiring: decision %s has no tenant", decision.get("id"))
         return []
     decision_id = _clean_str(decision.get("id"))
+    default_href = f"/v1/lint/decisions/{decision_id}" if decision_id else None
     payload = _compact(
         {
             "event": EVENT_LINT_WAIVER_EXPIRING,
+            "kind": kind,
             "decisionId": decision_id,
             "sourceFingerprint": _clean_str(decision.get("source_fingerprint")),
             "ruleId": _clean_str(decision.get("rule_id")),
@@ -289,7 +299,7 @@ def notify_lint_waiver_expiring(
             "expiresAt": _clean_str(decision.get("expires_at")),
             "rationale": _clean_str(decision.get("rationale")),
             "linkedTicket": _clean_str(decision.get("linked_ticket")),
-            "decisionHref": f"/v1/lint/decisions/{decision_id}" if decision_id else None,
+            "decisionHref": href or default_href,
         }
     )
     return _fan_out(db, tenant_id, EVENT_LINT_WAIVER_EXPIRING, payload)

@@ -3726,6 +3726,402 @@ class Database:
         rows = self.execute_query(query, (cutoff, limit))
         return sorted(rows, key=lambda r: str(r.get("expires_at") or ""))
 
+    # ------------------------------------------------------------------
+    # Import/export quality policy + waivers (IXH-2.3, #5098)
+    # ------------------------------------------------------------------
+
+    #: Columns every quality-policy read returns, so a row always adapts cleanly into
+    #: :func:`app.import_export_quality_policy.policy_from_row`.
+    _QUALITY_POLICY_COLUMNS = """
+        id::text AS id, tenant_id::text AS tenant_id, version_number, content_fingerprint,
+        import_min_grade, import_min_score, import_block_on_severity, import_enforcement,
+        export_min_grade, export_min_score, export_block_on_severity, export_enforcement,
+        format_overrides, allow_override, override_roles, waiver_ttl_hours,
+        actor_user_id::text AS actor_user_id, actor_label, created_at
+    """
+
+    def get_latest_import_export_quality_policy(
+        self, tenant_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """The tenant's quality policy in force — its highest version (IXH-2.3, #5098).
+
+        Args:
+            tenant_id: Tenant to read.
+
+        Returns:
+            The policy row, or ``None`` when the tenant has never saved one (callers then run
+            the advisory default).
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        rows = self.execute_query(
+            f"""
+            SELECT {self._QUALITY_POLICY_COLUMNS}
+            FROM apiome.import_export_quality_policies
+            WHERE tenant_id = %s::uuid
+            ORDER BY version_number DESC
+            LIMIT 1
+            """,
+            (tenant_id,),
+        )
+        return rows[0] if rows else None
+
+    def list_import_export_quality_policy_versions(
+        self, tenant_id: str, *, limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """The tenant's policy versions, newest first (IXH-2.3, #5098)."""
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        return self.execute_query(
+            f"""
+            SELECT {self._QUALITY_POLICY_COLUMNS}
+            FROM apiome.import_export_quality_policies
+            WHERE tenant_id = %s::uuid
+            ORDER BY version_number DESC
+            LIMIT %s
+            """,
+            (tenant_id, max(1, min(int(limit), 200))),
+        )
+
+    def insert_import_export_quality_policy(
+        self,
+        *,
+        tenant_id: str,
+        content_fingerprint: str,
+        import_min_grade: Optional[str],
+        import_min_score: Optional[int],
+        import_block_on_severity: Optional[str],
+        import_enforcement: str,
+        export_min_grade: Optional[str],
+        export_min_score: Optional[int],
+        export_block_on_severity: Optional[str],
+        export_enforcement: str,
+        format_overrides: Dict[str, Any],
+        allow_override: bool,
+        override_roles: List[str],
+        waiver_ttl_hours: int,
+        actor_user_id: Optional[str] = None,
+        actor_label: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Append a new policy version for a tenant (IXH-2.3, #5098).
+
+        Policy rows are append-only (a write-once trigger guards them), so a save is an insert
+        at ``max(version_number) + 1`` — the previous versions stay readable for the verdicts
+        that named them.
+
+        Args:
+            tenant_id: Tenant the policy governs.
+            content_fingerprint: SHA-256 over the canonicalized policy body.
+            import_min_grade: Import grade floor, or ``None``.
+            import_min_score: Import score floor, or ``None``.
+            import_block_on_severity: Import severity floor, or ``None``.
+            import_enforcement: ``advisory`` | ``block``.
+            export_min_grade: Export grade floor, or ``None``.
+            export_min_score: Export score floor, or ``None``.
+            export_block_on_severity: Export severity floor, or ``None``.
+            export_enforcement: ``advisory`` | ``block``.
+            format_overrides: Per-format override map.
+            allow_override: Whether a blocking verdict may be waived.
+            override_roles: Role slugs permitted to waive.
+            waiver_ttl_hours: Lifetime of a granted waiver.
+            actor_user_id: Publishing user.
+            actor_label: Human-readable actor label.
+
+        Returns:
+            The inserted row, or ``None`` when the tenant id is not a UUID.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        query = f"""
+            INSERT INTO apiome.import_export_quality_policies (
+                tenant_id, version_number, content_fingerprint,
+                import_min_grade, import_min_score, import_block_on_severity, import_enforcement,
+                export_min_grade, export_min_score, export_block_on_severity, export_enforcement,
+                format_overrides, allow_override, override_roles, waiver_ttl_hours,
+                actor_user_id, actor_label
+            )
+            SELECT %s::uuid,
+                   COALESCE(MAX(version_number), 0) + 1,
+                   %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                   %s::jsonb, %s, %s::jsonb, %s, %s::uuid, %s
+            FROM apiome.import_export_quality_policies
+            WHERE tenant_id = %s::uuid
+            RETURNING {self._QUALITY_POLICY_COLUMNS}
+        """
+        params = (
+            tenant_id,
+            content_fingerprint,
+            import_min_grade,
+            import_min_score,
+            import_block_on_severity,
+            import_enforcement,
+            export_min_grade,
+            export_min_score,
+            export_block_on_severity,
+            export_enforcement,
+            json.dumps(format_overrides or {}, sort_keys=True),
+            allow_override,
+            json.dumps(list(override_roles or [])),
+            waiver_ttl_hours,
+            actor_user_id,
+            actor_label,
+            tenant_id,
+        )
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, params)
+                row = cursor.fetchone()
+            conn.commit()
+            return row
+        except Exception:
+            conn.rollback()
+            raise
+
+    #: Columns every quality-waiver read returns.
+    _QUALITY_WAIVER_COLUMNS = """
+        id::text AS id, tenant_id::text AS tenant_id, scope, subject_key, subject_label,
+        format_key, report_fingerprint, score, grade,
+        policy_version_id::text AS policy_version_id, policy_content_fingerprint,
+        reason, expires_at, expiry_notified_at,
+        actor_user_id::text AS actor_user_id, actor_label, actor_role, created_at
+    """
+
+    def insert_import_export_quality_waiver(
+        self,
+        *,
+        tenant_id: str,
+        scope: str,
+        subject_key: str,
+        reason: str,
+        expires_at: Any,
+        subject_label: Optional[str] = None,
+        format_key: Optional[str] = None,
+        report_fingerprint: Optional[str] = None,
+        score: Optional[int] = None,
+        grade: Optional[str] = None,
+        policy_version_id: Optional[str] = None,
+        policy_content_fingerprint: Optional[str] = None,
+        actor_user_id: Optional[str] = None,
+        actor_label: Optional[str] = None,
+        actor_role: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Record one import/export quality waiver (IXH-2.3, #5098).
+
+        Args:
+            tenant_id: Granting tenant.
+            scope: ``import`` | ``export``.
+            subject_key: Subject identity (candidate content hash / delivery subject).
+            reason: The actor's stated justification (required by a CHECK constraint).
+            expires_at: When the waiver stops being honoured.
+            subject_label: Display label for the subject.
+            format_key: Adapter key / export target the waiver applies to.
+            report_fingerprint: Fingerprint of the waived lint report.
+            score: Score at waiver time.
+            grade: Grade at waiver time.
+            policy_version_id: Policy version in force (``None`` for the built-in default).
+            policy_content_fingerprint: That policy's content fingerprint.
+            actor_user_id: Granting user.
+            actor_label: Human-readable actor label.
+            actor_role: The actor's effective role slug at grant time.
+
+        Returns:
+            The inserted row, or ``None`` when the tenant id is not a UUID.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        policy_id = (
+            policy_version_id
+            if policy_version_id and is_uuid_string(str(policy_version_id))
+            else None
+        )
+        query = f"""
+            INSERT INTO apiome.import_export_quality_waivers (
+                tenant_id, scope, subject_key, subject_label, format_key,
+                report_fingerprint, score, grade, policy_version_id,
+                policy_content_fingerprint, reason, expires_at,
+                actor_user_id, actor_label, actor_role
+            )
+            VALUES (%s::uuid, %s, %s, %s, %s, %s, %s, %s, %s::uuid, %s, %s, %s, %s::uuid, %s, %s)
+            RETURNING {self._QUALITY_WAIVER_COLUMNS}
+        """
+        params = (
+            tenant_id,
+            scope,
+            subject_key,
+            subject_label,
+            format_key,
+            report_fingerprint,
+            score,
+            grade,
+            policy_id,
+            policy_content_fingerprint,
+            reason,
+            expires_at,
+            actor_user_id,
+            actor_label,
+            actor_role,
+        )
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, params)
+                row = cursor.fetchone()
+            conn.commit()
+            return row
+        except Exception:
+            conn.rollback()
+            raise
+
+    def list_active_import_export_quality_waivers(
+        self, tenant_id: str, *, scope: str, subject_key: str, now: Any
+    ) -> List[Dict[str, Any]]:
+        """Unexpired waivers covering one subject, newest expiry first (IXH-2.3, #5098).
+
+        Args:
+            tenant_id: Tenant scope.
+            scope: ``import`` | ``export``.
+            subject_key: The subject identity to match.
+            now: Instant expiry is evaluated against.
+
+        Returns:
+            The matching rows; empty when nothing active covers the subject.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        return self.execute_query(
+            f"""
+            SELECT {self._QUALITY_WAIVER_COLUMNS}
+            FROM apiome.import_export_quality_waivers
+            WHERE tenant_id = %s::uuid AND scope = %s AND subject_key = %s
+              AND expires_at > %s
+            ORDER BY expires_at DESC
+            """,
+            (tenant_id, scope, subject_key, now),
+        )
+
+    def list_import_export_quality_waivers(
+        self,
+        tenant_id: str,
+        *,
+        scope: Optional[str] = None,
+        active_only: bool = True,
+        now: Any = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """The tenant's waiver ledger, newest first (IXH-2.3, #5098).
+
+        Args:
+            tenant_id: Tenant scope.
+            scope: Restrict to ``import`` or ``export``; ``None`` returns both.
+            active_only: Drop waivers that have already expired.
+            now: Instant expiry is evaluated against (defaults to the database clock).
+            limit: Page size (capped at 500).
+
+        Returns:
+            The waiver rows.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        clauses = ["tenant_id = %s::uuid"]
+        params: List[Any] = [tenant_id]
+        if scope:
+            clauses.append("scope = %s")
+            params.append(scope)
+        if active_only:
+            if now is None:
+                clauses.append("expires_at > CURRENT_TIMESTAMP")
+            else:
+                clauses.append("expires_at > %s")
+                params.append(now)
+        params.append(max(1, min(int(limit), 500)))
+        return self.execute_query(
+            f"""
+            SELECT {self._QUALITY_WAIVER_COLUMNS}
+            FROM apiome.import_export_quality_waivers
+            WHERE {' AND '.join(clauses)}
+            ORDER BY created_at DESC
+            LIMIT %s
+            """,
+            tuple(params),
+        )
+
+    def claim_expiring_import_export_quality_waivers(
+        self, *, cutoff: Any, limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """Atomically claim quality waivers expiring before ``cutoff`` (IXH-2.3, #5098).
+
+        Same claim protocol as :meth:`claim_expiring_lint_waivers` (V176): stamp
+        ``expiry_notified_at`` under ``FOR UPDATE SKIP LOCKED`` and return only the rows this
+        instance won, so the shared expiry sweep notifies each grant exactly once across
+        replicas.
+
+        Args:
+            cutoff: Claim waivers with ``expires_at <= cutoff``.
+            limit: Max rows claimed per call.
+
+        Returns:
+            The claimed rows, soonest-expiring first.
+        """
+        query = f"""
+            UPDATE apiome.import_export_quality_waivers w
+            SET expiry_notified_at = CURRENT_TIMESTAMP
+            WHERE w.id IN (
+                SELECT id FROM apiome.import_export_quality_waivers
+                WHERE expiry_notified_at IS NULL AND expires_at <= %s
+                ORDER BY expires_at
+                LIMIT %s
+                FOR UPDATE SKIP LOCKED
+            )
+            RETURNING {self._QUALITY_WAIVER_COLUMNS}
+        """
+        rows = self.execute_query(query, (cutoff, limit))
+        return sorted(rows, key=lambda r: str(r.get("expires_at") or ""))
+
+    def get_effective_role_slug(self, tenant_id: str, user_id: str) -> Optional[str]:
+        """The user's effective RBAC role slug in a tenant (IXH-2.3, #5098).
+
+        Resolved exactly like :meth:`user_has_permission`: a ``tenant_administrators`` row is
+        Owner-equivalent (V118), otherwise the assigned ``tenant_user_roles`` slug wins, and a
+        non-suspended member with no explicit role inherits the built-in Editor grid.
+
+        Args:
+            tenant_id: Tenant to resolve within.
+            user_id: The user.
+
+        Returns:
+            ``owner`` | the assigned role slug | ``editor``, or ``None`` when the user is not a
+            member of the tenant.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        if not user_id or not is_uuid_string(str(user_id)):
+            return None
+        if self.is_user_tenant_admin(tenant_id, user_id):
+            return "owner"
+        assigned = self.execute_query(
+            """
+            SELECT r.slug
+            FROM apiome.tenant_user_roles tur
+            JOIN apiome.roles r ON r.id = tur.role_id
+            WHERE tur.tenant_id = %s::uuid AND tur.user_id = %s::uuid
+            ORDER BY r.slug
+            LIMIT 1
+            """,
+            (tenant_id, user_id),
+        )
+        if assigned:
+            return str(assigned[0]["slug"])
+        member = self.execute_query(
+            """
+            SELECT 1 FROM apiome.tenant_users
+            WHERE tenant_id = %s::uuid AND user_id = %s::uuid AND status <> 'suspended'
+            LIMIT 1
+            """,
+            (tenant_id, user_id),
+        )
+        return "editor" if member else None
+
     def list_lint_finding_decision_events(
         self, decision_id: str, tenant_id: str
     ) -> List[Dict[str, Any]]:

@@ -196,6 +196,15 @@ INTAKE_ERROR_TAXONOMY: Dict[str, IntakeErrorDescriptor] = {
             "server. Contact your administrator to enable it, or import the document "
             "in another supported format.",
         ),
+        # --- policy: rejected by tenant policy -----------------------------------
+        _d(
+            "QUALITY_POLICY_BLOCKED",
+            IntakeErrorCategory.POLICY,
+            False,
+            "Your tenant's import quality policy refuses this document at its current "
+            "lint grade. Fix the findings the pre-flight report ranks first and import "
+            "again, or ask someone with a permitted role to record a waiver.",
+        ),
         # --- internal: our fault -------------------------------------------------
         _d(
             "INTERNAL_ADAPTER_FAULT",

@@ -18,16 +18,21 @@ preview commit/rollback (pending-approval) is not exposed yet for REST callers.
 
 from __future__ import annotations
 
-from typing import Any, Dict
+import base64
+import binascii
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from pydantic import ValidationError
 
 from .auth import get_authenticated_user_id, validate_authentication
 from .database import db
+from .import_export_quality_policy import QualityGateError, enforce_import_quality_gate
 from .import_preflight import run_import_preflight
+from .intake_error_taxonomy import descriptor_for
 from .permissions import enforce_permission, Resource, Action
 from .models import (
+    REPOSITORY_AUTO_IMPORT_SOURCE_KIND,
     ImportPreflightReport,
     ImportPreflightRequest,
     SpecImportCommitResponse,
@@ -67,6 +72,71 @@ def _require_tenant_and_user(auth_data: Dict[str, Any]) -> tuple[str, str]:
     return str(tid), uid
 
 
+async def _enforce_quality_gate(
+    *,
+    tenant_id: str,
+    tenant_slug: str,
+    user_id: str,
+    raw: bytes,
+    metadata: SpecImportStartMetadata,
+    filename: Optional[str],
+    content_type: Optional[str],
+) -> None:
+    """Refuse a start request the tenant's import quality policy blocks (IXH-2.3, #5098).
+
+    The wizard's quality step already shows the verdict, but a policy enforced only in a client
+    is not enforced — the CLI, a script, and a stale browser tab all reach this endpoint. This
+    is the server-side gate, and it runs *before* the job exists so a blocked import costs
+    nothing to clean up.
+
+    Skipped for a dry run (which persists nothing to gate) and for a repository auto-refresh
+    (whose document and importer come from the stored spec, not this request). A tenant on the
+    default advisory policy pays nothing: the gate returns before it looks at the document.
+
+    Args:
+        tenant_id: The importing tenant.
+        tenant_slug: Its slug.
+        user_id: The acting user.
+        raw: The candidate document bytes.
+        metadata: The start request's metadata (source kind + options).
+        filename: Upload filename, when known.
+        content_type: Upload content type, when known.
+
+    Raises:
+        HTTPException: 409 with the ``QUALITY_POLICY_BLOCKED`` taxonomy code and the full
+            verdict when policy refuses the import.
+    """
+    options = metadata.options
+    if options.dry_run or metadata.source_kind == REPOSITORY_AUTO_IMPORT_SOURCE_KIND:
+        return
+    try:
+        await enforce_import_quality_gate(
+            tenant_id=tenant_id,
+            tenant_slug=tenant_slug,
+            user_id=user_id,
+            raw=raw,
+            filename=filename,
+            content_type=content_type,
+            source_kind=metadata.source_kind,
+            import_target=options.import_target,
+            input_kind=options.input_kind,
+            archive_root=options.archive_root,
+        )
+    except QualityGateError as exc:
+        descriptor = descriptor_for("QUALITY_POLICY_BLOCKED")
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "QUALITY_POLICY_BLOCKED",
+                "category": descriptor.category.value if descriptor else "policy",
+                "message": exc.verdict.reason,
+                "remediation": descriptor.remediation if descriptor else "",
+                "retriable": False,
+                "policy": exc.verdict.as_dict(),
+            },
+        ) from exc
+
+
 @router.post(
     "/{tenant_slug}/import/preflight",
     response_model=ImportPreflightReport,
@@ -76,13 +146,15 @@ def _require_tenant_and_user(auth_data: Dict[str, Any]) -> tuple[str, str]:
         "detect → parse → normalize → fingerprint → lint pipeline a real import runs, with "
         "dry-run semantics, and returns the detected adapter and confidence, the routing "
         "decision, canonical entity counts, the revision fingerprint, the full lint report "
-        "with findings ranked by severity then rule weight, the resolved style guide, and an "
-        "(advisory, until IXH-2.3) policy verdict. Nothing is persisted: no catalog item, "
-        "project, version, type row, or import job.\n\n"
+        "with findings ranked by severity then rule weight, the resolved style guide, and the "
+        "tenant quality policy verdict (IXH-2.3) with the resolution tier that produced it. "
+        "Nothing is persisted: no catalog item, project, version, type row, or import job.\n\n"
         "A document that cannot be imported is **not** an HTTP error — the response is a 200 "
         "with ``ok: false`` and a stable intake-taxonomy ``error`` code plus remediation, so "
         "callers key off the code rather than parsing exception strings. Repeated pre-flights "
-        "of identical bytes are served from a tenant-scoped cache and report ``cache.hit``."
+        "of identical bytes are served from a tenant-scoped cache and report ``cache.hit``; the "
+        "policy verdict is always re-evaluated, so a waiver recorded between two calls is "
+        "reflected immediately."
     ),
 )
 async def preflight_import_candidate(
@@ -134,6 +206,21 @@ async def start_spec_import_json(
 ) -> SpecImportJobAccepted:
     enforce_permission(db, auth_data, Resource.IMPORTS, Action.CREATE)
     tenant_id, user_id = _require_tenant_and_user(auth_data)
+    try:
+        raw = base64.standard_b64decode(body.document_base64)
+    except (binascii.Error, ValueError) as exc:
+        raise HTTPException(
+            status_code=422, detail=f"document_base64 is not valid base64: {exc}"
+        ) from exc
+    await _enforce_quality_gate(
+        tenant_id=tenant_id,
+        tenant_slug=tenant_slug,
+        user_id=user_id,
+        raw=raw,
+        metadata=body.metadata,
+        filename=body.filename,
+        content_type=body.content_type,
+    )
     return await schedule_spec_import(tenant_slug, tenant_id, user_id, body)
 
 
@@ -165,6 +252,15 @@ async def start_spec_import_multipart(
     except (ValidationError, ValueError) as e:
         raise HTTPException(status_code=422, detail=str(e)) from e
     raw = await file.read()
+    await _enforce_quality_gate(
+        tenant_id=tenant_id,
+        tenant_slug=tenant_slug,
+        user_id=user_id,
+        raw=raw,
+        metadata=meta,
+        filename=file.filename,
+        content_type=file.content_type,
+    )
     return await schedule_spec_import_multipart(
         tenant_slug,
         tenant_id,

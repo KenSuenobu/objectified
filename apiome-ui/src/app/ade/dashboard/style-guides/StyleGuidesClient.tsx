@@ -38,6 +38,7 @@ import {
   DialogTitle,
 } from '@/app/components/ui/Dialog';
 import { useDialog } from '@/app/components/providers/DialogProvider';
+import QualityPolicyPanel from './QualityPolicyPanel';
 import {
   fetchMyPermissions,
   styleGuidesApi,
@@ -695,6 +696,13 @@ export default function StyleGuidesClient() {
           The built-in “Apiome Recommended” guide is read-only — duplicate it to customize. Open a
           guide to tailor its rule catalog; custom rules arrive with GOV-2.3.
         </p>
+
+        {/* A guide decides how a document is scored; the quality policy decides what score is
+            good enough to import or export it (IXH-2.3). Non-admins see it read-only, because a
+            user who cannot see the policy cannot understand why a commit was refused. */}
+        <div className="mt-8">
+          <QualityPolicyPanel readOnly={!canMutate} />
+        </div>
       </main>
 
       {/* `key` remounts each dialog when it opens (or targets a new guide), resetting its

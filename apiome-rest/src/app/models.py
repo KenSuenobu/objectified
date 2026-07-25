@@ -1492,12 +1492,34 @@ class ImportPreflightStyleGuide(BaseModel):
     )
 
 
-class ImportPreflightPolicy(BaseModel):
-    """Policy verdict for the candidate.
+class ImportPreflightPolicyFailure(BaseModel):
+    """One quality floor the candidate falls short of (IXH-2.3, #5098)."""
 
-    A placeholder until IXH-2.3 makes the gate tenant-configurable: the shipped verdict is
-    always advisory, so no caller is blocked by a policy that does not exist yet. The shape
-    is the one 2.3 will populate, so clients written against it keep working.
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["score", "grade", "severity"] = Field(
+        description="Which floor was missed: the score floor, the grade floor, or the severity floor."
+    )
+    required: Union[int, str, None] = Field(
+        None, description="What policy requires (a score, a grade, or a severity name)."
+    )
+    actual: Union[int, str, None] = Field(
+        None,
+        description=(
+            "What the candidate has: its score, its grade, or — for a severity floor — how many "
+            "findings sit at or above that severity."
+        ),
+    )
+
+
+class ImportPreflightPolicy(BaseModel):
+    """Policy verdict for the candidate, under the tenant's quality policy (IXH-2.3, #5098).
+
+    ``verdict`` is ``pass`` when every configured floor is met (or none is configured — the
+    documented default), ``warn`` when a floor is missed under an *advisory* policy or a waiver
+    covers the shortfall, and ``block`` when the tenant's policy refuses the commit. ``source``
+    names the resolution tier that produced the thresholds, so a surprising verdict can always
+    be traced to the rule that caused it.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -1507,7 +1529,11 @@ class ImportPreflightPolicy(BaseModel):
     )
     blocking: bool = Field(False, description="Whether the verdict blocks the commit.")
     source: str = Field(
-        "default", description="Where the policy came from ('default' until IXH-2.3 lands tenant policy)."
+        "default",
+        description=(
+            "Which tier resolved the thresholds: 'format_override', 'tenant', or 'default' "
+            "(no tenant policy configured)."
+        ),
     )
     reason: str = Field(description="Human-readable justification for the verdict.")
     threshold_score: Optional[int] = Field(
@@ -1518,9 +1544,48 @@ class ImportPreflightPolicy(BaseModel):
         description=(
             "Whether a user may commit anyway against a blocking verdict by recording a waiver. "
             "Only meaningful when ``blocking`` is true; false means the gate is absolute and the "
-            "client must not offer an override path. Always true until IXH-2.3 lands tenant policy, "
-            "because nothing blocks yet."
+            "client must not offer an override path."
         ),
+    )
+    scope: Literal["import", "export"] = Field(
+        "import", description="Which gate this verdict belongs to."
+    )
+    format_key: Optional[str] = Field(
+        None, description="Adapter key the thresholds were resolved for, when known."
+    )
+    min_grade: Optional[str] = Field(
+        None, description="Minimum letter grade policy requires, or null when no grade floor applies."
+    )
+    block_on_severity: Optional[str] = Field(
+        None,
+        description=(
+            "Severity at or above which findings are unacceptable, or null when severity is not "
+            "gated."
+        ),
+    )
+    enforcement: Literal["advisory", "block"] = Field(
+        "advisory",
+        description="Whether a shortfall is reported only ('advisory') or refused ('block').",
+    )
+    failures: List[ImportPreflightPolicyFailure] = Field(
+        default_factory=list,
+        description="Every floor the candidate misses; empty on a pass.",
+    )
+    override_roles: List[str] = Field(
+        default_factory=list,
+        description="Role slugs permitted to record a waiver for a blocking verdict.",
+    )
+    policy_version_id: Optional[str] = Field(
+        None, description="Tenant policy version applied, or null for the built-in default."
+    )
+    policy_content_fingerprint: Optional[str] = Field(
+        None, description="Content fingerprint of the applied policy version."
+    )
+    waiver_id: Optional[str] = Field(
+        None, description="Active waiver that downgraded a blocking verdict, when one applied."
+    )
+    waiver_expires_at: Optional[str] = Field(
+        None, description="When that waiver stops being honoured (ISO-8601)."
     )
 
 
@@ -4017,6 +4082,256 @@ class StyleGuidePolicyVersionListResponse(BaseModel):
 
     versions: List[StyleGuidePolicyVersionOut] = Field(default_factory=list)
     count: int = 0
+
+
+class QualityPolicyThresholdsOut(BaseModel):
+    """One scope's quality floors and enforcement mode (IXH-2.3, #5098).
+
+    Every floor is independently optional; a scope with no floor at all can never block, which
+    is the shipped default and the reason an upgrade changes nothing for an existing tenant.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    min_grade: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices("minGrade", "min_grade"),
+        serialization_alias="minGrade",
+        description="Lowest acceptable letter grade (A best, F worst); null = no grade floor.",
+    )
+    min_score: Optional[int] = Field(
+        None,
+        ge=0,
+        le=100,
+        validation_alias=AliasChoices("minScore", "min_score"),
+        serialization_alias="minScore",
+        description="Lowest acceptable 0-100 lint score; null = no score floor.",
+    )
+    block_on_severity: Optional[Literal["error", "warning", "info"]] = Field(
+        None,
+        validation_alias=AliasChoices("blockOnSeverity", "block_on_severity"),
+        serialization_alias="blockOnSeverity",
+        description="Severity at or above which findings are unacceptable; null = not gated.",
+    )
+    enforcement: Literal["advisory", "block"] = Field(
+        "advisory",
+        description="'advisory' reports a shortfall; 'block' refuses the operation.",
+    )
+
+
+class QualityPolicyOut(BaseModel):
+    """The tenant's import/export quality policy in force (IXH-2.3, #5098)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    policy_version_id: Optional[str] = Field(
+        None,
+        serialization_alias="policyVersionId",
+        description="Row id of the applied policy version; null when the tenant has none saved.",
+    )
+    version_number: int = Field(
+        0,
+        serialization_alias="versionNumber",
+        description="Monotonic version number; 0 for the built-in default.",
+    )
+    content_fingerprint: str = Field(
+        "default",
+        serialization_alias="contentFingerprint",
+        description="SHA-256 over the canonicalized policy body ('default' for the default).",
+    )
+    is_default: bool = Field(
+        True,
+        serialization_alias="isDefault",
+        description="True when no tenant policy is saved and the advisory default applies.",
+    )
+    import_policy: QualityPolicyThresholdsOut = Field(
+        default_factory=QualityPolicyThresholdsOut,
+        serialization_alias="import",
+        description="Floors applied to import intake.",
+    )
+    export_policy: QualityPolicyThresholdsOut = Field(
+        default_factory=QualityPolicyThresholdsOut,
+        serialization_alias="export",
+        description="Floors applied to export delivery.",
+    )
+    format_overrides: Dict[str, Any] = Field(
+        default_factory=dict,
+        serialization_alias="formatOverrides",
+        description=(
+            "Per-adapter-key overrides, e.g. {'openapi': {'import': {'minGrade': 'B'}}}. "
+            "Resolution is format override → tenant → default."
+        ),
+    )
+    allow_override: bool = Field(
+        True,
+        serialization_alias="allowOverride",
+        description="Whether a blocking verdict may be waived at all.",
+    )
+    override_roles: List[str] = Field(
+        default_factory=list,
+        serialization_alias="overrideRoles",
+        description="Role slugs permitted to record a waiver (empty = nobody may).",
+    )
+    waiver_ttl_hours: int = Field(
+        168,
+        serialization_alias="waiverTtlHours",
+        description="Lifetime of a granted waiver, in hours.",
+    )
+    actor_label: Optional[str] = Field(
+        None, serialization_alias="actorLabel", description="Who saved this version."
+    )
+    created_at: Optional[Union[datetime, str]] = Field(
+        None, serialization_alias="createdAt", description="When this version was saved."
+    )
+
+
+class QualityPolicyPutRequest(BaseModel):
+    """Replace the tenant's import/export quality policy (IXH-2.3, #5098).
+
+    A PUT always appends a **new version**: policy rows are immutable so a verdict recorded
+    against a version stays reproducible. Omitted sections keep the values the current policy
+    holds, so a caller can raise the import floor without restating the export contract.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    import_policy: Optional[QualityPolicyThresholdsOut] = Field(
+        None,
+        validation_alias=AliasChoices("import", "import_policy", "importPolicy"),
+        serialization_alias="import",
+    )
+    export_policy: Optional[QualityPolicyThresholdsOut] = Field(
+        None,
+        validation_alias=AliasChoices("export", "export_policy", "exportPolicy"),
+        serialization_alias="export",
+    )
+    format_overrides: Optional[Dict[str, Any]] = Field(
+        None,
+        validation_alias=AliasChoices("formatOverrides", "format_overrides"),
+        serialization_alias="formatOverrides",
+    )
+    allow_override: Optional[bool] = Field(
+        None,
+        validation_alias=AliasChoices("allowOverride", "allow_override"),
+        serialization_alias="allowOverride",
+    )
+    override_roles: Optional[List[str]] = Field(
+        None,
+        validation_alias=AliasChoices("overrideRoles", "override_roles"),
+        serialization_alias="overrideRoles",
+    )
+    waiver_ttl_hours: Optional[int] = Field(
+        None,
+        ge=1,
+        le=8760,
+        validation_alias=AliasChoices("waiverTtlHours", "waiver_ttl_hours"),
+        serialization_alias="waiverTtlHours",
+    )
+
+
+class QualityPolicyVersionListResponse(BaseModel):
+    """The tenant's saved policy versions, newest first (IXH-2.3, #5098)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    versions: List[QualityPolicyOut] = Field(default_factory=list)
+    count: int = 0
+
+
+class QualityWaiverCreateRequest(BaseModel):
+    """Record a waiver against a blocking quality verdict (IXH-2.3, #5098)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    scope: Literal["import", "export"] = Field(
+        "import", description="Which gate the waiver applies to."
+    )
+    subject_key: str = Field(
+        min_length=1,
+        validation_alias=AliasChoices("subjectKey", "subject_key"),
+        serialization_alias="subjectKey",
+        description=(
+            "Subject identity: the SHA-256 of the candidate document for an import (the "
+            "pre-flight report's cache.content_hash), or the delivery subject for an export."
+        ),
+    )
+    reason: str = Field(
+        min_length=1, description="The actor's stated justification for accepting the risk."
+    )
+    subject_label: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices("subjectLabel", "subject_label"),
+        serialization_alias="subjectLabel",
+        description="Display label for the waived subject (filename / artifact name).",
+    )
+    format_key: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices("formatKey", "format_key"),
+        serialization_alias="formatKey",
+        description="Adapter key / export target the waiver applies to.",
+    )
+    report_fingerprint: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices("reportFingerprint", "report_fingerprint"),
+        serialization_alias="reportFingerprint",
+        description="Fingerprint of the lint report being waived.",
+    )
+    score: Optional[int] = Field(None, ge=0, le=100, description="Lint score at waiver time.")
+    grade: Optional[str] = Field(None, description="Lint grade at waiver time.")
+
+
+class QualityWaiverOut(BaseModel):
+    """One recorded quality waiver (IXH-2.3, #5098)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    scope: str
+    subject_key: str = Field(serialization_alias="subjectKey")
+    subject_label: Optional[str] = Field(None, serialization_alias="subjectLabel")
+    format_key: Optional[str] = Field(None, serialization_alias="formatKey")
+    report_fingerprint: Optional[str] = Field(None, serialization_alias="reportFingerprint")
+    score: Optional[int] = None
+    grade: Optional[str] = None
+    reason: str
+    expires_at: Optional[Union[datetime, str]] = Field(None, serialization_alias="expiresAt")
+    policy_version_id: Optional[str] = Field(None, serialization_alias="policyVersionId")
+    policy_content_fingerprint: Optional[str] = Field(
+        None, serialization_alias="policyContentFingerprint"
+    )
+    actor_label: Optional[str] = Field(None, serialization_alias="actorLabel")
+    actor_role: Optional[str] = Field(None, serialization_alias="actorRole")
+    created_at: Optional[Union[datetime, str]] = Field(None, serialization_alias="createdAt")
+
+
+class QualityWaiverListResponse(BaseModel):
+    """A tenant's quality waivers, newest first (IXH-2.3, #5098)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    waivers: List[QualityWaiverOut] = Field(default_factory=list)
+    count: int = 0
+
+
+def quality_waiver_out_from_row(row: Dict[str, Any]) -> QualityWaiverOut:
+    """Project an ``import_export_quality_waivers`` row onto the wire model."""
+    return QualityWaiverOut(
+        id=str(row["id"]),
+        scope=str(row.get("scope") or "import"),
+        subject_key=str(row.get("subject_key") or ""),
+        subject_label=row.get("subject_label"),
+        format_key=row.get("format_key"),
+        report_fingerprint=row.get("report_fingerprint"),
+        score=row.get("score"),
+        grade=row.get("grade"),
+        reason=str(row.get("reason") or ""),
+        expires_at=row.get("expires_at"),
+        policy_version_id=row.get("policy_version_id"),
+        policy_content_fingerprint=row.get("policy_content_fingerprint"),
+        actor_label=row.get("actor_label"),
+        actor_role=row.get("actor_role"),
+        created_at=row.get("created_at"),
+    )
 
 
 class LintFindingDecisionOut(BaseModel):

@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.43.0
+  version: 1.44.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -8023,6 +8023,373 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for get style guide policy versionresponse422.
+  /v1/tenants/{tenant_slug}/governance/quality-policy:
+    get:
+      tags:
+      - governance
+      summary: Get the tenant's import/export quality policy
+      description: 'The quality policy in force for this tenant (IXH-2.3). A tenant
+        that has never saved one gets the documented default — no floors, advisory
+        only, override permitted — with ``isDefault: true``, so an upgrade changes
+        no behaviour.
+
+
+        Readable by any tenant member: the import wizard renders the verdict it produces,
+        and a user who cannot see the policy cannot understand why a commit was refused.'
+      operationId: get_quality_policy_v1_tenants__tenant_slug__governance_quality_policy_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Getthetenantsimportexportqualitypolicyauthorization schema.
+          - type: 'null'
+            description: Getthetenantsimportexportqualitypolicyauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Getthetenantsimportexportqualitypolicy Xapikey schema.
+          - type: 'null'
+            description: Getthetenantsimportexportqualitypolicy Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get the tenant's import/export quality
+            policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualityPolicyOut'
+                description: Response payload for getthetenantsimportexportqualitypolicyresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for getthetenantsimportexportqualitypolicyresponse422.
+    put:
+      tags:
+      - governance
+      summary: Save a new version of the tenant's import/export quality policy
+      description: 'Append a new policy version (IXH-2.3). Policy rows are immutable
+        so that a verdict recorded against a version stays reproducible; omitted sections
+        carry forward from the current version.
+
+
+        Tenant administrators only. The change is written to the access audit with
+        the full policy body.'
+      operationId: put_quality_policy_v1_tenants__tenant_slug__governance_quality_policy_put
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Saveanewversionofthetenantsimportexportqauthorization schema.
+          - type: 'null'
+            description: Saveanewversionofthetenantsimportexportqauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Saveanewversionofthetenantsimportexportq Xapikey schema.
+          - type: 'null'
+            description: Saveanewversionofthetenantsimportexportq Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QualityPolicyPutRequest'
+              description: Request body for saveanewversionofthetenantsimportexportqrequest.
+        description: Request body for save a new version of the tenant's import/export
+          quality policy.
+      responses:
+        '200':
+          description: Successful response for save a new version of the tenant's
+            import/export quality policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualityPolicyOut'
+                description: Response payload for saveanewversionofthetenantsimportexportqresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for saveanewversionofthetenantsimportexportqresponse422.
+  /v1/tenants/{tenant_slug}/governance/quality-policy/versions:
+    get:
+      tags:
+      - governance
+      summary: List saved quality-policy versions
+      description: 'The tenant''s saved policy versions, newest first. Policy rows
+        are immutable, so this is the change history: every verdict names the ``policyVersionId``
+        it applied.'
+      operationId: list_quality_policy_versions_v1_tenants__tenant_slug__governance_quality_policy_versions_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Maximum versions to return.
+          default: 50
+          title: Limit
+        description: Maximum versions to return.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listsavedqualitypolicyversionsauthorization schema.
+          - type: 'null'
+            description: Listsavedqualitypolicyversionsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listsavedqualitypolicyversions Xapikey schema.
+          - type: 'null'
+            description: Listsavedqualitypolicyversions Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for list saved quality-policy versions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualityPolicyVersionListResponse'
+                description: Response payload for listsavedqualitypolicyversionsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for listsavedqualitypolicyversionsresponse422.
+  /v1/tenants/{tenant_slug}/governance/quality-waivers:
+    get:
+      tags:
+      - governance
+      summary: List import/export quality waivers
+      description: The tenant's recorded waivers, newest first (IXH-2.3). By default
+        only waivers that are still honoured are returned; pass ``activeOnly=false``
+        to include expired ones, which the shared waiver-expiry sweep has already
+        notified on.
+      operationId: list_quality_waivers_v1_tenants__tenant_slug__governance_quality_waivers_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: scope
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listimportexportqualitywaiversscope schema.
+          - type: 'null'
+            description: Listimportexportqualitywaiversscope schema.
+          description: Restrict to 'import' or 'export'; omit for both.
+          title: Scope
+        description: Restrict to 'import' or 'export'; omit for both.
+      - name: activeOnly
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Drop waivers whose expiry has passed.
+          default: true
+          title: Activeonly
+        description: Drop waivers whose expiry has passed.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          description: Maximum waivers to return.
+          default: 100
+          title: Limit
+        description: Maximum waivers to return.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listimportexportqualitywaiversauthorization schema.
+          - type: 'null'
+            description: Listimportexportqualitywaiversauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listimportexportqualitywaivers Xapikey schema.
+          - type: 'null'
+            description: Listimportexportqualitywaivers Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for list import/export quality waivers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualityWaiverListResponse'
+                description: Response payload for listimportexportqualitywaiversresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for listimportexportqualitywaiversresponse422.
+    post:
+      tags:
+      - governance
+      summary: Record a waiver against a blocking quality verdict
+      description: 'Record accepted risk so a blocked import (or delivery) may proceed
+        (IXH-2.3). The waiver carries the actor, the reason, the scope, and an expiry
+        of the policy''s ``waiverTtlHours``; the gate honours it until then, after
+        which the shared waiver-expiry sweep has already warned the tenant.
+
+
+        Refused with 403 when the policy forbids overrides or does not name the caller''s
+        effective role — the check is server-side, so a client cannot grant itself
+        one.'
+      operationId: create_quality_waiver_v1_tenants__tenant_slug__governance_quality_waivers_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Recordawaiveragainstablockingqualityverdauthorization schema.
+          - type: 'null'
+            description: Recordawaiveragainstablockingqualityverdauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Recordawaiveragainstablockingqualityverd Xapikey schema.
+          - type: 'null'
+            description: Recordawaiveragainstablockingqualityverd Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QualityWaiverCreateRequest'
+              description: Request body for recordawaiveragainstablockingqualityverdrequest.
+        description: Request body for record a waiver against a blocking quality verdict.
+      responses:
+        '201':
+          description: Successful response for record a waiver against a blocking
+            quality verdict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualityWaiverOut'
+                description: Response payload for recordawaiveragainstablockingqualityverdresponse201.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for recordawaiveragainstablockingqualityverdresponse422.
   /v1/versions/{tenant_slug}/{project_id}/version-branches:
     get:
       tags:
@@ -27592,15 +27959,17 @@ paths:
         import runs, with dry-run semantics, and returns the detected adapter and
         confidence, the routing decision, canonical entity counts, the revision fingerprint,
         the full lint report with findings ranked by severity then rule weight, the
-        resolved style guide, and an (advisory, until IXH-2.3) policy verdict. Nothing
-        is persisted: no catalog item, project, version, type row, or import job.
+        resolved style guide, and the tenant quality policy verdict (IXH-2.3) with
+        the resolution tier that produced it. Nothing is persisted: no catalog item,
+        project, version, type row, or import job.
 
 
         A document that cannot be imported is **not** an HTTP error — the response
         is a 200 with ``ok: false`` and a stable intake-taxonomy ``error`` code plus
         remediation, so callers key off the code rather than parsing exception strings.
         Repeated pre-flights of identical bytes are served from a tenant-scoped cache
-        and report ``cache.hit``.'
+        and report ``cache.hit``; the policy verdict is always re-evaluated, so a
+        waiver recorded between two calls is reflected immediately.'
       operationId: preflight_import_candidate_v1_tenants__tenant_slug__import_preflight_post
       parameters:
       - name: tenant_slug
@@ -48160,8 +48529,8 @@ components:
         source:
           type: string
           title: Source
-          description: Where the policy came from ('default' until IXH-2.3 lands tenant
-            policy).
+          description: 'Which tier resolved the thresholds: ''format_override'', ''tenant'',
+            or ''default'' (no tenant policy configured).'
           default: default
           example: human
         reason:
@@ -48183,25 +48552,161 @@ components:
           description: Whether a user may commit anyway against a blocking verdict
             by recording a waiver. Only meaningful when ``blocking`` is true; false
             means the gate is absolute and the client must not offer an override path.
-            Always true until IXH-2.3 lands tenant policy, because nothing blocks
-            yet.
           default: true
           example: false
+        scope:
+          type: string
+          enum:
+          - import
+          - export
+          title: Scope
+          description: Which gate this verdict belongs to.
+          default: import
+          example: import
+        format_key:
+          anyOf:
+          - type: string
+            description: Import Preflight Policy schema.
+          - type: 'null'
+            description: Import Preflight Policy schema.
+          title: Format Key
+          description: Adapter key the thresholds were resolved for, when known.
+        min_grade:
+          anyOf:
+          - type: string
+            description: Import Preflight Policy schema.
+          - type: 'null'
+            description: Import Preflight Policy schema.
+          title: Min Grade
+          description: Minimum letter grade policy requires, or null when no grade
+            floor applies.
+        block_on_severity:
+          anyOf:
+          - type: string
+            description: Import Preflight Policy schema.
+          - type: 'null'
+            description: Import Preflight Policy schema.
+          title: Block On Severity
+          description: Severity at or above which findings are unacceptable, or null
+            when severity is not gated.
+        enforcement:
+          type: string
+          enum:
+          - advisory
+          - block
+          title: Enforcement
+          description: Whether a shortfall is reported only ('advisory') or refused
+            ('block').
+          default: advisory
+          example: advisory
+        failures:
+          items:
+            $ref: '#/components/schemas/ImportPreflightPolicyFailure'
+          type: array
+          title: Failures
+          description: Every floor the candidate misses; empty on a pass.
+          maxItems: 1000
+        override_roles:
+          items:
+            type: string
+          type: array
+          title: Override Roles
+          description: Role slugs permitted to record a waiver for a blocking verdict.
+          maxItems: 1000
+        policy_version_id:
+          anyOf:
+          - type: string
+            description: Import Preflight Policy schema.
+          - type: 'null'
+            description: Import Preflight Policy schema.
+          title: Policy Version Id
+          description: Tenant policy version applied, or null for the built-in default.
+        policy_content_fingerprint:
+          anyOf:
+          - type: string
+            description: Import Preflight Policy schema.
+          - type: 'null'
+            description: Import Preflight Policy schema.
+          title: Policy Content Fingerprint
+          description: Content fingerprint of the applied policy version.
+        waiver_id:
+          anyOf:
+          - type: string
+            description: Import Preflight Policy schema.
+          - type: 'null'
+            description: Import Preflight Policy schema.
+          title: Waiver Id
+          description: Active waiver that downgraded a blocking verdict, when one
+            applied.
+        waiver_expires_at:
+          anyOf:
+          - type: string
+            description: Import Preflight Policy schema.
+          - type: 'null'
+            description: Import Preflight Policy schema.
+          title: Waiver Expires At
+          description: When that waiver stops being honoured (ISO-8601).
       additionalProperties: false
       type: object
       required:
       - reason
       title: ImportPreflightPolicy
-      description: 'Policy verdict for the candidate.
+      description: 'Policy verdict for the candidate, under the tenant''s quality
+        policy (IXH-2.3, #5098).
 
 
-        A placeholder until IXH-2.3 makes the gate tenant-configurable: the shipped
-        verdict is
+        ``verdict`` is ``pass`` when every configured floor is met (or none is configured
+        — the
 
-        always advisory, so no caller is blocked by a policy that does not exist yet.
-        The shape
+        documented default), ``warn`` when a floor is missed under an *advisory* policy
+        or a waiver
 
-        is the one 2.3 will populate, so clients written against it keep working.'
+        covers the shortfall, and ``block`` when the tenant''s policy refuses the
+        commit. ``source``
+
+        names the resolution tier that produced the thresholds, so a surprising verdict
+        can always
+
+        be traced to the rule that caused it.'
+    ImportPreflightPolicyFailure:
+      properties:
+        kind:
+          type: string
+          enum:
+          - score
+          - grade
+          - severity
+          title: Kind
+          description: 'Which floor was missed: the score floor, the grade floor,
+            or the severity floor.'
+          example: score
+        required:
+          anyOf:
+          - type: integer
+            description: Import Preflight Policy Failure schema.
+          - type: string
+            description: Import Preflight Policy Failure schema.
+          - type: 'null'
+            description: Import Preflight Policy Failure schema.
+          title: Required
+          description: What policy requires (a score, a grade, or a severity name).
+        actual:
+          anyOf:
+          - type: integer
+            description: Import Preflight Policy Failure schema.
+          - type: string
+            description: Import Preflight Policy Failure schema.
+          - type: 'null'
+            description: Import Preflight Policy Failure schema.
+          title: Actual
+          description: 'What the candidate has: its score, its grade, or — for a severity
+            floor — how many findings sit at or above that severity.'
+      additionalProperties: false
+      type: object
+      required:
+      - kind
+      title: ImportPreflightPolicyFailure
+      description: 'One quality floor the candidate falls short of (IXH-2.3, #5098).'
     ImportPreflightReport:
       properties:
         ok:
@@ -63555,6 +64060,441 @@ components:
       title: PushWebhookSubscriptionUpdateRequest
       description: 'Update URL, active flag, severity filter, and/or rotate signing
         secret (#2587, #4477).'
+    QualityPolicyOut:
+      properties:
+        policyVersionId:
+          anyOf:
+          - type: string
+            description: Response payload for quality policy.
+          - type: 'null'
+            description: Response payload for quality policy.
+          title: Policyversionid
+          description: Row id of the applied policy version; null when the tenant
+            has none saved.
+        versionNumber:
+          type: integer
+          title: Versionnumber
+          description: Monotonic version number; 0 for the built-in default.
+          default: 0
+          example: 1
+        contentFingerprint:
+          type: string
+          title: Contentfingerprint
+          description: SHA-256 over the canonicalized policy body ('default' for the
+            default).
+          default: default
+          example: a1b2c3d4e5f6789012345678901234ab
+        isDefault:
+          type: boolean
+          title: Isdefault
+          description: True when no tenant policy is saved and the advisory default
+            applies.
+          default: true
+          example: false
+        import:
+          $ref: '#/components/schemas/QualityPolicyThresholdsOut'
+          description: Floors applied to import intake.
+        export:
+          $ref: '#/components/schemas/QualityPolicyThresholdsOut'
+          description: Floors applied to export delivery.
+        formatOverrides:
+          additionalProperties: true
+          type: object
+          title: Formatoverrides
+          description: 'Per-adapter-key overrides, e.g. {''openapi'': {''import'':
+            {''minGrade'': ''B''}}}. Resolution is format override → tenant → default.'
+        allowOverride:
+          type: boolean
+          title: Allowoverride
+          description: Whether a blocking verdict may be waived at all.
+          default: true
+          example: false
+        overrideRoles:
+          items:
+            type: string
+          type: array
+          title: Overrideroles
+          description: Role slugs permitted to record a waiver (empty = nobody may).
+          maxItems: 1000
+        waiverTtlHours:
+          type: integer
+          title: Waiverttlhours
+          description: Lifetime of a granted waiver, in hours.
+          default: 168
+          example: 1
+        actorLabel:
+          anyOf:
+          - type: string
+            description: Response payload for quality policy.
+          - type: 'null'
+            description: Response payload for quality policy.
+          title: Actorlabel
+          description: Who saved this version.
+        createdAt:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Response payload for quality policy.
+          - type: string
+            description: Response payload for quality policy.
+          - type: 'null'
+            description: Response payload for quality policy.
+          title: Createdat
+          description: When this version was saved.
+      type: object
+      title: QualityPolicyOut
+      description: 'The tenant''s import/export quality policy in force (IXH-2.3,
+        #5098).'
+    QualityPolicyPutRequest:
+      properties:
+        import:
+          anyOf:
+          - $ref: '#/components/schemas/QualityPolicyThresholdsOut'
+          - type: 'null'
+            description: Request body for quality policy put.
+          description: Import.
+        export:
+          anyOf:
+          - $ref: '#/components/schemas/QualityPolicyThresholdsOut'
+          - type: 'null'
+            description: Request body for quality policy put.
+          description: Export.
+        formatOverrides:
+          anyOf:
+          - additionalProperties: true
+            type: object
+            description: Request body for quality policy put.
+          - type: 'null'
+            description: Request body for quality policy put.
+          title: Formatoverrides
+          description: Format Overrides.
+        allowOverride:
+          anyOf:
+          - type: boolean
+            description: Request body for quality policy put.
+          - type: 'null'
+            description: Request body for quality policy put.
+          title: Allowoverride
+          description: Allow Override.
+        overrideRoles:
+          anyOf:
+          - items:
+              type: string
+            type: array
+            description: Request body for quality policy put.
+          - type: 'null'
+            description: Request body for quality policy put.
+          title: Overrideroles
+          description: Override Roles.
+        waiverTtlHours:
+          anyOf:
+          - type: integer
+            maximum: 8760.0
+            minimum: 1.0
+            description: Request body for quality policy put.
+          - type: 'null'
+            description: Request body for quality policy put.
+          title: Waiverttlhours
+          description: Waiver Ttl Hours.
+      type: object
+      title: QualityPolicyPutRequest
+      description: 'Replace the tenant''s import/export quality policy (IXH-2.3, #5098).
+
+
+        A PUT always appends a **new version**: policy rows are immutable so a verdict
+        recorded
+
+        against a version stays reproducible. Omitted sections keep the values the
+        current policy
+
+        holds, so a caller can raise the import floor without restating the export
+        contract.'
+    QualityPolicyThresholdsOut:
+      properties:
+        minGrade:
+          anyOf:
+          - type: string
+            description: Response payload for quality policy thresholds.
+          - type: 'null'
+            description: Response payload for quality policy thresholds.
+          title: Mingrade
+          description: Lowest acceptable letter grade (A best, F worst); null = no
+            grade floor.
+        minScore:
+          anyOf:
+          - type: integer
+            maximum: 100.0
+            minimum: 0.0
+            description: Response payload for quality policy thresholds.
+          - type: 'null'
+            description: Response payload for quality policy thresholds.
+          title: Minscore
+          description: Lowest acceptable 0-100 lint score; null = no score floor.
+        blockOnSeverity:
+          anyOf:
+          - type: string
+            enum:
+            - error
+            - warning
+            - info
+            description: Response payload for quality policy thresholds.
+          - type: 'null'
+            description: Response payload for quality policy thresholds.
+          title: Blockonseverity
+          description: Severity at or above which findings are unacceptable; null
+            = not gated.
+        enforcement:
+          type: string
+          enum:
+          - advisory
+          - block
+          title: Enforcement
+          description: '''advisory'' reports a shortfall; ''block'' refuses the operation.'
+          default: advisory
+          example: advisory
+      type: object
+      title: QualityPolicyThresholdsOut
+      description: 'One scope''s quality floors and enforcement mode (IXH-2.3, #5098).
+
+
+        Every floor is independently optional; a scope with no floor at all can never
+        block, which
+
+        is the shipped default and the reason an upgrade changes nothing for an existing
+        tenant.'
+    QualityPolicyVersionListResponse:
+      properties:
+        versions:
+          items:
+            $ref: '#/components/schemas/QualityPolicyOut'
+          type: array
+          title: Versions
+          description: Versions.
+          maxItems: 1000
+        count:
+          type: integer
+          title: Count
+          default: 0
+          description: Number of count.
+          example: 1
+      type: object
+      title: QualityPolicyVersionListResponse
+      description: 'The tenant''s saved policy versions, newest first (IXH-2.3, #5098).'
+    QualityWaiverCreateRequest:
+      properties:
+        scope:
+          type: string
+          enum:
+          - import
+          - export
+          title: Scope
+          description: Which gate the waiver applies to.
+          default: import
+          example: import
+        subjectKey:
+          type: string
+          minLength: 1
+          title: Subjectkey
+          description: 'Subject identity: the SHA-256 of the candidate document for
+            an import (the pre-flight report''s cache.content_hash), or the delivery
+            subject for an export.'
+          example: example
+        reason:
+          type: string
+          minLength: 1
+          title: Reason
+          description: The actor's stated justification for accepting the risk.
+          example: example
+        subjectLabel:
+          anyOf:
+          - type: string
+            description: Request body for quality waiver create.
+          - type: 'null'
+            description: Request body for quality waiver create.
+          title: Subjectlabel
+          description: Display label for the waived subject (filename / artifact name).
+        formatKey:
+          anyOf:
+          - type: string
+            description: Request body for quality waiver create.
+          - type: 'null'
+            description: Request body for quality waiver create.
+          title: Formatkey
+          description: Adapter key / export target the waiver applies to.
+        reportFingerprint:
+          anyOf:
+          - type: string
+            description: Request body for quality waiver create.
+          - type: 'null'
+            description: Request body for quality waiver create.
+          title: Reportfingerprint
+          description: Fingerprint of the lint report being waived.
+        score:
+          anyOf:
+          - type: integer
+            maximum: 100.0
+            minimum: 0.0
+            description: Request body for quality waiver create.
+          - type: 'null'
+            description: Request body for quality waiver create.
+          title: Score
+          description: Lint score at waiver time.
+        grade:
+          anyOf:
+          - type: string
+            description: Request body for quality waiver create.
+          - type: 'null'
+            description: Request body for quality waiver create.
+          title: Grade
+          description: Lint grade at waiver time.
+      type: object
+      required:
+      - subjectKey
+      - reason
+      title: QualityWaiverCreateRequest
+      description: 'Record a waiver against a blocking quality verdict (IXH-2.3, #5098).'
+    QualityWaiverListResponse:
+      properties:
+        waivers:
+          items:
+            $ref: '#/components/schemas/QualityWaiverOut'
+          type: array
+          title: Waivers
+          description: Waivers.
+          maxItems: 1000
+        count:
+          type: integer
+          title: Count
+          default: 0
+          description: Number of count.
+          example: 1
+      type: object
+      title: QualityWaiverListResponse
+      description: 'A tenant''s quality waivers, newest first (IXH-2.3, #5098).'
+    QualityWaiverOut:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        scope:
+          type: string
+          title: Scope
+          description: Scope.
+          example: example
+        subjectKey:
+          type: string
+          title: Subjectkey
+          description: Subject Key.
+          example: example
+        subjectLabel:
+          anyOf:
+          - type: string
+            description: Response payload for quality waiver.
+          - type: 'null'
+            description: Response payload for quality waiver.
+          title: Subjectlabel
+          description: Subject Label.
+        formatKey:
+          anyOf:
+          - type: string
+            description: Response payload for quality waiver.
+          - type: 'null'
+            description: Response payload for quality waiver.
+          title: Formatkey
+          description: Format Key.
+        reportFingerprint:
+          anyOf:
+          - type: string
+            description: Response payload for quality waiver.
+          - type: 'null'
+            description: Response payload for quality waiver.
+          title: Reportfingerprint
+          description: Report Fingerprint.
+        score:
+          anyOf:
+          - type: integer
+            description: Response payload for quality waiver.
+          - type: 'null'
+            description: Response payload for quality waiver.
+          title: Score
+          description: Score.
+        grade:
+          anyOf:
+          - type: string
+            description: Response payload for quality waiver.
+          - type: 'null'
+            description: Response payload for quality waiver.
+          title: Grade
+          description: Grade.
+        reason:
+          type: string
+          title: Reason
+          description: Reason.
+          example: example
+        expiresAt:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Response payload for quality waiver.
+          - type: string
+            description: Response payload for quality waiver.
+          - type: 'null'
+            description: Response payload for quality waiver.
+          title: Expiresat
+          description: Expires At.
+        policyVersionId:
+          anyOf:
+          - type: string
+            description: Response payload for quality waiver.
+          - type: 'null'
+            description: Response payload for quality waiver.
+          title: Policyversionid
+          description: Policy Version ID.
+        policyContentFingerprint:
+          anyOf:
+          - type: string
+            description: Response payload for quality waiver.
+          - type: 'null'
+            description: Response payload for quality waiver.
+          title: Policycontentfingerprint
+          description: Policy Content Fingerprint.
+        actorLabel:
+          anyOf:
+          - type: string
+            description: Response payload for quality waiver.
+          - type: 'null'
+            description: Response payload for quality waiver.
+          title: Actorlabel
+          description: Actor Label.
+        actorRole:
+          anyOf:
+          - type: string
+            description: Response payload for quality waiver.
+          - type: 'null'
+            description: Response payload for quality waiver.
+          title: Actorrole
+          description: Actor Role.
+        createdAt:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Response payload for quality waiver.
+          - type: string
+            description: Response payload for quality waiver.
+          - type: 'null'
+            description: Response payload for quality waiver.
+          title: Createdat
+          description: Created At.
+      type: object
+      required:
+      - id
+      - scope
+      - subjectKey
+      - reason
+      title: QualityWaiverOut
+      description: 'One recorded quality waiver (IXH-2.3, #5098).'
     RatePresetBody:
       properties:
         key:
