@@ -1,0 +1,1133 @@
+"""Import preview manifest — IXH-3.1 (#5103).
+
+The IXH-2.1 pre-flight answers "is this worth importing?" — grade, findings, policy
+verdict. What it does **not** answer is *what the import would create*: which services,
+operations, types, and channels will exist, under what stable canonical keys, and what
+the source carried that the canonical model could not hold. Before this module the only
+pre-commit structure the UI had was ``extractFileMetadata`` — a client-side title/version
+sniff.
+
+This module extends the pre-flight into a full **import preview manifest**:
+
+* the canonical **entity tree** (services → operations, plus types and channels), every
+  entity carrying its stable canonical key and — where the parser captured one — a
+  source location;
+* per-entity **provenance** back to the source construct (native name / native id /
+  source location, read from the same extras keys the export manifest reads);
+* a **coverage ledger** classifying source constructs as ``mapped``,
+  ``partially-mapped``, ``unsupported-by-canonical-model``, or
+  ``not-parsed-by-adapter`` — the last two are *never* conflated: "the canonical model
+  cannot hold this" and "our parser does not yet read this" are different facts with
+  different owners, and each ``not-parsed-by-adapter`` entry names its CLX-2.4
+  capability-registry reference;
+* the **adapter capability reference** (descriptor + the CLX-2.4 per-format capability
+  entry + the adapter's declared parser limits); and
+* the **routing decision**, carried on the embedded pre-flight report.
+
+**One vocabulary, two directions (CPDO-1.3 / #4800).** The graph reuses the export
+projection manifest's node/edge contract verbatim — the same
+:class:`~app.export_projection.ProjectionNode` / :class:`~app.export_projection.ProjectionEdge`
+models, the same :class:`~app.export_projection.ProjectionNodeKind` /
+:class:`~app.export_projection.ProjectionEdgeRelation` enums, and the same
+:class:`~app.projection_taxonomy.ProjectionStatus` /
+:class:`~app.projection_taxonomy.ProjectionReason` taxonomy — rather than a second
+lookalike shape. The lanes read in the import direction: the *source document* is the
+origin and the *canonical model* is the destination, so an outcome (``projects``) edge
+runs **native → canonical** (where the export manifest's runs canonical → target), and a
+dropped source construct has ``target = None`` exactly as a dropped export construct
+does. ``derives`` edges carry provenance for mapped entities, mirroring the export
+build. A shared contract test asserts the two surfaces agree on every enum, model, id
+scheme, and cursor format.
+
+**Coverage classes ↔ shared statuses.** The ledger classes are a documented, bijective
+view over the shared taxonomy — they add no second status vocabulary:
+
+========================================  =============  ==========================
+Coverage class                            Status         Reason
+========================================  =============  ==========================
+``mapped``                                ``retained``   —
+``partially-mapped``                      ``approximated``  ``destination_unsupported``
+``unsupported-by-canonical-model``        ``dropped``    ``destination_unsupported``
+``not-parsed-by-adapter``                 ``dropped``    ``source_parse_limit``
+========================================  =============  ==========================
+
+In the import direction the "destination" is the **canonical model**, so
+``destination_unsupported`` truthfully means "the canonical fields cannot hold this"
+(the attributes ride in the untyped ``extras`` escape hatch), while
+``source_parse_limit`` means "apiome's parser does not read this yet" — the same
+never-blame-the-wrong-party rule the export taxonomy enforces.
+
+**What populates the ledger.** Only evidence the pipeline actually has:
+
+* every canonical entity → ``mapped`` when its canonical fields hold everything the
+  normalizer recovered, ``partially-mapped`` when source attributes ride only in its
+  ``extras`` bag (named in the entry's detail);
+* document-level ``extras`` on the model root → ``unsupported-by-canonical-model``
+  (the source carried document-level constructs no canonical field models);
+* the adapter's **declared parser limits** (:data:`KNOWN_PARSER_LIMITS`) →
+  ``not-parsed-by-adapter``. These are adapter-level declarations, not per-document
+  detections, so each entry is marked ``document_scoped = false`` — the ledger states
+  "this adapter does not read X yet" without pretending to have checked whether *this*
+  document uses X.
+
+**Determinism.** :func:`build_import_preview_manifest` is pure — no I/O, no clock. The
+entity order is the model's declaration order (itself deterministic for a fixed input),
+nodes/edges sort exactly as the export manifest sorts them, and the manifest hash folds
+the adapter key, adapter/apiome version provenance, and the request options into a
+digest over the full graph — so a fixed (input, adapter version, options) triple is
+byte-stable, and an adapter upgrade is a different snapshot.
+
+**Bounded output.** The entity tree, graph, and ledger are cursor-paginated over the
+entity list (the cursor codec is shared with the export evidence pages). Truncation is
+*stated*: ``truncated`` is true whenever a page omits rows, and every ``total_*`` field
+reports the full-manifest count, never the page's.
+"""
+
+from __future__ import annotations
+
+import base64
+import binascii
+import hashlib
+import json
+import logging
+from collections import OrderedDict
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from . import __version__
+from .canonical_model import CanonicalApi
+from .export_projection import (
+    NATIVE_ID_EXTRA_KEYS,
+    SOURCE_LOCATION_EXTRA_KEYS,
+    NativeEvidence,
+    ProjectionEdge,
+    ProjectionEdgeRelation,
+    ProjectionNode,
+    ProjectionNodeKind,
+    decode_page_cursor,
+    encode_page_cursor,
+    first_extra,
+)
+from .format_lint_capabilities import FormatLintCapability, capability_for_format
+from .import_preflight import run_import_preflight
+from .import_source import get_import_source, load_builtin_import_sources
+from .import_source_pipeline import ImportRunArtifacts
+from .models import ImportPreflightCounts, ImportPreflightReport, ImportPreflightRequest
+from .projection_taxonomy import ProjectionReason, ProjectionStatus
+
+logger = logging.getLogger(__name__)
+
+__all__ = [
+    "CoverageClass",
+    "STATUS_FOR_COVERAGE",
+    "coverage_for_outcome",
+    "ParserLimit",
+    "KNOWN_PARSER_LIMITS",
+    "CapabilityReference",
+    "ImportAdapterReference",
+    "CoverageEntry",
+    "ImportPreviewEntity",
+    "ImportPreviewManifest",
+    "ImportPreviewManifestRequest",
+    "ImportPreviewManifestResponse",
+    "build_import_preview_manifest",
+    "paginate_import_preview_manifest",
+    "run_import_preview_manifest",
+    "clear_preview_manifest_cache",
+    "preview_manifest_cache_size",
+    "DEFAULT_ENTITY_PAGE_SIZE",
+    "MAX_ENTITY_PAGE_SIZE",
+    "PREVIEW_MANIFEST_CACHE_MAX_ENTRIES",
+    "PROVENANCE_EXTRA_KEYS",
+]
+
+#: The apiome-rest package version stamped into every manifest's provenance and hash.
+APIOME_VERSION = __version__
+
+#: Default and hard-cap entity page sizes for :func:`paginate_import_preview_manifest`.
+DEFAULT_ENTITY_PAGE_SIZE = 200
+MAX_ENTITY_PAGE_SIZE = 1000
+
+#: Upper bound on cached full manifests held per process (they can be large, so the
+#: bound is tighter than the pre-flight report cache's).
+PREVIEW_MANIFEST_CACHE_MAX_ENTRIES = 32
+
+#: Extras keys that carry *provenance* (source location / native id) rather than source
+#: semantics. An entity whose extras hold only these keys is fully ``mapped`` — the
+#: provenance bag is our own bookkeeping, not an unmodeled source attribute.
+PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE_ID_EXTRA_KEYS)
+
+
+# ===========================================================================
+# Coverage vocabulary (a view over the shared CPDO-1.3 taxonomy)
+# ===========================================================================
+
+
+class CoverageClass(str, Enum):
+    """Coverage classification of one source construct in the import (IXH-3.1).
+
+    The values are the ticket's exact vocabulary. Each class is a documented view over
+    the shared :class:`~app.projection_taxonomy.ProjectionStatus` /
+    :class:`~app.projection_taxonomy.ProjectionReason` pair (see
+    :data:`STATUS_FOR_COVERAGE`) — never a parallel status vocabulary.
+    """
+
+    MAPPED = "mapped"
+    PARTIALLY_MAPPED = "partially-mapped"
+    UNSUPPORTED_BY_CANONICAL_MODEL = "unsupported-by-canonical-model"
+    NOT_PARSED_BY_ADAPTER = "not-parsed-by-adapter"
+
+
+#: The bijection coverage class → (status, reason) in the shared taxonomy. In the import
+#: direction the "destination" is the canonical model, so ``destination_unsupported``
+#: means "canonical fields cannot hold this", while ``source_parse_limit`` means "our
+#: parser does not read this yet" — the two are never conflated.
+STATUS_FOR_COVERAGE: Dict[CoverageClass, Tuple[ProjectionStatus, Optional[ProjectionReason]]] = {
+    CoverageClass.MAPPED: (ProjectionStatus.RETAINED, None),
+    CoverageClass.PARTIALLY_MAPPED: (
+        ProjectionStatus.APPROXIMATED,
+        ProjectionReason.DESTINATION_UNSUPPORTED,
+    ),
+    CoverageClass.UNSUPPORTED_BY_CANONICAL_MODEL: (
+        ProjectionStatus.DROPPED,
+        ProjectionReason.DESTINATION_UNSUPPORTED,
+    ),
+    CoverageClass.NOT_PARSED_BY_ADAPTER: (
+        ProjectionStatus.DROPPED,
+        ProjectionReason.SOURCE_PARSE_LIMIT,
+    ),
+}
+
+
+def coverage_for_outcome(
+    status: ProjectionStatus, reason: Optional[ProjectionReason]
+) -> Optional[CoverageClass]:
+    """Invert :data:`STATUS_FOR_COVERAGE`: the coverage class for a (status, reason) pair.
+
+    Args:
+        status: The shared-taxonomy status of an outcome edge.
+        reason: Its reason code, or ``None``.
+
+    Returns:
+        The coverage class the pair encodes, or ``None`` when the pair is not one the
+        import manifest produces (the mapping is a bijection over exactly four pairs).
+    """
+    for coverage, (mapped_status, mapped_reason) in STATUS_FOR_COVERAGE.items():
+        if mapped_status is status and mapped_reason is reason:
+            return coverage
+    return None
+
+
+# ===========================================================================
+# Adapter capability + parser-limit references (CLX-2.4)
+# ===========================================================================
+
+
+@dataclass(frozen=True)
+class ParserLimit:
+    """One declared "our parser does not yet read this" limit for an adapter.
+
+    A *declaration*, not a per-document detection: it states a construct class the
+    adapter's parser is known not to read today, so the coverage ledger can carry an
+    honest ``not-parsed-by-adapter`` entry (``document_scoped = false``) instead of
+    silently claiming full coverage.
+
+    Attributes:
+        construct: Short name of the source construct class the parser skips.
+        detail: One-sentence human description of the limit.
+    """
+
+    construct: str
+    detail: str
+
+
+#: Declared parser limits per adapter registry key. Entries are additive and must state
+#: only *documented* limits (the corpus manifest's recorded adapter bugs); remove an
+#: entry in the same change that fixes its parser. An adapter with no entry simply
+#: contributes no ``not-parsed-by-adapter`` rows — absence of a declaration is not a
+#: claim of completeness.
+KNOWN_PARSER_LIMITS: Dict[str, Tuple[ParserLimit, ...]] = {
+    "thrift": (
+        ParserLimit(
+            construct="single-line method parameters",
+            detail="Parameters of a method declared entirely on one line are silently "
+            "dropped by the Thrift parser.",
+        ),
+    ),
+    "capnproto": (
+        ParserLimit(
+            construct="parenthesized method result types",
+            detail="Methods whose result type nests parentheses (for example "
+            "List(Event)) are dropped by the Cap'n Proto parser.",
+        ),
+    ),
+    "asn1": (
+        ParserLimit(
+            construct="scalar and alias type assignments",
+            detail="Scalar and alias typedefs crash the ASN.1 normalizer and are not "
+            "represented in the canonical model.",
+        ),
+    ),
+    "cloudevents": (
+        ParserLimit(
+            construct="top-level event batch arrays",
+            detail="A JSON document whose root is a CloudEvents batch array is rejected "
+            "by the parser; only single-event documents are read.",
+        ),
+    ),
+}
+
+
+class CapabilityReference(BaseModel):
+    """A named reference into the CLX-2.4 per-format capability registry.
+
+    The ledger's ``not-parsed-by-adapter`` entries and the manifest's adapter section
+    both point here, so "our parser does not yet read this" is always traceable to the
+    registry entry that documents the format's coverage state.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    format: str = Field(description="Canonical format key of the registry entry (CLX-2.4).")
+    mode: str = Field(description="Registry coverage mode: native / adapted / unsupported.")
+    importable: bool = Field(description="Whether an import-source adapter ingests this format today.")
+    related_issues: List[str] = Field(
+        default_factory=list,
+        description="GitHub issues tracking planned coverage work for this format.",
+    )
+    notes: str = Field(default="", description="The registry entry's human rationale.")
+
+    @classmethod
+    def from_capability(cls, capability: FormatLintCapability) -> "CapabilityReference":
+        """Project a registry :class:`~app.format_lint_capabilities.FormatLintCapability` row."""
+        return cls(
+            format=capability.format,
+            mode=capability.mode,
+            importable=capability.importable,
+            related_issues=list(capability.related_issues),
+            notes=capability.notes,
+        )
+
+
+class ImportAdapterReference(BaseModel):
+    """The adapter that produced the manifest, with its capability references (CLX-2.4)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    adapter_key: str = Field(description="Registry key of the adapter that ran (e.g. ``openapi``).")
+    adapter_label: str = Field(description="Human label of the adapter.")
+    paradigm: str = Field(description="The canonical paradigm the adapter produces.")
+    formats: List[str] = Field(
+        default_factory=list, description="Normalizer format keys the adapter can emit."
+    )
+    apiome_version: str = Field(
+        description="The apiome-rest package version that ran the adapter — the adapter "
+        "version provenance folded into the manifest hash (adapters version with the package)."
+    )
+    capability: CapabilityReference = Field(
+        description="The CLX-2.4 capability-registry entry for the normalized model's format."
+    )
+    parser_limits: List[str] = Field(
+        default_factory=list,
+        description="Construct classes this adapter's parser is declared not to read yet "
+        "(see the coverage ledger's not-parsed-by-adapter entries for details).",
+    )
+
+
+# ===========================================================================
+# Entity tree + coverage ledger models
+# ===========================================================================
+
+
+class ImportPreviewEntity(BaseModel):
+    """One canonical entity the import would create (IXH-3.1).
+
+    A flat row of the entity tree: services, operations (parented to their service),
+    channels, and types, in the model's deterministic declaration order. ``order`` is
+    the entity's stable index in the *full* tree, so a paginated client can interleave
+    pages without re-sorting.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    key: str = Field(description="Stable canonical key (``acme.PetService``, ``GET /pets/{id}``, ``User``).")
+    name: str = Field(description="Source-visible name of the entity.")
+    entity_kind: str = Field(description="service | operation | type | channel.")
+    parent_key: Optional[str] = Field(
+        default=None,
+        description="The owning service's key, on an operation; null elsewhere.",
+    )
+    order: int = Field(description="Stable 0-based index of this entity in the full tree.")
+    description: Optional[str] = Field(default=None, description="Entity description, when the source carried one.")
+    deprecated: bool = Field(default=False, description="Whether the source marks the entity deprecated.")
+    coverage: CoverageClass = Field(description="This entity's coverage classification.")
+    native_name: Optional[str] = Field(
+        default=None, description="The construct's name in the source document, when recovered."
+    )
+    native_id: Optional[str] = Field(
+        default=None, description="Source-native stable identifier, when the parser captured one."
+    )
+    source_location: Optional[str] = Field(
+        default=None,
+        description="Source location (line/range/pointer) the entity came from, when the parser "
+        "captured one; null otherwise — never fabricated.",
+    )
+    unmodeled_extras: List[str] = Field(
+        default_factory=list,
+        description="Source attribute names that ride only in the entity's ``extras`` bag "
+        "because no canonical field models them; non-empty exactly when coverage is "
+        "``partially-mapped``.",
+    )
+
+
+class CoverageEntry(BaseModel):
+    """One row of the coverage ledger (IXH-3.1).
+
+    Classifies one source construct. Entity-scoped rows reference their canonical
+    entity by key; document-scoped rows (root-level constructs) have no entity. A
+    declared parser limit is marked ``document_scoped = false`` — it states an adapter
+    fact, not a verified fact about this document.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    source_construct: str = Field(
+        description="The source construct this row classifies (an entity key, a document-level "
+        "attribute, or a construct class). Named ``source_construct`` (not ``construct``) so it "
+        "cannot shadow pydantic's legacy ``BaseModel.construct``."
+    )
+    coverage: CoverageClass = Field(description="The coverage classification.")
+    status: ProjectionStatus = Field(
+        description="The shared CPDO-1.3 projection status this class encodes."
+    )
+    reason: Optional[ProjectionReason] = Field(
+        default=None,
+        description="The shared reason code for a non-mapped class; null for ``mapped``.",
+    )
+    detail: str = Field(description="Human-readable explanation of the classification.")
+    entity_key: Optional[str] = Field(
+        default=None,
+        description="The canonical entity this row concerns, when entity-scoped.",
+    )
+    document_scoped: bool = Field(
+        default=True,
+        description="True when the row states a fact about this document; false for an "
+        "adapter-level declaration (a parser limit not evaluated against this document).",
+    )
+    capability_reference: Optional[CapabilityReference] = Field(
+        default=None,
+        description="The CLX-2.4 registry entry documenting the coverage gap; present on "
+        "every ``not-parsed-by-adapter`` row.",
+    )
+
+
+class ImportPreviewManifest(BaseModel):
+    """One page of the import preview manifest (IXH-3.1).
+
+    The identity fields (``manifest_hash``, ``adapter``, counts) always describe the
+    **full** manifest; ``entities`` / ``nodes`` / ``edges`` / ``coverage`` carry the
+    requested page. ``truncated`` states whether anything was omitted from this
+    response — truncation is declared, never silent.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    manifest_hash: str = Field(
+        description="Stable content hash over the full manifest (adapter + versions + options "
+        "+ graph + ledger). Identical for a fixed input, adapter version, and options."
+    )
+    adapter: ImportAdapterReference = Field(
+        description="The adapter that produced the model, with its CLX-2.4 capability references."
+    )
+    counts: ImportPreflightCounts = Field(
+        description="Full-manifest canonical entity counts — the same values the pre-flight "
+        "reports and the committed import's summary reports for this document."
+    )
+    coverage_counts: Dict[str, int] = Field(
+        description="Full-manifest ledger row count per coverage class, zero-filled."
+    )
+    status_counts: Dict[str, int] = Field(
+        description="Full-manifest outcome-edge count per shared ProjectionStatus, zero-filled "
+        "(parity with the export projection manifest's counts)."
+    )
+    reason_counts: Dict[str, int] = Field(
+        description="Full-manifest outcome-edge count per shared ProjectionReason, zero-filled."
+    )
+    entities: List[ImportPreviewEntity] = Field(
+        default_factory=list, description="This page's entity rows, in stable tree order."
+    )
+    total_entities: int = Field(description="Entity count in the full manifest.")
+    nodes: List[ProjectionNode] = Field(
+        default_factory=list,
+        description="CPDO-1.3 projection nodes for this page's entities (plus document-scope "
+        "nodes on the first page).",
+    )
+    edges: List[ProjectionEdge] = Field(
+        default_factory=list,
+        description="CPDO-1.3 projection edges for this page's entities (plus document-scope "
+        "edges on the first page). ``projects`` edges run native → canonical: the import "
+        "direction's outcome edge.",
+    )
+    coverage: List[CoverageEntry] = Field(
+        default_factory=list,
+        description="This page's coverage-ledger rows (entity rows for the page; document-scope "
+        "and adapter-declaration rows ride on the first page).",
+    )
+    total_coverage_entries: int = Field(description="Ledger row count in the full manifest.")
+    page_size: int = Field(description="The applied (clamped) entity page size.")
+    next_cursor: Optional[str] = Field(
+        default=None,
+        description="Opaque cursor for the next entity page; null on the last page. The cursor "
+        "codec is shared with the export projection evidence pages.",
+    )
+    truncated: bool = Field(
+        description="True when this response omits rows the full manifest has (more pages exist)."
+    )
+
+
+class ImportPreviewManifestRequest(ImportPreflightRequest):
+    """The manifest request: the 2.1 pre-flight intake payload plus pagination.
+
+    Everything the pre-flight accepts (document, adapter/source hints, import target,
+    archive root) plus a cursor + page size over the entity tree. Repeating a request
+    with the next cursor re-submits the same bytes; the manifest itself is served from a
+    content-hash cache, so paging does not re-run the pipeline.
+    """
+
+    cursor: Optional[str] = Field(
+        default=None,
+        description="Opaque entity-page cursor from a previous response; null for the first page.",
+    )
+    page_size: int = Field(
+        default=DEFAULT_ENTITY_PAGE_SIZE,
+        ge=1,
+        description=f"Maximum entities per page; clamped to {MAX_ENTITY_PAGE_SIZE}.",
+    )
+
+
+class ImportPreviewManifestResponse(BaseModel):
+    """The preview-manifest endpoint's response (IXH-3.1).
+
+    Embeds the full IXH-2.1 pre-flight report (detection, routing decision, counts,
+    lint, policy verdict, taxonomy error) and adds the manifest. ``manifest`` is null
+    exactly when the candidate is not importable (``preflight.ok`` false) — there is no
+    model to describe, and the pre-flight's ``error`` says why.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    ok: bool = Field(description="Mirrors ``preflight.ok``: whether the candidate is importable.")
+    preflight: ImportPreflightReport = Field(
+        description="The full IXH-2.1 pre-flight report for the same run — detection, routing "
+        "decision, entity counts, ranked lint, policy verdict, and the intake-taxonomy error "
+        "when the candidate is not importable."
+    )
+    manifest: Optional[ImportPreviewManifest] = Field(
+        default=None,
+        description="The requested manifest page; null when the candidate is not importable.",
+    )
+
+
+# ===========================================================================
+# Internal full-manifest form (built once, paginated per request)
+# ===========================================================================
+
+
+@dataclass
+class _EntityRows:
+    """One entity together with its graph and ledger rows (page unit)."""
+
+    entity: ImportPreviewEntity
+    nodes: List[ProjectionNode]
+    edges: List[ProjectionEdge]
+    coverage: CoverageEntry
+
+
+@dataclass
+class _FullManifest:
+    """The complete, unpaginated manifest a build produces (cached per content hash)."""
+
+    manifest_hash: str
+    adapter: ImportAdapterReference
+    counts: ImportPreflightCounts
+    coverage_counts: Dict[str, int]
+    status_counts: Dict[str, int]
+    reason_counts: Dict[str, int]
+    entity_rows: List[_EntityRows]
+    document_nodes: List[ProjectionNode]
+    document_edges: List[ProjectionEdge]
+    document_coverage: List[CoverageEntry]
+
+    @property
+    def total_entities(self) -> int:
+        return len(self.entity_rows)
+
+    @property
+    def total_coverage_entries(self) -> int:
+        return len(self.entity_rows) + len(self.document_coverage)
+
+
+# ===========================================================================
+# Build
+# ===========================================================================
+
+
+def _native_evidence_for(extras: Dict[str, Any], name: Optional[str], key: str) -> NativeEvidence:
+    """Recover native evidence from an entity's extras, exactly as the export manifest does."""
+    return NativeEvidence(
+        native_id=first_extra(extras, NATIVE_ID_EXTRA_KEYS),
+        native_name=name or key,
+        source_location=first_extra(extras, SOURCE_LOCATION_EXTRA_KEYS),
+    )
+
+
+def _unmodeled_extras(extras: Dict[str, Any]) -> List[str]:
+    """Source attribute names in ``extras`` that are not our own provenance bookkeeping."""
+    return sorted(key for key in extras if key not in PROVENANCE_EXTRA_KEYS)
+
+
+def _entity_rows(
+    *,
+    key: str,
+    name: str,
+    entity_kind: str,
+    order: int,
+    extras: Dict[str, Any],
+    description: Optional[str],
+    deprecated: bool,
+    parent_key: Optional[str],
+) -> _EntityRows:
+    """Build one entity's row, nodes, edges, and ledger entry.
+
+    The graph mirrors the export build's shape: one native node, one canonical node, a
+    ``derives`` provenance edge (always ``retained``), and exactly one outcome
+    (``projects``) edge — here running native → canonical, the import direction's
+    destination lane.
+    """
+    unmodeled = _unmodeled_extras(extras)
+    coverage = CoverageClass.PARTIALLY_MAPPED if unmodeled else CoverageClass.MAPPED
+    status, reason = STATUS_FOR_COVERAGE[coverage]
+    evidence = _native_evidence_for(extras, name, key)
+
+    if coverage is CoverageClass.MAPPED:
+        detail = "Source construct fully represented by canonical fields."
+    else:
+        detail = (
+            "Source attributes not modeled by canonical fields ride in the entity's "
+            f"extras bag: {', '.join(unmodeled)}."
+        )
+
+    entity = ImportPreviewEntity(
+        key=key,
+        name=name,
+        entity_kind=entity_kind,
+        parent_key=parent_key,
+        order=order,
+        description=description,
+        deprecated=deprecated,
+        coverage=coverage,
+        native_name=evidence.native_name,
+        native_id=evidence.native_id,
+        source_location=evidence.source_location,
+        unmodeled_extras=unmodeled,
+    )
+
+    native_id = f"native:{key}"
+    canonical_id = f"canonical:{key}"
+    nodes = [
+        ProjectionNode(
+            id=native_id,
+            kind=ProjectionNodeKind.NATIVE,
+            label=evidence.native_name or key,
+            construct_key=key,
+            native=evidence,
+        ),
+        ProjectionNode(
+            id=canonical_id,
+            kind=ProjectionNodeKind.CANONICAL,
+            label=key,
+            construct_key=key,
+            canonical_kind=entity_kind,
+        ),
+    ]
+    edges = [
+        ProjectionEdge(
+            id=f"derives:{key}",
+            relation=ProjectionEdgeRelation.DERIVES,
+            source=native_id,
+            target=canonical_id,
+            status=ProjectionStatus.RETAINED,
+            detail="source construct normalized into the canonical model",
+        ),
+        ProjectionEdge(
+            id=f"projects:{key}#0",
+            relation=ProjectionEdgeRelation.PROJECTS,
+            source=native_id,
+            target=canonical_id,
+            status=status,
+            reason=reason,
+            detail=detail,
+        ),
+    ]
+    ledger = CoverageEntry(
+        source_construct=key,
+        coverage=coverage,
+        status=status,
+        reason=reason,
+        detail=detail,
+        entity_key=key,
+        document_scoped=True,
+    )
+    return _EntityRows(entity=entity, nodes=nodes, edges=edges, coverage=ledger)
+
+
+def _document_scope_rows(
+    api: CanonicalApi,
+    capability: CapabilityReference,
+    parser_limits: Tuple[ParserLimit, ...],
+) -> Tuple[List[ProjectionNode], List[ProjectionEdge], List[CoverageEntry]]:
+    """Build the document-level ledger rows and their graph counterparts.
+
+    * Root-level ``extras`` keys → ``unsupported-by-canonical-model``: the source
+      carried a document-level construct no canonical field models. These are facts
+      about *this* document, so they get a native node and a ``projects`` edge with
+      ``target = None`` — exactly how the export manifest represents a drop.
+    * Declared parser limits → ``not-parsed-by-adapter``: adapter-level declarations,
+      ledger-only (no graph rows — the graph states only document facts), each naming
+      its capability-registry reference.
+    """
+    nodes: List[ProjectionNode] = []
+    edges: List[ProjectionEdge] = []
+    ledger: List[CoverageEntry] = []
+
+    status, reason = STATUS_FOR_COVERAGE[CoverageClass.UNSUPPORTED_BY_CANONICAL_MODEL]
+    for extra_key in _unmodeled_extras(api.extras):
+        construct = f"document#{extra_key}"
+        detail = (
+            f"The source carried document-level construct {extra_key!r}, which no "
+            "canonical field models; it is preserved only in the model's extras bag."
+        )
+        native_id = f"native:{construct}"
+        nodes.append(
+            ProjectionNode(
+                id=native_id,
+                kind=ProjectionNodeKind.NATIVE,
+                label=extra_key,
+                construct_key=construct,
+                native=NativeEvidence(native_name=extra_key),
+            )
+        )
+        edges.append(
+            ProjectionEdge(
+                id=f"projects:{construct}#0",
+                relation=ProjectionEdgeRelation.PROJECTS,
+                source=native_id,
+                target=None,
+                status=status,
+                reason=reason,
+                detail=detail,
+            )
+        )
+        ledger.append(
+            CoverageEntry(
+                source_construct=construct,
+                coverage=CoverageClass.UNSUPPORTED_BY_CANONICAL_MODEL,
+                status=status,
+                reason=reason,
+                detail=detail,
+                document_scoped=True,
+            )
+        )
+
+    limit_status, limit_reason = STATUS_FOR_COVERAGE[CoverageClass.NOT_PARSED_BY_ADAPTER]
+    for limit in parser_limits:
+        ledger.append(
+            CoverageEntry(
+                source_construct=limit.construct,
+                coverage=CoverageClass.NOT_PARSED_BY_ADAPTER,
+                status=limit_status,
+                reason=limit_reason,
+                detail=(
+                    f"{limit.detail} Whether this document uses the construct is not "
+                    "evaluated — this is a declared adapter limit."
+                ),
+                document_scoped=False,
+                capability_reference=capability,
+            )
+        )
+    return nodes, edges, ledger
+
+
+def _sort_graph(
+    nodes: List[ProjectionNode], edges: List[ProjectionEdge]
+) -> Tuple[List[ProjectionNode], List[ProjectionEdge]]:
+    """Order nodes/edges exactly as :class:`~app.export_projection.ProjectionManifest` does."""
+    kind_order = {
+        ProjectionNodeKind.NATIVE: 0,
+        ProjectionNodeKind.CANONICAL: 1,
+        ProjectionNodeKind.TARGET: 2,
+    }
+    return (
+        sorted(nodes, key=lambda n: (kind_order[n.kind], n.id)),
+        sorted(edges, key=lambda e: e.id),
+    )
+
+
+def _manifest_hash(
+    *,
+    adapter_key: str,
+    options: Dict[str, Any],
+    nodes: List[ProjectionNode],
+    edges: List[ProjectionEdge],
+    coverage: List[CoverageEntry],
+) -> str:
+    """Stable content hash over the full manifest's identity-bearing content.
+
+    Mirrors the export manifest's hash recipe: adapter + version provenance + normalized
+    options folded into a digest over the deterministically ordered graph and ledger, so
+    an adapter (package) upgrade or an option change is a different snapshot while a
+    fixed input yields an identical hash.
+    """
+    payload = {
+        "adapter_key": adapter_key,
+        "apiome_version": APIOME_VERSION,
+        "options": options,
+        "nodes": [node.model_dump(mode="json") for node in nodes],
+        "edges": [edge.model_dump(mode="json") for edge in edges],
+        "coverage": [entry.model_dump(mode="json") for entry in coverage],
+    }
+    blob = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+def build_import_preview_manifest(
+    api: CanonicalApi,
+    *,
+    adapter_key: str,
+    options: Optional[Dict[str, Any]] = None,
+) -> _FullManifest:
+    """Build the complete (unpaginated) import preview manifest for one model.
+
+    Pure and deterministic: no I/O, no clock. Everything is derived from the canonical
+    model (whose declaration order is deterministic for a fixed input), the adapter's
+    registry metadata, and the request options, so a fixed (input, adapter version,
+    options) triple yields a byte-stable manifest and hash.
+
+    Args:
+        api: The normalized canonical model the pre-flight pipeline produced.
+        adapter_key: Registry key of the adapter that produced it.
+        options: The request options that shaped the run (source kind, import target,
+            archive root) — folded into the manifest hash.
+
+    Returns:
+        The internal full-manifest form; paginate with
+        :func:`paginate_import_preview_manifest`.
+    """
+    load_builtin_import_sources()
+    adapter = get_import_source(adapter_key)
+    capability = CapabilityReference.from_capability(capability_for_format(api.format))
+    parser_limits = KNOWN_PARSER_LIMITS.get(adapter_key, ())
+
+    adapter_ref = ImportAdapterReference(
+        adapter_key=adapter_key,
+        adapter_label=adapter.label if adapter is not None else adapter_key,
+        paradigm=api.paradigm.value,
+        formats=list(adapter.formats) if adapter is not None else [],
+        apiome_version=APIOME_VERSION,
+        capability=capability,
+        parser_limits=[limit.construct for limit in parser_limits],
+    )
+
+    entity_rows: List[_EntityRows] = []
+    order = 0
+
+    def _add(**kwargs: Any) -> None:
+        nonlocal order
+        entity_rows.append(_entity_rows(order=order, **kwargs))
+        order += 1
+
+    for service in api.services:
+        _add(
+            key=service.key,
+            name=service.name,
+            entity_kind="service",
+            extras=service.extras,
+            description=service.description,
+            deprecated=False,
+            parent_key=None,
+        )
+        for operation in service.operations:
+            _add(
+                key=operation.key,
+                name=operation.name,
+                entity_kind="operation",
+                extras=operation.extras,
+                description=operation.description,
+                deprecated=operation.deprecated,
+                parent_key=service.key,
+            )
+    for channel in api.channels:
+        _add(
+            key=channel.key,
+            name=channel.name or channel.address,
+            entity_kind="channel",
+            extras=channel.extras,
+            description=channel.description,
+            deprecated=False,
+            parent_key=None,
+        )
+    for type_ in api.types:
+        _add(
+            key=type_.key,
+            name=type_.name,
+            entity_kind="type",
+            extras=type_.extras,
+            description=type_.description,
+            deprecated=type_.deprecated,
+            parent_key=None,
+        )
+
+    document_nodes, document_edges, document_coverage = _document_scope_rows(
+        api, capability, parser_limits
+    )
+
+    counts = ImportPreflightCounts(
+        services=len(api.services),
+        operations=sum(len(service.operations) for service in api.services),
+        types=len(api.types),
+        channels=len(api.channels),
+    )
+
+    coverage_counts = {coverage.value: 0 for coverage in CoverageClass}
+    status_counts = {status.value: 0 for status in ProjectionStatus}
+    reason_counts = {reason.value: 0 for reason in ProjectionReason}
+    all_ledger = [rows.coverage for rows in entity_rows] + document_coverage
+    for entry in all_ledger:
+        coverage_counts[entry.coverage.value] += 1
+        status_counts[entry.status.value] += 1
+        if entry.reason is not None:
+            reason_counts[entry.reason.value] += 1
+
+    all_nodes = [node for rows in entity_rows for node in rows.nodes] + document_nodes
+    all_edges = [edge for rows in entity_rows for edge in rows.edges] + document_edges
+    sorted_nodes, sorted_edges = _sort_graph(all_nodes, all_edges)
+
+    manifest_hash = _manifest_hash(
+        adapter_key=adapter_key,
+        options=dict(sorted((options or {}).items())),
+        nodes=sorted_nodes,
+        edges=sorted_edges,
+        coverage=all_ledger,
+    )
+
+    return _FullManifest(
+        manifest_hash=manifest_hash,
+        adapter=adapter_ref,
+        counts=counts,
+        coverage_counts=coverage_counts,
+        status_counts=status_counts,
+        reason_counts=reason_counts,
+        entity_rows=entity_rows,
+        document_nodes=document_nodes,
+        document_edges=document_edges,
+        document_coverage=document_coverage,
+    )
+
+
+def paginate_import_preview_manifest(
+    full: _FullManifest,
+    *,
+    cursor: Optional[str] = None,
+    page_size: int = DEFAULT_ENTITY_PAGE_SIZE,
+) -> ImportPreviewManifest:
+    """Slice one deterministic entity page out of a full manifest.
+
+    Pages over the entity list in tree order; each page carries the graph and ledger
+    rows for exactly its entities. Document-scope rows (root-level constructs and the
+    adapter's declared parser limits) ride on the **first** page only, so a client that
+    walks every page sees every row exactly once.
+
+    Args:
+        full: The full manifest from :func:`build_import_preview_manifest`.
+        cursor: Opaque cursor from a previous page, or ``None`` for the first page.
+        page_size: Maximum entities per page (clamped to ``[1, MAX_ENTITY_PAGE_SIZE]``).
+
+    Returns:
+        The page as the wire :class:`ImportPreviewManifest`.
+
+    Raises:
+        ValueError: When ``cursor`` is malformed.
+    """
+    limit = max(1, min(int(page_size), MAX_ENTITY_PAGE_SIZE))
+    start = decode_page_cursor(cursor) if cursor else 0
+    page_rows = full.entity_rows[start : start + limit]
+
+    nodes = [node for rows in page_rows for node in rows.nodes]
+    edges = [edge for rows in page_rows for edge in rows.edges]
+    coverage = [rows.coverage for rows in page_rows]
+    if start == 0:
+        nodes += full.document_nodes
+        edges += full.document_edges
+        coverage += full.document_coverage
+    nodes, edges = _sort_graph(nodes, edges)
+
+    next_start = start + limit
+    next_cursor = encode_page_cursor(next_start) if next_start < full.total_entities else None
+
+    return ImportPreviewManifest(
+        manifest_hash=full.manifest_hash,
+        adapter=full.adapter,
+        counts=full.counts,
+        coverage_counts=dict(full.coverage_counts),
+        status_counts=dict(full.status_counts),
+        reason_counts=dict(full.reason_counts),
+        entities=[rows.entity for rows in page_rows],
+        total_entities=full.total_entities,
+        nodes=nodes,
+        edges=edges,
+        coverage=coverage,
+        total_coverage_entries=full.total_coverage_entries,
+        page_size=limit,
+        next_cursor=next_cursor,
+        truncated=next_cursor is not None or start > 0,
+    )
+
+
+# ===========================================================================
+# Cache + orchestration
+# ===========================================================================
+
+#: Per-process cache of full manifests keyed by (tenant, content hash, adapter, target,
+#: archive root) — the same identity the pre-flight report cache keys on. A manifest
+#: depends only on the model and adapter (not on the tenant's style guide or policy), so
+#: no fingerprint re-validation is needed; the bound keeps large graphs from pinning
+#: memory. Paging a big document therefore re-runs nothing.
+_manifest_cache: "OrderedDict[str, _FullManifest]" = OrderedDict()
+
+
+def clear_preview_manifest_cache() -> None:
+    """Drop every cached full manifest (tests and process-level reloads)."""
+    _manifest_cache.clear()
+
+
+def preview_manifest_cache_size() -> int:
+    """Return how many full manifests are currently cached in this process."""
+    return len(_manifest_cache)
+
+
+def _manifest_cache_key(tenant_id: str, content_hash: str, request: ImportPreflightRequest) -> str:
+    """The manifest cache key — everything that can change the built manifest."""
+    return "|".join(
+        (
+            tenant_id,
+            content_hash,
+            (request.source_kind or "").strip().lower() or "auto",
+            request.import_target or "",
+            (request.archive_root or "").strip(),
+        )
+    )
+
+
+def _manifest_cache_store(key: str, full: _FullManifest) -> None:
+    """Insert a full manifest, evicting the least recently used when over the bound."""
+    _manifest_cache[key] = full
+    _manifest_cache.move_to_end(key)
+    while len(_manifest_cache) > PREVIEW_MANIFEST_CACHE_MAX_ENTRIES:
+        _manifest_cache.popitem(last=False)
+
+
+def _request_options(request: ImportPreviewManifestRequest) -> Dict[str, Any]:
+    """The request options that shape the manifest, normalized for the hash."""
+    options: Dict[str, Any] = {}
+    if request.source_kind:
+        options["source_kind"] = request.source_kind.strip().lower()
+    if request.import_target:
+        options["import_target"] = request.import_target
+    if request.archive_root and request.archive_root.strip():
+        options["archive_root"] = request.archive_root.strip()
+    return options
+
+
+async def run_import_preview_manifest(
+    request: ImportPreviewManifestRequest,
+    *,
+    tenant_id: str,
+    tenant_slug: str,
+    user_id: Optional[str] = None,
+) -> ImportPreviewManifestResponse:
+    """Produce the preview manifest for one candidate document (IXH-3.1).
+
+    Runs the IXH-2.1 pre-flight (the one import code path, dry-run semantics, nothing
+    persisted) with an artifacts collector, builds the full manifest from the collected
+    canonical model, caches it per content hash, and returns the requested page
+    alongside the full pre-flight report. A repeat request for another page is served
+    from the manifest cache without re-running the pipeline.
+
+    Args:
+        request: The candidate document, its intake hints, and the page window.
+        tenant_id: The tenant the run is scoped to (cache key + style guide + policy).
+        tenant_slug: The tenant's slug, recorded on the pipeline payload.
+        user_id: The requesting user (provenance only; nothing is written).
+
+    Returns:
+        The response; ``manifest`` is null when the candidate is not importable.
+
+    Raises:
+        ValueError: When the request's ``cursor`` is malformed.
+    """
+    content_hash = ""
+    try:
+        raw = base64.standard_b64decode(request.document_base64)
+        content_hash = hashlib.sha256(raw).hexdigest()
+    except (binascii.Error, ValueError):
+        # Invalid base64 — the pre-flight reports the taxonomy error itself; the manifest
+        # simply has nothing to cache under.
+        pass
+
+    cache_key = _manifest_cache_key(tenant_id, content_hash, request)
+    cached = _manifest_cache.get(cache_key) if content_hash else None
+
+    # The pre-flight request must not carry the pagination fields (its model forbids
+    # extras and its cache key must match a plain pre-flight of the same bytes).
+    preflight_request = ImportPreflightRequest(
+        **request.model_dump(exclude={"cursor", "page_size"}, exclude_none=True)
+    )
+
+    if cached is not None:
+        _manifest_cache.move_to_end(cache_key)
+        report = await run_import_preflight(
+            preflight_request,
+            tenant_id=tenant_id,
+            tenant_slug=tenant_slug,
+            user_id=user_id,
+        )
+        full = cached
+    else:
+        artifacts = ImportRunArtifacts()
+        report = await run_import_preflight(
+            preflight_request,
+            tenant_id=tenant_id,
+            tenant_slug=tenant_slug,
+            user_id=user_id,
+            artifacts=artifacts,
+        )
+        if not report.ok or artifacts.model is None or artifacts.adapter_key is None:
+            return ImportPreviewManifestResponse(ok=report.ok, preflight=report, manifest=None)
+        full = build_import_preview_manifest(
+            artifacts.model,
+            adapter_key=artifacts.adapter_key,
+            options=_request_options(request),
+        )
+        if content_hash:
+            _manifest_cache_store(cache_key, full)
+
+    if not report.ok:
+        return ImportPreviewManifestResponse(ok=False, preflight=report, manifest=None)
+
+    page = paginate_import_preview_manifest(
+        full, cursor=request.cursor, page_size=request.page_size
+    )
+    return ImportPreviewManifestResponse(ok=True, preflight=report, manifest=page)

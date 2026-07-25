@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.45.0
+  version: 1.46.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -28030,6 +28030,92 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for preflightacandidatedocumentlintandranknoresponse422.
+  /v1/tenants/{tenant_slug}/import/preview-manifest:
+    post:
+      tags:
+      - spec-import
+      summary: Preview manifest for a candidate document (entity tree + coverage ledger,
+        no write)
+      description: 'Describe **what an import would create** before committing it
+        (IXH-3.1). Extends the IXH-2.1 pre-flight: the same detect → parse → normalize
+        → fingerprint → lint pipeline runs with dry-run semantics, and the response
+        adds the canonical entity tree (services → operations, types, channels) with
+        stable canonical keys and source locations, per-entity provenance back to
+        the source construct, a coverage ledger that classifies source constructs
+        as mapped / partially-mapped / unsupported-by-canonical-model / not-parsed-by-adapter
+        (the last two are never conflated, and every not-parsed entry names its CLX-2.4
+        capability-registry reference), the adapter capability reference, and the
+        routing decision (on the embedded pre-flight report). The graph reuses the
+        CPDO-1.3 projection-manifest node/edge vocabulary, so the import graph and
+        the conversion graph share one contract.
+
+
+        The manifest is deterministic and byte-stable for a fixed input, adapter version,
+        and options (`manifest_hash` is the snapshot id), and is cursor-paginated
+        over the entity tree for large inputs — truncation is stated in the payload
+        (`truncated`, `total_*`), never silent. A candidate that cannot be imported
+        is still a 200: `ok` is false, `manifest` is null, and the embedded pre-flight
+        report carries the stable intake-taxonomy error. Nothing is persisted.'
+      operationId: preview_import_manifest_v1_tenants__tenant_slug__import_preview_manifest_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Previewmanifestforacandidatedocumententiauthorization schema.
+          - type: 'null'
+            description: Previewmanifestforacandidatedocumententiauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Previewmanifestforacandidatedocumententi Xapikey schema.
+          - type: 'null'
+            description: Previewmanifestforacandidatedocumententi Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportPreviewManifestRequest'
+              description: Request body for previewmanifestforacandidatedocumententirequest.
+        description: Request body for preview manifest for a candidate document (entity
+          tree + coverage ledger, no write).
+      responses:
+        '200':
+          description: Successful response for preview manifest for a candidate document
+            (entity tree + coverage ledger, no write).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportPreviewManifestResponse'
+                description: Response payload for previewmanifestforacandidatedocumententiresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for previewmanifestforacandidatedocumententiresponse422.
   /v1/tenants/{tenant_slug}/imports:
     get:
       tags:
@@ -42583,6 +42669,53 @@ components:
         Each flag is ``True`` when the target can carry the construct faithfully (not
 
         merely approximate or synthesize a stand-in).'
+    CapabilityReference:
+      properties:
+        format:
+          type: string
+          title: Format
+          description: Canonical format key of the registry entry (CLX-2.4).
+          example: openapi
+        mode:
+          type: string
+          title: Mode
+          description: 'Registry coverage mode: native / adapted / unsupported.'
+          example: example
+        importable:
+          type: boolean
+          title: Importable
+          description: Whether an import-source adapter ingests this format today.
+          example: false
+        related_issues:
+          items:
+            type: string
+          type: array
+          title: Related Issues
+          description: GitHub issues tracking planned coverage work for this format.
+          maxItems: 1000
+        notes:
+          type: string
+          title: Notes
+          description: The registry entry's human rationale.
+          default: ''
+          example: example
+      additionalProperties: false
+      type: object
+      required:
+      - format
+      - mode
+      - importable
+      title: CapabilityReference
+      description: 'A named reference into the CLX-2.4 per-format capability registry.
+
+
+        The ledger''s ``not-parsed-by-adapter`` entries and the manifest''s adapter
+        section
+
+        both point here, so "our parser does not yet read this" is always traceable
+        to the
+
+        registry entry that documents the format''s coverage state.'
     CapabilityRegistrySnapshot:
       properties:
         version:
@@ -44590,6 +44723,95 @@ components:
       - class_id
       title: CopyClassToInlineSchemaRequest
       description: Request model for copying class properties to inline schema.
+    CoverageClass:
+      type: string
+      enum:
+      - mapped
+      - partially-mapped
+      - unsupported-by-canonical-model
+      - not-parsed-by-adapter
+      title: CoverageClass
+      description: 'Coverage classification of one source construct in the import
+        (IXH-3.1).
+
+
+        The values are the ticket''s exact vocabulary. Each class is a documented
+        view over
+
+        the shared :class:`~app.projection_taxonomy.ProjectionStatus` /
+
+        :class:`~app.projection_taxonomy.ProjectionReason` pair (see
+
+        :data:`STATUS_FOR_COVERAGE`) — never a parallel status vocabulary.'
+    CoverageEntry:
+      properties:
+        source_construct:
+          type: string
+          title: Source Construct
+          description: The source construct this row classifies (an entity key, a
+            document-level attribute, or a construct class). Named ``source_construct``
+            (not ``construct``) so it cannot shadow pydantic's legacy ``BaseModel.construct``.
+          example: example
+        coverage:
+          $ref: '#/components/schemas/CoverageClass'
+          description: The coverage classification.
+        status:
+          $ref: '#/components/schemas/ProjectionStatus'
+          description: The shared CPDO-1.3 projection status this class encodes.
+        reason:
+          anyOf:
+          - $ref: '#/components/schemas/ProjectionReason'
+          - type: 'null'
+            description: Coverage Entry schema.
+          description: The shared reason code for a non-mapped class; null for ``mapped``.
+        detail:
+          type: string
+          title: Detail
+          description: Human-readable explanation of the classification.
+          example: example
+        entity_key:
+          anyOf:
+          - type: string
+            description: Coverage Entry schema.
+          - type: 'null'
+            description: Coverage Entry schema.
+          title: Entity Key
+          description: The canonical entity this row concerns, when entity-scoped.
+        document_scoped:
+          type: boolean
+          title: Document Scoped
+          description: True when the row states a fact about this document; false
+            for an adapter-level declaration (a parser limit not evaluated against
+            this document).
+          default: true
+          example: false
+        capability_reference:
+          anyOf:
+          - $ref: '#/components/schemas/CapabilityReference'
+          - type: 'null'
+            description: Coverage Entry schema.
+          description: The CLX-2.4 registry entry documenting the coverage gap; present
+            on every ``not-parsed-by-adapter`` row.
+      additionalProperties: false
+      type: object
+      required:
+      - source_construct
+      - coverage
+      - status
+      - detail
+      title: CoverageEntry
+      description: 'One row of the coverage ledger (IXH-3.1).
+
+
+        Classifies one source construct. Entity-scoped rows reference their canonical
+
+        entity by key; document-scoped rows (root-level constructs) have no entity.
+        A
+
+        declared parser limit is marked ``document_scoped = false`` — it states an
+        adapter
+
+        fact, not a verified fact about this document.'
     CreateConnectionRequest:
       properties:
         siteId:
@@ -48585,6 +48807,61 @@ components:
 
 
         Suggestions are never auto-applied — the user must confirm a link action.'
+    ImportAdapterReference:
+      properties:
+        adapter_key:
+          type: string
+          title: Adapter Key
+          description: Registry key of the adapter that ran (e.g. ``openapi``).
+          example: example
+        adapter_label:
+          type: string
+          title: Adapter Label
+          description: Human label of the adapter.
+          example: example
+        paradigm:
+          type: string
+          title: Paradigm
+          description: The canonical paradigm the adapter produces.
+          example: example
+        formats:
+          items:
+            type: string
+          type: array
+          title: Formats
+          description: Normalizer format keys the adapter can emit.
+          maxItems: 1000
+        apiome_version:
+          type: string
+          title: Apiome Version
+          description: The apiome-rest package version that ran the adapter — the
+            adapter version provenance folded into the manifest hash (adapters version
+            with the package).
+          example: 1.0.0
+        capability:
+          $ref: '#/components/schemas/CapabilityReference'
+          description: The CLX-2.4 capability-registry entry for the normalized model's
+            format.
+        parser_limits:
+          items:
+            type: string
+          type: array
+          title: Parser Limits
+          description: Construct classes this adapter's parser is declared not to
+            read yet (see the coverage ledger's not-parsed-by-adapter entries for
+            details).
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - adapter_key
+      - adapter_label
+      - paradigm
+      - apiome_version
+      - capability
+      title: ImportAdapterReference
+      description: The adapter that produced the manifest, with its capability references
+        (CLX-2.4).
     ImportPreflightCache:
       properties:
         hit:
@@ -49330,6 +49607,387 @@ components:
       - fingerprint
       title: ImportPreflightStyleGuide
       description: Identity of the style guide that governed the pre-flight lint.
+    ImportPreviewEntity:
+      properties:
+        key:
+          type: string
+          title: Key
+          description: Stable canonical key (``acme.PetService``, ``GET /pets/{id}``,
+            ``User``).
+          example: example
+        name:
+          type: string
+          title: Name
+          description: Source-visible name of the entity.
+          example: Pet
+        entity_kind:
+          type: string
+          title: Entity Kind
+          description: service | operation | type | channel.
+          example: example
+        parent_key:
+          anyOf:
+          - type: string
+            description: Import Preview Entity schema.
+          - type: 'null'
+            description: Import Preview Entity schema.
+          title: Parent Key
+          description: The owning service's key, on an operation; null elsewhere.
+        order:
+          type: integer
+          title: Order
+          description: Stable 0-based index of this entity in the full tree.
+          example: 1
+        description:
+          anyOf:
+          - type: string
+            description: Import Preview Entity schema.
+          - type: 'null'
+            description: Import Preview Entity schema.
+          title: Description
+          description: Entity description, when the source carried one.
+        deprecated:
+          type: boolean
+          title: Deprecated
+          description: Whether the source marks the entity deprecated.
+          default: false
+          example: false
+        coverage:
+          $ref: '#/components/schemas/CoverageClass'
+          description: This entity's coverage classification.
+        native_name:
+          anyOf:
+          - type: string
+            description: Import Preview Entity schema.
+          - type: 'null'
+            description: Import Preview Entity schema.
+          title: Native Name
+          description: The construct's name in the source document, when recovered.
+        native_id:
+          anyOf:
+          - type: string
+            description: Import Preview Entity schema.
+          - type: 'null'
+            description: Import Preview Entity schema.
+          title: Native Id
+          description: Source-native stable identifier, when the parser captured one.
+        source_location:
+          anyOf:
+          - type: string
+            description: Import Preview Entity schema.
+          - type: 'null'
+            description: Import Preview Entity schema.
+          title: Source Location
+          description: Source location (line/range/pointer) the entity came from,
+            when the parser captured one; null otherwise — never fabricated.
+        unmodeled_extras:
+          items:
+            type: string
+          type: array
+          title: Unmodeled Extras
+          description: Source attribute names that ride only in the entity's ``extras``
+            bag because no canonical field models them; non-empty exactly when coverage
+            is ``partially-mapped``.
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - key
+      - name
+      - entity_kind
+      - order
+      - coverage
+      title: ImportPreviewEntity
+      description: 'One canonical entity the import would create (IXH-3.1).
+
+
+        A flat row of the entity tree: services, operations (parented to their service),
+
+        channels, and types, in the model''s deterministic declaration order. ``order``
+        is
+
+        the entity''s stable index in the *full* tree, so a paginated client can interleave
+
+        pages without re-sorting.'
+    ImportPreviewManifest:
+      properties:
+        manifest_hash:
+          type: string
+          title: Manifest Hash
+          description: Stable content hash over the full manifest (adapter + versions
+            + options + graph + ledger). Identical for a fixed input, adapter version,
+            and options.
+          example: a1b2c3d4e5f6789012345678901234ab
+        adapter:
+          $ref: '#/components/schemas/ImportAdapterReference'
+          description: The adapter that produced the model, with its CLX-2.4 capability
+            references.
+        counts:
+          $ref: '#/components/schemas/ImportPreflightCounts'
+          description: Full-manifest canonical entity counts — the same values the
+            pre-flight reports and the committed import's summary reports for this
+            document.
+        coverage_counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Coverage Counts
+          description: Full-manifest ledger row count per coverage class, zero-filled.
+        status_counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Status Counts
+          description: Full-manifest outcome-edge count per shared ProjectionStatus,
+            zero-filled (parity with the export projection manifest's counts).
+        reason_counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Reason Counts
+          description: Full-manifest outcome-edge count per shared ProjectionReason,
+            zero-filled.
+        entities:
+          items:
+            $ref: '#/components/schemas/ImportPreviewEntity'
+          type: array
+          title: Entities
+          description: This page's entity rows, in stable tree order.
+          maxItems: 1000
+        total_entities:
+          type: integer
+          title: Total Entities
+          description: Entity count in the full manifest.
+          example: 1
+        nodes:
+          items:
+            $ref: '#/components/schemas/ProjectionNode'
+          type: array
+          title: Nodes
+          description: CPDO-1.3 projection nodes for this page's entities (plus document-scope
+            nodes on the first page).
+          maxItems: 1000
+        edges:
+          items:
+            $ref: '#/components/schemas/ProjectionEdge'
+          type: array
+          title: Edges
+          description: 'CPDO-1.3 projection edges for this page''s entities (plus
+            document-scope edges on the first page). ``projects`` edges run native
+            → canonical: the import direction''s outcome edge.'
+          maxItems: 1000
+        coverage:
+          items:
+            $ref: '#/components/schemas/CoverageEntry'
+          type: array
+          title: Coverage
+          description: This page's coverage-ledger rows (entity rows for the page;
+            document-scope and adapter-declaration rows ride on the first page).
+          maxItems: 1000
+        total_coverage_entries:
+          type: integer
+          title: Total Coverage Entries
+          description: Ledger row count in the full manifest.
+          example: 1
+        page_size:
+          type: integer
+          title: Page Size
+          description: The applied (clamped) entity page size.
+          example: 50
+        next_cursor:
+          anyOf:
+          - type: string
+            description: Import Preview Manifest schema.
+          - type: 'null'
+            description: Import Preview Manifest schema.
+          title: Next Cursor
+          description: Opaque cursor for the next entity page; null on the last page.
+            The cursor codec is shared with the export projection evidence pages.
+        truncated:
+          type: boolean
+          title: Truncated
+          description: True when this response omits rows the full manifest has (more
+            pages exist).
+          example: false
+      additionalProperties: false
+      type: object
+      required:
+      - manifest_hash
+      - adapter
+      - counts
+      - coverage_counts
+      - status_counts
+      - reason_counts
+      - total_entities
+      - total_coverage_entries
+      - page_size
+      - truncated
+      title: ImportPreviewManifest
+      description: 'One page of the import preview manifest (IXH-3.1).
+
+
+        The identity fields (``manifest_hash``, ``adapter``, counts) always describe
+        the
+
+        **full** manifest; ``entities`` / ``nodes`` / ``edges`` / ``coverage`` carry
+        the
+
+        requested page. ``truncated`` states whether anything was omitted from this
+
+        response — truncation is declared, never silent.'
+    ImportPreviewManifestRequest:
+      properties:
+        document_base64:
+          type: string
+          title: Document Base64
+          description: 'Standard base64 (RFC 4648) of the candidate document''s bytes;
+            no data: URL prefix.'
+          example: eyJvcGVuYXBpIjoiMy4xLjAifQ==
+        source_kind:
+          anyOf:
+          - type: string
+            description: Request body for import preview manifest.
+          - type: 'null'
+            description: Request body for import preview manifest.
+          title: Source Kind
+          description: Importer discriminator to pre-flight against (for example openapi,
+            asyncapi, protobuf). When omitted the format is auto-detected and the
+            winning adapter is used; the detection verdict is reported either way.
+        filename:
+          anyOf:
+          - type: string
+            description: Request body for import preview manifest.
+          - type: 'null'
+            description: Request body for import preview manifest.
+          title: Filename
+          description: Original filename for format sniffing when bytes alone are
+            ambiguous.
+        content_type:
+          anyOf:
+          - type: string
+            description: Request body for import preview manifest.
+          - type: 'null'
+            description: Request body for import preview manifest.
+          title: Content Type
+          description: Optional MIME type hint (for example application/yaml or application/json).
+        url:
+          anyOf:
+          - type: string
+            description: Request body for import preview manifest.
+          - type: 'null'
+            description: Request body for import preview manifest.
+          title: Url
+          description: Source URL the document was fetched from, when the intake kind
+            is 'url'.
+        input_kind:
+          anyOf:
+          - type: string
+            enum:
+            - file
+            - url
+            - paste
+            - discovery
+            - fileset
+            description: Request body for import preview manifest.
+          - type: 'null'
+            description: Request body for import preview manifest.
+          title: Input Kind
+          description: How the document reached the importer; recorded on the report
+            for parity with the import job's option of the same name.
+        import_target:
+          anyOf:
+          - type: string
+            enum:
+            - catalog
+            - types
+            - project
+            description: Request body for import preview manifest.
+          - type: 'null'
+            description: Request body for import preview manifest.
+          title: Import Target
+          description: Destination the commit would request (MFI-26.8). Consulted
+            only for JSON Schema, exactly as on the import job, so the reported routing
+            decision matches what the commit would do.
+        archive_root:
+          anyOf:
+          - type: string
+            description: Request body for import preview manifest.
+          - type: 'null'
+            description: Request body for import preview manifest.
+          title: Archive Root
+          description: Explicit module-relative root document inside an uploaded archive
+            (.zip/.tar.gz); auto-selected when omitted.
+        cursor:
+          anyOf:
+          - type: string
+            description: Request body for import preview manifest.
+          - type: 'null'
+            description: Request body for import preview manifest.
+          title: Cursor
+          description: Opaque entity-page cursor from a previous response; null for
+            the first page.
+        page_size:
+          type: integer
+          minimum: 1.0
+          title: Page Size
+          description: Maximum entities per page; clamped to 1000.
+          default: 200
+          example: 50
+      additionalProperties: false
+      type: object
+      required:
+      - document_base64
+      title: ImportPreviewManifestRequest
+      description: 'The manifest request: the 2.1 pre-flight intake payload plus pagination.
+
+
+        Everything the pre-flight accepts (document, adapter/source hints, import
+        target,
+
+        archive root) plus a cursor + page size over the entity tree. Repeating a
+        request
+
+        with the next cursor re-submits the same bytes; the manifest itself is served
+        from a
+
+        content-hash cache, so paging does not re-run the pipeline.'
+    ImportPreviewManifestResponse:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+          description: 'Mirrors ``preflight.ok``: whether the candidate is importable.'
+          example: false
+        preflight:
+          $ref: '#/components/schemas/ImportPreflightReport'
+          description: The full IXH-2.1 pre-flight report for the same run — detection,
+            routing decision, entity counts, ranked lint, policy verdict, and the
+            intake-taxonomy error when the candidate is not importable.
+        manifest:
+          anyOf:
+          - $ref: '#/components/schemas/ImportPreviewManifest'
+          - type: 'null'
+            description: Response payload for import preview manifest.
+          description: The requested manifest page; null when the candidate is not
+            importable.
+      additionalProperties: false
+      type: object
+      required:
+      - ok
+      - preflight
+      title: ImportPreviewManifestResponse
+      description: 'The preview-manifest endpoint''s response (IXH-3.1).
+
+
+        Embeds the full IXH-2.1 pre-flight report (detection, routing decision, counts,
+
+        lint, policy verdict, taxonomy error) and adds the manifest. ``manifest``
+        is null
+
+        exactly when the candidate is not importable (``preflight.ok`` false) — there
+        is no
+
+        model to describe, and the pre-flight''s ``error`` says why.'
     ImportResolution:
       properties:
         action:

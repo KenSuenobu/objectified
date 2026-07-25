@@ -29,6 +29,11 @@ from .auth import get_authenticated_user_id, validate_authentication
 from .database import db
 from .import_export_quality_policy import QualityGateError, enforce_import_quality_gate
 from .import_preflight import run_import_preflight
+from .import_preview_manifest import (
+    ImportPreviewManifestRequest,
+    ImportPreviewManifestResponse,
+    run_import_preview_manifest,
+)
 from .intake_error_taxonomy import descriptor_for
 from .permissions import enforce_permission, Resource, Action
 from .models import (
@@ -170,6 +175,48 @@ async def preflight_import_candidate(
     return await run_import_preflight(
         body, tenant_id=tenant_id, tenant_slug=tenant_slug, user_id=user_id
     )
+
+
+@router.post(
+    "/{tenant_slug}/import/preview-manifest",
+    response_model=ImportPreviewManifestResponse,
+    summary="Preview manifest for a candidate document (entity tree + coverage ledger, no write)",
+    description=(
+        "Describe **what an import would create** before committing it (IXH-3.1). Extends the "
+        "IXH-2.1 pre-flight: the same detect → parse → normalize → fingerprint → lint pipeline "
+        "runs with dry-run semantics, and the response adds the canonical entity tree (services → "
+        "operations, types, channels) with stable canonical keys and source locations, per-entity "
+        "provenance back to the source construct, a coverage ledger that classifies source "
+        "constructs as mapped / partially-mapped / unsupported-by-canonical-model / "
+        "not-parsed-by-adapter (the last two are never conflated, and every not-parsed entry "
+        "names its CLX-2.4 capability-registry reference), the adapter capability reference, and "
+        "the routing decision (on the embedded pre-flight report). The graph reuses the CPDO-1.3 "
+        "projection-manifest node/edge vocabulary, so the import graph and the conversion graph "
+        "share one contract.\n\n"
+        "The manifest is deterministic and byte-stable for a fixed input, adapter version, and "
+        "options (`manifest_hash` is the snapshot id), and is cursor-paginated over the entity "
+        "tree for large inputs — truncation is stated in the payload (`truncated`, `total_*`), "
+        "never silent. A candidate that cannot be imported is still a 200: `ok` is false, "
+        "`manifest` is null, and the embedded pre-flight report carries the stable "
+        "intake-taxonomy error. Nothing is persisted."
+    ),
+)
+async def preview_import_manifest(
+    tenant_slug: str,
+    body: ImportPreviewManifestRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> ImportPreviewManifestResponse:
+    # Same gate as the pre-flight (IXH-2.1): the manifest is the first step of the import
+    # flow, and a caller who may not import has no use for it. It writes nothing itself.
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.CREATE)
+    tenant_id, user_id = _require_tenant_and_user(auth_data)
+    try:
+        return await run_import_preview_manifest(
+            body, tenant_id=tenant_id, tenant_slug=tenant_slug, user_id=user_id
+        )
+    except ValueError as exc:
+        # A malformed pagination cursor is a client error, not a pre-flight verdict.
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get(
