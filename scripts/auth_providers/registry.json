@@ -104,6 +104,15 @@
         { "field": "client_id", "kind": "client_id", "env_key": "VK_CLIENT_ID" },
         { "field": "client_secret", "kind": "client_secret", "env_key": "VK_CLIENT_SECRET" }
       ]
+    },
+    {
+      "id": "wechat",
+      "label": "WeChat",
+      "status": "available",
+      "required_fields": [
+        { "field": "client_id", "kind": "client_id", "env_key": "WECHAT_CLIENT_ID" },
+        { "field": "client_secret", "kind": "client_secret", "env_key": "WECHAT_CLIENT_SECRET" }
+      ]
     }
   ]
 }

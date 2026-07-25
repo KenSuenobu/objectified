@@ -71,6 +71,7 @@ for every provider, PKCE/nonce only when listed.
 | Auth0 | ✅ | ✅ | n/a | Better Auth discovery (`AUTH0_ISSUER` tenant issuer); native `email_verified` fail-closed (OLO-9.7). |
 | LINE | ✅ | ✅ | n/a | Better Auth fixed LINE OIDC endpoints; email permission gated; `email_verified` honored when present else link-first (OLO-9.41). |
 | VK | ✅ | ✅ | n/a | Better Auth fixed VK ID endpoints; email with grant but no verified claim → fail-closed link-first (OLO-9.42). |
+| WeChat | ✅ | n/a (no PKCE) | n/a | Better Auth QR Website App flow; custom GET token exchange; no email → link-only on openid/unionid (OLO-9.43). |
 
 No manual/hand-rolled OAuth flow bypasses NextAuth's checks machinery; the CLI is an API-key/bearer
 client with no PKCE flow, so it is out of scope.

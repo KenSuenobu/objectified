@@ -74,6 +74,8 @@ export const PROVIDER_CRED_ENV_KEYS: Record<
   line: { clientId: 'LINE_CLIENT_ID', clientSecret: 'LINE_CLIENT_SECRET' },
   // VK ID (OLO-9.42, #5055): credentials-only; no issuer extra.
   vk: { clientId: 'VK_CLIENT_ID', clientSecret: 'VK_CLIENT_SECRET' },
+  // WeChat Open Platform (OLO-9.43, #5056): credentials-only; no issuer extra.
+  wechat: { clientId: 'WECHAT_CLIENT_ID', clientSecret: 'WECHAT_CLIENT_SECRET' },
 };
 
 /** Default TTL (ms) for the in-process cache; bounded so a DB change lands within ~a cache window. */

@@ -50,8 +50,8 @@ import {
 const DB_SCRIPTS = path.join(__dirname, '..', '..', 'apiome-db', 'scripts');
 const V198 = path.join(DB_SCRIPTS, 'V198__auth_provider_vocabulary_4984.sql');
 const V199 = path.join(DB_SCRIPTS, 'V199__better_auth_core_tables_4999.sql');
-/** Latest vocabulary widen (VK / OLO-9.42); supersedes V202 for the live CHECK set. */
-const V203 = path.join(DB_SCRIPTS, 'V203__auth_provider_vocabulary_vk_5055.sql');
+/** Latest vocabulary widen (WeChat / OLO-9.43); supersedes V203 for the live CHECK set. */
+const V204 = path.join(DB_SCRIPTS, 'V204__auth_provider_vocabulary_wechat_5056.sql');
 
 /**
  * Extract the single-quoted slug list from a named `ADD CONSTRAINT … CHECK (… IN ( … ))` block.
@@ -72,9 +72,9 @@ function checkVocabulary(sql: string, constraint: string): Set<string> {
 
 const V198_SQL = fs.readFileSync(V198, 'utf8');
 const V199_SQL = fs.readFileSync(V199, 'utf8');
-const V203_SQL = fs.readFileSync(V203, 'utf8');
-/** The effective identity vocabulary the DB permits (latest widen: V203 / OLO-9.42). */
-const IDENTITY_VOCABULARY = checkVocabulary(V203_SQL, 'external_auth_providers_provider_supported_ck');
+const V204_SQL = fs.readFileSync(V204, 'utf8');
+/** The effective identity vocabulary the DB permits (latest widen: V204 / OLO-9.43). */
+const IDENTITY_VOCABULARY = checkVocabulary(V204_SQL, 'external_auth_providers_provider_supported_ck');
 
 /** The registry ids that are actually enabled (available), i.e. the live sign-in providers. */
 const ENABLED_IDS = PROVIDER_REGISTRY.filter((provider) => provider.status === 'available').map(
@@ -146,6 +146,7 @@ describe('slug vocabulary parity: registry & resolution gates ⊆ the DB CHECK',
       'oidc',
       'okta',
       'vk',
+      'wechat',
     ]);
   });
 
@@ -169,7 +170,7 @@ describe('slug vocabulary parity: registry & resolution gates ⊆ the DB CHECK',
   });
 
   test('the auth_provider_config CHECK shares the same vocabulary (store ↔ identity parity)', () => {
-    const configVocabulary = checkVocabulary(V203_SQL, 'auth_provider_config_provider_id_check');
+    const configVocabulary = checkVocabulary(V204_SQL, 'auth_provider_config_provider_id_check');
     expect([...configVocabulary].sort()).toEqual([...IDENTITY_VOCABULARY].sort());
   });
 });

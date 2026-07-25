@@ -82,6 +82,8 @@ const ALL_ENABLED: Record<string, string> = {
   LINE_CLIENT_SECRET: 'line-secret',
   VK_CLIENT_ID: 'vk-id',
   VK_CLIENT_SECRET: 'vk-secret',
+  WECHAT_CLIENT_ID: 'wx-id',
+  WECHAT_CLIENT_SECRET: 'wx-secret',
 };
 
 const OK_USER: ResolutionUser = {
@@ -187,6 +189,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'auth0',
       'line',
       'vk',
+      'wechat',
     ]);
   });
 
@@ -204,6 +207,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'auth0',
       'line',
       'vk',
+      'wechat',
     ]);
   });
 
@@ -239,6 +243,9 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
     const vk = buildGenericOAuthConfig('vk', ALL_ENABLED)!;
     expect(vk.clientId).toBe('vk-id');
     expect(vk.clientSecret).toBe('vk-secret');
+    const wechat = buildGenericOAuthConfig('wechat', ALL_ENABLED)!;
+    expect(wechat.clientId).toBe('wx-id');
+    expect(wechat.clientSecret).toBe('wx-secret');
   });
 
   test('an unknown provider id yields null', () => {
@@ -413,6 +420,17 @@ describe('endpoint & issuer overrides (OLO-7.4)', () => {
     expect(cfg.discoveryUrl).toBeUndefined();
   });
 
+  test('wechat: QR Website App endpoints; custom getToken; PKCE off (OLO-9.43)', () => {
+    const cfg = buildGenericOAuthConfig('wechat', ALL_ENABLED)!;
+    expect(cfg.authorizationUrl).toBe('https://open.weixin.qq.com/connect/qrconnect#wechat_redirect');
+    expect(cfg.tokenUrl).toBe('https://api.weixin.qq.com/sns/oauth2/access_token');
+    expect(cfg.userInfoUrl).toBe('https://api.weixin.qq.com/sns/userinfo');
+    expect(cfg.pkce).toBe(false);
+    expect(cfg.scopes).toEqual(['snsapi_login']);
+    expect(cfg.authorizationUrlParams).toEqual({ appid: 'wx-id', lang: 'cn' });
+    expect(typeof cfg.getToken).toBe('function');
+    expect(cfg.discoveryUrl).toBeUndefined();
+  });
 
   test('githubOauthWebBaseUrl strips a trailing slash', () => {
     expect(githubOauthWebBaseUrl({ GITHUB_OAUTH_BASE_URL: 'http://mock/' })).toBe('http://mock');
@@ -1289,6 +1307,124 @@ describe('getUserInfo — VK ID fail-closed link-first (OLO-9.42)', () => {
     expect(result).toBeNull();
     expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.UNVERIFIED_EMAIL}`);
     expect(calls.linkIdentity).toHaveLength(0);
+  });
+});
+
+
+/* ── getUserInfo: WeChat link-only (OLO-9.43) ─────────────────────────────────────────────────── */
+
+describe('getUserInfo — WeChat link-only (OLO-9.43)', () => {
+  const wechatUserInfo = (profile: Record<string, unknown>): FetchLike => {
+    return async (url) => {
+      if (url.includes('/sns/userinfo')) {
+        return {
+          ok: true,
+          json: async () => profile,
+        };
+      }
+      return { ok: false, json: async () => null };
+    };
+  };
+
+  const wechatTokens = (openid: string, unionid?: string) => ({
+    accessToken: 'tok',
+    raw: { openid, ...(unionid ? { unionid } : {}) },
+  });
+
+  test('fresh sign-in with no email → email-required rejection', async () => {
+    const { store } = makeStore();
+    const fetchImpl = wechatUserInfo({
+      openid: 'wx-openid-1',
+      nickname: 'Ada',
+      headimgurl: 'http://img/wx.png',
+    });
+
+    const { result, override } = await runGetUserInfo(
+      'wechat',
+      wechatTokens('wx-openid-1'),
+      { store, env: ALL_ENABLED, fetchImpl }
+    );
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.EMAIL_REQUIRED}`);
+  });
+
+  test('explicit link intent links without email', async () => {
+    const { store, calls } = makeStore();
+    const fetchImpl = wechatUserInfo({
+      openid: 'wx-openid-1',
+      nickname: 'Ada',
+      headimgurl: 'http://img/wx.png',
+    });
+
+    const { result, override } = await runGetUserInfo(
+      'wechat',
+      wechatTokens('wx-openid-1'),
+      {
+        store,
+        env: ALL_ENABLED,
+        fetchImpl,
+        resolveLinkToUserId: async () => 'session-user',
+      }
+    );
+
+    expect(result).toBeNull();
+    expect(override).toBe('/ade/dashboard/linked-accounts?linked=true');
+    expect(calls.linkIdentity).toHaveLength(1);
+    expect(calls.linkIdentity[0].userId).toBe('session-user');
+    expect(calls.linkIdentity[0].identity).toMatchObject({
+      provider: 'wechat',
+      providerUserId: 'wx-openid-1',
+    });
+  });
+
+  test('known identity subsequent sign-in prefers unionid and adopts bound user email', async () => {
+    const { store, calls } = makeStore({
+      identityUserId: OK_USER.id,
+      usersById: { [OK_USER.id]: OK_USER },
+    });
+    const fetchImpl = wechatUserInfo({
+      openid: 'wx-openid-1',
+      unionid: 'wx-union-1',
+      nickname: 'Ada',
+      headimgurl: 'http://img/wx.png',
+    });
+
+    const { result, override } = await runGetUserInfo(
+      'wechat',
+      wechatTokens('wx-openid-1', 'wx-union-1'),
+      { store, env: ALL_ENABLED, fetchImpl }
+    );
+
+    expect(override).toBeNull();
+    expect(result).toMatchObject({
+      id: 'wx-union-1',
+      email: 'ada@example.com',
+      emailVerified: false,
+      name: 'Ada',
+      image: 'http://img/wx.png',
+    });
+    expect(calls.recordUserLogin).toEqual([OK_USER.id]);
+  });
+
+  test('identity keys on openid when unionid is absent', async () => {
+    const { store, calls } = makeStore({
+      identityUserId: OK_USER.id,
+      usersById: { [OK_USER.id]: OK_USER },
+    });
+    const fetchImpl = wechatUserInfo({
+      openid: 'wx-openid-1',
+      nickname: 'Ada',
+    });
+
+    const { result } = await runGetUserInfo(
+      'wechat',
+      wechatTokens('wx-openid-1'),
+      { store, env: ALL_ENABLED, fetchImpl }
+    );
+
+    expect(result).toMatchObject({ id: 'wx-openid-1', email: 'ada@example.com' });
+    expect(calls.recordUserLogin).toEqual([OK_USER.id]);
   });
 });
 

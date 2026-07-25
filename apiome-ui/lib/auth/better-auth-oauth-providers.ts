@@ -2,7 +2,7 @@
  * Better Auth OAuth provider construction (OLO-10.7, #5002).
  *
  * Re-expresses the live sign-in providers — github, gitlab, azure, google, okta, aws, keycloak,
- * oidc, auth0, line, vk — on Better Auth's **generic OAuth2/OIDC** plugin, the Better Auth analogue of the
+ * oidc, auth0, line, vk, wechat — on Better Auth's **generic OAuth2/OIDC** plugin, the Better Auth analogue of the
  * NextAuth factory map in `nextauth-oauth-providers.ts`. Every provider is driven from the shared
  * provider registry (`provider-registry.ts`) exactly as the NextAuth path is, so the registry stays
  * the single source of the enabled set and the mirror tests (`provider-registry-mirror.test.ts`,
@@ -40,6 +40,9 @@
  *    fail-closed link-first.
  *  - **VK ID (OLO-9.42):** fixed VK ID endpoints (`id.vk.com`); email returned with grant but no
  *    verified claim (Better Auth `vk()` hard-codes `emailVerified: false`) → fail-closed link-first.
+ *  - **WeChat Open Platform (OLO-9.43):** QR Website App flow (`open.weixin.qq.com/connect/qrconnect`);
+ *    custom `getToken` (GET `appid`/`secret` exchange); identity keyed on `unionid`||`openid`;
+ *    **no email** → link-only.
  *  - **nOAuth hardening (OLO-1.4):** azure id-token claims (`oid`/`upn`/`xms_edov`/…) pass through
  *    untouched so the engine's `resolveEntraEmailVerified` still rejects a forged token.
  *  - **The account-resolution decision (OLO-1.x):** every callback runs through
@@ -487,6 +490,11 @@ const VK_AUTHORIZE_URL = 'https://id.vk.com/authorize';
 const VK_TOKEN_URL = 'https://id.vk.com/oauth2/auth';
 const VK_USERINFO_URL = 'https://id.vk.com/oauth2/user_info';
 
+/** WeChat Open Platform Website App endpoints (Better Auth `wechat()` helper). */
+const WECHAT_AUTHORIZE_URL = 'https://open.weixin.qq.com/connect/qrconnect#wechat_redirect';
+const WECHAT_TOKEN_URL = 'https://api.weixin.qq.com/sns/oauth2/access_token';
+const WECHAT_USERINFO_URL = 'https://api.weixin.qq.com/sns/userinfo';
+
 /**
  * Normalize a LINE sign-in (OLO-9.41): prefer id-token claims (email arrives only when the
  * channel has approved email permission and the `email` scope was granted); fall back to the
@@ -577,6 +585,125 @@ async function normalizeVk(
   };
 }
 
+/**
+ * Exchange a WeChat authorization code for tokens via GET query params (`appid`/`secret`/`code`),
+ * matching Better Auth's `wechat()` helper. WeChat is non-standard (no POST body, no `client_id`).
+ * Stashes `openid`/`unionid` on `tokens.raw` for {@link normalizeWechat}.
+ *
+ * @param data Code-exchange inputs from Better Auth's generic-OAuth callback.
+ * @param env Environment carrying `WECHAT_CLIENT_ID` / `WECHAT_CLIENT_SECRET`.
+ * @param fetchImpl Fetch implementation (injectable for tests).
+ * @returns OAuth2 tokens plus `raw.openid` / `raw.unionid`.
+ */
+export async function exchangeWechatAuthorizationCode(
+  data: { code: string; redirectURI: string; codeVerifier?: string; deviceId?: string },
+  env: Record<string, string | undefined> = process.env,
+  fetchImpl: FetchLike = fetch as unknown as FetchLike
+): Promise<OAuth2Tokens> {
+  const appid = readEnvString(env, 'WECHAT_CLIENT_ID') ?? '';
+  const secret = readEnvString(env, 'WECHAT_CLIENT_SECRET') ?? '';
+  const url =
+    WECHAT_TOKEN_URL +
+    '?' +
+    new URLSearchParams({
+      appid,
+      secret,
+      code: data.code,
+      grant_type: 'authorization_code',
+    }).toString();
+  const res = await fetchImpl(url, {
+    method: 'GET',
+    headers: { Accept: 'application/json', 'User-Agent': 'apiome' },
+  });
+  if (!res.ok) {
+    throw new Error('WeChat token exchange failed with a non-2xx response');
+  }
+  const body = (await res.json()) as Record<string, unknown>;
+  if (body.errcode != null) {
+    throw new Error(
+      `WeChat token exchange failed: ${typeof body.errmsg === 'string' ? body.errmsg : 'unknown error'}`
+    );
+  }
+  const accessToken = typeof body.access_token === 'string' ? body.access_token : undefined;
+  const refreshToken = typeof body.refresh_token === 'string' ? body.refresh_token : undefined;
+  const expiresIn = typeof body.expires_in === 'number' ? body.expires_in : undefined;
+  const scopeStr = typeof body.scope === 'string' ? body.scope : '';
+  return {
+    tokenType: 'Bearer',
+    accessToken,
+    refreshToken,
+    accessTokenExpiresAt:
+      typeof expiresIn === 'number' ? new Date(Date.now() + expiresIn * 1000) : undefined,
+    scopes: scopeStr ? scopeStr.split(',') : undefined,
+    raw: {
+      openid: typeof body.openid === 'string' ? body.openid : undefined,
+      unionid: typeof body.unionid === 'string' ? body.unionid : undefined,
+    },
+  };
+}
+
+/**
+ * Normalize a WeChat Open Platform sign-in (OLO-9.43): fetch `/sns/userinfo` with
+ * `access_token` + `openid` from the custom token exchange. Identity is keyed on
+ * `unionid` when present (stable across apps under the same open-platform account), else
+ * `openid`. WeChat exposes **no email** → leave email null so the engine fail-closes to
+ * link-only (`OAuthEmailRequired` on fresh sign-in).
+ */
+async function normalizeWechat(
+  tokens: OAuth2Tokens,
+  _env: Record<string, string | undefined>,
+  fetchImpl: FetchLike
+): Promise<NormalizedOAuthProfile> {
+  const accessToken = tokens.accessToken ?? '';
+  const raw = tokens.raw && typeof tokens.raw === 'object' ? tokens.raw : {};
+  const openid = typeof raw.openid === 'string' ? raw.openid : '';
+  let profile: Record<string, unknown> = {};
+  if (accessToken && openid) {
+    const url =
+      WECHAT_USERINFO_URL +
+      '?' +
+      new URLSearchParams({
+        access_token: accessToken,
+        openid,
+        lang: 'zh_CN',
+      }).toString();
+    try {
+      const res = await fetchImpl(url, {
+        method: 'GET',
+        headers: { Accept: 'application/json', 'User-Agent': 'apiome' },
+      });
+      if (res.ok) {
+        const body = await res.json();
+        if (body && typeof body === 'object' && (body as Record<string, unknown>).errcode == null) {
+          profile = body as Record<string, unknown>;
+        }
+      }
+    } catch {
+      // Fail-soft: keep empty profile; identity still keys on token openid/unionid below.
+    }
+  }
+  const profileOpenid = typeof profile.openid === 'string' ? profile.openid : openid;
+  const unionid =
+    typeof profile.unionid === 'string'
+      ? profile.unionid
+      : typeof raw.unionid === 'string'
+        ? raw.unionid
+        : '';
+  // Prefer unionid (cross-app) when the open-platform account has bound multiple apps.
+  const accountId = unionid || profileOpenid;
+  return {
+    accountId,
+    profile: {
+      ...profile,
+      openid: profileOpenid || undefined,
+      unionid: unionid || undefined,
+    },
+    email: null,
+    name: typeof profile.nickname === 'string' ? profile.nickname : null,
+    image: typeof profile.headimgurl === 'string' ? profile.headimgurl : null,
+  };
+}
+
 /* ── getUserInfo runner: normalize → resolve → admit or override ────────────────────────────── */
 
 /**
@@ -613,6 +740,7 @@ const NORMALIZERS: Record<
   auth0: (tokens) => normalizeAuth0(tokens),
   line: (tokens, env, fetchImpl) => normalizeLine(tokens, env, fetchImpl),
   vk: (tokens, env, fetchImpl) => normalizeVk(tokens, env, fetchImpl),
+  wechat: (tokens, env, fetchImpl) => normalizeWechat(tokens, env, fetchImpl),
 };
 
 /**
@@ -645,7 +773,7 @@ export async function resolveLinkIntentUserId(provider: string): Promise<string 
  * own account handling sees the identical verified signal the engine decided over.
  *
  * @param provider The provider slug (github | gitlab | azure | google | okta | aws | keycloak |
- *   oidc | auth0 | line | vk).
+ *   oidc | auth0 | line | vk | wechat).
  * @param deps Injectable dependencies (store, fetch, link-intent resolver, env).
  * @returns A `getUserInfo` function returning the Better Auth user info on admit, or null otherwise.
  */
@@ -707,11 +835,30 @@ export function makeOAuthGetUserInfo(
         provider === 'azure'
           ? resolveEntraEmailVerified(normalized.profile, account, canonicalizeEmail(normalized.email))
           : resolveOAuthEmailVerified(normalized.profile, account);
+
+      // Link-only providers (e.g. WeChat) share no email. Better Auth's generic callback requires
+      // one to establish the session — prefer the bound apiome user's email so findOAuthUser
+      // resolves to the existing account instead of fabricating an orphan.
+      let email = normalized.email;
+      let name = normalized.name;
+      if (!email && normalized.accountId) {
+        const bound = await store.getIdentity(provider, normalized.accountId);
+        if (bound.found && bound.userId) {
+          const user = await store.getUserById(bound.userId);
+          if (user?.email) email = user.email;
+          if (!name && user?.name) name = user.name;
+        }
+      }
+      if (!email) {
+        setOauthRedirectOverride(loginErrorRedirect(AUTH_ERROR_CODES.EMAIL_REQUIRED));
+        return null;
+      }
+
       return {
         id: normalized.accountId,
-        email: normalized.email,
+        email,
         emailVerified,
-        name: normalized.name ?? undefined,
+        name: name ?? normalized.accountId,
         image: normalized.image ?? undefined,
       };
     }
@@ -900,6 +1047,32 @@ export function buildGenericOAuthConfig(
         userInfoUrl: VK_USERINFO_URL,
         scopes: ['email', 'phone'],
         pkce: true,
+        getUserInfo,
+      };
+    }
+    case 'wechat': {
+      const clientId = readEnvString(env, 'WECHAT_CLIENT_ID') ?? '';
+      const lang = readEnvString(env, 'WECHAT_LANG') === 'en' ? 'en' : 'cn';
+      return {
+        providerId: 'wechat',
+        clientId,
+        clientSecret: readEnvString(env, 'WECHAT_CLIENT_SECRET') ?? '',
+        // QR Website App flow (Better Auth `wechat()`). Hash `#wechat_redirect` is required by
+        // WeChat; `appid` (not `client_id`) is the credential param — also set via
+        // authorizationUrlParams. Custom getToken performs the GET appid/secret exchange.
+        // No email → link-only. Identity prefers unionid over openid (see AUTH_PROVIDER_SETUP.md).
+        authorizationUrl: WECHAT_AUTHORIZE_URL,
+        tokenUrl: WECHAT_TOKEN_URL,
+        userInfoUrl: WECHAT_USERINFO_URL,
+        scopes: ['snsapi_login'],
+        pkce: false,
+        authorizationUrlParams: { appid: clientId, lang },
+        getToken: (data) =>
+          exchangeWechatAuthorizationCode(
+            data,
+            env,
+            runnerDeps.fetchImpl ?? (fetch as unknown as FetchLike)
+          ),
         getUserInfo,
       };
     }

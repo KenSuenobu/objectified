@@ -105,6 +105,12 @@ const VK = makeView({
   required_fields: ['client_id', 'client_secret'],
   missing_for_enable: ['client_id', 'client_secret'],
 });
+const WECHAT = makeView({
+  provider_id: 'wechat',
+  label: 'WeChat',
+  required_fields: ['client_id', 'client_secret'],
+  missing_for_enable: ['client_id', 'client_secret'],
+});
 /** Synthetic coming-soon stand-in so the Add picker / keyboard tests keep covering that path. */
 const ATLASSIAN = makeView({
   provider_id: 'atlassian',
@@ -115,7 +121,7 @@ const ATLASSIAN = makeView({
 });
 
 const DEFAULT_LIST = {
-  providers: [GITHUB, GITLAB, AZURE, GOOGLE, OKTA, AWS, KEYCLOAK, OIDC, AUTH0, LINE, VK, ATLASSIAN],
+  providers: [GITHUB, GITLAB, AZURE, GOOGLE, OKTA, AWS, KEYCLOAK, OIDC, AUTH0, LINE, VK, WECHAT, ATLASSIAN],
 };
 
 /** Install a fetch mock; `putHandler` decides PUT responses, `listBodies` queues GET bodies. */

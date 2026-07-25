@@ -248,6 +248,15 @@ const PROVIDER_REGISTRY_ENTRIES: readonly Omit<ProviderDescriptor, 'requiredEnvK
     // emailVerified: false). Country MVP for Russia / CIS — see AUTH_PROVIDER_SETUP.md.
     requiredFields: clientCredentialFields('VK_CLIENT_ID', 'VK_CLIENT_SECRET'),
   },
+  {
+    id: 'wechat',
+    label: 'WeChat',
+    status: 'available',
+    // WeChat Open Platform Website App (OLO-9.43, #5056): credentials only. QR web login
+    // (`snsapi_login`) exposes openid/unionid and **no email** → link-only. Country MVP for
+    // China — see AUTH_PROVIDER_SETUP.md (unionid for multi-app deployments).
+    requiredFields: clientCredentialFields('WECHAT_CLIENT_ID', 'WECHAT_CLIENT_SECRET'),
+  },
 ];
 
 export const PROVIDER_REGISTRY: readonly ProviderDescriptor[] =

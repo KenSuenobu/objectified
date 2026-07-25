@@ -56,6 +56,8 @@ const ALL_ENABLED_ENV = {
   LINE_CLIENT_SECRET: 'line-secret',
   VK_CLIENT_ID: 'vk-id',
   VK_CLIENT_SECRET: 'vk-secret',
+  WECHAT_CLIENT_ID: 'wx-id',
+  WECHAT_CLIENT_SECRET: 'wx-secret',
 };
 
 describe('registry vocabulary', () => {
@@ -72,6 +74,7 @@ describe('registry vocabulary', () => {
       'auth0',
       'line',
       'vk',
+      'wechat',
     ]);
   });
 
@@ -87,6 +90,7 @@ describe('registry vocabulary', () => {
     expect(getProviderDescriptor('auth0')?.label).toBe('Auth0');
     expect(getProviderDescriptor('line')?.label).toBe('LINE');
     expect(getProviderDescriptor('vk')?.label).toBe('VK');
+    expect(getProviderDescriptor('wechat')?.label).toBe('WeChat');
   });
 
   it('pins each available provider env contract', () => {
@@ -136,9 +140,13 @@ describe('registry vocabulary', () => {
       'VK_CLIENT_ID',
       'VK_CLIENT_SECRET',
     ]);
+    expect(getProviderDescriptor('wechat')?.requiredEnvKeys).toEqual([
+      'WECHAT_CLIENT_ID',
+      'WECHAT_CLIENT_SECRET',
+    ]);
   });
 
-  it('marks google/okta/aws/keycloak/oidc/auth0/line/vk available (OLO-9.2–9.7, 9.41–9.42); no coming-soon placeholders remain', () => {
+  it('marks google/okta/aws/keycloak/oidc/auth0/line/vk/wechat available (OLO-9.2–9.7, 9.41–9.43); no coming-soon placeholders remain', () => {
     expect(getProviderDescriptor('google')?.status).toBe('available');
     expect(getProviderDescriptor('okta')?.status).toBe('available');
     expect(getProviderDescriptor('aws')?.status).toBe('available');
@@ -147,6 +155,7 @@ describe('registry vocabulary', () => {
     expect(getProviderDescriptor('auth0')?.status).toBe('available');
     expect(getProviderDescriptor('line')?.status).toBe('available');
     expect(getProviderDescriptor('vk')?.status).toBe('available');
+    expect(getProviderDescriptor('wechat')?.status).toBe('available');
     expect(PROVIDER_REGISTRY.every((p) => p.status === 'available')).toBe(true);
   });
 
@@ -180,6 +189,7 @@ describe('isProviderEnabled', () => {
     expect(isProviderEnabled('auth0', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('line', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('vk', ALL_ENABLED_ENV)).toBe(true);
+    expect(isProviderEnabled('wechat', ALL_ENABLED_ENV)).toBe(true);
   });
 
   it('requires every env var — a missing secret disables the provider', () => {
@@ -275,6 +285,13 @@ describe('isProviderEnabled', () => {
       })
     ).toBe(true);
     expect(isProviderEnabled('vk', { VK_CLIENT_ID: 'x' })).toBe(false);
+    expect(
+      isProviderEnabled('wechat', {
+        WECHAT_CLIENT_ID: 'x',
+        WECHAT_CLIENT_SECRET: 'y',
+      })
+    ).toBe(true);
+    expect(isProviderEnabled('wechat', { WECHAT_CLIENT_ID: 'x' })).toBe(false);
   });
 
   it('never enables unknown ids', () => {
@@ -296,6 +313,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'auth0',
       'line',
       'vk',
+      'wechat',
     ]);
     expect(enabledProviderIds({ GITHUB_ID: 'gh-id', GITHUB_SECRET: 'gh-secret' })).toEqual(['github']);
     expect(enabledProviderIds({})).toEqual([]);
@@ -314,6 +332,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'auth0',
       'line',
       'vk',
+      'wechat',
     ]);
   });
 
@@ -330,6 +349,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'auth0',
       'line',
       'vk',
+      'wechat',
     ]);
   });
 });
@@ -350,6 +370,7 @@ describe('providerSummaries', () => {
       { id: 'auth0', label: 'Auth0', status: 'available', enabled: false },
       { id: 'line', label: 'LINE', status: 'available', enabled: false },
       { id: 'vk', label: 'VK', status: 'available', enabled: false },
+      { id: 'wechat', label: 'WeChat', status: 'available', enabled: false },
     ]);
     // Server → client props must survive serialization untouched.
     expect(JSON.parse(JSON.stringify(summaries))).toEqual(summaries);
