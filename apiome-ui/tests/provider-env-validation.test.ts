@@ -57,6 +57,8 @@ const ALL_ENABLED_ENV = {
   AUTH0_ISSUER: 'https://acme.auth0.com',
   LINE_CLIENT_ID: 'line-id',
   LINE_CLIENT_SECRET: 'line-secret',
+  VK_CLIENT_ID: 'vk-id',
+  VK_CLIENT_SECRET: 'vk-secret',
 };
 
 describe('providerEnvIssues', () => {

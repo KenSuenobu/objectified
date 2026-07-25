@@ -54,6 +54,8 @@ const ALL_ENABLED_ENV = {
   AUTH0_ISSUER: 'https://acme.auth0.com',
   LINE_CLIENT_ID: 'line-id',
   LINE_CLIENT_SECRET: 'line-secret',
+  VK_CLIENT_ID: 'vk-id',
+  VK_CLIENT_SECRET: 'vk-secret',
 };
 
 describe('registry vocabulary', () => {
@@ -69,6 +71,7 @@ describe('registry vocabulary', () => {
       'oidc',
       'auth0',
       'line',
+      'vk',
     ]);
   });
 
@@ -83,6 +86,7 @@ describe('registry vocabulary', () => {
     expect(getProviderDescriptor('oidc')?.label).toBe('OIDC');
     expect(getProviderDescriptor('auth0')?.label).toBe('Auth0');
     expect(getProviderDescriptor('line')?.label).toBe('LINE');
+    expect(getProviderDescriptor('vk')?.label).toBe('VK');
   });
 
   it('pins each available provider env contract', () => {
@@ -128,9 +132,13 @@ describe('registry vocabulary', () => {
       'LINE_CLIENT_ID',
       'LINE_CLIENT_SECRET',
     ]);
+    expect(getProviderDescriptor('vk')?.requiredEnvKeys).toEqual([
+      'VK_CLIENT_ID',
+      'VK_CLIENT_SECRET',
+    ]);
   });
 
-  it('marks google/okta/aws/keycloak/oidc/auth0/line available (OLO-9.2–9.7, 9.41); no coming-soon placeholders remain', () => {
+  it('marks google/okta/aws/keycloak/oidc/auth0/line/vk available (OLO-9.2–9.7, 9.41–9.42); no coming-soon placeholders remain', () => {
     expect(getProviderDescriptor('google')?.status).toBe('available');
     expect(getProviderDescriptor('okta')?.status).toBe('available');
     expect(getProviderDescriptor('aws')?.status).toBe('available');
@@ -138,6 +146,7 @@ describe('registry vocabulary', () => {
     expect(getProviderDescriptor('oidc')?.status).toBe('available');
     expect(getProviderDescriptor('auth0')?.status).toBe('available');
     expect(getProviderDescriptor('line')?.status).toBe('available');
+    expect(getProviderDescriptor('vk')?.status).toBe('available');
     expect(PROVIDER_REGISTRY.every((p) => p.status === 'available')).toBe(true);
   });
 
@@ -170,6 +179,7 @@ describe('isProviderEnabled', () => {
     expect(isProviderEnabled('oidc', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('auth0', ALL_ENABLED_ENV)).toBe(true);
     expect(isProviderEnabled('line', ALL_ENABLED_ENV)).toBe(true);
+    expect(isProviderEnabled('vk', ALL_ENABLED_ENV)).toBe(true);
   });
 
   it('requires every env var — a missing secret disables the provider', () => {
@@ -258,6 +268,13 @@ describe('isProviderEnabled', () => {
       })
     ).toBe(true);
     expect(isProviderEnabled('line', { LINE_CLIENT_ID: 'x' })).toBe(false);
+    expect(
+      isProviderEnabled('vk', {
+        VK_CLIENT_ID: 'x',
+        VK_CLIENT_SECRET: 'y',
+      })
+    ).toBe(true);
+    expect(isProviderEnabled('vk', { VK_CLIENT_ID: 'x' })).toBe(false);
   });
 
   it('never enables unknown ids', () => {
@@ -278,6 +295,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'oidc',
       'auth0',
       'line',
+      'vk',
     ]);
     expect(enabledProviderIds({ GITHUB_ID: 'gh-id', GITHUB_SECRET: 'gh-secret' })).toEqual(['github']);
     expect(enabledProviderIds({})).toEqual([]);
@@ -295,6 +313,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'oidc',
       'auth0',
       'line',
+      'vk',
     ]);
   });
 
@@ -310,6 +329,7 @@ describe('acceptance: env alone adds/removes providers everywhere', () => {
       'oidc',
       'auth0',
       'line',
+      'vk',
     ]);
   });
 });
@@ -329,6 +349,7 @@ describe('providerSummaries', () => {
       { id: 'oidc', label: 'OIDC', status: 'available', enabled: false },
       { id: 'auth0', label: 'Auth0', status: 'available', enabled: false },
       { id: 'line', label: 'LINE', status: 'available', enabled: false },
+      { id: 'vk', label: 'VK', status: 'available', enabled: false },
     ]);
     // Server → client props must survive serialization untouched.
     expect(JSON.parse(JSON.stringify(summaries))).toEqual(summaries);

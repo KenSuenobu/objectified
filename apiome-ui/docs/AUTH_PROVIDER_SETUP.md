@@ -1,7 +1,7 @@
 # Sign-in Provider Setup & Secrets Guide (OLO-7.2)
 
 How to register the OAuth applications Apiome signs users in with (GitHub, GitLab,
-Microsoft Entra ID, Google Workspace, Okta, Amazon Cognito, Keycloak, generic OIDC, Auth0, LINE), which
+Microsoft Entra ID, Google Workspace, Okta, Amazon Cognito, Keycloak, generic OIDC, Auth0, LINE, VK), which
 environment variables each provider needs, and how boot-time validation reacts when a provider is
 misconfigured.
 
@@ -46,6 +46,8 @@ linked-accounts panel, Better Auth sign-in route). No code changes are needed ei
 | `AUTH0_ISSUER` | Auth0 | To enable Auth0 | Tenant issuer (`https://<tenant>.auth0.com`) |
 | `LINE_CLIENT_ID` | LINE | To enable LINE | LINE Login channel **Channel ID** |
 | `LINE_CLIENT_SECRET` | LINE | To enable LINE | LINE Login channel **Channel secret** |
+| `VK_CLIENT_ID` | VK | To enable VK | VK ID application **App ID** |
+| `VK_CLIENT_SECRET` | VK | To enable VK | VK ID application **Secure key** |
 | `AUTH_PROVIDER_VALIDATION` | validation | No (default `strict`) | `strict` fails startup on partial provider config; `warn` logs and disables |
 
 Rules that apply to every provider:
@@ -439,6 +441,36 @@ across countries. Contact the platform team before enabling multi-channel — th
 registry currently ship the single `line` slug (OLO-9.41); additional slug widenings land with
 OLO-9.16 / follow-up tickets.
 
+## VK ID (OLO-9.42 — Russia / CIS country MVP)
+
+1. In the [VK ID Apps](https://id.vk.com/about/business/go/docs/en/vkid/latest/vk-id/connection/create-application)
+   console, create an application (or open an existing one).
+2. Set the **Redirect URI** to:
+   - `{BETTER_AUTH_URL}/api/auth/oauth2/callback/vk`
+     (e.g. `http://localhost:3000/api/auth/oauth2/callback/vk` for local dev)
+3. Copy the **App ID** and **Secure key**.
+4. Set the env vars:
+
+```bash
+VK_CLIENT_ID=<App ID>
+VK_CLIENT_SECRET=<Secure key>
+```
+
+The sign-in flow uses fixed VK ID endpoints (`https://id.vk.com/authorize`,
+`https://id.vk.com/oauth2/auth`, `https://id.vk.com/oauth2/user_info`), PKCE, and the
+`email phone` scopes (mirroring Better Auth's `vk()` helper). User info is fetched via
+**POST** form body (`access_token` + `client_id`). **Email verified semantics:** VK returns
+email with the grant but does **not** assert a verified claim (Better Auth hard-codes
+`emailVerified: false`). The engine always fail-closes (**link-first** — explicit link intent
+or an already-bound identity). Missing email surfaces `email-required`.
+
+### Hosting / compliance (RU / CIS)
+
+VK is the country-MVP SSO provider for Russia / CIS. Prefer hosting Apiome in the
+RU/CIS region when enabling VK so identity traffic and personal data stay aligned with local
+compliance expectations. Enabling VK from a non-RU/CIS deployment is technically possible but
+should be a deliberate operator choice.
+
 ## Secrets handling
 
 - Never commit client secrets — `.env` files are gitignored; the checked-in
@@ -501,8 +533,9 @@ mock server via base-URL override env vars:
 [Cognito](#amazon-cognito--user-pool--hosted-ui-olo-94),
 [Keycloak](#keycloak--realm-oidc-client-olo-95),
 [Generic OIDC](#generic-oidc--any-conformant-openid-provider-olo-96), and
-[Auth0](#auth0--regular-web-application-olo-97), and
-[LINE](#line-login-olo-941--japan--taiwan--thailand-country-mvp) sections. Pointing any of them
+[Auth0](#auth0--regular-web-application-olo-97),
+[LINE](#line-login-olo-941--japan--taiwan--thailand-country-mvp), and
+[VK](#vk-id-olo-942--russia--cis-country-mvp) sections. Pointing any of them
 at a mock issuer for the e2e journey is fine in test; never point a real deployment's issuer at a
 non-provider host.
 

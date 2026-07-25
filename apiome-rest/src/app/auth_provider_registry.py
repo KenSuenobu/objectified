@@ -118,7 +118,8 @@ class ProviderDescriptor:
 # (OLO-9.4, #4987) with a user-pool issuer config field; ``keycloak`` is available (OLO-9.5,
 # #4988) with a realm issuer config field; ``oidc`` is available (OLO-9.6, #4989) as the catch-all
 # generic OIDC connector with an issuer config field; ``auth0`` is available (OLO-9.7, #4990) with
-# a tenant-issuer config field; ``line`` is available (OLO-9.41, #5054) as credentials-only LINE Login.
+# a tenant-issuer config field; ``line`` is available (OLO-9.41, #5054) as credentials-only LINE Login;
+# ``vk`` is available (OLO-9.42, #5055) as credentials-only VK ID (Russia / CIS country MVP).
 PROVIDER_REGISTRY: Tuple[ProviderDescriptor, ...] = (
     ProviderDescriptor(
         "github", "GitHub", STATUS_AVAILABLE, client_credential_fields("GITHUB_ID", "GITHUB_SECRET")
@@ -181,6 +182,12 @@ PROVIDER_REGISTRY: Tuple[ProviderDescriptor, ...] = (
         "LINE",
         STATUS_AVAILABLE,
         client_credential_fields("LINE_CLIENT_ID", "LINE_CLIENT_SECRET"),
+    ),
+    ProviderDescriptor(
+        "vk",
+        "VK",
+        STATUS_AVAILABLE,
+        client_credential_fields("VK_CLIENT_ID", "VK_CLIENT_SECRET"),
     ),
 )
 

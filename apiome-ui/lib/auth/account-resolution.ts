@@ -103,7 +103,8 @@ export function isSignupDisabled(env: Record<string, string | undefined> = proce
  * `aws` / Cognito (OLO-9.4), `keycloak` (OLO-9.5), `oidc` (OLO-9.6), `auth0` (OLO-9.7),
  * and `line` (OLO-9.41) are likewise trusted through the generic path when their tokens carry a
  * native `email_verified` claim. LINE's email claim requires an approved channel permission —
- * when `email_verified` is absent the engine fail-closes to link-first (OLO-9.41).
+ * when `email_verified` is absent the engine fail-closes to link-first (OLO-9.41). `vk` (OLO-9.42)
+ * returns email with the grant but no verified claim — always fail-closed link-first.
  */
 export const AUTO_LINK_TRUSTED_PROVIDERS: ReadonlySet<string> = new Set([
   'github',
@@ -116,6 +117,7 @@ export const AUTO_LINK_TRUSTED_PROVIDERS: ReadonlySet<string> = new Set([
   'oidc',
   'auth0',
   'line',
+  'vk',
 ]);
 
 /**
@@ -137,6 +139,7 @@ export const LINKABLE_PROVIDERS: ReadonlySet<string> = new Set([
   'oidc',
   'auth0',
   'line',
+  'vk',
 ]);
 /**
  * Canonicalize an email address to the stored/indexed form: trimmed and lower-cased.

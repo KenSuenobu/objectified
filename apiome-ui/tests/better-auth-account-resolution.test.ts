@@ -296,6 +296,7 @@ describe('resolveBetterAuthOAuthSignIn — decision tree', () => {
       'line',
       'oidc',
       'okta',
+      'vk',
     ]);
     expect(SUPPORTED_OAUTH_PROVIDERS.has('credentials')).toBe(false);
   });
