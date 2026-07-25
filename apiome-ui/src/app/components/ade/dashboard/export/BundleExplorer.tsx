@@ -21,6 +21,12 @@ import {
   type BundleManifest,
   type FileFindingCounts,
 } from './exportBundle';
+import { useEntityMarkers } from './useEntityMarkers';
+import {
+  normalizedLocationFile,
+  type EntityRevealRequest,
+  type ExportManifestEntity,
+} from './exportPreviewManifest';
 
 /** How many recently-opened files the tab strip keeps before dropping the oldest. */
 const MAX_OPEN_TABS = 8;
@@ -42,6 +48,21 @@ export interface BundleExplorerProps {
    * the problem's file, highlights it, and reveals its line. Repeat requests re-trigger via nonce.
    */
   reveal?: ProblemRevealRequest | null;
+  /**
+   * The export preview manifest's entities (IXH-4.1). Located entities drive the code → entity
+   * direction (a line click resolves to its innermost entity) and the selected entity's
+   * declaration-line highlight.
+   */
+  manifestEntities?: ExportManifestEntity[];
+  /** The selected entity's canonical key (shared with the manifest tree). */
+  selectedEntityKey?: string | null;
+  /**
+   * A "reveal this entity in the code" request (a manifest tree click, IXH-4.1): the explorer
+   * opens the entity's bundle file and scrolls its declaration line to center. Nonce re-triggers.
+   */
+  entityReveal?: EntityRevealRequest | null;
+  /** A line click resolved to a located entity (code → entity direction). */
+  onEntityLineClick?: (entity: ExportManifestEntity) => void;
   className?: string;
 }
 
@@ -67,6 +88,10 @@ export function BundleExplorer({
   targetKey,
   problems = [],
   reveal = null,
+  manifestEntities = [],
+  selectedEntityKey = null,
+  entityReveal = null,
+  onEntityLineClick,
   className,
 }: BundleExplorerProps) {
   const multi = isMultiFileBundle(manifest);
@@ -84,6 +109,8 @@ export function BundleExplorer({
   const [selectedProblemId, setSelectedProblemId] = useState<string | null>(null);
   /** The last external reveal request seen, so a re-render never replays it. */
   const [seenRevealNonce, setSeenRevealNonce] = useState<number | null>(null);
+  /** The last external entity-reveal request seen (IXH-4.1), same replay guard. */
+  const [seenEntityRevealNonce, setSeenEntityRevealNonce] = useState<number | null>(null);
 
   // A fresh manifest (a new generate) resets navigation to its primary file.
   const [manifestKey, setManifestKey] = useState(manifest.primaryPath);
@@ -111,6 +138,23 @@ export function BundleExplorer({
           [revealPath, ...current.filter((p) => p !== revealPath)].slice(0, MAX_OPEN_TABS),
         );
       }
+    }
+  }
+
+  // An external entity-reveal request (a manifest tree click, IXH-4.1): make the entity's bundle
+  // file active — the same "adjust state during render" pattern as the problem reveal above. The
+  // editor-side line scroll is applied by {@link useEntityMarkers} once the file is active. An
+  // entity whose file is not in this bundle (a path mismatch) is ignored — no fake navigation.
+  if (entityReveal && entityReveal.nonce !== seenEntityRevealNonce) {
+    setSeenEntityRevealNonce(entityReveal.nonce);
+    const entityPath = normalizedLocationFile(entityReveal.entity);
+    if (entityPath && filesByPath.has(entityPath) && activePath !== entityPath) {
+      setActivePath(entityPath);
+      setOpenPaths((current) =>
+        multi
+          ? [entityPath, ...current.filter((p) => p !== entityPath)].slice(0, MAX_OPEN_TABS)
+          : current,
+      );
     }
   }
 
@@ -173,6 +217,30 @@ export function BundleExplorer({
     reveal,
   });
 
+  // The active file's located manifest entities (IXH-4.1) and the shared selection.
+  const activeEntities = useMemo(
+    () =>
+      activePath
+        ? manifestEntities.filter((entity) => normalizedLocationFile(entity) === activePath)
+        : [],
+    [manifestEntities, activePath],
+  );
+  const selectedEntity = useMemo(
+    () =>
+      selectedEntityKey
+        ? manifestEntities.find((entity) => entity.key === selectedEntityKey) ?? null
+        : null,
+    [manifestEntities, selectedEntityKey],
+  );
+  const entityMarkers = useEntityMarkers({
+    entities: activeEntities,
+    activeFile: activePath,
+    text: activeFile?.text ?? '',
+    selectedEntity,
+    onEntityLineClick,
+    reveal: entityReveal,
+  });
+
   const openProblem = useCallback(
     (problem: LocatedProblem) => {
       setSelectedProblemId(problem.id);
@@ -222,7 +290,10 @@ export function BundleExplorer({
         value={activeFile.text}
         language={language}
         overlay={copyButton}
-        onMount={markers.onEditorMount}
+        onMount={(editorInstance, monaco) => {
+          markers.onEditorMount(editorInstance, monaco);
+          entityMarkers.onEditorMount(editorInstance, monaco);
+        }}
         height={360}
         className="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
         editorTestId="bundle-file-editor"

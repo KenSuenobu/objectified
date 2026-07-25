@@ -116,6 +116,8 @@ __all__ = [
     "paginate_evidence",
     "encode_page_cursor",
     "decode_page_cursor",
+    "normalize_options_for_hash",
+    "target_location_for_construct",
     "SOURCE_LOCATION_EXTRA_KEYS",
     "NATIVE_ID_EXTRA_KEYS",
     "first_extra",
@@ -1047,6 +1049,27 @@ def _decode_cursor(cursor: str) -> int:
 #: both manifest surfaces speak one cursor format (part of the CPDO-1.3 shared contract).
 encode_page_cursor = _encode_cursor
 decode_page_cursor = _decode_cursor
+
+#: Public alias of the option normalizer, shared with the IXH-4.1 export preview manifest
+#: so both export snapshot hashes fold options identically.
+normalize_options_for_hash = _normalize_options_for_hash
+
+
+def target_location_for_construct(
+    emitter_cls: type[Emitter], construct_key: str, canonical_kind: str
+) -> Optional[TargetLocation]:
+    """Resolve a construct's :class:`TargetLocation` via the format's registered locator.
+
+    Public seam for the IXH-4.1 export preview manifest: the same per-format locator
+    registry the projection graph uses (:data:`_TARGET_LOCATORS`), so a manifest entity
+    and a projection target node can never claim different addresses for one construct.
+    Returns ``None`` when the format has no locator or the locator cannot address the
+    shape — a truthful absence, never a guess.
+    """
+    locator = _target_locator_for(emitter_cls)
+    if locator is None:
+        return None
+    return locator(construct_key, canonical_kind)
 
 
 def paginate_evidence(

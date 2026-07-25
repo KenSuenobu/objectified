@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.47.0
+  version: 1.48.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -28888,6 +28888,85 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for previewexportfidelityforonetargetresponse422.
+  /v1/export/{tenant_slug}/preview-manifest:
+    post:
+      tags:
+      - export
+      summary: 'Structural manifest of the emitted artifact: entities, fidelity, locations'
+      description: 'Describe the emitted artifact **structurally** (IXH-4.1): every
+        canonical entity (services → operations, channels, types → fields) with its
+        stable canonical key, its per-entity fidelity status and reason from the shared
+        CPDO-1.3 taxonomy, and — for entities the artifact carries — its location
+        in the bundle (file, 1-based line in the download-serialized text, and a JSON
+        Pointer where derivable). Entities the source has but the artifact does not
+        carry are listed with their drop reason, never hidden. The emit runs read-only
+        in a temporary buffer (no artifact, no job row, no field-identity persistence
+        — the verify route''s discipline) and a severe conversion is described, not
+        blocked. Deterministic: identical (revision, target, options) yield an identical
+        ``manifest_hash``; entities are cursor-paginated (codec shared with the import
+        preview manifest) and the full manifest is cached per (tenant, revision, target,
+        options) so paging re-emits nothing. Backs the Export Studio''s structural
+        artifact explorer with two-way entity ↔ code selection.'
+      operationId: preview_export_manifest_v1_export__tenant_slug__preview_manifest_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Structuralmanifestoftheemittedartifactenauthorization schema.
+          - type: 'null'
+            description: Structuralmanifestoftheemittedartifactenauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Structuralmanifestoftheemittedartifacten Xapikey schema.
+          - type: 'null'
+            description: Structuralmanifestoftheemittedartifacten Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportPreviewManifestRequest'
+              description: Request body for structuralmanifestoftheemittedartifactenrequest.
+        description: 'Request body for structural manifest of the emitted artifact:
+          entities, fidelity, locations.'
+      responses:
+        '200':
+          description: 'Successful response for structural manifest of the emitted
+            artifact: entities, fidelity, locations.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportPreviewManifestResponse'
+                description: Response payload for structuralmanifestoftheemittedartifactenresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for structuralmanifestoftheemittedartifactenresponse422.
   /v1/export/{tenant_slug}/projection-metrics:
     post:
       tags:
@@ -41593,6 +41672,50 @@ components:
         are load-bearing (for example ``channels`` matter for ``EVENT`` but not for
 
         ``REST``) and drives browse/search facets.'
+    ArtifactEntityLocation:
+      properties:
+        file:
+          type: string
+          title: File
+          description: Bundle-relative path of the emitted file the entity lands in.
+          example: "openapi: 3.1.0\ninfo:\n  title: Example\n  version: 1.0.0\n"
+        line:
+          anyOf:
+          - type: integer
+            description: Artifact Entity Location schema.
+          - type: 'null'
+            description: Artifact Entity Location schema.
+          title: Line
+          description: 1-based line of the entity's declaration in the file's serialized
+            text, when resolvable; null otherwise.
+        pointer:
+          anyOf:
+          - type: string
+            description: Artifact Entity Location schema.
+          - type: 'null'
+            description: Artifact Entity Location schema.
+          title: Pointer
+          description: RFC 6901 JSON Pointer into the emitted document (JSON targets),
+            when derivable; null otherwise.
+      additionalProperties: false
+      type: object
+      required:
+      - file
+      title: ArtifactEntityLocation
+      description: 'Where one entity lands in the emitted bundle.
+
+
+        ``file`` is always present (bundle-relative, exactly the path the download
+
+        manifest and zip use). ``line`` is the 1-based line of the entity''s declaration
+
+        in that file''s serialized text, when a locator resolved one; ``pointer``
+        is the
+
+        RFC 6901 JSON Pointer for JSON-document targets, when derivable. Either may
+        be
+
+        ``None`` independently — stated, never guessed.'
     BotPresetBody:
       properties:
         key:
@@ -47113,6 +47236,39 @@ components:
 
         ``download_path`` for a real export), ``failed`` carries a structured ``error``
         (MFX-3.4).'
+    ExportManifestFile:
+      properties:
+        path:
+          type: string
+          title: Path
+          description: Bundle-relative path (identical to the download manifest's).
+          example: /resources/{id}
+        media_type:
+          anyOf:
+          - type: string
+            description: Export Manifest File schema.
+          - type: 'null'
+            description: Export Manifest File schema.
+          title: Media Type
+          description: The file's media type, when declared.
+        line_count:
+          type: integer
+          title: Line Count
+          description: Line count of the file's serialized text.
+          example: 1
+        entity_count:
+          type: integer
+          title: Entity Count
+          description: How many manifest entities locate into this file.
+          example: 1
+      additionalProperties: false
+      type: object
+      required:
+      - path
+      - line_count
+      - entity_count
+      title: ExportManifestFile
+      description: One emitted file of the bundle, as the manifest addresses it.
     ExportPreflightCapability:
       properties:
         verdict:
@@ -47410,6 +47566,352 @@ components:
       title: ExportPreflightTarget
       description: 'One ranked export target: its inputs, its readiness, and why it
         ranks where it does.'
+    ExportPreviewEntity:
+      properties:
+        key:
+          type: string
+          title: Key
+          description: Stable canonical key (``acme.PetService``, ``GET /pets/{id}``,
+            ``User``).
+          example: example
+        name:
+          type: string
+          title: Name
+          description: Source-visible name of the entity.
+          example: Pet
+        entity_kind:
+          type: string
+          title: Entity Kind
+          description: service | operation | channel | type | field.
+          example: example
+        parent_key:
+          anyOf:
+          - type: string
+            description: Export Preview Entity schema.
+          - type: 'null'
+            description: Export Preview Entity schema.
+          title: Parent Key
+          description: The owning service's key on an operation, the owning type's
+            key on a field; null elsewhere.
+        order:
+          type: integer
+          title: Order
+          description: Stable 0-based index of this row in the full tree.
+          example: 1
+        description:
+          anyOf:
+          - type: string
+            description: Export Preview Entity schema.
+          - type: 'null'
+            description: Export Preview Entity schema.
+          title: Description
+          description: Entity description, when the source carried one.
+        deprecated:
+          type: boolean
+          title: Deprecated
+          description: Whether the source marks the entity deprecated.
+          default: false
+          example: false
+        status:
+          $ref: '#/components/schemas/ProjectionStatus'
+          description: The entity's fidelity outcome (shared CPDO-1.3 taxonomy), worst-first
+            over the construct's report items; a service aggregates its operations.
+        reason:
+          anyOf:
+          - $ref: '#/components/schemas/ProjectionReason'
+          - type: 'null'
+            description: Export Preview Entity schema.
+          description: Shared reason code for a non-preserved status; always present
+            on a dropped/unavailable/approximated/synthesized entity (the drop reason).
+        severity:
+          $ref: '#/components/schemas/LossinessSeverity'
+          description: How much the outcome matters (info / warn / critical), from
+            the report.
+          default: info
+        detail:
+          type: string
+          title: Detail
+          description: Human-readable explanation of the outcome.
+          example: example
+        target_mapping:
+          anyOf:
+          - type: string
+            description: Export Preview Entity schema.
+          - type: 'null'
+            description: Export Preview Entity schema.
+          title: Target Mapping
+          description: How the construct landed in the target when not dropped (from
+            the report).
+        emitted:
+          type: boolean
+          title: Emitted
+          description: True when the artifact carries this entity (status retained
+            / transformed / approximated / synthesized).
+          example: false
+        location:
+          anyOf:
+          - $ref: '#/components/schemas/ArtifactEntityLocation'
+          - type: 'null'
+            description: Export Preview Entity schema.
+          description: Where the entity lands in the bundle; null for a non-emitted
+            entity or when no locator can truthfully place it.
+        aggregated:
+          type: boolean
+          title: Aggregated
+          description: True when the status was aggregated from child constructs (a
+            service row — the fidelity report walks operations, not services).
+          default: false
+          example: false
+        reported:
+          type: boolean
+          title: Reported
+          description: True when the fidelity report carries an explicit outcome for
+            this construct. False when the report is silent about it — the report
+            is exception-based, so silence means no loss was recorded, and the row
+            defaults to retained with this flag stating the difference.
+          default: true
+          example: false
+        native_name:
+          anyOf:
+          - type: string
+            description: Export Preview Entity schema.
+          - type: 'null'
+            description: Export Preview Entity schema.
+          title: Native Name
+          description: The construct's name in the source document, when recovered.
+        native_id:
+          anyOf:
+          - type: string
+            description: Export Preview Entity schema.
+          - type: 'null'
+            description: Export Preview Entity schema.
+          title: Native Id
+          description: Source-native stable identifier, when the parser captured one.
+        source_location:
+          anyOf:
+          - type: string
+            description: Export Preview Entity schema.
+          - type: 'null'
+            description: Export Preview Entity schema.
+          title: Source Location
+          description: Source location the entity came from, when the parser captured
+            one — the same extras keys the import manifest reads (CPDO-1.3); never
+            fabricated.
+      additionalProperties: false
+      type: object
+      required:
+      - key
+      - name
+      - entity_kind
+      - order
+      - status
+      - detail
+      - emitted
+      title: ExportPreviewEntity
+      description: 'One canonical entity row of the export preview manifest (IXH-4.1).
+
+
+        A flat row of the entity tree — services → operations, channels, and
+
+        types → fields, in the model''s deterministic declaration order. ``order``
+        is the
+
+        row''s stable index in the *full* tree so a paginated client can interleave
+        pages
+
+        without re-sorting. Every row carries the fidelity outcome; a row the artifact
+
+        does not carry (``emitted`` false) states its reason — AC: entities that exist
+        in
+
+        the source but not the artifact are listed with their drop reason.'
+    ExportPreviewManifest:
+      properties:
+        manifest_hash:
+          type: string
+          title: Manifest Hash
+          description: Stable content hash over the full manifest (target + versions
+            + options + entities + files). Identical for a fixed revision, target,
+            and options.
+          example: a1b2c3d4e5f6789012345678901234ab
+        target:
+          $ref: '#/components/schemas/ManifestTarget'
+          description: The target + version provenance block (shared with the projection
+            manifest).
+        status_counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Status Counts
+          description: Full-manifest entity count per shared ProjectionStatus, zero-filled.
+        reason_counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Reason Counts
+          description: Full-manifest entity count per shared ProjectionReason, zero-filled.
+        entities:
+          items:
+            $ref: '#/components/schemas/ExportPreviewEntity'
+          type: array
+          title: Entities
+          description: This page's entity rows, in stable tree order.
+          maxItems: 1000
+        total_entities:
+          type: integer
+          title: Total Entities
+          description: Entity count in the full manifest.
+          example: 1
+        dropped_entities:
+          type: integer
+          title: Dropped Entities
+          description: Full-manifest count of entities the artifact does not carry
+            (status dropped or unavailable).
+          example: 1
+        files:
+          items:
+            $ref: '#/components/schemas/ExportManifestFile'
+          type: array
+          title: Files
+          description: The emitted bundle's file table (full list on every page —
+            bounded by the bundle's file count).
+          maxItems: 1000
+        page_size:
+          type: integer
+          title: Page Size
+          description: The applied (clamped) entity page size.
+          example: 50
+        next_cursor:
+          anyOf:
+          - type: string
+            description: Export Preview Manifest schema.
+          - type: 'null'
+            description: Export Preview Manifest schema.
+          title: Next Cursor
+          description: Opaque cursor for the next entity page; null on the last page.
+            Codec shared with the import preview manifest and the evidence pages.
+        truncated:
+          type: boolean
+          title: Truncated
+          description: True when this response omits rows the full manifest has (more
+            pages exist).
+          example: false
+      additionalProperties: false
+      type: object
+      required:
+      - manifest_hash
+      - target
+      - status_counts
+      - reason_counts
+      - total_entities
+      - dropped_entities
+      - page_size
+      - truncated
+      title: ExportPreviewManifest
+      description: 'One page of the export preview manifest (IXH-4.1).
+
+
+        Identity fields (``manifest_hash``, ``target``, counts, ``files``) always
+        describe
+
+        the **full** manifest; ``entities`` carries the requested page. ``truncated``
+
+        states whether this response omits rows — truncation is declared, never silent.'
+    ExportPreviewManifestRequest:
+      properties:
+        artifact:
+          type: string
+          title: Artifact
+          description: The artifact (project) id to describe.
+          example: example
+        version:
+          anyOf:
+          - type: string
+            description: Request body for export preview manifest.
+          - type: 'null'
+            description: Request body for export preview manifest.
+          title: Version
+          description: A revision UUID, a version label (``1.0.0``), or null for the
+            latest revision.
+        target:
+          type: string
+          title: Target
+          description: Target emitter key (``openapi``) or format key (``openapi-3.1``).
+          example: example
+        options:
+          anyOf:
+          - additionalProperties: true
+            type: object
+            description: Request body for export preview manifest.
+          - type: 'null'
+            description: Request body for export preview manifest.
+          title: Options
+          description: Per-target emit options; null/empty applies the target defaults.
+            Folded (normalized) into the manifest hash, so different options are a
+            different snapshot.
+        cursor:
+          anyOf:
+          - type: string
+            description: Request body for export preview manifest.
+          - type: 'null'
+            description: Request body for export preview manifest.
+          title: Cursor
+          description: Opaque entity-page cursor from a previous response; null for
+            the first page.
+        page_size:
+          type: integer
+          minimum: 1.0
+          title: Page Size
+          description: Maximum entities per page; clamped to 1000.
+          default: 200
+          example: 50
+      additionalProperties: false
+      type: object
+      required:
+      - artifact
+      - target
+      title: ExportPreviewManifestRequest
+      description: 'The preview-manifest request: source coordinates + target + options
+        + page window.'
+    ExportPreviewManifestResponse:
+      properties:
+        artifact:
+          type: string
+          title: Artifact
+          description: The artifact (project) id the manifest describes.
+          example: example
+        version:
+          anyOf:
+          - type: string
+            description: Response payload for export preview manifest.
+          - type: 'null'
+            description: Response payload for export preview manifest.
+          title: Version
+          description: The requested version selector, echoed.
+        version_record_id:
+          type: string
+          title: Version Record Id
+          description: The resolved revision (``versions.id``).
+          example: version_01h2xcejqtf3fz5y5j0v8k9m2p
+        version_label:
+          anyOf:
+          - type: string
+            description: Response payload for export preview manifest.
+          - type: 'null'
+            description: Response payload for export preview manifest.
+          title: Version Label
+          description: The resolved revision's version label, when it has one.
+        manifest:
+          $ref: '#/components/schemas/ExportPreviewManifest'
+          description: The requested manifest page.
+      additionalProperties: false
+      type: object
+      required:
+      - artifact
+      - version_record_id
+      - manifest
+      title: ExportPreviewManifestResponse
+      description: The preview-manifest endpoint's response (IXH-4.1).
     ExportPreviewRequest:
       properties:
         artifact:

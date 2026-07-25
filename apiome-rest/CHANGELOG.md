@@ -5,6 +5,27 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.181.0] - 2026-07-25
+
+### Added
+- **Export preview manifest (#5109, IXH-4.1)** — new
+  `POST /v1/export/{tenant_slug}/preview-manifest`: a deterministic **structural
+  manifest of the emitted artifact**. Every canonical entity (services → operations,
+  channels, types → fields) is listed with its stable canonical key, its per-entity
+  fidelity status and reason from the shared CPDO-1.3 taxonomy (entities the artifact
+  does not carry state their drop reason), and — for carried entities — its location
+  in the bundle: the emitted file, the 1-based line in the download-serialized text,
+  and a JSON Pointer where derivable. Locations are **artifact-derived**: resolved
+  against the actually-emitted bundle serialized exactly as the download packages it,
+  via a pointer→line walk for JSON targets (OpenAPI), declaration scanners for text
+  targets (proto3, GraphQL SDL), and a name-keyed search for other JSON targets
+  (AsyncAPI 3, Avro) — an unresolvable location is `null`, never a guess. The emit
+  runs read-only (no artifact, no job row, no field-identity persistence) and a
+  severe conversion is described, not blocked. Entities are cursor-paginated with the
+  shared page-cursor codec, and full manifests are cached per (tenant, revision,
+  target, options) so paging re-emits nothing. Backs the Export Studio's structural
+  artifact explorer with two-way entity ↔ code selection (apiome-ui).
+
 ## [1.180.0] - 2026-07-25
 
 ### Added

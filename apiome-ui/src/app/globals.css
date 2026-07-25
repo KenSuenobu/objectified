@@ -483,3 +483,14 @@ button {
   background: rgb(129 140 248 / 0.18); /* indigo-400 */
 }
 
+/* Export manifest explorer (IXH-4.1, #5109): the whole-line highlight for the selected
+   entity's declaration line in the code viewer. Emerald, so an entity selection reads
+   distinctly from the indigo Verify problem selection when both are visible. */
+.manifest-entity-line--selected {
+  background: rgb(16 185 129 / 0.14); /* emerald-500 */
+}
+
+.dark .manifest-entity-line--selected {
+  background: rgb(52 211 153 / 0.18); /* emerald-400 */
+}
+

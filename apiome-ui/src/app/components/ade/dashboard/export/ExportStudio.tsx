@@ -37,6 +37,9 @@ import { VerifyWorkbench, VerdictBanner } from './VerifyWorkbench';
 import { ProjectionGraphPanel } from './ProjectionGraphPanel';
 import { ArtifactPreviewCard } from './ArtifactPreviewCard';
 import { BundleExplorer } from './BundleExplorer';
+import { ExportManifestPanel } from './ExportManifestPanel';
+import { useExportPreviewManifest } from './useExportPreviewManifest';
+import type { EntityRevealRequest, ExportManifestEntity } from './exportPreviewManifest';
 import { OriginalSourceOption } from './OriginalSourceOption';
 import { deriveVerifyVerdict, verifyGatePasses } from './exportVerify';
 import { zipFilenameFor, type EmittedArtifact } from './exportArtifactPreview';
@@ -146,6 +149,12 @@ export function ExportStudio({
   const [problemReveal, setProblemReveal] = useState<ProblemRevealRequest | null>(null);
   /** Monotonic nonce so re-clicking the same finding still re-triggers the reveal. */
   const revealNonce = useRef(0);
+  /** The manifest explorer's selected entity (IXH-4.1), shared by the tree and the viewer. */
+  const [selectedEntityKey, setSelectedEntityKey] = useState<string | null>(null);
+  /** A pending "reveal this entity in the code" request (a manifest tree click). */
+  const [entityReveal, setEntityReveal] = useState<EntityRevealRequest | null>(null);
+  /** Monotonic nonce so re-selecting the same entity still re-triggers the reveal. */
+  const entityRevealNonce = useRef(0);
   const [error, setError] = useState<string | null>(null);
   /**
    * The validation report from a validation-gate job failure (MFX-46.2). When set, the Verify
@@ -550,6 +559,39 @@ export function ExportStudio({
     setStep('review');
   }, []);
 
+  // IXH-4.1: the structural manifest of the generated artifact. Fetched lazily — only once
+  // the Review step is actually showing an artifact — for the same (artifact, version,
+  // target, options) the export ran with, so it describes exactly what is on screen.
+  const manifestEnabled = step === 'review' && Boolean(bundle || emitted);
+  const {
+    page: manifestPage,
+    entities: manifestEntities,
+    loading: manifestLoading,
+    error: manifestError,
+    complete: manifestComplete,
+    loadMore: manifestLoadMore,
+  } = useExportPreviewManifest(manifestEnabled, artifact, version, selectedKey, changedOpts);
+
+  // A different target/config or source is a different manifest — drop the stale selection.
+  useEffect(() => {
+    setSelectedEntityKey(null);
+    setEntityReveal(null);
+  }, [artifact, version, selectedKey]);
+
+  /** Tree-side selection (IXH-4.1): record it and reveal a located entity in the viewer. */
+  const selectEntity = useCallback((entity: ExportManifestEntity) => {
+    setSelectedEntityKey(entity.key);
+    if (entity.location?.line != null) {
+      entityRevealNonce.current += 1;
+      setEntityReveal({ entity, nonce: entityRevealNonce.current });
+    }
+  }, []);
+
+  /** Viewer-side selection (IXH-4.1): a code line click highlights its entity in the tree. */
+  const handleEntityLineClick = useCallback((entity: ExportManifestEntity) => {
+    setSelectedEntityKey(entity.key);
+  }, []);
+
   /** Whether the current step permits advancing to the next one. */
   const canAdvance = useMemo(() => {
     switch (step) {
@@ -783,15 +825,32 @@ export function ExportStudio({
                   <p className="shrink-0 text-xs text-gray-600 dark:text-gray-300">
                     <CheckCircle2 className="mr-1.5 inline h-4 w-4 align-text-bottom text-green-500" aria-hidden />
                     Generated a <strong>{bundle.files.length}-file bundle</strong>. Navigate the files
-                    on the left, then download the .zip.
+                    or the artifact entities on the left, then download the .zip.
                   </p>
-                  <BundleExplorer
-                    manifest={bundle}
-                    countsByPath={bundleFindingCounts}
-                    targetKey={selected.key}
-                    problems={locatedProblems}
-                    reveal={problemReveal}
-                  />
+                  {/* IXH-4.1: the structural manifest tree beside the code viewer, two-way. */}
+                  <div className="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[minmax(18rem,22rem)_1fr]">
+                    <ExportManifestPanel
+                      page={manifestPage}
+                      entities={manifestEntities}
+                      loading={manifestLoading}
+                      error={manifestError}
+                      complete={manifestComplete}
+                      onLoadMore={manifestLoadMore}
+                      selectedKey={selectedEntityKey}
+                      onSelectEntity={selectEntity}
+                    />
+                    <BundleExplorer
+                      manifest={bundle}
+                      countsByPath={bundleFindingCounts}
+                      targetKey={selected.key}
+                      problems={locatedProblems}
+                      reveal={problemReveal}
+                      manifestEntities={manifestEntities}
+                      selectedEntityKey={selectedEntityKey}
+                      entityReveal={entityReveal}
+                      onEntityLineClick={handleEntityLineClick}
+                    />
+                  </div>
                 </div>
               ) : emitted ? (
                 <div className="flex min-h-0 flex-col gap-2">
@@ -800,13 +859,30 @@ export function ExportStudio({
                     Generated <strong>{emitted.filename}</strong>. Review it below, then download the
                     file or a .zip bundle.
                   </p>
-                  <ArtifactPreviewCard
-                    artifact={emitted}
-                    report={verifyResult?.fidelity.report ?? null}
-                    targetKey={selected.key}
-                    problems={openableProblems}
-                    reveal={problemReveal}
-                  />
+                  {/* IXH-4.1: same explorer beside the single-document viewer. */}
+                  <div className="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[minmax(18rem,22rem)_1fr]">
+                    <ExportManifestPanel
+                      page={manifestPage}
+                      entities={manifestEntities}
+                      loading={manifestLoading}
+                      error={manifestError}
+                      complete={manifestComplete}
+                      onLoadMore={manifestLoadMore}
+                      selectedKey={selectedEntityKey}
+                      onSelectEntity={selectEntity}
+                    />
+                    <ArtifactPreviewCard
+                      artifact={emitted}
+                      report={verifyResult?.fidelity.report ?? null}
+                      targetKey={selected.key}
+                      problems={openableProblems}
+                      reveal={problemReveal}
+                      manifestEntities={manifestEntities}
+                      selectedEntityKey={selectedEntityKey}
+                      entityReveal={entityReveal}
+                      onEntityLineClick={handleEntityLineClick}
+                    />
+                  </div>
                 </div>
               ) : job && jobStatus ? (
                 jobCompleted ? (
