@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+from corpus_loader import load_corpus
 
 from app.avro_emitter import validate_avro_schema
 from app.avro_import_source import AvroImportSource
@@ -14,12 +13,13 @@ from app.canonical_model import ApiParadigm, TypeKind
 from app.emitter import get_emitter
 from app.import_source import DetectionInput, ImportSourceError
 
-_USER_AVSC = (
-    Path(__file__).resolve().parents[2] / "apiome-ui/examples/avro/01-user-record.avsc"
-).read_text(encoding="utf-8")
-_ORDER_AVSC = (
-    Path(__file__).resolve().parents[2] / "apiome-ui/examples/avro/02-order-record.avsc"
-).read_text(encoding="utf-8")
+# Fixtures come from the corpus manifest (IXH-1.1, #5087), selected by tag
+# rather than hard-coded path: the user record is the corpus's enum example,
+# the order record its nested-records example.
+[_USER_ENTRY] = load_corpus(format="avro", feature="enum")
+[_ORDER_ENTRY] = load_corpus(format="avro", feature="nested-records")
+_USER_AVSC = _USER_ENTRY.read_text()
+_ORDER_AVSC = _ORDER_ENTRY.read_text()
 
 
 @pytest.fixture()

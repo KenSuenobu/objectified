@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+from corpus_loader import load_corpus
 
 from app.canonical_model import ApiParadigm, TypeKind
 from app.emitter import get_emitter
@@ -13,9 +12,10 @@ from app.smithy_import_source import SmithyImportSource
 from app.smithy_normalizer import SmithyNormalizer
 from app.smithy_parser import is_smithy, parse_smithy
 
-_WEATHER_SERVICE = (
-    Path(__file__).resolve().parents[2] / "apiome-ui/examples/smithy/01-weather-service.smithy"
-).read_text(encoding="utf-8")
+# Fixtures come from the corpus manifest (IXH-1.1, #5087), selected by tag
+# rather than hard-coded path.
+[_WEATHER_ENTRY] = load_corpus(format="smithy", feature="service")
+_WEATHER_SERVICE = _WEATHER_ENTRY.read_text()
 
 
 @pytest.fixture()

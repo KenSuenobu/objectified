@@ -1,0 +1,2462 @@
+{
+  "$schema": "./corpus.schema.json",
+  "manifest_version": 1,
+  "directories": {
+    "api-blueprint": {
+      "label": "API Blueprint",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "`FORMAT: 1A` metadata line"
+    },
+    "arazzo": {
+      "label": "Arazzo workflows",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "top-level `arazzo:` version"
+    },
+    "asn1": {
+      "label": "ASN.1",
+      "category": "data-schema",
+      "paradigm": "data_schema",
+      "marker": "`DEFINITIONS ::= BEGIN … END`"
+    },
+    "asyncapi": {
+      "label": "AsyncAPI 2.x/3.0",
+      "category": "event-messaging",
+      "paradigm": "event",
+      "marker": "top-level `asyncapi:` version"
+    },
+    "avro": {
+      "label": "Avro schema",
+      "category": "data-schema",
+      "paradigm": "data_schema",
+      "marker": "`type: record` + `fields`"
+    },
+    "capnproto": {
+      "label": "Cap'n Proto",
+      "category": "data-schema",
+      "paradigm": "data_schema",
+      "marker": "`@0x…` file id + `struct`"
+    },
+    "cloudevents": {
+      "label": "CloudEvents 1.0",
+      "category": "event-messaging",
+      "paradigm": "event",
+      "marker": "`specversion` + `type` + `source` envelope"
+    },
+    "cobol-copybook": {
+      "label": "COBOL copybook",
+      "category": "data-schema",
+      "paradigm": "data_schema",
+      "marker": "level numbers + `PIC` clauses"
+    },
+    "connectrpc": {
+      "label": "Connect-RPC",
+      "category": "rpc",
+      "paradigm": "rpc",
+      "marker": "Protobuf `service` (Connect)"
+    },
+    "corba-idl": {
+      "label": "CORBA / OMG IDL",
+      "category": "rpc",
+      "paradigm": "rpc",
+      "marker": "`module` + `interface`"
+    },
+    "edi-x12": {
+      "label": "EDI ASC X12",
+      "category": "industry-messaging",
+      "paradigm": "message",
+      "marker": "`ISA`/`GS`/`ST` envelopes"
+    },
+    "fhir": {
+      "label": "FHIR R4",
+      "category": "industry-messaging",
+      "paradigm": "data_schema",
+      "marker": "`resourceType` (+ StructureDefinition)"
+    },
+    "fix": {
+      "label": "FIX / FIX Orchestra",
+      "category": "industry-messaging",
+      "paradigm": "message",
+      "marker": "`8=FIX.` tags / `<fixr:repository>`"
+    },
+    "flatbuffers": {
+      "label": "FlatBuffers",
+      "category": "data-schema",
+      "paradigm": "data_schema",
+      "marker": "`table`/`struct` + `root_type`"
+    },
+    "graphql": {
+      "label": "GraphQL SDL",
+      "category": "graph",
+      "paradigm": "graph",
+      "marker": "root `type Query` / `schema {}`"
+    },
+    "hl7v2": {
+      "label": "HL7 v2.x",
+      "category": "industry-messaging",
+      "paradigm": "message",
+      "marker": "`MSH|^~\\&|` message header"
+    },
+    "iso20022": {
+      "label": "ISO 20022",
+      "category": "industry-messaging",
+      "paradigm": "message",
+      "marker": "`urn:iso:std:iso:20022` XML namespace"
+    },
+    "iso8583": {
+      "label": "ISO 8583",
+      "category": "industry-messaging",
+      "paradigm": "message",
+      "marker": "`mti` + numbered `dataElements`"
+    },
+    "json-schema": {
+      "label": "JSON Schema",
+      "category": "data-schema",
+      "paradigm": "data_schema",
+      "marker": "`$schema` / `type` + `properties`"
+    },
+    "jtd": {
+      "label": "JSON Type Definition",
+      "category": "data-schema",
+      "paradigm": "data_schema",
+      "marker": "`properties`/`optionalProperties`"
+    },
+    "odata": {
+      "label": "OData v4 (EDMX)",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "`<edmx:Edmx>` root"
+    },
+    "onc-rpc": {
+      "label": "ONC RPC / XDR",
+      "category": "rpc",
+      "paradigm": "rpc",
+      "marker": "`program {} = N` + XDR types"
+    },
+    "openapi": {
+      "label": "OpenAPI 3.x",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "top-level `openapi:` version"
+    },
+    "openrpc": {
+      "label": "OpenRPC (JSON-RPC)",
+      "category": "rpc",
+      "paradigm": "rpc",
+      "marker": "top-level `openrpc:` version"
+    },
+    "postman": {
+      "label": "Postman v2.1",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "collection `info.schema` URL"
+    },
+    "protobuf": {
+      "label": "Protobuf / gRPC",
+      "category": "rpc",
+      "paradigm": "rpc",
+      "marker": "`syntax = \"proto3\"`"
+    },
+    "raml": {
+      "label": "RAML 1.0",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "`#%RAML 1.0` header"
+    },
+    "smithy": {
+      "label": "Smithy 2.0",
+      "category": "rpc",
+      "paradigm": "rpc",
+      "marker": "`$version` + Smithy shapes"
+    },
+    "swagger": {
+      "label": "Swagger 2.0",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "`swagger: \"2.0\"`"
+    },
+    "thrift": {
+      "label": "Apache Thrift",
+      "category": "rpc",
+      "paradigm": "rpc",
+      "marker": "`service` / `struct` shapes"
+    },
+    "typespec": {
+      "label": "TypeSpec",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "`import \"@typespec/...\"`"
+    },
+    "wadl": {
+      "label": "WADL",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "`<application>` root (WADL namespace)"
+    },
+    "wsdl": {
+      "label": "WSDL 1.1 (SOAP)",
+      "category": "rest-http",
+      "paradigm": "soap",
+      "marker": "`<wsdl:definitions>` root"
+    },
+    "xml-rpc": {
+      "label": "XML-RPC",
+      "category": "rpc",
+      "paradigm": "rpc",
+      "marker": "`<methodCall>` / `<methodResponse>` root"
+    },
+    "xsd": {
+      "label": "XML Schema (XSD)",
+      "category": "data-schema",
+      "paradigm": "data_schema",
+      "marker": "`xs:schema` root element"
+    },
+    "zos-connect": {
+      "label": "z/OS Connect",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "`apiRequester` / `apiProvider` descriptor"
+    }
+  },
+  "entries": [
+    {
+      "path": "api-blueprint/01-simple-api.apib",
+      "format": "api-blueprint",
+      "adapter_key": "apiblueprint",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "api-blueprint",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "responses",
+        "parameters",
+        "resources"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "arazzo/edge-cases.yaml",
+      "format": "arazzo",
+      "adapter_key": "arazzo",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "arazzo",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "edge-cases",
+        "workflows",
+        "steps",
+        "success-criteria",
+        "source-descriptions",
+        "outputs",
+        "parameters"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "arazzo/mixed-scenarios.yaml",
+      "format": "arazzo",
+      "adapter_key": "arazzo",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "arazzo",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "mixed-scenarios",
+        "workflows",
+        "steps",
+        "success-criteria",
+        "source-descriptions",
+        "outputs",
+        "parameters"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "arazzo/property-conflicts.yaml",
+      "format": "arazzo",
+      "adapter_key": "arazzo",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "arazzo",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "property-conflicts",
+        "workflows",
+        "steps",
+        "success-criteria",
+        "source-descriptions",
+        "outputs",
+        "parameters"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Malformed YAML (mapping error at line 2) — the arazzo sniffer needs a parsed document, so detection currently falls through to a weak graphql match. Kept as the corpus's canonical `invalid` example; no detection guarantee."
+    },
+    {
+      "path": "arazzo/property-reuse.yaml",
+      "format": "arazzo",
+      "adapter_key": "arazzo",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "arazzo",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "property-reuse",
+        "workflows",
+        "steps",
+        "success-criteria",
+        "source-descriptions",
+        "outputs",
+        "parameters"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "arazzo/simple-workflow.yaml",
+      "format": "arazzo",
+      "adapter_key": "arazzo",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "arazzo",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "simple-workflow",
+        "workflows",
+        "steps",
+        "success-criteria",
+        "source-descriptions",
+        "outputs",
+        "parameters"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "asn1/01-person.asn1",
+      "format": "asn1",
+      "adapter_key": "asn1",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "asn1",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "sequence-of",
+        "sequence",
+        "choice",
+        "enumerated",
+        "optional",
+        "defaults"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "asn1/02-identifier.asn1",
+      "format": "asn1",
+      "adapter_key": "asn1",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "asn1",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "sequence",
+        "choice",
+        "enumerated",
+        "defaults"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "asyncapi/01-user-events-2.6.yaml",
+      "format": "asyncapi",
+      "adapter_key": "asyncapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "asyncapi-2",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "channels",
+        "subscribe",
+        "messages",
+        "components",
+        "servers",
+        "payload"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "asyncapi/02-order-events-3.0.yaml",
+      "format": "asyncapi",
+      "adapter_key": "asyncapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "asyncapi-3",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "channels",
+        "operations",
+        "messages",
+        "components",
+        "servers",
+        "payload"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "avro/01-user-record.avsc",
+      "format": "avro",
+      "adapter_key": "avro",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "avro",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "record",
+        "enum",
+        "array",
+        "logical-types",
+        "nullable-union",
+        "defaults",
+        "docs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "avro/02-order-record.avsc",
+      "format": "avro",
+      "adapter_key": "avro",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "avro",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "record",
+        "array",
+        "nested-records",
+        "logical-types",
+        "defaults",
+        "docs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "capnproto/01-address-book.capnp",
+      "format": "capnproto",
+      "adapter_key": "capnproto",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "capnproto",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "file-id",
+        "struct",
+        "enum",
+        "interface",
+        "list"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "cloudevents/01-order-created.json",
+      "format": "cloudevents",
+      "adapter_key": "cloudevents",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "cloudevents",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "envelope",
+        "data-content-type",
+        "data-payload"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "cobol-copybook/01-customer-record.cpy",
+      "format": "cobolcopybook",
+      "adapter_key": "cobolcopybook",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "cobolcopybook",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "occurs-depending-on",
+        "occurs",
+        "comp-3",
+        "pic",
+        "level-88",
+        "values"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "cobol-copybook/02-order-line.cpy",
+      "format": "cobolcopybook",
+      "adapter_key": "cobolcopybook",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "cobolcopybook",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "comp-3",
+        "pic"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "connectrpc/01-greeter.proto",
+      "format": "connectrpc",
+      "adapter_key": "connectrpc",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "connectrpc",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "proto3",
+        "message",
+        "service",
+        "rpc",
+        "streaming",
+        "repeated",
+        "package"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "corba-idl/01-bank.idl",
+      "format": "corbaidl",
+      "adapter_key": "corbaidl",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "corbaidl",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "module",
+        "interface",
+        "struct",
+        "enum",
+        "exceptions",
+        "raises"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "corba-idl/02-inventory.idl",
+      "format": "corbaidl",
+      "adapter_key": "corbaidl",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "corbaidl",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "module",
+        "interface",
+        "struct",
+        "exceptions",
+        "raises",
+        "sequence"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "edi-x12/01-850-purchase-order.edi",
+      "format": "edix12",
+      "adapter_key": "edix12",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "edix12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "850-purchase-order",
+        "isa-envelope",
+        "iea-trailer"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "edi-x12/02-810-invoice.edi",
+      "format": "edix12",
+      "adapter_key": "edix12",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "edix12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "810-invoice",
+        "isa-envelope",
+        "iea-trailer"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "fhir/01-patient.json",
+      "format": "fhir",
+      "adapter_key": "fhir",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "fhir",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "patient"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "fhir/02-patient-structuredefinition.json",
+      "format": "fhir",
+      "adapter_key": "fhir",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "fhir",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "structure-definition",
+        "profiles-observation",
+        "differential"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "fhir/03-patient-profile.json",
+      "format": "fhir",
+      "adapter_key": "fhir",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "fhir",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "structure-definition",
+        "profiles-patient",
+        "differential"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "fix/01-newordersingle.fix",
+      "format": "fix",
+      "adapter_key": "fix",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "fix",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "new-order-single"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "fix/02-executionreport.fix",
+      "format": "fix",
+      "adapter_key": "fix",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "fix",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "execution-report"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "fix/02-orchestra.xml",
+      "format": "fix",
+      "adapter_key": "fix",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "fix",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "fixr-repository",
+        "code-sets",
+        "messages"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "FIX Orchestra XML is not yet recognized — currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract."
+    },
+    {
+      "path": "flatbuffers/01-monster.fbs",
+      "format": "flatbuffers",
+      "adapter_key": "flatbuffers",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "flatbuffers",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "table",
+        "struct",
+        "enum",
+        "root-type",
+        "vector"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "graphql/01-simple-user.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "features": [
+        "simple-user",
+        "query",
+        "list-type"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "graphql/02-scalar-types.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "features": [
+        "scalar-types",
+        "query",
+        "scalar",
+        "list-type"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "graphql/03-enum-types.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "features": [
+        "enum-types",
+        "query",
+        "enum",
+        "list-type"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Currently outranked: detection ranks `smithy` (0.95) above `graphql` (0.90); expected_detection records the intended winner for the detection-hardening work."
+    },
+    {
+      "path": "graphql/04-input-types.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "features": [
+        "input-types",
+        "query",
+        "mutation",
+        "enum",
+        "input",
+        "defaults",
+        "list-type"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Currently outranked: detection ranks `smithy` (0.95) above `graphql` (0.90); expected_detection records the intended winner for the detection-hardening work."
+    },
+    {
+      "path": "graphql/05-interfaces.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "features": [
+        "interfaces",
+        "query",
+        "interface",
+        "list-type"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "graphql/06-union-types.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "features": [
+        "union-types",
+        "query",
+        "union",
+        "defaults",
+        "list-type"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "graphql/07-nested-types.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "features": [
+        "nested-types",
+        "query",
+        "enum",
+        "list-type"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Currently outranked: detection ranks `smithy` (0.95) above `graphql` (0.90); expected_detection records the intended winner for the detection-hardening work."
+    },
+    {
+      "path": "graphql/08-arguments-defaults.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "features": [
+        "arguments-defaults",
+        "query",
+        "enum",
+        "defaults",
+        "list-type"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Currently outranked: detection ranks `smithy` (0.95) above `graphql` (0.90); expected_detection records the intended winner for the detection-hardening work."
+    },
+    {
+      "path": "graphql/09-custom-scalars.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "features": [
+        "custom-scalars",
+        "query",
+        "mutation",
+        "scalar",
+        "list-type"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "graphql/10-comprehensive-ecommerce.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.85
+      },
+      "features": [
+        "comprehensive-ecommerce",
+        "query",
+        "mutation",
+        "subscription",
+        "interface",
+        "union",
+        "enum",
+        "input",
+        "scalar",
+        "defaults",
+        "list-type"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "hl7v2/01-adt-a01.hl7",
+      "format": "hl7v2",
+      "adapter_key": "hl7v2",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "hl7v2",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "adt-a01",
+        "pid",
+        "pv1",
+        "nk1"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "hl7v2/02-oru-r01.hl7",
+      "format": "hl7v2",
+      "adapter_key": "hl7v2",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "hl7v2",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "oru-r01",
+        "pid",
+        "obx",
+        "obr"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "iso20022/01-pain.001-credit-transfer.xml",
+      "format": "iso20022",
+      "adapter_key": "iso20022",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "iso20022",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "pain.001",
+        "group-header"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "iso20022/02-camt.053-statement.xml",
+      "format": "iso20022",
+      "adapter_key": "iso20022",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "iso20022",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "camt.053",
+        "group-header"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "iso8583/01-authorization-0100.json",
+      "format": "iso8583",
+      "adapter_key": "iso8583",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "iso8583",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "mti-0100",
+        "data-elements"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "iso8583/02-authorization-response-0110.json",
+      "format": "iso8583",
+      "adapter_key": "iso8583",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "iso8583",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "mti-0110",
+        "data-elements"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "json-schema/01-simple-person.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "simple-person"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "json-schema/02-product-types.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "product-types",
+        "enum"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "json-schema/03-multiple-defs.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "multiple-defs",
+        "enum",
+        "defs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "json-schema/04-draft07-definitions.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "json-schema",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "draft07-definitions",
+        "enum",
+        "defs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "json-schema/05-allof-inheritance.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "allof-inheritance",
+        "oneOf",
+        "allOf",
+        "enum",
+        "const",
+        "defs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "json-schema/06-oneof-polymorphism.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "oneof-polymorphism",
+        "oneOf",
+        "enum",
+        "const",
+        "defs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "json-schema/07-anyof-flexible.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "anyof-flexible",
+        "anyOf",
+        "enum",
+        "const",
+        "defs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "json-schema/08-if-then-else.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "if-then-else",
+        "allOf",
+        "enum",
+        "const",
+        "defs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "json-schema/09-advanced-features.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "features",
+        "nullable",
+        "enum",
+        "const",
+        "contains",
+        "prefixItems",
+        "patternProperties",
+        "propertyNames",
+        "additionalProperties",
+        "dependentSchemas",
+        "dependentRequired",
+        "defs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "json-schema/10-comprehensive-ecommerce.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "comprehensive-ecommerce",
+        "allOf",
+        "enum",
+        "patternProperties",
+        "additionalProperties",
+        "defs",
+        "multipleOf"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "jtd/01-user.jtd.json",
+      "format": "jtd",
+      "adapter_key": "jtd",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "jtd",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "properties",
+        "optional-properties",
+        "elements",
+        "enum"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "jtd/02-order.jtd.json",
+      "format": "jtd",
+      "adapter_key": "jtd",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "jtd",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "properties",
+        "optional-properties",
+        "elements",
+        "discriminator",
+        "definitions",
+        "ref"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "odata/01-northwind.edmx",
+      "format": "odata",
+      "adapter_key": "odata",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "odata",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "entity-type",
+        "navigation",
+        "entity-set",
+        "keys"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written EDMX modeled on the OData Northwind reference service."
+    },
+    {
+      "path": "odata/02-orders.edmx",
+      "format": "odata",
+      "adapter_key": "odata",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "odata",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "entity-type",
+        "complex-type",
+        "entity-set",
+        "keys"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "onc-rpc/01-key-value-store.x",
+      "format": "oncrpc",
+      "adapter_key": "oncrpc",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "oncrpc",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "program",
+        "version",
+        "struct",
+        "union",
+        "typedef",
+        "enum",
+        "opaque"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96) above `oncrpc` (0.95); expected_detection records the intended winner for the detection-hardening work."
+    },
+    {
+      "path": "onc-rpc/02-file-stat.x",
+      "format": "oncrpc",
+      "adapter_key": "oncrpc",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "oncrpc",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "program",
+        "version",
+        "struct",
+        "enum"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96) above `oncrpc` (0.95); expected_detection records the intended winner for the detection-hardening work."
+    },
+    {
+      "path": "openapi/01-numeric-constraints.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "numeric-constraints",
+        "multipleOf"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/02-array-contains.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "array-contains",
+        "enum",
+        "contains"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/03-object-properties.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "object-properties",
+        "patternProperties"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/04-constant-not.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "constant-not",
+        "not",
+        "const"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/05-dependent-schemas.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "dependent-schemas",
+        "if-then-else",
+        "enum",
+        "const",
+        "dependentSchemas"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "openapi/06-dependent-required.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "dependent-required",
+        "dependentRequired"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/07-nullable-types.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "nullable-types",
+        "nullable"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/08-multiple-examples.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "multiple-examples",
+        "enum"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/09-unevaluated-properties.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "unevaluated-properties",
+        "allOf",
+        "unevaluatedProperties"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/10-if-then-else.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "if-then-else",
+        "allOf",
+        "enum",
+        "const"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "openapi/10b-if-then-else-separate-rules.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "if-then-else-separate-rules",
+        "oneOf",
+        "allOf",
+        "discriminator",
+        "enum",
+        "const"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "openapi/11-unevaluated-items.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "unevaluated-items",
+        "const",
+        "prefixItems",
+        "unevaluatedItems"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/12-additional-properties-ref.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "additional-properties-ref",
+        "const",
+        "additionalProperties"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/13-property-name-constraints.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "property-name-constraints",
+        "propertyNames",
+        "additionalProperties"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/14-custom-extensions.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "custom-extensions",
+        "additionalProperties",
+        "x-extensions"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/15-external-docs.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "external-docs",
+        "enum",
+        "externalDocs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/16-discriminator-mapping.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "discriminator-mapping",
+        "allOf",
+        "discriminator",
+        "x-extensions"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/17-deprecated-features.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "deprecated-features",
+        "deprecated",
+        "x-extensions"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/18-prefix-items-tuples.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "prefix-items-tuples",
+        "nullable",
+        "enum",
+        "prefixItems"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/19-enumeration-sorting.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "enumeration-sorting",
+        "enum"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/20-comprehensive-features.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "comprehensive-features",
+        "if-then-else",
+        "enum",
+        "const",
+        "contains",
+        "prefixItems",
+        "propertyNames",
+        "additionalProperties",
+        "unevaluatedProperties",
+        "unevaluatedItems",
+        "dependentSchemas",
+        "dependentRequired",
+        "externalDocs",
+        "x-extensions",
+        "multipleOf"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/21-advanced-allof-inheritance.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "allof-inheritance",
+        "allOf",
+        "enum",
+        "additionalProperties"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "openapi/22-advanced-oneof-polymorphism.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "oneof-polymorphism",
+        "oneOf",
+        "discriminator",
+        "enum",
+        "const",
+        "additionalProperties"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "openapi/23-advanced-anyof-flexible.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "anyof-flexible",
+        "anyOf",
+        "enum",
+        "const"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "openapi/24-advanced-combined-composition.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "combined-composition",
+        "oneOf",
+        "anyOf",
+        "allOf",
+        "discriminator",
+        "enum",
+        "const",
+        "additionalProperties"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "openapi/25-test-property-conflict-diff.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "property-conflict-diff",
+        "enum",
+        "defs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "openapi/26-test-property-edge-cases.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "property-edge-cases"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "openapi/27-test-property-mixed.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "property-mixed",
+        "additionalProperties",
+        "defs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "openapi/28-test-property-reuse-same.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "property-reuse-same",
+        "enum"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work."
+    },
+    {
+      "path": "openapi/30-openapi-3.0-petstore.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.0",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "openapi-3.0-petstore",
+        "nullable"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written in the style of the classic OpenAPI Petstore sample."
+    },
+    {
+      "path": "openapi/31-paths-comprehensive.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "paths-comprehensive",
+        "enum"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openapi/32-openapi-3.2.0-minimal.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.2",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "openapi-3.2.0-minimal"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "openrpc/01-wallet-api.json",
+      "format": "openrpc",
+      "adapter_key": "openrpc",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openrpc",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "methods",
+        "params",
+        "result",
+        "components"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "postman/01-tasks-collection.postman_collection.json",
+      "format": "postman",
+      "adapter_key": "postman",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "postman",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "items",
+        "requests",
+        "variables"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "protobuf/01-simple-user.proto",
+      "format": "protobuf",
+      "adapter_key": "grpc",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "protobuf",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "proto3",
+        "message",
+        "enum",
+        "repeated",
+        "package"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "protobuf/02-grpc-service.proto",
+      "format": "protobuf",
+      "adapter_key": "grpc",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "protobuf",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "proto3",
+        "message",
+        "service",
+        "rpc",
+        "repeated",
+        "map",
+        "package"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "raml/01-simple-api.raml",
+      "format": "raml",
+      "adapter_key": "raml",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "raml",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "types",
+        "methods",
+        "responses",
+        "base-uri"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "smithy/01-weather-service.smithy",
+      "format": "smithy",
+      "adapter_key": "smithy",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "smithy",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "service",
+        "operations",
+        "structure",
+        "list",
+        "enum",
+        "required"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "swagger/01-swagger-2-petstore.yaml",
+      "format": "swagger",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "swagger-2.0",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "nullable",
+        "enum",
+        "additionalProperties",
+        "defs",
+        "x-extensions"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written in the style of the classic Swagger Petstore sample.",
+      "notes": "Currently outranked: detection ranks `api-blueprint` (0.98) above `swagger-2.0` (0.95); expected_detection records the intended winner for the detection-hardening work."
+    },
+    {
+      "path": "thrift/01-user-service.thrift",
+      "format": "thrift",
+      "adapter_key": "thrift",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "thrift",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "struct",
+        "service",
+        "enum",
+        "exceptions",
+        "optional",
+        "containers"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Currently outranked: detection ranks `oncrpc` (0.95) above `thrift` (0.95); expected_detection records the intended winner for the detection-hardening work."
+    },
+    {
+      "path": "typespec/01-pets-api.tsp",
+      "format": "typespec",
+      "adapter_key": "typespec",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "typespec",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "model",
+        "interface",
+        "routes",
+        "http-verbs",
+        "enum",
+        "namespace"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "typespec/02-orders-api.tsp",
+      "format": "typespec",
+      "adapter_key": "typespec",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "typespec",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "model",
+        "interface",
+        "routes",
+        "http-verbs",
+        "enum",
+        "namespace"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "wadl/01-bookstore.wadl",
+      "format": "wadl",
+      "adapter_key": "wadl",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wadl",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "resources",
+        "methods",
+        "params",
+        "representations"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "wsdl/01-calculator.wsdl",
+      "format": "wsdl",
+      "adapter_key": "wsdl",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "wsdl",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "port-type",
+        "binding",
+        "message",
+        "service",
+        "soap"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "xml-rpc/01-method-call.xml",
+      "format": "xmlrpc",
+      "adapter_key": "xmlrpc",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "xmlrpc",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "method-call",
+        "params",
+        "struct",
+        "array"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "xml-rpc/02-method-response.xml",
+      "format": "xmlrpc",
+      "adapter_key": "xmlrpc",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "xmlrpc",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "method-response",
+        "params",
+        "struct",
+        "fault"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "xsd/01-purchase-order.xsd",
+      "format": "xsd",
+      "adapter_key": "xsd",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "xsd",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "complex-type",
+        "simple-type",
+        "sequence",
+        "restrictions",
+        "enumeration",
+        "occurrence",
+        "attribute"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "zos-connect/01-api-requester.json",
+      "format": "zosconnect",
+      "adapter_key": "zosconnect",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "zosconnect",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "api-requester",
+        "operations"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "zos-connect/02-api-provider.json",
+      "format": "zosconnect",
+      "adapter_key": "zosconnect",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "zosconnect",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "api-provider",
+        "operations"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    }
+  ]
+}
