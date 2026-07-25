@@ -80,3 +80,31 @@ export function clampRowIndex(index: number, rowCount: number): number | null {
   if (index >= rowCount) return rowCount - 1;
   return index;
 }
+
+/**
+ * The window of source lines a locator-style viewer should mount around a selected line
+ * (IXH-3.2, #5104).
+ *
+ * The quality step's raw viewer used to render only the first N lines, so a source location past
+ * the cap was unreachable. This keeps the DOM bounded at ~`context` lines while making *any* line
+ * reachable: no selection mounts the head of the document (the old behavior), a selection mounts a
+ * `context`-sized window centered on it, clamped to the document at both ends.
+ *
+ * @param lineCount Total lines in the document.
+ * @param centerLine 1-based selected line, or `null` for none. Out-of-range values are clamped.
+ * @param context Maximum lines to mount. Non-positive mounts nothing.
+ * @returns 0-based slice bounds `[start, end)` into the document's line array.
+ */
+export function computeCenteredLineRange(
+  lineCount: number,
+  centerLine: number | null,
+  context: number,
+): { start: number; end: number } {
+  if (lineCount <= 0 || context <= 0) return { start: 0, end: 0 };
+  if (centerLine === null) return { start: 0, end: Math.min(context, lineCount) };
+  const center = Math.min(Math.max(centerLine, 1), lineCount) - 1;
+  let start = Math.max(0, center - Math.floor(context / 2));
+  const end = Math.min(lineCount, start + context);
+  start = Math.max(0, end - context);
+  return { start, end };
+}

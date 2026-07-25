@@ -17,7 +17,10 @@
  *    {@link VIRTUALIZE_ABOVE} rows the list is windowed (see `windowed-rows`), so a report with
  *    thousands of findings stays responsive;
  *  - the **resolved style guide** that governed the lint;
- *  - the **policy comparison** — score against the tenant threshold (IXH-2.3 populates it).
+ *  - the **policy comparison** — score against the tenant threshold (IXH-2.3 populates it);
+ *  - the **entity preview** (IXH-3.2, #5104) — `CatalogImportPreviewPanel`, the structural
+ *    explorer of what the import would create, whose source-location links drive the same raw
+ *    viewer the findings link into.
  *
  * Three exits: **Import** (commit), **Import anyway** (commit against a blocking policy, recording a
  * waiver), and **Cancel**. The blocking exit never appears when policy forbids an override, and the
@@ -51,7 +54,8 @@ import {
   type PreflightReport,
   type PreflightRequest,
 } from '@/app/utils/import-preflight';
-import { clampRowIndex, computeWindowedRange } from '@/app/utils/windowed-rows';
+import { clampRowIndex, computeCenteredLineRange, computeWindowedRange } from '@/app/utils/windowed-rows';
+import { CatalogImportPreviewPanel } from './CatalogImportPreviewPanel';
 
 /** SVG progress-ring geometry, matching `CatalogLintPanel`'s gauge (viewBox 0 0 40 40, r 16). */
 const GAUGE_R = 16;
@@ -66,7 +70,7 @@ const ROW_HEIGHT = 76;
 /** Height (px) of the findings viewport; matches the `h-[380px]` list class. */
 const LIST_HEIGHT = 380;
 
-/** Raw-source lines rendered around a linked finding. The viewer is a locator, not an editor. */
+/** Raw-source lines rendered around a linked location. The viewer is a locator, not an editor. */
 const RAW_VIEWER_CONTEXT = 400;
 
 export interface CatalogImportQualityStepProps {
@@ -242,6 +246,9 @@ export function CatalogImportQualityStep({
   }>({ runId: null, report: null, error: null });
   const [attempt, setAttempt] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  // A line the preview panel's entity explorer linked to; overrides the selected finding's line
+  // until the user selects a finding again, so both surfaces drive the one raw viewer.
+  const [previewLine, setPreviewLine] = useState<number | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [justification, setJustification] = useState('');
   // Waiver-grant state: the server decides whether this user may waive, so the override exit has
@@ -280,6 +287,7 @@ export function CatalogImportQualityStep({
         if (!live) return;
         setOutcome({ runId, report: result, error: null });
         setSelectedIndex(0);
+        setPreviewLine(null);
       })
       .catch((e: unknown) => {
         if (!live || controller.signal.aborted) return;
@@ -304,7 +312,8 @@ export function CatalogImportQualityStep({
     () => findings.map((finding) => locateFindingLine(finding.path, rawSource)),
     [findings, rawSource],
   );
-  const selectedLine = findingLines[selectedIndex] ?? null;
+  // The preview panel's link wins until a finding is selected again (selecting one clears it).
+  const selectedLine = previewLine ?? findingLines[selectedIndex] ?? null;
 
   // Auto-advance only for a real, non-blocking verdict: a block, an unimportable candidate, and a
   // failed pre-flight always stop here, so the preference can never hide a gate.
@@ -362,10 +371,19 @@ export function CatalogImportQualityStep({
   const handleRetry = useCallback(() => setAttempt((n) => n + 1), []);
 
   // Roving focus: the list owns arrow/Home/End, each row is a real button so Tab and Enter work.
-  const focusRow = useCallback((index: number) => {
+  // Selecting a finding reclaims the raw viewer from a preview-panel link.
+  const selectFinding = useCallback((index: number) => {
     setSelectedIndex(index);
-    rowRefs.current.get(index)?.focus();
+    setPreviewLine(null);
   }, []);
+
+  const focusRow = useCallback(
+    (index: number) => {
+      selectFinding(index);
+      rowRefs.current.get(index)?.focus();
+    },
+    [selectFinding],
+  );
 
   const handleListKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
@@ -413,9 +431,16 @@ export function CatalogImportQualityStep({
     [findings.length, scrollTop, virtualized],
   );
 
+  // The viewer mounts a bounded window of lines *around* the selected location (IXH-3.2) rather
+  // than only the head of the document, so a preview-manifest link to line 12,000 still resolves.
+  const rawAllLines = useMemo(() => (rawSource ? rawSource.split('\n') : []), [rawSource]);
+  const rawRange = useMemo(
+    () => computeCenteredLineRange(rawAllLines.length, selectedLine, RAW_VIEWER_CONTEXT),
+    [rawAllLines.length, selectedLine],
+  );
   const rawLines = useMemo(
-    () => (rawSource ? rawSource.split('\n').slice(0, RAW_VIEWER_CONTEXT) : []),
-    [rawSource],
+    () => rawAllLines.slice(rawRange.start, rawRange.end),
+    [rawAllLines, rawRange],
   );
 
   const toneAlertVariant =
@@ -548,57 +573,76 @@ export function CatalogImportQualityStep({
             </div>
           )}
 
-          {findings.length > 0 && (
+          <CatalogImportPreviewPanel
+            request={request}
+            rawSourceAvailable={rawSource !== ''}
+            rawLineCount={rawAllLines.length}
+            onSelectSourceLine={setPreviewLine}
+          />
+
+          {(findings.length > 0 || rawSource !== '') && (
             <div className="grid gap-3 lg:grid-cols-2">
               <div>
-                <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-                  <span>Ranked findings ({findings.length})</span>
-                  {virtualized && (
-                    <span className="font-normal normal-case text-gray-500 dark:text-gray-400">
-                      windowed
-                    </span>
-                  )}
-                </div>
-                <div
-                  ref={listRef}
-                  onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
-                  onKeyDown={handleListKeyDown}
-                  className="h-[380px] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
-                >
-                  <ul role="listbox" aria-label="Ranked lint findings" className="space-y-1 py-1">
-                    {rowWindow.paddingTop > 0 && (
-                      <li aria-hidden role="presentation" style={{ height: rowWindow.paddingTop }} />
+                {findings.length > 0 ? (
+                  <>
+                    <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+                      <span>Ranked findings ({findings.length})</span>
+                      {virtualized && (
+                        <span className="font-normal normal-case text-gray-500 dark:text-gray-400">
+                          windowed
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      ref={listRef}
+                      onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+                      onKeyDown={handleListKeyDown}
+                      className="h-[380px] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
+                    >
+                      <ul role="listbox" aria-label="Ranked lint findings" className="space-y-1 py-1">
+                        {rowWindow.paddingTop > 0 && (
+                          <li aria-hidden role="presentation" style={{ height: rowWindow.paddingTop }} />
+                        )}
+                        {findings.slice(rowWindow.startIndex, rowWindow.endIndex).map((finding, offset) => {
+                          const index = rowWindow.startIndex + offset;
+                          return (
+                            <FindingRow
+                              key={finding.id || `${finding.rule}:${index}`}
+                              finding={finding}
+                              line={findingLines[index] ?? null}
+                              selected={index === selectedIndex}
+                              onSelect={() => selectFinding(index)}
+                              registerRef={(node) => {
+                                if (node) rowRefs.current.set(index, node);
+                                else rowRefs.current.delete(index);
+                              }}
+                            />
+                          );
+                        })}
+                        {rowWindow.paddingBottom > 0 && (
+                          <li aria-hidden role="presentation" style={{ height: rowWindow.paddingBottom }} />
+                        )}
+                      </ul>
+                    </div>
+                    {findings[selectedIndex]?.remediation && (
+                      <p
+                        className="mt-2 text-xs text-gray-600 dark:text-gray-300"
+                        data-testid="import-quality-finding-remediation"
+                      >
+                        {findings[selectedIndex].remediation}
+                        {findings[selectedIndex].docs_url ? ` · ${findings[selectedIndex].docs_url}` : ''}
+                      </p>
                     )}
-                    {findings.slice(rowWindow.startIndex, rowWindow.endIndex).map((finding, offset) => {
-                      const index = rowWindow.startIndex + offset;
-                      return (
-                        <FindingRow
-                          key={finding.id || `${finding.rule}:${index}`}
-                          finding={finding}
-                          line={findingLines[index] ?? null}
-                          selected={index === selectedIndex}
-                          onSelect={() => setSelectedIndex(index)}
-                          registerRef={(node) => {
-                            if (node) rowRefs.current.set(index, node);
-                            else rowRefs.current.delete(index);
-                          }}
-                        />
-                      );
-                    })}
-                    {rowWindow.paddingBottom > 0 && (
-                      <li aria-hidden role="presentation" style={{ height: rowWindow.paddingBottom }} />
-                    )}
-                  </ul>
-                </div>
-                {findings[selectedIndex]?.remediation && (
-                  <p
-                    className="mt-2 text-xs text-gray-600 dark:text-gray-300"
-                    data-testid="import-quality-finding-remediation"
+                  </>
+                ) : report?.ok ? (
+                  <div
+                    className="flex items-center gap-2 rounded-lg border border-emerald-200 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:text-emerald-200"
+                    data-testid="import-quality-no-findings"
                   >
-                    {findings[selectedIndex].remediation}
-                    {findings[selectedIndex].docs_url ? ` · ${findings[selectedIndex].docs_url}` : ''}
-                  </p>
-                )}
+                    <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+                    No lint findings — this source is clean against the resolved style guide.
+                  </div>
+                ) : null}
               </div>
 
               <div>
@@ -610,30 +654,50 @@ export function CatalogImportQualityStep({
                   data-testid="import-quality-raw-viewer"
                 >
                   {rawLines.length > 0 ? (
-                    <ol className="py-1 font-mono text-[11px] leading-snug">
-                      {rawLines.map((text, index) => {
-                        const lineNumber = index + 1;
-                        const isTarget = selectedLine === lineNumber;
-                        return (
-                          <li
-                            key={lineNumber}
-                            ref={isTarget ? lineRef : undefined}
-                            data-testid={isTarget ? 'import-quality-raw-line-active' : undefined}
-                            className={cn(
-                              'flex gap-3 px-3',
-                              isTarget
-                                ? 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-100'
-                                : 'text-gray-700 dark:text-gray-300',
-                            )}
-                          >
-                            <span className="w-8 shrink-0 select-none text-right text-gray-400 tabular-nums">
-                              {lineNumber}
-                            </span>
-                            <span className="whitespace-pre-wrap break-all">{text}</span>
-                          </li>
-                        );
-                      })}
-                    </ol>
+                    <>
+                      {rawRange.start > 0 && (
+                        <p
+                          className="px-3 py-1 font-mono text-[10px] text-gray-400 dark:text-gray-500"
+                          data-testid="import-quality-raw-clipped-before"
+                        >
+                          … {rawRange.start.toLocaleString()} earlier{' '}
+                          {rawRange.start === 1 ? 'line' : 'lines'}
+                        </p>
+                      )}
+                      <ol className="py-1 font-mono text-[11px] leading-snug">
+                        {rawLines.map((text, index) => {
+                          const lineNumber = rawRange.start + index + 1;
+                          const isTarget = selectedLine === lineNumber;
+                          return (
+                            <li
+                              key={lineNumber}
+                              ref={isTarget ? lineRef : undefined}
+                              data-testid={isTarget ? 'import-quality-raw-line-active' : undefined}
+                              className={cn(
+                                'flex gap-3 px-3',
+                                isTarget
+                                  ? 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-100'
+                                  : 'text-gray-700 dark:text-gray-300',
+                              )}
+                            >
+                              <span className="w-8 shrink-0 select-none text-right text-gray-400 tabular-nums">
+                                {lineNumber}
+                              </span>
+                              <span className="whitespace-pre-wrap break-all">{text}</span>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                      {rawRange.end < rawAllLines.length && (
+                        <p
+                          className="px-3 py-1 font-mono text-[10px] text-gray-400 dark:text-gray-500"
+                          data-testid="import-quality-raw-clipped-after"
+                        >
+                          … {(rawAllLines.length - rawRange.end).toLocaleString()} later{' '}
+                          {rawAllLines.length - rawRange.end === 1 ? 'line' : 'lines'}
+                        </p>
+                      )}
+                    </>
                   ) : (
                     <p className="p-3 text-xs text-gray-500 dark:text-gray-400">
                       The raw source is not available for this candidate (archives are read
@@ -645,7 +709,7 @@ export function CatalogImportQualityStep({
             </div>
           )}
 
-          {report?.ok && findings.length === 0 && (
+          {report?.ok && findings.length === 0 && rawSource === '' && (
             <div
               className="flex items-center gap-2 rounded-lg border border-emerald-200 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:text-emerald-200"
               data-testid="import-quality-no-findings"

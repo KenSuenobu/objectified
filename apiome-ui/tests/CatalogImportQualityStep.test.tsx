@@ -79,15 +79,17 @@ function buildReport(overrides: Partial<PreflightReport> = {}): PreflightReport 
   };
 }
 
-/** Serve one pre-flight response (or reject the call to simulate a transport failure). */
 /**
- * Stub the two endpoints the step calls: the pre-flight report and, when the user overrides a
- * blocking verdict, the tenant waiver ledger (IXH-2.3). `waiverFailure` makes the ledger refuse
- * the grant the way a role the policy does not name would be refused.
+ * Stub the three endpoints the step calls: the pre-flight report, the preview manifest the entity
+ * explorer fetches (IXH-3.2 — served consistently from the same report, with one located service
+ * at `previewLocation`), and, when the user overrides a blocking verdict, the tenant waiver ledger
+ * (IXH-2.3). `waiverFailure` makes the ledger refuse the grant the way a role the policy does not
+ * name would be refused.
  */
 function mockPreflight(
   response: PreflightReport | { failWith: string },
   waiverFailure?: string,
+  previewLocation = '3:1',
 ): jest.Mock {
   return jest.fn((url: unknown) => {
     if (String(url).includes('/api/quality-policy/waivers')) {
@@ -111,8 +113,69 @@ function mockPreflight(
         json: () => Promise.resolve({ success: false, error: response.failWith }),
       });
     }
+    if (String(url).includes('/api/import/preview-manifest')) {
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            success: true,
+            ok: response.ok,
+            preflight: response,
+            manifest: response.ok
+              ? {
+                  manifest_hash: 'mh-1',
+                  adapter: {
+                    adapter_key: 'graphql',
+                    adapter_label: 'GraphQL SDL',
+                    paradigm: 'graphql',
+                    formats: ['graphql'],
+                    capability: {
+                      format: 'graphql',
+                      mode: 'native',
+                      importable: true,
+                      related_issues: [],
+                    },
+                    parser_limits: [],
+                  },
+                  counts: { services: 1, operations: 0, channels: 0, types: 0 },
+                  coverage_counts: {},
+                  status_counts: {},
+                  reason_counts: {},
+                  entities: [
+                    {
+                      key: 'svc:1',
+                      name: 'PetService',
+                      entity_kind: 'service',
+                      parent_key: null,
+                      order: 0,
+                      deprecated: false,
+                      coverage: 'mapped',
+                      unmodeled_extras: [],
+                      source_location: previewLocation,
+                    },
+                  ],
+                  total_entities: 1,
+                  nodes: [],
+                  edges: [],
+                  coverage: [],
+                  total_coverage_entries: 0,
+                  page_size: 1000,
+                  next_cursor: null,
+                  truncated: false,
+                }
+              : null,
+          }),
+      });
+    }
     return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, ...response }) });
   }) as unknown as jest.Mock;
+}
+
+/** The step's calls to one endpoint, so assertions are not entangled with the preview panel's. */
+function callsTo(path: string): unknown[][] {
+  return (global.fetch as unknown as jest.Mock).mock.calls.filter((call) =>
+    String(call[0]).includes(path),
+  );
 }
 
 interface Handlers {
@@ -127,8 +190,9 @@ async function renderStep(
   response: PreflightReport | { failWith: string },
   props: Partial<React.ComponentProps<typeof CatalogImportQualityStep>> = {},
   waiverFailure?: string,
+  previewLocation?: string,
 ): Promise<Handlers> {
-  global.fetch = mockPreflight(response, waiverFailure) as unknown as typeof fetch;
+  global.fetch = mockPreflight(response, waiverFailure, previewLocation) as unknown as typeof fetch;
   const handlers: Handlers = {
     onCommit: jest.fn(),
     onBack: jest.fn(),
@@ -154,6 +218,11 @@ async function renderStep(
   await waitFor(() =>
     expect(screen.queryByTestId('import-quality-loading')).not.toBeInTheDocument(),
   );
+  // The entity preview panel (IXH-3.2) mounts with the report and fetches its manifest; wait for
+  // it to settle so no test tears down with that request still updating state.
+  await waitFor(() =>
+    expect(screen.queryByTestId('import-preview-loading')).not.toBeInTheDocument(),
+  );
   return handlers;
 }
 
@@ -177,8 +246,10 @@ describe('CatalogImportQualityStep — passing verdict', () => {
   it('pre-flights without committing, then commits only when the user confirms', async () => {
     const handlers = await renderStep(buildReport());
 
-    // The only call made is the pre-flight; nothing was written.
-    expect(global.fetch).toHaveBeenCalledTimes(1);
+    // The pre-flight ran once, and the only other call is the preview manifest — both are
+    // server-side dry runs; nothing was written.
+    expect(callsTo('/api/import/preflight')).toHaveLength(1);
+    expect(callsTo('/api/import/preview-manifest')).toHaveLength(1);
     expect((global.fetch as unknown as jest.Mock).mock.calls[0][0]).toBe('/api/import/preflight');
     expect(handlers.onCommit).not.toHaveBeenCalled();
 
@@ -495,7 +566,7 @@ describe('CatalogImportQualityStep — pre-flight failure', () => {
 
     fireEvent.click(screen.getByTestId('import-quality-retry'));
     await waitFor(() => expect(screen.getByTestId('import-quality-grade')).toHaveTextContent('B'));
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(callsTo('/api/import/preflight')).toHaveLength(2);
     expect(screen.queryByTestId('import-quality-retry')).not.toBeInTheDocument();
   });
 
@@ -589,5 +660,64 @@ describe('CatalogImportQualityStep — skip preference', () => {
     const handlers = await renderStep(buildReport());
     fireEvent.click(screen.getByLabelText(/skip this step for clean imports/i));
     expect(handlers.onSkipPreferenceChange).toHaveBeenCalledWith(true);
+  });
+});
+
+describe('CatalogImportQualityStep — entity preview integration (IXH-3.2)', () => {
+  beforeEach(() => window.localStorage.clear());
+  afterEach(() => jest.restoreAllMocks());
+
+  // Long enough that a 400-line window centered on line 450 clips lines on *both* sides.
+  const LONG_SOURCE = Array.from({ length: 1200 }, (_, i) => `line-${i + 1}-content`).join('\n');
+
+  it('renders the entity preview panel with its manifest tree inside the step', async () => {
+    await renderStep(buildReport());
+    expect(screen.getByTestId('import-preview-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('import-preview-summary')).toBeInTheDocument();
+    expect(screen.getByRole('treeitem', { name: /PetService/ })).toBeInTheDocument();
+  });
+
+  it('drives the raw viewer from a preview link beyond the old 400-line head window', async () => {
+    await renderStep(buildReport(), { rawSource: LONG_SOURCE }, undefined, '450:1');
+
+    fireEvent.click(screen.getByTestId('import-preview-source-link'));
+    await waitFor(() =>
+      expect(screen.getByTestId('import-quality-raw-line-active')).toHaveTextContent(
+        'line-450-content',
+      ),
+    );
+    // The viewer states what it clipped on both sides of the centered window.
+    expect(screen.getByTestId('import-quality-raw-clipped-before')).toBeInTheDocument();
+    expect(screen.getByTestId('import-quality-raw-clipped-after')).toBeInTheDocument();
+  });
+
+  it('lets selecting a finding reclaim the raw viewer from a preview link', async () => {
+    await renderStep(buildReport());
+
+    // The preview link (line 3) takes the viewer over from finding 1 (line 1)…
+    fireEvent.click(screen.getByTestId('import-preview-source-link'));
+    await waitFor(() =>
+      expect(screen.getByTestId('import-quality-raw-line-active')).toHaveTextContent('}'),
+    );
+
+    // …and selecting a finding takes it back.
+    fireEvent.click(screen.getAllByTestId('import-quality-finding')[0]);
+    await waitFor(() =>
+      expect(screen.getByTestId('import-quality-raw-line-active')).toHaveTextContent('type Query {'),
+    );
+  });
+
+  it('keeps the raw viewer available for preview links when there are no findings', async () => {
+    await renderStep(
+      buildReport({
+        lint: { score: 100, grade: 'A', severity_counts: { error: 0, warning: 0, info: 0 }, findings: [] },
+      }),
+    );
+    expect(screen.getByTestId('import-quality-no-findings')).toBeInTheDocument();
+    expect(screen.getByTestId('import-quality-raw-viewer')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('import-preview-source-link'));
+    await waitFor(() =>
+      expect(screen.getByTestId('import-quality-raw-line-active')).toHaveTextContent('}'),
+    );
   });
 });
