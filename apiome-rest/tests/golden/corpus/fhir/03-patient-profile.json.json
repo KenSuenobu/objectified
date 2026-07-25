@@ -1,0 +1,432 @@
+{
+  "adapter": "fhir",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "fhir_kind": "structure_definition",
+      "fhir_structure_definition": {
+        "abstract": false,
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Patient",
+        "derivation": "constraint",
+        "elements": [
+          {
+            "field_name": "identifier",
+            "max": "*",
+            "min": 0,
+            "path": "Patient.identifier",
+            "short": "An identifier for this patient",
+            "types": [
+              {
+                "code": "Identifier",
+                "profile": null
+              }
+            ]
+          },
+          {
+            "field_name": "active",
+            "max": "1",
+            "min": 0,
+            "path": "Patient.active",
+            "short": "Whether this patient record is in active use",
+            "types": [
+              {
+                "code": "boolean",
+                "profile": null
+              }
+            ]
+          },
+          {
+            "field_name": "name",
+            "max": "*",
+            "min": 0,
+            "path": "Patient.name",
+            "short": "A name associated with the patient",
+            "types": [
+              {
+                "code": "HumanName",
+                "profile": null
+              }
+            ]
+          },
+          {
+            "field_name": "gender",
+            "max": "1",
+            "min": 0,
+            "path": "Patient.gender",
+            "short": "male | female | other | unknown",
+            "types": [
+              {
+                "code": "code",
+                "profile": null
+              }
+            ]
+          }
+        ],
+        "id": "SimplePatient",
+        "kind": "resource",
+        "name": "SimplePatient",
+        "status": "draft",
+        "type": "Patient",
+        "url": "http://example.com/fhir/StructureDefinition/SimplePatient"
+      }
+    },
+    "format": "fhir",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "SimplePatient",
+      "namespace": "SimplePatient"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "SimplePatient.Patient",
+        "name": "Patient",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fhir_interaction": "search-type"
+            },
+            "http_method": "GET",
+            "http_path": "/Patient",
+            "key": "GET /Patient",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/fhir+json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Patient#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "SimplePatient.Patient",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "searchPatient",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Patient#query._count",
+                "location": "query",
+                "name": "_count",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fhir_interaction": "read"
+            },
+            "http_method": "GET",
+            "http_path": "/Patient/{id}",
+            "key": "GET /Patient/{id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/fhir+json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Patient/{id}#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "SimplePatient.Patient",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "readPatient",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fhir_interaction": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Patient",
+            "key": "POST /Patient",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/fhir+json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Patient#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "SimplePatient.Patient",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/fhir+json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Patient#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "SimplePatient.Patient",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createPatient",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "SimplePatient",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fhir_kind": "complex",
+          "fhir_placeholder": true
+        },
+        "fields": [],
+        "key": "SimplePatient.HumanName",
+        "key_type": null,
+        "kind": "record",
+        "name": "HumanName",
+        "namespace": "SimplePatient",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fhir_kind": "complex",
+          "fhir_placeholder": true
+        },
+        "fields": [],
+        "key": "SimplePatient.Identifier",
+        "key_type": null,
+        "kind": "record",
+        "name": "Identifier",
+        "namespace": "SimplePatient",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fhir_kind": "resource"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Whether this patient record is in active use",
+            "extras": {
+              "fhir_max": "1",
+              "fhir_min": 0,
+              "fhir_path": "Patient.active",
+              "fhir_profiles": [],
+              "fhir_type": "boolean"
+            },
+            "field_number": 2,
+            "key": "SimplePatient.Patient.active",
+            "name": "active",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "male | female | other | unknown",
+            "extras": {
+              "fhir_max": "1",
+              "fhir_min": 0,
+              "fhir_path": "Patient.gender",
+              "fhir_profiles": [],
+              "fhir_type": "code"
+            },
+            "field_number": 4,
+            "key": "SimplePatient.Patient.gender",
+            "name": "gender",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "An identifier for this patient",
+            "extras": {
+              "fhir_max": "*",
+              "fhir_min": 0,
+              "fhir_path": "Patient.identifier",
+              "fhir_profiles": [],
+              "fhir_type": "Identifier"
+            },
+            "field_number": 1,
+            "key": "SimplePatient.Patient.identifier",
+            "name": "identifier",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "SimplePatient.Identifier",
+                "nullable": true
+              },
+              "name": "SimplePatient.Identifier",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "A name associated with the patient",
+            "extras": {
+              "fhir_max": "*",
+              "fhir_min": 0,
+              "fhir_path": "Patient.name",
+              "fhir_profiles": [],
+              "fhir_type": "HumanName"
+            },
+            "field_number": 3,
+            "key": "SimplePatient.Patient.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "SimplePatient.HumanName",
+                "nullable": true
+              },
+              "name": "SimplePatient.HumanName",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "SimplePatient.Patient",
+        "key_type": null,
+        "kind": "record",
+        "name": "Patient",
+        "namespace": "SimplePatient",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "fhir/03-patient-profile.json",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "fhir"
+  },
+  "fingerprint": "sha256:790ce6052e1146cdb638294e0098e3126051795e23ac467db5f54ddbcc31113f",
+  "lint": {
+    "findings": 11,
+    "grade": "C",
+    "report_fingerprint": "5b5f41b860319ee1141116912a739262ded7b89f3d488af1382e41a5dc6f5004",
+    "score": 71,
+    "severity_counts": {
+      "error": 0,
+      "info": 5,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

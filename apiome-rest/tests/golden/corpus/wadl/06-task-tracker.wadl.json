@@ -1,0 +1,479 @@
+{
+  "adapter": "wadl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "wadl_target_namespace": "http://example.com/tasks"
+    },
+    "format": "wadl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Task tracker API",
+      "namespace": "http://example.com/tasks"
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From WADL resources@base",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/v1/",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "http://example.com/tasks.Task tracker API",
+        "name": "Task tracker API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "DELETE",
+            "http_path": "/tasks/{taskId}",
+            "key": "DELETE /tasks/{taskId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "204"
+                },
+                "headers": [],
+                "key": "DELETE /tasks/{taskId}#response.204",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "deleteTask",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "wadl_type": "string"
+                },
+                "key": "DELETE /tasks/{taskId}#path.taskId",
+                "location": "path",
+                "name": "taskId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List tasks, optionally filtered by assignee or completion.",
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/tasks",
+            "key": "GET /tasks",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /tasks#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/tasks.Task",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "listTasks",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/tasks/{taskId}",
+            "key": "GET /tasks/{taskId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /tasks/{taskId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/tasks.Task",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "404"
+                },
+                "headers": [],
+                "key": "GET /tasks/{taskId}#response.404",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "getTask",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "wadl_type": "string"
+                },
+                "key": "GET /tasks/{taskId}#path.taskId",
+                "location": "path",
+                "name": "taskId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "POST",
+            "http_path": "/tasks",
+            "key": "POST /tasks",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /tasks#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/tasks.Task",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "201"
+                },
+                "headers": [],
+                "key": "POST /tasks#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/tasks.Task",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "422"
+                },
+                "headers": [],
+                "key": "POST /tasks#response.422",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "createTask",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "PUT",
+            "http_path": "/tasks/{taskId}",
+            "key": "PUT /tasks/{taskId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PUT /tasks/{taskId}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/tasks.Task",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "PUT /tasks/{taskId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/tasks.Task",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "replaceTask",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "wadl_type": "string"
+                },
+                "key": "PUT /tasks/{taskId}#path.taskId",
+                "location": "path",
+                "name": "taskId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wadl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "wadl_type": "string"
+            },
+            "field_number": 3,
+            "key": "http://example.com/tasks.Task.assignee",
+            "name": "assignee",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "wadl_type": "boolean"
+            },
+            "field_number": 5,
+            "key": "http://example.com/tasks.Task.done",
+            "name": "done",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "wadl_type": "date"
+            },
+            "field_number": 4,
+            "key": "http://example.com/tasks.Task.dueDate",
+            "name": "dueDate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "wadl_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/tasks.Task.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "wadl_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/tasks.Task.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/tasks.Task",
+        "key_type": null,
+        "kind": "record",
+        "name": "Task",
+        "namespace": "http://example.com/tasks",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "wadl/06-task-tracker.wadl",
+  "counts": {
+    "channels": 0,
+    "operations": 5,
+    "servers": 1,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wadl"
+  },
+  "fingerprint": "sha256:5d20c50d6dbcee208d64d72459be1db504bd25b5ecfa37e554fb0935f9b67481",
+  "lint": {
+    "findings": 20,
+    "grade": "D",
+    "report_fingerprint": "2ada6bed54c48caac3b59b76984addba528d03970bf1516821773ec93e7453d5",
+    "score": 65,
+    "severity_counts": {
+      "error": 0,
+      "info": 15,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

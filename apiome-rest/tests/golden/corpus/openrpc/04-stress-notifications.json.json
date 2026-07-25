@@ -1,0 +1,266 @@
+{
+  "adapter": "openrpc",
+  "canonical": {
+    "channels": [],
+    "description": "JSON-RPC telemetry service exercising the wider OpenRPC grammar.",
+    "extras": {
+      "openrpc_version": "1.3.2"
+    },
+    "format": "openrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Telemetry Ingest API",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": "jsonrpc",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "Region-scoped ingest endpoint.",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://{region}.rpc.example.com/telemetry",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Telemetry Ingest API",
+        "name": "Telemetry Ingest API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Fire-and-forget sensor reading (notification: no result).",
+            "extras": {
+              "openrpc_result_name": null,
+              "openrpc_summary": "Fire-and-forget sensor reading (notification: no result)."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Telemetry Ingest API.emitReading",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "openrpc_params": [
+                    {
+                      "description": null,
+                      "name": "sensorId",
+                      "required": true,
+                      "schema": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "description": null,
+                      "name": "reading",
+                      "required": true,
+                      "schema": {
+                        "oneOf": [
+                          {
+                            "description": "Scalar reading.",
+                            "type": "number"
+                          },
+                          {
+                            "properties": {
+                              "unit": {
+                                "enum": [
+                                  "celsius",
+                                  "pascal",
+                                  "lux"
+                                ],
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "value",
+                              "unit"
+                            ],
+                            "type": "object"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Telemetry Ingest API.emitReading#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "emitReading",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Deprecated synchronous flush.",
+            "extras": {
+              "openrpc_result_name": "flushed",
+              "openrpc_summary": "Deprecated synchronous flush."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Telemetry Ingest API.flushBuffer",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Telemetry Ingest API.flushBuffer#response",
+                "name": "flushed",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "boolean",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "flushBuffer",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Query stored readings for a sensor.",
+            "extras": {
+              "openrpc_result_name": "readings",
+              "openrpc_summary": "Query stored readings for a sensor."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Telemetry Ingest API.queryReadings",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "openrpc_params": [
+                    {
+                      "description": null,
+                      "name": "sensorId",
+                      "required": true,
+                      "schema": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "description": null,
+                      "name": "since",
+                      "required": false,
+                      "schema": {
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "description": null,
+                      "name": "limit",
+                      "required": false,
+                      "schema": {
+                        "default": 100,
+                        "maximum": 1000,
+                        "type": "integer"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Telemetry Ingest API.queryReadings#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Telemetry Ingest API.queryReadings#response",
+                "name": "readings",
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "number",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "queryReadings",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Telemetry Ingest API",
+    "types": [],
+    "version": "3.4.1"
+  },
+  "corpus_path": "openrpc/04-stress-notifications.json",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "openrpc"
+  },
+  "fingerprint": "sha256:07ecb37860457864995555ccaeadf283c7090152124f0966d83698ced3b6b22e",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "8a1f3a4bb2304119128610a57fabcf1f2b81cf5f2ec290587b50d86071f05314",
+    "score": 96,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

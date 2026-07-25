@@ -1,0 +1,586 @@
+{
+  "adapter": "corbaidl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "corbaidl_interfaces": [
+        {
+          "name": "Orders",
+          "operations": [
+            {
+              "name": "place",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "lines",
+                  "type": "sequence<OrderLine>"
+                }
+              ],
+              "raises": [
+                "OutOfStock"
+              ],
+              "return_type": "Order"
+            },
+            {
+              "name": "getOrder",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "raises": [],
+              "return_type": "Order"
+            }
+          ]
+        },
+        {
+          "name": "Finder",
+          "operations": [
+            {
+              "name": "byName",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "query",
+                  "type": "string"
+                }
+              ],
+              "raises": [],
+              "return_type": "sequence<Product>"
+            },
+            {
+              "name": "allSkus",
+              "parameters": [],
+              "raises": [],
+              "return_type": "sequence<string>"
+            }
+          ]
+        }
+      ],
+      "corbaidl_module": "Commerce",
+      "corbaidl_typedefs": {
+        "OrderLineList": "sequence<OrderLine>",
+        "ProductList": "sequence<Product>",
+        "Sku": "string",
+        "SkuList": "sequence<Sku>"
+      }
+    },
+    "format": "corbaidl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Commerce",
+      "namespace": "Commerce"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Commerce.Finder",
+        "name": "Finder",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Commerce.Finder.allSkus",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Commerce.Finder.allSkus#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "string",
+                    "nullable": false
+                  },
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "allSkus",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Commerce.Finder.byName",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "Commerce.Finder.byName#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Commerce.Finder.byName#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Commerce.Product",
+                    "nullable": false
+                  },
+                  "name": "Commerce.Product",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "byName",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Commerce.Orders",
+        "name": "Orders",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Commerce.Orders.getOrder",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "Commerce.Orders.getOrder#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Commerce.Orders.getOrder#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Commerce.Order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "getOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Commerce.Orders.place",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "Commerce.Orders.place#error.OutOfStock",
+                "name": "OutOfStock",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Commerce.OutOfStock",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "Commerce.Orders.place#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Commerce.OrderLine",
+                    "nullable": false
+                  },
+                  "name": "Commerce.OrderLine",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Commerce.Orders.place#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Commerce.Order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "place",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "Commerce.Order.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "sequence<OrderLine>"
+            },
+            "field_number": 2,
+            "key": "Commerce.Order.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Commerce.OrderLine",
+                "nullable": false
+              },
+              "name": "Commerce.OrderLine",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Commerce.Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "long"
+            },
+            "field_number": 2,
+            "key": "Commerce.OrderLine.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "Commerce.OrderLine.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Commerce.OrderLine",
+        "key_type": null,
+        "kind": "record",
+        "name": "OrderLine",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "exception"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "Commerce.OutOfStock.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Commerce.OutOfStock",
+        "key_type": null,
+        "kind": "record",
+        "name": "OutOfStock",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 2,
+            "key": "Commerce.Product.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "double"
+            },
+            "field_number": 3,
+            "key": "Commerce.Product.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "Commerce.Product.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Commerce.Product",
+        "key_type": null,
+        "kind": "record",
+        "name": "Product",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "corba-idl/04-nested-modules.idl",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 2,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "corbaidl"
+  },
+  "fingerprint": "sha256:3b37eba3a10b01a1ac6136475fa058d08b5ec80c577b446898684878b9378922",
+  "lint": {
+    "findings": 25,
+    "grade": "F",
+    "report_fingerprint": "509c33af0987a0d71cae727803ce3ea29f40793634965602109d6bd3288c437a",
+    "score": 51,
+    "severity_counts": {
+      "error": 0,
+      "info": 17,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

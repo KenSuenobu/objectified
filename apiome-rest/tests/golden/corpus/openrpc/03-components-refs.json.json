@@ -1,0 +1,457 @@
+{
+  "adapter": "openrpc",
+  "canonical": {
+    "channels": [],
+    "description": "JSON-RPC order service built almost entirely from shared components.",
+    "extras": {
+      "openrpc_version": "1.3.2"
+    },
+    "format": "openrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Order Desk API",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": "jsonrpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Order Desk API",
+        "name": "Order Desk API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Create a new order for a customer.",
+            "extras": {
+              "openrpc_result_name": "order",
+              "openrpc_summary": "Create a new order for a customer."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Order Desk API.createOrder",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "openrpc_params": [
+                    {
+                      "description": null,
+                      "name": "items",
+                      "required": true,
+                      "schema": {
+                        "items": {
+                          "$ref": "#/components/schemas/LineItem"
+                        },
+                        "type": "array"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Order Desk API.createOrder#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "LineItem",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Order Desk API.createOrder#response",
+                "name": "order",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "createOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Fetch an existing order by id.",
+            "extras": {
+              "openrpc_result_name": "order",
+              "openrpc_summary": "Fetch an existing order by id."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Order Desk API.getOrder",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "openrpc_params": [
+                    {
+                      "description": null,
+                      "name": "orderId",
+                      "required": true,
+                      "schema": {
+                        "$ref": "#/components/schemas/OrderId"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Order Desk API.getOrder#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "OrderId",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Order Desk API.getOrder#response",
+                "name": "order",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "getOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List all orders belonging to a customer.",
+            "extras": {
+              "openrpc_result_name": "orders",
+              "openrpc_summary": "List all orders belonging to a customer."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Order Desk API.listOrders",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Order Desk API.listOrders#response",
+                "name": "orders",
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Order",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "listOrders",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Order Desk API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A customer of the order desk.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Customer.customerId",
+            "name": "customerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Customer.displayName",
+            "name": "displayName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Customer",
+        "key_type": null,
+        "kind": "record",
+        "name": "Customer",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One line of an order.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "LineItem.note",
+            "name": "note",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "LineItem.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "LineItem.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "LineItem",
+        "key_type": null,
+        "kind": "record",
+        "name": "LineItem",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "An order composed from the shared Customer and LineItem schemas.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.customer",
+            "name": "customer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Customer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "LineItem",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.orderId",
+            "name": "orderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "OrderId",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Opaque order identifier.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "OrderId",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "OrderId",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "2.0.0"
+  },
+  "corpus_path": "openrpc/03-components-refs.json",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "openrpc"
+  },
+  "fingerprint": "sha256:17be82b2ea1bc6231b3a8712e716627ec4caa42d0dabcbab23fd8d743f3e8bb1",
+  "lint": {
+    "findings": 13,
+    "grade": "B",
+    "report_fingerprint": "be5ae4f5ec68670f855e64d2bc6ab6e2bfeec1ebee2b7cea0aa77d49ce45620b",
+    "score": 87,
+    "severity_counts": {
+      "error": 0,
+      "info": 13,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

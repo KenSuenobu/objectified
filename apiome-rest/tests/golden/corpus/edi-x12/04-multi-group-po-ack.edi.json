@@ -1,0 +1,356 @@
+{
+  "adapter": "edix12",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "x12_envelope": {
+        "element_separator": "*",
+        "functional_id": "PO",
+        "group_control_number": "10",
+        "group_receiver": "RECEIVERID",
+        "group_sender": "SENDERID",
+        "interchange_control_number": "000000004",
+        "interchange_version": "00401",
+        "receiver_id": "RECEIVERID",
+        "segment_terminator": "~",
+        "sender_id": "SENDERID"
+      },
+      "x12_set_id": "850",
+      "x12_transactions": [
+        {
+          "control_number": "0001",
+          "segments": [
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "BEG01",
+                  "value": "00"
+                },
+                {
+                  "position": "02",
+                  "ref": "BEG02",
+                  "value": "NE"
+                },
+                {
+                  "position": "03",
+                  "ref": "BEG03",
+                  "value": "PO-0002"
+                },
+                {
+                  "position": "05",
+                  "ref": "BEG05",
+                  "value": "20260116"
+                }
+              ],
+              "id": "BEG"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "PO101",
+                  "value": "1"
+                },
+                {
+                  "position": "02",
+                  "ref": "PO102",
+                  "value": "10"
+                },
+                {
+                  "position": "03",
+                  "ref": "PO103",
+                  "value": "EA"
+                },
+                {
+                  "position": "04",
+                  "ref": "PO104",
+                  "value": "4.99"
+                },
+                {
+                  "position": "05",
+                  "ref": "PO105",
+                  "value": "PE"
+                },
+                {
+                  "position": "06",
+                  "ref": "PO106",
+                  "value": "BP"
+                },
+                {
+                  "position": "07",
+                  "ref": "PO107",
+                  "value": "PART-100"
+                }
+              ],
+              "id": "PO1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "CTT01",
+                  "value": "1"
+                }
+              ],
+              "id": "CTT"
+            }
+          ],
+          "set_id": "850"
+        }
+      ],
+      "x12_version": "004010"
+    },
+    "format": "edix12",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "X12 850",
+      "namespace": "X12-850"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "X12 850",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "00",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-850.TransactionSet850.BEG01",
+            "name": "BEG01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "NE",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-850.TransactionSet850.BEG02",
+            "name": "BEG02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "PO-0002",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-850.TransactionSet850.BEG03",
+            "name": "BEG03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260116",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "X12-850.TransactionSet850.BEG05",
+            "name": "BEG05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 12,
+            "key": "X12-850.TransactionSet850.CTT01",
+            "name": "CTT01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "X12-850.TransactionSet850.PO101",
+            "name": "PO101",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "10",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 6,
+            "key": "X12-850.TransactionSet850.PO102",
+            "name": "PO102",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "EA",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "X12-850.TransactionSet850.PO103",
+            "name": "PO103",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "4.99",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 8,
+            "key": "X12-850.TransactionSet850.PO104",
+            "name": "PO104",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "PE",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 9,
+            "key": "X12-850.TransactionSet850.PO105",
+            "name": "PO105",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "BP",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 10,
+            "key": "X12-850.TransactionSet850.PO106",
+            "name": "PO106",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "PART-100",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 11,
+            "key": "X12-850.TransactionSet850.PO107",
+            "name": "PO107",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-850.TransactionSet850",
+        "key_type": null,
+        "kind": "record",
+        "name": "TransactionSet850",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "edi-x12/04-multi-group-po-ack.edi",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "edix12"
+  },
+  "fingerprint": "sha256:52f3da65589f53e6739982e6483a8fb2a57bb24ae55cf01563d2026eac7cf706",
+  "lint": {
+    "findings": 14,
+    "grade": "B",
+    "report_fingerprint": "648d44e65e5b3dce5f78e936564b335ad74c1a68acb2decc3d4c3cf3b081cd71",
+    "score": 83,
+    "severity_counts": {
+      "error": 0,
+      "info": 13,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

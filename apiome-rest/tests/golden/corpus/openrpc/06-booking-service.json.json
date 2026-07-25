@@ -1,0 +1,576 @@
+{
+  "adapter": "openrpc",
+  "canonical": {
+    "channels": [],
+    "description": "Book and manage meeting rooms over JSON-RPC.",
+    "extras": {
+      "openrpc_version": "1.3.2"
+    },
+    "format": "openrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Room Booking API",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": "jsonrpc",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "production",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://rpc.example.com/booking",
+        "variables": []
+      },
+      {
+        "description": "staging",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://rpc.staging.example.com/booking",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Room Booking API",
+        "name": "Room Booking API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Reserve a room for a time window.",
+            "extras": {
+              "openrpc_result_name": "booking",
+              "openrpc_summary": "Reserve a room for a time window."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Room Booking API.bookRoom",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "openrpc_params": [
+                    {
+                      "description": null,
+                      "name": "roomId",
+                      "required": true,
+                      "schema": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "description": null,
+                      "name": "start",
+                      "required": true,
+                      "schema": {
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "description": null,
+                      "name": "end",
+                      "required": true,
+                      "schema": {
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "description": null,
+                      "name": "organizer",
+                      "required": true,
+                      "schema": {
+                        "format": "email",
+                        "type": "string"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Room Booking API.bookRoom#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Room Booking API.bookRoom#response",
+                "name": "booking",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Booking",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "bookRoom",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Cancel an existing booking.",
+            "extras": {
+              "openrpc_result_name": "cancelled",
+              "openrpc_summary": "Cancel an existing booking."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Room Booking API.cancelBooking",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "openrpc_params": [
+                    {
+                      "description": null,
+                      "name": "bookingId",
+                      "required": true,
+                      "schema": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Room Booking API.cancelBooking#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Room Booking API.cancelBooking#response",
+                "name": "cancelled",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "boolean",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "cancelBooking",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List rooms, optionally filtered by capacity.",
+            "extras": {
+              "openrpc_result_name": "rooms",
+              "openrpc_summary": "List rooms, optionally filtered by capacity."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Room Booking API.listRooms",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "openrpc_params": [
+                    {
+                      "description": null,
+                      "name": "minCapacity",
+                      "required": false,
+                      "schema": {
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Room Booking API.listRooms#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Room Booking API.listRooms#response",
+                "name": "rooms",
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Room",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "listRooms",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Room Booking API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A confirmed room reservation.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Booking.bookingId",
+            "name": "bookingId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Booking.end",
+            "name": "end",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "email",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Booking.organizer",
+            "name": "organizer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Booking.roomId",
+            "name": "roomId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Booking.start",
+            "name": "start",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "confirmed",
+                "cancelled"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Booking.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Booking",
+        "key_type": null,
+        "kind": "record",
+        "name": "Booking",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A bookable meeting room.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Room.capacity",
+            "name": "capacity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Room.floor",
+            "name": "floor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Room.hasVideoConference",
+            "name": "hasVideoConference",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "boolean",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Room.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Room.roomId",
+            "name": "roomId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Room",
+        "key_type": null,
+        "kind": "record",
+        "name": "Room",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.4.0"
+  },
+  "corpus_path": "openrpc/06-booking-service.json",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 2,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "openrpc"
+  },
+  "fingerprint": "sha256:2a39ebe3671e4d8a8df87a9bafd413ef93dd1c2d34983c4b12f3db9ff5ab72e8",
+  "lint": {
+    "findings": 17,
+    "grade": "B",
+    "report_fingerprint": "e0582b27b9f2747cecd515eeb011a2435293fb0bedd448c7b9db5107f59d0a39",
+    "score": 83,
+    "severity_counts": {
+      "error": 0,
+      "info": 17,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

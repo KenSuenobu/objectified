@@ -1,0 +1,82 @@
+{
+  "adapter": "jtd",
+  "canonical": {
+    "channels": [],
+    "description": "The smallest useful JTD schema: one required string field.",
+    "extras": {},
+    "format": "jtd",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ping",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Ping",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "The smallest useful JTD schema: one required string field.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Ping.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Ping",
+        "key_type": null,
+        "kind": "record",
+        "name": "Ping",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "jtd/03-minimal-ping.jtd.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "jtd"
+  },
+  "fingerprint": "sha256:b56490a4c90d2d9a483bbb90c9019bc07d02dfb9bec4c43ee31e02dafae8b5f8",
+  "lint": {
+    "findings": 1,
+    "grade": "A",
+    "report_fingerprint": "a6eb3edadf3e1b909a1a88f7129242934ecb9f1c07eb5724c742bc59b8d27545",
+    "score": 99,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

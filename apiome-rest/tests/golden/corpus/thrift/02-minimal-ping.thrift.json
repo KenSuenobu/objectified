@@ -1,0 +1,92 @@
+{
+  "adapter": "thrift",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "thrift_includes": [],
+      "thrift_namespaces": {
+        "java": "com.example.ping"
+      },
+      "thrift_typedefs": {}
+    },
+    "format": "thrift",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "com.example.ping",
+      "namespace": "com.example.ping"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": true
+            },
+            "field_number": 1,
+            "key": "com.example.ping.Ping.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.ping.Ping",
+        "key_type": null,
+        "kind": "record",
+        "name": "Ping",
+        "namespace": "com.example.ping",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "thrift/02-minimal-ping.thrift",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "thrift"
+  },
+  "fingerprint": "sha256:6bdf6a1a51f486917571c6284c0ef5c865bd9d1a20953f250487faf113e9e78c",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "8febcdef6986e0d52f82a09692eaec5acd1aa426052624c19e169dc45e667c52",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

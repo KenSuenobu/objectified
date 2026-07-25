@@ -1,0 +1,1324 @@
+{
+  "adapter": "graphql",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {},
+    "format": "graphql",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "GraphQL Schema",
+      "namespace": null
+    },
+    "paradigm": "graph",
+    "protocol": "graphql",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Query",
+        "name": "Query",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Search for posts",
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.searchPosts",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.searchPosts#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PostConnection",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "searchPosts",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.searchPosts#arg.after",
+                "location": "query",
+                "name": "after",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.searchPosts#arg.authorId",
+                "location": "query",
+                "name": "authorId",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ID",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": 10,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.searchPosts#arg.first",
+                "location": "query",
+                "name": "first",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.searchPosts#arg.publishedAfter",
+                "location": "query",
+                "name": "publishedAfter",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.searchPosts#arg.publishedBefore",
+                "location": "query",
+                "name": "publishedBefore",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.searchPosts#arg.query",
+                "location": "query",
+                "name": "query",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.searchPosts#arg.tags",
+                "location": "query",
+                "name": "tags",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "String",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Get a single user by ID",
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.user",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.user#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "User",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "user",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "The unique ID of the user",
+                "extras": {},
+                "key": "Query.user#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List users with pagination",
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.users",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.users#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UserConnection",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "users",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Cursor for pagination",
+                "extras": {},
+                "key": "Query.users#arg.after",
+                "location": "query",
+                "name": "after",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": 20,
+                "deprecated": false,
+                "description": "Number of users to return (max 100)",
+                "extras": {},
+                "key": "Query.users#arg.first",
+                "location": "query",
+                "name": "first",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": true,
+                "deprecated": false,
+                "description": "Filter by active status",
+                "extras": {},
+                "key": "Query.users#arg.isActive",
+                "location": "query",
+                "name": "isActive",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Boolean",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Filter by name",
+                "extras": {},
+                "key": "Query.users#arg.nameContains",
+                "location": "query",
+                "name": "nameContains",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Comment.author",
+            "name": "author",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "User",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Comment.content",
+            "name": "content",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Comment.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Comment.likes",
+            "name": "likes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Comment.post",
+            "name": "post",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Post",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Comment",
+        "key_type": null,
+        "kind": "record",
+        "name": "Comment",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CommentConnection.edges",
+            "name": "edges",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "CommentEdge",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CommentConnection.pageInfo",
+            "name": "pageInfo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PageInfo",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CommentConnection",
+        "key_type": null,
+        "kind": "record",
+        "name": "CommentConnection",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CommentEdge.cursor",
+            "name": "cursor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CommentEdge.node",
+            "name": "node",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Comment",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CommentEdge",
+        "key_type": null,
+        "kind": "record",
+        "name": "CommentEdge",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "CommentOrderBy.CREATED_AT_ASC",
+            "name": "CREATED_AT_ASC",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "CommentOrderBy.CREATED_AT_DESC",
+            "name": "CREATED_AT_DESC",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "CommentOrderBy.LIKES_DESC",
+            "name": "LIKES_DESC",
+            "value": null
+          }
+        ],
+        "extras": {
+          "graphql_type": "enum"
+        },
+        "fields": [],
+        "key": "CommentOrderBy",
+        "key_type": null,
+        "kind": "enum",
+        "name": "CommentOrderBy",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Pagination connection pattern (Relay-style)",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PageInfo.endCursor",
+            "name": "endCursor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PageInfo.hasNextPage",
+            "name": "hasNextPage",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PageInfo.hasPreviousPage",
+            "name": "hasPreviousPage",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PageInfo.startCursor",
+            "name": "startCursor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PageInfo.totalCount",
+            "name": "totalCount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PageInfo",
+        "key_type": null,
+        "kind": "record",
+        "name": "PageInfo",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.author",
+            "name": "author",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "User",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arguments": [
+                {
+                  "default": 20,
+                  "name": "first",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Int",
+                    "nullable": true
+                  }
+                },
+                {
+                  "name": "after",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "String",
+                    "nullable": true
+                  }
+                },
+                {
+                  "default": "CREATED_AT_DESC",
+                  "name": "orderBy",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "CommentOrderBy",
+                    "nullable": true
+                  }
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "Post.comments",
+            "name": "comments",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CommentConnection",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.content",
+            "name": "content",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Post",
+        "key_type": null,
+        "kind": "record",
+        "name": "Post",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PostConnection.edges",
+            "name": "edges",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "PostEdge",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PostConnection.pageInfo",
+            "name": "pageInfo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PageInfo",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PostConnection",
+        "key_type": null,
+        "kind": "record",
+        "name": "PostConnection",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PostEdge.cursor",
+            "name": "cursor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PostEdge.node",
+            "name": "node",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Post",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PostEdge",
+        "key_type": null,
+        "kind": "record",
+        "name": "PostEdge",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PostOrderBy.CREATED_AT_ASC",
+            "name": "CREATED_AT_ASC",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PostOrderBy.CREATED_AT_DESC",
+            "name": "CREATED_AT_DESC",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PostOrderBy.TITLE_ASC",
+            "name": "TITLE_ASC",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PostOrderBy.TITLE_DESC",
+            "name": "TITLE_DESC",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PostOrderBy.LIKES_DESC",
+            "name": "LIKES_DESC",
+            "value": null
+          }
+        ],
+        "extras": {
+          "graphql_type": "enum"
+        },
+        "fields": [],
+        "key": "PostOrderBy",
+        "key_type": null,
+        "kind": "enum",
+        "name": "PostOrderBy",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arguments": [
+                {
+                  "default": 20,
+                  "name": "first",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Int",
+                    "nullable": true
+                  }
+                },
+                {
+                  "name": "after",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "String",
+                    "nullable": true
+                  }
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "User.followers",
+            "name": "followers",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UserConnection",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arguments": [
+                {
+                  "default": 20,
+                  "name": "first",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Int",
+                    "nullable": true
+                  }
+                },
+                {
+                  "name": "after",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "String",
+                    "nullable": true
+                  }
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "User.following",
+            "name": "following",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UserConnection",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arguments": [
+                {
+                  "default": 10,
+                  "name": "first",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Int",
+                    "nullable": true
+                  }
+                },
+                {
+                  "name": "after",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "String",
+                    "nullable": true
+                  }
+                },
+                {
+                  "name": "published",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Boolean",
+                    "nullable": true
+                  }
+                },
+                {
+                  "default": "CREATED_AT_DESC",
+                  "name": "orderBy",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "PostOrderBy",
+                    "nullable": true
+                  }
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "User.posts",
+            "name": "posts",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PostConnection",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "User",
+        "key_type": null,
+        "kind": "record",
+        "name": "User",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserConnection.edges",
+            "name": "edges",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "UserEdge",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserConnection.pageInfo",
+            "name": "pageInfo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PageInfo",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "UserConnection",
+        "key_type": null,
+        "kind": "record",
+        "name": "UserConnection",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserEdge.cursor",
+            "name": "cursor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserEdge.node",
+            "name": "node",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "User",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "UserEdge",
+        "key_type": null,
+        "kind": "record",
+        "name": "UserEdge",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "graphql/08-arguments-defaults.graphql",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 12
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "graphql"
+  },
+  "fingerprint": "sha256:b9e0c80ad9c95e7fa3efa5b1e97d7c07920826ebfe572435b614ca3c67b9b869",
+  "lint": {
+    "findings": 63,
+    "grade": "F",
+    "report_fingerprint": "4e0acf5a213786f2d11b529309141ae980cc609e1218a966b9d158d19d44172a",
+    "score": 41,
+    "severity_counts": {
+      "error": 0,
+      "info": 52,
+      "warning": 11
+    }
+  },
+  "snapshot_version": 1
+}

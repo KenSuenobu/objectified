@@ -1,0 +1,104 @@
+{
+  "adapter": "xmlrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "xmlrpc_kind": "methodCall"
+    },
+    "format": "xmlrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "system.ping",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": "xmlrpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "system.ping",
+        "name": "system.ping",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xmlrpc_fault_code": null,
+              "xmlrpc_fault_string": null,
+              "xmlrpc_kind": "methodCall"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "system.ping.system.ping",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "xmlrpc_params": [
+                    {
+                      "index": 0,
+                      "name": "param0",
+                      "required": true,
+                      "sample": "hello",
+                      "schema": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "system.ping.system.ping#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "system.ping",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "system.ping",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "xml-rpc/03-minimal-call.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "xmlrpc"
+  },
+  "fingerprint": "sha256:b66e4dd8e81e41b5203679f1fe053ea4d12e7a5dfff88e35d89da284ac8a8474",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "0d977307d672296acdf9c0b7bdbbb67f1cc4e848ccda784304f7e9bf8d09a52e",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

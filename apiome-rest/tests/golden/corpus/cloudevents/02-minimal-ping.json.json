@@ -1,0 +1,110 @@
+{
+  "adapter": "cloudevents",
+  "canonical": {
+    "channels": [
+      {
+        "address": "com.example.ping",
+        "bindings": {},
+        "description": "CloudEvents channel for `com.example.ping`",
+        "extras": {
+          "cloudevents_source": "/system/health",
+          "cloudevents_subject": null
+        },
+        "key": "com.example.ping",
+        "name": "com.example.ping",
+        "parameters": [],
+        "protocol": "cloudevents"
+      }
+    ],
+    "description": null,
+    "extras": {
+      "cloudevents_event_count": 1
+    },
+    "format": "cloudevents",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "com.example.ping",
+      "namespace": null
+    },
+    "paradigm": "event",
+    "protocol": "cloudevents",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "com.example.ping",
+        "name": "com.example.ping",
+        "operations": [
+          {
+            "channel_ref": "com.example.ping",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cloudevents_id": "0001",
+              "cloudevents_source": "/system/health",
+              "cloudevents_specversion": "1.0",
+              "cloudevents_type": "com.example.ping"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "0001",
+            "kind": "publish",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "cloudevents_data_sample": null,
+                  "cloudevents_payload_schema": {}
+                },
+                "headers": [],
+                "key": "0001#event.ExamplePing",
+                "name": "ExamplePing",
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "0001",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "com.example.ping",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "cloudevents/02-minimal-ping.json",
+  "counts": {
+    "channels": 1,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cloudevents"
+  },
+  "fingerprint": "sha256:faaffdada6543264bedad5b38c283ddaf4ef952f1a9ac4e8b06d69394525d5e7",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "f802d27751bf44ca67ab9509ab92c49213878f65d13e88f3326914c9e9ff473c",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

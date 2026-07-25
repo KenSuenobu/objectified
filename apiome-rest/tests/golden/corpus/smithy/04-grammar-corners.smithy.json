@@ -1,0 +1,622 @@
+{
+  "adapter": "smithy",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "smithy_namespace": "example.payments",
+      "smithy_version": "2.0"
+    },
+    "format": "smithy",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "PaymentService",
+      "namespace": "example.payments"
+    },
+    "paradigm": "rpc",
+    "protocol": "smithy",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "smithy_operations": [
+            "SubmitPayment"
+          ],
+          "smithy_version": "2026-02-01"
+        },
+        "key": "example.payments.PaymentService",
+        "name": "PaymentService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.payments.PaymentService.SubmitPayment",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.payments.PaymentService.SubmitPayment#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.payments.SubmitPaymentInput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.payments.PaymentService.SubmitPayment#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.payments.SubmitPaymentOutput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "SubmitPayment",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "PaymentService",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.payments.BankTransferMethod.bic",
+            "name": "bic",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.payments.BankTransferMethod.iban",
+            "name": "iban",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.payments.BankTransferMethod",
+        "key_type": null,
+        "kind": "record",
+        "name": "BankTransferMethod",
+        "namespace": "example.payments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.payments.CardMethod.expiryMonth",
+            "name": "expiryMonth",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.payments.CardMethod.expiryYear",
+            "name": "expiryYear",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.payments.CardMethod.panLastFour",
+            "name": "panLastFour",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.payments.CardMethod",
+        "key_type": null,
+        "kind": "record",
+        "name": "CardMethod",
+        "namespace": "example.payments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "map"
+        },
+        "fields": [],
+        "key": "example.payments.MetadataMap",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": false
+        },
+        "kind": "map",
+        "name": "MetadataMap",
+        "namespace": "example.payments",
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": false
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "union"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.payments.PaymentMethod.bankTransfer",
+            "name": "bankTransfer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.payments.BankTransferMethod",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.payments.PaymentMethod.card",
+            "name": "card",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.payments.CardMethod",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.payments.PaymentMethod.walletToken",
+            "name": "walletToken",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.payments.PaymentMethod",
+        "key_type": null,
+        "kind": "union",
+        "name": "PaymentMethod",
+        "namespace": "example.payments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.payments.PaymentRejected.reason",
+            "name": "reason",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.payments.PaymentRejected.retryAfterSeconds",
+            "name": "retryAfterSeconds",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.payments.PaymentRejected",
+        "key_type": null,
+        "kind": "record",
+        "name": "PaymentRejected",
+        "namespace": "example.payments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Exactly one member of the union is present o",
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.payments.PaymentStatus.PENDING",
+            "name": "PENDING",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.payments.PaymentStatus.SETTLED",
+            "name": "SETTLED",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.payments.PaymentStatus.FAILED",
+            "name": "FAILED",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "smithy_kind": "enum"
+        },
+        "fields": [],
+        "key": "example.payments.PaymentStatus",
+        "key_type": null,
+        "kind": "enum",
+        "name": "PaymentStatus",
+        "namespace": "example.payments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required",
+                "range"
+              ]
+            },
+            "field_number": null,
+            "key": "example.payments.SubmitPaymentInput.amountMinor",
+            "name": "amountMinor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Long",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required",
+                "length"
+              ]
+            },
+            "field_number": null,
+            "key": "example.payments.SubmitPaymentInput.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.payments.SubmitPaymentInput.metadata",
+            "name": "metadata",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.payments.MetadataMap",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.payments.SubmitPaymentInput.method",
+            "name": "method",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.payments.PaymentMethod",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required",
+                "pattern"
+              ]
+            },
+            "field_number": null,
+            "key": "example.payments.SubmitPaymentInput.paymentId",
+            "name": "paymentId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.payments.SubmitPaymentInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "SubmitPaymentInput",
+        "namespace": "example.payments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.payments.SubmitPaymentOutput.paymentId",
+            "name": "paymentId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.payments.SubmitPaymentOutput.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.payments.PaymentStatus",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.payments.SubmitPaymentOutput",
+        "key_type": null,
+        "kind": "record",
+        "name": "SubmitPaymentOutput",
+        "namespace": "example.payments",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "smithy/04-grammar-corners.smithy",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 8
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "smithy"
+  },
+  "fingerprint": "sha256:8fe2784575db4e3d8d3beaf3316abdaa081d90ca158acab7fdfa399c37bc5a54",
+  "lint": {
+    "findings": 28,
+    "grade": "F",
+    "report_fingerprint": "6f6ada73dae6241f1a76fc1a8fbc46168876c11690dc561c56aec295759bffc9",
+    "score": 56,
+    "severity_counts": {
+      "error": 0,
+      "info": 20,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

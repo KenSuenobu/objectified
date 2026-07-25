@@ -1,0 +1,669 @@
+{
+  "adapter": "asn1",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "asn1_module_name": "CertificateShapeModule",
+      "asn1_tags": "EXPLICIT"
+    },
+    "format": "asn1",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "CertificateShapeModule",
+      "namespace": "CertificateShapeModule"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "CertVersion",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "CertificateShapeModule.AlgorithmIdentifier.algorithm",
+            "name": "algorithm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.OBJECT IDENTIFIER",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "CertificateShapeModule.AlgorithmIdentifier.parameters",
+            "name": "parameters",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "CertificateShapeModule.AlgorithmIdentifier",
+        "key_type": null,
+        "kind": "record",
+        "name": "AlgorithmIdentifier",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "CertificateShapeModule.AttributeTypeAndValue.attrType",
+            "name": "attrType",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.OBJECT IDENTIFIER",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "CertificateShapeModule.AttributeTypeAndValue.attrValue",
+            "name": "attrValue",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CertificateShapeModule.AttributeTypeAndValue",
+        "key_type": null,
+        "kind": "record",
+        "name": "AttributeTypeAndValue",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "CertificateShapeModule.CertVersion.v1",
+            "name": "v1",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "CertificateShapeModule.CertVersion.v2",
+            "name": "v2",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "CertificateShapeModule.CertVersion.v3",
+            "name": "v3",
+            "value": 2
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "CertificateShapeModule.CertVersion",
+        "key_type": null,
+        "kind": "enum",
+        "name": "CertVersion",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "CertificateShapeModule.Certificate.signatureAlgorithm",
+            "name": "signatureAlgorithm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.AlgorithmIdentifier",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "CertificateShapeModule.Certificate.signatureValue",
+            "name": "signatureValue",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "CertificateShapeModule.Certificate.tbsCertificate",
+            "name": "tbsCertificate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.TBSCertificate",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CertificateShapeModule.Certificate",
+        "key_type": null,
+        "kind": "record",
+        "name": "Certificate",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "CertificateShapeModule.Extension.critical",
+            "name": "critical",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "CertificateShapeModule.Extension.extnID",
+            "name": "extnID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.OBJECT IDENTIFIER",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "CertificateShapeModule.Extension.extnValue",
+            "name": "extnValue",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CertificateShapeModule.Extension",
+        "key_type": null,
+        "kind": "record",
+        "name": "Extension",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "CertificateShapeModule.Name.rdnSequence",
+            "name": "rdnSequence",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "CertificateShapeModule.AttributeTypeAndValue",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CertificateShapeModule.Name",
+        "key_type": null,
+        "kind": "record",
+        "name": "Name",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "CertificateShapeModule.SubjectPublicKeyInfo.algorithm",
+            "name": "algorithm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.AlgorithmIdentifier",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "CertificateShapeModule.SubjectPublicKeyInfo.subjectPublicKey",
+            "name": "subjectPublicKey",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CertificateShapeModule.SubjectPublicKeyInfo",
+        "key_type": null,
+        "kind": "record",
+        "name": "SubjectPublicKeyInfo",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 10,
+            "key": "CertificateShapeModule.TBSCertificate.extensions",
+            "name": "extensions",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "CertificateShapeModule.Extension",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "CertificateShapeModule.TBSCertificate.issuer",
+            "name": "issuer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.Name",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 8,
+            "key": "CertificateShapeModule.TBSCertificate.issuerUniqueID",
+            "name": "issuerUniqueID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "CertificateShapeModule.TBSCertificate.serialNumber",
+            "name": "serialNumber",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "CertificateShapeModule.TBSCertificate.signature",
+            "name": "signature",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.AlgorithmIdentifier",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 6,
+            "key": "CertificateShapeModule.TBSCertificate.subject",
+            "name": "subject",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.Name",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "CertificateShapeModule.TBSCertificate.subjectPublicKeyInfo",
+            "name": "subjectPublicKeyInfo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.SubjectPublicKeyInfo",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 9,
+            "key": "CertificateShapeModule.TBSCertificate.subjectUniqueID",
+            "name": "subjectUniqueID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "CertificateShapeModule.TBSCertificate.validity",
+            "name": "validity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.Validity",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "v1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "CertificateShapeModule.TBSCertificate.version",
+            "name": "version",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.CertVersion",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CertificateShapeModule.TBSCertificate",
+        "key_type": null,
+        "kind": "record",
+        "name": "TBSCertificate",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "asn1_choice_members": [
+            {
+              "name": "utcTime",
+              "type": "string"
+            },
+            {
+              "name": "generalTime",
+              "type": "string"
+            }
+          ]
+        },
+        "fields": [],
+        "key": "CertificateShapeModule.Time",
+        "key_type": null,
+        "kind": "union",
+        "name": "Time",
+        "namespace": null,
+        "union_members": [
+          "string",
+          "string"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "CertificateShapeModule.Validity.notAfter",
+            "name": "notAfter",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.Time",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "CertificateShapeModule.Validity.notBefore",
+            "name": "notBefore",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CertificateShapeModule.Time",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CertificateShapeModule.Validity",
+        "key_type": null,
+        "kind": "record",
+        "name": "Validity",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "asn1/06-x509-certificate-shape.asn1",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 10
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "asn1"
+  },
+  "fingerprint": "sha256:1f6f3a9668018de51bb21bd175ab106e493a06532997410a48262f86ff9b34e2",
+  "lint": {
+    "findings": 36,
+    "grade": "F",
+    "report_fingerprint": "200bf334d6ec2ffe772a7bb9c37b539d4d8749436b42400089e528b8824d138a",
+    "score": 59,
+    "severity_counts": {
+      "error": 0,
+      "info": 26,
+      "warning": 10
+    }
+  },
+  "snapshot_version": 1
+}

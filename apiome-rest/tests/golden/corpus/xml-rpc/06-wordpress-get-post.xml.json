@@ -1,0 +1,148 @@
+{
+  "adapter": "xmlrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "xmlrpc_kind": "methodCall"
+    },
+    "format": "xmlrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "wp.getPost",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": "xmlrpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "wp.getPost",
+        "name": "wp.getPost",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xmlrpc_fault_code": null,
+              "xmlrpc_fault_string": null,
+              "xmlrpc_kind": "methodCall"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "wp.getPost.wp.getPost",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "xmlrpc_params": [
+                    {
+                      "index": 0,
+                      "name": "param0",
+                      "required": true,
+                      "sample": 1,
+                      "schema": {
+                        "type": "integer"
+                      }
+                    },
+                    {
+                      "index": 1,
+                      "name": "param1",
+                      "required": true,
+                      "sample": "editor",
+                      "schema": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "index": 2,
+                      "name": "param2",
+                      "required": true,
+                      "sample": "example-app-password",
+                      "schema": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "index": 3,
+                      "name": "param3",
+                      "required": true,
+                      "sample": 2308,
+                      "schema": {
+                        "type": "integer"
+                      }
+                    },
+                    {
+                      "index": 4,
+                      "name": "param4",
+                      "required": true,
+                      "sample": [
+                        "post_title",
+                        "post_status",
+                        "post_date",
+                        "post_author"
+                      ],
+                      "schema": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "wp.getPost.wp.getPost#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "wp.getPost",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "wp.getPost",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "xml-rpc/06-wordpress-get-post.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "xmlrpc"
+  },
+  "fingerprint": "sha256:f6f457a93d66a35cd70c0f529829e15d9ce3c5cbd340397cef3ebeaca3d67b44",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "c12dc2705acfcf3fec9aa4296336b8f75c3cd5a790661f1f3b03aca0c24e3ca1",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

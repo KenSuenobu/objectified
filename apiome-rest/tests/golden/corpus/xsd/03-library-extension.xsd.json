@@ -1,0 +1,383 @@
+{
+  "adapter": "xsd",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "xsd_elements": [
+        {
+          "name": "shelf",
+          "type": "Shelf"
+        }
+      ],
+      "xsd_root_element": "shelf",
+      "xsd_target_namespace": "http://example.com/library"
+    },
+    "format": "xsd",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "shelf",
+      "namespace": "http://example.com/library"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "shelf",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_max_occurs": "unbounded",
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/library.Book.author",
+            "name": "author",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "Isbn"
+            },
+            "field_number": 1,
+            "key": "http://example.com/library.Book.isbn",
+            "name": "isbn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/library.Isbn",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/library.Book",
+        "key_type": null,
+        "kind": "record",
+        "name": "Book",
+        "namespace": "http://example.com/library",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_base": "string",
+          "xsd_kind": "simpleType",
+          "xsd_type": "string"
+        },
+        "fields": [],
+        "key": "http://example.com/library.Isbn",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "Isbn",
+        "namespace": "http://example.com/library",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/library.Journal.issn",
+            "name": "issn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "positiveInteger"
+            },
+            "field_number": 2,
+            "key": "http://example.com/library.Journal.issueNumber",
+            "name": "issueNumber",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/library.Journal",
+        "key_type": null,
+        "kind": "record",
+        "name": "Journal",
+        "namespace": "http://example.com/library",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "gYear"
+            },
+            "field_number": 3,
+            "key": "http://example.com/library.Publication.publishedYear",
+            "name": "publishedYear",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "gYear",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/library.Publication.publisher",
+            "name": "publisher",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/library.Publication.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/library.Publication",
+        "key_type": null,
+        "kind": "record",
+        "name": "Publication",
+        "namespace": "http://example.com/library",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_max_occurs": "unbounded",
+              "xsd_min_occurs": "0",
+              "xsd_type": "Book"
+            },
+            "field_number": 2,
+            "key": "http://example.com/library.Shelf.book",
+            "name": "book",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "http://example.com/library.Book",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_max_occurs": "unbounded",
+              "xsd_min_occurs": "0",
+              "xsd_type": "Journal"
+            },
+            "field_number": 3,
+            "key": "http://example.com/library.Shelf.journal",
+            "name": "journal",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "http://example.com/library.Journal",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/library.Shelf.label",
+            "name": "label",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "attribute",
+              "xsd_type": "string"
+            },
+            "field_number": 4,
+            "key": "http://example.com/library.Shelf.section",
+            "name": "section",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/library.Shelf",
+        "key_type": null,
+        "kind": "record",
+        "name": "Shelf",
+        "namespace": "http://example.com/library",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "xsd/03-library-extension.xsd",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "xsd"
+  },
+  "fingerprint": "sha256:ab82d50e6d895c0d3902a2dffe98099ea444762328b3e8308320323c4ba0ae1d",
+  "lint": {
+    "findings": 17,
+    "grade": "D",
+    "report_fingerprint": "4e7337fd557719d194dfe044dde2ab4e23ffbccdabd7eedcdc0f5a96553c157a",
+    "score": 68,
+    "severity_counts": {
+      "error": 0,
+      "info": 12,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

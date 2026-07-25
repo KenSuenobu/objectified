@@ -1,0 +1,349 @@
+{
+  "adapter": "capnproto",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "capnp_file_id": "0xa41c2b9d5f36e708",
+      "capnp_imports": [
+        "shared.capnp"
+      ]
+    },
+    "format": "capnproto",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Billing",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Billing",
+        "name": "Billing",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Billing.issue",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "capnp_param_name": "invoice"
+                },
+                "headers": [],
+                "key": "Billing.issue#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Invoice",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "capnp_result_name": "id"
+                },
+                "headers": [],
+                "key": "Billing.issue#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "issue",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Billing.lookup",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "capnp_param_name": "id"
+                },
+                "headers": [],
+                "key": "Billing.lookup#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "capnp_result_name": "invoice"
+                },
+                "headers": [],
+                "key": "Billing.lookup#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Invoice",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "lookup",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "Invoice.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "field_number": 1,
+            "key": "Invoice.issuer",
+            "name": "issuer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Party",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 3
+            },
+            "field_number": 3,
+            "key": "Invoice.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Invoice.Line",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 2
+            },
+            "field_number": 2,
+            "key": "Invoice.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Invoice",
+        "key_type": null,
+        "kind": "record",
+        "name": "Invoice",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct",
+          "capnp_qualified_name": "Invoice.Line"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "field_number": 1,
+            "key": "Invoice.Line.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "Invoice.Line.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 2
+            },
+            "field_number": 2,
+            "key": "Invoice.Line.unitPrice",
+            "name": "unitPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Invoice.Line",
+        "key_type": null,
+        "kind": "record",
+        "name": "Line",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "capnproto/03-invoice-imports.capnp",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "capnproto"
+  },
+  "fingerprint": "sha256:bfa42d245d1f86c6e31830e605fa2cf24b48c4e3800bd0b09f7669cc2b39019e",
+  "lint": {
+    "findings": 16,
+    "grade": "C",
+    "report_fingerprint": "43de1427096460ece5b1c81f0d76a0bab98b9d12f036238dea8e4cc973edeb37",
+    "score": 72,
+    "severity_counts": {
+      "error": 0,
+      "info": 12,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

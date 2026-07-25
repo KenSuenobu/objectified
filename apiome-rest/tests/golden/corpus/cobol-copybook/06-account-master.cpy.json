@@ -1,0 +1,377 @@
+{
+  "adapter": "cobolcopybook",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "cobolcopybook_root": "ACCOUNT-MASTER",
+      "cobolcopybook_tree": {
+        "children": [
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACCT-NUMBER",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(12)",
+            "usage": null
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "ACCT-HOLDER-NAME",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(30)",
+                "usage": null
+              },
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "ACCT-HOLDER-TAX-ID",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(11)",
+                "usage": null
+              }
+            ],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACCT-HOLDER",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": null,
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [
+              {
+                "name": "ACCT-CHECKING",
+                "value": "CK"
+              },
+              {
+                "name": "ACCT-SAVINGS",
+                "value": "SV"
+              },
+              {
+                "name": "ACCT-MONEY-MARKET",
+                "value": "MM"
+              }
+            ],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACCT-TYPE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(2)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACCT-BALANCE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "S9(11)V99",
+            "usage": "COMP-3"
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACCT-OPEN-DATE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(8)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACCT-LAST-ACTIVITY",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(8)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACCT-BRANCH-CODE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(4)",
+            "usage": null
+          }
+        ],
+        "conditions": [],
+        "depending_on": null,
+        "level": 1,
+        "name": "ACCOUNT-MASTER",
+        "occurs_max": null,
+        "occurs_min": null,
+        "picture": null,
+        "usage": null
+      }
+    },
+    "format": "cobolcopybook",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "ACCOUNT-MASTER",
+      "namespace": "ACCOUNT-MASTER"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "ACCOUNT-MASTER",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cobol_kind": "group",
+          "cobol_level": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "S9(11)V99",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "S9(11)V99",
+              "cobol_usage": "COMP-3"
+            },
+            "field_number": 4,
+            "key": "ACCOUNT-MASTER.ACCOUNT-MASTER.ACCT-BALANCE",
+            "name": "ACCT-BALANCE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(4)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(4)",
+              "cobol_usage": null
+            },
+            "field_number": 7,
+            "key": "ACCOUNT-MASTER.ACCOUNT-MASTER.ACCT-BRANCH-CODE",
+            "name": "ACCT-BRANCH-CODE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": null,
+              "cobol_usage": null
+            },
+            "field_number": 2,
+            "key": "ACCOUNT-MASTER.ACCOUNT-MASTER.ACCT-HOLDER",
+            "name": "ACCT-HOLDER",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ACCOUNT-MASTER.ACCT-HOLDER",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(8)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(8)",
+              "cobol_usage": null
+            },
+            "field_number": 6,
+            "key": "ACCOUNT-MASTER.ACCOUNT-MASTER.ACCT-LAST-ACTIVITY",
+            "name": "ACCT-LAST-ACTIVITY",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(12)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(12)",
+              "cobol_usage": null
+            },
+            "field_number": 1,
+            "key": "ACCOUNT-MASTER.ACCOUNT-MASTER.ACCT-NUMBER",
+            "name": "ACCT-NUMBER",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(8)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(8)",
+              "cobol_usage": null
+            },
+            "field_number": 5,
+            "key": "ACCOUNT-MASTER.ACCOUNT-MASTER.ACCT-OPEN-DATE",
+            "name": "ACCT-OPEN-DATE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(2)",
+            "extras": {
+              "cobol_conditions": [
+                {
+                  "name": "ACCT-CHECKING",
+                  "value": "CK"
+                },
+                {
+                  "name": "ACCT-SAVINGS",
+                  "value": "SV"
+                },
+                {
+                  "name": "ACCT-MONEY-MARKET",
+                  "value": "MM"
+                }
+              ],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(2)",
+              "cobol_usage": null
+            },
+            "field_number": 3,
+            "key": "ACCOUNT-MASTER.ACCOUNT-MASTER.ACCT-TYPE",
+            "name": "ACCT-TYPE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ACCOUNT-MASTER.ACCOUNT-MASTER",
+        "key_type": null,
+        "kind": "record",
+        "name": "ACCOUNT-MASTER",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cobol-copybook/06-account-master.cpy",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cobolcopybook"
+  },
+  "fingerprint": "sha256:bd55472bf2ff3aac00748c55454091aecfabb496e52e6b36cd9056243aded4bb",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "b8ff4617964c14353d29e07ee214c74df8ff14779add9a9dc0c3ef291111ad61",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

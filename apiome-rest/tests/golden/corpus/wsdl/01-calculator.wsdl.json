@@ -1,0 +1,213 @@
+{
+  "adapter": "wsdl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "wsdl_target_namespace": "http://example.com/calculator"
+    },
+    "format": "wsdl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Calculator",
+      "namespace": "http://example.com/calculator"
+    },
+    "paradigm": "rest",
+    "protocol": "soap",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "CalculatorService/CalculatorPort",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/calculator",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "http://example.com/calculator.CalculatorPort",
+        "name": "CalculatorPort",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "http://example.com/calculator.CalculatorPort.Add",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/calculator.CalculatorPort.Add#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/calculator.AddRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/calculator.CalculatorPort.Add#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/calculator.AddResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Add",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "double"
+            },
+            "field_number": 1,
+            "key": "http://example.com/calculator.AddRequest.a",
+            "name": "a",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "double"
+            },
+            "field_number": 2,
+            "key": "http://example.com/calculator.AddRequest.b",
+            "name": "b",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/calculator.AddRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "AddRequest",
+        "namespace": "http://example.com/calculator",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "double"
+            },
+            "field_number": 1,
+            "key": "http://example.com/calculator.AddResponse.result",
+            "name": "result",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/calculator.AddResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "AddResponse",
+        "namespace": "http://example.com/calculator",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "wsdl/01-calculator.wsdl",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 1,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wsdl"
+  },
+  "fingerprint": "sha256:03d0d7baa150e8fc5876f142dd33944a9a4a8dc870d896ffbef2e9abafe9b78e",
+  "lint": {
+    "findings": 9,
+    "grade": "B",
+    "report_fingerprint": "64454d95123e38e91561226573346c06c67e9a6f31358737c3ee41864aa09933",
+    "score": 82,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

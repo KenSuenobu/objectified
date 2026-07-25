@@ -1,0 +1,784 @@
+{
+  "adapter": "thrift",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "thrift_includes": [],
+      "thrift_namespaces": {
+        "go": "example.telemetry",
+        "java": "com.example.telemetry",
+        "py": "example.telemetry"
+      },
+      "thrift_typedefs": {
+        "SeriesBySensor": "map<string, list<double>>",
+        "Tags": "set<string>"
+      }
+    },
+    "format": "thrift",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "com.example.telemetry",
+      "namespace": "com.example.telemetry"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "com.example.telemetry.Telemetry",
+        "name": "Telemetry",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_oneway": false
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.telemetry.Telemetry.aggregate",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "thrift_throw_id": 1
+                },
+                "headers": [],
+                "key": "com.example.telemetry.Telemetry.aggregate#error.o",
+                "name": "o",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.telemetry.Overloaded",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.telemetry.Telemetry.aggregate#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.telemetry.Telemetry.aggregate#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.telemetry.Window",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "aggregate",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_oneway": false
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.telemetry.Telemetry.flush",
+            "kind": "one_way",
+            "messages": [],
+            "name": "flush",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_oneway": true
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.telemetry.Telemetry.record",
+            "kind": "one_way",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.telemetry.Telemetry.record#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.telemetry.Sample",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "record",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_kind": "exception"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 1,
+            "key": "com.example.telemetry.Overloaded.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 2,
+            "key": "com.example.telemetry.Overloaded.retryAfterSeconds",
+            "name": "retryAfterSeconds",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.telemetry.Overloaded",
+        "key_type": null,
+        "kind": "record",
+        "name": "Overloaded",
+        "namespace": "com.example.telemetry",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 6,
+            "key": "com.example.telemetry.Sample.annotations",
+            "name": "annotations",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.telemetry.map_string_string_",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 7,
+            "key": "com.example.telemetry.Sample.flagsByte",
+            "name": "flagsByte",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int8",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": true
+            },
+            "field_number": 1,
+            "key": "com.example.telemetry.Sample.sensorId",
+            "name": "sensorId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_default": "Severity.INFO",
+              "thrift_required": false
+            },
+            "field_number": 5,
+            "key": "com.example.telemetry.Sample.severity",
+            "name": "severity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.telemetry.Severity",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 8,
+            "key": "com.example.telemetry.Sample.shortCode",
+            "name": "shortCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 4,
+            "key": "com.example.telemetry.Sample.tags",
+            "name": "tags",
+            "type": {
+              "extras": {
+                "thrift_container": "set"
+              },
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": true
+            },
+            "field_number": 2,
+            "key": "com.example.telemetry.Sample.timestamp",
+            "name": "timestamp",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 3,
+            "key": "com.example.telemetry.Sample.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.telemetry.Value",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.telemetry.Sample",
+        "key_type": null,
+        "kind": "record",
+        "name": "Sample",
+        "namespace": "com.example.telemetry",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.telemetry.Severity.DEBUG",
+            "name": "DEBUG",
+            "value": 16
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.telemetry.Severity.INFO",
+            "name": "INFO",
+            "value": 32
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.telemetry.Severity.WARN",
+            "name": "WARN",
+            "value": 48
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.telemetry.Severity.ERROR",
+            "name": "ERROR",
+            "value": 64
+          }
+        ],
+        "extras": {
+          "thrift_kind": "enum"
+        },
+        "fields": [],
+        "key": "com.example.telemetry.Severity",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Severity",
+        "namespace": "com.example.telemetry",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_kind": "union"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 5,
+            "key": "com.example.telemetry.Value.blob",
+            "name": "blob",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 2,
+            "key": "com.example.telemetry.Value.count",
+            "name": "count",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 1,
+            "key": "com.example.telemetry.Value.flag",
+            "name": "flag",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 3,
+            "key": "com.example.telemetry.Value.gauge",
+            "name": "gauge",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 4,
+            "key": "com.example.telemetry.Value.label",
+            "name": "label",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.telemetry.Value",
+        "key_type": null,
+        "kind": "union",
+        "name": "Value",
+        "namespace": "com.example.telemetry",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 2,
+            "key": "com.example.telemetry.Window.buckets",
+            "name": "buckets",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {
+                  "thrift_container": "set"
+                },
+                "item": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                },
+                "name": null,
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 3,
+            "key": "com.example.telemetry.Window.nested",
+            "name": "nested",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.telemetry.map_i32_map_string_double__",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 1,
+            "key": "com.example.telemetry.Window.series",
+            "name": "series",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.telemetry.map_string_list_double__",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.telemetry.Window",
+        "key_type": null,
+        "kind": "record",
+        "name": "Window",
+        "namespace": "com.example.telemetry",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_map": true
+        },
+        "fields": [],
+        "key": "com.example.telemetry.map_i32_map_string_double__",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "i32",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "map<i32,map<string,double>>",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "com.example.telemetry.map_string_double_",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_map": true
+        },
+        "fields": [],
+        "key": "com.example.telemetry.map_string_double_",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "map<string,double>",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "double",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_map": true
+        },
+        "fields": [],
+        "key": "com.example.telemetry.map_string_list_double__",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "map<string,list<double>>",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": {
+            "extras": {},
+            "item": null,
+            "name": "double",
+            "nullable": true
+          },
+          "name": null,
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_map": true
+        },
+        "fields": [],
+        "key": "com.example.telemetry.map_string_string_",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "map<string,string>",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        }
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "thrift/04-telemetry-stress.thrift",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "thrift"
+  },
+  "fingerprint": "sha256:41311051ffaa68469b2b14aac4486bb5a77f3e67389d5a285d20fcc3d7d20cc5",
+  "lint": {
+    "findings": 35,
+    "grade": "F",
+    "report_fingerprint": "4f283a0f77edc8daf0a5ffe7acbd85c0f78451a04f1113376070fcceaaa37d3e",
+    "score": 45,
+    "severity_counts": {
+      "error": 0,
+      "info": 23,
+      "warning": 12
+    }
+  },
+  "snapshot_version": 1
+}

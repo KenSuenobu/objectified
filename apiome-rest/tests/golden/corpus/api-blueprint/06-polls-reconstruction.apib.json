@@ -1,0 +1,585 @@
+{
+  "adapter": "apiblueprint",
+  "canonical": {
+    "channels": [],
+    "description": "Hand-authored reconstruction of the shape of the canonical Apiary \"Polls\"\ntutorial API (questions with choices that can be voted on); no third-party\ntext copied.",
+    "extras": {
+      "apib_format_version": "1A",
+      "apib_host": "https://polls.example.com"
+    },
+    "format": "apiblueprint",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Polls API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From API Blueprint HOST",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://polls.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Polls API",
+        "name": "Polls API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/questions",
+            "key": "GET /questions",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "apib_response_array": "Question",
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /questions#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Question",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "List questions",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Page of results to return.",
+                "extras": {
+                  "apib_type": "number"
+                },
+                "key": "GET /questions#path.page",
+                "location": "path",
+                "name": "page",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "double",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/questions/{question_id}",
+            "key": "GET /questions/{question_id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /questions/{question_id}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Question",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "404"
+                },
+                "headers": [],
+                "key": "GET /questions/{question_id}#response.404",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "View a question detail",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Identifier of the question.",
+                "extras": {
+                  "apib_type": "number"
+                },
+                "key": "GET /questions/{question_id}#path.question_id",
+                "location": "path",
+                "name": "question_id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "double",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "POST",
+            "http_path": "/questions",
+            "key": "POST /questions",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /questions#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "QuestionRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "201"
+                },
+                "headers": [],
+                "key": "POST /questions#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Question",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Create a question",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Page of results to return.",
+                "extras": {
+                  "apib_type": "number"
+                },
+                "key": "POST /questions#path.page",
+                "location": "path",
+                "name": "page",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "double",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "POST",
+            "http_path": "/questions/{question_id}/choices/{choice_id}",
+            "key": "POST /questions/{question_id}/choices/{choice_id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "201"
+                },
+                "headers": [],
+                "key": "POST /questions/{question_id}/choices/{choice_id}#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Choice",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Vote on a choice",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Identifier of the choice.",
+                "extras": {
+                  "apib_type": "number"
+                },
+                "key": "POST /questions/{question_id}/choices/{choice_id}#path.choice_id",
+                "location": "path",
+                "name": "choice_id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "double",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Identifier of the question.",
+                "extras": {
+                  "apib_type": "number"
+                },
+                "key": "POST /questions/{question_id}/choices/{choice_id}#path.question_id",
+                "location": "path",
+                "name": "question_id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "double",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Polls API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "apib_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Choice text.",
+            "extras": {
+              "apib_sample": "Python",
+              "apib_type": "string"
+            },
+            "field_number": 1,
+            "key": "Choice.choice",
+            "name": "choice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Canonical URL of the choice.",
+            "extras": {
+              "apib_sample": "/questions/1/choices/1",
+              "apib_type": "string"
+            },
+            "field_number": 2,
+            "key": "Choice.url",
+            "name": "url",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Number of votes cast so far.",
+            "extras": {
+              "apib_sample": "3",
+              "apib_type": "number"
+            },
+            "field_number": 3,
+            "key": "Choice.votes",
+            "name": "votes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Choice",
+        "key_type": null,
+        "kind": "record",
+        "name": "Choice",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "apib_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Available answer choices.",
+            "extras": {
+              "apib_sample": "[]",
+              "apib_type": "array"
+            },
+            "field_number": 4,
+            "key": "Question.choices",
+            "name": "choices",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "array",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Publication timestamp.",
+            "extras": {
+              "apib_sample": "2026-01-05T08:40:51Z",
+              "apib_type": "string"
+            },
+            "field_number": 2,
+            "key": "Question.published_at",
+            "name": "published_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The question text.",
+            "extras": {
+              "apib_sample": "Favourite programming language?",
+              "apib_type": "string"
+            },
+            "field_number": 1,
+            "key": "Question.question",
+            "name": "question",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Canonical URL of the question.",
+            "extras": {
+              "apib_sample": "/questions/1",
+              "apib_type": "string"
+            },
+            "field_number": 3,
+            "key": "Question.url",
+            "name": "url",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Question",
+        "key_type": null,
+        "kind": "record",
+        "name": "Question",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "apib_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Choice texts to create.",
+            "extras": {
+              "apib_sample": "[]",
+              "apib_type": "array"
+            },
+            "field_number": 2,
+            "key": "QuestionRequest.choices",
+            "name": "choices",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "array",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The question text.",
+            "extras": {
+              "apib_sample": "Favourite programming language?",
+              "apib_type": "string"
+            },
+            "field_number": 1,
+            "key": "QuestionRequest.question",
+            "name": "question",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "QuestionRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "QuestionRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "api-blueprint/06-polls-reconstruction.apib",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 1,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "api-blueprint"
+  },
+  "fingerprint": "sha256:85fda397acec63e33ba591a8c249da14a7a34c2fcd1c331a65743ec72ac24caf",
+  "lint": {
+    "findings": 13,
+    "grade": "D",
+    "report_fingerprint": "2c59d34e911e8a93ce6731593d973a2f73ec1c8f45894ee9bd7d28110abdcf64",
+    "score": 66,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

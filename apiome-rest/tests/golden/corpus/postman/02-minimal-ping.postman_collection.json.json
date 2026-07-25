@@ -1,0 +1,78 @@
+{
+  "adapter": "postman",
+  "canonical": {
+    "channels": [],
+    "description": "Minimal Postman Collection v2.1 example: the smallest canonical collection, an info block plus a single GET request with a plain string URL.",
+    "extras": {
+      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "postman_variables": []
+    },
+    "format": "postman",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ping",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Ping",
+        "name": "Ping",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Liveness probe.",
+            "extras": {
+              "postman_folder_path": [],
+              "postman_headers": []
+            },
+            "http_method": "GET",
+            "http_path": "/ping",
+            "key": "GET /ping",
+            "kind": "request_response",
+            "messages": [],
+            "name": "Ping",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Ping",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "postman/02-minimal-ping.postman_collection.json",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "postman"
+  },
+  "fingerprint": "sha256:df5286c002ba75772877c945d019a05c38614ba65f417ab1e52ee0c5b7fcf168",
+  "lint": {
+    "findings": 0,
+    "grade": "A",
+    "report_fingerprint": "49f00aff0ad03525a1e73592c60211f9f8572853ba37d488054fdb78f1f77bd1",
+    "score": 100,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

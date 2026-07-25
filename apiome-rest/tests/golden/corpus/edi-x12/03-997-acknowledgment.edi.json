@@ -1,0 +1,298 @@
+{
+  "adapter": "edix12",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "x12_envelope": {
+        "element_separator": "*",
+        "functional_id": "FA",
+        "group_control_number": "3",
+        "group_receiver": "SENDERID",
+        "group_sender": "BUYER01",
+        "interchange_control_number": "000000003",
+        "interchange_version": "00401",
+        "receiver_id": "SENDERID",
+        "segment_terminator": "~",
+        "sender_id": "BUYER01"
+      },
+      "x12_set_id": "997",
+      "x12_transactions": [
+        {
+          "control_number": "0001",
+          "segments": [
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "AK101",
+                  "value": "PO"
+                },
+                {
+                  "position": "02",
+                  "ref": "AK102",
+                  "value": "1"
+                }
+              ],
+              "id": "AK1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "AK201",
+                  "value": "850"
+                },
+                {
+                  "position": "02",
+                  "ref": "AK202",
+                  "value": "0001"
+                }
+              ],
+              "id": "AK2"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "AK501",
+                  "value": "A"
+                }
+              ],
+              "id": "AK5"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "AK901",
+                  "value": "A"
+                },
+                {
+                  "position": "02",
+                  "ref": "AK902",
+                  "value": "1"
+                },
+                {
+                  "position": "03",
+                  "ref": "AK903",
+                  "value": "1"
+                },
+                {
+                  "position": "04",
+                  "ref": "AK904",
+                  "value": "1"
+                }
+              ],
+              "id": "AK9"
+            }
+          ],
+          "set_id": "997"
+        }
+      ],
+      "x12_version": "004010"
+    },
+    "format": "edix12",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "X12 997",
+      "namespace": "X12-997"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "X12 997",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "PO",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-997.TransactionSet997.AK101",
+            "name": "AK101",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-997.TransactionSet997.AK102",
+            "name": "AK102",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "850",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-997.TransactionSet997.AK201",
+            "name": "AK201",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "X12-997.TransactionSet997.AK202",
+            "name": "AK202",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "A",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "X12-997.TransactionSet997.AK501",
+            "name": "AK501",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "A",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 6,
+            "key": "X12-997.TransactionSet997.AK901",
+            "name": "AK901",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "X12-997.TransactionSet997.AK902",
+            "name": "AK902",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 8,
+            "key": "X12-997.TransactionSet997.AK903",
+            "name": "AK903",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 9,
+            "key": "X12-997.TransactionSet997.AK904",
+            "name": "AK904",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-997.TransactionSet997",
+        "key_type": null,
+        "kind": "record",
+        "name": "TransactionSet997",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "edi-x12/03-997-acknowledgment.edi",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "edix12"
+  },
+  "fingerprint": "sha256:19fffb3a98ace89769f8afd264dda4dc75c34081f6e665bd587e60cdd6e0856c",
+  "lint": {
+    "findings": 11,
+    "grade": "B",
+    "report_fingerprint": "4de13430e9f6cd79846eccb5202daca55f7504ba2292d02610a6143382b88f78",
+    "score": 86,
+    "severity_counts": {
+      "error": 0,
+      "info": 10,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

@@ -5,6 +5,33 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.174.1] - 2026-07-24
+
+### Added
+- **Canonical golden snapshots and corpus conformance runner (#5092, IXH-1.6)** — every
+  `valid` corpus entry now runs detect → parse → normalize → fingerprint → lint and is
+  compared against a checked-in snapshot of its canonical model (`raw` excluded) plus its
+  fingerprint, entity counts, and lint roll-up, stored one file per entry under
+  `tests/golden/corpus/` (240 snapshots). A normalizer change that silently drops a field,
+  reorders a list, or renames a canonical key now fails as an identity-keyed structural
+  diff built on the shipped `canonical_diff` — naming the entity, its canonical key, the
+  changed fields, and (for keyed lists) the exact members added or removed, e.g.
+  `changed type Person — fields: fields (-Person.email)` — instead of an opaque blob diff.
+  Regenerate with `pytest tests/test_corpus_golden.py --update-golden` (or
+  `UPDATE_CORPUS_GOLDENS=1`). Determinism is asserted by running each pipeline twice, and
+  the store is completeness- and orphan-checked. New `tests/corpus_snapshot.py` (runner +
+  store + diff renderer) and `tests/corpus_adapter_support.py` (entry selection, tool
+  gating, known-bug maps, fileset assembly — extracted from `test_corpus_import.py` so
+  both corpus suites gate on the same knowledge).
+- **Fingerprint order-invariance is now asserted (#5092)** — reordering a structured
+  source's mapping keys must not change the version fingerprint. This surfaced 24 corpus
+  entries across four adapters where it does: `json-schema` and `jtd` normalizers never
+  call `normalize_ordering`, and `fhir`/`raml` call it on only some return paths, so a
+  `Type.fields` list keeps source declaration order. Recorded as documented strict xfails
+  in `KNOWN_ORDER_SENSITIVE_FINGERPRINTS` (fixing a normalizer fails the suite until its
+  entries are removed), which keeps the debt tracked for the 1.7/1.8 conformance work. No
+  behavior changed: a fingerprint is stable for a fixed source, which every fixture is.
+
 ## [1.174.0] - 2026-07-24
 
 ### Security

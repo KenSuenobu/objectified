@@ -1,0 +1,657 @@
+{
+  "adapter": "oncrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "oncrpc_programs": [
+        {
+          "name": "JOB_PROG",
+          "number": 536870916,
+          "versions": [
+            {
+              "name": "JOB_VERS_1",
+              "number": 1,
+              "procedures": [
+                {
+                  "arg_type": "job_spec",
+                  "name": "JOB_SUBMIT",
+                  "number": 1,
+                  "return_type": "job_state"
+                },
+                {
+                  "arg_type": "job_id",
+                  "name": "JOB_STATUS",
+                  "number": 2,
+                  "return_type": "job_status_res"
+                }
+              ]
+            },
+            {
+              "name": "JOB_VERS_2",
+              "number": 2,
+              "procedures": [
+                {
+                  "arg_type": "job_spec",
+                  "name": "JOB_SUBMIT2",
+                  "number": 1,
+                  "return_type": "job_state"
+                },
+                {
+                  "arg_type": "job_id",
+                  "name": "JOB_STATUS2",
+                  "number": 2,
+                  "return_type": "job_status_res"
+                },
+                {
+                  "arg_type": "job_id",
+                  "name": "JOB_CANCEL",
+                  "number": 3,
+                  "return_type": "void"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "oncrpc_typedefs": {
+        "job_id": "string<36>"
+      }
+    },
+    "format": "oncrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "JOB_PROG",
+      "namespace": "JOB_PROG"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "JOB_PROG.JOB_PROG",
+        "name": "JOB_PROG",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 3
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "JOB_PROG.JOB_PROG.JOB_CANCEL",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "JOB_PROG.JOB_PROG.JOB_CANCEL#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "JOB_CANCEL",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 2
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "JOB_PROG.JOB_PROG.JOB_STATUS",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "JOB_PROG.JOB_PROG.JOB_STATUS#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "JOB_PROG.JOB_PROG.JOB_STATUS#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "JOB_PROG.job_status_res",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "JOB_STATUS",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 2
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "JOB_PROG.JOB_PROG.JOB_STATUS2",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "JOB_PROG.JOB_PROG.JOB_STATUS2#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "JOB_PROG.JOB_PROG.JOB_STATUS2#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "JOB_PROG.job_status_res",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "JOB_STATUS2",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 1
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "JOB_PROG.JOB_PROG.JOB_SUBMIT",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "JOB_PROG.JOB_PROG.JOB_SUBMIT#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "JOB_PROG.job_spec",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "JOB_PROG.JOB_PROG.JOB_SUBMIT#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "JOB_PROG.job_state",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "JOB_SUBMIT",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 1
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "JOB_PROG.JOB_PROG.JOB_SUBMIT2",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "JOB_PROG.JOB_PROG.JOB_SUBMIT2#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "JOB_PROG.job_spec",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "JOB_PROG.JOB_PROG.JOB_SUBMIT2#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "JOB_PROG.job_state",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "JOB_SUBMIT2",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "int"
+            },
+            "field_number": 1,
+            "key": "JOB_PROG.job_error.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 256,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "string<256>"
+            },
+            "field_number": 2,
+            "key": "JOB_PROG.job_error.detail",
+            "name": "detail",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "JOB_PROG.job_error",
+        "key_type": null,
+        "kind": "record",
+        "name": "job_error",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 512,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "string<512>"
+            },
+            "field_number": 2,
+            "key": "JOB_PROG.job_spec.command",
+            "name": "command",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 36,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "job_id"
+            },
+            "field_number": 1,
+            "key": "JOB_PROG.job_spec.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "unsigned hyper"
+            },
+            "field_number": 3,
+            "key": "JOB_PROG.job_spec.submitted_at",
+            "name": "submitted_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "bool"
+            },
+            "field_number": 4,
+            "key": "JOB_PROG.job_spec.urgent",
+            "name": "urgent",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "JOB_PROG.job_spec",
+        "key_type": null,
+        "kind": "record",
+        "name": "job_spec",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "JOB_PROG.job_state.JOB_QUEUED",
+            "name": "JOB_QUEUED",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "JOB_PROG.job_state.JOB_RUNNING",
+            "name": "JOB_RUNNING",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "JOB_PROG.job_state.JOB_DONE",
+            "name": "JOB_DONE",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "JOB_PROG.job_state.JOB_FAILED",
+            "name": "JOB_FAILED",
+            "value": 3
+          }
+        ],
+        "extras": {
+          "oncrpc_kind": "enum"
+        },
+        "fields": [],
+        "key": "JOB_PROG.job_state",
+        "key_type": null,
+        "kind": "enum",
+        "name": "job_state",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "union",
+          "oncrpc_switch_field": "state",
+          "oncrpc_switch_type": "job_state",
+          "oncrpc_union_cases": [
+            {
+              "canonical_type": "uint32",
+              "field": "queue_position",
+              "label": "JOB_QUEUED",
+              "type": "unsigned int"
+            },
+            {
+              "canonical_type": "uint32",
+              "field": "percent_complete",
+              "label": "JOB_RUNNING",
+              "type": "unsigned int"
+            },
+            {
+              "canonical_type": "bytes",
+              "field": "result",
+              "label": "JOB_DONE",
+              "type": "opaque<4096>"
+            },
+            {
+              "canonical_type": "JOB_PROG.job_error",
+              "field": "error",
+              "label": "default",
+              "type": "job_error"
+            }
+          ]
+        },
+        "fields": [],
+        "key": "JOB_PROG.job_status_res",
+        "key_type": null,
+        "kind": "union",
+        "name": "job_status_res",
+        "namespace": null,
+        "union_members": [
+          "uint32",
+          "uint32",
+          "bytes",
+          "JOB_PROG.job_error"
+        ],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "onc-rpc/04-job-queue-stress.x",
+  "counts": {
+    "channels": 0,
+    "operations": 5,
+    "servers": 0,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "oncrpc"
+  },
+  "fingerprint": "sha256:4f78bb35ae53e52077be2d11f5be7b314e1c016c79bd8afbcbcce08d74978dfe",
+  "lint": {
+    "findings": 25,
+    "grade": "F",
+    "report_fingerprint": "1c00d8b31ae2e0e45e39683ce625ac3407fef0fd511fce1e7fa1728b697109ae",
+    "score": 48,
+    "severity_counts": {
+      "error": 0,
+      "info": 16,
+      "warning": 9
+    }
+  },
+  "snapshot_version": 1
+}

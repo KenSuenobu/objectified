@@ -1,0 +1,413 @@
+{
+  "adapter": "asn1",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "asn1_module_name": "PersonModule",
+      "asn1_tags": "AUTOMATIC"
+    },
+    "format": "asn1",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "PersonModule",
+      "namespace": "PersonModule"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Status",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "PersonModule.Address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "PersonModule.Address.country",
+            "name": "country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "PersonModule.Address.postalCode",
+            "name": "postalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "PersonModule.Address.street",
+            "name": "street",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PersonModule.Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "Address",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "PersonModule.Person.address",
+            "name": "address",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PersonModule.Address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "PersonModule.Person.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "PersonModule.Person.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "PersonModule.Person.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "PersonModule.Person.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 6,
+            "key": "PersonModule.Person.phones",
+            "name": "phones",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "PersonModule.PhoneNumber",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "active",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "PersonModule.Person.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PersonModule.Status",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PersonModule.Person",
+        "key_type": null,
+        "kind": "record",
+        "name": "Person",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "PersonModule.PhoneNumber.number",
+            "name": "number",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "PersonModule.PhoneNumber.type",
+            "name": "type",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PersonModule.PhoneNumberType",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PersonModule.PhoneNumber",
+        "key_type": null,
+        "kind": "record",
+        "name": "PhoneNumber",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PersonModule.PhoneNumberType.home",
+            "name": "home",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PersonModule.PhoneNumberType.work",
+            "name": "work",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PersonModule.PhoneNumberType.mobile",
+            "name": "mobile",
+            "value": 2
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "PersonModule.PhoneNumberType",
+        "key_type": null,
+        "kind": "enum",
+        "name": "PhoneNumberType",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PersonModule.Status.active",
+            "name": "active",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PersonModule.Status.suspended",
+            "name": "suspended",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PersonModule.Status.deleted",
+            "name": "deleted",
+            "value": 2
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "PersonModule.Status",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Status",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "asn1/01-person.asn1",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "asn1"
+  },
+  "fingerprint": "sha256:4746c0744edd241f3a26d2d7ce48d57055e8505aedf4de59153b9ce4acb92059",
+  "lint": {
+    "findings": 19,
+    "grade": "D",
+    "report_fingerprint": "ab57ac6480018258b7d02cd9e4c8083faa7db6f50075a571b9140bbbc404693e",
+    "score": 66,
+    "severity_counts": {
+      "error": 0,
+      "info": 14,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

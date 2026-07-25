@@ -1,0 +1,520 @@
+{
+  "adapter": "wsdl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "wsdl_target_namespace": "http://example.com/banking"
+    },
+    "format": "wsdl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "TransferService",
+      "namespace": "http://example.com/banking"
+    },
+    "paradigm": "rest",
+    "protocol": "soap",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "TransferService/TransferPort",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/soap/banking",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "http://example.com/banking.TransferPort",
+        "name": "TransferPort",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "http://example.com/banking.TransferPort.GetBalance",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/banking.TransferPort.GetBalance#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/banking.GetBalanceRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/banking.TransferPort.GetBalance#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/banking.GetBalanceResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GetBalance",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "http://example.com/banking.TransferPort.TransferFunds",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/banking.TransferPort.TransferFunds#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/banking.TransferFundsRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/banking.TransferPort.TransferFunds#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/banking.TransferFundsResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "TransferFunds",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/banking.GetBalanceRequest.account",
+            "name": "account",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/banking.GetBalanceRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "GetBalanceRequest",
+        "namespace": "http://example.com/banking",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "dateTime"
+            },
+            "field_number": 3,
+            "key": "http://example.com/banking.GetBalanceResponse.asOf",
+            "name": "asOf",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "decimal"
+            },
+            "field_number": 1,
+            "key": "http://example.com/banking.GetBalanceResponse.balance",
+            "name": "balance",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/banking.GetBalanceResponse.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/banking.GetBalanceResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "GetBalanceResponse",
+        "namespace": "http://example.com/banking",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/banking.InsufficientFundsFault.account",
+            "name": "account",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "decimal"
+            },
+            "field_number": 3,
+            "key": "http://example.com/banking.InsufficientFundsFault.available",
+            "name": "available",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "decimal"
+            },
+            "field_number": 2,
+            "key": "http://example.com/banking.InsufficientFundsFault.requested",
+            "name": "requested",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/banking.InsufficientFundsFault",
+        "key_type": null,
+        "kind": "record",
+        "name": "InsufficientFundsFault",
+        "namespace": "http://example.com/banking",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "decimal"
+            },
+            "field_number": 3,
+            "key": "http://example.com/banking.TransferFundsRequest.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 4,
+            "key": "http://example.com/banking.TransferFundsRequest.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/banking.TransferFundsRequest.fromAccount",
+            "name": "fromAccount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 5,
+            "key": "http://example.com/banking.TransferFundsRequest.reference",
+            "name": "reference",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/banking.TransferFundsRequest.toAccount",
+            "name": "toAccount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/banking.TransferFundsRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "TransferFundsRequest",
+        "namespace": "http://example.com/banking",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "dateTime"
+            },
+            "field_number": 2,
+            "key": "http://example.com/banking.TransferFundsResponse.bookedAt",
+            "name": "bookedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/banking.TransferFundsResponse.transactionId",
+            "name": "transactionId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/banking.TransferFundsResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "TransferFundsResponse",
+        "namespace": "http://example.com/banking",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "wsdl/06-bank-transfer.wsdl",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wsdl"
+  },
+  "fingerprint": "sha256:d8684ff9d598c2afe0b6976a65403cde71d01c25a1b64c7201cb86e58ac20406",
+  "lint": {
+    "findings": 26,
+    "grade": "F",
+    "report_fingerprint": "fc0953ec5c41adee6cda1a1cc19da17dab332b60dfea5c3e6f994a5e6cb48750",
+    "score": 53,
+    "severity_counts": {
+      "error": 0,
+      "info": 19,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

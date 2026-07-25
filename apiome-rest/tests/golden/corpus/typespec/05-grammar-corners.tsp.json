@@ -1,0 +1,697 @@
+{
+  "adapter": "typespec",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "typespec_enums": [
+        {
+          "documentation": null,
+          "name": "DeviceState",
+          "values": [
+            "provisioning",
+            "online",
+            "offline",
+            "retired"
+          ]
+        }
+      ],
+      "typespec_imports": [
+        "import \"@typespec/http\"",
+        "import \"@typespec/rest\""
+      ],
+      "typespec_interfaces": [
+        {
+          "documentation": null,
+          "name": "Devices",
+          "operations": [
+            {
+              "documentation": "Sparse update payload; e",
+              "is_array_return": true,
+              "name": "list",
+              "parameters": [
+                {
+                  "location": "query",
+                  "name": "state",
+                  "type": "string"
+                },
+                {
+                  "location": "query",
+                  "name": "cursor",
+                  "type": "string"
+                }
+              ],
+              "return_type": "Device",
+              "verb": "get"
+            },
+            {
+              "documentation": null,
+              "is_array_return": false,
+              "name": "read",
+              "parameters": [
+                {
+                  "location": "path",
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "location": "header",
+                  "name": "ifNoneMatch",
+                  "type": "string"
+                }
+              ],
+              "return_type": "Device",
+              "verb": "get"
+            },
+            {
+              "documentation": "A firmware rollou",
+              "is_array_return": false,
+              "name": "update",
+              "parameters": [
+                {
+                  "location": "path",
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "location": "body",
+                  "name": "patch",
+                  "type": "DevicePatch"
+                }
+              ],
+              "return_type": "Device",
+              "verb": "patch"
+            },
+            {
+              "documentation": null,
+              "is_array_return": false,
+              "name": "remove",
+              "parameters": [
+                {
+                  "location": "path",
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "return_type": "void",
+              "verb": "delete"
+            }
+          ],
+          "route_prefix": "/devices"
+        },
+        {
+          "documentation": "Summary returned",
+          "name": "Rollouts",
+          "operations": [
+            {
+              "documentation": null,
+              "is_array_return": false,
+              "name": "create",
+              "parameters": [
+                {
+                  "location": "body",
+                  "name": "request",
+                  "type": "RolloutRequest"
+                }
+              ],
+              "return_type": "RolloutSummary",
+              "verb": "post"
+            }
+          ],
+          "route_prefix": "/rollouts"
+        }
+      ],
+      "typespec_models": [
+        {
+          "documentation": null,
+          "fields": [],
+          "name": "Device"
+        },
+        {
+          "documentation": null,
+          "fields": [],
+          "name": "DevicePatch"
+        },
+        {
+          "documentation": null,
+          "fields": [],
+          "name": "RolloutRequest"
+        },
+        {
+          "documentation": null,
+          "fields": [],
+          "name": "RolloutSummary"
+        }
+      ],
+      "typespec_namespace": "DeviceFleet",
+      "typespec_service_title": "Device Fleet API",
+      "typespec_usings": [
+        "TypeSpec.Http",
+        "TypeSpec.Rest"
+      ]
+    },
+    "format": "typespec",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Device Fleet API",
+      "namespace": "DeviceFleet"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "typespec_route_prefix": "/devices"
+        },
+        "key": "DeviceFleet.Devices",
+        "name": "Devices",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "typespec_interface": "Devices",
+              "typespec_route_prefix": "/devices",
+              "typespec_verb": "delete"
+            },
+            "http_method": "DELETE",
+            "http_path": "/devices/{id}",
+            "key": "DELETE /devices/{id}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "remove",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "typespec_location": "path",
+                  "typespec_type": "string"
+                },
+                "key": "DELETE /devices/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Sparse update payload; e",
+            "extras": {
+              "typespec_interface": "Devices",
+              "typespec_route_prefix": "/devices",
+              "typespec_verb": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/devices",
+            "key": "GET /devices",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /devices#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "DeviceFleet.Device",
+                    "nullable": true
+                  },
+                  "name": "DeviceFleet.Device",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "list",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "typespec_location": "query",
+                  "typespec_type": "string"
+                },
+                "key": "GET /devices#query.cursor",
+                "location": "query",
+                "name": "cursor",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "typespec_location": "query",
+                  "typespec_type": "string"
+                },
+                "key": "GET /devices#query.state",
+                "location": "query",
+                "name": "state",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "typespec_interface": "Devices",
+              "typespec_route_prefix": "/devices",
+              "typespec_verb": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/devices/{id}",
+            "key": "GET /devices/{id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /devices/{id}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "DeviceFleet.Device",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "read",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "typespec_location": "header",
+                  "typespec_type": "string"
+                },
+                "key": "GET /devices/{id}#header.ifNoneMatch",
+                "location": "header",
+                "name": "ifNoneMatch",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "typespec_location": "path",
+                  "typespec_type": "string"
+                },
+                "key": "GET /devices/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "A firmware rollou",
+            "extras": {
+              "typespec_interface": "Devices",
+              "typespec_route_prefix": "/devices",
+              "typespec_verb": "patch"
+            },
+            "http_method": "PATCH",
+            "http_path": "/devices/{id}",
+            "key": "PATCH /devices/{id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PATCH /devices/{id}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "DeviceFleet.DevicePatch",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PATCH /devices/{id}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "DeviceFleet.Device",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "update",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "typespec_location": "path",
+                  "typespec_type": "string"
+                },
+                "key": "PATCH /devices/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": "Summary returned",
+        "extras": {
+          "typespec_route_prefix": "/rollouts"
+        },
+        "key": "DeviceFleet.Rollouts",
+        "name": "Rollouts",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "typespec_interface": "Rollouts",
+              "typespec_route_prefix": "/rollouts",
+              "typespec_verb": "post"
+            },
+            "http_method": "POST",
+            "http_path": "/rollouts",
+            "key": "POST /rollouts",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /rollouts#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "DeviceFleet.RolloutRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /rollouts#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "DeviceFleet.RolloutSummary",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "create",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "typespec_key_fields": [],
+          "typespec_kind": "model"
+        },
+        "fields": [],
+        "key": "DeviceFleet.Device",
+        "key_type": null,
+        "kind": "record",
+        "name": "Device",
+        "namespace": "DeviceFleet",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "typespec_key_fields": [],
+          "typespec_kind": "model"
+        },
+        "fields": [],
+        "key": "DeviceFleet.DevicePatch",
+        "key_type": null,
+        "kind": "record",
+        "name": "DevicePatch",
+        "namespace": "DeviceFleet",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "DeviceFleet.DeviceState.provisioning",
+            "name": "provisioning",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "DeviceFleet.DeviceState.online",
+            "name": "online",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "DeviceFleet.DeviceState.offline",
+            "name": "offline",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "DeviceFleet.DeviceState.retired",
+            "name": "retired",
+            "value": 3
+          }
+        ],
+        "extras": {
+          "typespec_kind": "enum",
+          "typespec_values": [
+            "provisioning",
+            "online",
+            "offline",
+            "retired"
+          ]
+        },
+        "fields": [],
+        "key": "DeviceFleet.DeviceState",
+        "key_type": null,
+        "kind": "enum",
+        "name": "DeviceState",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "typespec_key_fields": [],
+          "typespec_kind": "model"
+        },
+        "fields": [],
+        "key": "DeviceFleet.RolloutRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "RolloutRequest",
+        "namespace": "DeviceFleet",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "typespec_key_fields": [],
+          "typespec_kind": "model"
+        },
+        "fields": [],
+        "key": "DeviceFleet.RolloutSummary",
+        "key_type": null,
+        "kind": "record",
+        "name": "RolloutSummary",
+        "namespace": "DeviceFleet",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "typespec/05-grammar-corners.tsp",
+  "counts": {
+    "channels": 0,
+    "operations": 5,
+    "servers": 0,
+    "services": 2,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "typespec"
+  },
+  "fingerprint": "sha256:2cfbc7cdb037d5b6b1ebcf7c22c5b434d22599c478bd6961914233c24664f882",
+  "lint": {
+    "findings": 15,
+    "grade": "D",
+    "report_fingerprint": "3f8fd211c2bd48f2752a431c644de7605875addc1d21faf43250dbb2819bf027",
+    "score": 61,
+    "severity_counts": {
+      "error": 0,
+      "info": 7,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,2209 @@
+{
+  "adapter": "hl7v2",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "hl7v2_control_id": "MSG00004",
+      "hl7v2_envelope": {
+        "encoding_characters": "^~\\&",
+        "field_separator": "|",
+        "processing_id": "P",
+        "receiving_application": "EMR",
+        "receiving_facility": "GOOD HEALTH HOSPITAL",
+        "sending_application": "REG^GHH^L",
+        "sending_facility": "GOOD HEALTH HOSPITAL"
+      },
+      "hl7v2_message_type": "ADT^A08^ADT_A01",
+      "hl7v2_segments": [
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "|"
+            },
+            {
+              "index": 2,
+              "value": "^~\\&"
+            },
+            {
+              "index": 3,
+              "value": "REG^GHH^L"
+            },
+            {
+              "index": 4,
+              "value": "GOOD HEALTH HOSPITAL"
+            },
+            {
+              "index": 5,
+              "value": "EMR"
+            },
+            {
+              "index": 6,
+              "value": "GOOD HEALTH HOSPITAL"
+            },
+            {
+              "index": 7,
+              "value": "20260117141530"
+            },
+            {
+              "index": 8,
+              "value": ""
+            },
+            {
+              "index": 9,
+              "value": "ADT^A08^ADT_A01"
+            },
+            {
+              "index": 10,
+              "value": "MSG00004"
+            },
+            {
+              "index": 11,
+              "value": "P"
+            },
+            {
+              "index": 12,
+              "value": "2.5"
+            },
+            {
+              "index": 13,
+              "value": ""
+            },
+            {
+              "index": 14,
+              "value": ""
+            },
+            {
+              "index": 15,
+              "value": "AL"
+            },
+            {
+              "index": 16,
+              "value": "NE"
+            }
+          ],
+          "id": "MSH"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "A08"
+            },
+            {
+              "index": 2,
+              "value": "20260117141500"
+            },
+            {
+              "index": 3,
+              "value": ""
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": "004777^Smith^John^A^III^DR"
+            }
+          ],
+          "id": "EVN"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": ""
+            },
+            {
+              "index": 3,
+              "value": "MRN-13579^^^GHH^MR~ACCT-9922^^^GHH^AN"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": "Garcia^Maria^Isabel^^Sra~Lopez^Maria^^^^^M"
+            },
+            {
+              "index": 6,
+              "value": ""
+            },
+            {
+              "index": 7,
+              "value": "19851102"
+            },
+            {
+              "index": 8,
+              "value": "F"
+            },
+            {
+              "index": 9,
+              "value": ""
+            },
+            {
+              "index": 10,
+              "value": "2106-3^White^HL70005"
+            },
+            {
+              "index": 11,
+              "value": "12 Camino Real^Unit 4^Santa Fe^NM^87501^USA^H~PO Box 77^^Santa Fe^NM^87502^USA^M"
+            },
+            {
+              "index": 12,
+              "value": ""
+            },
+            {
+              "index": 13,
+              "value": "(555)555-0142^PRN^PH~maria.garcia@example.com^NET^Internet"
+            },
+            {
+              "index": 14,
+              "value": ""
+            },
+            {
+              "index": 15,
+              "value": ""
+            },
+            {
+              "index": 16,
+              "value": "M"
+            }
+          ],
+          "id": "PID"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": "DA"
+            },
+            {
+              "index": 3,
+              "value": "70618^Penicillin^L"
+            },
+            {
+              "index": 4,
+              "value": "SV"
+            },
+            {
+              "index": 5,
+              "value": "Hives \\T\\ facial swelling"
+            }
+          ],
+          "id": "AL1"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "2"
+            },
+            {
+              "index": 2,
+              "value": "FA"
+            },
+            {
+              "index": 3,
+              "value": "33333^Peanut^L"
+            },
+            {
+              "index": 4,
+              "value": "MO"
+            },
+            {
+              "index": 5,
+              "value": "Anaphylaxis"
+            }
+          ],
+          "id": "AL1"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": "I10"
+            },
+            {
+              "index": 3,
+              "value": "E11.9^Type 2 diabetes without complications^I10"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": "20240110"
+            },
+            {
+              "index": 6,
+              "value": "W"
+            }
+          ],
+          "id": "DG1"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "2"
+            },
+            {
+              "index": 2,
+              "value": "I10"
+            },
+            {
+              "index": 3,
+              "value": "I10^Essential hypertension^I10"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": "20220305"
+            },
+            {
+              "index": 6,
+              "value": "W"
+            }
+          ],
+          "id": "DG1"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": "ST"
+            },
+            {
+              "index": 3,
+              "value": "NOTE^Comment"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": "Escaped separators demo: \\F\\ field \\S\\ component \\R\\ repetition \\E\\ escape"
+            },
+            {
+              "index": 6,
+              "value": ""
+            },
+            {
+              "index": 7,
+              "value": ""
+            },
+            {
+              "index": 8,
+              "value": ""
+            },
+            {
+              "index": 9,
+              "value": ""
+            },
+            {
+              "index": 10,
+              "value": ""
+            },
+            {
+              "index": 11,
+              "value": "F"
+            }
+          ],
+          "id": "OBX"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": "PLAN001"
+            },
+            {
+              "index": 3,
+              "value": "INS-77"
+            },
+            {
+              "index": 4,
+              "value": "Acme Health \\T\\ Life"
+            },
+            {
+              "index": 5,
+              "value": "500 Insurance Way^^Albany^NY^12207"
+            },
+            {
+              "index": 6,
+              "value": ""
+            },
+            {
+              "index": 7,
+              "value": ""
+            },
+            {
+              "index": 8,
+              "value": "GRP-88&Corporate&EastDivision"
+            }
+          ],
+          "id": "IN1"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": "Preferred pharmacy"
+            },
+            {
+              "index": 3,
+              "value": "Central Pharmacy^123 Main St^Santa Fe^NM"
+            }
+          ],
+          "id": "ZPD"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": "I"
+            },
+            {
+              "index": 3,
+              "value": "3N^301^A"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": ""
+            },
+            {
+              "index": 6,
+              "value": "004777^Smith^John^A^III^DR"
+            },
+            {
+              "index": 7,
+              "value": ""
+            },
+            {
+              "index": 8,
+              "value": ""
+            },
+            {
+              "index": 9,
+              "value": ""
+            },
+            {
+              "index": 10,
+              "value": "MED"
+            },
+            {
+              "index": 11,
+              "value": ""
+            },
+            {
+              "index": 12,
+              "value": ""
+            },
+            {
+              "index": 13,
+              "value": ""
+            },
+            {
+              "index": 14,
+              "value": "ADM"
+            },
+            {
+              "index": 15,
+              "value": "A0"
+            }
+          ],
+          "id": "PV1"
+        }
+      ],
+      "hl7v2_version": "2.5"
+    },
+    "format": "hl7v2",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "ADT^A08^ADT_A01",
+      "namespace": "ADT-A08-ADT_A01"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "ADT^A08^ADT_A01",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "hl7v2_kind": "segment"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1
+            },
+            "field_number": 1,
+            "key": "ADT-A08-ADT_A01.AL1.AL1-01",
+            "name": "AL1-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "DA",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2
+            },
+            "field_number": 2,
+            "key": "ADT-A08-ADT_A01.AL1.AL1-02",
+            "name": "AL1-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "70618^Penicillin^L",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3
+            },
+            "field_number": 3,
+            "key": "ADT-A08-ADT_A01.AL1.AL1-03",
+            "name": "AL1-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "SV",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4
+            },
+            "field_number": 4,
+            "key": "ADT-A08-ADT_A01.AL1.AL1-04",
+            "name": "AL1-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Hives \\T\\ facial swelling",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5
+            },
+            "field_number": 5,
+            "key": "ADT-A08-ADT_A01.AL1.AL1-05",
+            "name": "AL1-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ADT-A08-ADT_A01.AL1",
+        "key_type": null,
+        "kind": "record",
+        "name": "AL1",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "hl7v2_kind": "segment"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1
+            },
+            "field_number": 1,
+            "key": "ADT-A08-ADT_A01.DG1.DG1-01",
+            "name": "DG1-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "I10",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2
+            },
+            "field_number": 2,
+            "key": "ADT-A08-ADT_A01.DG1.DG1-02",
+            "name": "DG1-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "E11.9^Type 2 diabetes without complications^I10",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3
+            },
+            "field_number": 3,
+            "key": "ADT-A08-ADT_A01.DG1.DG1-03",
+            "name": "DG1-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4
+            },
+            "field_number": 4,
+            "key": "ADT-A08-ADT_A01.DG1.DG1-04",
+            "name": "DG1-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20240110",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5
+            },
+            "field_number": 5,
+            "key": "ADT-A08-ADT_A01.DG1.DG1-05",
+            "name": "DG1-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "W",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6
+            },
+            "field_number": 6,
+            "key": "ADT-A08-ADT_A01.DG1.DG1-06",
+            "name": "DG1-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ADT-A08-ADT_A01.DG1",
+        "key_type": null,
+        "kind": "record",
+        "name": "DG1",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "hl7v2_kind": "segment"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "|",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1
+            },
+            "field_number": 1,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-01",
+            "name": "MSH-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "^~\\&",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2
+            },
+            "field_number": 2,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-02",
+            "name": "MSH-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "REG^GHH^L",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3
+            },
+            "field_number": 3,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-03",
+            "name": "MSH-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "GOOD HEALTH HOSPITAL",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4
+            },
+            "field_number": 4,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-04",
+            "name": "MSH-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "EMR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5
+            },
+            "field_number": 5,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-05",
+            "name": "MSH-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "GOOD HEALTH HOSPITAL",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6
+            },
+            "field_number": 6,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-06",
+            "name": "MSH-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260117141530",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7
+            },
+            "field_number": 7,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-07",
+            "name": "MSH-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8
+            },
+            "field_number": 8,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-08",
+            "name": "MSH-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ADT^A08^ADT_A01",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9
+            },
+            "field_number": 9,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-09",
+            "name": "MSH-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "MSG00004",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10
+            },
+            "field_number": 10,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-10",
+            "name": "MSH-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "P",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11
+            },
+            "field_number": 11,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-11",
+            "name": "MSH-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "2.5",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 12
+            },
+            "field_number": 12,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-12",
+            "name": "MSH-12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 13
+            },
+            "field_number": 13,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-13",
+            "name": "MSH-13",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 14
+            },
+            "field_number": 14,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-14",
+            "name": "MSH-14",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "AL",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 15
+            },
+            "field_number": 15,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-15",
+            "name": "MSH-15",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "NE",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 16
+            },
+            "field_number": 16,
+            "key": "ADT-A08-ADT_A01.MSH.MSH-16",
+            "name": "MSH-16",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ADT-A08-ADT_A01.MSH",
+        "key_type": null,
+        "kind": "record",
+        "name": "MSH",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "hl7v2_kind": "message"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 22,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.AL1",
+            "name": "AL1",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "ADT-A08-ADT_A01.AL1",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 23,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.DG1",
+            "name": "DG1",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "ADT-A08-ADT_A01.DG1",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "A08",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "EVN"
+            },
+            "field_number": 1,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.EVN-01",
+            "name": "EVN-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260117141500",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "EVN"
+            },
+            "field_number": 2,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.EVN-02",
+            "name": "EVN-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "EVN"
+            },
+            "field_number": 3,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.EVN-03",
+            "name": "EVN-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "EVN"
+            },
+            "field_number": 4,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.EVN-04",
+            "name": "EVN-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "004777^Smith^John^A^III^DR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "EVN"
+            },
+            "field_number": 5,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.EVN-05",
+            "name": "EVN-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "IN1"
+            },
+            "field_number": 35,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.IN1-01",
+            "name": "IN1-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "PLAN001",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "IN1"
+            },
+            "field_number": 36,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.IN1-02",
+            "name": "IN1-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "INS-77",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "IN1"
+            },
+            "field_number": 37,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.IN1-03",
+            "name": "IN1-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Acme Health \\T\\ Life",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "IN1"
+            },
+            "field_number": 38,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.IN1-04",
+            "name": "IN1-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "500 Insurance Way^^Albany^NY^12207",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "IN1"
+            },
+            "field_number": 39,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.IN1-05",
+            "name": "IN1-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "IN1"
+            },
+            "field_number": 40,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.IN1-06",
+            "name": "IN1-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "IN1"
+            },
+            "field_number": 41,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.IN1-07",
+            "name": "IN1-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "GRP-88&Corporate&EastDivision",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8,
+              "hl7v2_segment": "IN1"
+            },
+            "field_number": 42,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.IN1-08",
+            "name": "IN1-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 24,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.OBX-01",
+            "name": "OBX-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ST",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 25,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.OBX-02",
+            "name": "OBX-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "NOTE^Comment",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 26,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.OBX-03",
+            "name": "OBX-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 27,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.OBX-04",
+            "name": "OBX-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Escaped separators demo: \\F\\ field \\S\\ component \\R\\ repetition \\E\\ escape",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 28,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.OBX-05",
+            "name": "OBX-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 29,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.OBX-06",
+            "name": "OBX-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 30,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.OBX-07",
+            "name": "OBX-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 31,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.OBX-08",
+            "name": "OBX-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 32,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.OBX-09",
+            "name": "OBX-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 33,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.OBX-10",
+            "name": "OBX-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "F",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 34,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.OBX-11",
+            "name": "OBX-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 6,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-01",
+            "name": "PID-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 7,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-02",
+            "name": "PID-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "MRN-13579^^^GHH^MR~ACCT-9922^^^GHH^AN",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 8,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-03",
+            "name": "PID-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 9,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-04",
+            "name": "PID-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Garcia^Maria^Isabel^^Sra~Lopez^Maria^^^^^M",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 10,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-05",
+            "name": "PID-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 11,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-06",
+            "name": "PID-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "19851102",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 12,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-07",
+            "name": "PID-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "F",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 13,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-08",
+            "name": "PID-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 14,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-09",
+            "name": "PID-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "2106-3^White^HL70005",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 15,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-10",
+            "name": "PID-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "12 Camino Real^Unit 4^Santa Fe^NM^87501^USA^H~PO Box 77^^Santa Fe^NM^87502^USA^M",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 16,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-11",
+            "name": "PID-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 12,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 17,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-12",
+            "name": "PID-12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "(555)555-0142^PRN^PH~maria.garcia@example.com^NET^Internet",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 13,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 18,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-13",
+            "name": "PID-13",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 14,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 19,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-14",
+            "name": "PID-14",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 15,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 20,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-15",
+            "name": "PID-15",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "M",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 16,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 21,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PID-16",
+            "name": "PID-16",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 46,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-01",
+            "name": "PV1-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "I",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 47,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-02",
+            "name": "PV1-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "3N^301^A",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 48,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-03",
+            "name": "PV1-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 49,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-04",
+            "name": "PV1-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 50,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-05",
+            "name": "PV1-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "004777^Smith^John^A^III^DR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 51,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-06",
+            "name": "PV1-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 52,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-07",
+            "name": "PV1-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 53,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-08",
+            "name": "PV1-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 54,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-09",
+            "name": "PV1-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "MED",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 55,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-10",
+            "name": "PV1-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 56,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-11",
+            "name": "PV1-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 12,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 57,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-12",
+            "name": "PV1-12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 13,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 58,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-13",
+            "name": "PV1-13",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ADM",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 14,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 59,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-14",
+            "name": "PV1-14",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "A0",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 15,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 60,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.PV1-15",
+            "name": "PV1-15",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "ZPD"
+            },
+            "field_number": 43,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.ZPD-01",
+            "name": "ZPD-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Preferred pharmacy",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "ZPD"
+            },
+            "field_number": 44,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.ZPD-02",
+            "name": "ZPD-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Central Pharmacy^123 Main St^Santa Fe^NM",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "ZPD"
+            },
+            "field_number": 45,
+            "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01.ZPD-03",
+            "name": "ZPD-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ADT-A08-ADT_A01.MessageADTA08ADT_A01",
+        "key_type": null,
+        "kind": "record",
+        "name": "MessageADTA08ADT_A01",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "hl7v2/05-adt-a08-repetitions-escapes.hl7",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "hl7v2"
+  },
+  "fingerprint": "sha256:58b4a48227d8775c28b8237b4ab0e3892211a74b887be9deaf3ef0bcb3e2e596",
+  "lint": {
+    "findings": 92,
+    "grade": "D",
+    "report_fingerprint": "e99b58269bc891d6855d25e8ed5a798948204820a831eb39a06d85a121b232cf",
+    "score": 63,
+    "severity_counts": {
+      "error": 0,
+      "info": 88,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

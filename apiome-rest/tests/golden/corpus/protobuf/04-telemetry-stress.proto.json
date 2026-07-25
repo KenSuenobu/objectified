@@ -1,0 +1,739 @@
+{
+  "adapter": "grpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {},
+    "format": "protobuf",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.telemetry.v1",
+      "namespace": "example.telemetry.v1"
+    },
+    "paradigm": "rpc",
+    "protocol": "grpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "example.telemetry.v1.TelemetryService",
+        "name": "TelemetryService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.telemetry.v1.TelemetryService.Exchange",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.telemetry.v1.TelemetryService.Exchange#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.telemetry.v1.Reading",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.telemetry.v1.TelemetryService.Exchange#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.telemetry.v1.Alert",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Exchange",
+            "parameters": [],
+            "streaming": "bidirectional",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.telemetry.v1.TelemetryService.GetSnapshot",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.telemetry.v1.TelemetryService.GetSnapshot#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.telemetry.v1.SnapshotRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.telemetry.v1.TelemetryService.GetSnapshot#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.telemetry.v1.Snapshot",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GetSnapshot",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.telemetry.v1.TelemetryService.StreamReadings",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.telemetry.v1.TelemetryService.StreamReadings#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.telemetry.v1.SnapshotRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.telemetry.v1.TelemetryService.StreamReadings#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.telemetry.v1.Reading",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "StreamReadings",
+            "parameters": [],
+            "streaming": "server",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.telemetry.v1.TelemetryService.UploadReadings",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.telemetry.v1.TelemetryService.UploadReadings#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.telemetry.v1.Reading",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.telemetry.v1.TelemetryService.UploadReadings#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.telemetry.v1.UploadSummary",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "UploadReadings",
+            "parameters": [],
+            "streaming": "client",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.telemetry.v1.Alert.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.telemetry.v1.Alert.sensor_id",
+            "name": "sensor_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.telemetry.v1.Alert",
+        "key_type": null,
+        "kind": "record",
+        "name": "Alert",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oneofs": [
+            "value"
+          ],
+          "reserved_names": [
+            "legacy_tag"
+          ],
+          "reserved_ranges": [
+            [
+              3,
+              4
+            ],
+            [
+              8,
+              11
+            ]
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.telemetry.v1.Reading.captured_unix_nanos",
+            "name": "captured_unix_nanos",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "sfixed64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional",
+              "oneof": "value"
+            },
+            "field_number": 5,
+            "key": "example.telemetry.v1.Reading.humidity_pct",
+            "name": "humidity_pct",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 11,
+            "key": "example.telemetry.v1.Reading.quality",
+            "name": "quality",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.telemetry.v1.Reading.Quality",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional",
+              "oneof": "value"
+            },
+            "field_number": 6,
+            "key": "example.telemetry.v1.Reading.raw_frame",
+            "name": "raw_frame",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.telemetry.v1.Reading.sensor_id",
+            "name": "sensor_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional",
+              "proto3_optional": true
+            },
+            "field_number": 7,
+            "key": "example.telemetry.v1.Reading.site",
+            "name": "site",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional",
+              "oneof": "value"
+            },
+            "field_number": 4,
+            "key": "example.telemetry.v1.Reading.temperature_c",
+            "name": "temperature_c",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.telemetry.v1.Reading",
+        "key_type": null,
+        "kind": "record",
+        "name": "Reading",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.v1.Reading.Quality.QUALITY_UNSPECIFIED",
+            "name": "QUALITY_UNSPECIFIED",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.v1.Reading.Quality.QUALITY_GOOD",
+            "name": "QUALITY_GOOD",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.v1.Reading.Quality.QUALITY_SUSPECT",
+            "name": "QUALITY_SUSPECT",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.v1.Reading.Quality.QUALITY_BAD",
+            "name": "QUALITY_BAD",
+            "value": 3
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "example.telemetry.v1.Reading.Quality",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Quality",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 1,
+            "key": "example.telemetry.v1.Snapshot.sensors",
+            "name": "sensors",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.telemetry.v1.Snapshot.SensorsEntry",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.telemetry.v1.Snapshot",
+        "key_type": null,
+        "kind": "record",
+        "name": "Snapshot",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.telemetry.v1.Snapshot.SensorState.last_reading",
+            "name": "last_reading",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.telemetry.v1.Reading",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.telemetry.v1.Snapshot.SensorState.sequence",
+            "name": "sequence",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "fixed32",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.telemetry.v1.Snapshot.SensorState",
+        "key_type": null,
+        "kind": "record",
+        "name": "SensorState",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "example.telemetry.v1.Snapshot.SensorsEntry",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "SensorsEntry",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "example.telemetry.v1.Snapshot.SensorState",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 1,
+            "key": "example.telemetry.v1.SnapshotRequest.sensor_ids",
+            "name": "sensor_ids",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.telemetry.v1.SnapshotRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "SnapshotRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.telemetry.v1.UploadSummary.accepted",
+            "name": "accepted",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.telemetry.v1.UploadSummary.rejected",
+            "name": "rejected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.telemetry.v1.UploadSummary",
+        "key_type": null,
+        "kind": "record",
+        "name": "UploadSummary",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "protobuf/04-telemetry-stress.proto",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 1,
+    "types": 8
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "protobuf"
+  },
+  "fingerprint": "sha256:23f5fd62d85d10096a294a5f82461a73e583ea31aacc5eedfd2c448b631dc4ff",
+  "lint": {
+    "findings": 36,
+    "grade": "F",
+    "report_fingerprint": "de356a556379fbe4fb5895af6430cbb3f63f8e3fc94efa51061b6461c07817f5",
+    "score": 40,
+    "severity_counts": {
+      "error": 0,
+      "info": 24,
+      "warning": 12
+    }
+  },
+  "snapshot_version": 1
+}

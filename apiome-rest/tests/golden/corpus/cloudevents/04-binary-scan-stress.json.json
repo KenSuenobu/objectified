@@ -1,0 +1,123 @@
+{
+  "adapter": "cloudevents",
+  "canonical": {
+    "channels": [
+      {
+        "address": "com.example.document.scanned",
+        "bindings": {},
+        "description": "CloudEvents channel for `com.example.document.scanned`",
+        "extras": {
+          "cloudevents_source": "https://scanner.example.com/devices/12",
+          "cloudevents_subject": "documents/477"
+        },
+        "key": "com.example.document.scanned",
+        "name": "com.example.document.scanned",
+        "parameters": [],
+        "protocol": "cloudevents"
+      }
+    ],
+    "description": null,
+    "extras": {
+      "cloudevents_event_count": 1
+    },
+    "format": "cloudevents",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "com.example.document.scanned",
+      "namespace": null
+    },
+    "paradigm": "event",
+    "protocol": "cloudevents",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "com.example.document.scanned",
+        "name": "com.example.document.scanned",
+        "operations": [
+          {
+            "channel_ref": "com.example.document.scanned",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cloudevents_data_base64": "JVBERi0xLjcKJeLjz9MKc2Nhbm5lZC1wYWdlLTE=",
+              "cloudevents_datacontenttype": "application/pdf",
+              "cloudevents_dataschema": "https://schemas.example.com/document-scanned/1.0",
+              "cloudevents_extensions": {
+                "partitionkey": "documents-477",
+                "sampledrate": 1,
+                "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+                "tracestate": "vendor=opaque"
+              },
+              "cloudevents_id": "evt-9001",
+              "cloudevents_source": "https://scanner.example.com/devices/12",
+              "cloudevents_specversion": "1.0",
+              "cloudevents_subject": "documents/477",
+              "cloudevents_time": "2026-05-04T09:30:00.500Z",
+              "cloudevents_type": "com.example.document.scanned"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "evt-9001",
+            "kind": "publish",
+            "messages": [
+              {
+                "content_types": [
+                  "application/pdf"
+                ],
+                "description": null,
+                "extras": {
+                  "cloudevents_data_sample": null,
+                  "cloudevents_payload_schema": {}
+                },
+                "headers": [],
+                "key": "evt-9001#event.DocumentScanned",
+                "name": "DocumentScanned",
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "evt-9001",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "com.example.document.scanned",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "cloudevents/04-binary-scan-stress.json",
+  "counts": {
+    "channels": 1,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cloudevents"
+  },
+  "fingerprint": "sha256:8d3e4e0c069bd7a4687d3e9945202477016c9fb22523bf89b0c80406c54a8184",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "df160ac35bc61b6f0bb557d03543ed9e37d84c9ed5ccb9f20649dff373d33f75",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

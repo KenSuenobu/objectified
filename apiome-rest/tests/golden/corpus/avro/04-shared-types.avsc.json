@@ -1,0 +1,322 @@
+{
+  "adapter": "avro",
+  "canonical": {
+    "channels": [],
+    "description": "An invoice whose monetary fields all reuse one shared Money record.",
+    "extras": {
+      "avro_root": "com.example.billing.Invoice"
+    },
+    "format": "avro",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Invoice",
+      "namespace": "com.example.billing"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Invoice",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Supported settlement currencies.",
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.billing.Currency.USD",
+            "name": "USD",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.billing.Currency.EUR",
+            "name": "EUR",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.billing.Currency.GBP",
+            "name": "GBP",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.billing.Currency.JPY",
+            "name": "JPY",
+            "value": 3
+          }
+        ],
+        "extras": {
+          "avro_kind": "enum"
+        },
+        "fields": [],
+        "key": "com.example.billing.Currency",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Currency",
+        "namespace": "com.example.billing",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "An invoice whose monetary fields all reuse one shared Money record.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "USD",
+            "deprecated": false,
+            "description": "Reuses the Currency enum by name.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 6,
+            "key": "com.example.billing.Invoice.billingCurrency",
+            "name": "billingCurrency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.billing.Currency",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": {},
+            "deprecated": false,
+            "description": "Currency-pair exchange rates applied, keyed by pair code.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 5,
+            "key": "com.example.billing.Invoice.exchangeRatesUsed",
+            "name": "exchangeRatesUsed",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.billing.Map_double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Per-line amounts — an array of the shared Money record.",
+            "extras": {},
+            "field_number": 4,
+            "key": "com.example.billing.Invoice.lineAmounts",
+            "name": "lineAmounts",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "com.example.billing.Money",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Sum of line amounts before tax.",
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.billing.Invoice.subtotal",
+            "name": "subtotal",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.billing.Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Tax amount, reusing Money by name.",
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.billing.Invoice.tax",
+            "name": "tax",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.billing.Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Grand total, reusing Money by name.",
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.billing.Invoice.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.billing.Money",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.billing.Invoice",
+        "key_type": null,
+        "kind": "record",
+        "name": "Invoice",
+        "namespace": "com.example.billing",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "map"
+        },
+        "fields": [],
+        "key": "com.example.billing.Map_double",
+        "key_type": null,
+        "kind": "map",
+        "name": "Map_double",
+        "namespace": "com.example.billing",
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "double",
+          "nullable": false
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A monetary amount tagged with its currency.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "decimal",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Decimal amount.",
+            "extras": {
+              "avro_type": "bytes",
+              "logicalType": "decimal",
+              "precision": 14,
+              "scale": 2
+            },
+            "field_number": 1,
+            "key": "com.example.billing.Money.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "USD",
+            "deprecated": false,
+            "description": "ISO 4217 currency code.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.billing.Money.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.billing.Currency",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.billing.Money",
+        "key_type": null,
+        "kind": "record",
+        "name": "Money",
+        "namespace": "com.example.billing",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "avro/04-shared-types.avsc",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "avro"
+  },
+  "fingerprint": "sha256:ae439911348460ffd555d3e8a26a59a901689267c04b9ce73d6e0800cd00d713",
+  "lint": {
+    "findings": 1,
+    "grade": "A",
+    "report_fingerprint": "6e605915ff3934112c9d0449b4539621590b113169051aa5f9da98297697e8d6",
+    "score": 96,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

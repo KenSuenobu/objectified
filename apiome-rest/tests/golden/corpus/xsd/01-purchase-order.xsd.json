@@ -1,0 +1,454 @@
+{
+  "adapter": "xsd",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "xsd_elements": [
+        {
+          "name": "purchaseOrder",
+          "type": "PurchaseOrder"
+        }
+      ],
+      "xsd_root_element": "purchaseOrder",
+      "xsd_target_namespace": "http://example.com/po"
+    },
+    "format": "xsd",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "purchaseOrder",
+      "namespace": "http://example.com/po"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "purchaseOrder",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 3,
+            "key": "http://example.com/po.Address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 5,
+            "key": "http://example.com/po.Address.country",
+            "name": "country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/po.Address.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 4,
+            "key": "http://example.com/po.Address.postalCode",
+            "name": "postalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/po.Address.street",
+            "name": "street",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/po.Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "Address",
+        "namespace": "http://example.com/po",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "positiveInteger"
+            },
+            "field_number": 2,
+            "key": "http://example.com/po.Item.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/po.Item.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "decimal"
+            },
+            "field_number": 3,
+            "key": "http://example.com/po.Item.unitPrice",
+            "name": "unitPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/po.Item",
+        "key_type": null,
+        "kind": "record",
+        "name": "Item",
+        "namespace": "http://example.com/po",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "Address"
+            },
+            "field_number": 3,
+            "key": "http://example.com/po.PurchaseOrder.billTo",
+            "name": "billTo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/po.Address",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_max_occurs": "unbounded",
+              "xsd_type": "Item"
+            },
+            "field_number": 4,
+            "key": "http://example.com/po.PurchaseOrder.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "http://example.com/po.Item",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "attribute",
+              "xsd_type": "date"
+            },
+            "field_number": 6,
+            "key": "http://example.com/po.PurchaseOrder.orderDate",
+            "name": "orderDate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/po.PurchaseOrder.orderId",
+            "name": "orderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "Address"
+            },
+            "field_number": 2,
+            "key": "http://example.com/po.PurchaseOrder.shipTo",
+            "name": "shipTo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/po.Address",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "Status"
+            },
+            "field_number": 5,
+            "key": "http://example.com/po.PurchaseOrder.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/po.Status",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/po.PurchaseOrder",
+        "key_type": null,
+        "kind": "record",
+        "name": "PurchaseOrder",
+        "namespace": "http://example.com/po",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "http://example.com/po.Status.pending",
+            "name": "pending",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "http://example.com/po.Status.shipped",
+            "name": "shipped",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "http://example.com/po.Status.delivered",
+            "name": "delivered",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "http://example.com/po.Status.cancelled",
+            "name": "cancelled",
+            "value": 3
+          }
+        ],
+        "extras": {
+          "xsd_base": "string",
+          "xsd_kind": "simpleType"
+        },
+        "fields": [],
+        "key": "http://example.com/po.Status",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Status",
+        "namespace": "http://example.com/po",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "xsd/01-purchase-order.xsd",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "xsd"
+  },
+  "fingerprint": "sha256:eb8ccaf12754aec1a25f0f63c401e05518f10b3b34522aa716b1ba49153e70ff",
+  "lint": {
+    "findings": 19,
+    "grade": "D",
+    "report_fingerprint": "f7be7b5ca0d196f2411ce02d376453682699c280415f26c2faeaffec09b64008",
+    "score": 69,
+    "severity_counts": {
+      "error": 0,
+      "info": 15,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

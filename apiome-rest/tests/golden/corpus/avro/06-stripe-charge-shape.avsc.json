@@ -1,0 +1,757 @@
+{
+  "adapter": "avro",
+  "canonical": {
+    "channels": [],
+    "description": "A card charge, shaped like the Stripe Charge resource.",
+    "extras": {
+      "avro_root": "com.example.payments.stripe.Charge"
+    },
+    "format": "avro",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Charge",
+      "namespace": "com.example.payments.stripe"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Charge",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Billing information associated with the payment method.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Billing address.",
+            "extras": {},
+            "field_number": 4,
+            "key": "com.example.payments.stripe.BillingDetails.address",
+            "name": "address",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.stripe.PostalAddress",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.payments.stripe.BillingDetails.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 1,
+            "key": "com.example.payments.stripe.BillingDetails.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 3,
+            "key": "com.example.payments.stripe.BillingDetails.phone",
+            "name": "phone",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.payments.stripe.BillingDetails",
+        "key_type": null,
+        "kind": "record",
+        "name": "BillingDetails",
+        "namespace": "com.example.payments.stripe",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A card charge, shaped like the Stripe Charge resource.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Amount intended to be collected, in minor units.",
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.payments.stripe.Charge.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": 0,
+            "deprecated": false,
+            "description": "Amount captured so far, in minor units.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 4,
+            "key": "com.example.payments.stripe.Charge.amountCaptured",
+            "name": "amountCaptured",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": 0,
+            "deprecated": false,
+            "description": "Amount refunded so far, in minor units.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 5,
+            "key": "com.example.payments.stripe.Charge.amountRefunded",
+            "name": "amountRefunded",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Billing details captured with the payment method.",
+            "extras": {},
+            "field_number": 14,
+            "key": "com.example.payments.stripe.Charge.billingDetails",
+            "name": "billingDetails",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.stripe.BillingDetails",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": false,
+            "deprecated": false,
+            "description": "Whether the charge has been captured.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 7,
+            "key": "com.example.payments.stripe.Charge.captured",
+            "name": "captured",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Time at which the charge was created.",
+            "extras": {
+              "avro_type": "long",
+              "logicalType": "timestamp-millis"
+            },
+            "field_number": 17,
+            "key": "com.example.payments.stripe.Charge.created",
+            "name": "created",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Three-letter ISO 4217 currency code.",
+            "extras": {},
+            "field_number": 6,
+            "key": "com.example.payments.stripe.Charge.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Identifier of the customer this charge is for, if any.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 11,
+            "key": "com.example.payments.stripe.Charge.customer",
+            "name": "customer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Arbitrary description attached at creation.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 12,
+            "key": "com.example.payments.stripe.Charge.description",
+            "name": "description",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Unique charge identifier.",
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.payments.stripe.Charge.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": false,
+            "deprecated": false,
+            "description": "True for live-mode objects.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 8,
+            "key": "com.example.payments.stripe.Charge.livemode",
+            "name": "livemode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": {},
+            "deprecated": false,
+            "description": "Set of key-value pairs attached to the charge.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 16,
+            "key": "com.example.payments.stripe.Charge.metadata",
+            "name": "metadata",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.stripe.Map_string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "charge",
+            "deprecated": false,
+            "description": "Object type discriminator.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.payments.stripe.Charge.object",
+            "name": "object",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Outcome of the charge, when available.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 15,
+            "key": "com.example.payments.stripe.Charge.outcome",
+            "name": "outcome",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.stripe.ChargeOutcome",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": false,
+            "deprecated": false,
+            "description": "Whether the charge succeeded.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 9,
+            "key": "com.example.payments.stripe.Charge.paid",
+            "name": "paid",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Email address the receipt was sent to.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 13,
+            "key": "com.example.payments.stripe.Charge.receiptEmail",
+            "name": "receiptEmail",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "pending",
+            "deprecated": false,
+            "description": "Status of the payment.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 10,
+            "key": "com.example.payments.stripe.Charge.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.stripe.ChargeStatus",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.payments.stripe.Charge",
+        "key_type": null,
+        "kind": "record",
+        "name": "Charge",
+        "namespace": "com.example.payments.stripe",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Details about whether and why the charge was accepted.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 1,
+            "key": "com.example.payments.stripe.ChargeOutcome.networkStatus",
+            "name": "networkStatus",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.payments.stripe.ChargeOutcome.reason",
+            "name": "reason",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 3,
+            "key": "com.example.payments.stripe.ChargeOutcome.riskLevel",
+            "name": "riskLevel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 4,
+            "key": "com.example.payments.stripe.ChargeOutcome.sellerMessage",
+            "name": "sellerMessage",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.payments.stripe.ChargeOutcome",
+        "key_type": null,
+        "kind": "record",
+        "name": "ChargeOutcome",
+        "namespace": "com.example.payments.stripe",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Lifecycle status of the charge.",
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.stripe.ChargeStatus.succeeded",
+            "name": "succeeded",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.stripe.ChargeStatus.pending",
+            "name": "pending",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.stripe.ChargeStatus.failed",
+            "name": "failed",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "avro_kind": "enum"
+        },
+        "fields": [],
+        "key": "com.example.payments.stripe.ChargeStatus",
+        "key_type": null,
+        "kind": "enum",
+        "name": "ChargeStatus",
+        "namespace": "com.example.payments.stripe",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "map"
+        },
+        "fields": [],
+        "key": "com.example.payments.stripe.Map_string",
+        "key_type": null,
+        "kind": "map",
+        "name": "Map_string",
+        "namespace": "com.example.payments.stripe",
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": false
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A postal address.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 3,
+            "key": "com.example.payments.stripe.PostalAddress.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 6,
+            "key": "com.example.payments.stripe.PostalAddress.country",
+            "name": "country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 1,
+            "key": "com.example.payments.stripe.PostalAddress.line1",
+            "name": "line1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.payments.stripe.PostalAddress.line2",
+            "name": "line2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 5,
+            "key": "com.example.payments.stripe.PostalAddress.postalCode",
+            "name": "postalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 4,
+            "key": "com.example.payments.stripe.PostalAddress.state",
+            "name": "state",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.payments.stripe.PostalAddress",
+        "key_type": null,
+        "kind": "record",
+        "name": "PostalAddress",
+        "namespace": "com.example.payments.stripe",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "avro/06-stripe-charge-shape.avsc",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "avro"
+  },
+  "fingerprint": "sha256:574663968ccc37a9b59dfd229ecf662a02caa2a3ae5befe8035771c21252fe5f",
+  "lint": {
+    "findings": 14,
+    "grade": "B",
+    "report_fingerprint": "005a5a0470899b97ca1df7a8216b8d07b62f4546dd1f312b902ea4f7d4d1ffca",
+    "score": 83,
+    "severity_counts": {
+      "error": 0,
+      "info": 13,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,1242 @@
+{
+  "adapter": "hl7v2",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "hl7v2_control_id": "MSG00001",
+      "hl7v2_envelope": {
+        "encoding_characters": "^~\\&",
+        "field_separator": "|",
+        "processing_id": "P",
+        "receiving_application": "GHH LAB",
+        "receiving_facility": "GOOD HEALTH HOSPITAL",
+        "sending_application": "ADT1",
+        "sending_facility": "GOOD HEALTH HOSPITAL"
+      },
+      "hl7v2_message_type": "ADT^A01",
+      "hl7v2_segments": [
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "|"
+            },
+            {
+              "index": 2,
+              "value": "^~\\&"
+            },
+            {
+              "index": 3,
+              "value": "ADT1"
+            },
+            {
+              "index": 4,
+              "value": "GOOD HEALTH HOSPITAL"
+            },
+            {
+              "index": 5,
+              "value": "GHH LAB"
+            },
+            {
+              "index": 6,
+              "value": "GOOD HEALTH HOSPITAL"
+            },
+            {
+              "index": 7,
+              "value": "20260115083000"
+            },
+            {
+              "index": 8,
+              "value": ""
+            },
+            {
+              "index": 9,
+              "value": "ADT^A01"
+            },
+            {
+              "index": 10,
+              "value": "MSG00001"
+            },
+            {
+              "index": 11,
+              "value": "P"
+            },
+            {
+              "index": 12,
+              "value": "2.5"
+            }
+          ],
+          "id": "MSH"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "A01"
+            },
+            {
+              "index": 2,
+              "value": "20260115083000"
+            }
+          ],
+          "id": "EVN"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": ""
+            },
+            {
+              "index": 3,
+              "value": "MRN-12345^^^GHH^MR"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": "Chalmers^Peter^James^^Mr"
+            },
+            {
+              "index": 6,
+              "value": ""
+            },
+            {
+              "index": 7,
+              "value": "19741225"
+            },
+            {
+              "index": 8,
+              "value": "M"
+            },
+            {
+              "index": 9,
+              "value": ""
+            },
+            {
+              "index": 10,
+              "value": ""
+            },
+            {
+              "index": 11,
+              "value": "534 Erewhon St^^PleasantVille^VIC^3999^AU"
+            },
+            {
+              "index": 12,
+              "value": ""
+            },
+            {
+              "index": 13,
+              "value": "(555)555-0100"
+            },
+            {
+              "index": 14,
+              "value": ""
+            },
+            {
+              "index": 15,
+              "value": ""
+            },
+            {
+              "index": 16,
+              "value": "M"
+            }
+          ],
+          "id": "PID"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": "Chalmers^Mary^^^Mrs"
+            },
+            {
+              "index": 3,
+              "value": "SPO"
+            },
+            {
+              "index": 4,
+              "value": "534 Erewhon St^^PleasantVille^VIC^3999^AU"
+            }
+          ],
+          "id": "NK1"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": "I"
+            },
+            {
+              "index": 3,
+              "value": "2000^2012^01"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": ""
+            },
+            {
+              "index": 6,
+              "value": ""
+            },
+            {
+              "index": 7,
+              "value": "004777^Smith^John^A^III^DR"
+            },
+            {
+              "index": 8,
+              "value": ""
+            },
+            {
+              "index": 9,
+              "value": ""
+            },
+            {
+              "index": 10,
+              "value": "SUR"
+            },
+            {
+              "index": 11,
+              "value": ""
+            },
+            {
+              "index": 12,
+              "value": ""
+            },
+            {
+              "index": 13,
+              "value": ""
+            },
+            {
+              "index": 14,
+              "value": "ADM"
+            },
+            {
+              "index": 15,
+              "value": "A0"
+            }
+          ],
+          "id": "PV1"
+        }
+      ],
+      "hl7v2_version": "2.5"
+    },
+    "format": "hl7v2",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "ADT^A01",
+      "namespace": "ADT-A01"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "ADT^A01",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "hl7v2_kind": "segment"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "|",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1
+            },
+            "field_number": 1,
+            "key": "ADT-A01.MSH.MSH-01",
+            "name": "MSH-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "^~\\&",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2
+            },
+            "field_number": 2,
+            "key": "ADT-A01.MSH.MSH-02",
+            "name": "MSH-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ADT1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3
+            },
+            "field_number": 3,
+            "key": "ADT-A01.MSH.MSH-03",
+            "name": "MSH-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "GOOD HEALTH HOSPITAL",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4
+            },
+            "field_number": 4,
+            "key": "ADT-A01.MSH.MSH-04",
+            "name": "MSH-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "GHH LAB",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5
+            },
+            "field_number": 5,
+            "key": "ADT-A01.MSH.MSH-05",
+            "name": "MSH-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "GOOD HEALTH HOSPITAL",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6
+            },
+            "field_number": 6,
+            "key": "ADT-A01.MSH.MSH-06",
+            "name": "MSH-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260115083000",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7
+            },
+            "field_number": 7,
+            "key": "ADT-A01.MSH.MSH-07",
+            "name": "MSH-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8
+            },
+            "field_number": 8,
+            "key": "ADT-A01.MSH.MSH-08",
+            "name": "MSH-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ADT^A01",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9
+            },
+            "field_number": 9,
+            "key": "ADT-A01.MSH.MSH-09",
+            "name": "MSH-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "MSG00001",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10
+            },
+            "field_number": 10,
+            "key": "ADT-A01.MSH.MSH-10",
+            "name": "MSH-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "P",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11
+            },
+            "field_number": 11,
+            "key": "ADT-A01.MSH.MSH-11",
+            "name": "MSH-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "2.5",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 12
+            },
+            "field_number": 12,
+            "key": "ADT-A01.MSH.MSH-12",
+            "name": "MSH-12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ADT-A01.MSH",
+        "key_type": null,
+        "kind": "record",
+        "name": "MSH",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "hl7v2_kind": "message"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "A01",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "EVN"
+            },
+            "field_number": 1,
+            "key": "ADT-A01.MessageADTA01.EVN-01",
+            "name": "EVN-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260115083000",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "EVN"
+            },
+            "field_number": 2,
+            "key": "ADT-A01.MessageADTA01.EVN-02",
+            "name": "EVN-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "NK1"
+            },
+            "field_number": 19,
+            "key": "ADT-A01.MessageADTA01.NK1-01",
+            "name": "NK1-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Chalmers^Mary^^^Mrs",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "NK1"
+            },
+            "field_number": 20,
+            "key": "ADT-A01.MessageADTA01.NK1-02",
+            "name": "NK1-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "SPO",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "NK1"
+            },
+            "field_number": 21,
+            "key": "ADT-A01.MessageADTA01.NK1-03",
+            "name": "NK1-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "534 Erewhon St^^PleasantVille^VIC^3999^AU",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "NK1"
+            },
+            "field_number": 22,
+            "key": "ADT-A01.MessageADTA01.NK1-04",
+            "name": "NK1-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 3,
+            "key": "ADT-A01.MessageADTA01.PID-01",
+            "name": "PID-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 4,
+            "key": "ADT-A01.MessageADTA01.PID-02",
+            "name": "PID-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "MRN-12345^^^GHH^MR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 5,
+            "key": "ADT-A01.MessageADTA01.PID-03",
+            "name": "PID-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 6,
+            "key": "ADT-A01.MessageADTA01.PID-04",
+            "name": "PID-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Chalmers^Peter^James^^Mr",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 7,
+            "key": "ADT-A01.MessageADTA01.PID-05",
+            "name": "PID-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 8,
+            "key": "ADT-A01.MessageADTA01.PID-06",
+            "name": "PID-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "19741225",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 9,
+            "key": "ADT-A01.MessageADTA01.PID-07",
+            "name": "PID-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "M",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 10,
+            "key": "ADT-A01.MessageADTA01.PID-08",
+            "name": "PID-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 11,
+            "key": "ADT-A01.MessageADTA01.PID-09",
+            "name": "PID-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 12,
+            "key": "ADT-A01.MessageADTA01.PID-10",
+            "name": "PID-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "534 Erewhon St^^PleasantVille^VIC^3999^AU",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 13,
+            "key": "ADT-A01.MessageADTA01.PID-11",
+            "name": "PID-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 12,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 14,
+            "key": "ADT-A01.MessageADTA01.PID-12",
+            "name": "PID-12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "(555)555-0100",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 13,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 15,
+            "key": "ADT-A01.MessageADTA01.PID-13",
+            "name": "PID-13",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 14,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 16,
+            "key": "ADT-A01.MessageADTA01.PID-14",
+            "name": "PID-14",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 15,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 17,
+            "key": "ADT-A01.MessageADTA01.PID-15",
+            "name": "PID-15",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "M",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 16,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 18,
+            "key": "ADT-A01.MessageADTA01.PID-16",
+            "name": "PID-16",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 23,
+            "key": "ADT-A01.MessageADTA01.PV1-01",
+            "name": "PV1-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "I",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 24,
+            "key": "ADT-A01.MessageADTA01.PV1-02",
+            "name": "PV1-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "2000^2012^01",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 25,
+            "key": "ADT-A01.MessageADTA01.PV1-03",
+            "name": "PV1-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 26,
+            "key": "ADT-A01.MessageADTA01.PV1-04",
+            "name": "PV1-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 27,
+            "key": "ADT-A01.MessageADTA01.PV1-05",
+            "name": "PV1-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 28,
+            "key": "ADT-A01.MessageADTA01.PV1-06",
+            "name": "PV1-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "004777^Smith^John^A^III^DR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 29,
+            "key": "ADT-A01.MessageADTA01.PV1-07",
+            "name": "PV1-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 30,
+            "key": "ADT-A01.MessageADTA01.PV1-08",
+            "name": "PV1-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 31,
+            "key": "ADT-A01.MessageADTA01.PV1-09",
+            "name": "PV1-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "SUR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 32,
+            "key": "ADT-A01.MessageADTA01.PV1-10",
+            "name": "PV1-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 33,
+            "key": "ADT-A01.MessageADTA01.PV1-11",
+            "name": "PV1-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 12,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 34,
+            "key": "ADT-A01.MessageADTA01.PV1-12",
+            "name": "PV1-12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 13,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 35,
+            "key": "ADT-A01.MessageADTA01.PV1-13",
+            "name": "PV1-13",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ADM",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 14,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 36,
+            "key": "ADT-A01.MessageADTA01.PV1-14",
+            "name": "PV1-14",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "A0",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 15,
+              "hl7v2_segment": "PV1"
+            },
+            "field_number": 37,
+            "key": "ADT-A01.MessageADTA01.PV1-15",
+            "name": "PV1-15",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ADT-A01.MessageADTA01",
+        "key_type": null,
+        "kind": "record",
+        "name": "MessageADTA01",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "hl7v2/01-adt-a01.hl7",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "hl7v2"
+  },
+  "fingerprint": "sha256:c43db2591c5124df9ca874803ae5771b39b4f2178ac664a1cba4f3f52b661cb0",
+  "lint": {
+    "findings": 52,
+    "grade": "C",
+    "report_fingerprint": "171c41633d1823db4a05c5852e00e65bb1ada04fe11b8cdda10097fdba2326d8",
+    "score": 71,
+    "severity_counts": {
+      "error": 0,
+      "info": 50,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

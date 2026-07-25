@@ -1,0 +1,693 @@
+{
+  "adapter": "raml",
+  "canonical": {
+    "channels": [],
+    "description": "Repository and issue tracking endpoints shaped like GitHub v3.",
+    "extras": {
+      "raml_media_type": "application/json",
+      "raml_version": "1.0"
+    },
+    "format": "raml",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Code Hosting API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From RAML baseUri",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example-codehost.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Code Hosting API",
+        "name": "Code Hosting API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Fetch a repository.",
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/repos/{owner}/{repo}",
+            "key": "GET /repos/{owner}/{repo}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /repos/{owner}/{repo}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Repository",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GET /repos/{owner}/{repo}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Short name of the repository.",
+                "extras": {
+                  "raml_type": "string"
+                },
+                "key": "GET /repos/{owner}/{repo}#path.repo",
+                "location": "path",
+                "name": "repo",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List issues of the repository.",
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/repos/{owner}/{repo}/issues",
+            "key": "GET /repos/{owner}/{repo}/issues",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /repos/{owner}/{repo}/issues#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Issue",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GET /repos/{owner}/{repo}/issues",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Page size, max 100.",
+                "extras": {
+                  "raml_type": "integer"
+                },
+                "key": "GET /repos/{owner}/{repo}/issues#query.per_page",
+                "location": "query",
+                "name": "per_page",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Filter by issue state (open, closed, all).",
+                "extras": {
+                  "raml_type": "string"
+                },
+                "key": "GET /repos/{owner}/{repo}/issues#query.state",
+                "location": "query",
+                "name": "state",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Fetch a single issue.",
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/repos/{owner}/{repo}/issues/{issue_number}",
+            "key": "GET /repos/{owner}/{repo}/issues/{issue_number}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /repos/{owner}/{repo}/issues/{issue_number}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Issue",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GET /repos/{owner}/{repo}/issues/{issue_number}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Number of the issue.",
+                "extras": {
+                  "raml_type": "integer"
+                },
+                "key": "GET /repos/{owner}/{repo}/issues/{issue_number}#path.issue_number",
+                "location": "path",
+                "name": "issue_number",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Open a new issue.",
+            "extras": {},
+            "http_method": "POST",
+            "http_path": "/repos/{owner}/{repo}/issues",
+            "key": "POST /repos/{owner}/{repo}/issues",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /repos/{owner}/{repo}/issues#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "NewIssue",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "201"
+                },
+                "headers": [],
+                "key": "POST /repos/{owner}/{repo}/issues#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Issue",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "POST /repos/{owner}/{repo}/issues",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Code Hosting API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "An issue on a repository.",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Markdown body of the issue.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 4,
+            "key": "Issue.body",
+            "name": "body",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Creation timestamp.",
+            "extras": {
+              "raml_type": "datetime"
+            },
+            "field_number": 5,
+            "key": "Issue.created_at",
+            "name": "created_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Issue number unique within the repository.",
+            "extras": {
+              "raml_type": "integer"
+            },
+            "field_number": 1,
+            "key": "Issue.number",
+            "name": "number",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "open or closed.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 3,
+            "key": "Issue.state",
+            "name": "state",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Issue title.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 2,
+            "key": "Issue.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Issue",
+        "key_type": null,
+        "kind": "record",
+        "name": "Issue",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Payload to open an issue.",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 2,
+            "key": "NewIssue.body",
+            "name": "body",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 1,
+            "key": "NewIssue.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "NewIssue",
+        "key_type": null,
+        "kind": "record",
+        "name": "NewIssue",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Account that owns repositories.",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Numeric account id.",
+            "extras": {
+              "raml_type": "integer"
+            },
+            "field_number": 2,
+            "key": "Owner.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Account login name.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 1,
+            "key": "Owner.login",
+            "name": "login",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Account kind (User or Organization).",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 3,
+            "key": "Owner.type",
+            "name": "type",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Owner",
+        "key_type": null,
+        "kind": "record",
+        "name": "Owner",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A source code repository.",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Name of the default branch.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 6,
+            "key": "Repository.default_branch",
+            "name": "default_branch",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Optional repository description.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 5,
+            "key": "Repository.description",
+            "name": "description",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "owner/name form.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 3,
+            "key": "Repository.full_name",
+            "name": "full_name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Numeric repository id.",
+            "extras": {
+              "raml_type": "integer"
+            },
+            "field_number": 1,
+            "key": "Repository.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Repository short name.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 2,
+            "key": "Repository.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Whether the repository is private.",
+            "extras": {
+              "raml_type": "boolean"
+            },
+            "field_number": 4,
+            "key": "Repository.private",
+            "name": "private",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Number of stars.",
+            "extras": {
+              "raml_type": "integer"
+            },
+            "field_number": 7,
+            "key": "Repository.stargazers_count",
+            "name": "stargazers_count",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Repository",
+        "key_type": null,
+        "kind": "record",
+        "name": "Repository",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v3"
+  },
+  "corpus_path": "raml/06-github-style-api.raml",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 1,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "raml"
+  },
+  "fingerprint": "sha256:44292d8dc3a4ea064b86b18f57574b1b6ca91ab96f076ed08a02bff115271da3",
+  "lint": {
+    "findings": 7,
+    "grade": "A",
+    "report_fingerprint": "e4e10a8bfa58649a3c0d8dae5683498a80228d95cce8d28fbc84bd2c75adafb1",
+    "score": 93,
+    "severity_counts": {
+      "error": 0,
+      "info": 7,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

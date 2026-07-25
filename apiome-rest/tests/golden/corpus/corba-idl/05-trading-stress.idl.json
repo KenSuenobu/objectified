@@ -1,0 +1,1158 @@
+{
+  "adapter": "corbaidl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "corbaidl_interfaces": [
+        {
+          "name": "MarketData",
+          "operations": [
+            {
+              "name": "snapshot",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "symbol",
+                  "type": "string"
+                }
+              ],
+              "raises": [
+                "UnknownSymbol",
+                "Halted"
+              ],
+              "return_type": "Quote"
+            },
+            {
+              "name": "history",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "symbol",
+                  "type": "string"
+                },
+                {
+                  "direction": "in",
+                  "name": "bars",
+                  "type": "long"
+                }
+              ],
+              "raises": [
+                "UnknownSymbol"
+              ],
+              "return_type": "sequence<sequence<double>>"
+            },
+            {
+              "name": "subscribe",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "symbol",
+                  "type": "string"
+                },
+                {
+                  "direction": "out",
+                  "name": "initial",
+                  "type": "Quote"
+                }
+              ],
+              "raises": [
+                "UnknownSymbol",
+                "Throttled"
+              ],
+              "return_type": "void"
+            },
+            {
+              "name": "heartbeat",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "sequenceNumber",
+                  "type": "long"
+                }
+              ],
+              "raises": [],
+              "return_type": "oneway void"
+            }
+          ]
+        },
+        {
+          "name": "OrderEntry",
+          "operations": [
+            {
+              "name": "place",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "symbol",
+                  "type": "string"
+                },
+                {
+                  "direction": "in",
+                  "name": "side",
+                  "type": "Side"
+                },
+                {
+                  "direction": "in",
+                  "name": "quantity",
+                  "type": "long"
+                },
+                {
+                  "direction": "inout",
+                  "name": "limitPrice",
+                  "type": "double"
+                }
+              ],
+              "raises": [
+                "Halted",
+                "Throttled",
+                "UnknownSymbol"
+              ],
+              "return_type": "string"
+            },
+            {
+              "name": "cancel",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "orderId",
+                  "type": "string"
+                }
+              ],
+              "raises": [],
+              "return_type": "void"
+            },
+            {
+              "name": "status",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "orderId",
+                  "type": "string"
+                }
+              ],
+              "raises": [],
+              "return_type": "any"
+            }
+          ]
+        }
+      ],
+      "corbaidl_module": "Trading",
+      "corbaidl_typedefs": {
+        "Bytes": "sequence<octet>",
+        "Matrix": "sequence<sequence<double>>"
+      }
+    },
+    "format": "corbaidl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Trading",
+      "namespace": "Trading"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Trading.MarketData",
+        "name": "MarketData",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Trading.MarketData.heartbeat",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "Trading.MarketData.heartbeat#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Trading.MarketData.heartbeat#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "oneway void",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "heartbeat",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Trading.MarketData.history",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "Trading.MarketData.history#error.UnknownSymbol",
+                "name": "UnknownSymbol",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Trading.UnknownSymbol",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_parameters": [
+                    {
+                      "direction": "in",
+                      "name": "symbol",
+                      "type": "string"
+                    },
+                    {
+                      "direction": "in",
+                      "name": "bars",
+                      "type": "long"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Trading.MarketData.history#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Trading.MarketData.history#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": {
+                      "extras": {},
+                      "item": null,
+                      "name": "double",
+                      "nullable": false
+                    },
+                    "name": "double",
+                    "nullable": false
+                  },
+                  "name": "double",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "history",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Trading.MarketData.snapshot",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 2
+                },
+                "headers": [],
+                "key": "Trading.MarketData.snapshot#error.Halted",
+                "name": "Halted",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Trading.Halted",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "Trading.MarketData.snapshot#error.UnknownSymbol",
+                "name": "UnknownSymbol",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Trading.UnknownSymbol",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "Trading.MarketData.snapshot#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Trading.MarketData.snapshot#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Trading.Quote",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "snapshot",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Trading.MarketData.subscribe",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 2
+                },
+                "headers": [],
+                "key": "Trading.MarketData.subscribe#error.Throttled",
+                "name": "Throttled",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Trading.Throttled",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "Trading.MarketData.subscribe#error.UnknownSymbol",
+                "name": "UnknownSymbol",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Trading.UnknownSymbol",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_parameters": [
+                    {
+                      "direction": "in",
+                      "name": "symbol",
+                      "type": "string"
+                    },
+                    {
+                      "direction": "out",
+                      "name": "initial",
+                      "type": "Quote"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Trading.MarketData.subscribe#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "subscribe",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Trading.OrderEntry",
+        "name": "OrderEntry",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Trading.OrderEntry.cancel",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "Trading.OrderEntry.cancel#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "cancel",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Trading.OrderEntry.place",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "Trading.OrderEntry.place#error.Halted",
+                "name": "Halted",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Trading.Halted",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 2
+                },
+                "headers": [],
+                "key": "Trading.OrderEntry.place#error.Throttled",
+                "name": "Throttled",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Trading.Throttled",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 3
+                },
+                "headers": [],
+                "key": "Trading.OrderEntry.place#error.UnknownSymbol",
+                "name": "UnknownSymbol",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Trading.UnknownSymbol",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_parameters": [
+                    {
+                      "direction": "in",
+                      "name": "symbol",
+                      "type": "string"
+                    },
+                    {
+                      "direction": "in",
+                      "name": "side",
+                      "type": "Side"
+                    },
+                    {
+                      "direction": "in",
+                      "name": "quantity",
+                      "type": "long"
+                    },
+                    {
+                      "direction": "inout",
+                      "name": "limitPrice",
+                      "type": "double"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Trading.OrderEntry.place#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Trading.OrderEntry.place#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "place",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Trading.OrderEntry.status",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "Trading.OrderEntry.status#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Trading.OrderEntry.status#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "bytes",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "status",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "Trading.Fill.orderId",
+            "name": "orderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "double"
+            },
+            "field_number": 2,
+            "key": "Trading.Fill.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "long"
+            },
+            "field_number": 3,
+            "key": "Trading.Fill.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "char"
+            },
+            "field_number": 4,
+            "key": "Trading.Fill.venueCode",
+            "name": "venueCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "wstring"
+            },
+            "field_number": 5,
+            "key": "Trading.Fill.venueName",
+            "name": "venueName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Trading.Fill",
+        "key_type": null,
+        "kind": "record",
+        "name": "Fill",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "exception"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "Trading.Halted.symbol",
+            "name": "symbol",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Trading.Halted",
+        "key_type": null,
+        "kind": "record",
+        "name": "Halted",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Trading.OrderState.NEW",
+            "name": "NEW",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Trading.OrderState.PARTIAL",
+            "name": "PARTIAL",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Trading.OrderState.FILLED",
+            "name": "FILLED",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Trading.OrderState.CANCELLED",
+            "name": "CANCELLED",
+            "value": 3
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Trading.OrderState.REJECTED",
+            "name": "REJECTED",
+            "value": 4
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Trading.OrderState.EXPIRED",
+            "name": "EXPIRED",
+            "value": 5
+          }
+        ],
+        "extras": {
+          "corbaidl_kind": "enum"
+        },
+        "fields": [],
+        "key": "Trading.OrderState",
+        "key_type": null,
+        "kind": "enum",
+        "name": "OrderState",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "double"
+            },
+            "field_number": 3,
+            "key": "Trading.Quote.ask",
+            "name": "ask",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "double"
+            },
+            "field_number": 2,
+            "key": "Trading.Quote.bid",
+            "name": "bid",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "long"
+            },
+            "field_number": 4,
+            "key": "Trading.Quote.depth",
+            "name": "depth",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "Trading.Quote.symbol",
+            "name": "symbol",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Trading.Quote",
+        "key_type": null,
+        "kind": "record",
+        "name": "Quote",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Trading.Side.BUY",
+            "name": "BUY",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Trading.Side.SELL",
+            "name": "SELL",
+            "value": 1
+          }
+        ],
+        "extras": {
+          "corbaidl_kind": "enum"
+        },
+        "fields": [],
+        "key": "Trading.Side",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Side",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "exception"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "long"
+            },
+            "field_number": 1,
+            "key": "Trading.Throttled.retryAfterMillis",
+            "name": "retryAfterMillis",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Trading.Throttled",
+        "key_type": null,
+        "kind": "record",
+        "name": "Throttled",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "exception"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "Trading.UnknownSymbol.symbol",
+            "name": "symbol",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Trading.UnknownSymbol",
+        "key_type": null,
+        "kind": "record",
+        "name": "UnknownSymbol",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "corba-idl/05-trading-stress.idl",
+  "counts": {
+    "channels": 0,
+    "operations": 7,
+    "servers": 0,
+    "services": 2,
+    "types": 7
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "corbaidl"
+  },
+  "fingerprint": "sha256:e9dc0f165e6b9aaca0d454e1680ef0c84af57ad1794ea1756125da49fa82bb46",
+  "lint": {
+    "findings": 47,
+    "grade": "F",
+    "report_fingerprint": "8dc5decb4bfe4d0baccd55c9dd4f14ee63ded5fcbb7678486236fa5d877f6969",
+    "score": 27,
+    "severity_counts": {
+      "error": 0,
+      "info": 33,
+      "warning": 14
+    }
+  },
+  "snapshot_version": 1
+}

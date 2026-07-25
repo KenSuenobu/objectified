@@ -1,0 +1,294 @@
+{
+  "adapter": "odata",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "odata_entity_sets": [
+        {
+          "entity_type": "Example.Minimal.Item",
+          "name": "Items"
+        }
+      ],
+      "odata_schemas": [
+        {
+          "complex_types": [],
+          "entity_container": {
+            "entity_sets": [
+              {
+                "entity_type": "Example.Minimal.Item",
+                "name": "Items"
+              }
+            ],
+            "name": "Container"
+          },
+          "entity_types": [
+            {
+              "key_properties": [
+                "Id"
+              ],
+              "name": "Item",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "name": "Id",
+                  "nullable": false,
+                  "type": "Edm.Int32"
+                }
+              ]
+            }
+          ],
+          "enum_types": [],
+          "namespace": "Example.Minimal"
+        }
+      ],
+      "odata_version": "4.0"
+    },
+    "format": "odata",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Example.Minimal",
+      "namespace": "Example.Minimal"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Example.Minimal.Items",
+        "name": "Items",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Items",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Items",
+            "key": "GET /Items",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Items#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Minimal.Item",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listItems",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Items#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Items",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Items({key})",
+            "key": "GET /Items({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Items({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Minimal.Item",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Items",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Items",
+            "key": "POST /Items",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Items#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Minimal.Item",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Items#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Minimal.Item",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "Id"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Int32"
+            },
+            "field_number": 1,
+            "key": "Example.Minimal.Item.Id",
+            "name": "Id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Example.Minimal.Item",
+        "key_type": null,
+        "kind": "record",
+        "name": "Item",
+        "namespace": "Example.Minimal",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "4.0"
+  },
+  "corpus_path": "odata/03-minimal-service.edmx",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "odata"
+  },
+  "fingerprint": "sha256:f886f7719cbe9c254537fe551a6ee9a45196e5881b7f6a99696e33a539b9ef05",
+  "lint": {
+    "findings": 10,
+    "grade": "C",
+    "report_fingerprint": "cd5636f10ba59b96944d62b99bb1561b194917e381b3a677bc7e6b44ca19f8ab",
+    "score": 78,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

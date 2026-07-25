@@ -1,0 +1,412 @@
+{
+  "adapter": "thrift",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "thrift_includes": [
+        "shared.thrift"
+      ],
+      "thrift_namespaces": {
+        "java": "com.example.orders",
+        "py": "example.orders"
+      },
+      "thrift_typedefs": {
+        "OrderId": "string",
+        "OrderIdList": "list<OrderId>",
+        "PriceBySku": "map<string, shared.Money>"
+      }
+    },
+    "format": "thrift",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "com.example.orders",
+      "namespace": "com.example.orders"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "com.example.orders.OrderService",
+        "name": "OrderService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_oneway": false
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.orders.OrderService.currentPrices",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.orders.OrderService.currentPrices#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.orders.OrderService.currentPrices#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.orders.map_string_shared.Money_",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "currentPrices",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_oneway": false
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.orders.OrderService.getOrder",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.orders.OrderService.getOrder#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.orders.OrderService.getOrder#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.orders.Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "getOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_oneway": false
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.orders.OrderService.listOrders",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.orders.OrderService.listOrders#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.orders.OrderService.listOrders#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "string",
+                    "nullable": true
+                  },
+                  "name": null,
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "listOrders",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": true
+            },
+            "field_number": 1,
+            "key": "com.example.orders.Order.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": true
+            },
+            "field_number": 2,
+            "key": "com.example.orders.Order.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "com.example.orders.OrderLine",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 4,
+            "key": "com.example.orders.Order.relatedOrders",
+            "name": "relatedOrders",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 3,
+            "key": "com.example.orders.Order.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "shared.Money",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.orders.Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": "com.example.orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": true
+            },
+            "field_number": 2,
+            "key": "com.example.orders.OrderLine.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": true
+            },
+            "field_number": 1,
+            "key": "com.example.orders.OrderLine.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 3,
+            "key": "com.example.orders.OrderLine.unitPrice",
+            "name": "unitPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "shared.Money",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.orders.OrderLine",
+        "key_type": null,
+        "kind": "record",
+        "name": "OrderLine",
+        "namespace": "com.example.orders",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "thrift/03-order-includes.thrift",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "thrift"
+  },
+  "fingerprint": "sha256:49592ae1547e31fce4a8aaa18e56f97cd18cc4a0766c97be0c23ebb34fa984e3",
+  "lint": {
+    "findings": 19,
+    "grade": "D",
+    "report_fingerprint": "236c6bf73d3cf6eeb6ded965e07752d801bebe72891025778cab1aebca359bd0",
+    "score": 66,
+    "severity_counts": {
+      "error": 0,
+      "info": 14,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

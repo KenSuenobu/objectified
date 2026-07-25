@@ -1,0 +1,460 @@
+{
+  "adapter": "odata",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "odata_entity_sets": [
+        {
+          "entity_type": "Example.Orders.Order",
+          "name": "Orders"
+        }
+      ],
+      "odata_schemas": [
+        {
+          "complex_types": [
+            {
+              "name": "Address",
+              "properties": [
+                {
+                  "name": "Street",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "City",
+                  "nullable": null,
+                  "type": "Edm.String"
+                }
+              ]
+            }
+          ],
+          "entity_container": {
+            "entity_sets": [
+              {
+                "entity_type": "Example.Orders.Order",
+                "name": "Orders"
+              }
+            ],
+            "name": "Container"
+          },
+          "entity_types": [
+            {
+              "key_properties": [
+                "Id"
+              ],
+              "name": "Order",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "name": "Id",
+                  "nullable": false,
+                  "type": "Edm.Int32"
+                },
+                {
+                  "name": "Status",
+                  "nullable": null,
+                  "type": "Example.Orders.OrderStatus"
+                },
+                {
+                  "name": "ShipTo",
+                  "nullable": null,
+                  "type": "Example.Orders.Address"
+                }
+              ]
+            }
+          ],
+          "enum_types": [
+            {
+              "members": [
+                {
+                  "name": "Open",
+                  "value": 0
+                },
+                {
+                  "name": "Closed",
+                  "value": 1
+                }
+              ],
+              "name": "OrderStatus"
+            }
+          ],
+          "namespace": "Example.Orders"
+        }
+      ],
+      "odata_version": "4.0"
+    },
+    "format": "odata",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Example.Orders",
+      "namespace": "Example.Orders"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Example.Orders.Orders",
+        "name": "Orders",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Orders",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Orders",
+            "key": "GET /Orders",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Orders#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Orders.Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listOrders",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Orders#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Orders",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Orders({key})",
+            "key": "GET /Orders({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Orders({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Orders.Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Orders",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Orders",
+            "key": "POST /Orders",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Orders#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Orders.Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Orders#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Orders.Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "Example.Orders.Address.City",
+            "name": "City",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Example.Orders.Address.Street",
+            "name": "Street",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Example.Orders.Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "Address",
+        "namespace": "Example.Orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "Id"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Int32"
+            },
+            "field_number": 1,
+            "key": "Example.Orders.Order.Id",
+            "name": "Id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Example.Orders.Address"
+            },
+            "field_number": 3,
+            "key": "Example.Orders.Order.ShipTo",
+            "name": "ShipTo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Example.Orders.Address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Example.Orders.OrderStatus"
+            },
+            "field_number": 2,
+            "key": "Example.Orders.Order.Status",
+            "name": "Status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Example.Orders.OrderStatus",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Example.Orders.Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": "Example.Orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Example.Orders.OrderStatus.Open",
+            "name": "Open",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Example.Orders.OrderStatus.Closed",
+            "name": "Closed",
+            "value": 1
+          }
+        ],
+        "extras": {
+          "odata_kind": "enum"
+        },
+        "fields": [],
+        "key": "Example.Orders.OrderStatus",
+        "key_type": null,
+        "kind": "enum",
+        "name": "OrderStatus",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "4.0"
+  },
+  "corpus_path": "odata/02-orders.edmx",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "odata"
+  },
+  "fingerprint": "sha256:08e5a8be8b4315f406a249291bb0462411f1564bff85ac1b9478fe4893950d73",
+  "lint": {
+    "findings": 16,
+    "grade": "D",
+    "report_fingerprint": "a04bf9f7524aafb5e2b174d7fe83b803d48d34cda050ed957135d1a6b269c4a7",
+    "score": 66,
+    "severity_counts": {
+      "error": 0,
+      "info": 10,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

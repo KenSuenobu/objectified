@@ -1,0 +1,594 @@
+{
+  "adapter": "openrpc",
+  "canonical": {
+    "channels": [],
+    "description": "A small, faithful reconstruction of the shape of the Ethereum node RPC surface.",
+    "extras": {
+      "openrpc_version": "1.3.2"
+    },
+    "format": "openrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ethereum JSON-RPC (subset)",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": "jsonrpc",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "mainnet",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://rpc.example.com/mainnet",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Ethereum JSON-RPC (subset)",
+        "name": "Ethereum JSON-RPC (subset)",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Height of the most recent block.",
+            "extras": {
+              "openrpc_result_name": "blockNumber",
+              "openrpc_summary": "Height of the most recent block."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Ethereum JSON-RPC (subset).eth_blockNumber",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Ethereum JSON-RPC (subset).eth_blockNumber#response",
+                "name": "blockNumber",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Quantity",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "eth_blockNumber",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Balance of an address at a given block.",
+            "extras": {
+              "openrpc_result_name": "balance",
+              "openrpc_summary": "Balance of an address at a given block."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Ethereum JSON-RPC (subset).eth_getBalance",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "openrpc_params": [
+                    {
+                      "description": null,
+                      "name": "address",
+                      "required": true,
+                      "schema": {
+                        "$ref": "#/components/schemas/Address"
+                      }
+                    },
+                    {
+                      "description": null,
+                      "name": "block",
+                      "required": true,
+                      "schema": {
+                        "$ref": "#/components/schemas/BlockNumberOrTag"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Ethereum JSON-RPC (subset).eth_getBalance#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Ethereum JSON-RPC (subset).eth_getBalance#response",
+                "name": "balance",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Quantity",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "eth_getBalance",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Look up a transaction by its hash.",
+            "extras": {
+              "openrpc_result_name": "transaction",
+              "openrpc_summary": "Look up a transaction by its hash."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Ethereum JSON-RPC (subset).eth_getTransactionByHash",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "openrpc_params": [
+                    {
+                      "description": null,
+                      "name": "transactionHash",
+                      "required": true,
+                      "schema": {
+                        "$ref": "#/components/schemas/Hash32"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Ethereum JSON-RPC (subset).eth_getTransactionByHash#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Hash32",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Ethereum JSON-RPC (subset).eth_getTransactionByHash#response",
+                "name": "transaction",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "eth_getTransactionByHash",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Broadcast a signed, RLP-encoded transaction.",
+            "extras": {
+              "openrpc_result_name": "transactionHash",
+              "openrpc_summary": "Broadcast a signed, RLP-encoded transaction."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Ethereum JSON-RPC (subset).eth_sendRawTransaction",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "openrpc_params": [
+                    {
+                      "description": null,
+                      "name": "signedTransaction",
+                      "required": true,
+                      "schema": {
+                        "$ref": "#/components/schemas/HexBytes"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Ethereum JSON-RPC (subset).eth_sendRawTransaction#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "HexBytes",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Ethereum JSON-RPC (subset).eth_sendRawTransaction#response",
+                "name": "transactionHash",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Hash32",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "eth_sendRawTransaction",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Ethereum JSON-RPC (subset)",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": null,
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": null,
+          "maximum": null,
+          "min_items": null,
+          "min_length": null,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": "^0x[0-9a-fA-F]{40}$",
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": "20-byte account address, 0x-prefixed hex.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "Address",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "Address",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Either a hex block number or a named tag.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "BlockNumberOrTag",
+        "key_type": null,
+        "kind": "union",
+        "name": "BlockNumberOrTag",
+        "namespace": null,
+        "union_members": [
+          "Quantity"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": null,
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": null,
+          "maximum": null,
+          "min_items": null,
+          "min_length": null,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": "^0x[0-9a-fA-F]{64}$",
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": "32-byte hash, 0x-prefixed hex.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "Hash32",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "Hash32",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": null,
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": null,
+          "maximum": null,
+          "min_items": null,
+          "min_length": null,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": "^0x[0-9a-fA-F]*$",
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": "Arbitrary 0x-prefixed byte string.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "HexBytes",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "HexBytes",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": null,
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": null,
+          "maximum": null,
+          "min_items": null,
+          "min_length": null,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": "^0x[0-9a-fA-F]+$",
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": "Hex-encoded unsigned integer quantity.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "Quantity",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "Quantity",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A transaction as returned by the node.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Transaction.from",
+            "name": "from",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Address",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Transaction.gas",
+            "name": "gas",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Quantity",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Transaction.gasPrice",
+            "name": "gasPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Quantity",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Transaction.hash",
+            "name": "hash",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Hash32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Transaction.input",
+            "name": "input",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "HexBytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Transaction.nonce",
+            "name": "nonce",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Quantity",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Transaction.to",
+            "name": "to",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Transaction.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Quantity",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Transaction",
+        "key_type": null,
+        "kind": "record",
+        "name": "Transaction",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "openrpc/05-ethereum-json-rpc.json",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 1,
+    "services": 1,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "openrpc"
+  },
+  "fingerprint": "sha256:79cfb6eb7f1d587e651b3b97c588bd1709f5a10af9ee88781f435fe46fe97de1",
+  "lint": {
+    "findings": 15,
+    "grade": "B",
+    "report_fingerprint": "804e49aea1c0b9508544b10930c76bdb807145e32ed55968d2c7355a9cf4f52c",
+    "score": 85,
+    "severity_counts": {
+      "error": 0,
+      "info": 15,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

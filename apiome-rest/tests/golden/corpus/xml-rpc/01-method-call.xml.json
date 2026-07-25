@@ -1,0 +1,181 @@
+{
+  "adapter": "xmlrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "xmlrpc_kind": "methodCall"
+    },
+    "format": "xmlrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "inventory.reserveStock",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": "xmlrpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "inventory.reserveStock",
+        "name": "inventory.reserveStock",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xmlrpc_fault_code": null,
+              "xmlrpc_fault_string": null,
+              "xmlrpc_kind": "methodCall"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "inventory.reserveStock.inventory.reserveStock",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "xmlrpc_params": [
+                    {
+                      "index": 0,
+                      "name": "param0",
+                      "required": true,
+                      "sample": "WIDGET-001",
+                      "schema": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "index": 1,
+                      "name": "param1",
+                      "required": true,
+                      "sample": 5,
+                      "schema": {
+                        "type": "integer"
+                      }
+                    },
+                    {
+                      "index": 2,
+                      "name": "param2",
+                      "required": true,
+                      "sample": {
+                        "customerId": "c-7781",
+                        "priority": true
+                      },
+                      "schema": {
+                        "$ref": "#/components/schemas/InventoryReserveStockParam3"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "inventory.reserveStock.inventory.reserveStock#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "inventory.reserveStock",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "inventory.reserveStock",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xmlrpc_kind": "struct",
+          "xmlrpc_samples": {
+            "customerId": "c-7781",
+            "priority": true
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "InventoryReserveStockParam3.customerId",
+            "name": "customerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "InventoryReserveStockParam3.priority",
+            "name": "priority",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "InventoryReserveStockParam3",
+        "key_type": null,
+        "kind": "record",
+        "name": "InventoryReserveStockParam3",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "xml-rpc/01-method-call.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "xmlrpc"
+  },
+  "fingerprint": "sha256:063095e393ba35c3cc05d7d269eb6ba1a2b454cfe0d10dae9963bf86b7d15452",
+  "lint": {
+    "findings": 6,
+    "grade": "B",
+    "report_fingerprint": "fcda9ecd3e0fba23e3adff0fab4133002c1bf130bb311da01617ee4c81aa556b",
+    "score": 88,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,361 @@
+{
+  "adapter": "flatbuffers",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "fbs_includes": [],
+      "fbs_root_type": "Batch"
+    },
+    "format": "flatbuffers",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.telemetry",
+      "namespace": "example.telemetry"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "example.telemetry.Batch.readings",
+            "name": "readings",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "example.telemetry.Reading",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.telemetry.Batch.sensor",
+            "name": "sensor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.telemetry.Sensor",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.telemetry.Batch",
+        "key_type": null,
+        "kind": "record",
+        "name": "Batch",
+        "namespace": "example.telemetry",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.telemetry.GeoPoint.lat",
+            "name": "lat",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "example.telemetry.GeoPoint.lon",
+            "name": "lon",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.telemetry.GeoPoint",
+        "key_type": null,
+        "kind": "record",
+        "name": "GeoPoint",
+        "namespace": "example.telemetry",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.telemetry.Reading.sensorId",
+            "name": "sensorId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "example.telemetry.Reading.timestampMs",
+            "name": "timestampMs",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "example.telemetry.Reading.unit",
+            "name": "unit",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.telemetry.Unit",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "example.telemetry.Reading.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.telemetry.Reading",
+        "key_type": null,
+        "kind": "record",
+        "name": "Reading",
+        "namespace": "example.telemetry",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.telemetry.Sensor.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "example.telemetry.Sensor.location",
+            "name": "location",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.telemetry.GeoPoint",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "example.telemetry.Sensor.unit",
+            "name": "unit",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.telemetry.Unit",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.telemetry.Sensor",
+        "key_type": null,
+        "kind": "record",
+        "name": "Sensor",
+        "namespace": "example.telemetry",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.Unit.Celsius",
+            "name": "Celsius",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.Unit.Pascal",
+            "name": "Pascal",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.Unit.Lux",
+            "name": "Lux",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.Unit.Volt",
+            "name": "Volt",
+            "value": 3
+          }
+        ],
+        "extras": {
+          "fbs_base_type": "byte",
+          "fbs_kind": "enum"
+        },
+        "fields": [],
+        "key": "example.telemetry.Unit",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Unit",
+        "namespace": "example.telemetry",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "flatbuffers/06-telemetry.fbs",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "flatbuffers"
+  },
+  "fingerprint": "sha256:d9d3a9455e9e1ede794ea21259da3771c8e672f96e331efd4674079aa36d5612",
+  "lint": {
+    "findings": 17,
+    "grade": "D",
+    "report_fingerprint": "2285d5b1c6636572d304f987f715cbb5d744aec56b62b61d697b6e3a6551e81e",
+    "score": 68,
+    "severity_counts": {
+      "error": 0,
+      "info": 12,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

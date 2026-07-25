@@ -1,0 +1,756 @@
+{
+  "adapter": "flatbuffers",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "fbs_includes": [],
+      "fbs_root_type": "Schema"
+    },
+    "format": "flatbuffers",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "reflection",
+      "namespace": "reflection"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.None",
+            "name": "None",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.UType",
+            "name": "UType",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.Bool",
+            "name": "Bool",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.Byte",
+            "name": "Byte",
+            "value": 3
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.Short",
+            "name": "Short",
+            "value": 5
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.Int",
+            "name": "Int",
+            "value": 7
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.Long",
+            "name": "Long",
+            "value": 9
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.Float",
+            "name": "Float",
+            "value": 11
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.Double",
+            "name": "Double",
+            "value": 12
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.String",
+            "name": "String",
+            "value": 13
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.Vector",
+            "name": "Vector",
+            "value": 14
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.Obj",
+            "name": "Obj",
+            "value": 15
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "reflection.BaseType.Union",
+            "name": "Union",
+            "value": 16
+          }
+        ],
+        "extras": {
+          "fbs_base_type": "byte",
+          "fbs_kind": "enum"
+        },
+        "fields": [],
+        "key": "reflection.BaseType",
+        "key_type": null,
+        "kind": "enum",
+        "name": "BaseType",
+        "namespace": "reflection",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "false",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "false"
+            },
+            "field_number": 3,
+            "key": "reflection.Enum.is_union",
+            "name": "is_union",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "reflection.Enum.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "reflection.Enum.underlying_type",
+            "name": "underlying_type",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "reflection.Type",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "reflection.Enum.values",
+            "name": "values",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "reflection.EnumVal",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "reflection.Enum",
+        "key_type": null,
+        "kind": "record",
+        "name": "Enum",
+        "namespace": "reflection",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "reflection.EnumVal.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "reflection.EnumVal.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "reflection.EnumVal",
+        "key_type": null,
+        "kind": "record",
+        "name": "EnumVal",
+        "namespace": "reflection",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "0",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "0"
+            },
+            "field_number": 5,
+            "key": "reflection.Field.default_integer",
+            "name": "default_integer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "0.0",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "0.0"
+            },
+            "field_number": 6,
+            "key": "reflection.Field.default_real",
+            "name": "default_real",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "false",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "false"
+            },
+            "field_number": 7,
+            "key": "reflection.Field.deprecated",
+            "name": "deprecated",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "reflection.Field.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "reflection.Field.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "reflection.Field.offset",
+            "name": "offset",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "false",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "false"
+            },
+            "field_number": 8,
+            "key": "reflection.Field.optional",
+            "name": "optional",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "reflection.Field.type",
+            "name": "type",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "reflection.Type",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "reflection.Field",
+        "key_type": null,
+        "kind": "record",
+        "name": "Field",
+        "namespace": "reflection",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "reflection.Object.bytesize",
+            "name": "bytesize",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "reflection.Object.fields",
+            "name": "fields",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "reflection.Field",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "false",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "false"
+            },
+            "field_number": 3,
+            "key": "reflection.Object.is_struct",
+            "name": "is_struct",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "reflection.Object.minalign",
+            "name": "minalign",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "reflection.Object.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "reflection.Object",
+        "key_type": null,
+        "kind": "record",
+        "name": "Object",
+        "namespace": "reflection",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "reflection.Schema.enums",
+            "name": "enums",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "reflection.Enum",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "reflection.Schema.file_ext",
+            "name": "file_ext",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "reflection.Schema.file_ident",
+            "name": "file_ident",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "reflection.Schema.objects",
+            "name": "objects",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "reflection.Object",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "reflection.Schema.root_table",
+            "name": "root_table",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "reflection.Object",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "reflection.Schema",
+        "key_type": null,
+        "kind": "record",
+        "name": "Schema",
+        "namespace": "reflection",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "reflection.Type.base_type",
+            "name": "base_type",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "reflection.BaseType",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "reflection.Type.element",
+            "name": "element",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "reflection.BaseType",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "-1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "-1"
+            },
+            "field_number": 3,
+            "key": "reflection.Type.index",
+            "name": "index",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "reflection.Type",
+        "key_type": null,
+        "kind": "record",
+        "name": "Type",
+        "namespace": "reflection",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "flatbuffers/05-reflection.fbs",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 7
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "flatbuffers"
+  },
+  "fingerprint": "sha256:f67dfe8cc9aec4ef757aee2ed8e792b02877038ab95d86e834ce0b3969bf38f8",
+  "lint": {
+    "findings": 35,
+    "grade": "F",
+    "report_fingerprint": "93791a7532068f306d71211a0f2ed321b5c11981b13d2d3807c87813f6ccf3cb",
+    "score": 59,
+    "severity_counts": {
+      "error": 0,
+      "info": 28,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

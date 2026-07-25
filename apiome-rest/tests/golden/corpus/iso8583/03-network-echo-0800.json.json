@@ -1,0 +1,140 @@
+{
+  "adapter": "iso8583",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "iso8583_data_elements": [
+        {
+          "length": "3",
+          "name": "Network Management Information Code",
+          "number": "70",
+          "type": "n",
+          "value": "301"
+        }
+      ],
+      "iso8583_mti": "0800",
+      "iso8583_name": null
+    },
+    "format": "iso8583",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "ISO 8583 MTI 0800",
+      "namespace": "0800"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "ISO 8583 MTI 0800",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Network Management Information Code",
+        "enum_values": [],
+        "extras": {
+          "iso8583_de_length": "3",
+          "iso8583_de_name": "Network Management Information Code",
+          "iso8583_de_number": "70",
+          "iso8583_de_type": "n"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "301",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "0800.DE70.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0800.DE70",
+        "key_type": null,
+        "kind": "record",
+        "name": "DE70",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso8583_kind": "message",
+          "iso8583_mti": "0800"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "301",
+            "deprecated": false,
+            "description": "Network Management Information Code",
+            "extras": {
+              "iso8583_de_length": "3",
+              "iso8583_de_name": "Network Management Information Code",
+              "iso8583_de_number": "70",
+              "iso8583_de_type": "n"
+            },
+            "field_number": 1,
+            "key": "0800.Message0800.DE70",
+            "name": "DE70",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0800.Message0800",
+        "key_type": null,
+        "kind": "record",
+        "name": "Message0800",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "iso8583/03-network-echo-0800.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "iso8583"
+  },
+  "fingerprint": "sha256:f4ef8399632b6d6f47abc64e23cfbbe2e25471a1c29d37c802e950efa8afe77b",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "0f7e8d45ae9772a435d0a7a4d53beb79249d03f4409c0787d79e786b89cda1af",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,340 @@
+{
+  "adapter": "json-schema",
+  "canonical": {
+    "channels": [],
+    "description": "Real-world example: a hand-authored faithful reconstruction of the shape of a GeoJSON (RFC 7946) Feature with its geometry objects; no third-party text copied.",
+    "extras": {},
+    "format": "json-schema",
+    "identity": {
+      "extras": {},
+      "id": "https://example.com/geojson-feature.json",
+      "name": "GeoJSONFeature",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "GeoJSONFeature",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A coordinate position: longitude, latitude, optional altitude",
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "Position",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "Position",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Coordinate range the geometry falls within",
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "BoundingBox",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "BoundingBox",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A single position",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Point.type",
+            "name": "type",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Point.coordinates",
+            "name": "coordinates",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Position",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Point",
+        "key_type": null,
+        "kind": "record",
+        "name": "Point",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A connected sequence of two or more positions",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "LineString.type",
+            "name": "type",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "LineString.coordinates",
+            "name": "coordinates",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Position",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "LineString",
+        "key_type": null,
+        "kind": "record",
+        "name": "LineString",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One or more closed linear rings",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Polygon.type",
+            "name": "type",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Polygon.coordinates",
+            "name": "coordinates",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Position",
+                  "nullable": true
+                },
+                "name": null,
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Polygon",
+        "key_type": null,
+        "kind": "record",
+        "name": "Polygon",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Real-world example: a hand-authored faithful reconstruction of the shape of a GeoJSON (RFC 7946) Feature with its geometry objects; no third-party text copied.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Fixed object type discriminator for a Feature",
+            "extras": {},
+            "field_number": null,
+            "key": "GeoJSONFeature.type",
+            "name": "type",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Optional feature identifier",
+            "extras": {},
+            "field_number": null,
+            "key": "GeoJSONFeature.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The feature's geometry, or null for an unlocated feature",
+            "extras": {},
+            "field_number": null,
+            "key": "GeoJSONFeature.geometry",
+            "name": "geometry",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Arbitrary application properties, or null",
+            "extras": {},
+            "field_number": null,
+            "key": "GeoJSONFeature.properties",
+            "name": "properties",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "GeoJSONFeature.bbox",
+            "name": "bbox",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "BoundingBox",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "GeoJSONFeature",
+        "key_type": null,
+        "kind": "record",
+        "name": "GeoJSONFeature",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "json-schema/11-geojson-feature.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "json-schema-2020-12"
+  },
+  "fingerprint": "sha256:732b11cf71d1077b013e09525cd7a61b759eb490b493c864b40e27cf5373cb9b",
+  "lint": {
+    "findings": 7,
+    "grade": "A",
+    "report_fingerprint": "498a3affb66bdc9eff6cc0d2c620e7281c4f38d6f21d0b57bbb85de145fa6442",
+    "score": 93,
+    "severity_counts": {
+      "error": 0,
+      "info": 7,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

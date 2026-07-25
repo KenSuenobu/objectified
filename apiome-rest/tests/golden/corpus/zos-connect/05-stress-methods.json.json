@@ -1,0 +1,673 @@
+{
+  "adapter": "zosconnect",
+  "canonical": {
+    "channels": [],
+    "description": "Outbound requester exercising the full method surface from a PL/I batch job.",
+    "extras": {
+      "zosconnect_api": {
+        "basePath": "https://api.example.com/freight/v2",
+        "specification": "openapi-3.1",
+        "title": "Freight Movement API"
+      },
+      "zosconnect_descriptor": {
+        "description": "Outbound requester exercising the full method surface from a PL/I batch job.",
+        "name": "FreightRequester",
+        "version": "0.9.5-beta"
+      },
+      "zosconnect_kind": "requester",
+      "zosconnect_language": {
+        "codepage": "IBM-037",
+        "type": "pli"
+      },
+      "zosconnect_operations": [
+        {
+          "method": "GET",
+          "operationId": "listManifests",
+          "path": "/manifests",
+          "pathParameters": [],
+          "requestStructure": null,
+          "responseStructure": "MANIFEST_LIST"
+        },
+        {
+          "method": "PUT",
+          "operationId": "replaceManifest",
+          "path": "/depots/{depotId}/manifests/{manifestId}",
+          "pathParameters": [
+            {
+              "field": "DEPOT_ID",
+              "name": "depotId",
+              "type": "string"
+            },
+            {
+              "field": "MANIFEST_ID",
+              "name": "manifestId",
+              "type": "integer"
+            }
+          ],
+          "requestStructure": "MANIFEST_RECORD",
+          "responseStructure": "MANIFEST_RECORD"
+        },
+        {
+          "method": "POST",
+          "operationId": "createManifest",
+          "path": "/manifests",
+          "pathParameters": [],
+          "requestStructure": "MANIFEST_RECORD",
+          "responseStructure": "MANIFEST_KEY"
+        },
+        {
+          "method": "DELETE",
+          "operationId": "cancelManifest",
+          "path": "/manifests/{manifestId}",
+          "pathParameters": [
+            {
+              "field": "MANIFEST_ID",
+              "name": "manifestId",
+              "type": "integer"
+            }
+          ],
+          "requestStructure": null,
+          "responseStructure": null
+        },
+        {
+          "method": "PATCH",
+          "operationId": "amendManifest",
+          "path": "/manifests/{manifestId}",
+          "pathParameters": [
+            {
+              "field": "MANIFEST_ID",
+              "name": "manifestId",
+              "type": "integer"
+            }
+          ],
+          "requestStructure": "MANIFEST_DELTA",
+          "responseStructure": "MANIFEST_RECORD"
+        },
+        {
+          "method": "HEAD",
+          "operationId": "probeManifest",
+          "path": "/manifests/{manifestId}",
+          "pathParameters": [
+            {
+              "field": "MANIFEST_ID",
+              "name": "manifestId",
+              "type": "integer"
+            }
+          ],
+          "requestStructure": null,
+          "responseStructure": null
+        },
+        {
+          "method": "OPTIONS",
+          "operationId": "describeManifests",
+          "path": "/manifests",
+          "pathParameters": [],
+          "requestStructure": null,
+          "responseStructure": null
+        }
+      ]
+    },
+    "format": "zosconnect",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Freight Movement API",
+      "namespace": "FreightRequester"
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From z/OS Connect `api.basePath`",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/freight/v2",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "FreightRequester.FreightRequester",
+        "name": "FreightRequester",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": null,
+              "zosconnect_request_structure": null,
+              "zosconnect_response_structure": null
+            },
+            "http_method": "DELETE",
+            "http_path": "/manifests/{manifestId}",
+            "key": "DELETE /manifests/{manifestId}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "cancelManifest",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "MANIFEST_ID",
+                  "zosconnect_type": "integer"
+                },
+                "key": "DELETE /manifests/{manifestId}#path.manifestId",
+                "location": "path",
+                "name": "manifestId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": null,
+              "zosconnect_request_structure": null,
+              "zosconnect_response_structure": "MANIFEST_LIST"
+            },
+            "http_method": "GET",
+            "http_path": "/manifests",
+            "key": "GET /manifests",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "GET /manifests#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "FreightRequester.MANIFEST_LIST",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "listManifests",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": null,
+              "zosconnect_request_structure": null,
+              "zosconnect_response_structure": null
+            },
+            "http_method": "HEAD",
+            "http_path": "/manifests/{manifestId}",
+            "key": "HEAD /manifests/{manifestId}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "probeManifest",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "MANIFEST_ID",
+                  "zosconnect_type": "integer"
+                },
+                "key": "HEAD /manifests/{manifestId}#path.manifestId",
+                "location": "path",
+                "name": "manifestId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": null,
+              "zosconnect_request_structure": null,
+              "zosconnect_response_structure": null
+            },
+            "http_method": "OPTIONS",
+            "http_path": "/manifests",
+            "key": "OPTIONS /manifests",
+            "kind": "request_response",
+            "messages": [],
+            "name": "describeManifests",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": null,
+              "zosconnect_request_structure": "MANIFEST_DELTA",
+              "zosconnect_response_structure": "MANIFEST_RECORD"
+            },
+            "http_method": "PATCH",
+            "http_path": "/manifests/{manifestId}",
+            "key": "PATCH /manifests/{manifestId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PATCH /manifests/{manifestId}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "FreightRequester.MANIFEST_DELTA",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "PATCH /manifests/{manifestId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "FreightRequester.MANIFEST_RECORD",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "amendManifest",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "MANIFEST_ID",
+                  "zosconnect_type": "integer"
+                },
+                "key": "PATCH /manifests/{manifestId}#path.manifestId",
+                "location": "path",
+                "name": "manifestId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": null,
+              "zosconnect_request_structure": "MANIFEST_RECORD",
+              "zosconnect_response_structure": "MANIFEST_KEY"
+            },
+            "http_method": "POST",
+            "http_path": "/manifests",
+            "key": "POST /manifests",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /manifests#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "FreightRequester.MANIFEST_RECORD",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "POST /manifests#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "FreightRequester.MANIFEST_KEY",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "createManifest",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": null,
+              "zosconnect_request_structure": "MANIFEST_RECORD",
+              "zosconnect_response_structure": "MANIFEST_RECORD"
+            },
+            "http_method": "PUT",
+            "http_path": "/depots/{depotId}/manifests/{manifestId}",
+            "key": "PUT /depots/{depotId}/manifests/{manifestId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PUT /depots/{depotId}/manifests/{manifestId}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "FreightRequester.MANIFEST_RECORD",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "PUT /depots/{depotId}/manifests/{manifestId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "FreightRequester.MANIFEST_RECORD",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "replaceManifest",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "DEPOT_ID",
+                  "zosconnect_type": "string"
+                },
+                "key": "PUT /depots/{depotId}/manifests/{manifestId}#path.depotId",
+                "location": "path",
+                "name": "depotId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "MANIFEST_ID",
+                  "zosconnect_type": "integer"
+                },
+                "key": "PUT /depots/{depotId}/manifests/{manifestId}#path.manifestId",
+                "location": "path",
+                "name": "manifestId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Freight Movement API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Path parameter `manifestId`",
+            "extras": {
+              "zosconnect_path_parameter": "manifestId"
+            },
+            "field_number": 1,
+            "key": "FreightRequester.MANIFEST_DELTA.MANIFEST_ID",
+            "name": "MANIFEST_ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "FreightRequester.MANIFEST_DELTA",
+        "key_type": null,
+        "kind": "record",
+        "name": "MANIFEST_DELTA",
+        "namespace": "FreightRequester",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "FreightRequester.MANIFEST_KEY",
+        "key_type": null,
+        "kind": "record",
+        "name": "MANIFEST_KEY",
+        "namespace": "FreightRequester",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "FreightRequester.MANIFEST_LIST",
+        "key_type": null,
+        "kind": "record",
+        "name": "MANIFEST_LIST",
+        "namespace": "FreightRequester",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Path parameter `depotId`",
+            "extras": {
+              "zosconnect_path_parameter": "depotId"
+            },
+            "field_number": 1,
+            "key": "FreightRequester.MANIFEST_RECORD.DEPOT_ID",
+            "name": "DEPOT_ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Path parameter `manifestId`",
+            "extras": {
+              "zosconnect_path_parameter": "manifestId"
+            },
+            "field_number": 2,
+            "key": "FreightRequester.MANIFEST_RECORD.MANIFEST_ID",
+            "name": "MANIFEST_ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "FreightRequester.MANIFEST_RECORD",
+        "key_type": null,
+        "kind": "record",
+        "name": "MANIFEST_RECORD",
+        "namespace": "FreightRequester",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "0.9.5-beta"
+  },
+  "corpus_path": "zos-connect/05-stress-methods.json",
+  "counts": {
+    "channels": 0,
+    "operations": 7,
+    "servers": 1,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "zosconnect"
+  },
+  "fingerprint": "sha256:6e50240c9f6db7daed3342b205c0e144f1a82cc0a42d3701aa851b0bbabb1699",
+  "lint": {
+    "findings": 18,
+    "grade": "F",
+    "report_fingerprint": "c13575ad67a4a93ffce6848c93eaf36dfcf733eeaca50d3751fa3ca5668e6bb2",
+    "score": 57,
+    "severity_counts": {
+      "error": 0,
+      "info": 7,
+      "warning": 11
+    }
+  },
+  "snapshot_version": 1
+}

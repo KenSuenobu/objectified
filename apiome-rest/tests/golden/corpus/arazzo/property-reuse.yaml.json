@@ -1,0 +1,155 @@
+{
+  "adapter": "arazzo",
+  "canonical": {
+    "channels": [],
+    "description": "Arazzo workflow that reuses similar properties across steps",
+    "extras": {
+      "arazzo": "1.0.1",
+      "sourceDescriptions": [
+        {
+          "name": "UserAPI",
+          "type": "openapi",
+          "url": "https://example.com/openapi/user.json"
+        },
+        {
+          "name": "EmailAPI",
+          "type": "openapi",
+          "url": "https://example.com/openapi/email.json"
+        }
+      ]
+    },
+    "format": "arazzo",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Property Reuse Workflow",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Register a user and send a welcome email",
+        "extras": {
+          "stepOrder": [
+            "RegisterUser",
+            "SendWelcome"
+          ],
+          "workflowId": "RegisterAndNotify"
+        },
+        "key": "RegisterAndNotify",
+        "name": "RegisterAndNotify",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Register a new user",
+            "extras": {
+              "outputs": [
+                {
+                  "name": "userId",
+                  "path": "$.id"
+                },
+                {
+                  "name": "userEmail",
+                  "path": "$.email"
+                }
+              ],
+              "request": {
+                "operationId": "registerUser",
+                "parameters": {
+                  "body": {
+                    "email": "alice@example.com",
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "name": "Alice Example"
+                  }
+                },
+                "source": "UserAPI"
+              },
+              "stepId": "RegisterUser",
+              "stepIndex": 0
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "RegisterAndNotify#RegisterUser",
+            "kind": "one_way",
+            "messages": [],
+            "name": "RegisterUser",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "RegisterAndNotify"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Send a welcome email",
+            "extras": {
+              "assertions": [
+                {
+                  "description": "Email accepted for delivery",
+                  "expression": "${response.status == 202}"
+                }
+              ],
+              "request": {
+                "operationId": "sendEmail",
+                "parameters": {
+                  "body": {
+                    "content": "Hello ${userId}, thanks for registering!",
+                    "subject": "Welcome, ${userId}!",
+                    "to": "${userEmail}"
+                  }
+                },
+                "source": "EmailAPI"
+              },
+              "stepId": "SendWelcome",
+              "stepIndex": 1
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "RegisterAndNotify#SendWelcome",
+            "kind": "one_way",
+            "messages": [],
+            "name": "SendWelcome",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "RegisterAndNotify"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Property Reuse Workflow",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "arazzo/property-reuse.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "arazzo"
+  },
+  "fingerprint": "sha256:ab8bfe46f26dd3e718d73e4c7220c177271f10cf4179d9a9f97f9ecfc5937866",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "a1d02354a55e91fe5789a81fd0a477a4c154344bbf0c1fcfd9086e95b747c156",
+    "score": 92,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

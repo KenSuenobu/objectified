@@ -1,0 +1,530 @@
+{
+  "adapter": "xsd",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "xsd_elements": [
+        {
+          "name": "manifest",
+          "type": "Manifest"
+        }
+      ],
+      "xsd_root_element": "manifest",
+      "xsd_target_namespace": "http://example.com/shipping"
+    },
+    "format": "xsd",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "manifest",
+      "namespace": "http://example.com/shipping"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "manifest",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_base": "string",
+          "xsd_kind": "simpleType",
+          "xsd_type": "string"
+        },
+        "fields": [],
+        "key": "http://example.com/shipping.CountryCode",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "CountryCode",
+        "namespace": "http://example.com/shipping",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "decimal"
+            },
+            "field_number": 3,
+            "key": "http://example.com/shipping.Dimensions.heightCm",
+            "name": "heightCm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "decimal"
+            },
+            "field_number": 1,
+            "key": "http://example.com/shipping.Dimensions.lengthCm",
+            "name": "lengthCm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "decimal"
+            },
+            "field_number": 2,
+            "key": "http://example.com/shipping.Dimensions.widthCm",
+            "name": "widthCm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/shipping.Dimensions",
+        "key_type": null,
+        "kind": "record",
+        "name": "Dimensions",
+        "namespace": "http://example.com/shipping",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "CountryCode"
+            },
+            "field_number": 3,
+            "key": "http://example.com/shipping.Manifest.destination",
+            "name": "destination",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/shipping.CountryCode",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/shipping.Manifest.manifestId",
+            "name": "manifestId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "CountryCode"
+            },
+            "field_number": 2,
+            "key": "http://example.com/shipping.Manifest.origin",
+            "name": "origin",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/shipping.CountryCode",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_max_occurs": "500",
+              "xsd_min_occurs": "1",
+              "xsd_type": "Parcel"
+            },
+            "field_number": 5,
+            "key": "http://example.com/shipping.Manifest.parcels",
+            "name": "parcels",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "http://example.com/shipping.Parcel",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_min_occurs": "0",
+              "xsd_type": "RouteCodes"
+            },
+            "field_number": 4,
+            "key": "http://example.com/shipping.Manifest.route",
+            "name": "route",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/shipping.RouteCodes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "attribute",
+              "xsd_type": "string"
+            },
+            "field_number": 6,
+            "key": "http://example.com/shipping.Manifest.version",
+            "name": "version",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/shipping.Manifest",
+        "key_type": null,
+        "kind": "record",
+        "name": "Manifest",
+        "namespace": "http://example.com/shipping",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_min_occurs": "0",
+              "xsd_type": "decimal"
+            },
+            "field_number": 4,
+            "key": "http://example.com/shipping.Parcel.declaredValue",
+            "name": "declaredValue",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_min_occurs": "0",
+              "xsd_type": "Dimensions"
+            },
+            "field_number": 3,
+            "key": "http://example.com/shipping.Parcel.dimensions",
+            "name": "dimensions",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/shipping.Dimensions",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "attribute",
+              "xsd_type": "boolean"
+            },
+            "field_number": 6,
+            "key": "http://example.com/shipping.Parcel.fragile",
+            "name": "fragile",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_min_occurs": "0",
+              "xsd_type": "string"
+            },
+            "field_number": 5,
+            "key": "http://example.com/shipping.Parcel.handlingNote",
+            "name": "handlingNote",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "attribute",
+              "xsd_type": "string"
+            },
+            "field_number": 7,
+            "key": "http://example.com/shipping.Parcel.priority",
+            "name": "priority",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "ParcelRef"
+            },
+            "field_number": 1,
+            "key": "http://example.com/shipping.Parcel.ref",
+            "name": "ref",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/shipping.ParcelRef",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "WeightKg"
+            },
+            "field_number": 2,
+            "key": "http://example.com/shipping.Parcel.weight",
+            "name": "weight",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/shipping.WeightKg",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/shipping.Parcel",
+        "key_type": null,
+        "kind": "record",
+        "name": "Parcel",
+        "namespace": "http://example.com/shipping",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_base": null,
+          "xsd_kind": "simpleType",
+          "xsd_type": "string"
+        },
+        "fields": [],
+        "key": "http://example.com/shipping.ParcelRef",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "ParcelRef",
+        "namespace": "http://example.com/shipping",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_base": null,
+          "xsd_kind": "simpleType",
+          "xsd_type": "string"
+        },
+        "fields": [],
+        "key": "http://example.com/shipping.RouteCodes",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "RouteCodes",
+        "namespace": "http://example.com/shipping",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_base": "string",
+          "xsd_kind": "simpleType",
+          "xsd_type": "string"
+        },
+        "fields": [],
+        "key": "http://example.com/shipping.TrackingCode",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "TrackingCode",
+        "namespace": "http://example.com/shipping",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_base": "decimal",
+          "xsd_kind": "simpleType",
+          "xsd_type": "double"
+        },
+        "fields": [],
+        "key": "http://example.com/shipping.WeightKg",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "WeightKg",
+        "namespace": "http://example.com/shipping",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "xsd/04-kitchen-sink.xsd",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 8
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "xsd"
+  },
+  "fingerprint": "sha256:a3caa613c1cd35e4b7ff84a572632a0362decf8e40c1c4fa259639ea3bf71788",
+  "lint": {
+    "findings": 25,
+    "grade": "D",
+    "report_fingerprint": "cf46f528047b9b33573b719eaa9872305b6a38346ab45bd3d00f0ad8ee2ccde2",
+    "score": 63,
+    "severity_counts": {
+      "error": 0,
+      "info": 17,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

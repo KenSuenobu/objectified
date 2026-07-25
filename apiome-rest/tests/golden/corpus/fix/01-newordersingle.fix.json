@@ -1,0 +1,463 @@
+{
+  "adapter": "fix",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "fix_begin_string": "FIX.4.4",
+      "fix_delimiter": "|",
+      "fix_fields": [
+        {
+          "name": "BeginString",
+          "tag": "8",
+          "value": "FIX.4.4"
+        },
+        {
+          "name": "BodyLength",
+          "tag": "9",
+          "value": "154"
+        },
+        {
+          "name": "MsgType",
+          "tag": "35",
+          "value": "D"
+        },
+        {
+          "name": "MsgSeqNum",
+          "tag": "34",
+          "value": "1089"
+        },
+        {
+          "name": "SenderCompID",
+          "tag": "49",
+          "value": "BUYSIDE"
+        },
+        {
+          "name": "TargetCompID",
+          "tag": "56",
+          "value": "SELLSIDE"
+        },
+        {
+          "name": "SendingTime",
+          "tag": "52",
+          "value": "20260115-08:30:00.000"
+        },
+        {
+          "name": "ClOrdID",
+          "tag": "11",
+          "value": "ORDER-0001"
+        },
+        {
+          "name": "Symbol",
+          "tag": "55",
+          "value": "AAPL"
+        },
+        {
+          "name": "Side",
+          "tag": "54",
+          "value": "1"
+        },
+        {
+          "name": "TransactTime",
+          "tag": "60",
+          "value": "20260115-08:30:00.000"
+        },
+        {
+          "name": "OrderQty",
+          "tag": "38",
+          "value": "100"
+        },
+        {
+          "name": "OrdType",
+          "tag": "40",
+          "value": "2"
+        },
+        {
+          "name": "Price",
+          "tag": "44",
+          "value": "185.50"
+        },
+        {
+          "name": "TimeInForce",
+          "tag": "59",
+          "value": "0"
+        },
+        {
+          "name": "CheckSum",
+          "tag": "10",
+          "value": "062"
+        }
+      ],
+      "fix_msg_type": "D",
+      "fix_msg_type_name": "NewOrderSingle",
+      "fix_sender_comp_id": "BUYSIDE",
+      "fix_target_comp_id": "SELLSIDE"
+    },
+    "format": "fix",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "NewOrderSingle (FIX.4.4)",
+      "namespace": "FIX.4.4"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "NewOrderSingle (FIX.4.4)",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "NewOrderSingle",
+        "enum_values": [],
+        "extras": {
+          "fix_kind": "message",
+          "fix_msg_type": "D",
+          "fix_msg_type_name": "NewOrderSingle"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "062",
+            "deprecated": false,
+            "description": "CheckSum",
+            "extras": {
+              "fix_name": "CheckSum",
+              "fix_tag": "10"
+            },
+            "field_number": 16,
+            "key": "FIX.4.4.MessageD.Tag10",
+            "name": "Tag10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ORDER-0001",
+            "deprecated": false,
+            "description": "ClOrdID",
+            "extras": {
+              "fix_name": "ClOrdID",
+              "fix_tag": "11"
+            },
+            "field_number": 8,
+            "key": "FIX.4.4.MessageD.Tag11",
+            "name": "Tag11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1089",
+            "deprecated": false,
+            "description": "MsgSeqNum",
+            "extras": {
+              "fix_name": "MsgSeqNum",
+              "fix_tag": "34"
+            },
+            "field_number": 4,
+            "key": "FIX.4.4.MessageD.Tag34",
+            "name": "Tag34",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "D",
+            "deprecated": false,
+            "description": "MsgType",
+            "extras": {
+              "fix_name": "MsgType",
+              "fix_tag": "35"
+            },
+            "field_number": 3,
+            "key": "FIX.4.4.MessageD.Tag35",
+            "name": "Tag35",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "100",
+            "deprecated": false,
+            "description": "OrderQty",
+            "extras": {
+              "fix_name": "OrderQty",
+              "fix_tag": "38"
+            },
+            "field_number": 12,
+            "key": "FIX.4.4.MessageD.Tag38",
+            "name": "Tag38",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "2",
+            "deprecated": false,
+            "description": "OrdType",
+            "extras": {
+              "fix_name": "OrdType",
+              "fix_tag": "40"
+            },
+            "field_number": 13,
+            "key": "FIX.4.4.MessageD.Tag40",
+            "name": "Tag40",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "185.50",
+            "deprecated": false,
+            "description": "Price",
+            "extras": {
+              "fix_name": "Price",
+              "fix_tag": "44"
+            },
+            "field_number": 14,
+            "key": "FIX.4.4.MessageD.Tag44",
+            "name": "Tag44",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "BUYSIDE",
+            "deprecated": false,
+            "description": "SenderCompID",
+            "extras": {
+              "fix_name": "SenderCompID",
+              "fix_tag": "49"
+            },
+            "field_number": 5,
+            "key": "FIX.4.4.MessageD.Tag49",
+            "name": "Tag49",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260115-08:30:00.000",
+            "deprecated": false,
+            "description": "SendingTime",
+            "extras": {
+              "fix_name": "SendingTime",
+              "fix_tag": "52"
+            },
+            "field_number": 7,
+            "key": "FIX.4.4.MessageD.Tag52",
+            "name": "Tag52",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": "Side",
+            "extras": {
+              "fix_name": "Side",
+              "fix_tag": "54"
+            },
+            "field_number": 10,
+            "key": "FIX.4.4.MessageD.Tag54",
+            "name": "Tag54",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "AAPL",
+            "deprecated": false,
+            "description": "Symbol",
+            "extras": {
+              "fix_name": "Symbol",
+              "fix_tag": "55"
+            },
+            "field_number": 9,
+            "key": "FIX.4.4.MessageD.Tag55",
+            "name": "Tag55",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "SELLSIDE",
+            "deprecated": false,
+            "description": "TargetCompID",
+            "extras": {
+              "fix_name": "TargetCompID",
+              "fix_tag": "56"
+            },
+            "field_number": 6,
+            "key": "FIX.4.4.MessageD.Tag56",
+            "name": "Tag56",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "0",
+            "deprecated": false,
+            "description": "TimeInForce",
+            "extras": {
+              "fix_name": "TimeInForce",
+              "fix_tag": "59"
+            },
+            "field_number": 15,
+            "key": "FIX.4.4.MessageD.Tag59",
+            "name": "Tag59",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260115-08:30:00.000",
+            "deprecated": false,
+            "description": "TransactTime",
+            "extras": {
+              "fix_name": "TransactTime",
+              "fix_tag": "60"
+            },
+            "field_number": 11,
+            "key": "FIX.4.4.MessageD.Tag60",
+            "name": "Tag60",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "FIX.4.4",
+            "deprecated": false,
+            "description": "BeginString",
+            "extras": {
+              "fix_name": "BeginString",
+              "fix_tag": "8"
+            },
+            "field_number": 1,
+            "key": "FIX.4.4.MessageD.Tag8",
+            "name": "Tag8",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "154",
+            "deprecated": false,
+            "description": "BodyLength",
+            "extras": {
+              "fix_name": "BodyLength",
+              "fix_tag": "9"
+            },
+            "field_number": 2,
+            "key": "FIX.4.4.MessageD.Tag9",
+            "name": "Tag9",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "FIX.4.4.MessageD",
+        "key_type": null,
+        "kind": "record",
+        "name": "MessageD",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "fix/01-newordersingle.fix",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "fix"
+  },
+  "fingerprint": "sha256:f1f2d003d6e7644a3d20157e6e262567e16e076ea1323d27b4ea3bdf6acd9464",
+  "lint": {
+    "findings": 1,
+    "grade": "A",
+    "report_fingerprint": "2b78e2b5c7f8af1d6379e332a3af25b1aa937a184e9db4f080b86973c195ae8f",
+    "score": 99,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

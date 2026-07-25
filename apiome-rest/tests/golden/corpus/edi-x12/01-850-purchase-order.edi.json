@@ -1,0 +1,659 @@
+{
+  "adapter": "edix12",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "x12_envelope": {
+        "element_separator": "*",
+        "functional_id": "PO",
+        "group_control_number": "1",
+        "group_receiver": "RECEIVERID",
+        "group_sender": "SENDERID",
+        "interchange_control_number": "000000001",
+        "interchange_version": "00401",
+        "receiver_id": "RECEIVERID",
+        "segment_terminator": "~",
+        "sender_id": "SENDERID"
+      },
+      "x12_set_id": "850",
+      "x12_transactions": [
+        {
+          "control_number": "0001",
+          "segments": [
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "BEG01",
+                  "value": "00"
+                },
+                {
+                  "position": "02",
+                  "ref": "BEG02",
+                  "value": "SA"
+                },
+                {
+                  "position": "03",
+                  "ref": "BEG03",
+                  "value": "PO-0001"
+                },
+                {
+                  "position": "05",
+                  "ref": "BEG05",
+                  "value": "20260115"
+                }
+              ],
+              "id": "BEG"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "REF01",
+                  "value": "DP"
+                },
+                {
+                  "position": "02",
+                  "ref": "REF02",
+                  "value": "DEPT-42"
+                }
+              ],
+              "id": "REF"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "PER01",
+                  "value": "BD"
+                },
+                {
+                  "position": "02",
+                  "ref": "PER02",
+                  "value": "Jane Buyer"
+                },
+                {
+                  "position": "03",
+                  "ref": "PER03",
+                  "value": "TE"
+                },
+                {
+                  "position": "04",
+                  "ref": "PER04",
+                  "value": "5555550100"
+                }
+              ],
+              "id": "PER"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "N101",
+                  "value": "BT"
+                },
+                {
+                  "position": "02",
+                  "ref": "N102",
+                  "value": "Example Corp"
+                },
+                {
+                  "position": "03",
+                  "ref": "N103",
+                  "value": "92"
+                },
+                {
+                  "position": "04",
+                  "ref": "N104",
+                  "value": "BUYER01"
+                }
+              ],
+              "id": "N1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "PO101",
+                  "value": "1"
+                },
+                {
+                  "position": "02",
+                  "ref": "PO102",
+                  "value": "100"
+                },
+                {
+                  "position": "03",
+                  "ref": "PO103",
+                  "value": "EA"
+                },
+                {
+                  "position": "04",
+                  "ref": "PO104",
+                  "value": "185.50"
+                },
+                {
+                  "position": "05",
+                  "ref": "PO105",
+                  "value": "PE"
+                },
+                {
+                  "position": "06",
+                  "ref": "PO106",
+                  "value": "BP"
+                },
+                {
+                  "position": "07",
+                  "ref": "PO107",
+                  "value": "WIDGET-001"
+                }
+              ],
+              "id": "PO1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "PO101",
+                  "value": "2"
+                },
+                {
+                  "position": "02",
+                  "ref": "PO102",
+                  "value": "50"
+                },
+                {
+                  "position": "03",
+                  "ref": "PO103",
+                  "value": "EA"
+                },
+                {
+                  "position": "04",
+                  "ref": "PO104",
+                  "value": "42.00"
+                },
+                {
+                  "position": "05",
+                  "ref": "PO105",
+                  "value": "PE"
+                },
+                {
+                  "position": "06",
+                  "ref": "PO106",
+                  "value": "BP"
+                },
+                {
+                  "position": "07",
+                  "ref": "PO107",
+                  "value": "GADGET-007"
+                }
+              ],
+              "id": "PO1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "CTT01",
+                  "value": "2"
+                }
+              ],
+              "id": "CTT"
+            }
+          ],
+          "set_id": "850"
+        }
+      ],
+      "x12_version": "004010"
+    },
+    "format": "edix12",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "X12 850",
+      "namespace": "X12-850"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "X12 850",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-850.PO1.PO101",
+            "name": "PO101",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "100",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-850.PO1.PO102",
+            "name": "PO102",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "EA",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-850.PO1.PO103",
+            "name": "PO103",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "185.50",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "X12-850.PO1.PO104",
+            "name": "PO104",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "PE",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "X12-850.PO1.PO105",
+            "name": "PO105",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "BP",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 6,
+            "key": "X12-850.PO1.PO106",
+            "name": "PO106",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "WIDGET-001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "X12-850.PO1.PO107",
+            "name": "PO107",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-850.PO1",
+        "key_type": null,
+        "kind": "record",
+        "name": "PO1",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "00",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-850.TransactionSet850.BEG01",
+            "name": "BEG01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "SA",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-850.TransactionSet850.BEG02",
+            "name": "BEG02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "PO-0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-850.TransactionSet850.BEG03",
+            "name": "BEG03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260115",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "X12-850.TransactionSet850.BEG05",
+            "name": "BEG05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "2",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 16,
+            "key": "X12-850.TransactionSet850.CTT01",
+            "name": "CTT01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "BT",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 11,
+            "key": "X12-850.TransactionSet850.N101",
+            "name": "N101",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Example Corp",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 12,
+            "key": "X12-850.TransactionSet850.N102",
+            "name": "N102",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "92",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 13,
+            "key": "X12-850.TransactionSet850.N103",
+            "name": "N103",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "BUYER01",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 14,
+            "key": "X12-850.TransactionSet850.N104",
+            "name": "N104",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "BD",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "X12-850.TransactionSet850.PER01",
+            "name": "PER01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Jane Buyer",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 8,
+            "key": "X12-850.TransactionSet850.PER02",
+            "name": "PER02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "TE",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 9,
+            "key": "X12-850.TransactionSet850.PER03",
+            "name": "PER03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "5555550100",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 10,
+            "key": "X12-850.TransactionSet850.PER04",
+            "name": "PER04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 15,
+            "key": "X12-850.TransactionSet850.PO1",
+            "name": "PO1",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "X12-850.PO1",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "DP",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "X12-850.TransactionSet850.REF01",
+            "name": "REF01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "DEPT-42",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 6,
+            "key": "X12-850.TransactionSet850.REF02",
+            "name": "REF02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-850.TransactionSet850",
+        "key_type": null,
+        "kind": "record",
+        "name": "TransactionSet850",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "edi-x12/01-850-purchase-order.edi",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "edix12"
+  },
+  "fingerprint": "sha256:d36a714eab3c743cbd8aec8e1148903ce69b12a3c4bdb71ab045441bd125a711",
+  "lint": {
+    "findings": 26,
+    "grade": "C",
+    "report_fingerprint": "79f42271733317b4d0b39c8bf5ae8309d746f4dc04807336eb5437c115c6721d",
+    "score": 71,
+    "severity_counts": {
+      "error": 0,
+      "info": 24,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

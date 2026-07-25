@@ -1,0 +1,361 @@
+{
+  "adapter": "flatbuffers",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "fbs_includes": [],
+      "fbs_root_type": "Monster"
+    },
+    "format": "flatbuffers",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.game",
+      "namespace": "example.game"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.game.Color.Red",
+            "name": "Red",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.game.Color.Green",
+            "name": "Green",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.game.Color.Blue",
+            "name": "Blue",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "fbs_base_type": "byte",
+          "fbs_kind": "enum"
+        },
+        "fields": [],
+        "key": "example.game.Color",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Color",
+        "namespace": "example.game",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "Blue",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "Blue"
+            },
+            "field_number": 6,
+            "key": "example.game.Monster.color",
+            "name": "color",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.game.Color",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "100",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "100"
+            },
+            "field_number": 3,
+            "key": "example.game.Monster.hp",
+            "name": "hp",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "example.game.Monster.inventory",
+            "name": "inventory",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "uint8",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "150",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "150"
+            },
+            "field_number": 2,
+            "key": "example.game.Monster.mana",
+            "name": "mana",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "example.game.Monster.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.game.Monster.pos",
+            "name": "pos",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.game.Vec3",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "example.game.Monster.weapons",
+            "name": "weapons",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "example.game.Weapon",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.game.Monster",
+        "key_type": null,
+        "kind": "record",
+        "name": "Monster",
+        "namespace": "example.game",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.game.Vec3.x",
+            "name": "x",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "example.game.Vec3.y",
+            "name": "y",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "example.game.Vec3.z",
+            "name": "z",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.game.Vec3",
+        "key_type": null,
+        "kind": "record",
+        "name": "Vec3",
+        "namespace": "example.game",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "example.game.Weapon.damage",
+            "name": "damage",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.game.Weapon.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.game.Weapon",
+        "key_type": null,
+        "kind": "record",
+        "name": "Weapon",
+        "namespace": "example.game",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "flatbuffers/01-monster.fbs",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "flatbuffers"
+  },
+  "fingerprint": "sha256:3e1674888d27011443edb83235a57003da3f5d86662696ee9da6a556d4770b7d",
+  "lint": {
+    "findings": 17,
+    "grade": "C",
+    "report_fingerprint": "138ed15cc71ad56a6721abe4e2f78293910f28626f9f20ce2424c526f99e6dcb",
+    "score": 71,
+    "severity_counts": {
+      "error": 0,
+      "info": 13,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,1392 @@
+{
+  "adapter": "iso20022",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "iso20022_business_element": "FIToFICstmrCdtTrf",
+      "iso20022_message_id": "pacs.008.001.08",
+      "iso20022_namespace": "urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08",
+      "iso20022_tree": {
+        "attributes": [],
+        "children": [
+          {
+            "attributes": [],
+            "children": [
+              {
+                "attributes": [],
+                "children": [
+                  {
+                    "attributes": [],
+                    "children": [],
+                    "tag": "MsgId",
+                    "text": "PACS8-20260116-0001"
+                  },
+                  {
+                    "attributes": [],
+                    "children": [],
+                    "tag": "CreDtTm",
+                    "text": "2026-01-16T09:30:00"
+                  },
+                  {
+                    "attributes": [],
+                    "children": [],
+                    "tag": "NbOfTxs",
+                    "text": "1"
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [],
+                        "tag": "SttlmMtd",
+                        "text": "INDA"
+                      }
+                    ],
+                    "tag": "SttlmInf",
+                    "text": null
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "BICFI",
+                            "text": "COBADEFFXXX"
+                          }
+                        ],
+                        "tag": "FinInstnId",
+                        "text": null
+                      }
+                    ],
+                    "tag": "InstgAgt",
+                    "text": null
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "BICFI",
+                            "text": "BNPAFRPPXXX"
+                          }
+                        ],
+                        "tag": "FinInstnId",
+                        "text": null
+                      }
+                    ],
+                    "tag": "InstdAgt",
+                    "text": null
+                  }
+                ],
+                "tag": "GrpHdr",
+                "text": null
+              },
+              {
+                "attributes": [],
+                "children": [
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [],
+                        "tag": "InstrId",
+                        "text": "INSTR-0001"
+                      },
+                      {
+                        "attributes": [],
+                        "children": [],
+                        "tag": "EndToEndId",
+                        "text": "E2E-PACS8-0001"
+                      },
+                      {
+                        "attributes": [],
+                        "children": [],
+                        "tag": "UETR",
+                        "text": "eb6305c9-1f7f-49de-aed0-16487c27b42d"
+                      }
+                    ],
+                    "tag": "PmtId",
+                    "text": null
+                  },
+                  {
+                    "attributes": [
+                      [
+                        "Ccy",
+                        "EUR"
+                      ]
+                    ],
+                    "children": [],
+                    "tag": "IntrBkSttlmAmt",
+                    "text": "25000.00"
+                  },
+                  {
+                    "attributes": [],
+                    "children": [],
+                    "tag": "IntrBkSttlmDt",
+                    "text": "2026-01-16"
+                  },
+                  {
+                    "attributes": [],
+                    "children": [],
+                    "tag": "ChrgBr",
+                    "text": "SHAR"
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [],
+                        "tag": "Nm",
+                        "text": "Example Corp"
+                      },
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "Ctry",
+                            "text": "DE"
+                          }
+                        ],
+                        "tag": "PstlAdr",
+                        "text": null
+                      }
+                    ],
+                    "tag": "Dbtr",
+                    "text": null
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "IBAN",
+                            "text": "DE89370400440532013000"
+                          }
+                        ],
+                        "tag": "Id",
+                        "text": null
+                      }
+                    ],
+                    "tag": "DbtrAcct",
+                    "text": null
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "BICFI",
+                            "text": "COBADEFFXXX"
+                          }
+                        ],
+                        "tag": "FinInstnId",
+                        "text": null
+                      }
+                    ],
+                    "tag": "DbtrAgt",
+                    "text": null
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "BICFI",
+                            "text": "BNPAFRPPXXX"
+                          }
+                        ],
+                        "tag": "FinInstnId",
+                        "text": null
+                      }
+                    ],
+                    "tag": "CdtrAgt",
+                    "text": null
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [],
+                        "tag": "Nm",
+                        "text": "Fournisseur SARL"
+                      },
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "Ctry",
+                            "text": "FR"
+                          }
+                        ],
+                        "tag": "PstlAdr",
+                        "text": null
+                      }
+                    ],
+                    "tag": "Cdtr",
+                    "text": null
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "IBAN",
+                            "text": "FR7630006000011234567890189"
+                          }
+                        ],
+                        "tag": "Id",
+                        "text": null
+                      }
+                    ],
+                    "tag": "CdtrAcct",
+                    "text": null
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [],
+                        "tag": "Ustrd",
+                        "text": "Contract 2026-77 milestone 1"
+                      }
+                    ],
+                    "tag": "RmtInf",
+                    "text": null
+                  }
+                ],
+                "tag": "CdtTrfTxInf",
+                "text": null
+              }
+            ],
+            "tag": "FIToFICstmrCdtTrf",
+            "text": null
+          }
+        ],
+        "tag": "Document",
+        "text": null
+      }
+    },
+    "format": "iso20022",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "FIToFICstmrCdtTrf (pacs.008.001.08)",
+      "namespace": "pacs.008.001.08"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "FIToFICstmrCdtTrf (pacs.008.001.08)",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 9,
+            "key": "pacs.008.001.08.CdtTrfTxInf.Cdtr",
+            "name": "Cdtr",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.Cdtr",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 10,
+            "key": "pacs.008.001.08.CdtTrfTxInf.CdtrAcct",
+            "name": "CdtrAcct",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.CdtrAcct",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 8,
+            "key": "pacs.008.001.08.CdtTrfTxInf.CdtrAgt",
+            "name": "CdtrAgt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.CdtrAgt",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "SHAR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 4,
+            "key": "pacs.008.001.08.CdtTrfTxInf.ChrgBr",
+            "name": "ChrgBr",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 5,
+            "key": "pacs.008.001.08.CdtTrfTxInf.Dbtr",
+            "name": "Dbtr",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.Dbtr",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 6,
+            "key": "pacs.008.001.08.CdtTrfTxInf.DbtrAcct",
+            "name": "DbtrAcct",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.DbtrAcct",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 7,
+            "key": "pacs.008.001.08.CdtTrfTxInf.DbtrAgt",
+            "name": "DbtrAgt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.DbtrAgt",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "25000.00",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [
+                [
+                  "Ccy",
+                  "EUR"
+                ]
+              ],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 2,
+            "key": "pacs.008.001.08.CdtTrfTxInf.IntrBkSttlmAmt",
+            "name": "IntrBkSttlmAmt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "2026-01-16",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 3,
+            "key": "pacs.008.001.08.CdtTrfTxInf.IntrBkSttlmDt",
+            "name": "IntrBkSttlmDt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.CdtTrfTxInf.PmtId",
+            "name": "PmtId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.PmtId",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 11,
+            "key": "pacs.008.001.08.CdtTrfTxInf.RmtInf",
+            "name": "RmtInf",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.RmtInf",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.CdtTrfTxInf",
+        "key_type": null,
+        "kind": "record",
+        "name": "CdtTrfTxInf",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "Fournisseur SARL",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.Cdtr.Nm",
+            "name": "Nm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 2,
+            "key": "pacs.008.001.08.Cdtr.PstlAdr",
+            "name": "PstlAdr",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.PstlAdr",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.Cdtr",
+        "key_type": null,
+        "kind": "record",
+        "name": "Cdtr",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.CdtrAcct.Id",
+            "name": "Id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.Id",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.CdtrAcct",
+        "key_type": null,
+        "kind": "record",
+        "name": "CdtrAcct",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.CdtrAgt.FinInstnId",
+            "name": "FinInstnId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.FinInstnId",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.CdtrAgt",
+        "key_type": null,
+        "kind": "record",
+        "name": "CdtrAgt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "Example Corp",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.Dbtr.Nm",
+            "name": "Nm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 2,
+            "key": "pacs.008.001.08.Dbtr.PstlAdr",
+            "name": "PstlAdr",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.PstlAdr",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.Dbtr",
+        "key_type": null,
+        "kind": "record",
+        "name": "Dbtr",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.DbtrAcct.Id",
+            "name": "Id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.Id",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.DbtrAcct",
+        "key_type": null,
+        "kind": "record",
+        "name": "DbtrAcct",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.DbtrAgt.FinInstnId",
+            "name": "FinInstnId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.FinInstnId",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.DbtrAgt",
+        "key_type": null,
+        "kind": "record",
+        "name": "DbtrAgt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.Document.FIToFICstmrCdtTrf",
+            "name": "FIToFICstmrCdtTrf",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.FIToFICstmrCdtTrf",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.Document",
+        "key_type": null,
+        "kind": "record",
+        "name": "Document",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 2,
+            "key": "pacs.008.001.08.FIToFICstmrCdtTrf.CdtTrfTxInf",
+            "name": "CdtTrfTxInf",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.CdtTrfTxInf",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.FIToFICstmrCdtTrf.GrpHdr",
+            "name": "GrpHdr",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.GrpHdr",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.FIToFICstmrCdtTrf",
+        "key_type": null,
+        "kind": "record",
+        "name": "FIToFICstmrCdtTrf",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "COBADEFFXXX",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.FinInstnId.BICFI",
+            "name": "BICFI",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.FinInstnId",
+        "key_type": null,
+        "kind": "record",
+        "name": "FinInstnId",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "2026-01-16T09:30:00",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 2,
+            "key": "pacs.008.001.08.GrpHdr.CreDtTm",
+            "name": "CreDtTm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 6,
+            "key": "pacs.008.001.08.GrpHdr.InstdAgt",
+            "name": "InstdAgt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.InstdAgt",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 5,
+            "key": "pacs.008.001.08.GrpHdr.InstgAgt",
+            "name": "InstgAgt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.InstgAgt",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "PACS8-20260116-0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.GrpHdr.MsgId",
+            "name": "MsgId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 3,
+            "key": "pacs.008.001.08.GrpHdr.NbOfTxs",
+            "name": "NbOfTxs",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 4,
+            "key": "pacs.008.001.08.GrpHdr.SttlmInf",
+            "name": "SttlmInf",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.SttlmInf",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.GrpHdr",
+        "key_type": null,
+        "kind": "record",
+        "name": "GrpHdr",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "DE89370400440532013000",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.Id.IBAN",
+            "name": "IBAN",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.Id",
+        "key_type": null,
+        "kind": "record",
+        "name": "Id",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.InstdAgt.FinInstnId",
+            "name": "FinInstnId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.FinInstnId",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.InstdAgt",
+        "key_type": null,
+        "kind": "record",
+        "name": "InstdAgt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.InstgAgt.FinInstnId",
+            "name": "FinInstnId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "pacs.008.001.08.FinInstnId",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.InstgAgt",
+        "key_type": null,
+        "kind": "record",
+        "name": "InstgAgt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "E2E-PACS8-0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 2,
+            "key": "pacs.008.001.08.PmtId.EndToEndId",
+            "name": "EndToEndId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "INSTR-0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.PmtId.InstrId",
+            "name": "InstrId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "eb6305c9-1f7f-49de-aed0-16487c27b42d",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 3,
+            "key": "pacs.008.001.08.PmtId.UETR",
+            "name": "UETR",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.PmtId",
+        "key_type": null,
+        "kind": "record",
+        "name": "PmtId",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "DE",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.PstlAdr.Ctry",
+            "name": "Ctry",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.PstlAdr",
+        "key_type": null,
+        "kind": "record",
+        "name": "PstlAdr",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "Contract 2026-77 milestone 1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.RmtInf.Ustrd",
+            "name": "Ustrd",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.RmtInf",
+        "key_type": null,
+        "kind": "record",
+        "name": "RmtInf",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "INDA",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "pacs.008.001.08.SttlmInf.SttlmMtd",
+            "name": "SttlmMtd",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pacs.008.001.08.SttlmInf",
+        "key_type": null,
+        "kind": "record",
+        "name": "SttlmInf",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "iso20022/06-pacs.008-interbank-transfer.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 18
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "iso20022"
+  },
+  "fingerprint": "sha256:bf431547a948df536e9a4cac2c34e8492a1d9ee771512cec5cb91e67a0e67a29",
+  "lint": {
+    "findings": 57,
+    "grade": "F",
+    "report_fingerprint": "13fe1011b94a16fade1d68648b060b1c2e390cb19cc5f67d64c6295bd875b43e",
+    "score": 59,
+    "severity_counts": {
+      "error": 0,
+      "info": 39,
+      "warning": 18
+    }
+  },
+  "snapshot_version": 1
+}

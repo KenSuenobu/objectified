@@ -1,0 +1,291 @@
+{
+  "adapter": "postman",
+  "canonical": {
+    "channels": [],
+    "description": "Stress Postman Collection v2.1 example covering less common corners: disabled query parameters and headers, colon-style path variables, urlencoded and GraphQL body modes, saved response examples with status codes, an unnamed folder passthrough, and HEAD/OPTIONS requests.",
+    "extras": {
+      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "postman_variables": [
+        {
+          "key": "baseUrl",
+          "value": "https://gateway.example.com"
+        }
+      ]
+    },
+    "format": "postman",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Search Gateway",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From Postman collection variable",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://gateway.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Search Gateway",
+        "name": "Search Gateway",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Full-text search; the fuzzy toggle is saved but disabled.",
+            "extras": {
+              "postman_folder_path": [],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Accept",
+                  "value": "application/json"
+                },
+                {
+                  "disabled": true,
+                  "key": "X-Debug-Trace",
+                  "value": "1"
+                }
+              ]
+            },
+            "http_method": "GET",
+            "http_path": "/search",
+            "key": "GET /search",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200",
+                  "postman_body_raw": "{\n  \"total\": 2,\n  \"hits\": [\n    { \"id\": \"d-1\", \"score\": 0.98 },\n    { \"id\": \"d-2\", \"score\": 0.71 }\n  ]\n}"
+                },
+                "headers": [],
+                "key": "GET /search#response.200",
+                "name": "Two hits",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "400",
+                  "postman_body_raw": "{\n  \"error\": \"unbalanced quotes in q\"\n}"
+                },
+                "headers": [],
+                "key": "GET /search#response.400",
+                "name": "Bad query",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Search documents",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_sample": "true",
+                  "postman_style": "query"
+                },
+                "key": "GET /search#query.highlight",
+                "location": "query",
+                "name": "highlight",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_sample": "archive",
+                  "postman_style": "query"
+                },
+                "key": "GET /search#query.q",
+                "location": "query",
+                "name": "q",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Existence probe inside an unnamed folder.",
+            "extras": {
+              "postman_folder_path": [],
+              "postman_headers": []
+            },
+            "http_method": "HEAD",
+            "http_path": "/indices/documents",
+            "key": "HEAD /indices/documents",
+            "kind": "request_response",
+            "messages": [],
+            "name": "Index health",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "postman_folder_path": [],
+              "postman_headers": []
+            },
+            "http_method": "OPTIONS",
+            "http_path": "/indices/documents",
+            "key": "OPTIONS /indices/documents",
+            "kind": "request_response",
+            "messages": [],
+            "name": "Allowed methods",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Urlencoded body mode with a colon-style path variable.",
+            "extras": {
+              "postman_folder_path": [],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Content-Type",
+                  "value": "application/x-www-form-urlencoded"
+                }
+              ]
+            },
+            "http_method": "POST",
+            "http_path": "/documents/{docId}/reindex",
+            "key": "POST /documents/{docId}/reindex",
+            "kind": "request_response",
+            "messages": [],
+            "name": "Reindex document",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_style": "path"
+                },
+                "key": "POST /documents/{docId}/reindex#path.docId",
+                "location": "path",
+                "name": "docId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "GraphQL body mode; the gateway proxies it to the stats sidecar.",
+            "extras": {
+              "postman_folder_path": [],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "http_method": "POST",
+            "http_path": "/graphql",
+            "key": "POST /graphql",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GraphQL sidecar query",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Search Gateway",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "postman/05-grammar-corners.postman_collection.json",
+  "counts": {
+    "channels": 0,
+    "operations": 5,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "postman"
+  },
+  "fingerprint": "sha256:f9e057ec9480758972afb209bd23851c80417cdddf4c57776960b48cf1851d52",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "1e3552808b09460329b54b9ac6cc215cda3f4b4ac177fd0261918c885eedd9b7",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,1085 @@
+{
+  "adapter": "hl7v2",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "hl7v2_control_id": "MSG00002",
+      "hl7v2_envelope": {
+        "encoding_characters": "^~\\&",
+        "field_separator": "|",
+        "processing_id": "P",
+        "receiving_application": "EMR",
+        "receiving_facility": "HOSPITAL",
+        "sending_application": "LAB",
+        "sending_facility": "HOSPITAL"
+      },
+      "hl7v2_message_type": "ORU^R01",
+      "hl7v2_segments": [
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "|"
+            },
+            {
+              "index": 2,
+              "value": "^~\\&"
+            },
+            {
+              "index": 3,
+              "value": "LAB"
+            },
+            {
+              "index": 4,
+              "value": "HOSPITAL"
+            },
+            {
+              "index": 5,
+              "value": "EMR"
+            },
+            {
+              "index": 6,
+              "value": "HOSPITAL"
+            },
+            {
+              "index": 7,
+              "value": "20260115120000"
+            },
+            {
+              "index": 8,
+              "value": ""
+            },
+            {
+              "index": 9,
+              "value": "ORU^R01"
+            },
+            {
+              "index": 10,
+              "value": "MSG00002"
+            },
+            {
+              "index": 11,
+              "value": "P"
+            },
+            {
+              "index": 12,
+              "value": "2.5"
+            }
+          ],
+          "id": "MSH"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": ""
+            },
+            {
+              "index": 3,
+              "value": "MRN-67890^^^LAB^MR"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": "Doe^Jane"
+            },
+            {
+              "index": 6,
+              "value": ""
+            },
+            {
+              "index": 7,
+              "value": ""
+            },
+            {
+              "index": 8,
+              "value": "19800101"
+            },
+            {
+              "index": 9,
+              "value": "F"
+            }
+          ],
+          "id": "PID"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": ""
+            },
+            {
+              "index": 3,
+              "value": "LAB1234^LAB"
+            },
+            {
+              "index": 4,
+              "value": "CBC^Complete Blood Count"
+            },
+            {
+              "index": 5,
+              "value": ""
+            },
+            {
+              "index": 6,
+              "value": ""
+            },
+            {
+              "index": 7,
+              "value": "20260115114500"
+            }
+          ],
+          "id": "OBR"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": "NM"
+            },
+            {
+              "index": 3,
+              "value": "WBC^White Blood Cells"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": "7.2"
+            },
+            {
+              "index": 6,
+              "value": "10*3/uL"
+            },
+            {
+              "index": 7,
+              "value": "4.0-11.0"
+            },
+            {
+              "index": 8,
+              "value": "N"
+            },
+            {
+              "index": 9,
+              "value": ""
+            },
+            {
+              "index": 10,
+              "value": ""
+            },
+            {
+              "index": 11,
+              "value": "F"
+            }
+          ],
+          "id": "OBX"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "2"
+            },
+            {
+              "index": 2,
+              "value": "NM"
+            },
+            {
+              "index": 3,
+              "value": "RBC^Red Blood Cells"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": "4.8"
+            },
+            {
+              "index": 6,
+              "value": "10*6/uL"
+            },
+            {
+              "index": 7,
+              "value": "4.2-5.4"
+            },
+            {
+              "index": 8,
+              "value": "N"
+            },
+            {
+              "index": 9,
+              "value": ""
+            },
+            {
+              "index": 10,
+              "value": ""
+            },
+            {
+              "index": 11,
+              "value": "F"
+            }
+          ],
+          "id": "OBX"
+        }
+      ],
+      "hl7v2_version": "2.5"
+    },
+    "format": "hl7v2",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "ORU^R01",
+      "namespace": "ORU-R01"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "ORU^R01",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "hl7v2_kind": "segment"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "|",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1
+            },
+            "field_number": 1,
+            "key": "ORU-R01.MSH.MSH-01",
+            "name": "MSH-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "^~\\&",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2
+            },
+            "field_number": 2,
+            "key": "ORU-R01.MSH.MSH-02",
+            "name": "MSH-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "LAB",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3
+            },
+            "field_number": 3,
+            "key": "ORU-R01.MSH.MSH-03",
+            "name": "MSH-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "HOSPITAL",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4
+            },
+            "field_number": 4,
+            "key": "ORU-R01.MSH.MSH-04",
+            "name": "MSH-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "EMR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5
+            },
+            "field_number": 5,
+            "key": "ORU-R01.MSH.MSH-05",
+            "name": "MSH-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "HOSPITAL",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6
+            },
+            "field_number": 6,
+            "key": "ORU-R01.MSH.MSH-06",
+            "name": "MSH-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260115120000",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7
+            },
+            "field_number": 7,
+            "key": "ORU-R01.MSH.MSH-07",
+            "name": "MSH-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8
+            },
+            "field_number": 8,
+            "key": "ORU-R01.MSH.MSH-08",
+            "name": "MSH-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ORU^R01",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9
+            },
+            "field_number": 9,
+            "key": "ORU-R01.MSH.MSH-09",
+            "name": "MSH-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "MSG00002",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10
+            },
+            "field_number": 10,
+            "key": "ORU-R01.MSH.MSH-10",
+            "name": "MSH-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "P",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11
+            },
+            "field_number": 11,
+            "key": "ORU-R01.MSH.MSH-11",
+            "name": "MSH-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "2.5",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 12
+            },
+            "field_number": 12,
+            "key": "ORU-R01.MSH.MSH-12",
+            "name": "MSH-12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ORU-R01.MSH",
+        "key_type": null,
+        "kind": "record",
+        "name": "MSH",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "hl7v2_kind": "message"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "OBR"
+            },
+            "field_number": 10,
+            "key": "ORU-R01.MessageORUR01.OBR-01",
+            "name": "OBR-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "OBR"
+            },
+            "field_number": 11,
+            "key": "ORU-R01.MessageORUR01.OBR-02",
+            "name": "OBR-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "LAB1234^LAB",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "OBR"
+            },
+            "field_number": 12,
+            "key": "ORU-R01.MessageORUR01.OBR-03",
+            "name": "OBR-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "CBC^Complete Blood Count",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "OBR"
+            },
+            "field_number": 13,
+            "key": "ORU-R01.MessageORUR01.OBR-04",
+            "name": "OBR-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "OBR"
+            },
+            "field_number": 14,
+            "key": "ORU-R01.MessageORUR01.OBR-05",
+            "name": "OBR-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "OBR"
+            },
+            "field_number": 15,
+            "key": "ORU-R01.MessageORUR01.OBR-06",
+            "name": "OBR-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260115114500",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "OBR"
+            },
+            "field_number": 16,
+            "key": "ORU-R01.MessageORUR01.OBR-07",
+            "name": "OBR-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 17,
+            "key": "ORU-R01.MessageORUR01.OBX",
+            "name": "OBX",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "ORU-R01.OBX",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 1,
+            "key": "ORU-R01.MessageORUR01.PID-01",
+            "name": "PID-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 2,
+            "key": "ORU-R01.MessageORUR01.PID-02",
+            "name": "PID-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "MRN-67890^^^LAB^MR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 3,
+            "key": "ORU-R01.MessageORUR01.PID-03",
+            "name": "PID-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 4,
+            "key": "ORU-R01.MessageORUR01.PID-04",
+            "name": "PID-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Doe^Jane",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 5,
+            "key": "ORU-R01.MessageORUR01.PID-05",
+            "name": "PID-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 6,
+            "key": "ORU-R01.MessageORUR01.PID-06",
+            "name": "PID-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 7,
+            "key": "ORU-R01.MessageORUR01.PID-07",
+            "name": "PID-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "19800101",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 8,
+            "key": "ORU-R01.MessageORUR01.PID-08",
+            "name": "PID-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "F",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 9,
+            "key": "ORU-R01.MessageORUR01.PID-09",
+            "name": "PID-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ORU-R01.MessageORUR01",
+        "key_type": null,
+        "kind": "record",
+        "name": "MessageORUR01",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "hl7v2_kind": "segment"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1
+            },
+            "field_number": 1,
+            "key": "ORU-R01.OBX.OBX-01",
+            "name": "OBX-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "NM",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2
+            },
+            "field_number": 2,
+            "key": "ORU-R01.OBX.OBX-02",
+            "name": "OBX-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "WBC^White Blood Cells",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3
+            },
+            "field_number": 3,
+            "key": "ORU-R01.OBX.OBX-03",
+            "name": "OBX-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4
+            },
+            "field_number": 4,
+            "key": "ORU-R01.OBX.OBX-04",
+            "name": "OBX-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "7.2",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5
+            },
+            "field_number": 5,
+            "key": "ORU-R01.OBX.OBX-05",
+            "name": "OBX-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "10*3/uL",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6
+            },
+            "field_number": 6,
+            "key": "ORU-R01.OBX.OBX-06",
+            "name": "OBX-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "4.0-11.0",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7
+            },
+            "field_number": 7,
+            "key": "ORU-R01.OBX.OBX-07",
+            "name": "OBX-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "N",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8
+            },
+            "field_number": 8,
+            "key": "ORU-R01.OBX.OBX-08",
+            "name": "OBX-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9
+            },
+            "field_number": 9,
+            "key": "ORU-R01.OBX.OBX-09",
+            "name": "OBX-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10
+            },
+            "field_number": 10,
+            "key": "ORU-R01.OBX.OBX-10",
+            "name": "OBX-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "F",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11
+            },
+            "field_number": 11,
+            "key": "ORU-R01.OBX.OBX-11",
+            "name": "OBX-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ORU-R01.OBX",
+        "key_type": null,
+        "kind": "record",
+        "name": "OBX",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "hl7v2/02-oru-r01.hl7",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "hl7v2"
+  },
+  "fingerprint": "sha256:e5b83a519ad9f110de6d77c950c438e9a28e3db80126a368c86656ed012162f2",
+  "lint": {
+    "findings": 44,
+    "grade": "D",
+    "report_fingerprint": "dd0837765077a5548613baae15038e8903c838f9658c68383906cdb4dafeb3f9",
+    "score": 67,
+    "severity_counts": {
+      "error": 0,
+      "info": 41,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

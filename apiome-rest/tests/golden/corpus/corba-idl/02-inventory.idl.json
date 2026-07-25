@@ -1,0 +1,339 @@
+{
+  "adapter": "corbaidl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "corbaidl_interfaces": [
+        {
+          "name": "Stock",
+          "operations": [
+            {
+              "name": "lookup",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "sku",
+                  "type": "string"
+                }
+              ],
+              "raises": [
+                "ItemNotFound"
+              ],
+              "return_type": "Item"
+            },
+            {
+              "name": "count",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "sku",
+                  "type": "string"
+                }
+              ],
+              "raises": [],
+              "return_type": "long"
+            }
+          ]
+        }
+      ],
+      "corbaidl_module": "Inventory",
+      "corbaidl_typedefs": {
+        "StringList": "sequence<string>"
+      }
+    },
+    "format": "corbaidl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Inventory",
+      "namespace": "Inventory"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Inventory.Stock",
+        "name": "Stock",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Inventory.Stock.count",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "Inventory.Stock.count#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Inventory.Stock.count#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "count",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Inventory.Stock.lookup",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "Inventory.Stock.lookup#error.ItemNotFound",
+                "name": "ItemNotFound",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Inventory.ItemNotFound",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "Inventory.Stock.lookup#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Inventory.Stock.lookup#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Inventory.Item",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "lookup",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "long"
+            },
+            "field_number": 2,
+            "key": "Inventory.Item.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "Inventory.Item.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "sequence<string>"
+            },
+            "field_number": 3,
+            "key": "Inventory.Item.tags",
+            "name": "tags",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Inventory.Item",
+        "key_type": null,
+        "kind": "record",
+        "name": "Item",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "exception"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "Inventory.ItemNotFound.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Inventory.ItemNotFound",
+        "key_type": null,
+        "kind": "record",
+        "name": "ItemNotFound",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "corba-idl/02-inventory.idl",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "corbaidl"
+  },
+  "fingerprint": "sha256:71435da05959edd0913e2587285fc471dd0a18c53be211eab0847ad06d93025f",
+  "lint": {
+    "findings": 14,
+    "grade": "C",
+    "report_fingerprint": "0c909e59388039bed64f73dbe598e66296f504dac3bd6eb05638c2740af305ff",
+    "score": 74,
+    "severity_counts": {
+      "error": 0,
+      "info": 10,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

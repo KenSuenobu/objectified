@@ -1,0 +1,1380 @@
+{
+  "adapter": "odata",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "odata_entity_sets": [
+        {
+          "entity_type": "Example.TripPin.Person",
+          "name": "People"
+        },
+        {
+          "entity_type": "Example.TripPin.Airline",
+          "name": "Airlines"
+        },
+        {
+          "entity_type": "Example.TripPin.Airport",
+          "name": "Airports"
+        }
+      ],
+      "odata_schemas": [
+        {
+          "complex_types": [
+            {
+              "name": "City",
+              "properties": [
+                {
+                  "name": "Name",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "CountryRegion",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "Region",
+                  "nullable": null,
+                  "type": "Edm.String"
+                }
+              ]
+            },
+            {
+              "name": "Location",
+              "properties": [
+                {
+                  "name": "Address",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "City",
+                  "nullable": null,
+                  "type": "Example.TripPin.City"
+                }
+              ]
+            }
+          ],
+          "entity_container": {
+            "entity_sets": [
+              {
+                "entity_type": "Example.TripPin.Person",
+                "name": "People"
+              },
+              {
+                "entity_type": "Example.TripPin.Airline",
+                "name": "Airlines"
+              },
+              {
+                "entity_type": "Example.TripPin.Airport",
+                "name": "Airports"
+              }
+            ],
+            "name": "TripPinService"
+          },
+          "entity_types": [
+            {
+              "key_properties": [
+                "UserName"
+              ],
+              "name": "Person",
+              "navigation_properties": [
+                {
+                  "name": "Friends",
+                  "partner": null,
+                  "type": "Collection(Example.TripPin.Person)"
+                },
+                {
+                  "name": "Trips",
+                  "partner": null,
+                  "type": "Collection(Example.TripPin.Trip)"
+                }
+              ],
+              "properties": [
+                {
+                  "name": "UserName",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "FirstName",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "LastName",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "Emails",
+                  "nullable": null,
+                  "type": "Collection(Edm.String)"
+                },
+                {
+                  "name": "AddressInfo",
+                  "nullable": null,
+                  "type": "Collection(Example.TripPin.Location)"
+                },
+                {
+                  "name": "Gender",
+                  "nullable": null,
+                  "type": "Example.TripPin.PersonGender"
+                }
+              ]
+            },
+            {
+              "key_properties": [
+                "TripId"
+              ],
+              "name": "Trip",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "name": "TripId",
+                  "nullable": false,
+                  "type": "Edm.Int32"
+                },
+                {
+                  "name": "Name",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "Budget",
+                  "nullable": null,
+                  "type": "Edm.Single"
+                },
+                {
+                  "name": "Description",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "StartsAt",
+                  "nullable": null,
+                  "type": "Edm.DateTimeOffset"
+                },
+                {
+                  "name": "EndsAt",
+                  "nullable": null,
+                  "type": "Edm.DateTimeOffset"
+                }
+              ]
+            },
+            {
+              "key_properties": [
+                "AirlineCode"
+              ],
+              "name": "Airline",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "name": "AirlineCode",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "Name",
+                  "nullable": null,
+                  "type": "Edm.String"
+                }
+              ]
+            },
+            {
+              "key_properties": [
+                "IcaoCode"
+              ],
+              "name": "Airport",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "name": "IcaoCode",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "IataCode",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "Name",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "Location",
+                  "nullable": null,
+                  "type": "Example.TripPin.Location"
+                }
+              ]
+            }
+          ],
+          "enum_types": [
+            {
+              "members": [
+                {
+                  "name": "Male",
+                  "value": 0
+                },
+                {
+                  "name": "Female",
+                  "value": 1
+                },
+                {
+                  "name": "Unknown",
+                  "value": 2
+                }
+              ],
+              "name": "PersonGender"
+            }
+          ],
+          "namespace": "Example.TripPin"
+        }
+      ],
+      "odata_version": "4.0"
+    },
+    "format": "odata",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Example.TripPin",
+      "namespace": "Example.TripPin"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Example.TripPin.Airlines",
+        "name": "Airlines",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Airlines",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Airlines",
+            "key": "GET /Airlines",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Airlines#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.TripPin.Airline",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listAirlines",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Airlines#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Airlines",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Airlines({key})",
+            "key": "GET /Airlines({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Airlines({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.TripPin.Airline",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getAirline",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Airlines",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Airlines",
+            "key": "POST /Airlines",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Airlines#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.TripPin.Airline",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Airlines#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.TripPin.Airline",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createAirline",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Example.TripPin.Airports",
+        "name": "Airports",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Airports",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Airports",
+            "key": "GET /Airports",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Airports#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.TripPin.Airport",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listAirports",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Airports#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Airports",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Airports({key})",
+            "key": "GET /Airports({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Airports({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.TripPin.Airport",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getAirport",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Airports",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Airports",
+            "key": "POST /Airports",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Airports#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.TripPin.Airport",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Airports#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.TripPin.Airport",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createAirport",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Example.TripPin.People",
+        "name": "People",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "People",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/People",
+            "key": "GET /People",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /People#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.TripPin.Person",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listPeople",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /People#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "People",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/People({key})",
+            "key": "GET /People({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /People({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.TripPin.Person",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getPeople",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "People",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/People",
+            "key": "POST /People",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /People#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.TripPin.Person",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /People#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.TripPin.Person",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createPeople",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "AirlineCode"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Example.TripPin.Airline.AirlineCode",
+            "name": "AirlineCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "Example.TripPin.Airline.Name",
+            "name": "Name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Example.TripPin.Airline",
+        "key_type": null,
+        "kind": "record",
+        "name": "Airline",
+        "namespace": "Example.TripPin",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "IcaoCode"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "Example.TripPin.Airport.IataCode",
+            "name": "IataCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Example.TripPin.Airport.IcaoCode",
+            "name": "IcaoCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Example.TripPin.Location"
+            },
+            "field_number": 4,
+            "key": "Example.TripPin.Airport.Location",
+            "name": "Location",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Example.TripPin.Location",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 3,
+            "key": "Example.TripPin.Airport.Name",
+            "name": "Name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Example.TripPin.Airport",
+        "key_type": null,
+        "kind": "record",
+        "name": "Airport",
+        "namespace": "Example.TripPin",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "Example.TripPin.City.CountryRegion",
+            "name": "CountryRegion",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Example.TripPin.City.Name",
+            "name": "Name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 3,
+            "key": "Example.TripPin.City.Region",
+            "name": "Region",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Example.TripPin.City",
+        "key_type": null,
+        "kind": "record",
+        "name": "City",
+        "namespace": "Example.TripPin",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Example.TripPin.Location.Address",
+            "name": "Address",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Example.TripPin.City"
+            },
+            "field_number": 2,
+            "key": "Example.TripPin.Location.City",
+            "name": "City",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Example.TripPin.City",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Example.TripPin.Location",
+        "key_type": null,
+        "kind": "record",
+        "name": "Location",
+        "namespace": "Example.TripPin",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "UserName"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": [
+            {
+              "name": "Friends",
+              "partner": null,
+              "type": "Collection(Example.TripPin.Person)"
+            },
+            {
+              "name": "Trips",
+              "partner": null,
+              "type": "Collection(Example.TripPin.Trip)"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Collection(Example.TripPin.Location)"
+            },
+            "field_number": 5,
+            "key": "Example.TripPin.Person.AddressInfo",
+            "name": "AddressInfo",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Example.TripPin.Location",
+                "nullable": true
+              },
+              "name": "Example.TripPin.Location",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Collection(Edm.String)"
+            },
+            "field_number": 4,
+            "key": "Example.TripPin.Person.Emails",
+            "name": "Emails",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "Example.TripPin.Person.FirstName",
+            "name": "FirstName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Example.TripPin.PersonGender"
+            },
+            "field_number": 6,
+            "key": "Example.TripPin.Person.Gender",
+            "name": "Gender",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Example.TripPin.PersonGender",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 3,
+            "key": "Example.TripPin.Person.LastName",
+            "name": "LastName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Example.TripPin.Person.UserName",
+            "name": "UserName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Example.TripPin.Person",
+        "key_type": null,
+        "kind": "record",
+        "name": "Person",
+        "namespace": "Example.TripPin",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Example.TripPin.PersonGender.Male",
+            "name": "Male",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Example.TripPin.PersonGender.Female",
+            "name": "Female",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Example.TripPin.PersonGender.Unknown",
+            "name": "Unknown",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "odata_kind": "enum"
+        },
+        "fields": [],
+        "key": "Example.TripPin.PersonGender",
+        "key_type": null,
+        "kind": "enum",
+        "name": "PersonGender",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "TripId"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Single"
+            },
+            "field_number": 3,
+            "key": "Example.TripPin.Trip.Budget",
+            "name": "Budget",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 4,
+            "key": "Example.TripPin.Trip.Description",
+            "name": "Description",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.DateTimeOffset"
+            },
+            "field_number": 6,
+            "key": "Example.TripPin.Trip.EndsAt",
+            "name": "EndsAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "Example.TripPin.Trip.Name",
+            "name": "Name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.DateTimeOffset"
+            },
+            "field_number": 5,
+            "key": "Example.TripPin.Trip.StartsAt",
+            "name": "StartsAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Int32"
+            },
+            "field_number": 1,
+            "key": "Example.TripPin.Trip.TripId",
+            "name": "TripId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Example.TripPin.Trip",
+        "key_type": null,
+        "kind": "record",
+        "name": "Trip",
+        "namespace": "Example.TripPin",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "4.0"
+  },
+  "corpus_path": "odata/06-trippin-reference.edmx",
+  "counts": {
+    "channels": 0,
+    "operations": 9,
+    "servers": 0,
+    "services": 3,
+    "types": 7
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "odata"
+  },
+  "fingerprint": "sha256:365bbfa35593fd9703029e1ac2cf7b4515f601b8e082d630769b757d78ff9706",
+  "lint": {
+    "findings": 52,
+    "grade": "F",
+    "report_fingerprint": "ae31664cc521827fc55ca77e2ffda3e3ec661427455651e9af3b8a62295a4f32",
+    "score": 27,
+    "severity_counts": {
+      "error": 0,
+      "info": 36,
+      "warning": 16
+    }
+  },
+  "snapshot_version": 1
+}

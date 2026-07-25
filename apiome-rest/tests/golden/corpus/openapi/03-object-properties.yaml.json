@@ -1,0 +1,98 @@
+{
+  "adapter": "openapi",
+  "canonical": {
+    "channels": [],
+    "description": "Demonstrates minProperties, maxProperties, and patternProperties",
+    "extras": {},
+    "format": "openapi-3.1",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Object Properties Constraints Example",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Object Properties Constraints Example",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Configuration object with property count constraints",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Configuration.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Settings object with min/max properties and pattern properties",
+            "extras": {},
+            "field_number": null,
+            "key": "Configuration.settings",
+            "name": "settings",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Configuration",
+        "key_type": null,
+        "kind": "record",
+        "name": "Configuration",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "openapi/03-object-properties.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "openapi-3.1"
+  },
+  "fingerprint": "sha256:6625025b6a2595c03cd716f1b232e280092a4a35985669026c3c64dccbdf3541",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "1271b0300820a7f62ec63d3e416c2b622a35b6c28baea3622f9b421fd2825b69",
+    "score": 97,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

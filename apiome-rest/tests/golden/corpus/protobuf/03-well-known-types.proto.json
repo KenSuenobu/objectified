@@ -1,0 +1,316 @@
+{
+  "adapter": "grpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {},
+    "format": "protobuf",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.billing.v1",
+      "namespace": "example.billing.v1"
+    },
+    "paradigm": "rpc",
+    "protocol": "grpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "example.billing.v1.Charge.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.billing.v1.Money",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 4,
+            "key": "example.billing.v1.Charge.charged_at",
+            "name": "charged_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "google.protobuf.Timestamp",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.billing.v1.Charge.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.billing.v1.Charge.subscription_id",
+            "name": "subscription_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.billing.v1.Charge",
+        "key_type": null,
+        "kind": "record",
+        "name": "Charge",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.billing.v1.Money.currency_code",
+            "name": "currency_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "example.billing.v1.Money.nanos",
+            "name": "nanos",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "sint32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.billing.v1.Money.units",
+            "name": "units",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.billing.v1.Money",
+        "key_type": null,
+        "kind": "record",
+        "name": "Money",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "example.billing.v1.Subscription.billing_interval",
+            "name": "billing_interval",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "google.protobuf.Duration",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.billing.v1.Subscription.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 5,
+            "key": "example.billing.v1.Subscription.next_charge_at",
+            "name": "next_charge_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "google.protobuf.Timestamp",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.billing.v1.Subscription.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.billing.v1.Money",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 4,
+            "key": "example.billing.v1.Subscription.started_at",
+            "name": "started_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "google.protobuf.Timestamp",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.billing.v1.Subscription",
+        "key_type": null,
+        "kind": "record",
+        "name": "Subscription",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "protobuf/03-well-known-types.proto",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "protobuf"
+  },
+  "fingerprint": "sha256:2c3a865ffbe7cb9c2a0a90f9033b61eed4b756cce38f5acb3552a02af50fe631",
+  "lint": {
+    "findings": 16,
+    "grade": "C",
+    "report_fingerprint": "edabbd4c3b0f03e85df383d3e4d5f08b1c82eec41decf9128ab05161416fd827",
+    "score": 75,
+    "severity_counts": {
+      "error": 0,
+      "info": 13,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

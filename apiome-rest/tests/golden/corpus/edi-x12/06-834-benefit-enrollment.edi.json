@@ -1,0 +1,1193 @@
+{
+  "adapter": "edix12",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "x12_envelope": {
+        "element_separator": "*",
+        "functional_id": "BE",
+        "group_control_number": "6",
+        "group_receiver": "PAYER01",
+        "group_sender": "SPONSOR01",
+        "interchange_control_number": "000000006",
+        "interchange_version": "00501",
+        "receiver_id": "PAYER01",
+        "segment_terminator": "~",
+        "sender_id": "SPONSOR01"
+      },
+      "x12_set_id": "834",
+      "x12_transactions": [
+        {
+          "control_number": "0001",
+          "segments": [
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "BGN01",
+                  "value": "00"
+                },
+                {
+                  "position": "02",
+                  "ref": "BGN02",
+                  "value": "ENR-0001"
+                },
+                {
+                  "position": "03",
+                  "ref": "BGN03",
+                  "value": "20260115"
+                },
+                {
+                  "position": "04",
+                  "ref": "BGN04",
+                  "value": "093000"
+                },
+                {
+                  "position": "08",
+                  "ref": "BGN08",
+                  "value": "4"
+                }
+              ],
+              "id": "BGN"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "REF01",
+                  "value": "38"
+                },
+                {
+                  "position": "02",
+                  "ref": "REF02",
+                  "value": "GROUP-001"
+                }
+              ],
+              "id": "REF"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "DTP01",
+                  "value": "007"
+                },
+                {
+                  "position": "02",
+                  "ref": "DTP02",
+                  "value": "D8"
+                },
+                {
+                  "position": "03",
+                  "ref": "DTP03",
+                  "value": "20260201"
+                }
+              ],
+              "id": "DTP"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "N101",
+                  "value": "P5"
+                },
+                {
+                  "position": "02",
+                  "ref": "N102",
+                  "value": "Example Employer"
+                },
+                {
+                  "position": "03",
+                  "ref": "N103",
+                  "value": "FI"
+                },
+                {
+                  "position": "04",
+                  "ref": "N104",
+                  "value": "123456789"
+                }
+              ],
+              "id": "N1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "N101",
+                  "value": "IN"
+                },
+                {
+                  "position": "02",
+                  "ref": "N102",
+                  "value": "Example Health Plan"
+                },
+                {
+                  "position": "03",
+                  "ref": "N103",
+                  "value": "FI"
+                },
+                {
+                  "position": "04",
+                  "ref": "N104",
+                  "value": "987654321"
+                }
+              ],
+              "id": "N1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "INS01",
+                  "value": "Y"
+                },
+                {
+                  "position": "02",
+                  "ref": "INS02",
+                  "value": "18"
+                },
+                {
+                  "position": "03",
+                  "ref": "INS03",
+                  "value": "030"
+                },
+                {
+                  "position": "04",
+                  "ref": "INS04",
+                  "value": "XN"
+                },
+                {
+                  "position": "05",
+                  "ref": "INS05",
+                  "value": "A"
+                },
+                {
+                  "position": "06",
+                  "ref": "INS06",
+                  "value": "E"
+                },
+                {
+                  "position": "08",
+                  "ref": "INS08",
+                  "value": "FT"
+                }
+              ],
+              "id": "INS"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "REF01",
+                  "value": "0F"
+                },
+                {
+                  "position": "02",
+                  "ref": "REF02",
+                  "value": "SUBSCRIBER-001"
+                }
+              ],
+              "id": "REF"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "REF01",
+                  "value": "1L"
+                },
+                {
+                  "position": "02",
+                  "ref": "REF02",
+                  "value": "GROUP-001"
+                }
+              ],
+              "id": "REF"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "DTP01",
+                  "value": "336"
+                },
+                {
+                  "position": "02",
+                  "ref": "DTP02",
+                  "value": "D8"
+                },
+                {
+                  "position": "03",
+                  "ref": "DTP03",
+                  "value": "20250601"
+                }
+              ],
+              "id": "DTP"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "NM101",
+                  "value": "IL"
+                },
+                {
+                  "position": "02",
+                  "ref": "NM102",
+                  "value": "1"
+                },
+                {
+                  "position": "03",
+                  "ref": "NM103",
+                  "value": "Doe"
+                },
+                {
+                  "position": "04",
+                  "ref": "NM104",
+                  "value": "Jane"
+                },
+                {
+                  "position": "08",
+                  "ref": "NM108",
+                  "value": "34"
+                },
+                {
+                  "position": "09",
+                  "ref": "NM109",
+                  "value": "555443333"
+                }
+              ],
+              "id": "NM1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "PER01",
+                  "value": "IP"
+                },
+                {
+                  "position": "03",
+                  "ref": "PER03",
+                  "value": "TE"
+                },
+                {
+                  "position": "04",
+                  "ref": "PER04",
+                  "value": "5555550111"
+                }
+              ],
+              "id": "PER"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "N301",
+                  "value": "123 Main St"
+                }
+              ],
+              "id": "N3"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "N401",
+                  "value": "Metropolis"
+                },
+                {
+                  "position": "02",
+                  "ref": "N402",
+                  "value": "NY"
+                },
+                {
+                  "position": "03",
+                  "ref": "N403",
+                  "value": "10001"
+                }
+              ],
+              "id": "N4"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "DMG01",
+                  "value": "D8"
+                },
+                {
+                  "position": "02",
+                  "ref": "DMG02",
+                  "value": "19900115"
+                },
+                {
+                  "position": "03",
+                  "ref": "DMG03",
+                  "value": "F"
+                }
+              ],
+              "id": "DMG"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "HD01",
+                  "value": "030"
+                },
+                {
+                  "position": "03",
+                  "ref": "HD03",
+                  "value": "HLT"
+                },
+                {
+                  "position": "04",
+                  "ref": "HD04",
+                  "value": "PLAN-A"
+                }
+              ],
+              "id": "HD"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "DTP01",
+                  "value": "348"
+                },
+                {
+                  "position": "02",
+                  "ref": "DTP02",
+                  "value": "D8"
+                },
+                {
+                  "position": "03",
+                  "ref": "DTP03",
+                  "value": "20260201"
+                }
+              ],
+              "id": "DTP"
+            }
+          ],
+          "set_id": "834"
+        }
+      ],
+      "x12_version": "005010X220A1"
+    },
+    "format": "edix12",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "X12 834",
+      "namespace": "X12-834"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "X12 834",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "007",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-834.DTP.DTP01",
+            "name": "DTP01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "D8",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-834.DTP.DTP02",
+            "name": "DTP02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260201",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-834.DTP.DTP03",
+            "name": "DTP03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-834.DTP",
+        "key_type": null,
+        "kind": "record",
+        "name": "DTP",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "P5",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-834.N1.N101",
+            "name": "N101",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Example Employer",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-834.N1.N102",
+            "name": "N102",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "FI",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-834.N1.N103",
+            "name": "N103",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "123456789",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "X12-834.N1.N104",
+            "name": "N104",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-834.N1",
+        "key_type": null,
+        "kind": "record",
+        "name": "N1",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "38",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-834.REF.REF01",
+            "name": "REF01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "GROUP-001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-834.REF.REF02",
+            "name": "REF02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-834.REF",
+        "key_type": null,
+        "kind": "record",
+        "name": "REF",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "00",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-834.TransactionSet834.BGN01",
+            "name": "BGN01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ENR-0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-834.TransactionSet834.BGN02",
+            "name": "BGN02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260115",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-834.TransactionSet834.BGN03",
+            "name": "BGN03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "093000",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "X12-834.TransactionSet834.BGN04",
+            "name": "BGN04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "4",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "X12-834.TransactionSet834.BGN08",
+            "name": "BGN08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "D8",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 29,
+            "key": "X12-834.TransactionSet834.DMG01",
+            "name": "DMG01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "19900115",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 30,
+            "key": "X12-834.TransactionSet834.DMG02",
+            "name": "DMG02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "F",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 31,
+            "key": "X12-834.TransactionSet834.DMG03",
+            "name": "DMG03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "X12-834.TransactionSet834.DTP",
+            "name": "DTP",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "X12-834.DTP",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "030",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 32,
+            "key": "X12-834.TransactionSet834.HD01",
+            "name": "HD01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "HLT",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 33,
+            "key": "X12-834.TransactionSet834.HD03",
+            "name": "HD03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "PLAN-A",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 34,
+            "key": "X12-834.TransactionSet834.HD04",
+            "name": "HD04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Y",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 9,
+            "key": "X12-834.TransactionSet834.INS01",
+            "name": "INS01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "18",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 10,
+            "key": "X12-834.TransactionSet834.INS02",
+            "name": "INS02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "030",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 11,
+            "key": "X12-834.TransactionSet834.INS03",
+            "name": "INS03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "XN",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 12,
+            "key": "X12-834.TransactionSet834.INS04",
+            "name": "INS04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "A",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 13,
+            "key": "X12-834.TransactionSet834.INS05",
+            "name": "INS05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "E",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 14,
+            "key": "X12-834.TransactionSet834.INS06",
+            "name": "INS06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "FT",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 15,
+            "key": "X12-834.TransactionSet834.INS08",
+            "name": "INS08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 8,
+            "key": "X12-834.TransactionSet834.N1",
+            "name": "N1",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "X12-834.N1",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "123 Main St",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 25,
+            "key": "X12-834.TransactionSet834.N301",
+            "name": "N301",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Metropolis",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 26,
+            "key": "X12-834.TransactionSet834.N401",
+            "name": "N401",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "NY",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 27,
+            "key": "X12-834.TransactionSet834.N402",
+            "name": "N402",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "10001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 28,
+            "key": "X12-834.TransactionSet834.N403",
+            "name": "N403",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "IL",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 16,
+            "key": "X12-834.TransactionSet834.NM101",
+            "name": "NM101",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 17,
+            "key": "X12-834.TransactionSet834.NM102",
+            "name": "NM102",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Doe",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 18,
+            "key": "X12-834.TransactionSet834.NM103",
+            "name": "NM103",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Jane",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 19,
+            "key": "X12-834.TransactionSet834.NM104",
+            "name": "NM104",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "34",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 20,
+            "key": "X12-834.TransactionSet834.NM108",
+            "name": "NM108",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "555443333",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 21,
+            "key": "X12-834.TransactionSet834.NM109",
+            "name": "NM109",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "IP",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 22,
+            "key": "X12-834.TransactionSet834.PER01",
+            "name": "PER01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "TE",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 23,
+            "key": "X12-834.TransactionSet834.PER03",
+            "name": "PER03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "5555550111",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 24,
+            "key": "X12-834.TransactionSet834.PER04",
+            "name": "PER04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 6,
+            "key": "X12-834.TransactionSet834.REF",
+            "name": "REF",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "X12-834.REF",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-834.TransactionSet834",
+        "key_type": null,
+        "kind": "record",
+        "name": "TransactionSet834",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "edi-x12/06-834-benefit-enrollment.edi",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "edix12"
+  },
+  "fingerprint": "sha256:9c23b267418df2d7527d9aff6ca1bff592f8d19d593f89bf167850a0f70ac3ae",
+  "lint": {
+    "findings": 48,
+    "grade": "D",
+    "report_fingerprint": "a404946102b114a6a2fa3c19f8d26a88b911fbffe47727bef157adfd90a0b221",
+    "score": 63,
+    "severity_counts": {
+      "error": 0,
+      "info": 44,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

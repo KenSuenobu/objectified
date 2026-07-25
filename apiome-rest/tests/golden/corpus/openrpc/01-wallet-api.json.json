@@ -1,0 +1,377 @@
+{
+  "adapter": "openrpc",
+  "canonical": {
+    "channels": [],
+    "description": "A small JSON-RPC wallet service.",
+    "extras": {
+      "openrpc_version": "1.2.6"
+    },
+    "format": "openrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Wallet API",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": "jsonrpc",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "production",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/rpc",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Wallet API",
+        "name": "Wallet API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Return the balance of an account.",
+            "extras": {
+              "openrpc_result_name": "balance",
+              "openrpc_summary": "Return the balance of an account."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Wallet API.getBalance",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "openrpc_params": [
+                    {
+                      "description": null,
+                      "name": "accountId",
+                      "required": true,
+                      "schema": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Wallet API.getBalance#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Wallet API.getBalance#response",
+                "name": "balance",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Balance",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "getBalance",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Move funds between two accounts.",
+            "extras": {
+              "openrpc_result_name": "receipt",
+              "openrpc_summary": "Move funds between two accounts."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Wallet API.transfer",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "openrpc_params": [
+                    {
+                      "description": null,
+                      "name": "from",
+                      "required": true,
+                      "schema": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "description": null,
+                      "name": "to",
+                      "required": true,
+                      "schema": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "description": null,
+                      "name": "amount",
+                      "required": true,
+                      "schema": {
+                        "description": "Minor currency units.",
+                        "type": "integer"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Wallet API.transfer#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Wallet API.transfer#response",
+                "name": "receipt",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "TransferReceipt",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "transfer",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Wallet API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "The balance of an account.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Account identifier.",
+            "extras": {},
+            "field_number": null,
+            "key": "Balance.accountId",
+            "name": "accountId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Balance in minor units.",
+            "extras": {},
+            "field_number": null,
+            "key": "Balance.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "ISO 4217 currency code.",
+            "extras": {},
+            "field_number": null,
+            "key": "Balance.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Balance",
+        "key_type": null,
+        "kind": "record",
+        "name": "Balance",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Confirmation of a completed transfer.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "TransferReceipt.settledAt",
+            "name": "settledAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "completed",
+                "pending",
+                "failed"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "TransferReceipt.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Unique transfer id.",
+            "extras": {},
+            "field_number": null,
+            "key": "TransferReceipt.transferId",
+            "name": "transferId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "TransferReceipt",
+        "key_type": null,
+        "kind": "record",
+        "name": "TransferReceipt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "openrpc/01-wallet-api.json",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "openrpc"
+  },
+  "fingerprint": "sha256:faabea8621774c37b9dc7261be30df55a0c5870264eb84dc0d74b860c02e0555",
+  "lint": {
+    "findings": 6,
+    "grade": "A",
+    "report_fingerprint": "74d036dfc07b93be1d93dbef4e6ad3e0a868c0f749bb8ff29ab484f6fa31cb06",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}
