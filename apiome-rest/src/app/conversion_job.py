@@ -1,4 +1,4 @@
-"""Convert-to-project/version job + provenance — MFI-22.5 (#4006).
+"""Convert-to-project/version job + provenance — MFI-22.5 (#4006), passthrough MFI-22.7 (#4008).
 
 The emitter (:mod:`app.openapi_emitter`, MFI-22.1), paradigm projections
 (:mod:`app.projection`, MFI-22.2) and fidelity analyzer (:mod:`app.fidelity`,
@@ -6,7 +6,10 @@ MFI-22.3) turn a catalog item's canonical model into an OpenAPI 3.1 document *an
 tell the user how faithful that conversion is. This module is the step after the
 user says **"convert"**: it makes the conversion *real*.
 
-A conversion job:
+OpenAPI/Swagger and TypeSpec sources skip the lossy projection (MFI-22.7): the
+preview/commit path classifies the source and either adopts the captured document
+(or a structural Swagger 2.0→3.1 upgrade) or compiles TypeSpec via ``tsp``, returning
+a high-fidelity report. Every other format still:
 
 1. **emits** the OpenAPI 3.1 document from the source :class:`~app.canonical_model.CanonicalApi`
    (optionally closing cheap gaps with user-supplied ``defaults`` — an info title/version or
@@ -80,6 +83,9 @@ INITIAL_VERSION_LABEL = "1.0.0"
 #: emitted doc is decomposed into a full publishable Project + version exactly like an OpenAPI upload.
 CONVERT_IMPORT_SOURCE_KIND = "openapi"
 
+#: Default conversion mode for the lossy canonical→OpenAPI path (MFI-22.1–22.5).
+LOSSY_CONVERSION_MODE = "lossy"
+
 
 class ConversionError(Exception):
     """A conversion could not be completed (bad source, commit failure, …).
@@ -146,6 +152,11 @@ class ConversionSource(BaseModel):
     source_tool_versions: Dict[str, Any] = Field(
         default_factory=dict, description="Tool provenance the import recorded for the source revision."
     )
+    source_text: Optional[str] = Field(
+        default=None,
+        description="Captured raw source text (needed for TypeSpec native emit and OpenAPI "
+        "passthrough when ``api.raw`` is absent) — MFI-22.7.",
+    )
 
 
 class ConversionCommit(BaseModel):
@@ -184,6 +195,11 @@ class ConversionPreview(BaseModel):
     fidelity: FidelityReport
     document: Dict[str, Any] = Field(description="The OpenAPI 3.1 document the conversion would emit.")
     target_format: str = Field(description="Emit target the preview was produced for.")
+    conversion_mode: str = Field(
+        default=LOSSY_CONVERSION_MODE,
+        description="How the document was produced: ``passthrough``, ``typespec_native``, or "
+        "``lossy`` (MFI-22.7).",
+    )
 
 
 class ConversionResult(BaseModel):
@@ -203,6 +219,11 @@ class ConversionResult(BaseModel):
     )
     provenance_id: str = Field(description="Id of the persisted ``conversion_provenance`` row.")
     document: Dict[str, Any] = Field(description="The emitted OpenAPI 3.1 document that was committed.")
+    conversion_mode: str = Field(
+        default=LOSSY_CONVERSION_MODE,
+        description="How the document was produced: ``passthrough``, ``typespec_native``, or "
+        "``lossy`` (MFI-22.7).",
+    )
 
 
 # ===========================================================================
@@ -267,21 +288,34 @@ class ProvenanceStore(Protocol):
 # ===========================================================================
 
 
-def converter_tool_versions() -> Dict[str, str]:
+def converter_tool_versions(*, conversion_mode: str = LOSSY_CONVERSION_MODE) -> Dict[str, str]:
     """Return the conversion tool versions stamped onto each provenance row.
 
     Records *what produced this conversion* so it is reproducible and a later re-convert can be
     compared against the tooling that made the prior one: the ``apiome-rest`` package version and
-    the emitter/analyzer contract identifiers (MFI-22.1/22.3).
+    the emitter/analyzer contract identifiers (MFI-22.1/22.3). For OpenAPI-native passthrough and
+    TypeSpec native emit (MFI-22.7), the ``emitter`` key names the path taken instead of the
+    lossy OpenAPI 3.1 emitter.
+
+    Args:
+        conversion_mode: The :class:`~app.conversion_passthrough.ConversionMode` value that
+            produced the document (``passthrough`` / ``typespec_native`` / ``lossy``).
     """
     try:
         rest_version = _pkg_version("apiome-rest")
     except PackageNotFoundError:  # pragma: no cover - packaging edge, not worth a DB-free test
         rest_version = "unknown"
+    if conversion_mode == "passthrough":
+        emitter = "passthrough"
+    elif conversion_mode == "typespec_native":
+        emitter = "typespec-native"
+    else:
+        emitter = DEFAULT_TARGET_FORMAT
     return {
         "apiome-rest": rest_version,
-        "emitter": DEFAULT_TARGET_FORMAT,
-        "fidelity-analyzer": "MFI-22.3",
+        "emitter": emitter,
+        "fidelity-analyzer": "MFI-22.3" if conversion_mode == LOSSY_CONVERSION_MODE else "MFI-22.7",
+        "conversion-mode": conversion_mode,
     }
 
 
@@ -338,22 +372,49 @@ def preview_conversion(
 ) -> ConversionPreview:
     """Emit + analyze a conversion **without committing it** (the dry-run path).
 
-    Runs the pure, deterministic first half of :func:`run_conversion`: fill cheap gaps from
-    ``defaults`` where the source is empty, emit the OpenAPI 3.1 document, and analyze its fidelity.
-    No Project/version is created and nothing is persisted, so this is safe to call for a preview
-    (MFI-22.4) or a CLI ``--dry-run`` (MFI-22.6).
+    Runs the pure, deterministic first half of :func:`run_conversion`. OpenAPI/Swagger sources
+    and TypeSpec take the near-lossless paths (MFI-22.7 — passthrough / ``tsp`` native emit);
+    every other format fills cheap gaps from ``defaults``, emits via the OpenAPI 3.1 emitter
+    (MFI-22.1), and analyzes fidelity (MFI-22.3). No Project/version is created and nothing is
+    persisted, so this is safe to call for a preview (MFI-22.4) or a CLI ``--dry-run`` (MFI-22.6).
 
     Args:
         source: The loaded canonical model + source provenance coordinates.
-        defaults: Optional user-supplied fallbacks (title/version/servers) for cheap gaps.
+        defaults: Optional user-supplied fallbacks (title/version/servers) for cheap gaps
+            (lossy path only).
         target_format: Emit target; only :data:`DEFAULT_TARGET_FORMAT` is supported today.
 
     Returns:
-        A :class:`ConversionPreview` with the fidelity report and the would-be OpenAPI document.
+        A :class:`ConversionPreview` with the fidelity report, the would-be OpenAPI document,
+        and the :attr:`~ConversionPreview.conversion_mode` that produced them.
 
     Raises:
-        ConversionError: If ``target_format`` is unsupported.
+        ConversionError: If ``target_format`` is unsupported, or a native/passthrough path fails.
     """
+    from .conversion_passthrough import (
+        ConversionMode,
+        classify_conversion,
+        resolve_passthrough_preview,
+    )
+
+    mode = classify_conversion(
+        source_format=source.source_format, api_format=source.api.format
+    )
+    if mode is not ConversionMode.LOSSY:
+        try:
+            resolved_format = resolve_emit_format(target_format)
+        except ExportError as exc:
+            raise ConversionError(str(exc), status_code=exc.status_code) from exc
+        document, report = resolve_passthrough_preview(
+            mode=mode, api=source.api, source_text=source.source_text
+        )
+        return ConversionPreview(
+            fidelity=report,
+            document=document,
+            target_format=resolved_format,
+            conversion_mode=mode.value,
+        )
+
     api = _apply_defaults(source.api, defaults)
     try:
         resolved_format = resolve_emit_format(target_format)
@@ -362,7 +423,10 @@ def preview_conversion(
         raise ConversionError(str(exc), status_code=exc.status_code) from exc
     report = analyze_fidelity(api, emit_result)
     return ConversionPreview(
-        fidelity=report, document=emit_result.document, target_format=resolved_format
+        fidelity=report,
+        document=emit_result.document,
+        target_format=resolved_format,
+        conversion_mode=LOSSY_CONVERSION_MODE,
     )
 
 
@@ -404,8 +468,10 @@ async def run_conversion(
         ConversionError: If ``target_format`` is unsupported or the commit yields no Project/revision.
     """
     # 1. Emit + 2. analyze fidelity — pure, deterministic, no I/O (shared with the dry-run path).
+    #    OpenAPI/Swagger/TypeSpec take the MFI-22.7 near-lossless path inside preview_conversion.
     preview = preview_conversion(source, defaults, target_format)
     report = preview.fidelity
+    conversion_mode = preview.conversion_mode
 
     # 3. First-convert vs re-convert: a prior conversion of this source names the Project a re-convert
     #    must add a new version to, so we never duplicate a Project on re-convert.
@@ -439,7 +505,7 @@ async def run_conversion(
         commit=commit,
         fidelity=report,
         lint=lint,
-        converter_tool_versions=converter_tool_versions(),
+        converter_tool_versions=converter_tool_versions(conversion_mode=conversion_mode),
         reconverted=reconverted,
     )
 
@@ -468,6 +534,7 @@ async def run_conversion(
         lint=lint,
         provenance_id=str(prov["id"]),
         document=preview.document,
+        conversion_mode=conversion_mode,
     )
 
 

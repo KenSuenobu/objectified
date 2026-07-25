@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse, StreamingResponse
 
+from .api_identity_service import build_related_artifact_refs
 from .auth import get_authenticated_user_id, validate_authentication
 from .catalog_conversion import build_conversion_source
 from .catalog_detail import (
@@ -28,7 +29,6 @@ from .catalog_detail import (
     resolve_source_payload,
 )
 from .catalog_parsed_model import derive_catalog_parsed_model
-from .api_identity_service import build_related_artifact_refs
 from .conversion_job import (
     ConversionDefaults,
     ConversionError,
@@ -323,6 +323,7 @@ async def convert_catalog_item(
                 openapi=preview.document,
                 source_format=source.source_format,
                 target="openapi",
+                conversion_mode=preview.conversion_mode,
             )
 
         result = await run_conversion(
@@ -345,6 +346,7 @@ async def convert_catalog_item(
         reconverted=result.reconverted,
         provenance_id=result.provenance_id,
         report=result.fidelity.model_dump(mode="json"),
+        conversion_mode=result.conversion_mode,
     )
 
 

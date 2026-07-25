@@ -5,6 +5,19 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.172.0] - 2026-07-24
+
+### Added
+- **OpenAPI-native passthrough detection (#4008, MFI-22.7)** — catalog → OpenAPI conversion
+  classifies the source before the lossy emitter runs. OpenAPI/Swagger adopt the captured
+  document (`passthrough`; Swagger 2.0 upgrades structurally to OpenAPI 3.1 with an informational
+  note); TypeSpec routes through a `tsp` native OpenAPI emit seam (`typespec_native`; missing
+  `tsp` → 422, no silent lossy fallback); every other format stays on 22.1–22.5 (`lossy`).
+  Preview/commit return a guaranteed high-fidelity report for the near-lossless modes, and
+  dry-run/commit responses expose `conversionMode`. New `src/app/conversion_passthrough.py`;
+  `ConversionSource.source_text` carries captured source for TypeSpec/OpenAPI when `api.raw` is
+  absent. Tests: `tests/test_conversion_passthrough.py` plus convert route/job coverage.
+
 ## [1.158.0] - 2026-07-22
 
 ### Added
