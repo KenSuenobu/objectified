@@ -31,6 +31,7 @@ from .database import Database, db
 from .draft_lock_routes import router as draft_lock_router
 from .export_job_routes import router as export_job_router
 from .export_routes import router as export_router
+from .export_routes import tenant_router as export_tenant_router
 from .identity_routes import router as identity_router
 from .import_sources_routes import router as import_sources_router
 from .jsonschema_generator import generate_class_jsonschema_spec, generate_jsonschema_spec
@@ -104,7 +105,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.44.0",
+    version="1.45.0",
 )
 
 
@@ -309,6 +310,9 @@ app.include_router(import_sources_router)
 # Multi-format export (MFX-2.5, #3842): tenant-scoped fidelity report surfacing — per-target
 # fidelity badges (/export/{tenant}/targets) and the dry-run preview (/export/{tenant}/preview).
 app.include_router(export_router)
+# Export pre-flight (IXH-2.4, #5099): the export twin of the import pre-flight, mounted under
+# /v1/tenants/{tenant}/export/preflight so the two pre-flights sit side by side.
+app.include_router(export_tenant_router)
 app.include_router(export_job_router)
 app.include_router(tenant_repositories_router)
 app.include_router(access_router)

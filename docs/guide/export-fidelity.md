@@ -29,6 +29,42 @@ Every target card shows a coarse fidelity tier plus a preserved-% estimate:
 not inspect (`unavailable`) are not "preserved" — they are unknown. Use the
 per-construct evidence below to see exactly what happens to your API.
 
+## Target readiness (the pre-flight ranking)
+
+The target grid does not just badge each target — it **ranks** them by expected outcome,
+before any job runs. The ranking comes from the export pre-flight
+(`POST /v1/tenants/{tenant}/export/preflight`), which lints the **source** under your
+tenant's style guide and then, per target, mixes three things into one score:
+
+| Input | What it answers |
+|---|---|
+| Projected fidelity (preserved %) | How much of this source survives the trip? |
+| Source lint score | How good is the thing you are exporting in the first place? |
+| Capability fit | Can the target carry the *kinds* of construct this source is made of? |
+
+Each card then falls into a band, and the grid sorts by band first:
+
+| Band | Meaning |
+|---|---|
+| `ready` | Go. Good fidelity, no policy shortfall. |
+| `check first` | Usable — read the rationale before you commit. |
+| `blocked` | Your tenant's export quality policy refuses this delivery. The card stays visible with the reason; it cannot be selected until the shortfall is fixed or waived. |
+| `unavailable` | The emitter's toolchain is not installed in this runtime. |
+
+Every card carries a one-line **rationale** ("Type shapes only: 50% preserved, 5
+constructs dropped. Source grade B. Apache Avro cannot carry operations.") and the grid
+prints the source's own grade above it. Prefer another order? The **Sorted by
+readiness / Sorted by name** toggle restores the original registry ordering.
+
+The ranking is deterministic for a fixed source revision, style guide, and policy — the
+report's `ranking_fingerprint` is a stable hash of it — and the pre-flight emits nothing:
+no job, no artifact. The fidelity numbers it shows are the same ones the eventual job
+attaches to its result.
+
+Quality floors and waivers are configured per tenant in **Governance → Style guides →
+Quality policy**; see [import-a-spec.md](import-a-spec.md) for how the same policy gates
+intake.
+
 ## The projection map (graph + table)
 
 The quick **Export** dialog (Fidelity step) and **Export Studio → Verify**
@@ -240,6 +276,7 @@ The round trip is **lossless** for position, size, color, text, kind, and attach
 | Purpose | Route |
 |---|---|
 | Target list + per-source tier | `GET /v1/export/{tenant}/targets?artifact={id}&version={v}` |
+| Pre-flight: source lint + target-readiness ranking (no job, no artifact) | `POST /v1/tenants/{tenant}/export/preflight` |
 | Preview (fidelity + projection summary + snapshot hash) | `POST /v1/export/{tenant}/preview` |
 | Bounded, cursor-paginated projection evidence | `POST /v1/export/{tenant}/projection-evidence` |
 | Reviewed reason explanations + destination documentation | `GET /v1/export/{tenant}/capability-registry` |

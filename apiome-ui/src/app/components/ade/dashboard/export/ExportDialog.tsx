@@ -22,6 +22,8 @@ import { FidelityWarningPanel } from './FidelityWarningPanel';
 import { ProjectionGraphPanel } from './ProjectionGraphPanel';
 import { ArtifactPreviewCard } from './ArtifactPreviewCard';
 import { ExportTargetGrid } from './ExportTargetGrid';
+import type { ExportTargetOrder } from './exportReadiness';
+import { useExportPreflight } from './useExportPreflight';
 import { ExportOptionsForm } from './ExportOptionsForm';
 import { OriginalSourceOption } from './OriginalSourceOption';
 import { requiresExportAcknowledgement } from './exportFidelityPreview';
@@ -121,6 +123,10 @@ export function ExportDialog({
   const [acknowledged, setAcknowledged] = useState(false);
 
   const { response, loading, error: targetsError } = useExportTargets(open, artifact, version);
+  // IXH-2.4: the same readiness ranking the Studio uses, so the dialog's grid orders by expected
+  // outcome and surfaces a policy-blocked target's reason before a job is submitted.
+  const { report: preflight, readiness } = useExportPreflight(open, artifact, version);
+  const [targetOrder, setTargetOrder] = useState<ExportTargetOrder>('readiness');
   // Drop the redundant same-format target (e.g. GraphQL→GraphQL); the "Original source" option
   // replaces it when the source's format is known.
   const cards = useMemo(
@@ -369,6 +375,10 @@ export function ExportDialog({
               cards={cards}
               selectedKey={selectedKey}
               onSelect={handleSelect}
+              readiness={readiness}
+              preflight={preflight}
+              order={targetOrder}
+              onOrderChange={setTargetOrder}
               heading={
                 <div className="text-center">
                   <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">

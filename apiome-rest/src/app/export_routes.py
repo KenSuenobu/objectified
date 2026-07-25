@@ -63,6 +63,11 @@ from .export_fidelity import (
     build_export_fidelity,
     build_target_fidelity,
 )
+from .export_preflight import (
+    ExportPreflightReport,
+    ExportPreflightRequest,
+    run_export_preflight,
+)
 from .export_projection import (
     DEFAULT_EVIDENCE_PAGE_SIZE,
     MAX_EVIDENCE_PAGE_SIZE,
@@ -86,6 +91,12 @@ from .transcoding_guards import TranscodeGuard, TranscodeGuardError, classify_tr
 from . import __version__ as APIOME_VERSION
 
 router = APIRouter(prefix="/v1/export", tags=["export"])
+
+#: The tenant-scoped export surface. ``/v1/export/{tenant_slug}/…`` is the historical shape of
+#: the fidelity endpoints above; the pre-flight (IXH-2.4) is the export twin of
+#: ``POST /v1/tenants/{tenant_slug}/import/preflight`` (IXH-2.1) and is mounted alongside it, so
+#: the two pre-flights read as one pair of endpoints rather than two unrelated surfaces.
+tenant_router = APIRouter(prefix="/v1/tenants", tags=["export"])
 
 
 # ===========================================================================
@@ -1343,3 +1354,56 @@ async def verify_export(
         files=files,
         truncated=truncated,
     )
+
+
+@tenant_router.post(
+    "/{tenant_slug}/export/preflight",
+    response_model=ExportPreflightReport,
+    summary="Pre-flight an export: source lint + target-readiness ranking (no job, no artifact)",
+    description=(
+        "Rank every export target for one source revision **before** a job exists (IXH-2.4). "
+        "Lints the *source* under the tenant's resolved style guide — the check the export path "
+        "otherwise only makes against the emitted artifact, and only after the job — then, per "
+        "target, returns the projected fidelity envelope (tier, preserved %, DROP/APPROX/SYNTH "
+        "counts from the same prediction engine a job embeds in its result), the capability "
+        "verdict (which construct classes this source uses vs. which the target declares it can "
+        "carry), the tenant export quality-policy verdict (IXH-2.3) with any honoured waiver, and "
+        "a composite readiness score with a one-line rationale.\n\n"
+        "Targets are returned best-readiness first: ready → caution → blocked → unavailable, then "
+        "by descending score and target key. A target the policy **blocks** is ranked and returned "
+        "with its reason, never hidden. Nothing is emitted and nothing is persisted — no export "
+        "job, no artifact, no field-identity rows. The ranking is deterministic for a fixed source "
+        "revision, style guide, and policy; ``ranking_fingerprint`` lets a caller assert that "
+        "without diffing the body. This is the pre-job counterpart to ``POST …/export/verify``."
+    ),
+)
+async def preflight_export(
+    tenant_slug: str,
+    request: ExportPreflightRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> ExportPreflightReport:
+    """Rank every export target for one source revision, emitting and persisting nothing.
+
+    Authenticated like the rest of the export surface (no additional action permission): the
+    pre-flight reads the source the caller can already export and writes nothing.
+
+    Args:
+        tenant_slug: The tenant slug (scopes the artifact lookup).
+        request: The source coordinates plus the optional target filter.
+        auth_data: Authenticated tenant context (JWT or API key).
+
+    Returns:
+        The :class:`~app.export_preflight.ExportPreflightReport` for the resolved revision.
+
+    Raises:
+        HTTPException: 404 when the artifact/version is unknown; 422 when the revision has no
+            reconstructable source.
+    """
+    _ = tenant_slug
+    tenant_id = str(auth_data["tenant_id"])
+    try:
+        source = load_export_source(tenant_id, request.artifact, request.version)
+    except ExportSourceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+
+    return run_export_preflight(source, request, tenant_id=tenant_id)

@@ -5,6 +5,38 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.178.0] - 2026-07-25
+
+### Added
+- **Export pre-flight — source lint and target-readiness ranking (#5099, IXH-2.4)** —
+  `POST /v1/tenants/{tenant_slug}/export/preflight` ranks every export target for one
+  source revision **before** a job exists. The export path previously only lints and
+  validates the *emitted* artifact, so a user picked a target, waited for a job, and
+  only then learned the source was too thin for it.
+  - The **source** is linted under the tenant's resolved style guide (the same engine
+    and scoring formula an import pre-flight uses), and the report carries that grade,
+    score, tallies, and — unless `include_findings: false` — the ranked findings.
+  - Each target reports its projected fidelity envelope (tier, preserved %,
+    DROP/APPROX/SYNTH counts from the prediction engine an export job embeds in its
+    result), a **capability verdict** naming which construct classes the source uses
+    and which the target can carry, the tenant export quality-policy verdict (IXH-2.3)
+    with any honoured waiver, a composite `readiness` score, a `band`, and a one-line
+    `rationale`.
+  - Targets come back best-first — `ready` → `caution` → `blocked` → `unavailable`,
+    then descending score, then key. A target the policy **blocks** is ranked and
+    returned with its reason, never hidden. `ranking_fingerprint` lets a caller assert
+    the ranking is unchanged without diffing the body.
+  - Nothing is emitted and nothing is persisted: no export job, no artifact, no
+    field-identity rows. The tenant policy is read **once** per ranking and a waiver is
+    looked up only when a block would otherwise stand, so the default policy adds no
+    queries.
+
+### Changed
+- `evaluate_export_quality()` accepts a pre-loaded policy and defers its waiver lookup
+  until a blocking verdict makes one meaningful; the verdict → API-model adaptation now
+  lives with the policy engine (`verdict_response_model`) so the import pre-flight, the
+  export pre-flight, and the coming delivery gate cannot drift apart on it.
+
 ## [1.177.0] - 2026-07-25
 
 ### Added

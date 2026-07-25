@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.44.0",
+    "version": "1.45.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -40940,6 +40940,105 @@
         }
       }
     },
+    "/v1/tenants/{tenant_slug}/export/preflight": {
+      "post": {
+        "tags": [
+          "export"
+        ],
+        "summary": "Pre-flight an export: source lint + target-readiness ranking (no job, no artifact)",
+        "description": "Rank every export target for one source revision **before** a job exists (IXH-2.4). Lints the *source* under the tenant's resolved style guide \u2014 the check the export path otherwise only makes against the emitted artifact, and only after the job \u2014 then, per target, returns the projected fidelity envelope (tier, preserved %, DROP/APPROX/SYNTH counts from the same prediction engine a job embeds in its result), the capability verdict (which construct classes this source uses vs. which the target declares it can carry), the tenant export quality-policy verdict (IXH-2.3) with any honoured waiver, and a composite readiness score with a one-line rationale.\n\nTargets are returned best-readiness first: ready \u2192 caution \u2192 blocked \u2192 unavailable, then by descending score and target key. A target the policy **blocks** is ranked and returned with its reason, never hidden. Nothing is emitted and nothing is persisted \u2014 no export job, no artifact, no field-identity rows. The ranking is deterministic for a fixed source revision, style guide, and policy; ``ranking_fingerprint`` lets a caller assert that without diffing the body. This is the pre-job counterpart to ``POST \u2026/export/verify``.",
+        "operationId": "preflight_export_v1_tenants__tenant_slug__export_preflight_post",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Preflightanexportsourcelinttargetreadineauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Preflightanexportsourcelinttargetreadineauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Preflightanexportsourcelinttargetreadine Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Preflightanexportsourcelinttargetreadine Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportPreflightRequest",
+                "description": "Request body for preflightanexportsourcelinttargetreadinerequest."
+              }
+            }
+          },
+          "description": "Request body for pre-flight an export: source lint + target-readiness ranking (no job, no artifact)."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for pre-flight an export: source lint + target-readiness ranking (no job, no artifact).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportPreflightReport",
+                  "description": "Response payload for preflightanexportsourcelinttargetreadineresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for preflightanexportsourcelinttargetreadineresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/export/{tenant_slug}/jobs": {
       "post": {
         "tags": [
@@ -64306,6 +64405,346 @@
         ],
         "title": "ExportJobStatus",
         "description": "Poll payload for an export job (same shape as the import job status).\n\nA terminal job is self-describing: ``completed`` carries ``result`` (with a\n``download_path`` for a real export), ``failed`` carries a structured ``error`` (MFX-3.4)."
+      },
+      "ExportPreflightCapability": {
+        "properties": {
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "full",
+              "partial",
+              "schema_only",
+              "unavailable"
+            ],
+            "title": "Verdict",
+            "description": "``full`` \u2014 the target declares every axis this source uses; ``partial`` \u2014 some are missing; ``schema_only`` \u2014 the source carries operations or events and the target carries neither, so only type shapes survive; ``unavailable`` \u2014 the emitter cannot run in this runtime, so no verdict can be given.",
+            "example": "full"
+          },
+          "required": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Required",
+            "description": "Capability axes this source actually uses (operations, events, unions, nullability, constraints, field_identity).",
+            "maxItems": 1000
+          },
+          "supported": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supported",
+            "description": "Of those, the axes the target's capability profile declares it can carry.",
+            "maxItems": 1000
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing",
+            "description": "Of those, the axes the target cannot carry \u2014 the cause of the predicted loss.",
+            "maxItems": 1000
+          },
+          "synthesized": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Synthesized",
+            "description": "Axes the target *requires* that this source does not provide, so the emitter must invent them (protobuf field numbers for a source that has none).",
+            "maxItems": 1000
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "One-sentence explanation of the verdict.",
+            "example": "example"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "verdict",
+          "reason"
+        ],
+        "title": "ExportPreflightCapability",
+        "description": "How well a target's declared capabilities cover what this source is made of.\n\nAnswers a question the fidelity percentage cannot: *why* a target loses what it loses.\n``preserved_percent`` of 60 reads very differently when the target simply cannot carry\noperations (a schema-only destination) than when it carries everything but drops a handful\nof validation facets."
+      },
+      "ExportPreflightReport": {
+        "properties": {
+          "artifact": {
+            "type": "string",
+            "title": "Artifact",
+            "description": "The artifact (project) id the pre-flight ran for.",
+            "example": "example"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Export Preflight Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Export Preflight Report schema."
+              }
+            ],
+            "title": "Version",
+            "description": "The version selector as requested (label, UUID, or null)."
+          },
+          "version_record_id": {
+            "type": "string",
+            "title": "Version Record Id",
+            "description": "The resolved revision (``versions.id``).",
+            "example": "version_01h2xcejqtf3fz5y5j0v8k9m2p"
+          },
+          "version_label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Export Preflight Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Export Preflight Report schema."
+              }
+            ],
+            "title": "Version Label",
+            "description": "The resolved revision's version label (e.g. ``1.0.0``)."
+          },
+          "paradigm": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Export Preflight Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Export Preflight Report schema."
+              }
+            ],
+            "title": "Paradigm",
+            "description": "The source model's canonical paradigm (``rest``, ``event``\u2026)."
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Export Preflight Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Export Preflight Report schema."
+              }
+            ],
+            "title": "Format",
+            "description": "The source model's format key (``openapi-3.1``)."
+          },
+          "lint": {
+            "$ref": "#/components/schemas/ImportPreflightLint",
+            "description": "The source's lint verdict under the resolved style guide \u2014 the same engine and scoring formula an import pre-flight reports, run over the reconstructed source model rather than a candidate document."
+          },
+          "style_guide": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImportPreflightStyleGuide"
+              },
+              {
+                "type": "null",
+                "description": "Export Preflight Report schema."
+              }
+            ],
+            "description": "The style guide that governed the lint, when one resolved."
+          },
+          "capability_demand": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Capability Demand",
+            "description": "The capability axes this source uses \u2014 the yardstick every target's capability verdict is measured against.",
+            "maxItems": 1000
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/ExportPreflightTarget"
+            },
+            "type": "array",
+            "title": "Targets",
+            "description": "Every ranked target, best readiness first. Blocked and unavailable targets are included (ranked last), never hidden.",
+            "maxItems": 1000
+          },
+          "ranking_fingerprint": {
+            "type": "string",
+            "title": "Ranking Fingerprint",
+            "description": "Stable hash over the ranked (target, readiness, band) triples. Identical for two pre-flights of the same revision under the same guide and policy.",
+            "example": "a1b2c3d4e5f6789012345678901234ab"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "artifact",
+          "version_record_id",
+          "lint",
+          "ranking_fingerprint"
+        ],
+        "title": "ExportPreflightReport",
+        "description": "The full export pre-flight: one source lint verdict plus every target, ranked."
+      },
+      "ExportPreflightRequest": {
+        "properties": {
+          "artifact": {
+            "type": "string",
+            "title": "Artifact",
+            "description": "The artifact (project) id to export.",
+            "example": "example"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for export preflight."
+              },
+              {
+                "type": "null",
+                "description": "Request body for export preflight."
+              }
+            ],
+            "title": "Version",
+            "description": "Revision UUID, version label (``1.0.0``), or null for the latest revision."
+          },
+          "targets": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "description": "Request body for export preflight."
+              },
+              {
+                "type": "null",
+                "description": "Request body for export preflight."
+              }
+            ],
+            "title": "Targets",
+            "description": "Restrict the ranking to these target keys or format keys (``openapi`` / ``openapi-3.1``); null ranks every registered target. Unknown entries are ignored \u2014 a pre-flight reports what it can rank rather than failing on a stale client's target list."
+          },
+          "include_findings": {
+            "type": "boolean",
+            "title": "Include Findings",
+            "description": "When false, the source lint verdict is returned without its ranked finding list (score, grade, and tallies are always present). Lets a target-grid caller skip the findings payload it does not render.",
+            "default": true,
+            "example": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "artifact"
+        ],
+        "title": "ExportPreflightRequest",
+        "description": "A pre-flight request: the source revision, optionally narrowed to some targets."
+      },
+      "ExportPreflightTarget": {
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "title": "Rank",
+            "description": "1-based position in the readiness ranking.",
+            "example": 1
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The target's registry key (``openapi``).",
+            "example": "example"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format",
+            "description": "The target's output format key (``openapi-3.1``).",
+            "example": "openapi"
+          },
+          "descriptor": {
+            "$ref": "#/components/schemas/EmitterDescriptor",
+            "description": "The target emitter's descriptor."
+          },
+          "capability_profile": {
+            "$ref": "#/components/schemas/CapabilityProfile",
+            "description": "The target's static capability declaration (MFX-1.1)."
+          },
+          "readiness": {
+            "type": "integer",
+            "title": "Readiness",
+            "description": "Composite 0\u2013100 readiness score: a weighted mix of projected fidelity, source lint score, and capability fit. Comparable across targets of one pre-flight; not a quality score for the target itself.",
+            "example": 1
+          },
+          "band": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "caution",
+              "blocked",
+              "unavailable"
+            ],
+            "title": "Band",
+            "description": "``ready`` \u2014 go; ``caution`` \u2014 usable, look at the rationale first; ``blocked`` \u2014 the tenant's export policy refuses this delivery; ``unavailable`` \u2014 the emitter cannot run in this runtime.",
+            "example": "ready"
+          },
+          "blocked": {
+            "type": "boolean",
+            "title": "Blocked",
+            "description": "True when the tenant's export policy blocks this target. Blocked targets are ranked and returned (never hidden) so the user sees the reason.",
+            "example": false
+          },
+          "selectable": {
+            "type": "boolean",
+            "title": "Selectable",
+            "description": "Whether a client should let the user choose this target: false when the emitter is unavailable or policy blocks it.",
+            "example": false
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale",
+            "description": "One line explaining the rank in the user's terms \u2014 the fidelity outcome, the source grade, and any blocking reason.",
+            "example": "example"
+          },
+          "fidelity": {
+            "$ref": "#/components/schemas/TargetFidelity",
+            "description": "The projected fidelity envelope (tier, preserved %, DROP/APPROX/SYNTH counts) from the same prediction engine the export job embeds in its result."
+          },
+          "capability": {
+            "$ref": "#/components/schemas/ExportPreflightCapability",
+            "description": "The capability verdict for this source against this target."
+          },
+          "policy": {
+            "$ref": "#/components/schemas/ImportPreflightPolicy",
+            "description": "The tenant's export quality policy verdict for this source and target (IXH-2.3). Shares the import pre-flight's verdict shape \u2014 one policy engine, one response shape \u2014 and names its own ``scope`` (``export``)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "rank",
+          "key",
+          "format",
+          "descriptor",
+          "capability_profile",
+          "readiness",
+          "band",
+          "blocked",
+          "selectable",
+          "rationale",
+          "fidelity",
+          "capability",
+          "policy"
+        ],
+        "title": "ExportPreflightTarget",
+        "description": "One ranked export target: its inputs, its readiness, and why it ranks where it does."
       },
       "ExportPreviewRequest": {
         "properties": {
