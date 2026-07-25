@@ -100,9 +100,10 @@ export function isSignupDisabled(env: Record<string, string | undefined> = proce
  * set true. `google` (OLO-9.2) is trusted through the generic path: Google's id token carries a
  * native `email_verified` claim, and any Workspace-domain restriction is already enforced upstream
  * in the provider's profile callback (`google-workspace-domain.ts`). `okta` (OLO-9.3),
- * `aws` / Cognito (OLO-9.4), `keycloak` (OLO-9.5), `oidc` (OLO-9.6), and `auth0` (OLO-9.7)
- * are likewise trusted through the generic path: their id tokens carry a native
- * `email_verified` claim.
+ * `aws` / Cognito (OLO-9.4), `keycloak` (OLO-9.5), `oidc` (OLO-9.6), `auth0` (OLO-9.7),
+ * and `line` (OLO-9.41) are likewise trusted through the generic path when their tokens carry a
+ * native `email_verified` claim. LINE's email claim requires an approved channel permission —
+ * when `email_verified` is absent the engine fail-closes to link-first (OLO-9.41).
  */
 export const AUTO_LINK_TRUSTED_PROVIDERS: ReadonlySet<string> = new Set([
   'github',
@@ -114,6 +115,7 @@ export const AUTO_LINK_TRUSTED_PROVIDERS: ReadonlySet<string> = new Set([
   'keycloak',
   'oidc',
   'auth0',
+  'line',
 ]);
 
 /**
@@ -134,6 +136,7 @@ export const LINKABLE_PROVIDERS: ReadonlySet<string> = new Set([
   'keycloak',
   'oidc',
   'auth0',
+  'line',
 ]);
 /**
  * Canonicalize an email address to the stored/indexed form: trimmed and lower-cased.

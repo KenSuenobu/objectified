@@ -78,6 +78,8 @@ const ALL_ENABLED: Record<string, string> = {
   AUTH0_CLIENT_ID: 'a0-id',
   AUTH0_CLIENT_SECRET: 'a0-secret',
   AUTH0_ISSUER: 'https://acme.auth0.com',
+  LINE_CLIENT_ID: 'line-id',
+  LINE_CLIENT_SECRET: 'line-secret',
 };
 
 const OK_USER: ResolutionUser = {
@@ -181,6 +183,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'keycloak',
       'oidc',
       'auth0',
+      'line',
     ]);
   });
 
@@ -196,6 +199,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'keycloak',
       'oidc',
       'auth0',
+      'line',
     ]);
   });
 
@@ -225,6 +229,9 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
     const auth0 = buildGenericOAuthConfig('auth0', ALL_ENABLED)!;
     expect(auth0.clientId).toBe('a0-id');
     expect(auth0.clientSecret).toBe('a0-secret');
+    const line = buildGenericOAuthConfig('line', ALL_ENABLED)!;
+    expect(line.clientId).toBe('line-id');
+    expect(line.clientSecret).toBe('line-secret');
   });
 
   test('an unknown provider id yields null', () => {
@@ -378,6 +385,17 @@ describe('endpoint & issuer overrides (OLO-7.4)', () => {
       'http://localhost:9009/auth0/.well-known/openid-configuration'
     );
   });
+
+  test('line: fixed LINE Login v2.1 endpoints; PKCE on (OLO-9.41)', () => {
+    const cfg = buildGenericOAuthConfig('line', ALL_ENABLED)!;
+    expect(cfg.authorizationUrl).toBe('https://access.line.me/oauth2/v2.1/authorize');
+    expect(cfg.tokenUrl).toBe('https://api.line.me/oauth2/v2.1/token');
+    expect(cfg.userInfoUrl).toBe('https://api.line.me/oauth2/v2.1/userinfo');
+    expect(cfg.pkce).toBe(true);
+    expect(cfg.scopes).toEqual(['openid', 'profile', 'email']);
+    expect(cfg.discoveryUrl).toBeUndefined();
+  });
+
 
   test('githubOauthWebBaseUrl strips a trailing slash', () => {
     expect(githubOauthWebBaseUrl({ GITHUB_OAUTH_BASE_URL: 'http://mock/' })).toBe('http://mock');
@@ -987,6 +1005,139 @@ describe('getUserInfo — Auth0 email_verified fail-closed (OLO-9.7)', () => {
       provider: 'auth0',
       email: 'ada@example.com',
     });
+  });
+});
+
+
+/* ── getUserInfo: LINE email permission states (OLO-9.41) ───────────────────────────────────── */
+
+describe('getUserInfo — LINE email permission states (OLO-9.41)', () => {
+  test('email + email_verified=true → known identity signs in (permission granted)', async () => {
+    const { store, calls } = makeStore({
+      identityUserId: OK_USER.id,
+      usersById: { [OK_USER.id]: OK_USER },
+    });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'Uline-sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+        name: 'Ada',
+        picture: 'http://img/line.png',
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('line', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(override).toBeNull();
+    expect(result).toMatchObject({
+      id: 'Uline-sub-1',
+      email: 'ada@example.com',
+      emailVerified: true,
+      name: 'Ada',
+      image: 'http://img/line.png',
+    });
+    expect(calls.recordUserLogin).toEqual([OK_USER.id]);
+  });
+
+  test('email without email_verified claim → fail-closed unverified (link-first)', async () => {
+    const { store, calls } = makeStore({ usersByEmail: { 'ada@example.com': OK_USER } });
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'Uline-sub-1',
+        email: 'ada@example.com',
+        name: 'Ada',
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('line', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.UNVERIFIED_EMAIL}`);
+    expect(calls.linkIdentity).toHaveLength(0);
+  });
+
+  test('no email claim (permission not granted) → email-required rejection', async () => {
+    const { store } = makeStore();
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({ sub: 'Uline-sub-1', name: 'Ada' }),
+    };
+
+    const { result, override } = await runGetUserInfo('line', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.EMAIL_REQUIRED}`);
+  });
+
+  test('verified email on new account routes to onboarding', async () => {
+    const { store, calls } = makeStore();
+    const tokens = {
+      accessToken: 'tok',
+      idToken: idTokenFor({
+        sub: 'Uline-sub-1',
+        email: 'ada@example.com',
+        email_verified: true,
+      }),
+    };
+
+    const { result, override } = await runGetUserInfo('line', tokens, {
+      store,
+      env: ALL_ENABLED,
+    });
+
+    expect(result).toBeNull();
+    expect(override).toBe('/signup/oauth?token=pending-1');
+    expect(calls.createPendingSignup[0]).toMatchObject({
+      provider: 'line',
+      email: 'ada@example.com',
+    });
+  });
+
+  test('falls back to userinfo when id token is absent', async () => {
+    const { store, calls } = makeStore({
+      identityUserId: OK_USER.id,
+      usersById: { [OK_USER.id]: OK_USER },
+    });
+    const fetchImpl: FetchLike = async (url) => {
+      if (url.includes('/oauth2/v2.1/userinfo')) {
+        return {
+          ok: true,
+          json: async () => ({
+            sub: 'Uline-sub-1',
+            email: 'ada@example.com',
+            email_verified: true,
+            name: 'Ada',
+          }),
+        };
+      }
+      return { ok: false, json: async () => null };
+    };
+
+    const { result, override } = await runGetUserInfo(
+      'line',
+      { accessToken: 'tok' },
+      { store, env: ALL_ENABLED, fetchImpl }
+    );
+
+    expect(override).toBeNull();
+    expect(result).toMatchObject({
+      id: 'Uline-sub-1',
+      email: 'ada@example.com',
+      emailVerified: true,
+    });
+    expect(calls.recordUserLogin).toEqual([OK_USER.id]);
   });
 });
 

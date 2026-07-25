@@ -50,6 +50,8 @@ import {
 const DB_SCRIPTS = path.join(__dirname, '..', '..', 'apiome-db', 'scripts');
 const V198 = path.join(DB_SCRIPTS, 'V198__auth_provider_vocabulary_4984.sql');
 const V199 = path.join(DB_SCRIPTS, 'V199__better_auth_core_tables_4999.sql');
+/** Latest vocabulary widen (LINE / OLO-9.41); supersedes V198 for the live CHECK set. */
+const V202 = path.join(DB_SCRIPTS, 'V202__auth_provider_vocabulary_line_5054.sql');
 
 /**
  * Extract the single-quoted slug list from a named `ADD CONSTRAINT … CHECK (… IN ( … ))` block.
@@ -70,8 +72,9 @@ function checkVocabulary(sql: string, constraint: string): Set<string> {
 
 const V198_SQL = fs.readFileSync(V198, 'utf8');
 const V199_SQL = fs.readFileSync(V199, 'utf8');
-/** The effective identity vocabulary the DB permits for `external_auth_providers.provider` (V198). */
-const IDENTITY_VOCABULARY = checkVocabulary(V198_SQL, 'external_auth_providers_provider_supported_ck');
+const V202_SQL = fs.readFileSync(V202, 'utf8');
+/** The effective identity vocabulary the DB permits (latest widen: V202 / OLO-9.41). */
+const IDENTITY_VOCABULARY = checkVocabulary(V202_SQL, 'external_auth_providers_provider_supported_ck');
 
 /** The registry ids that are actually enabled (available), i.e. the live sign-in providers. */
 const ENABLED_IDS = PROVIDER_REGISTRY.filter((provider) => provider.status === 'available').map(
@@ -139,6 +142,7 @@ describe('slug vocabulary parity: registry & resolution gates ⊆ the DB CHECK',
       'gitlab',
       'google',
       'keycloak',
+      'line',
       'oidc',
       'okta',
     ]);
@@ -164,7 +168,7 @@ describe('slug vocabulary parity: registry & resolution gates ⊆ the DB CHECK',
   });
 
   test('the auth_provider_config CHECK shares the same vocabulary (store ↔ identity parity)', () => {
-    const configVocabulary = checkVocabulary(V198_SQL, 'auth_provider_config_provider_id_check');
+    const configVocabulary = checkVocabulary(V202_SQL, 'auth_provider_config_provider_id_check');
     expect([...configVocabulary].sort()).toEqual([...IDENTITY_VOCABULARY].sort());
   });
 });

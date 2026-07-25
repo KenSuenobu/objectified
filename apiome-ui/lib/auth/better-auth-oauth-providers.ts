@@ -2,7 +2,7 @@
  * Better Auth OAuth provider construction (OLO-10.7, #5002).
  *
  * Re-expresses the live sign-in providers — github, gitlab, azure, google, okta, aws, keycloak,
- * oidc, auth0 — on Better Auth's **generic OAuth2/OIDC** plugin, the Better Auth analogue of the
+ * oidc, auth0, line — on Better Auth's **generic OAuth2/OIDC** plugin, the Better Auth analogue of the
  * NextAuth factory map in `nextauth-oauth-providers.ts`. Every provider is driven from the shared
  * provider registry (`provider-registry.ts`) exactly as the NextAuth path is, so the registry stays
  * the single source of the enabled set and the mirror tests (`provider-registry-mirror.test.ts`,
@@ -35,6 +35,9 @@
  *    / `OIDC_SCOPES`; PKCE on; native `email_verified` fail-closed (`oidc-issuer.ts`).
  *  - **Auth0 issuer discovery (OLO-9.7):** `AUTH0_ISSUER` (tenant issuer) drives OIDC discovery;
  *    PKCE on; native `email_verified` fail-closed (`auth0-issuer.ts`).
+ *  - **LINE Login (OLO-9.41):** fixed LINE OIDC endpoints (`access.line.me` / `api.line.me`); email
+ *    requires an approved channel permission — `email_verified` honored when present, otherwise
+ *    fail-closed link-first.
  *  - **nOAuth hardening (OLO-1.4):** azure id-token claims (`oid`/`upn`/`xms_edov`/…) pass through
  *    untouched so the engine's `resolveEntraEmailVerified` still rejects a forged token.
  *  - **The account-resolution decision (OLO-1.x):** every callback runs through
@@ -470,6 +473,37 @@ function normalizeAuth0(tokens: OAuth2Tokens): NormalizedOAuthProfile {
   };
 }
 
+/** LINE Login v2.1 userinfo endpoint (Better Auth `line()` helper). */
+const LINE_USERINFO_URL = 'https://api.line.me/oauth2/v2.1/userinfo';
+
+/**
+ * Normalize a LINE sign-in (OLO-9.41): prefer id-token claims (email arrives only when the
+ * channel has approved email permission and the `email` scope was granted); fall back to the
+ * LINE userinfo endpoint when the id token is absent. `email_verified` is honored when the claim
+ * arrives; otherwise `resolveOAuthEmailVerified` fail-closes to link-first.
+ */
+async function normalizeLine(
+  tokens: OAuth2Tokens,
+  _env: Record<string, string | undefined>,
+  fetchImpl: FetchLike
+): Promise<NormalizedOAuthProfile> {
+  let claims = (decodeJwtClaims(tokens.idToken) ?? null) as Record<string, unknown> | null;
+  if (!claims && tokens.accessToken) {
+    const body = await fetchJsonWithToken(LINE_USERINFO_URL, tokens.accessToken, fetchImpl);
+    if (body && typeof body === 'object') {
+      claims = body as Record<string, unknown>;
+    }
+  }
+  const profile = claims ?? {};
+  return {
+    accountId: typeof profile.sub === 'string' ? profile.sub : '',
+    profile,
+    email: typeof profile.email === 'string' ? profile.email : null,
+    name: typeof profile.name === 'string' ? profile.name : null,
+    image: typeof profile.picture === 'string' ? profile.picture : null,
+  };
+}
+
 /* ── getUserInfo runner: normalize → resolve → admit or override ────────────────────────────── */
 
 /**
@@ -504,6 +538,7 @@ const NORMALIZERS: Record<
   keycloak: (tokens) => normalizeKeycloak(tokens),
   oidc: (tokens) => normalizeOidc(tokens),
   auth0: (tokens) => normalizeAuth0(tokens),
+  line: (tokens, env, fetchImpl) => normalizeLine(tokens, env, fetchImpl),
 };
 
 /**
@@ -536,7 +571,7 @@ export async function resolveLinkIntentUserId(provider: string): Promise<string 
  * own account handling sees the identical verified signal the engine decided over.
  *
  * @param provider The provider slug (github | gitlab | azure | google | okta | aws | keycloak |
- *   oidc | auth0).
+ *   oidc | auth0 | line).
  * @param deps Injectable dependencies (store, fetch, link-intent resolver, env).
  * @returns A `getUserInfo` function returning the Better Auth user info on admit, or null otherwise.
  */
@@ -760,6 +795,21 @@ export function buildGenericOAuthConfig(
         // Form: https://<tenant>.auth0.com
         discoveryUrl: `${auth0IssuerBaseUrl(env)}/.well-known/openid-configuration`,
         scopes: ['openid', 'email', 'profile'],
+        pkce: true,
+        getUserInfo,
+      };
+    }
+    case 'line': {
+      return {
+        providerId: 'line',
+        clientId: readEnvString(env, 'LINE_CLIENT_ID') ?? '',
+        clientSecret: readEnvString(env, 'LINE_CLIENT_SECRET') ?? '',
+        // Fixed LINE Login v2.1 endpoints (Better Auth `line()` helper). Email requires an
+        // approved channel permission; multi-channel JP/TW/TH use distinct providerIds in docs.
+        authorizationUrl: 'https://access.line.me/oauth2/v2.1/authorize',
+        tokenUrl: 'https://api.line.me/oauth2/v2.1/token',
+        userInfoUrl: LINE_USERINFO_URL,
+        scopes: ['openid', 'profile', 'email'],
         pkce: true,
         getUserInfo,
       };

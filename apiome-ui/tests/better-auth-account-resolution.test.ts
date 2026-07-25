@@ -293,6 +293,7 @@ describe('resolveBetterAuthOAuthSignIn — decision tree', () => {
       'gitlab',
       'google',
       'keycloak',
+      'line',
       'oidc',
       'okta',
     ]);

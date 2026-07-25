@@ -257,8 +257,8 @@ describe('linkable-provider vocabulary', () => {
     expect(LINKABLE_PROVIDERS.has('azure-ad')).toBe(false);
   });
 
-  test('every linkable provider is within the V198 DB vocabulary', () => {
-    // Widened by V198__auth_provider_vocabulary_4984.sql (includes okta and upcoming issuer IdPs).
+  test('every linkable provider is within the V202 DB vocabulary', () => {
+    // Widened by V202__auth_provider_vocabulary_line_5054.sql (adds line; keeps V198 set).
     const dbVocabulary = new Set([
       'github',
       'gitlab',
@@ -272,6 +272,7 @@ describe('linkable-provider vocabulary', () => {
       'auth0',
       'oidc',
       'atlassian',
+      'line',
     ]);
     for (const provider of LINKABLE_PROVIDERS) {
       expect(dbVocabulary.has(provider)).toBe(true);
