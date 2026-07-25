@@ -30,6 +30,7 @@ from corpus_loader import (
     MANIFEST_PATH,
     SCHEMA_PATH,
     CorpusEntry,
+    ExpectedOutcome,
     FilesetRole,
     Rung,
     ValidityClass,
@@ -42,6 +43,10 @@ from jsonschema import Draft202012Validator
 #: The floor every non-preview adapter's valid-example count must reach
 #: (IXH-1.2 acceptance criterion, #5088).
 MIN_VALID_EXAMPLES_PER_ADAPTER = 6
+
+#: The floor every non-preview adapter's negative-example count — and distinct
+#: failure-class count — must reach (IXH-1.3 acceptance criterion, #5089).
+MIN_NEGATIVE_EXAMPLES_PER_ADAPTER = 5
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _README_PATH = EXAMPLES_DIR / "README.md"
@@ -174,7 +179,7 @@ def test_load_corpus_filters_by_validity_class_enum_and_string():
     assert invalid_via_enum == invalid_via_str
     assert all(e.validity_class is ValidityClass.INVALID for e in invalid_via_enum)
     # The corpus's canonical invalid example must stay classified as such.
-    assert "arazzo/property-conflicts.yaml" in {e.path for e in invalid_via_enum}
+    assert "arazzo/negative/property-conflicts.yaml" in {e.path for e in invalid_via_enum}
 
 
 def test_load_corpus_filters_by_feature():
@@ -303,12 +308,14 @@ def test_fileset_entries_are_consistent():
 
     Every nested entry must carry a ``fileset_role`` and sit on the
     ``multi-file`` rung; flat entries must not carry a role; and every set
-    directory must contain exactly one ``root``.
+    directory must contain exactly one ``root``. The ``negative/`` tier
+    directory (IXH-1.3) is not a set: its files behave like flat entries.
     """
     problems = []
     roots_by_set: dict[str, int] = {}
     for entry in load_corpus():
-        nested = entry.path.count("/") == 2
+        segments = entry.path.split("/")
+        nested = len(segments) == 3 and segments[1] != "negative"
         if nested:
             set_dir = entry.path.rsplit("/", 1)[0]
             roots_by_set.setdefault(set_dir, 0)
@@ -324,6 +331,86 @@ def test_fileset_entries_are_consistent():
         if count != 1:
             problems.append(f"{set_dir}/: expected exactly one fileset root, found {count}")
     assert not problems, "multi-file set problems:\n  " + "\n  ".join(problems)
+
+
+# ---------------------------------------------------------------------------
+# Negative tier (IXH-1.3, #5089)
+# ---------------------------------------------------------------------------
+
+
+def test_invalid_entries_declare_failure_class_and_error_code():
+    """Every invalid entry carries the IXH-1.3 negative-contract fields, and
+    only invalid entries carry them."""
+    problems = []
+    for entry in load_corpus():
+        if entry.validity_class is ValidityClass.INVALID:
+            if entry.failure_class is None:
+                problems.append(f"{entry.path}: invalid entry missing failure_class")
+            if entry.expected_error_code is None:
+                problems.append(f"{entry.path}: invalid entry missing expected_error_code")
+            if entry.expected_outcome is not ExpectedOutcome.REJECTS:
+                problems.append(f"{entry.path}: invalid entry must declare expected_outcome rejects")
+        else:
+            if entry.failure_class is not None:
+                problems.append(f"{entry.path}: failure_class on a non-invalid entry")
+            if entry.expected_error_code is not None:
+                problems.append(f"{entry.path}: expected_error_code on a non-invalid entry")
+    assert not problems, "negative-contract problems:\n  " + "\n  ".join(problems)
+
+
+def test_expected_error_codes_are_registered_taxonomy_codes():
+    from app.intake_error_taxonomy import INTAKE_ERROR_TAXONOMY
+
+    unknown = sorted(
+        {
+            f"{entry.path}: {entry.expected_error_code}"
+            for entry in load_corpus(validity_class=ValidityClass.INVALID)
+            if entry.expected_error_code not in INTAKE_ERROR_TAXONOMY
+        }
+    )
+    assert not unknown, (
+        "expected_error_code values not in app.intake_error_taxonomy:\n  " + "\n  ".join(unknown)
+    )
+
+
+def test_invalid_entries_live_in_the_negative_tier():
+    """Invalid fixtures live under ``<format>/negative/`` and vice versa."""
+    problems = []
+    for entry in load_corpus():
+        segments = entry.path.split("/")
+        in_tier = len(segments) == 3 and segments[1] == "negative"
+        if entry.validity_class is ValidityClass.INVALID and not in_tier:
+            problems.append(f"{entry.path}: invalid entry outside a negative/ tier directory")
+        if in_tier and entry.validity_class is not ValidityClass.INVALID:
+            problems.append(f"{entry.path}: negative/ tier file not classified invalid")
+    assert not problems, "negative-tier placement problems:\n  " + "\n  ".join(problems)
+
+
+def test_every_non_preview_adapter_has_the_negative_example_floor():
+    """IXH-1.3 acceptance: >= 5 negative entries covering distinct failure
+    classes for every shipped adapter."""
+    entries_by_adapter: dict[str, list[CorpusEntry]] = {
+        key: [] for key in _non_preview_adapter_keys()
+    }
+    for entry in load_corpus(validity_class=ValidityClass.INVALID):
+        if entry.adapter_key in entries_by_adapter:
+            entries_by_adapter[entry.adapter_key].append(entry)
+    problems = []
+    for key, entries in sorted(entries_by_adapter.items()):
+        classes = {entry.failure_class for entry in entries if entry.failure_class}
+        if len(entries) < MIN_NEGATIVE_EXAMPLES_PER_ADAPTER:
+            problems.append(
+                f"{key}: {len(entries)} negative entries "
+                f"(floor {MIN_NEGATIVE_EXAMPLES_PER_ADAPTER})"
+            )
+        elif len(classes) < MIN_NEGATIVE_EXAMPLES_PER_ADAPTER:
+            problems.append(
+                f"{key}: negative entries span only {len(classes)} distinct "
+                f"failure classes (floor {MIN_NEGATIVE_EXAMPLES_PER_ADAPTER})"
+            )
+    assert not problems, (
+        "adapters below the IXH-1.3 negative-corpus floor:\n  " + "\n  ".join(problems)
+    )
 
 
 # ---------------------------------------------------------------------------

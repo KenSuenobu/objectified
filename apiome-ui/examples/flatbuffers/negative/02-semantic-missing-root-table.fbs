@@ -1,0 +1,4 @@
+// Declares a root_type but never defines any table, struct, or union for it.
+namespace acme.ping;
+
+root_type Ping;

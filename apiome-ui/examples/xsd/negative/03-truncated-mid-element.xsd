@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  XSD minimal example: the smallest canonical schema.
+
+  One global element with one named complexType containing a single
+  sequence of two string fields.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://example.com/note"
+           xmlns:n="http://example.com/note

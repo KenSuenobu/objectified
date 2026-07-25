@@ -1,0 +1,7 @@
+{
+  "_comment": "Minimal z/OS Connect descriptor — the smallest canonical requester: an `apiRequester` block naming the artifact, the target `api` block, and a single mapped operation. Everything else (language, path parameters, programs) is optional.",
+  "apiRequester": {
+    "name": "PingRequester",
+    "version": "1.0.0"
+  },
+  "

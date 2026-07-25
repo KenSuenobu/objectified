@@ -1,0 +1,19 @@
+// Protocol Buffers definition for a product catalog RPC.
+syntax = "proto3";
+
+package acme.catalog.v1;
+
+message Product {
+  string id = 1;
+  string name = 2;
+  int64 price_cents = 3;
+  repeated string tags = 4;
+}
+
+message GetProductRequest {
+  string id = 1;
+}
+
+service CatalogService {
+  rpc GetProduct(GetProductRequest) returns (Product);
+}

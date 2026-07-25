@@ -1,0 +1,11 @@
+openapi: 9.0.0
+info:
+  title: Future API
+  version: 1.0.0
+paths:
+  /ping:
+    get:
+      operationId: ping
+      responses:
+        '200':
+          description: pong

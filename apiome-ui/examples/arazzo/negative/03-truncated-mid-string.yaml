@@ -1,0 +1,23 @@
+arazzo: 1.0.1
+info:
+  title: Simple Todo Workflow
+  version: 1.0.0
+  description: A minimal Arazzo example with a single workflow and two steps
+
+sourceDescriptions:
+  - name: TodoAPI
+    type: openapi
+    url: https://example.com/openapi/todo.json
+
+workflows:
+  - name: CreateAndGetTodo
+    description: Creates a todo item and then retrieves it
+    steps:
+      - name: CreateTodo
+        description: Create a todo item
+        request:
+          source: TodoAPI
+          operationId: createTodo
+          parameters:
+            body:
+              title: "Buy mi

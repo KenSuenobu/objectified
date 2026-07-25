@@ -1,0 +1,10 @@
+{
+  "specversion": "1.0",
+  "id": "evt-1001",
+  "type": "com.example.order.created",
+  "source": "/orders",
+  "time": "2026-07-01T12:00:00Z",
+  "datacontenttype": "application/json",
+  "data": {
+    "orderId": "PO-77031",
+    "total": 149.95

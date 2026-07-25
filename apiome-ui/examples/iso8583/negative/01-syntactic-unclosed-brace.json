@@ -1,0 +1,4 @@
+{
+  "mti": "0800",
+  "dataElements": {
+    "70": { "name": "Network Management Information Code", "type": "n", "length": "3", "value": "301" }

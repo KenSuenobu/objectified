@@ -1,0 +1,16 @@
+{
+  "_comment": "FHIR R4 example — a StructureDefinition (the schema/contract form, as opposed to the instance in 01-patient.json). A StructureDefinition formally describes a resource or profile: `resourceType: StructureDefinition`, a `kind`, the constrained `type`, and an `element` list under `snapshot`/`differential`. This is the form a catalog would parse to derive the resource's classes and properties.",
+  "resourceType": "StructureDefinition",
+  "id": "SimpleObservation",
+  "url": "http://example.com/fhir/StructureDefinition/SimpleObservation",
+  "name": "SimpleObservation",
+  "status": "draft",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Observation",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation",
+  "derivation": "constraint",
+  "differential": {
+    "element": [
+      {
+    

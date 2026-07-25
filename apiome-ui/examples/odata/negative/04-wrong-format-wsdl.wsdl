@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="StockQuote"
+    targetNamespace="http://example.com/stockquote.wsdl"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:tns="http://example.com/stockquote.wsdl"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:message name="GetQuoteRequest">
+    <wsdl:part name="symbol" element="xsd:string"/>
+  </wsdl:message>
+  <wsdl:message name="GetQuoteResponse">
+    <wsdl:part name="price" element="xsd:float"/>
+  </wsdl:message>
+  <wsdl:portType name="StockQuotePortType">
+    <wsdl:operation name="GetQuote">
+      <wsdl:input message="tns:GetQuoteRequest"/>
+      <wsdl:output message="tns:GetQuoteResponse"/>
+    </wsdl:operation>
+  </wsdl:portType>
+</wsdl:definitions>

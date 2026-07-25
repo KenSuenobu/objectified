@@ -1,0 +1,5 @@
+"A book record whose type body is never closed"
+type Book {
+  id: ID!
+  title: String!
+  pageCount: Int

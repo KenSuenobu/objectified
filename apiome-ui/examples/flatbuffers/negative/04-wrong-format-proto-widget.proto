@@ -1,0 +1,14 @@
+// Protocol Buffers definition offered to the FlatBuffers adapter.
+syntax = "proto3";
+
+package acme.inventory.v1;
+
+message Widget {
+  string id = 1;
+  string label = 2;
+  int64 stock = 3;
+}
+
+message WidgetList {
+  repeated Widget widgets = 1;
+}

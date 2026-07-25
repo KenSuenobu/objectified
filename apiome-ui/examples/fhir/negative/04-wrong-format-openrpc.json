@@ -1,0 +1,19 @@
+{
+  "openrpc": "1.2.6",
+  "info": {
+    "title": "Pet Directory",
+    "version": "1.0.0"
+  },
+  "methods": [
+    {
+      "name": "list_pets",
+      "params": [
+        { "name": "limit", "schema": { "type": "integer" } }
+      ],
+      "result": {
+        "name": "pets",
+        "schema": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  ]
+}

@@ -65,9 +65,17 @@ from .archive_intake import ArchiveIntakeError, is_archive_payload, unpack_archi
 from .canonical_model import CanonicalApi
 from .fileset import IntakeFileset
 from .import_routing import ImportRoutingDecision, ImportTarget, decide_import_routing
-from .import_source import ImportSource, ImportSourceError, LintReport
+from .import_source import (
+    DetectionInput,
+    ImportSource,
+    ImportSourceError,
+    LintReport,
+    detect_import_source,
+)
+from .intake_error_taxonomy import descriptor_for, resolve_intake_error_code
 from .models import (
     SpecImportEvent,
+    SpecImportJobError,
     SpecImportJobResult,
     SpecImportJobStatus,
 )
@@ -81,6 +89,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "ADAPTER_PHASE_EVENT_CODES",
+    "build_job_error",
     "capture_canonical_quality_score",
     "run_adapter_import_job",
 ]
@@ -156,6 +165,7 @@ class _AdapterRunState:
         percent: int,
         summary: Optional[Dict[str, Any]] = None,
         result: Optional[SpecImportJobResult] = None,
+        error: Optional[SpecImportJobError] = None,
     ) -> SpecImportJobStatus:
         """Build a status snapshot carrying the accumulated event log."""
         return SpecImportJobStatus(
@@ -165,7 +175,85 @@ class _AdapterRunState:
             events=list(self._events),
             summary=summary,
             result=result,
+            error=error,
         )
+
+
+def build_job_error(code: Optional[str], message: str) -> SpecImportJobError:
+    """Build the terminal :class:`SpecImportJobError` for a failed job.
+
+    ``code`` may be a taxonomy code, a legacy event/engine code, or ``None``;
+    anything unrecognized falls back to ``INTERNAL_ADAPTER_FAULT`` so a failed job
+    always carries a valid taxonomy code with non-empty remediation (IXH-1.3).
+    """
+    resolved = resolve_intake_error_code(code) or "INTERNAL_ADAPTER_FAULT"
+    descriptor = descriptor_for(resolved)
+    assert descriptor is not None  # every resolved code is registered
+    return SpecImportJobError(
+        code=descriptor.code,
+        category=descriptor.category.value,
+        message=message,
+        remediation=descriptor.remediation,
+        retriable=descriptor.retriable,
+    )
+
+
+#: Characters that betray a text that was decoded from a non-UTF-8 upload:
+#: U+FFFD replacement characters (invalid byte sequences under the permissive
+#: decode in :func:`_decode_document`) and NULs (UTF-16 payloads decoded as UTF-8).
+_ENCODING_FAULT_MARKERS = ("\ufffd", "\x00")
+
+#: Minimum confidence another adapter must report before a parse failure is
+#: attributed to a wrong-format upload rather than a malformed document.
+_FORMAT_MISMATCH_MIN_CONFIDENCE = 0.5
+
+
+def _classify_parse_failure(
+    exc: ImportSourceError,
+    adapter: ImportSource,
+    text: Optional[str],
+    source_label: Optional[str],
+) -> str:
+    """Pick the taxonomy code for a parse-phase failure (IXH-1.3).
+
+    Precedence:
+        1. An explicit ``exc.code`` from the adapter (it knows best).
+        2. Empty/whitespace-only input → ``INPUT_EMPTY``.
+        3. Encoding-fault markers (replacement chars, NULs, a leading BOM) →
+           ``INPUT_ENCODING_INVALID``.
+        4. The adapter's own ``detect()`` does not claim the text but a
+           *different* adapter confidently does → ``FORMAT_MISMATCH`` (the
+           document is plausibly that other format, routed to the wrong
+           importer). A broken document nobody claims is just malformed —
+           detection failing on it is not evidence of a different format.
+        5. Otherwise ``INPUT_MALFORMED``.
+    """
+    explicit = resolve_intake_error_code(getattr(exc, "code", None))
+    if explicit is not None:
+        return explicit
+    if text is None:
+        # Archive/fileset intake: no single text to inspect further.
+        return "INPUT_MALFORMED"
+    if not text.strip():
+        return "INPUT_EMPTY"
+    if text.startswith("\ufeff") or any(marker in text for marker in _ENCODING_FAULT_MARKERS):
+        return "INPUT_ENCODING_INVALID"
+    payload = DetectionInput(
+        text=text, filename=source_label if isinstance(source_label, str) else None
+    )
+    try:
+        claimed = adapter.detect(payload).matched
+    except Exception:  # noqa: BLE001 - a buggy sniffer must not change the outcome
+        claimed = True
+    if not claimed:
+        best = detect_import_source(payload)
+        if (
+            best is not None
+            and best[0].key != adapter.key
+            and best[1].confidence >= _FORMAT_MISMATCH_MIN_CONFIDENCE
+        ):
+            return "FORMAT_MISMATCH"
+    return "INPUT_MALFORMED"
 
 
 def _decode_document_bytes(payload: Dict[str, Any]) -> bytes:
@@ -176,11 +264,15 @@ def _decode_document_bytes(payload: Dict[str, Any]) -> bytes:
     """
     b64 = payload.get("document_base64")
     if not isinstance(b64, str) or not b64:
-        raise ImportSourceError("Import payload is missing document_base64 content")
+        raise ImportSourceError(
+            "Import payload is missing document_base64 content", code="INPUT_EMPTY"
+        )
     try:
         return base64.standard_b64decode(b64)
     except (binascii.Error, ValueError) as exc:
-        raise ImportSourceError(f"document_base64 is not valid base64: {exc}") from exc
+        raise ImportSourceError(
+            f"document_base64 is not valid base64: {exc}", code="INPUT_ENCODING_INVALID"
+        ) from exc
 
 
 def _decode_document(payload: Dict[str, Any]) -> str:
@@ -230,7 +322,7 @@ def _resolve_intake(payload: Dict[str, Any], options: Dict[str, Any]) -> _Resolv
             root_path=archive_root,
         )
     except ArchiveIntakeError as exc:
-        raise ImportSourceError(str(exc)) from exc
+        raise ImportSourceError(str(exc), code="INPUT_ARCHIVE_INVALID") from exc
 
     fileset = IntakeFileset.from_members(unpacked.members, root=unpacked.root_path)
     return _ResolvedIntake(
@@ -743,6 +835,7 @@ async def run_adapter_import_job(
         return state.snapshot(state="canceled", percent=_PCT_INIT)
 
     # --- parse ----------------------------------------------------------------
+    intake: Optional[_ResolvedIntake] = None
     try:
         intake = _resolve_intake(payload, options if isinstance(options, dict) else {})
         if intake.fileset is not None:
@@ -751,8 +844,15 @@ async def run_adapter_import_job(
             assert intake.text is not None
             native_ast = adapter.parse(intake.text, source_label=source_label)
     except ImportSourceError as exc:
-        state.event("PARSE_ERROR", str(exc), level="error")
-        return state.snapshot(state="failed", percent=_PCT_INIT)
+        error_code = _classify_parse_failure(
+            exc, adapter, intake.text if intake is not None else None, source_label
+        )
+        state.event("PARSE_ERROR", str(exc), level="error", context={"error_code": error_code})
+        return state.snapshot(
+            state="failed",
+            percent=_PCT_INIT,
+            error=build_job_error(error_code, str(exc)),
+        )
     state.event("PARSE_OK", "Parsed source into the format's native representation.")
     await publish(state.snapshot(state="running", percent=_PCT_PARSED))
     if canceled():
@@ -762,8 +862,17 @@ async def run_adapter_import_job(
     try:
         model = adapter.normalize(native_ast, include_raw=True)
     except ImportSourceError as exc:
-        state.event("NORMALIZE_ERROR", str(exc), level="error")
-        return state.snapshot(state="failed", percent=_PCT_PARSED)
+        error_code = resolve_intake_error_code(getattr(exc, "code", None)) or (
+            "INPUT_SEMANTIC_INVALID"
+        )
+        state.event(
+            "NORMALIZE_ERROR", str(exc), level="error", context={"error_code": error_code}
+        )
+        return state.snapshot(
+            state="failed",
+            percent=_PCT_PARSED,
+            error=build_job_error(error_code, str(exc)),
+        )
     state.event(
         "NORMALIZE_OK",
         f"Normalized into the canonical model ({model.paradigm.value}/{model.format}).",
@@ -856,8 +965,19 @@ async def run_adapter_import_job(
                 )
         except Exception as exc:  # noqa: BLE001 - surface a persistence fault as a failed job
             logger.exception("adapter import persistence failed job=%s", job_id)
-            state.event("PERSIST_ERROR", f"Failed to store the import: {exc}", level="error")
-            return state.snapshot(state="failed", percent=_PCT_LINTED)
+            state.event(
+                "PERSIST_ERROR",
+                f"Failed to store the import: {exc}",
+                level="error",
+                context={"error_code": "INTERNAL_PERSIST_FAULT"},
+            )
+            return state.snapshot(
+                state="failed",
+                percent=_PCT_LINTED,
+                error=build_job_error(
+                    "INTERNAL_PERSIST_FAULT", f"Failed to store the import: {exc}"
+                ),
+            )
 
     if types_outcome is not None:
         imported = types_outcome.get("imported") or []

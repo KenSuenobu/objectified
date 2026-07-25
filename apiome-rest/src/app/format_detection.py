@@ -32,6 +32,7 @@ time without callers changing.
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass, replace
 from typing import Callable, List, Optional
@@ -43,6 +44,8 @@ from .import_source import (
     DetectionResult,
     detect_import_source_candidates,
 )
+
+logger = logging.getLogger(__name__)
 
 # When the top two distinct-format candidates are within this confidence margin of
 # each other, the input is treated as ambiguous (the importer should ask the user
@@ -639,9 +642,15 @@ def detect_format(
             )
         )
 
-    # Not-yet-importable sniffer matches (later format epics).
+    # Not-yet-importable sniffer matches (later format epics). A raising sniffer is
+    # treated as no-match: detection feeds a live endpoint and adversarial input
+    # must never turn into a 5xx (IXH-1.3).
     for sniffer in _SNIFFERS:
-        result = sniffer(enriched)
+        try:
+            result = sniffer(enriched)
+        except Exception:  # noqa: BLE001 - a broken sniffer must not break detection
+            logger.warning("format sniffer %r raised; treating as no-match", sniffer, exc_info=True)
+            continue
         if result.matched and result.format is not None:
             candidates.append(
                 FormatCandidate(

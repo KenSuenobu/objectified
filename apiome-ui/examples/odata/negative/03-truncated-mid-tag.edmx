@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Minimal OData v4 CSDL (EDMX) document — the smallest canonical service.
+
+  One EntityType with a single key property and one EntitySet exposing it.
+  Demonstrates the bare structural skeleton every EDMX shares: Edmx,
+  DataServices, Schema, EntityType, EntityContainer.
+-->
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:DataServices>
+    <Schema Namespace="Example.Minimal" xmlns="http://docs.o

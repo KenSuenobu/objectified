@@ -1,0 +1,38 @@
+# AsyncAPI 2.6 example — user lifecycle events over a message broker.
+#
+# Recognized by the format-detection sniffer via the top-level `asyncapi:` marker
+# (a 2.x version routes to the `asyncapi-2` format). Used to exercise the catalog's
+# event/messaging paradigm: a `user/signedup` channel publishing a UserSignedUp
+# payload whose schema becomes a catalog class with its properties.
+asyncapi: 2.6.0
+info:
+  title: User Account Service
+  version: 1.0.0
+  description: Publishes account lifecycle events for downstream consumers.
+servers:
+  production:
+    url: broker.example.com:9092
+    protocol: kafka
+    description: Production Kafka cluster.
+channels:
+  user/signedup:
+    description: A new user completed registration.
+    subscribe:
+      operationId: onUserSignedUp
+      summary: Receive a notification when a user signs up.
+      message:
+        $ref: '#/components/messages/UserSignedUp'
+  user/deleted:
+    description: A user account was deleted.
+    subscribe:
+      operationId: onUserDeleted
+      message:
+        $ref: '#/components/messages/UserDeleted'
+components:
+  messages:
+    UserSignedUp:
+      name: userSignedUp
+      title: User signed up
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/UserSig

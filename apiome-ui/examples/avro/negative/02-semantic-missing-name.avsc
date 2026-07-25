@@ -1,0 +1,7 @@
+{
+  "type": "record",
+  "fields": [
+    { "name": "id", "type": "string" },
+    { "name": "email", "type": "string" }
+  ]
+}

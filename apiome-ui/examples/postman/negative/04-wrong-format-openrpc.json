@@ -1,0 +1,19 @@
+{
+  "openrpc": "1.3.2",
+  "info": {
+    "title": "Echo Service",
+    "version": "1.0.0"
+  },
+  "methods": [
+    {
+      "name": "echo",
+      "params": [
+        { "name": "text", "schema": { "type": "string" } }
+      ],
+      "result": {
+        "name": "echoed",
+        "schema": { "type": "string" }
+      }
+    }
+  ]
+}

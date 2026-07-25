@@ -27,7 +27,11 @@ from .import_source import (
     get_import_source,
     resolve_import_source_key,
 )
-from .import_source_pipeline import ADAPTER_PHASE_EVENT_CODES, run_adapter_import_job
+from .import_source_pipeline import (
+    ADAPTER_PHASE_EVENT_CODES,
+    build_job_error,
+    run_adapter_import_job,
+)
 from .models import (
     SpecImportCommitResponse,
     SpecImportEvent,
@@ -430,6 +434,9 @@ def _default_result_status(
                 "context": None,
             }
         ],
+        # IXH-1.3: every terminal failure carries a stable taxonomy code +
+        # remediation, keyed off the engine's legacy event code.
+        error=build_job_error(code, message),
     )
 
 

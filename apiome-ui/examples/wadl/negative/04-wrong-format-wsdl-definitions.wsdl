@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions
+    name="Echo"
+    targetNamespace="http://example.com/echo"
+    xmlns:tns="http://example.com/echo"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:message name="EchoInput">
+    <wsdl:part name="text" type="xsd:string"/>
+  </wsdl:message>
+  <wsdl:portType name="EchoPort">
+    <wsdl:operation name="Echo">
+      <wsdl:input message="tns:EchoInput"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:service name="EchoService">
+    <wsdl:port name="EchoPort" binding="tns:EchoBinding">
+      <soap:address location="https://api.example.com/echo"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

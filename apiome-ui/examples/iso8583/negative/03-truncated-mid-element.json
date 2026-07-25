@@ -1,0 +1,9 @@
+{
+  "_comment": "ISO 8583 example — an authorization request (MTI 0100) expressed as a JSON field map. The wire format of ISO 8583 is binary (a Message Type Indicator + one or two bitmaps that flag which numbered data elements are present), so it is not human-readable on the wire. This JSON is the documented field-definition form most catalogs/parsers use: `mti` plus the numbered Data Elements (DE). Each DE has a fixed meaning, length, and type — they become the typed properties of the message class.",
+  "mti": "0100",
+  "name": "Authorization Request",
+  "dataElements": {
+    "2": { "name": "Primary Account Number", "type": "n", "length": "..19", "value": "4111111111111111" },
+    "3": { "name": "Processing Code", "type": "n", "length": "6", "value": "000000" },
+    "4": { "name": "Amount, Transaction", "type": "n", "length": "12", "value": "000000018550" },
+    "7": { "name": "Transmission Date & T

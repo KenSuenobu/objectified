@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.39.15",
+    "version": "1.40.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -90083,6 +90083,51 @@
         "title": "SpecImportJobAccepted",
         "description": "Returned when a job is accepted (HTTP 202)."
       },
+      "SpecImportJobError": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Stable intake-taxonomy error code (additive-only).",
+            "example": "example"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Taxonomy category: input, format, capability, policy, resource, transport, or internal.",
+            "example": "domain"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable description of the failure.",
+            "example": "Example validation message."
+          },
+          "remediation": {
+            "type": "string",
+            "title": "Remediation",
+            "description": "Actionable, user-facing next step.",
+            "example": "example"
+          },
+          "retriable": {
+            "type": "boolean",
+            "title": "Retriable",
+            "description": "Whether retrying the identical request may succeed without changing the input.",
+            "example": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "category",
+          "message",
+          "remediation",
+          "retriable"
+        ],
+        "title": "SpecImportJobError",
+        "description": "Stable, user-facing description of why an import job failed (IXH-1.3/6.4).\n\n``code`` comes from the intake error taxonomy (``app.intake_error_taxonomy``)\nand is additive-only: a shipped code is never renamed or repurposed, so UI\nremediation copy and CLI exit codes can key off it safely."
+      },
       "SpecImportJobListItem": {
         "properties": {
           "job_id": {
@@ -90321,6 +90366,18 @@
               }
             ],
             "description": "Result."
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpecImportJobError"
+              },
+              {
+                "type": "null",
+                "description": "Spec Import Job schema."
+              }
+            ],
+            "description": "Populated when state is failed: the stable taxonomy code and remediation for the terminal failure."
           }
         },
         "type": "object",

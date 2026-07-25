@@ -1,0 +1,6 @@
+{
+  "info": {
+    "_postman_id": "b1a2c3d4-0000-4000-8000-000000000002",
+    "name": "Ping",
+    "description": "Minimal Postman Collection v2.1 example: the smallest canonical collection, an info block plus a single GET request with a plain string URL.",
+    "schema": "https://schema.getpostman.com/json/co

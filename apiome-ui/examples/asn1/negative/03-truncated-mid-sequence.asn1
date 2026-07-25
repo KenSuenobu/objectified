@@ -1,0 +1,18 @@
+-- ASN.1 example — a person record module.
+--
+-- ASN.1 (Abstract Syntax Notation One) is a data-schema IDL used across telecoms,
+-- security (X.509), and aviation. A module is framed by `DEFINITIONS ::= BEGIN …
+-- END`. `SEQUENCE` is a record (its named members become properties), `ENUMERATED`
+-- an enumeration, `SEQUENCE OF` an array, and constructs like `OPTIONAL` and
+-- `DEFAULT` mark optionality. Each SEQUENCE/CHOICE becomes a catalog class.
+PersonModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+  Status ::= ENUMERATED { active(0), suspended(1), deleted(2) }
+
+  PhoneNumber ::= SEQUENCE {
+    type     ENUMERATED { home(0), work(1), mobile(2) },
+    number   UTF8String
+  }
+
+  Address ::= SEQUENCE {
+    street      UTF8St

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/order.json",
+  "title": "Order",
+  "type": "object",
+  "required": ["orderId", "total"],
+  "properties": {
+    "orderId": { "type": "string" },
+    "total": { "type": "number" },
+    "lines": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

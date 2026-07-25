@@ -345,6 +345,111 @@
       "rung": "real-world"
     },
     {
+      "path": "api-blueprint/negative/01-syntactic-unclosed-resource-bracket.apib",
+      "format": "api-blueprint",
+      "adapter_key": "apiblueprint",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "api-blueprint",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-resource-bracket"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal ping blueprint whose resource and action headers never close their brackets, authored for the negative corpus.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "api-blueprint/negative/02-semantic-no-resources.apib",
+      "format": "api-blueprint",
+      "adapter_key": "apiblueprint",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "api-blueprint",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "no-resources"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Well-formed FORMAT/HOST metadata and prose with no resource sections or data structures, authored for the negative corpus.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "api-blueprint/negative/03-truncated-mid-resource.apib",
+      "format": "api-blueprint",
+      "adapter_key": "apiblueprint",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "api-blueprint",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-resource"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of api-blueprint/02-minimal-ping.apib cut at byte 157 of 222 (71%), mid-token inside the resource header.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "api-blueprint/negative/04-wrong-format-protobuf.proto",
+      "format": "api-blueprint",
+      "adapter_key": "apiblueprint",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "api-blueprint",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "protobuf"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid proto3 ping service offered to the API Blueprint adapter, authored for the negative corpus.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "api-blueprint/negative/05-encoding-utf16.apib",
+      "format": "api-blueprint",
+      "adapter_key": "apiblueprint",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "api-blueprint",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid minimal ping blueprint written as UTF-16 bytes so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "arazzo/06-pet-coupons-real-world.yaml",
       "format": "arazzo",
       "adapter_key": "arazzo",
@@ -439,7 +544,93 @@
       "rung": "composition"
     },
     {
-      "path": "arazzo/property-conflicts.yaml",
+      "path": "arazzo/negative/02-semantic-root-not-a-mapping.yaml",
+      "format": "arazzo",
+      "adapter_key": "arazzo",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "arazzo",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "root-not-a-mapping"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A complete Arazzo description wrapped in a YAML list so the document root is a sequence instead of the required mapping.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "The shared ingestion loader rejects top-level YAML sequences at the parse phase, so the code is INPUT_MALFORMED rather than a normalize-phase INPUT_SEMANTIC_INVALID."
+    },
+    {
+      "path": "arazzo/negative/03-truncated-mid-string.yaml",
+      "format": "arazzo",
+      "adapter_key": "arazzo",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "arazzo",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-quoted-scalar"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of arazzo/simple-workflow.yaml cut at byte 567 of 1264 (45%), inside a double-quoted scalar so the YAML cannot parse.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "arazzo/negative/04-wrong-format-openapi.yaml",
+      "format": "arazzo",
+      "adapter_key": "arazzo",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "arazzo",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "openapi"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid OpenAPI 3.0 document offered to the Arazzo adapter, authored for the negative corpus.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "INPUT_SEMANTIC_INVALID",
+      "notes": "The YAML parses cleanly, so the failure surfaces at normalize (`no arazzo version marker`) as INPUT_SEMANTIC_INVALID rather than FORMAT_MISMATCH; the arazzo sniffer correctly reports no match (detect_matched false)."
+    },
+    {
+      "path": "arazzo/negative/05-encoding-utf16.yaml",
+      "format": "arazzo",
+      "adapter_key": "arazzo",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "arazzo",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid minimal Arazzo workflow written as UTF-16 bytes so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
+      "path": "arazzo/negative/property-conflicts.yaml",
       "format": "arazzo",
       "adapter_key": "arazzo",
       "validity_class": "invalid",
@@ -460,7 +651,9 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Malformed YAML (mapping error at line 2) \u2014 the arazzo sniffer needs a parsed document, so detection currently falls through to a weak graphql match. Kept as the corpus's canonical `invalid` example; no detection guarantee."
+      "failure_class": "syntactic",
+      "expected_error_code": "FORMAT_MISMATCH",
+      "notes": "The line-scrambled YAML fails to parse, so the arazzo sniffer cannot claim it; the greedy graphql sniffer claims the text at 0.9 confidence, so the pipeline classifies FORMAT_MISMATCH instead of INPUT_MALFORMED."
     },
     {
       "path": "arazzo/property-reuse.yaml",
@@ -666,6 +859,111 @@
       "rung": "stress"
     },
     {
+      "path": "asn1/negative/01-syntactic-unclosed-brace.asn1",
+      "format": "asn1",
+      "adapter_key": "asn1",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "asn1",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal module whose SEQUENCE opens a brace that is never closed, authored for the negative corpus.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "asn1/negative/02-semantic-empty-module.asn1",
+      "format": "asn1",
+      "adapter_key": "asn1",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "asn1",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "empty-module"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Grammatically well-formed DEFINITIONS ::= BEGIN/END frame that defines no types, authored for the negative corpus.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "asn1/negative/03-truncated-mid-sequence.asn1",
+      "format": "asn1",
+      "adapter_key": "asn1",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "asn1",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-sequence"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of asn1/01-person.asn1 cut at byte 732 of 1102 (66%), mid-token inside the Address SEQUENCE.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "asn1/negative/04-wrong-format-graphql.graphql",
+      "format": "asn1",
+      "adapter_key": "asn1",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "asn1",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "graphql"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid GraphQL SDL document offered to the ASN.1 adapter, authored for the negative corpus.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "asn1/negative/05-encoding-utf16.asn1",
+      "format": "asn1",
+      "adapter_key": "asn1",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "asn1",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid minimal module written as UTF-16 bytes so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "asyncapi/01-user-events-2.6.yaml",
       "format": "asyncapi",
       "adapter_key": "asyncapi",
@@ -842,6 +1140,114 @@
       "fileset_role": "member"
     },
     {
+      "path": "asyncapi/negative/01-syntactic-unclosed-flow-sequence.yaml",
+      "format": "asyncapi",
+      "adapter_key": "asyncapi",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "asyncapi-2",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-flow-sequence"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "AsyncAPI 2.6 document whose `required` flow sequence never closes, breaking the YAML; authored for the negative corpus.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "Verified without asyncapi-parser installed (parse raises tool-unavailable), but the flaw is broken YAML, so classification is text-grounded and tool-independent."
+    },
+    {
+      "path": "asyncapi/negative/02-semantic-channels-not-a-mapping.yaml",
+      "format": "asyncapi",
+      "adapter_key": "asyncapi",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "asyncapi-2",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "channels-not-a-mapping"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid YAML with an `asyncapi: 2.6.0` marker whose `channels` value is a plain string instead of a mapping; authored for the negative corpus.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "Verified without asyncapi-parser installed; the asyncapi sniffer still claims the document (detect_matched true) and the blatantly wrong `channels` type also fails validation when the tool is present."
+    },
+    {
+      "path": "asyncapi/negative/03-truncated-mid-ref.yaml",
+      "format": "asyncapi",
+      "adapter_key": "asyncapi",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "asyncapi-2",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-ref"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of asyncapi/01-user-events-2.6.yaml cut at byte 1269 of 2535 (50%), inside a single-quoted $ref scalar so the YAML cannot parse.",
+      "failure_class": "truncated",
+      "expected_error_code": "FORMAT_MISMATCH",
+      "notes": "The truncated YAML no longer parses, so the asyncapi sniffer cannot claim it; the greedy graphql sniffer claims the text at 0.9 confidence, so the pipeline classifies FORMAT_MISMATCH instead of INPUT_MALFORMED."
+    },
+    {
+      "path": "asyncapi/negative/04-wrong-format-protobuf.proto",
+      "format": "asyncapi",
+      "adapter_key": "asyncapi",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "asyncapi-2",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "protobuf"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid proto3 event-message file offered to the AsyncAPI adapter, authored for the negative corpus.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "asyncapi/negative/05-encoding-utf16.yaml",
+      "format": "asyncapi",
+      "adapter_key": "asyncapi",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "asyncapi-2",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid minimal AsyncAPI 2.6 heartbeat document written as UTF-16 bytes so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "avro/01-user-record.avsc",
       "format": "avro",
       "adapter_key": "avro",
@@ -977,6 +1383,111 @@
       "rung": "real-world"
     },
     {
+      "path": "avro/negative/01-syntactic-unclosed-brace.avsc",
+      "format": "avro",
+      "adapter_key": "avro",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "avro",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal record schema missing its closing brace, authored for the negative corpus.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "avro/negative/02-semantic-missing-name.avsc",
+      "format": "avro",
+      "adapter_key": "avro",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "avro",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "missing-name"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Well-formed JSON record schema with `fields` but no required `name`, authored for the negative corpus.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "avro/negative/03-truncated-mid-union.avsc",
+      "format": "avro",
+      "adapter_key": "avro",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "avro",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-union"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of avro/01-user-record.avsc cut at byte 659 of 1303 (51%), inside a quoted union member so the JSON cannot parse.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "avro/negative/04-wrong-format-json-schema.json",
+      "format": "avro",
+      "adapter_key": "avro",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "avro",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "json-schema"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid JSON Schema (draft 2020-12) document offered to the Avro adapter, authored for the negative corpus.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "avro/negative/05-encoding-utf16.avsc",
+      "format": "avro",
+      "adapter_key": "avro",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "avro",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid minimal record schema written as UTF-16 bytes so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "capnproto/01-address-book.capnp",
       "format": "capnproto",
       "adapter_key": "capnproto",
@@ -1107,6 +1618,111 @@
       "rung": "typical"
     },
     {
+      "path": "capnproto/negative/01-syntactic-unclosed-struct.capnp",
+      "format": "capnproto",
+      "adapter_key": "capnproto",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "capnproto",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-struct"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal schema whose struct opens a brace that is never closed, authored for the negative corpus.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "capnproto/negative/02-semantic-no-definitions.capnp",
+      "format": "capnproto",
+      "adapter_key": "capnproto",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "capnproto",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "no-definitions"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Grammatically well-formed schema containing a file id and constants only \u2014 no struct, enum, or interface to import.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "capnproto/negative/03-truncated-mid-struct.capnp",
+      "format": "capnproto",
+      "adapter_key": "capnproto",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "capnproto",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-struct"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of capnproto/01-address-book.capnp cut at byte 580 of 962 (60%), mid-token inside the nested PhoneNumber struct so no definition closes.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "capnproto/negative/04-wrong-format-thrift.thrift",
+      "format": "capnproto",
+      "adapter_key": "capnproto",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "capnproto",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "thrift"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid Thrift IDL ping service offered to the Cap'n Proto adapter, authored for the negative corpus.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "capnproto/negative/05-encoding-utf16.capnp",
+      "format": "capnproto",
+      "adapter_key": "capnproto",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "capnproto",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid minimal ping schema written as UTF-16 bytes so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "cloudevents/01-order-created.json",
       "format": "cloudevents",
       "adapter_key": "cloudevents",
@@ -1227,6 +1843,112 @@
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "rung": "typical"
+    },
+    {
+      "path": "cloudevents/negative/01-syntactic-unclosed-brace.json",
+      "format": "cloudevents",
+      "adapter_key": "cloudevents",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "cloudevents",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written CloudEvents 1.0 order-created envelope whose data object and outer envelope are never closed, leaving the JSON braces unbalanced.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "cloudevents/negative/02-semantic-missing-source.json",
+      "format": "cloudevents",
+      "adapter_key": "cloudevents",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "cloudevents",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "missing-source"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written, well-formed JSON CloudEvents envelope with specversion, id, and type but the REQUIRED source context attribute omitted.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "Rejected at parse (`Content does not appear to be a CloudEvents document`), so the grounded code is INPUT_MALFORMED rather than INPUT_SEMANTIC_INVALID; detect also declines because is_cloudevents_document requires source."
+    },
+    {
+      "path": "cloudevents/negative/03-truncated-azure-blob.json",
+      "format": "cloudevents",
+      "adapter_key": "cloudevents",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "cloudevents",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "First 55% of the hand-authored cloudevents/05-azure-blob-created.json, cut mid-token inside the data payload so the JSON never closes.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "cloudevents/negative/04-wrong-format-json-schema.json",
+      "format": "cloudevents",
+      "adapter_key": "cloudevents",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "cloudevents",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "json-schema-document"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written JSON Schema 2020-12 Order schema offered to the CloudEvents adapter; the jsonschema sniffer claims it, grounding FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "cloudevents/negative/05-encoding-utf16-ping.json",
+      "format": "cloudevents",
+      "adapter_key": "cloudevents",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "cloudevents",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A minimal valid CloudEvents ping envelope written as UTF-16 (BOM + NUL bytes) instead of UTF-8, produced with Python text.encode('utf-16').",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "cobol-copybook/01-customer-record.cpy",
@@ -1355,6 +2077,112 @@
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "rung": "typical"
+    },
+    {
+      "path": "cobol-copybook/negative/01-syntactic-garbled-level.cpy",
+      "format": "cobolcopybook",
+      "adapter_key": "cobolcopybook",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "cobolcopybook",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "garbled-level-number"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written invoice-header copybook whose level-01 entry fuses the level number to the data name (01INVOICE-HEADER.), which is not a legal data-description entry.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "cobol-copybook/negative/02-semantic-level-05-before-01.cpy",
+      "format": "cobolcopybook",
+      "adapter_key": "cobolcopybook",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "cobolcopybook",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "level-05-before-01"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written shipment-record copybook whose elementary level-05 items precede the level-01 group; every entry is well-formed but the record cannot begin at level 05.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "cobol-copybook/negative/03-truncated-order-line.cpy",
+      "format": "cobolcopybook",
+      "adapter_key": "cobolcopybook",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "cobolcopybook",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Prefix of the hand-authored cobol-copybook/02-order-line.cpy cut mid-token inside the first PIC clause (ends 'PI'), leaving a copybook with no complete picture clause.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "The parser accepts any prefix containing a level-01 item plus one PIC clause, so the cut lands just before the first PIC completes (~54%) to defeat the lenient line-by-line parser."
+    },
+    {
+      "path": "cobol-copybook/negative/04-wrong-format-inventory.idl",
+      "format": "cobolcopybook",
+      "adapter_key": "cobolcopybook",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "cobolcopybook",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "corba-idl-document"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written CORBA IDL inventory module (modeled on corba-idl/02-inventory.idl) offered to the COBOL copybook adapter; the corbaidl sniffer claims it, grounding FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "cobol-copybook/negative/05-encoding-utf16-order-line.cpy",
+      "format": "cobolcopybook",
+      "adapter_key": "cobolcopybook",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "cobolcopybook",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "The hand-authored cobol-copybook/02-order-line.cpy re-encoded as UTF-16 (BOM + NUL bytes) with Python text.encode('utf-16').",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "connectrpc/01-greeter.proto",
@@ -1516,6 +2344,112 @@
       "fileset_role": "member"
     },
     {
+      "path": "connectrpc/negative/01-syntactic-unclosed-brace.proto",
+      "format": "connectrpc",
+      "adapter_key": "connectrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "connectrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written proto3 order service whose first message body is missing its closing brace; buf build reports a syntax error at end of file.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "connectrpc/negative/02-semantic-duplicate-field-number.proto",
+      "format": "connectrpc",
+      "adapter_key": "connectrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "connectrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "duplicate-field-number"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written grammar-valid proto3 contract in which ListOrdersRequest assigns field number 1 to two different fields, which protobuf forbids and buf build rejects.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "connectrpc/negative/03-truncated-greeter.proto",
+      "format": "connectrpc",
+      "adapter_key": "connectrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "connectrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "First 55% of the hand-authored connectrpc/01-greeter.proto, cut mid-token inside a message body so buf build hits an unexpected end of file.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "connectrpc/negative/04-wrong-format-user-directory.thrift",
+      "format": "connectrpc",
+      "adapter_key": "connectrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "connectrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "thrift-idl-document"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written Apache Thrift user-directory IDL offered to the Connect-RPC adapter; the thrift sniffer claims it, grounding FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH",
+      "notes": "The connectrpc _CONNECT_MARKER_RE claims any proto-looking text whose comments mention 'Connect-RPC' at 0.98, so the fixture's comment deliberately avoids the phrase to keep detect_matched false."
+    },
+    {
+      "path": "connectrpc/negative/05-encoding-utf16-greeter.proto",
+      "format": "connectrpc",
+      "adapter_key": "connectrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "connectrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A minimal valid greeter proto3 contract written as UTF-16 (BOM + NUL bytes) instead of UTF-8, produced with Python text.encode('utf-16').",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "corba-idl/01-bank.idl",
       "format": "corbaidl",
       "adapter_key": "corbaidl",
@@ -1650,6 +2584,112 @@
       "rung": "real-world"
     },
     {
+      "path": "corba-idl/negative/01-syntactic-unclosed-interface.idl",
+      "format": "corbaidl",
+      "adapter_key": "corbaidl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "corbaidl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-interface-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written catalog IDL whose interface body has no closing brace; brace matching fails and the parser finds no complete definitions.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "corba-idl/negative/02-unresolvable-ref-missing-include.idl",
+      "format": "corbaidl",
+      "adapter_key": "corbaidl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "corbaidl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "unresolvable-ref",
+        "missing-include"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written billing IDL that #includes common/money.idl, which is not provided, so Common::Money can never resolve.",
+      "failure_class": "unresolvable-ref",
+      "expected_error_code": "FORMAT_MISMATCH",
+      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 \u2014 the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
+    },
+    {
+      "path": "corba-idl/negative/03-truncated-inventory.idl",
+      "format": "corbaidl",
+      "adapter_key": "corbaidl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "corbaidl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "First 55% of the hand-authored corba-idl/02-inventory.idl, cut mid-struct so no complete struct, exception, enum, or interface remains.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "corba-idl/negative/04-wrong-format-greeter.proto",
+      "format": "corbaidl",
+      "adapter_key": "corbaidl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "corbaidl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "protobuf-document"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written proto3 greeter service offered to the CORBA IDL adapter; the protobuf/gRPC sniffer claims it, grounding FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "corba-idl/negative/05-encoding-utf16-echo.idl",
+      "format": "corbaidl",
+      "adapter_key": "corbaidl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "corbaidl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "The hand-authored corba-idl/03-minimal-echo.idl re-encoded as UTF-16 (BOM + NUL bytes) with Python text.encode('utf-16').",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "edi-x12/01-850-purchase-order.edi",
       "format": "edix12",
       "adapter_key": "edix12",
@@ -1773,6 +2813,113 @@
       "rung": "real-world"
     },
     {
+      "path": "edi-x12/negative/01-syntactic-missing-se.edi",
+      "format": "edix12",
+      "adapter_key": "edix12",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "edix12",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "missing-se-trailer"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written 850 purchase order (modeled on edi-x12/01-850-purchase-order.edi) whose ST transaction set is never terminated by an SE segment, so the envelope grammar is broken and no transaction set can be built.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "ISA-level syntactic faults were avoided on purpose: pyx12 raises X12Error/IndexError out of X12Reader iteration for a short or reordered ISA envelope and the exception escapes parse_edix12 unwrapped (UNHANDLED in the pipeline); the missing-SE variant fails cleanly via the adapter's own EdiX12ParseError."
+    },
+    {
+      "path": "edi-x12/negative/02-semantic-nested-gs.edi",
+      "format": "edix12",
+      "adapter_key": "edix12",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "edix12",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "nested-gs-groups"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written interchange in which a second GS functional group opens before the first is closed by GE; every segment is well-formed but the envelope structure is contradictory.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "The canonical semantic negative (SE segment-count mismatch, e.g. SE*9 over 6 segments) does NOT fail here: pyx12 treats the count mismatch as non-fatal and the import completes all the way to persist, so the nested-GS contradiction is used instead."
+    },
+    {
+      "path": "edi-x12/negative/03-truncated-850-purchase-order.edi",
+      "format": "edix12",
+      "adapter_key": "edix12",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "edix12",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "First 55% of the hand-authored edi-x12/01-850-purchase-order.edi, cut mid-segment so the SE/GE/IEA trailers are gone and no functional group closes.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "edi-x12/negative/04-wrong-format-adt-admit.hl7",
+      "format": "edix12",
+      "adapter_key": "edix12",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "edix12",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "hl7v2-message"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written HL7 v2.5 ADT^A01 admit message offered to the EDI X12 adapter; the hl7v2 sniffer claims the MSH segment, grounding FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "edi-x12/negative/05-encoding-utf16-invoice.edi",
+      "format": "edix12",
+      "adapter_key": "edix12",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "edix12",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "The hand-authored edi-x12/02-810-invoice.edi re-encoded as UTF-16 (BOM + NUL bytes) with Python text.encode('utf-16').",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "fhir/01-patient.json",
       "format": "fhir",
       "adapter_key": "fhir",
@@ -1889,6 +3036,111 @@
       "license": "Apache-2.0",
       "provenance": "Hand-authored faithful reconstruction of the shape of a public FHIR R4 server CapabilityStatement (the /metadata response); no third-party text copied.",
       "rung": "real-world"
+    },
+    {
+      "path": "fhir/negative/01-syntactic-unclosed-brace.json",
+      "format": "fhir",
+      "adapter_key": "fhir",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "fhir",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written FHIR R4 Patient resource whose name array and outer object are never closed, leaving the JSON braces unbalanced.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "fhir/negative/02-semantic-structuredefinition-missing-type.json",
+      "format": "fhir",
+      "adapter_key": "fhir",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "fhir",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "structuredefinition-missing-type"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written, well-formed FHIR R4 StructureDefinition (modeled on fhir/02-patient-structuredefinition.json) with the required type element omitted; the adapter detects it at 0.98 and parse raises the missing-type error.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "fhir/negative/03-truncated-structuredefinition.json",
+      "format": "fhir",
+      "adapter_key": "fhir",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "fhir",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "First 55% of the hand-authored fhir/02-patient-structuredefinition.json, cut mid-token inside the differential element list so the JSON never closes.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "fhir/negative/04-wrong-format-openrpc.json",
+      "format": "fhir",
+      "adapter_key": "fhir",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "fhir",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "openrpc-document"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-written OpenRPC 1.2.6 pet-directory document offered to the FHIR adapter; the openrpc sniffer claims it, grounding FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "fhir/negative/05-encoding-utf16-patient.json",
+      "format": "fhir",
+      "adapter_key": "fhir",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "fhir",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A minimal valid FHIR Patient resource written as UTF-16 (BOM + NUL bytes) instead of UTF-8, produced with Python text.encode('utf-16').",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "fix/01-newordersingle.fix",
@@ -2009,6 +3261,114 @@
       "license": "Apache-2.0",
       "provenance": "Hand-authored faithful reconstruction of the shape of the standard FIX 4.4 equity order lifecycle session flow; no third-party text copied.",
       "rung": "real-world"
+    },
+    {
+      "path": "fix/negative/01-syntactic-bare-token.fix",
+      "format": "fix",
+      "adapter_key": "fix",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "fix",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "bare-token"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored NewOrderSingle-style pipe-delimited FIX 4.4 message with one bare BADTOKEN field that has no tag=value form.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "The fix sniffer is_fix() raises FixParseError on the bare token instead of returning False; the pipeline grounds the failure to INPUT_MALFORMED, but a direct adapter.detect() probe raises FixParseError."
+    },
+    {
+      "path": "fix/negative/02-semantic-missing-msgtype.fix",
+      "format": "fix",
+      "adapter_key": "fix",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "fix",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "missing-msgtype"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored pipe-delimited FIX 4.4 message whose every field is well-formed tag=value but the required 35=MsgType field is absent.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "fix/negative/03-truncated-mid-tag.fix",
+      "format": "fix",
+      "adapter_key": "fix",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "fix",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-tag"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of fix/01-newordersingle.fix cut at roughly half its length, ending mid-token on tag 11 before its = sign.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "The fix sniffer is_fix() raises FixParseError on the trailing bare tag instead of returning False; the pipeline grounds the failure to INPUT_MALFORMED, but a direct adapter.detect() probe raises FixParseError."
+    },
+    {
+      "path": "fix/negative/04-wrong-format-hl7-ack.hl7",
+      "format": "fix",
+      "adapter_key": "fix",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "fix",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "hl7-ack"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored HL7 v2.5 ACK message (derived from hl7v2/03-minimal-ack.hl7) offered to the FIX adapter.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "fix/negative/05-encoding-utf16-order.fix",
+      "format": "fix",
+      "adapter_key": "fix",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "fix",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored valid FIX 4.4 NewOrderSingle encoded as UTF-16 with BOM so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID",
+      "notes": "A direct adapter.detect() probe on the replacement-character text raises FixParseError (known is_fix sniffer bug); the pipeline classifies the file as INPUT_ENCODING_INVALID before that matters."
     },
     {
       "path": "flatbuffers/01-monster.fbs",
@@ -2139,6 +3499,111 @@
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "rung": "typical"
+    },
+    {
+      "path": "flatbuffers/negative/01-syntactic-unclosed-table.fbs",
+      "format": "flatbuffers",
+      "adapter_key": "flatbuffers",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "flatbuffers",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-table"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored .fbs schema whose only table is missing its closing brace, so the brace-matching parser finds no complete definitions.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "flatbuffers/negative/02-semantic-missing-root-table.fbs",
+      "format": "flatbuffers",
+      "adapter_key": "flatbuffers",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "flatbuffers",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "missing-root-table"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored .fbs file that declares namespace and root_type Ping but never defines any table, struct, union, or enum.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "flatbuffers/negative/03-truncated-mid-field.fbs",
+      "format": "flatbuffers",
+      "adapter_key": "flatbuffers",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "flatbuffers",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-field"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of flatbuffers/02-minimal-ping.fbs cut mid-field inside the table body (at ~85% because the leading comment block occupies the first 70% of the file), leaving the table unclosed.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "flatbuffers/negative/04-wrong-format-proto-widget.proto",
+      "format": "flatbuffers",
+      "adapter_key": "flatbuffers",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "flatbuffers",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "proto-schema"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored valid proto3 schema (two messages) offered to the FlatBuffers adapter; the grpc adapter claims it.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "flatbuffers/negative/05-encoding-utf16-ping.fbs",
+      "format": "flatbuffers",
+      "adapter_key": "flatbuffers",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "flatbuffers",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored valid minimal Ping schema encoded as UTF-16 with BOM so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "graphql/01-simple-user.graphql",
@@ -2460,6 +3925,111 @@
       "fileset_role": "root"
     },
     {
+      "path": "graphql/negative/01-syntactic-unclosed-brace.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored SDL with a single type Book whose body is never closed, so graphql-core hits EOF expecting a name.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "graphql/negative/02-semantic-unknown-type.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "unknown-type"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored syntactically valid SDL whose Query field references type Article, which is never defined; schema build fails.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "graphql/negative/03-truncated-mid-definition.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-definition"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of graphql/01-simple-user.graphql cut at 55% of its bytes, ending inside a field docstring, leaving an unterminated string and unclosed type body.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "graphql/negative/04-wrong-format-proto-catalog.proto",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "proto-schema"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored valid proto3 catalog service, worded to avoid GraphQL SDL marker keywords so the greedy graphql sniffer does not claim it; the grpc adapter does.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "graphql/negative/05-encoding-utf16-schema.graphql",
+      "format": "graphql",
+      "adapter_key": "graphql",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "graphql",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored valid two-type SDL encoded as UTF-16 with BOM so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "hl7v2/01-adt-a01.hl7",
       "format": "hl7v2",
       "adapter_key": "hl7v2",
@@ -2585,6 +4155,111 @@
       "rung": "real-world"
     },
     {
+      "path": "hl7v2/negative/01-syntactic-empty-segment-id.hl7",
+      "format": "hl7v2",
+      "adapter_key": "hl7v2",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "hl7v2",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "empty-segment-id"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored ADT^A01 message whose second segment line begins with the field separator, giving it an empty segment id.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "hl7v2/negative/02-semantic-msh-only.hl7",
+      "format": "hl7v2",
+      "adapter_key": "hl7v2",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "hl7v2",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "msh-only"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored message consisting of a well-formed MSH header and nothing else; the parser requires at least one body segment.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "hl7v2/negative/03-truncated-mid-msh.hl7",
+      "format": "hl7v2",
+      "adapter_key": "hl7v2",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "hl7v2",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-msh"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of hl7v2/03-minimal-ack.hl7 cut at 55% of its bytes, ending mid-token inside the MSH timestamp with the MSA segment lost.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "hl7v2/negative/04-wrong-format-fix-order.fix",
+      "format": "hl7v2",
+      "adapter_key": "hl7v2",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "hl7v2",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "fix-message"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored valid FIX 4.4 NewOrderSingle (derived from fix/01-newordersingle.fix) offered to the HL7 v2 adapter; the fix adapter claims it.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "hl7v2/negative/05-encoding-utf16-ack.hl7",
+      "format": "hl7v2",
+      "adapter_key": "hl7v2",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "hl7v2",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored valid ACK message encoded as UTF-16 with BOM so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "iso20022/01-pain.001-credit-transfer.xml",
       "format": "iso20022",
       "adapter_key": "iso20022",
@@ -2703,6 +4378,111 @@
       "license": "Apache-2.0",
       "provenance": "Hand-authored faithful reconstruction of the shape of a SWIFT CBPR+/SEPA pacs.008.001.08 interbank customer credit transfer; no third-party text copied.",
       "rung": "real-world"
+    },
+    {
+      "path": "iso20022/negative/01-syntactic-unclosed-tag.xml",
+      "format": "iso20022",
+      "adapter_key": "iso20022",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "iso20022",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-tag"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored admi.004 SystemEventNotification whose closing </Document> tag is missing, so the XML does not parse.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "iso20022/negative/02-semantic-empty-document.xml",
+      "format": "iso20022",
+      "adapter_key": "iso20022",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "iso20022",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "empty-document"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored well-formed pain.001-namespaced <Document> with no business payload children; the parser requires one.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "iso20022/negative/03-truncated-mid-tag.xml",
+      "format": "iso20022",
+      "adapter_key": "iso20022",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "iso20022",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-tag"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of iso20022/02-camt.053-statement.xml cut at 55% of its bytes, ending mid-tag inside a closing </GrpHdr> element.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "iso20022/negative/04-wrong-format-xsd-schema.xsd",
+      "format": "iso20022",
+      "adapter_key": "iso20022",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "iso20022",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "xsd-schema"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored small W3C XML Schema document offered to the ISO 20022 adapter; the xsd adapter claims it.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "iso20022/negative/05-encoding-utf16-event.xml",
+      "format": "iso20022",
+      "adapter_key": "iso20022",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "iso20022",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored valid admi.004 message encoded as UTF-16 with BOM (declaration still says UTF-8) so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "iso8583/01-authorization-0100.json",
@@ -2824,6 +4604,112 @@
       "license": "Apache-2.0",
       "provenance": "Hand-authored faithful reconstruction of the shape of an ISO 8583:1987 ATM cash-withdrawal financial request as used by major card networks; no third-party text copied.",
       "rung": "real-world"
+    },
+    {
+      "path": "iso8583/negative/01-syntactic-unclosed-brace.json",
+      "format": "iso8583",
+      "adapter_key": "iso8583",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "iso8583",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "ISO 8583 field-map JSON derived from the 03-network-echo-0800 fixture with the two closing braces removed, leaving the JSON object unterminated.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "iso8583/negative/02-semantic-null-value.json",
+      "format": "iso8583",
+      "adapter_key": "iso8583",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "iso8583",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "null-data-element-value"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Well-formed ISO 8583 field-map JSON (MTI 0800) whose only data element carries \"value\": null, so the parser rejects it as missing its value.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "iso8583/negative/03-truncated-mid-element.json",
+      "format": "iso8583",
+      "adapter_key": "iso8583",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "iso8583",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "cut-mid-token"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of the valid 01-authorization-0100.json fixture cut at ~55% of its bytes, mid-token inside a data-element definition.",
+      "failure_class": "truncated",
+      "expected_error_code": "FORMAT_MISMATCH",
+      "notes": "Grounded FORMAT_MISMATCH rather than INPUT_MALFORMED: the greedy graphql sniffer claims the truncated JSON at 0.9 (`type` keyword match) and grpc claims it at 0.7, while iso8583's own detect cannot claim broken JSON."
+    },
+    {
+      "path": "iso8583/negative/04-wrong-format-cloudevent.json",
+      "format": "iso8583",
+      "adapter_key": "iso8583",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "iso8583",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "cloudevents-event"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A plausible CloudEvents 1.0 JSON event (specversion marker, payment payload) offered to the ISO 8583 adapter; the cloudevents adapter claims it instead.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "iso8583/negative/05-encoding-utf16.json",
+      "format": "iso8583",
+      "adapter_key": "iso8583",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "iso8583",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "An otherwise-valid network-echo field-map document written as UTF-16 bytes (with BOM), so the UTF-8 decode yields NUL/replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "json-schema/01-simple-person.json",
@@ -3067,6 +4953,112 @@
       "rung": "real-world"
     },
     {
+      "path": "json-schema/negative/01-syntactic-unclosed-brace.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A small 2020-12 object schema (Badge) modeled on 01-simple-person.json with the final closing brace removed, so neither JSON nor the YAML fallback can parse it.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "json-schema/negative/02-semantic-top-level-array.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "top-level-array"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Grammatically valid JSON whose top level is an array wrapping a Person schema; a schema document must be a JSON object, so ingestion rejects it.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "json-schema/negative/03-truncated-mid-token.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "cut-mid-token"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of the valid 01-simple-person.json fixture cut at ~55% of its bytes, mid-token inside a property description string.",
+      "failure_class": "truncated",
+      "expected_error_code": "FORMAT_MISMATCH",
+      "notes": "Grounded FORMAT_MISMATCH rather than INPUT_MALFORMED: the greedy graphql sniffer claims the truncated JSON at 0.9 (`type` keyword match), while json-schema's own detect cannot claim broken JSON."
+    },
+    {
+      "path": "json-schema/negative/04-wrong-format-protobuf.proto",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "protobuf-idl"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A plausible proto3 IDL file (Product messages plus a service) offered to the JSON Schema adapter; the grpc adapter claims it instead.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "json-schema/negative/05-encoding-utf16.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "An otherwise-valid 2020-12 Person schema written as UTF-16 bytes (with BOM), so the UTF-8 decode yields NUL/replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "jtd/01-user.jtd.json",
       "format": "jtd",
       "adapter_key": "jtd",
@@ -3199,6 +5191,112 @@
       "rung": "real-world"
     },
     {
+      "path": "jtd/negative/01-syntactic-unclosed-brace.jtd.json",
+      "format": "jtd",
+      "adapter_key": "jtd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "jtd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A small JTD User schema derived from 01-user.jtd.json with the final closing brace removed, so neither JSON nor the YAML fallback can parse it.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "jtd/negative/02-semantic-top-level-array.jtd.json",
+      "format": "jtd",
+      "adapter_key": "jtd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "jtd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "top-level-array"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Grammatically valid JSON whose top level is an array of two JTD property schemas; RFC 8927 requires a schema to be a JSON object, so ingestion rejects it.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "jtd/negative/03-truncated-mid-token.jtd.json",
+      "format": "jtd",
+      "adapter_key": "jtd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "jtd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "cut-mid-token"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of the valid 01-user.jtd.json fixture cut at ~55% of its bytes, mid-token inside the properties map.",
+      "failure_class": "truncated",
+      "expected_error_code": "FORMAT_MISMATCH",
+      "notes": "Grounded FORMAT_MISMATCH rather than INPUT_MALFORMED: the greedy graphql sniffer claims the truncated JSON at 0.9 (`type` keyword match), while jtd's own detect cannot claim broken JSON."
+    },
+    {
+      "path": "jtd/negative/04-wrong-format-oncrpc.x",
+      "format": "jtd",
+      "adapter_key": "jtd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "jtd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "oncrpc-rpcl"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A plausible ONC RPC / XDR RPCL key-value protocol definition offered to the JTD adapter; the oncrpc/flatbuffers detectors claim it instead.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "jtd/negative/05-encoding-utf16.jtd.json",
+      "format": "jtd",
+      "adapter_key": "jtd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "jtd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "An otherwise-valid JTD User schema written as UTF-16 bytes (with BOM), so the UTF-8 decode yields NUL/replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "odata/01-northwind.edmx",
       "format": "odata",
       "adapter_key": "odata",
@@ -3326,6 +5424,111 @@
       "license": "Apache-2.0",
       "provenance": "Hand-authored faithful reconstruction of the shape of the OData TripPin reference service; no third-party text copied.",
       "rung": "real-world"
+    },
+    {
+      "path": "odata/negative/01-syntactic-mismatched-tag.edmx",
+      "format": "odata",
+      "adapter_key": "odata",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "odata",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "mismatched-tag"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "The minimal EDMX service (from 03-minimal-service.edmx) with the closing </EntityType> tag removed, producing an XML mismatched-tag error.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "odata/negative/02-semantic-no-schema.edmx",
+      "format": "odata",
+      "adapter_key": "odata",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "odata",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "empty-data-services"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Well-formed EDMX whose edmx:DataServices element contains no Schema children, so the parser finds no OData schema definitions.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "odata/negative/03-truncated-mid-tag.edmx",
+      "format": "odata",
+      "adapter_key": "odata",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "odata",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "cut-mid-token"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of the valid 03-minimal-service.edmx fixture cut at ~55% of its bytes, mid-token inside an element tag, leaving an unclosed XML token.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "odata/negative/04-wrong-format-wsdl.wsdl",
+      "format": "odata",
+      "adapter_key": "odata",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "odata",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "wsdl-definitions"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A plausible WSDL 1.1 StockQuote definitions document offered to the OData adapter; the wsdl adapter claims it instead.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "odata/negative/05-encoding-utf16.edmx",
+      "format": "odata",
+      "adapter_key": "odata",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "odata",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "An otherwise-valid minimal EDMX service written as UTF-16 bytes (with BOM), so the UTF-8 decode yields NUL/replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "onc-rpc/01-key-value-store.x",
@@ -3465,6 +5668,111 @@
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "notes": "Currently outranked: detection ranks `flatbuffers` (0.96) above `oncrpc` (0.95); expected_detection records the intended winner for the detection-hardening work.",
       "rung": "typical"
+    },
+    {
+      "path": "onc-rpc/negative/01-syntactic-unclosed-struct.x",
+      "format": "oncrpc",
+      "adapter_key": "oncrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "oncrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-struct"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A fresh RPCL sensor-registry document whose trailing struct sensor_reading is missing its closing brace.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "onc-rpc/negative/02-semantic-missing-program-number.x",
+      "format": "oncrpc",
+      "adapter_key": "oncrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "oncrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "missing-program-number"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "The file-stat program (derived from 02-file-stat.x) with braces balanced but the program block's required `= 0x20000002` numeric assignment removed.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "onc-rpc/negative/03-truncated-mid-field.x",
+      "format": "oncrpc",
+      "adapter_key": "oncrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "oncrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "cut-mid-token"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of the valid 02-file-stat.x fixture cut at ~55% of its bytes, mid-token inside struct file_stat_res, leaving the struct unclosed.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "onc-rpc/negative/04-wrong-format-flatbuffers.fbs",
+      "format": "oncrpc",
+      "adapter_key": "oncrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "oncrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "flatbuffers-schema"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A plausible FlatBuffers telemetry schema (table, enum, root_type) offered to the ONC RPC adapter; the flatbuffers adapter claims it instead.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "onc-rpc/negative/05-encoding-utf16.x",
+      "format": "oncrpc",
+      "adapter_key": "oncrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "oncrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "The valid 02-file-stat.x RPCL document written as UTF-16 bytes (with BOM), so the UTF-8 decode yields NUL/replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "openapi/01-numeric-constraints.yaml",
@@ -4136,6 +6444,112 @@
       "rung": "minimal"
     },
     {
+      "path": "openapi/negative/01-syntactic-unclosed-flow-sequence.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-flow-sequence"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A small OpenAPI 3.1 widgets document whose tags list is written as an unclosed YAML flow sequence (`tags: [widgets`), so the YAML scanner fails.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "openapi/negative/02-truncated-mid-quoted-ref.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "cut-mid-token"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of the valid 32-openapi-3.2.0-minimal.yaml fixture (comment header stripped) cut at ~55% of its bytes, inside a single-quoted $ref scalar, leaving the quote unclosed.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "openapi/negative/03-wrong-format-graphql-sdl.graphql",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "graphql-sdl"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A plausible GraphQL SDL document (Query and Widget types) offered to the OpenAPI adapter; the graphql adapter claims it instead.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "openapi/negative/04-encoding-utf16.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "An otherwise-valid minimal OpenAPI 3.1 ping document written as UTF-16 bytes (with BOM), so the UTF-8 decode yields NUL/replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
+      "path": "openapi/negative/05-version-out-of-range.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "version-out-of-range",
+        "openapi-9.0.0"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "A structurally plausible OpenAPI document declaring `openapi: 9.0.0`, a version the adapter does not support; normalize rejects it as not 3.x/2.0.",
+      "failure_class": "version-out-of-range",
+      "expected_error_code": "INPUT_SEMANTIC_INVALID",
+      "notes": "Fails at the normalize phase (parse succeeds since the YAML is well-formed); the adapter's detect declines the 9.0.0 marker, so normalize raises and the pipeline grounds INPUT_SEMANTIC_INVALID."
+    },
+    {
       "path": "openrpc/01-wallet-api.json",
       "format": "openrpc",
       "adapter_key": "openrpc",
@@ -4264,6 +6678,111 @@
       "rung": "typical"
     },
     {
+      "path": "openrpc/negative/01-syntactic-unclosed-brace.json",
+      "format": "openrpc",
+      "adapter_key": "openrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "openrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal OpenRPC ping document, hand-authored, with the top-level closing brace removed so the JSON never closes.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "openrpc/negative/02-semantic-missing-info-title.json",
+      "format": "openrpc",
+      "adapter_key": "openrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "openrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "missing-info-title"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Well-formed JSON OpenRPC ping document, hand-authored, whose required info.title member was deleted.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "openrpc/negative/03-truncated-mid-token.json",
+      "format": "openrpc",
+      "adapter_key": "openrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "openrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Byte-truncated copy of openrpc/02-minimal-ping.json cut at 55% (275 of 500 bytes), mid-way through the info block.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "openrpc/negative/04-wrong-format-protobuf.proto",
+      "format": "openrpc",
+      "adapter_key": "openrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "openrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "protobuf-idl"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid proto3 ping service, hand-authored, offered to the openrpc adapter; the grpc adapter claims it, so the pipeline grounds FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "openrpc/negative/05-encoding-utf16.json",
+      "format": "openrpc",
+      "adapter_key": "openrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "openrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid minimal OpenRPC ping document written as UTF-16 bytes (with BOM) via Python, which the UTF-8 pipeline cannot decode.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "postman/01-tasks-collection.postman_collection.json",
       "format": "postman",
       "adapter_key": "postman",
@@ -4387,6 +6906,111 @@
       "license": "Apache-2.0",
       "provenance": "Hand-authored faithful reconstruction of the shape of the Stripe API customers/charges surface; no third-party text copied.",
       "rung": "real-world"
+    },
+    {
+      "path": "postman/negative/01-syntactic-unclosed-brace.postman_collection.json",
+      "format": "postman",
+      "adapter_key": "postman",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "postman",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal Postman v2.1 ping collection, hand-authored, with the top-level closing brace removed; a trailing-comma variant was rejected because the YAML-based JSON loader tolerates trailing commas and the import completed.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "postman/negative/02-semantic-no-requests.postman_collection.json",
+      "format": "postman",
+      "adapter_key": "postman",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "postman",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "empty-item-array"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Well-formed Postman v2.1 collection, hand-authored, whose item array is empty so no requests exist to import.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "postman/negative/03-truncated-mid-token.postman_collection.json",
+      "format": "postman",
+      "adapter_key": "postman",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "postman",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Byte-truncated copy of postman/02-minimal-ping.postman_collection.json cut at 55% (308 of 560 bytes), mid-way through the schema URL string.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "postman/negative/04-wrong-format-openrpc.json",
+      "format": "postman",
+      "adapter_key": "postman",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "postman",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "openrpc-document"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid OpenRPC echo document, hand-authored, offered to the postman adapter; the openrpc adapter claims it, so the pipeline grounds FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "postman/negative/05-encoding-utf16.postman_collection.json",
+      "format": "postman",
+      "adapter_key": "postman",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "postman",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid minimal Postman v2.1 ping collection written as UTF-16 bytes (with BOM) via Python, which the UTF-8 pipeline cannot decode.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "protobuf/01-simple-user.proto",
@@ -4549,6 +7173,111 @@
       "fileset_role": "member"
     },
     {
+      "path": "protobuf/negative/01-syntactic-unclosed-message.proto",
+      "format": "protobuf",
+      "adapter_key": "grpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "protobuf",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-message"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored proto3 file whose outer message Invoice is missing its closing brace; buf build reports a syntax error at EOF.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "protobuf/negative/02-semantic-duplicate-field-number.proto",
+      "format": "protobuf",
+      "adapter_key": "grpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "protobuf",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "duplicate-field-number"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored grammar-valid proto3 message whose two fields both use field number 1; buf build rejects the duplicate tag.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "protobuf/negative/03-truncated-mid-message.proto",
+      "format": "protobuf",
+      "adapter_key": "grpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "protobuf",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-message"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of protobuf/01-simple-user.proto cut at 55% of its bytes, ending mid-field inside message User; buf build hits unexpected EOF.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "protobuf/negative/04-unresolvable-ref-missing-import.proto",
+      "format": "protobuf",
+      "adapter_key": "grpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "protobuf",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "unresolvable-ref",
+        "missing-import"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored otherwise-valid proto3 file that imports acme/common/money.proto, which exists nowhere in the fileset; buf build cannot resolve it.",
+      "failure_class": "unresolvable-ref",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "protobuf/negative/05-encoding-utf16-user.proto",
+      "format": "protobuf",
+      "adapter_key": "grpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "protobuf",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored valid proto3 message encoded as UTF-16 with BOM so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "raml/01-simple-api.raml",
       "format": "raml",
       "adapter_key": "raml",
@@ -4674,6 +7403,111 @@
       "license": "Apache-2.0",
       "provenance": "Hand-authored faithful reconstruction of the shape of the GitHub REST API v3 repositories/issues surface; no third-party text copied.",
       "rung": "real-world"
+    },
+    {
+      "path": "raml/negative/01-syntactic-unclosed-flow-sequence.raml",
+      "format": "raml",
+      "adapter_key": "raml",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "raml",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-flow-sequence"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal RAML 1.0 ping API, hand-authored, whose body value opens a YAML flow sequence that never closes.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "raml/negative/02-semantic-missing-title.raml",
+      "format": "raml",
+      "adapter_key": "raml",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "raml",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "missing-title"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Grammar-valid RAML 1.0 document, hand-authored, with the mandatory root title property deleted; version-out-of-range was probed instead but a #%RAML 2.0 header imports successfully (the parser never validates the header version).",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "raml/negative/03-truncated-mid-token.raml",
+      "format": "raml",
+      "adapter_key": "raml",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "raml",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Byte-truncated copy of raml/02-minimal-ping.raml cut at 55% (179 of 326 bytes), mid-way through the version key token.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "raml/negative/04-wrong-format-openapi.yaml",
+      "format": "raml",
+      "adapter_key": "raml",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "raml",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "openapi-document"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid OpenAPI 3.0 ping API in YAML, hand-authored, offered to the raml adapter; the openapi adapter claims it, so the pipeline grounds FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "raml/negative/05-encoding-utf16.raml",
+      "format": "raml",
+      "adapter_key": "raml",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "raml",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid minimal RAML 1.0 ping API written as UTF-16 bytes (with BOM) via Python, which the UTF-8 pipeline cannot decode.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "smithy/01-weather-service.smithy",
@@ -4808,6 +7642,111 @@
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "rung": "typical"
+    },
+    {
+      "path": "smithy/negative/01-syntactic-unclosed-brace.smithy",
+      "format": "smithy",
+      "adapter_key": "smithy",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "smithy",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal Smithy 2.0 greeting model, hand-authored, with the structure's closing brace removed so its only shape never closes.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "smithy/negative/02-semantic-no-shapes.smithy",
+      "format": "smithy",
+      "adapter_key": "smithy",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "smithy",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "no-shapes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Grammar-valid Smithy control, namespace, and metadata statements, hand-authored, defining no shapes at all; version-out-of-range was probed instead but $version \"9.0\" imports successfully (the parser never validates the version string).",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "smithy/negative/03-truncated-mid-token.smithy",
+      "format": "smithy",
+      "adapter_key": "smithy",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "smithy",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Byte-truncated copy of smithy/02-minimal-greeting.smithy cut at 64% (181 of 283 bytes), mid-way through the namespace identifier.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "smithy/negative/04-wrong-format-postman.postman_collection.json",
+      "format": "smithy",
+      "adapter_key": "smithy",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "smithy",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "postman-collection"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid Postman v2.1 ping collection, hand-authored, offered to the smithy adapter; the postman adapter claims it, so the pipeline grounds FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "smithy/negative/05-encoding-utf16.smithy",
+      "format": "smithy",
+      "adapter_key": "smithy",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "smithy",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid minimal Smithy 2.0 greeting model written as UTF-16 bytes (with BOM) via Python, which the UTF-8 pipeline cannot decode.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "swagger/01-swagger-2-petstore.yaml",
@@ -4969,6 +7908,111 @@
       "rung": "typical"
     },
     {
+      "path": "thrift/negative/01-syntactic-unclosed-brace.thrift",
+      "format": "thrift",
+      "adapter_key": "thrift",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "thrift",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal Thrift ping struct, hand-authored, with the struct's closing brace removed so its only definition never closes.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "thrift/negative/02-semantic-no-definitions.thrift",
+      "format": "thrift",
+      "adapter_key": "thrift",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "thrift",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "no-definitions"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Grammar-valid Thrift IDL, hand-authored, containing only namespace, typedef, and const declarations with no struct, enum, or service to import.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "thrift/negative/03-truncated-mid-token.thrift",
+      "format": "thrift",
+      "adapter_key": "thrift",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "thrift",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Byte-truncated copy of thrift/02-minimal-ping.thrift cut at 77% (187 of 244 bytes), mid-way through the namespace identifier before the struct begins.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "thrift/negative/04-wrong-format-graphql.graphql",
+      "format": "thrift",
+      "adapter_key": "thrift",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "thrift",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "graphql-sdl"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid GraphQL SDL task schema, hand-authored without enum or union keywords so is_thrift stays false; the graphql adapter claims it, so the pipeline grounds FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "thrift/negative/05-encoding-utf16.thrift",
+      "format": "thrift",
+      "adapter_key": "thrift",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "thrift",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid minimal Thrift ping struct written as UTF-16 bytes (with BOM) via Python, which the UTF-8 pipeline cannot decode.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "typespec/01-pets-api.tsp",
       "format": "typespec",
       "adapter_key": "typespec",
@@ -5102,6 +8146,111 @@
       "rung": "real-world"
     },
     {
+      "path": "typespec/negative/01-syntactic-unclosed-brace.tsp",
+      "format": "typespec",
+      "adapter_key": "typespec",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "typespec",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal TypeSpec greeting model, hand-authored, with the model's closing brace removed so its only definition never closes.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "typespec/negative/02-semantic-no-definitions.tsp",
+      "format": "typespec",
+      "adapter_key": "typespec",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "typespec",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "no-definitions"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Grammar-valid TypeSpec source, hand-authored, containing imports, a namespace, and an alias but no model, enum, or interface to import.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "typespec/negative/03-truncated-mid-token.tsp",
+      "format": "typespec",
+      "adapter_key": "typespec",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "typespec",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Byte-truncated copy of typespec/03-minimal-hello.tsp cut at 55% (149 of 272 bytes), mid-way through the @typespec/http import specifier.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "typespec/negative/04-wrong-format-raml.raml",
+      "format": "typespec",
+      "adapter_key": "typespec",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "typespec",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "raml-document"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid RAML 1.0 task API, hand-authored, offered to the typespec adapter; the raml adapter claims it via its #%RAML header, so the pipeline grounds FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "typespec/negative/05-encoding-utf16.tsp",
+      "format": "typespec",
+      "adapter_key": "typespec",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "typespec",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bytes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Valid minimal TypeSpec greeting model written as UTF-16 bytes (with BOM) via Python, which the UTF-8 pipeline cannot decode.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "wadl/01-bookstore.wadl",
       "format": "wadl",
       "adapter_key": "wadl",
@@ -5228,6 +8377,111 @@
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "rung": "typical"
+    },
+    {
+      "path": "wadl/negative/01-syntactic-mismatched-close-tag.wadl",
+      "format": "wadl",
+      "adapter_key": "wadl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wadl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "mismatched-close-tag"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored WADL based on 02-status-ping.wadl with the method/resource close tags swapped so the XML is mismatched.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "wadl/negative/02-semantic-no-resources.wadl",
+      "format": "wadl",
+      "adapter_key": "wadl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wadl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "no-resources"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored well-formed WADL application carrying only a doc element and no resources or grammars.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "wadl/negative/03-truncated-mid-element.wadl",
+      "format": "wadl",
+      "adapter_key": "wadl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wadl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-element"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of 02-status-ping.wadl cut at 55% of its length, mid-attribute inside the resources element.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "wadl/negative/04-wrong-format-wsdl-definitions.wsdl",
+      "format": "wadl",
+      "adapter_key": "wadl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wadl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "wsdl-definitions"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored minimal WSDL 1.1 echo service placed in the WADL corpus as a wrong-format probe.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "wadl/negative/05-encoding-utf16-bom.wadl",
+      "format": "wadl",
+      "adapter_key": "wadl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wadl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bom"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Bytes of 02-status-ping.wadl re-encoded as UTF-16 with BOM via Python, breaking UTF-8 decoding.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "wsdl/01-calculator.wsdl",
@@ -5363,6 +8617,111 @@
       "rung": "typical"
     },
     {
+      "path": "wsdl/negative/01-syntactic-mismatched-close-tag.wsdl",
+      "format": "wsdl",
+      "adapter_key": "wsdl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wsdl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "mismatched-close-tag"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored WSDL based on 01-calculator.wsdl with the operation/portType close tags swapped so the XML is mismatched.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "wsdl/negative/02-semantic-no-types-or-porttypes.wsdl",
+      "format": "wsdl",
+      "adapter_key": "wsdl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wsdl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "no-types-or-porttypes"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored well-formed WSDL definitions containing only a service element, with no types or portTypes.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "wsdl/negative/03-truncated-mid-element.wsdl",
+      "format": "wsdl",
+      "adapter_key": "wsdl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wsdl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-element"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of 01-calculator.wsdl cut at 55% of its length, mid-token after a wsdl:message open tag.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "wsdl/negative/04-wrong-format-wadl-application.wadl",
+      "format": "wsdl",
+      "adapter_key": "wsdl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wsdl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "wadl-application"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored minimal WADL application placed in the WSDL corpus as a wrong-format probe.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "wsdl/negative/05-encoding-utf16-bom.wsdl",
+      "format": "wsdl",
+      "adapter_key": "wsdl",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "wsdl",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bom"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Bytes of 01-calculator.wsdl re-encoded as UTF-16 with BOM via Python, breaking UTF-8 decoding.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "xml-rpc/01-method-call.xml",
       "format": "xmlrpc",
       "adapter_key": "xmlrpc",
@@ -5487,6 +8846,111 @@
       "license": "Apache-2.0",
       "provenance": "Hand-authored faithful reconstruction of the shape of the WordPress XML-RPC wp.getPost call; no third-party text copied.",
       "rung": "real-world"
+    },
+    {
+      "path": "xml-rpc/negative/01-syntactic-unclosed-value-tag.xml",
+      "format": "xmlrpc",
+      "adapter_key": "xmlrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "xmlrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-value-tag"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored XML-RPC methodCall based on 03-minimal-call.xml with the string element left unclosed inside value.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "xml-rpc/negative/02-semantic-missing-methodname.xml",
+      "format": "xmlrpc",
+      "adapter_key": "xmlrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "xmlrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "missing-methodname"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored well-formed methodCall whose required methodName element is absent.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "xml-rpc/negative/03-truncated-mid-element.xml",
+      "format": "xmlrpc",
+      "adapter_key": "xmlrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "xmlrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-element"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Comment-stripped copy of 03-minimal-call.xml cut at 55% of its length, mid-structure inside the params block.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "xml-rpc/negative/04-wrong-format-protobuf-service.proto",
+      "format": "xmlrpc",
+      "adapter_key": "xmlrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "xmlrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "protobuf-service"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored minimal proto3 service definition placed in the XML-RPC corpus as a wrong-format probe.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "xml-rpc/negative/05-encoding-utf16-bom.xml",
+      "format": "xmlrpc",
+      "adapter_key": "xmlrpc",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "xmlrpc",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bom"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Bytes of 03-minimal-call.xml re-encoded as UTF-16 with BOM via Python, breaking UTF-8 decoding.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     },
     {
       "path": "xsd/01-purchase-order.xsd",
@@ -5621,6 +9085,111 @@
       "rung": "typical"
     },
     {
+      "path": "xsd/negative/01-syntactic-mismatched-close-tag.xsd",
+      "format": "xsd",
+      "adapter_key": "xsd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "xsd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "mismatched-close-tag"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored XSD based on 02-minimal-note.xsd with the sequence/complexType close tags swapped so the XML is mismatched.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "xsd/negative/02-semantic-no-types-or-elements.xsd",
+      "format": "xsd",
+      "adapter_key": "xsd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "xsd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "no-types-or-elements"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored well-formed xs:schema containing only an annotation, declaring no types and no elements.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "xsd/negative/03-truncated-mid-element.xsd",
+      "format": "xsd",
+      "adapter_key": "xsd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "xsd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-element"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of 02-minimal-note.xsd cut at 55% of its length, mid-attribute inside the schema open tag.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "xsd/negative/04-wrong-format-openapi-document.json",
+      "format": "xsd",
+      "adapter_key": "xsd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "xsd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "openapi-document"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored minimal OpenAPI 3.0 JSON document placed in the XSD corpus as a wrong-format probe.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "xsd/negative/05-encoding-utf16-bom.xsd",
+      "format": "xsd",
+      "adapter_key": "xsd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "xsd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bom"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Bytes of 02-minimal-note.xsd re-encoded as UTF-16 with BOM via Python, breaking UTF-8 decoding.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
       "path": "zos-connect/01-api-requester.json",
       "format": "zosconnect",
       "adapter_key": "zosconnect",
@@ -5740,6 +9309,111 @@
       "license": "Apache-2.0",
       "provenance": "Hand-authored faithful reconstruction of the shape of IBM's CICS catalog manager sample (DFH0XCMN) as a z/OS Connect provider; no third-party text copied.",
       "rung": "real-world"
+    },
+    {
+      "path": "zos-connect/negative/01-syntactic-trailing-comma.json",
+      "format": "zosconnect",
+      "adapter_key": "zosconnect",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "zosconnect",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "trailing-comma"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored z/OS Connect requester based on 03-minimal-requester.json with an illegal trailing comma in the apiRequester object.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "zos-connect/negative/02-semantic-missing-api-block.json",
+      "format": "zosconnect",
+      "adapter_key": "zosconnect",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "zosconnect",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "missing-api-block"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored valid-JSON requester descriptor whose required api block is absent.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "zos-connect/negative/03-truncated-mid-string.json",
+      "format": "zosconnect",
+      "adapter_key": "zosconnect",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "zosconnect",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-string"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Copy of 03-minimal-requester.json cut at 55% of its length, leaving an unterminated JSON string.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "zos-connect/negative/04-wrong-format-protobuf-service.proto",
+      "format": "zosconnect",
+      "adapter_key": "zosconnect",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "zosconnect",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "protobuf-service"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored minimal proto3 catalog service placed in the z/OS Connect corpus as a wrong-format probe.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "zos-connect/negative/05-encoding-utf16-bom.json",
+      "format": "zosconnect",
+      "adapter_key": "zosconnect",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "zosconnect",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16-bom"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Bytes of 03-minimal-requester.json re-encoded as UTF-16 with BOM via Python, breaking UTF-8 decoding.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
     }
   ],
   "rung_waivers": {

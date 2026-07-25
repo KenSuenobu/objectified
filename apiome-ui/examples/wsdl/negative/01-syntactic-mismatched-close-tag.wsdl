@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions
+    name="Calculator"
+    targetNamespace="http://example.com/calculator"
+    xmlns:tns="http://example.com/calculator"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:message name="AddInput">
+    <wsdl:part name="a" type="xsd:double"/>
+  </wsdl:message>
+  <wsdl:portType name="CalculatorPort">
+    <wsdl:operation name="Add">
+      <wsdl:input message="tns:AddInput"/>
+    </wsdl:portType>
+  </wsdl:operation>
+</wsdl:definitions>
