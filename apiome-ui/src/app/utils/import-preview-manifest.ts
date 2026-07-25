@@ -25,6 +25,10 @@
  */
 
 import type { PreflightCounts, PreflightReport, PreflightRequest } from './import-preflight';
+import type {
+  ProjectionEdge,
+  ProjectionNode,
+} from '../components/ade/dashboard/export/projectionEvidence';
 
 /** How much of a source construct survives the canonical projection (REST `CoverageClass`). */
 export type PreviewCoverageClass =
@@ -59,6 +63,20 @@ export interface ImportPreviewEntity {
   unmodeled_extras: string[];
 }
 
+/** CLX-2.4 capability-registry reference (REST `CapabilityReference`). */
+export interface ImportCapabilityReference {
+  /** Format key the capability entry describes. */
+  format: string;
+  /** `native` | `adapted` | `unsupported`. */
+  mode: string;
+  /** Whether the registry says this format is importable at all. */
+  importable: boolean;
+  /** Tracking issues for the gap, when the registry names any. */
+  related_issues: string[];
+  /** Registry prose about the capability, when present. */
+  notes?: string | null;
+}
+
 /** One coverage-ledger row (REST `CoverageEntry`). */
 export interface ImportPreviewCoverageEntry {
   /** The source construct the row describes (a path or a named facet). */
@@ -72,10 +90,10 @@ export interface ImportPreviewCoverageEntry {
   detail: string;
   /** The manifest entity the row belongs to, when it is entity-scoped. */
   entity_key?: string | null;
-  /** True for document-level rows that belong to no single entity. */
+  /** True for document-scoped facts; false for adapter-level declared parser limits. */
   document_scoped: boolean;
-  /** CLX-2.4 capability-registry reference; always present on `not-parsed-by-adapter`. */
-  capability_reference?: Record<string, unknown> | null;
+  /** Capability-registry reference; always present on `not-parsed-by-adapter`. */
+  capability_reference?: ImportCapabilityReference | null;
 }
 
 /** Which adapter produced the manifest, and what it is known (not) to parse. */
@@ -84,14 +102,7 @@ export interface ImportPreviewAdapter {
   adapter_label: string;
   paradigm: string;
   formats: string[];
-  capability: {
-    format: string;
-    /** `native` | `adapted` | `unsupported`. */
-    mode: string;
-    importable: boolean;
-    related_issues: string[];
-    notes?: string | null;
-  };
+  capability: ImportCapabilityReference;
   /** Known parser limits, surfaced so "not parsed" rows have a stated cause. */
   parser_limits: string[];
 }
@@ -111,9 +122,10 @@ export interface ImportPreviewManifest {
   entities: ImportPreviewEntity[];
   /** Entity count of the full tree. */
   total_entities: number;
-  /** CPDO-1.3 projection graph slice for this page (not rendered by the preview panel). */
-  nodes: Array<Record<string, unknown>>;
-  edges: Array<Record<string, unknown>>;
+  /** CPDO-1.3 projection graph slice for this page — the shared node/edge vocabulary the
+   *  export surfaces use (`projectionEvidence.ts`), rendered by the IXH-3.3 projection map. */
+  nodes: ProjectionNode[];
+  edges: ProjectionEdge[];
   /** This page's coverage-ledger rows. */
   coverage: ImportPreviewCoverageEntry[];
   total_coverage_entries: number;
