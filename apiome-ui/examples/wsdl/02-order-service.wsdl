@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WSDL 1.1 typical example: an everyday order-management SOAP service.
+
+  A realistic document-literal service with several request/response
+  operations (CreateOrder, GetOrder, CancelOrder), embedded XSD types for
+  the order aggregate, a fault message, and a single SOAP port.
+-->
+<wsdl:definitions
+    name="OrderService"
+    targetNamespace="http://example.com/orders"
+    xmlns:tns="http://example.com/orders"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+
+  <wsdl:documentation>Order management service for the example storefront.</wsdl:documentation>
+
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://example.com/orders" elementFormDefault="qualified">
+      <xsd:complexType name="OrderLine">
+        <xsd:sequence>
+          <xsd:element name="sku" type="xsd:string"/>
+          <xsd:element name="quantity" type="xsd:positiveInteger"/>
+          <xsd:element name="unitPrice" type="xsd:decimal"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Order">
+        <xsd:sequence>
+          <xsd:element name="orderId" type="xsd:string"/>
+          <xsd:element name="customerId" type="xsd:string"/>
+          <xsd:element name="placedAt" type="xsd:dateTime"/>
+          <xsd:element name="lines" type="tns:OrderLine" maxOccurs="unbounded"/>
+          <xsd:element name="total" type="xsd:decimal"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="CreateOrderRequest">
+        <xsd:sequence>
+          <xsd:element name="customerId" type="xsd:string"/>
+          <xsd:element name="lines" type="tns:OrderLine" maxOccurs="unbounded"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="CreateOrderResponse">
+        <xsd:sequence>
+          <xsd:element name="order" type="tns:Order"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="GetOrderRequest">
+        <xsd:sequence>
+          <xsd:element name="orderId" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="GetOrderResponse">
+        <xsd:sequence>
+          <xsd:element name="order" type="tns:Order"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="CancelOrderRequest">
+        <xsd:sequence>
+          <xsd:element name="orderId" type="xsd:string"/>
+          <xsd:element name="reason" type="xsd:string" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="CancelOrderResponse">
+        <xsd:sequence>
+          <xsd:element name="cancelled" type="xsd:boolean"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="OrderFault">
+        <xsd:sequence>
+          <xsd:element name="code" type="xsd:string"/>
+          <xsd:element name="message" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="CreateOrderRequest" type="tns:CreateOrderRequest"/>
+      <xsd:element name="CreateOrderResponse" type="tns:CreateOrderResponse"/>
+      <xsd:element name="GetOrderRequest" type="tns:GetOrderRequest"/>
+      <xsd:element name="GetOrderResponse" type="tns:GetOrderResponse"/>
+      <xsd:element name="CancelOrderRequest" type="tns:CancelOrderRequest"/>
+      <xsd:element name="CancelOrderResponse" type="tns:CancelOrderResponse"/>
+      <xsd:element name="OrderFault" type="tns:OrderFault"/>
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="CreateOrderInput">
+    <wsdl:part name="parameters" element="tns:CreateOrderRequest"/>
+  </wsdl:message>
+  <wsdl:message name="CreateOrderOutput">
+    <wsdl:part name="parameters" element="tns:CreateOrderResponse"/>
+  </wsdl:message>
+  <wsdl:message name="GetOrderInput">
+    <wsdl:part name="parameters" element="tns:GetOrderRequest"/>
+  </wsdl:message>
+  <wsdl:message name="GetOrderOutput">
+    <wsdl:part name="parameters" element="tns:GetOrderResponse"/>
+  </wsdl:message>
+  <wsdl:message name="CancelOrderInput">
+    <wsdl:part name="parameters" element="tns:CancelOrderRequest"/>
+  </wsdl:message>
+  <wsdl:message name="CancelOrderOutput">
+    <wsdl:part name="parameters" element="tns:CancelOrderResponse"/>
+  </wsdl:message>
+  <wsdl:message name="OrderFaultMessage">
+    <wsdl:part name="fault" element="tns:OrderFault"/>
+  </wsdl:message>
+
+  <wsdl:portType name="OrderPort">
+    <wsdl:operation name="CreateOrder">
+      <wsdl:input message="tns:CreateOrderInput"/>
+      <wsdl:output message="tns:CreateOrderOutput"/>
+      <wsdl:fault name="orderFault" message="tns:OrderFaultMessage"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetOrder">
+      <wsdl:input message="tns:GetOrderInput"/>
+      <wsdl:output message="tns:GetOrderOutput"/>
+      <wsdl:fault name="orderFault" message="tns:OrderFaultMessage"/>
+    </wsdl:operation>
+    <wsdl:operation name="CancelOrder">
+      <wsdl:input message="tns:CancelOrderInput"/>
+      <wsdl:output message="tns:CancelOrderOutput"/>
+      <wsdl:fault name="orderFault" message="tns:OrderFaultMessage"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="OrderBinding" type="tns:OrderPort">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="CreateOrder">
+      <soap:operation soapAction="http://example.com/orders/CreateOrder"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+      <wsdl:fault name="orderFault"><soap:fault name="orderFault" use="literal"/></wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="GetOrder">
+      <soap:operation soapAction="http://example.com/orders/GetOrder"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+      <wsdl:fault name="orderFault"><soap:fault name="orderFault" use="literal"/></wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="CancelOrder">
+      <soap:operation soapAction="http://example.com/orders/CancelOrder"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+      <wsdl:fault name="orderFault"><soap:fault name="orderFault" use="literal"/></wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="OrderService">
+    <wsdl:port name="OrderPort" binding="tns:OrderBinding">
+      <soap:address location="https://api.example.com/soap/orders"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

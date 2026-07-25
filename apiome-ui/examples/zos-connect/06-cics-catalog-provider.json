@@ -1,0 +1,46 @@
+{
+  "_comment": "z/OS Connect real-world example — hand-authored reconstruction of the shape of IBM's CICS catalog manager sample (the DFH0XCMN 'EGUI' application used throughout z/OS Connect provider tutorials): inquire the catalog, inquire a single item, and place an order, all backed by one COBOL program. No third-party text copied.",
+  "apiProvider": {
+    "name": "CatalogManagerProvider",
+    "version": "1.0.0",
+    "description": "Inbound provider exposing the CICS catalog manager sample program as REST."
+  },
+  "api": {
+    "title": "Catalog Manager API",
+    "specification": "openapi-3.0",
+    "basePath": "https://mainframe.example.com/catalogManager"
+  },
+  "language": {
+    "type": "cobol",
+    "codepage": "IBM-1047"
+  },
+  "operations": [
+    {
+      "operationId": "inquireCatalog",
+      "method": "GET",
+      "path": "/items",
+      "program": "DFH0XCMN",
+      "requestStructure": "CA-INQUIRE-REQUEST",
+      "responseStructure": "CA-CAT-ITEM-LIST"
+    },
+    {
+      "operationId": "inquireSingle",
+      "method": "GET",
+      "path": "/items/{itemNumber}",
+      "program": "DFH0XCMN",
+      "requestStructure": "CA-INQUIRE-SINGLE",
+      "responseStructure": "CA-CAT-ITEM",
+      "pathParameters": [
+        { "name": "itemNumber", "field": "CA-ITEM-REF-NUMBER", "type": "integer" }
+      ]
+    },
+    {
+      "operationId": "placeOrder",
+      "method": "POST",
+      "path": "/orders",
+      "program": "DFH0XCMN",
+      "requestStructure": "CA-ORDER-REQUEST",
+      "responseStructure": "CA-ORDER-RESPONSE"
+    }
+  ]
+}

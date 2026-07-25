@@ -1,0 +1,27 @@
+{
+  "_comment": "Stress ISO 8583 field map — a reversal advice (MTI 0420) exercising the format's grammar corners at once: the snake_case `data_elements` key, every core type-code (n, an, ans, z, b, x+n), all three length notations (fixed, ..LL, ...LLL), binary/EMV data as hex, and high-numbered secondary-bitmap elements (90, 95, 128).",
+  "mti": "0420",
+  "name": "Reversal Advice",
+  "data_elements": {
+    "2": { "name": "Primary Account Number", "type": "n", "length": "..19", "value": "4111111111111111" },
+    "3": { "name": "Processing Code", "type": "n", "length": "6", "value": "000000" },
+    "4": { "name": "Amount, Transaction", "type": "n", "length": "12", "value": "000000004250" },
+    "7": { "name": "Transmission Date & Time", "type": "n", "length": "10", "value": "0116103000" },
+    "11": { "name": "System Trace Audit Number", "type": "n", "length": "6", "value": "000043" },
+    "25": { "name": "POS Condition Code", "type": "n", "length": "2", "value": "00" },
+    "28": { "name": "Amount, Transaction Fee", "type": "x+n", "length": "8", "value": "D00000050" },
+    "32": { "name": "Acquiring Institution ID", "type": "n", "length": "..11", "value": "12345" },
+    "35": { "name": "Track 2 Data", "type": "z", "length": "..37", "value": "4111111111111111=29121011000012345678" },
+    "38": { "name": "Authorization ID Response", "type": "an", "length": "6", "value": "AUTH01" },
+    "39": { "name": "Response Code", "type": "an", "length": "2", "value": "00" },
+    "41": { "name": "Card Acceptor Terminal ID", "type": "ans", "length": "8", "value": "TERM0002" },
+    "48": { "name": "Additional Data, Private", "type": "ans", "length": "...999", "value": "REVERSAL REASON=TIMEOUT" },
+    "52": { "name": "PIN Data", "type": "b", "length": "8", "value": "A1B2C3D4E5F60718" },
+    "54": { "name": "Additional Amounts", "type": "an", "length": "...120", "value": "1001840C000000004250" },
+    "55": { "name": "ICC System Related Data", "type": "b", "length": "...255", "value": "9F2608AABBCCDDEEFF00119F2701809F360200AB" },
+    "64": { "name": "Message Authentication Code", "type": "b", "length": "8", "value": "0123456789ABCDEF" },
+    "90": { "name": "Original Data Elements", "type": "n", "length": "42", "value": "020000004201161015000000000000000000000000" },
+    "95": { "name": "Replacement Amounts", "type": "an", "length": "42", "value": "000000000000000000000000000000000000000000" },
+    "128": { "name": "Message Authentication Code", "type": "b", "length": "8", "value": "FEDCBA9876543210" }
+  }
+}

@@ -1,0 +1,66 @@
+FORMAT: 1A
+HOST: https://polls.example.com
+
+# Polls API
+
+Hand-authored reconstruction of the shape of the canonical Apiary "Polls"
+tutorial API (questions with choices that can be voted on); no third-party
+text copied.
+
+## Questions Collection [/questions]
+
++ Parameters
+    + page (number, optional) - Page of results to return.
+
+### List questions [GET]
+
++ Response 200 (application/json)
+    + Attributes (array[Question])
+
+### Create a question [POST]
+
++ Request (application/json)
+    + Attributes (QuestionRequest)
+
++ Response 201 (application/json)
+    + Attributes (Question)
+
+## Question [/questions/{question_id}]
+
++ Parameters
+    + question_id (number, required) - Identifier of the question.
+
+### View a question detail [GET]
+
++ Response 200 (application/json)
+    + Attributes (Question)
+
++ Response 404
+
+## Choice [/questions/{question_id}/choices/{choice_id}]
+
++ Parameters
+    + question_id (number, required) - Identifier of the question.
+    + choice_id (number, required) - Identifier of the choice.
+
+### Vote on a choice [POST]
+
++ Response 201 (application/json)
+    + Attributes (Choice)
+
+# Data Structures
+
+## Question (object)
++ question: `Favourite programming language?` (string, required) - The question text.
++ published_at: `2026-01-05T08:40:51Z` (string, required) - Publication timestamp.
++ url: `/questions/1` (string, required) - Canonical URL of the question.
++ choices: `[]` (array, required) - Available answer choices.
+
+## QuestionRequest (object)
++ question: `Favourite programming language?` (string, required) - The question text.
++ choices: `[]` (array, required) - Choice texts to create.
+
+## Choice (object)
++ choice: `Python` (string, required) - Choice text.
++ url: `/questions/1/choices/1` (string, required) - Canonical URL of the choice.
++ votes: 3 (number, required) - Number of votes cast so far.

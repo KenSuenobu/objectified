@@ -1,0 +1,78 @@
+// CORBA IDL (OMG IDL) example — real-world shape: the OMG CosNaming service.
+//
+// Hand-authored reconstruction of the shape of the OMG Naming Service
+// (CosNaming module: NameComponent/Binding types, NamingContext and
+// BindingIterator interfaces); no third-party text was copied and integer
+// types are simplified.
+module CosNaming {
+
+  typedef string Istring;
+
+  struct NameComponent {
+    Istring id;
+    Istring kind;
+  };
+
+  typedef sequence<NameComponent> Name;
+
+  enum BindingType {
+    nobject,
+    ncontext
+  };
+
+  struct Binding {
+    Name bindingName;
+    BindingType bindingType;
+  };
+
+  typedef sequence<Binding> BindingList;
+
+  enum NotFoundReason {
+    missingNode,
+    notContext,
+    notObject
+  };
+
+  exception NotFound {
+    NotFoundReason why;
+    Name restOfName;
+  };
+
+  exception CannotProceed {
+    Name restOfName;
+  };
+
+  exception AlreadyBound {
+  };
+
+  exception InvalidName {
+  };
+
+  exception NotEmpty {
+  };
+
+  interface BindingIterator {
+    boolean nextOne(out Binding b);
+    void destroy();
+  };
+
+  interface NamingContext {
+    void bind(in Name n, in Object obj)
+      raises (NotFound, CannotProceed, InvalidName, AlreadyBound);
+
+    void rebind(in Name n, in Object obj)
+      raises (NotFound, CannotProceed, InvalidName);
+
+    Object resolve(in Name n)
+      raises (NotFound, CannotProceed, InvalidName);
+
+    void unbind(in Name n)
+      raises (NotFound, CannotProceed, InvalidName);
+
+    NamingContext newContext();
+
+    void destroy() raises (NotEmpty);
+
+    void list(in long howMany, out BindingList bl, out BindingIterator bi);
+  };
+};

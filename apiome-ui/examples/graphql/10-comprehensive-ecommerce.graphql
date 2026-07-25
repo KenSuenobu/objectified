@@ -1,7 +1,5 @@
-"""
-Comprehensive e-commerce GraphQL schema
-Demonstrates all major GraphQL features combined
-"""
+# Comprehensive e-commerce GraphQL schema
+# Demonstrates all major GraphQL features combined
 
 # Custom scalars
 scalar DateTime

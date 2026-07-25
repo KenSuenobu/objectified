@@ -1,0 +1,31 @@
+// FlatBuffers schema example — composition: `include` plus namespaced type
+// reuse across schema files.
+//
+// `include "common.fbs"` pulls shared definitions into scope; the vector
+// fields below reference its types with a dotted namespace prefix, while the
+// local enum default shows same-file reuse.
+include "common.fbs";
+
+namespace example.shop;
+
+enum Currency : byte {
+  USD = 0,
+  EUR = 1,
+  JPY = 2,
+}
+
+table LineItem {
+  sku: string;
+  quantity: uint;
+  unitPriceMinor: long;
+  currency: Currency = USD;
+}
+
+table Order {
+  id: string;
+  lines: [LineItem];
+  tags: [common.Tag];
+  audit: [common.AuditEntry];
+}
+
+root_type Order;

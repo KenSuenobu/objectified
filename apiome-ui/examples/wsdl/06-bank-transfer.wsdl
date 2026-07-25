@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WSDL 1.1 typical example: a small bank funds-transfer SOAP service.
+
+  Everyday document-literal service with two operations (TransferFunds,
+  GetBalance), a business fault, and money amounts modeled as decimals with
+  ISO currency codes.
+-->
+<wsdl:definitions
+    name="TransferService"
+    targetNamespace="http://example.com/banking"
+    xmlns:tns="http://example.com/banking"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://example.com/banking" elementFormDefault="qualified">
+      <xsd:complexType name="TransferFundsRequest">
+        <xsd:sequence>
+          <xsd:element name="fromAccount" type="xsd:string"/>
+          <xsd:element name="toAccount" type="xsd:string"/>
+          <xsd:element name="amount" type="xsd:decimal"/>
+          <xsd:element name="currency" type="xsd:string"/>
+          <xsd:element name="reference" type="xsd:string" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="TransferFundsResponse">
+        <xsd:sequence>
+          <xsd:element name="transactionId" type="xsd:string"/>
+          <xsd:element name="bookedAt" type="xsd:dateTime"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="GetBalanceRequest">
+        <xsd:sequence>
+          <xsd:element name="account" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="GetBalanceResponse">
+        <xsd:sequence>
+          <xsd:element name="balance" type="xsd:decimal"/>
+          <xsd:element name="currency" type="xsd:string"/>
+          <xsd:element name="asOf" type="xsd:dateTime"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="InsufficientFundsFault">
+        <xsd:sequence>
+          <xsd:element name="account" type="xsd:string"/>
+          <xsd:element name="requested" type="xsd:decimal"/>
+          <xsd:element name="available" type="xsd:decimal"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="TransferFundsRequest" type="tns:TransferFundsRequest"/>
+      <xsd:element name="TransferFundsResponse" type="tns:TransferFundsResponse"/>
+      <xsd:element name="GetBalanceRequest" type="tns:GetBalanceRequest"/>
+      <xsd:element name="GetBalanceResponse" type="tns:GetBalanceResponse"/>
+      <xsd:element name="InsufficientFundsFault" type="tns:InsufficientFundsFault"/>
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="TransferFundsInput">
+    <wsdl:part name="parameters" element="tns:TransferFundsRequest"/>
+  </wsdl:message>
+  <wsdl:message name="TransferFundsOutput">
+    <wsdl:part name="parameters" element="tns:TransferFundsResponse"/>
+  </wsdl:message>
+  <wsdl:message name="GetBalanceInput">
+    <wsdl:part name="parameters" element="tns:GetBalanceRequest"/>
+  </wsdl:message>
+  <wsdl:message name="GetBalanceOutput">
+    <wsdl:part name="parameters" element="tns:GetBalanceResponse"/>
+  </wsdl:message>
+  <wsdl:message name="InsufficientFundsMessage">
+    <wsdl:part name="fault" element="tns:InsufficientFundsFault"/>
+  </wsdl:message>
+
+  <wsdl:portType name="TransferPort">
+    <wsdl:operation name="TransferFunds">
+      <wsdl:input message="tns:TransferFundsInput"/>
+      <wsdl:output message="tns:TransferFundsOutput"/>
+      <wsdl:fault name="insufficientFunds" message="tns:InsufficientFundsMessage"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetBalance">
+      <wsdl:input message="tns:GetBalanceInput"/>
+      <wsdl:output message="tns:GetBalanceOutput"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="TransferBinding" type="tns:TransferPort">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="TransferFunds">
+      <soap:operation soapAction="http://example.com/banking/TransferFunds"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+      <wsdl:fault name="insufficientFunds">
+        <soap:fault name="insufficientFunds" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="GetBalance">
+      <soap:operation soapAction="http://example.com/banking/GetBalance"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="TransferService">
+    <wsdl:port name="TransferPort" binding="tns:TransferBinding">
+      <soap:address location="https://api.example.com/soap/banking"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

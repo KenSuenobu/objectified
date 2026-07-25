@@ -1,0 +1,74 @@
+{
+  "_comment": "z/OS Connect stress example — the descriptor grammar's less common corners at once: every allowed HTTP method (GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS), a PL/I language block, an operation with two path parameters, and operations that omit optional requestStructure, responseStructure, or program fields.",
+  "apiRequester": {
+    "name": "FreightRequester",
+    "version": "0.9.5-beta",
+    "description": "Outbound requester exercising the full method surface from a PL/I batch job."
+  },
+  "api": {
+    "title": "Freight Movement API",
+    "specification": "openapi-3.1",
+    "basePath": "https://api.example.com/freight/v2"
+  },
+  "language": {
+    "type": "pli",
+    "codepage": "IBM-037"
+  },
+  "operations": [
+    {
+      "operationId": "listManifests",
+      "method": "GET",
+      "path": "/manifests",
+      "responseStructure": "MANIFEST_LIST"
+    },
+    {
+      "operationId": "replaceManifest",
+      "method": "PUT",
+      "path": "/depots/{depotId}/manifests/{manifestId}",
+      "requestStructure": "MANIFEST_RECORD",
+      "responseStructure": "MANIFEST_RECORD",
+      "pathParameters": [
+        { "name": "depotId", "field": "DEPOT_ID", "type": "string" },
+        { "name": "manifestId", "field": "MANIFEST_ID", "type": "integer" }
+      ]
+    },
+    {
+      "operationId": "createManifest",
+      "method": "POST",
+      "path": "/manifests",
+      "requestStructure": "MANIFEST_RECORD",
+      "responseStructure": "MANIFEST_KEY"
+    },
+    {
+      "operationId": "cancelManifest",
+      "method": "DELETE",
+      "path": "/manifests/{manifestId}",
+      "pathParameters": [
+        { "name": "manifestId", "field": "MANIFEST_ID", "type": "integer" }
+      ]
+    },
+    {
+      "operationId": "amendManifest",
+      "method": "PATCH",
+      "path": "/manifests/{manifestId}",
+      "requestStructure": "MANIFEST_DELTA",
+      "responseStructure": "MANIFEST_RECORD",
+      "pathParameters": [
+        { "name": "manifestId", "field": "MANIFEST_ID", "type": "integer" }
+      ]
+    },
+    {
+      "operationId": "probeManifest",
+      "method": "HEAD",
+      "path": "/manifests/{manifestId}",
+      "pathParameters": [
+        { "name": "manifestId", "field": "MANIFEST_ID", "type": "integer" }
+      ]
+    },
+    {
+      "operationId": "describeManifests",
+      "method": "OPTIONS",
+      "path": "/manifests"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "_comment": "Real-world example — a hand-authored faithful reconstruction of the shape of GitHub's push webhook event payload as a JTD (RFC 8927) schema; no third-party text copied. Demonstrates shared definitions, refs, elements-of-ref lists, and a nullable ref.",
+  "metadata": {
+    "title": "PushEvent",
+    "description": "The payload delivered to a webhook when commits are pushed to a repository."
+  },
+  "definitions": {
+    "Author": {
+      "metadata": { "description": "A git author or committer identity." },
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "optionalProperties": {
+        "username": { "type": "string" }
+      }
+    },
+    "Commit": {
+      "metadata": { "description": "One commit contained in the push." },
+      "properties": {
+        "id": { "type": "string" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "timestamp" },
+        "author": { "ref": "Author" },
+        "committer": { "ref": "Author" },
+        "distinct": { "type": "boolean" }
+      },
+      "optionalProperties": {
+        "added": { "elements": { "type": "string" } },
+        "removed": { "elements": { "type": "string" } },
+        "modified": { "elements": { "type": "string" } }
+      }
+    },
+    "Repository": {
+      "metadata": { "description": "The repository the push targeted." },
+      "properties": {
+        "id": { "type": "uint32" },
+        "name": { "type": "string" },
+        "fullName": { "type": "string" },
+        "private": { "type": "boolean" },
+        "defaultBranch": { "type": "string" },
+        "owner": { "ref": "Author" }
+      },
+      "optionalProperties": {
+        "description": { "type": "string", "nullable": true }
+      }
+    }
+  },
+  "properties": {
+    "ref": { "type": "string" },
+    "before": { "type": "string" },
+    "after": { "type": "string" },
+    "created": { "type": "boolean" },
+    "deleted": { "type": "boolean" },
+    "forced": { "type": "boolean" },
+    "repository": { "ref": "Repository" },
+    "pusher": { "ref": "Author" },
+    "commits": {
+      "elements": { "ref": "Commit" }
+    }
+  },
+  "optionalProperties": {
+    "headCommit": { "ref": "Commit", "nullable": true },
+    "compare": { "type": "string" }
+  }
+}

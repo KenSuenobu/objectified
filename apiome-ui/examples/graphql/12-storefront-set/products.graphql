@@ -1,0 +1,22 @@
+# Member of the multi-file storefront set: the product catalog domain.
+# Defines Product against the shared Node/DateTime from schema.graphql and
+# extends the base Query type with product lookups.
+
+"A sellable product in the storefront"
+type Product implements Node {
+  id: ID!
+  sku: String!
+  name: String!
+  description: String
+  priceCents: Int!
+  inStock: Boolean!
+  createdAt: DateTime!
+}
+
+extend type Query {
+  "Look up one product by SKU"
+  product(sku: String!): Product
+
+  "List products, newest first"
+  products(first: Int = 20, after: String): [Product!]!
+}

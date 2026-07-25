@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  XSD real-world example: shaped like the OASIS UBL Invoice schema, the most
+  widely deployed public XML business-document schema (e-invoicing mandates
+  across the EU build on it). Hand-authored, heavily simplified
+  reconstruction of the shape only; no third-party text copied. Amounts
+  carry a currencyID attribute, parties nest postal addresses, and invoice
+  lines reference items, mirroring the UBL aggregate structure.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://example.com/ubl-shape/invoice"
+           xmlns:inv="http://example.com/ubl-shape/invoice"
+           elementFormDefault="qualified">
+
+  <xs:element name="Invoice" type="inv:InvoiceType"/>
+
+  <xs:simpleType name="InvoiceTypeCodeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="380"/>
+      <xs:enumeration value="381"/>
+      <xs:enumeration value="384"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="AmountType">
+    <xs:sequence>
+      <xs:element name="Value" type="xs:decimal"/>
+    </xs:sequence>
+    <xs:attribute name="currencyID" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="AddressType">
+    <xs:sequence>
+      <xs:element name="StreetName" type="xs:string"/>
+      <xs:element name="CityName" type="xs:string"/>
+      <xs:element name="PostalZone" type="xs:string"/>
+      <xs:element name="CountryCode" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PartyType">
+    <xs:sequence>
+      <xs:element name="PartyName" type="xs:string"/>
+      <xs:element name="CompanyID" type="xs:string" minOccurs="0"/>
+      <xs:element name="PostalAddress" type="inv:AddressType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ItemType">
+    <xs:sequence>
+      <xs:element name="Name" type="xs:string"/>
+      <xs:element name="SellersItemIdentification" type="xs:string" minOccurs="0"/>
+      <xs:element name="ClassifiedTaxCategory" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="InvoiceLineType">
+    <xs:sequence>
+      <xs:element name="ID" type="xs:string"/>
+      <xs:element name="InvoicedQuantity" type="xs:decimal"/>
+      <xs:element name="LineExtensionAmount" type="inv:AmountType"/>
+      <xs:element name="Item" type="inv:ItemType"/>
+      <xs:element name="PriceAmount" type="inv:AmountType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="MonetaryTotalType">
+    <xs:sequence>
+      <xs:element name="LineExtensionAmount" type="inv:AmountType"/>
+      <xs:element name="TaxExclusiveAmount" type="inv:AmountType"/>
+      <xs:element name="TaxInclusiveAmount" type="inv:AmountType"/>
+      <xs:element name="PayableAmount" type="inv:AmountType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="InvoiceType">
+    <xs:sequence>
+      <xs:element name="ID" type="xs:string"/>
+      <xs:element name="IssueDate" type="xs:date"/>
+      <xs:element name="DueDate" type="xs:date" minOccurs="0"/>
+      <xs:element name="InvoiceTypeCode" type="inv:InvoiceTypeCodeType"/>
+      <xs:element name="DocumentCurrencyCode" type="xs:string"/>
+      <xs:element name="AccountingSupplierParty" type="inv:PartyType"/>
+      <xs:element name="AccountingCustomerParty" type="inv:PartyType"/>
+      <xs:element name="InvoiceLine" type="inv:InvoiceLineType" maxOccurs="unbounded"/>
+      <xs:element name="LegalMonetaryTotal" type="inv:MonetaryTotalType"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

@@ -1,0 +1,83 @@
+// Protobuf (proto3) example — real-world rung: a hand-authored reconstruction
+// of the shape of the Google Cloud Pub/Sub v1 Publisher API. No third-party
+// text is copied; message and method names follow the public API surface to
+// exercise the corpus against a realistic production-scale contract.
+syntax = "proto3";
+
+package example.pubsub.v1;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "example.com/pubsub/v1;pubsubv1";
+
+// Manages topics and publishes messages to them.
+service Publisher {
+  // Create the named topic.
+  rpc CreateTopic(Topic) returns (Topic);
+  // Get the configuration of a topic.
+  rpc GetTopic(GetTopicRequest) returns (Topic);
+  // List topics in a project.
+  rpc ListTopics(ListTopicsRequest) returns (ListTopicsResponse);
+  // Publish a batch of messages to a topic.
+  rpc Publish(PublishRequest) returns (PublishResponse);
+  // Delete a topic; existing subscriptions detach.
+  rpc DeleteTopic(DeleteTopicRequest) returns (google.protobuf.Empty);
+}
+
+// A named channel messages are published to.
+message Topic {
+  // Resource name, e.g. projects/p/topics/t.
+  string name = 1;
+  // User labels attached to the topic.
+  map<string, string> labels = 2;
+  // Policy: how long the topic retains published messages.
+  MessageStoragePolicy message_storage_policy = 3;
+}
+
+// Restricts where message data may be stored.
+message MessageStoragePolicy {
+  repeated string allowed_persistence_regions = 1;
+}
+
+// A message to be published.
+message PubsubMessage {
+  // The payload.
+  bytes data = 1;
+  // Delivery attributes.
+  map<string, string> attributes = 2;
+  // Server-assigned id, set on delivery.
+  string message_id = 3;
+  // When the server accepted the message.
+  google.protobuf.Timestamp publish_time = 4;
+  // Messages with the same key are delivered in order.
+  string ordering_key = 5;
+}
+
+message GetTopicRequest {
+  string topic = 1;
+}
+
+message ListTopicsRequest {
+  string project = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListTopicsResponse {
+  repeated Topic topics = 1;
+  string next_page_token = 2;
+}
+
+message PublishRequest {
+  string topic = 1;
+  repeated PubsubMessage messages = 2;
+}
+
+message PublishResponse {
+  repeated string message_ids = 1;
+}
+
+message DeleteTopicRequest {
+  string topic = 1;
+}

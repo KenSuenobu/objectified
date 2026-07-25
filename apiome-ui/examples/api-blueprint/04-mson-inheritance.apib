@@ -1,0 +1,49 @@
+FORMAT: 1A
+HOST: https://api.example.com
+
+# Accounts API
+
+Composition via MSON inheritance: the AdminUser data structure extends User
+(declared as `## AdminUser (User)`), so admin payloads reuse the base user
+fields and add their own.
+
+## Users Collection [/users]
+
+### List users [GET]
+
++ Response 200 (application/json)
+    + Attributes (array[User])
+
+### Create a user [POST]
+
++ Request (application/json)
+    + Attributes (User)
+
++ Response 201 (application/json)
+    + Attributes (User)
+
+## Admins Collection [/admins]
+
+### List admins [GET]
+
++ Response 200 (application/json)
+    + Attributes (array[AdminUser])
+
+### Promote to admin [POST]
+
++ Request (application/json)
+    + Attributes (AdminUser)
+
++ Response 201 (application/json)
+    + Attributes (AdminUser)
+
+# Data Structures
+
+## User (object)
++ id: `u-1001` (string, required) - Unique user identifier.
++ email: `kai@example.com` (string, required) - Login email address.
++ displayName: `Kai` (string, optional) - Preferred display name.
+
+## AdminUser (User)
++ scope: `billing` (string, required) - Administrative scope granted.
++ mfaEnrolled: true (boolean, required) - Whether MFA is enforced.

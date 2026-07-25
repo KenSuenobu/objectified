@@ -1,0 +1,27 @@
+# Member of the multi-file storefront set: the reviews domain.
+# Defines Review, extends Product (from products.graphql) with review fields,
+# and extends the base Query type from schema.graphql.
+
+"A customer review of a product"
+type Review implements Node {
+  id: ID!
+  rating: Int!
+  title: String
+  body: String
+  author: String!
+  product: Product!
+  postedAt: DateTime!
+}
+
+extend type Product {
+  "Reviews posted for this product"
+  reviews(first: Int = 10): [Review!]!
+
+  "Mean rating across all reviews, null when unreviewed"
+  averageRating: Float
+}
+
+extend type Query {
+  "Look up one review by its global ID"
+  review(id: ID!): Review
+}

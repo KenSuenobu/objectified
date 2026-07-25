@@ -1,0 +1,36 @@
+-- ASN.1 example — stress: less common grammar corners in one module.
+--
+-- Exercises EXPLICIT TAGS with context-specific tag numbers, SET, nested
+-- CHOICE with a NULL alternative, inline member-level ENUMERATED (which the
+-- importer lifts into synthetic enums), OCTET STRING and INTEGER with SIZE
+-- and value-range constraints, OBJECT IDENTIFIER, IA5String and
+-- PrintableString, and DEFAULT values on tagged members.
+StressModule DEFINITIONS EXPLICIT TAGS ::= BEGIN
+
+  Priority ::= ENUMERATED { low(0), normal(1), high(2), critical(3) }
+
+  Payload ::= CHOICE {
+    text    [0] UTF8String,
+    binary  [1] OCTET STRING (SIZE (1..4096)),
+    empty   [2] NULL
+  }
+
+  Endpoint ::= SET {
+    host  [0] IA5String,
+    port  [1] INTEGER (1..65535),
+    tag   [2] PrintableString OPTIONAL
+  }
+
+  Envelope ::= SEQUENCE {
+    version     [0] INTEGER DEFAULT 1,
+    priority    [1] Priority DEFAULT normal,
+    transport   [2] ENUMERATED { tcp(0), udp(1), quic(2) } DEFAULT tcp,
+    contentType [3] OBJECT IDENTIFIER,
+    flags       [4] BIT STRING OPTIONAL,
+    source      [5] Endpoint,
+    hops        [6] SEQUENCE OF Endpoint,
+    payload     [7] Payload,
+    ttlSeconds  [8] INTEGER (0..86400) DEFAULT 3600
+  }
+
+END

@@ -1,0 +1,177 @@
+# AsyncAPI 2.6 stress example — the format's less common grammar corners at once.
+#
+# Exercises channel parameters, operation traits, message traits, correlationId,
+# message headers and examples, `oneOf` alternative messages, `allOf` schema
+# composition, server variables and security, MQTT server/operation bindings,
+# root-level `id`, `tags` and `externalDocs`, and `defaultContentType`.
+asyncapi: 2.6.0
+id: urn:example:iot:telemetry
+defaultContentType: application/json
+info:
+  title: IoT Telemetry Service
+  version: 1.4.0
+  description: >-
+    Ingests sensor readings and fans out threshold and battery alerts for a
+    fleet of field devices.
+  termsOfService: https://telemetry.example.com/terms
+  contact:
+    name: Platform Team
+    email: platform@example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+tags:
+  - name: iot
+    description: Device telemetry topics.
+externalDocs:
+  description: Device onboarding guide.
+  url: https://telemetry.example.com/docs/onboarding
+servers:
+  production:
+    url: 'mqtt://broker.{env}.example.com:1883'
+    protocol: mqtt
+    protocolVersion: '5.0'
+    description: Regional MQTT broker.
+    variables:
+      env:
+        description: Deployment environment.
+        default: prod
+        enum:
+          - prod
+          - staging
+    security:
+      - devicePassword: []
+    bindings:
+      mqtt:
+        clientId: telemetry-ingest
+        cleanSession: true
+channels:
+  'sensor/{sensorId}/reading':
+    description: Periodic readings published by one sensor.
+    parameters:
+      sensorId:
+        description: Stable sensor hardware identifier.
+        schema:
+          type: string
+          pattern: '^[a-z0-9]{8}$'
+    publish:
+      operationId: publishReading
+      summary: A sensor pushes one telemetry reading.
+      traits:
+        - $ref: '#/components/operationTraits/qos1'
+      message:
+        $ref: '#/components/messages/SensorReading'
+  'sensor/{sensorId}/alert':
+    description: Alerts derived from a sensor's readings.
+    parameters:
+      sensorId:
+        schema:
+          type: string
+          pattern: '^[a-z0-9]{8}$'
+    subscribe:
+      operationId: onSensorAlert
+      summary: Receive threshold or battery alerts for a sensor.
+      message:
+        oneOf:
+          - $ref: '#/components/messages/ThresholdAlert'
+          - $ref: '#/components/messages/BatteryAlert'
+components:
+  securitySchemes:
+    devicePassword:
+      type: userPassword
+      description: Per-device broker credentials.
+  operationTraits:
+    qos1:
+      bindings:
+        mqtt:
+          qos: 1
+          retain: false
+  messageTraits:
+    commonHeaders:
+      headers:
+        type: object
+        properties:
+          traceId:
+            type: string
+            description: Correlates a reading with the alerts it triggered.
+  messages:
+    SensorReading:
+      name: sensorReading
+      title: Sensor reading
+      contentType: application/json
+      traits:
+        - $ref: '#/components/messageTraits/commonHeaders'
+      correlationId:
+        description: Trace header carried through the alert fan-out.
+        location: '$message.header#/traceId'
+      payload:
+        $ref: '#/components/schemas/SensorReading'
+      examples:
+        - name: nominal
+          summary: An in-range reading.
+          payload:
+            sensorId: ab12cd34
+            celsius: 21.5
+            recordedAt: '2026-03-01T12:00:00Z'
+    ThresholdAlert:
+      name: thresholdAlert
+      title: Threshold alert
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/AlertBase'
+          - type: object
+            required:
+              - threshold
+            properties:
+              threshold:
+                type: number
+                description: Configured limit that was crossed.
+    BatteryAlert:
+      name: batteryAlert
+      title: Battery alert
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/AlertBase'
+          - type: object
+            required:
+              - batteryPercent
+            properties:
+              batteryPercent:
+                type: integer
+                minimum: 0
+                maximum: 100
+                description: Remaining charge when the alert fired.
+  schemas:
+    SensorReading:
+      type: object
+      required:
+        - sensorId
+        - celsius
+        - recordedAt
+      properties:
+        sensorId:
+          type: string
+        celsius:
+          type: number
+          description: Measured temperature in degrees Celsius.
+        recordedAt:
+          type: string
+          format: date-time
+    AlertBase:
+      type: object
+      required:
+        - sensorId
+        - raisedAt
+      properties:
+        sensorId:
+          type: string
+        raisedAt:
+          type: string
+          format: date-time
+        severity:
+          type: string
+          enum:
+            - info
+            - warning
+            - critical
+          default: warning

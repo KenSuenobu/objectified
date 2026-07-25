@@ -1,0 +1,56 @@
+{
+  "_comment": "FHIR R4 example — real-world: hand-authored reconstruction of the shape of a public FHIR R4 server's CapabilityStatement (the /metadata response every FHIR server publishes), with software/implementation metadata, REST resource entries, interactions, and search parameters. No third-party text copied.",
+  "resourceType": "CapabilityStatement",
+  "id": "example-server",
+  "status": "active",
+  "date": "2026-02-01",
+  "publisher": "Example Health",
+  "kind": "instance",
+  "software": {
+    "name": "Example FHIR Server",
+    "version": "6.2.0"
+  },
+  "implementation": {
+    "description": "Example Health public FHIR R4 endpoint",
+    "url": "https://fhir.example.com/r4"
+  },
+  "fhirVersion": "4.0.1",
+  "format": ["application/fhir+json", "application/fhir+xml"],
+  "rest": [
+    {
+      "mode": "server",
+      "resource": [
+        {
+          "type": "Patient",
+          "profile": "http://hl7.org/fhir/StructureDefinition/Patient",
+          "interaction": [
+            { "code": "read" },
+            { "code": "vread" },
+            { "code": "search-type" },
+            { "code": "create" },
+            { "code": "update" }
+          ],
+          "searchParam": [
+            { "name": "identifier", "type": "token" },
+            { "name": "name", "type": "string" },
+            { "name": "birthdate", "type": "date" }
+          ]
+        },
+        {
+          "type": "Observation",
+          "profile": "http://hl7.org/fhir/StructureDefinition/Observation",
+          "interaction": [
+            { "code": "read" },
+            { "code": "search-type" },
+            { "code": "create" }
+          ],
+          "searchParam": [
+            { "name": "patient", "type": "reference" },
+            { "name": "code", "type": "token" },
+            { "name": "date", "type": "date" }
+          ]
+        }
+      ]
+    }
+  ]
+}

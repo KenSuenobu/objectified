@@ -1,6 +1,4 @@
-"""
-Schema demonstrating interface types for polymorphism
-"""
+# Schema demonstrating interface types for polymorphism
 
 """
 Base interface for all nodes in the system

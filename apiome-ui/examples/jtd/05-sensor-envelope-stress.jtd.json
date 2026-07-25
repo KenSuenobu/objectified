@@ -1,0 +1,65 @@
+{
+  "_comment": "Stress example — exercises every JTD (RFC 8927) schema form in one document: all eleven primitive types, enum, elements, values, a discriminator/mapping tagged union with both ref and inline branches, refs into definitions, the empty (any) form, nullable, and additionalProperties.",
+  "metadata": {
+    "title": "SensorEnvelope",
+    "description": "A telemetry envelope that touches every JTD schema form at once."
+  },
+  "definitions": {
+    "Reading": {
+      "metadata": { "description": "One sampled reading from a sensor channel." },
+      "properties": {
+        "seq": { "type": "uint32" },
+        "value": { "type": "float64", "nullable": true }
+      }
+    },
+    "GpsFix": {
+      "metadata": { "description": "A GPS position fix." },
+      "properties": {
+        "lat": { "type": "float32" },
+        "lon": { "type": "float32" }
+      },
+      "optionalProperties": {
+        "altitudeMeters": { "type": "int16", "nullable": true }
+      }
+    }
+  },
+  "properties": {
+    "envelopeId": { "type": "string" },
+    "recordedAt": { "type": "timestamp" },
+    "flags": { "type": "uint8" },
+    "clockSkew": { "type": "int8" },
+    "sampleCount": { "type": "uint16" },
+    "driftTicks": { "type": "int32" },
+    "healthy": { "type": "boolean" },
+    "priority": { "enum": ["low", "normal", "high"] },
+    "readings": {
+      "elements": { "ref": "Reading" }
+    },
+    "attributes": {
+      "metadata": { "description": "Free-form string map via the values form." },
+      "values": { "type": "string" }
+    },
+    "position": {
+      "metadata": { "description": "Tagged union: a ref branch and an inline properties branch." },
+      "discriminator": "kind",
+      "mapping": {
+        "gps": { "ref": "GpsFix" },
+        "none": {
+          "properties": {
+            "reason": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "optionalProperties": {
+    "annotations": {
+      "elements": { "enum": ["flagged", "reviewed", "archived"] }
+    },
+    "rawPayload": {
+      "metadata": { "description": "Empty form: any JSON value passes." }
+    },
+    "batteryPercent": { "type": "float32", "nullable": true }
+  },
+  "additionalProperties": true
+}

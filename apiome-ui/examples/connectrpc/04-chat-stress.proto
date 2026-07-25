@@ -1,0 +1,83 @@
+// Connect-RPC example — stress: less common grammar corners in one contract.
+//
+// A Connect-RPC chat service exercising all four streaming shapes (unary,
+// server-, client-, and bidirectional streaming — Connect maps these onto
+// HTTP), plus oneof, optional fields, reserved numbers and names, nested
+// messages and enums, and a map field.
+syntax = "proto3";
+
+package chat.v1;
+
+option go_package = "example.com/gen/chat/v1;chatv1";
+
+// Real-time chat over Connect streaming.
+service ChatService {
+  // Unary: fetch a room's metadata.
+  rpc GetRoom(GetRoomRequest) returns (Room);
+  // Server streaming: subscribe to a room's events.
+  rpc Subscribe(GetRoomRequest) returns (stream Event);
+  // Client streaming: bulk-import history.
+  rpc ImportHistory(stream Event) returns (ImportSummary);
+  // Bidirectional streaming: live conversation.
+  rpc Converse(stream Event) returns (stream Event);
+}
+
+// Something that happened in a room.
+message Event {
+  // Numbers and names retired from earlier revisions.
+  reserved 2, 6 to 8;
+  reserved "author_nick";
+
+  // The room this event belongs to.
+  string room_id = 1;
+
+  // Exactly one event payload.
+  oneof payload {
+    Message message = 3;
+    Reaction reaction = 4;
+    Presence presence = 5;
+  }
+
+  // Optional client-assigned id for deduplication.
+  optional string client_event_id = 9;
+
+  // A chat message.
+  message Message {
+    string author = 1;
+    string text = 2;
+  }
+
+  // An emoji reaction to a prior message.
+  message Reaction {
+    string target_event_id = 1;
+    string emoji = 2;
+  }
+
+  // A join/leave notice.
+  message Presence {
+    string member = 1;
+    Kind kind = 2;
+    enum Kind {
+      KIND_UNSPECIFIED = 0;
+      KIND_JOINED = 1;
+      KIND_LEFT = 2;
+    }
+  }
+}
+
+// A chat room.
+message Room {
+  string id = 1;
+  string topic = 2;
+  // Member display names keyed by member id.
+  map<string, string> members = 3;
+}
+
+message GetRoomRequest {
+  string room_id = 1;
+}
+
+message ImportSummary {
+  uint64 imported = 1;
+  uint64 skipped = 2;
+}

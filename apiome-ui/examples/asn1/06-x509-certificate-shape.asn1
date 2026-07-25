@@ -1,0 +1,66 @@
+-- ASN.1 example — real-world shape: X.509 public-key certificate.
+--
+-- A hand-authored reconstruction of the shape of the X.509 v3 certificate
+-- structures described by RFC 5280 (Certificate, TBSCertificate, Validity,
+-- extensions); no third-party text copied. Simplified where the original
+-- relies on information-object classes or top-level SET OF / INTEGER
+-- named-number typedefs, but structurally faithful.
+CertificateShapeModule DEFINITIONS EXPLICIT TAGS ::= BEGIN
+
+  CertVersion ::= ENUMERATED { v1(0), v2(1), v3(2) }
+
+  AlgorithmIdentifier ::= SEQUENCE {
+    algorithm   OBJECT IDENTIFIER,
+    parameters  OCTET STRING OPTIONAL
+  }
+
+  AttributeTypeAndValue ::= SEQUENCE {
+    attrType   OBJECT IDENTIFIER,
+    attrValue  UTF8String
+  }
+
+  Name ::= SEQUENCE {
+    rdnSequence  SEQUENCE OF AttributeTypeAndValue
+  }
+
+  Time ::= CHOICE {
+    utcTime      UTCTime,
+    generalTime  GeneralizedTime
+  }
+
+  Validity ::= SEQUENCE {
+    notBefore  Time,
+    notAfter   Time
+  }
+
+  SubjectPublicKeyInfo ::= SEQUENCE {
+    algorithm         AlgorithmIdentifier,
+    subjectPublicKey  BIT STRING
+  }
+
+  Extension ::= SEQUENCE {
+    extnID     OBJECT IDENTIFIER,
+    critical   BOOLEAN DEFAULT FALSE,
+    extnValue  OCTET STRING
+  }
+
+  TBSCertificate ::= SEQUENCE {
+    version               [0] CertVersion DEFAULT v1,
+    serialNumber          INTEGER,
+    signature             AlgorithmIdentifier,
+    issuer                Name,
+    validity              Validity,
+    subject               Name,
+    subjectPublicKeyInfo  SubjectPublicKeyInfo,
+    issuerUniqueID        [1] BIT STRING OPTIONAL,
+    subjectUniqueID       [2] BIT STRING OPTIONAL,
+    extensions            [3] SEQUENCE OF Extension OPTIONAL
+  }
+
+  Certificate ::= SEQUENCE {
+    tbsCertificate      TBSCertificate,
+    signatureAlgorithm  AlgorithmIdentifier,
+    signatureValue      BIT STRING
+  }
+
+END

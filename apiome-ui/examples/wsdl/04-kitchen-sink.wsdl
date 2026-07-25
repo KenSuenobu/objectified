@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WSDL 1.1 stress example: less common grammar corners in one document.
+
+  Combines an RPC-style binding whose message parts use type attributes
+  (instead of element references), a one-way notification operation with no
+  output, two portTypes bound separately, a SOAP 1.2 binding alongside the
+  SOAP 1.1 binding, and one service exposing three ports.
+-->
+<wsdl:definitions
+    name="TelemetryHub"
+    targetNamespace="http://example.com/telemetry"
+    xmlns:tns="http://example.com/telemetry"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+
+  <wsdl:documentation>Telemetry ingestion hub mixing request-response and one-way styles.</wsdl:documentation>
+
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://example.com/telemetry" elementFormDefault="qualified">
+      <xsd:simpleType name="Severity">
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="debug"/>
+          <xsd:enumeration value="info"/>
+          <xsd:enumeration value="warning"/>
+          <xsd:enumeration value="critical"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:complexType name="Reading">
+        <xsd:sequence>
+          <xsd:element name="sensorId" type="xsd:string"/>
+          <xsd:element name="capturedAt" type="xsd:dateTime"/>
+          <xsd:element name="value" type="xsd:double"/>
+          <xsd:element name="unit" type="xsd:string" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="ReadingBatch">
+        <xsd:sequence>
+          <xsd:element name="readings" type="tns:Reading" maxOccurs="unbounded"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="IngestResult">
+        <xsd:sequence>
+          <xsd:element name="accepted" type="xsd:int"/>
+          <xsd:element name="rejected" type="xsd:int"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="AlarmEvent">
+        <xsd:sequence>
+          <xsd:element name="sensorId" type="xsd:string"/>
+          <xsd:element name="severity" type="tns:Severity"/>
+          <xsd:element name="raisedAt" type="xsd:dateTime"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="SubmitBatch" type="tns:ReadingBatch"/>
+      <xsd:element name="SubmitBatchResult" type="tns:IngestResult"/>
+      <xsd:element name="AlarmEvent" type="tns:AlarmEvent"/>
+    </xsd:schema>
+  </wsdl:types>
+
+  <!-- Document-literal messages referencing elements. -->
+  <wsdl:message name="SubmitBatchInput">
+    <wsdl:part name="parameters" element="tns:SubmitBatch"/>
+  </wsdl:message>
+  <wsdl:message name="SubmitBatchOutput">
+    <wsdl:part name="parameters" element="tns:SubmitBatchResult"/>
+  </wsdl:message>
+
+  <!-- RPC-style message whose parts are typed directly. -->
+  <wsdl:message name="GetSensorStatusInput">
+    <wsdl:part name="sensorId" type="xsd:string"/>
+    <wsdl:part name="includeHistory" type="xsd:boolean"/>
+  </wsdl:message>
+  <wsdl:message name="GetSensorStatusOutput">
+    <wsdl:part name="status" type="xsd:string"/>
+    <wsdl:part name="lastReading" type="tns:Reading"/>
+  </wsdl:message>
+
+  <!-- One-way notification message. -->
+  <wsdl:message name="AlarmNotification">
+    <wsdl:part name="event" element="tns:AlarmEvent"/>
+  </wsdl:message>
+
+  <wsdl:portType name="IngestionPort">
+    <wsdl:operation name="SubmitBatch">
+      <wsdl:documentation>Document-literal request-response.</wsdl:documentation>
+      <wsdl:input message="tns:SubmitBatchInput"/>
+      <wsdl:output message="tns:SubmitBatchOutput"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetSensorStatus">
+      <wsdl:documentation>RPC-style request-response with typed parts.</wsdl:documentation>
+      <wsdl:input message="tns:GetSensorStatusInput"/>
+      <wsdl:output message="tns:GetSensorStatusOutput"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:portType name="AlarmPort">
+    <wsdl:operation name="RaiseAlarm">
+      <wsdl:documentation>One-way: input only, no output message.</wsdl:documentation>
+      <wsdl:input message="tns:AlarmNotification"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="IngestionSoap11Binding" type="tns:IngestionPort">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="SubmitBatch">
+      <soap:operation soapAction="http://example.com/telemetry/SubmitBatch"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetSensorStatus">
+      <soap:operation soapAction="http://example.com/telemetry/GetSensorStatus" style="rpc"/>
+      <wsdl:input><soap:body use="literal" namespace="http://example.com/telemetry"/></wsdl:input>
+      <wsdl:output><soap:body use="literal" namespace="http://example.com/telemetry"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:binding name="IngestionSoap12Binding" type="tns:IngestionPort">
+    <soap12:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="SubmitBatch">
+      <soap12:operation soapAction="http://example.com/telemetry/SubmitBatch"/>
+      <wsdl:input><soap12:body use="literal"/></wsdl:input>
+      <wsdl:output><soap12:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetSensorStatus">
+      <soap12:operation soapAction="http://example.com/telemetry/GetSensorStatus"/>
+      <wsdl:input><soap12:body use="literal"/></wsdl:input>
+      <wsdl:output><soap12:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:binding name="AlarmBinding" type="tns:AlarmPort">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="RaiseAlarm">
+      <soap:operation soapAction="http://example.com/telemetry/RaiseAlarm"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="TelemetryHubService">
+    <wsdl:port name="IngestionSoap11Port" binding="tns:IngestionSoap11Binding">
+      <soap:address location="https://api.example.com/telemetry/soap11"/>
+    </wsdl:port>
+    <wsdl:port name="IngestionSoap12Port" binding="tns:IngestionSoap12Binding">
+      <soap12:address location="https://api.example.com/telemetry/soap12"/>
+    </wsdl:port>
+    <wsdl:port name="AlarmPort" binding="tns:AlarmBinding">
+      <soap:address location="https://api.example.com/telemetry/alarms"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

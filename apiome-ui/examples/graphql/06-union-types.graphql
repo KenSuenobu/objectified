@@ -1,6 +1,4 @@
-"""
-Schema demonstrating union types for polymorphic results
-"""
+# Schema demonstrating union types for polymorphic results
 
 """
 Search result that can be any of several types

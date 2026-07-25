@@ -50,6 +50,15 @@ def _detection_cell(entry: Dict[str, Any]) -> str:
     return f"`{detection['format']}` ≥ {min_conf:g}"
 
 
+def _rung_cell(entry: Dict[str, Any]) -> str:
+    """Render an entry's ladder rung (with fileset role when in a set)."""
+    rung = entry.get("rung")
+    if rung is None:
+        return "—"
+    role = entry.get("fileset_role")
+    return f"{rung} ({role})" if role else rung
+
+
 def build_readme(manifest: Dict[str, Any]) -> str:
     """Render the full README.md content for a parsed corpus manifest.
 
@@ -135,20 +144,28 @@ def build_readme(manifest: Dict[str, Any]) -> str:
         "Validity classes: `valid` imports cleanly · `invalid` must be rejected · "
         "`adversarial` tries to confuse detection · `scale` stresses limits."
     )
+    out("")
+    out(
+        "Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic "
+        "service · `composition` inheritance/refs/imports · `stress` less common grammar · "
+        "`real-world` public spec or faithful reconstruction · `multi-file` a set imported "
+        "together."
+    )
     for d in sorted(by_dir):
         meta = directories[d]
         out("")
         out(f"### `{d}/` — {meta['label']}")
         out("")
-        out("| File | Expected detection | Class | Features |")
-        out("| --- | --- | --- | --- |")
+        out("| File | Rung | Expected detection | Class | Features |")
+        out("| --- | --- | --- | --- | --- |")
         notes: List[tuple[str, str]] = []
         for entry in by_dir[d]:
             name = entry["path"].split("/", 1)[1]
             marker = " ⚠" if "notes" in entry else ""
             features = ", ".join(f"`{feature}`" for feature in entry["features"])
             out(
-                f"| `{name}`{marker} | {_cell(_detection_cell(entry))} "
+                f"| `{name}`{marker} | {_cell(_rung_cell(entry))} "
+                f"| {_cell(_detection_cell(entry))} "
                 f"| {entry['validity_class']} | {_cell(features)} |"
             )
             if "notes" in entry:
@@ -156,6 +173,22 @@ def build_readme(manifest: Dict[str, Any]) -> str:
         for name, note in notes:
             out("")
             out(f"> ⚠ **`{name}`** — {note}")
+
+    waivers: Dict[str, Dict[str, str]] = manifest.get("rung_waivers", {})
+    if waivers:
+        out("")
+        out("## Ladder waivers")
+        out("")
+        out(
+            "Rungs that do not apply to an adapter's format, with the manifest-recorded "
+            "justification (IXH-1.2 acceptance criterion)."
+        )
+        out("")
+        out("| Adapter | Rung | Justification |")
+        out("| --- | --- | --- |")
+        for adapter in sorted(waivers):
+            for rung in sorted(waivers[adapter]):
+                out(f"| `{adapter}` | {rung} | {_cell(waivers[adapter][rung])} |")
 
     out("")
     out("## Trying an import")

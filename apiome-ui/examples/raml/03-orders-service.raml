@@ -1,0 +1,106 @@
+#%RAML 1.0
+# Typical RAML 1.0 example — a realistic everyday "orders" service: data types
+# for orders and line items, a collection resource with query parameters, and
+# an item resource with fetch/cancel methods.
+title: Orders API
+version: v1
+baseUri: https://api.example.com/orders/{version}
+mediaType: application/json
+description: Order intake and fulfilment tracking for the web store.
+
+types:
+  OrderItem:
+    type: object
+    description: A single line in an order.
+    properties:
+      sku:
+        type: string
+        description: Stock keeping unit of the product.
+      quantity:
+        type: integer
+        description: Number of units ordered.
+      unitPrice:
+        type: number
+        description: Price per unit at order time.
+  Order:
+    type: object
+    description: A customer order.
+    properties:
+      id:
+        type: string
+        description: Unique order identifier.
+      customerId:
+        type: string
+        description: Identifier of the ordering customer.
+      status:
+        type: string
+        description: Fulfilment status (placed, shipped, delivered, cancelled).
+      placedAt:
+        type: datetime
+        description: When the order was placed.
+      items:
+        type: array
+        description: Lines of the order.
+        items: OrderItem
+      total:
+        type: number
+        description: Order total in the shop currency.
+  NewOrder:
+    type: object
+    description: Payload to place an order (server assigns id and status).
+    properties:
+      customerId: string
+      items:
+        type: array
+        items: OrderItem
+
+/orders:
+  description: Collection of orders.
+  get:
+    description: List orders, optionally filtered.
+    queryParameters:
+      status:
+        type: string
+        required: false
+        description: Only return orders in this status.
+      customerId:
+        type: string
+        required: false
+        description: Only return orders for this customer.
+    responses:
+      200:
+        body:
+          application/json:
+            type: Order[]
+  post:
+    description: Place a new order.
+    body:
+      application/json:
+        type: NewOrder
+    responses:
+      201:
+        body:
+          application/json:
+            type: Order
+  /{orderId}:
+    description: A single order.
+    uriParameters:
+      orderId:
+        type: string
+        description: Identifier of the order.
+    get:
+      description: Fetch an order by id.
+      responses:
+        200:
+          body:
+            application/json:
+              type: Order
+        404:
+          description: No order with that id.
+    delete:
+      description: Cancel an order that has not shipped yet.
+      responses:
+        204:
+          description: Order cancelled.
+        409:
+          description: Order already shipped.

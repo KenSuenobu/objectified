@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OData v4 CSDL (EDMX) stress example — the less common grammar corners at once.
+
+  Exercises a flags EnumType with an underlying type, a TypeDefinition alias,
+  an OpenType entity, containment navigation, collections of complex types,
+  bound Function and Action definitions with FunctionImport / ActionImport,
+  a Singleton, and inline Annotation elements.
+-->
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:DataServices>
+    <Schema Namespace="Example.Warehouse" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <TypeDefinition Name="Sku" UnderlyingType="Edm.String">
+        <Annotation Term="Core.Description" String="Stock-keeping unit code."/>
+      </TypeDefinition>
+
+      <EnumType Name="StorageFlags" UnderlyingType="Edm.Int32" IsFlags="true">
+        <Member Name="None" Value="0"/>
+        <Member Name="Refrigerated" Value="1"/>
+        <Member Name="Fragile" Value="2"/>
+        <Member Name="Hazardous" Value="4"/>
+        <Member Name="Oversized" Value="8"/>
+      </EnumType>
+
+      <ComplexType Name="Dimension">
+        <Property Name="Length" Type="Edm.Double" Nullable="false"/>
+        <Property Name="Width" Type="Edm.Double" Nullable="false"/>
+        <Property Name="Height" Type="Edm.Double" Nullable="false"/>
+      </ComplexType>
+
+      <EntityType Name="Bin" OpenType="true">
+        <Key>
+          <PropertyRef Name="Code"/>
+        </Key>
+        <Property Name="Code" Type="Edm.String" Nullable="false" MaxLength="16"/>
+        <Property Name="Flags" Type="Example.Warehouse.StorageFlags"/>
+        <Property Name="Sku" Type="Example.Warehouse.Sku"/>
+        <Property Name="Slots" Type="Collection(Example.Warehouse.Dimension)"/>
+        <Property Name="Location" Type="Edm.GeographyPoint" SRID="4326"/>
+        <NavigationProperty Name="Contents" Type="Collection(Example.Warehouse.Pallet)" ContainsTarget="true"/>
+      </EntityType>
+
+      <EntityType Name="Pallet">
+        <Key>
+          <PropertyRef Name="Id"/>
+        </Key>
+        <Property Name="Id" Type="Edm.Int64" Nullable="false"/>
+        <Property Name="Weight" Type="Edm.Decimal" Precision="10" Scale="3"/>
+        <Property Name="Barcode" Type="Edm.Binary" MaxLength="64"/>
+        <Property Name="ReceivedOn" Type="Edm.Date"/>
+        <Property Name="Dwell" Type="Edm.Duration"/>
+      </EntityType>
+
+      <Function Name="NearestBin" IsBound="true" IsComposable="true">
+        <Parameter Name="bindingParameter" Type="Collection(Example.Warehouse.Bin)"/>
+        <Parameter Name="point" Type="Edm.GeographyPoint" SRID="4326"/>
+        <ReturnType Type="Example.Warehouse.Bin"/>
+      </Function>
+
+      <Action Name="Recount" IsBound="true">
+        <Parameter Name="bindingParameter" Type="Example.Warehouse.Bin"/>
+        <Parameter Name="auditor" Type="Edm.String"/>
+        <ReturnType Type="Edm.Int32"/>
+      </Action>
+
+      <EntityContainer Name="WarehouseService">
+        <EntitySet Name="Bins" EntityType="Example.Warehouse.Bin"/>
+        <Singleton Name="DefaultBin" Type="Example.Warehouse.Bin"/>
+        <FunctionImport Name="NearestBin" Function="Example.Warehouse.NearestBin" EntitySet="Bins"/>
+        <ActionImport Name="RecountAll" Action="Example.Warehouse.Recount"/>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

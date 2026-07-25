@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ISO 20022 example — admi.004.001.02 (SystemEventNotification).
+  The smallest canonical ISO 20022 message: a namespaced <Document> whose only
+  business payload is a single system-event notification (event code + time).
+-->
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:admi.004.001.02">
+  <SysEvtNtfctn>
+    <EvtInf>
+      <EvtCd>CLSD</EvtCd>
+      <EvtTm>2026-01-16T17:00:00</EvtTm>
+    </EvtInf>
+  </SysEvtNtfctn>
+</Document>

@@ -1,0 +1,125 @@
+# Real-world example: a hand-authored faithful reconstruction of the shape of the
+# GitHub GraphQL API (v4) core surface — Node interface, viewer, repository lookup,
+# Relay-style connections, and an input/payload mutation pair. No third-party text copied.
+
+"An object with a globally unique ID"
+interface Node {
+  "The globally unique identifier"
+  id: ID!
+}
+
+"Pagination metadata for a connection"
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+"A user account on the platform"
+type User implements Node {
+  id: ID!
+  login: String!
+  name: String
+  bio: String
+  avatarUrl(size: Int): String!
+  createdAt: String!
+  repositories(first: Int = 25, after: String): RepositoryConnection!
+}
+
+"A code repository"
+type Repository implements Node {
+  id: ID!
+  name: String!
+  nameWithOwner: String!
+  description: String
+  isPrivate: Boolean!
+  isArchived: Boolean!
+  stargazerCount: Int!
+  forkCount: Int!
+  owner: User!
+  createdAt: String!
+  issues(first: Int = 25, after: String, states: [IssueState!]): IssueConnection!
+  pullRequest(number: Int!): PullRequest
+}
+
+"The state of an issue"
+enum IssueState {
+  OPEN
+  CLOSED
+}
+
+"The state of a pull request"
+enum PullRequestState {
+  OPEN
+  CLOSED
+  MERGED
+}
+
+"An issue on a repository"
+type Issue implements Node {
+  id: ID!
+  number: Int!
+  title: String!
+  body: String
+  state: IssueState!
+  author: User
+  createdAt: String!
+  closedAt: String
+}
+
+"A pull request on a repository"
+type PullRequest implements Node {
+  id: ID!
+  number: Int!
+  title: String!
+  state: PullRequestState!
+  baseRefName: String!
+  headRefName: String!
+  merged: Boolean!
+  mergedAt: String
+  author: User
+}
+
+"A page of repositories"
+type RepositoryConnection {
+  pageInfo: PageInfo!
+  nodes: [Repository]
+  totalCount: Int!
+}
+
+"A page of issues"
+type IssueConnection {
+  pageInfo: PageInfo!
+  nodes: [Issue]
+  totalCount: Int!
+}
+
+"Input for adding a comment to a subject"
+input AddCommentInput {
+  subjectId: ID!
+  body: String!
+  clientMutationId: String
+}
+
+"Payload returned after adding a comment"
+type AddCommentPayload {
+  subject: Node
+  clientMutationId: String
+}
+
+type Query {
+  "Fetch any object by its global ID"
+  node(id: ID!): Node
+
+  "The currently authenticated user"
+  viewer: User!
+
+  "Look up a repository by owner and name"
+  repository(owner: String!, name: String!): Repository
+}
+
+type Mutation {
+  "Add a comment to an issue or pull request"
+  addComment(input: AddCommentInput!): AddCommentPayload
+}

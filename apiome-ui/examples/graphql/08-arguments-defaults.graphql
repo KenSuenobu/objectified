@@ -1,136 +1,133 @@
-"""
-}
-  ): PostConnection!
-    publishedBefore: String
-    publishedAfter: String
-    tags: [String!]
-    authorId: ID
-    after: String
-    first: Int = 10
-    query: String!
-  searchPosts(
-  """
-  Search for posts
-  """
+# Schema demonstrating arguments and default values
 
-  ): UserConnection!
-    isActive: Boolean = true
-    "Filter by active status"
-    nameContains: String
-    "Filter by name"
-    after: String
-    "Cursor for pagination"
-    first: Int = 20
-    "Number of users to return (max 100)"
-  users(
-  """
-  List users with pagination
-  """
-
-  ): User
-    id: ID!
-    "The unique ID of the user"
-  user(
-  """
-  Get a single user by ID
-  """
-type Query {
-
-}
-  likes: Int!
-  post: Post!
-  author: User!
-  content: String!
-  id: ID!
-type Comment {
-
-}
-  LIKES_DESC
-  CREATED_AT_DESC
-  CREATED_AT_ASC
-enum CommentOrderBy {
-
-}
-  pageInfo: PageInfo!
-  edges: [CommentEdge!]!
-type CommentConnection {
-
-}
-  cursor: String!
-  node: Comment!
-type CommentEdge {
-
-}
-  ): CommentConnection!
-    orderBy: CommentOrderBy = CREATED_AT_DESC
-    after: String
-    first: Int = 20
-  comments(
-
-  author: User!
-  content: String!
-  title: String!
-  id: ID!
-type Post {
-
-}
-  LIKES_DESC
-  TITLE_DESC
-  TITLE_ASC
-  CREATED_AT_DESC
-  CREATED_AT_ASC
-enum PostOrderBy {
-
-}
-  pageInfo: PageInfo!
-  edges: [PostEdge!]!
-type PostConnection {
-
-}
-  cursor: String!
-  node: Post!
-type PostEdge {
-
-}
-  following(first: Int = 20, after: String): UserConnection!
-  followers(first: Int = 20, after: String): UserConnection!
-
-  ): PostConnection!
-    orderBy: PostOrderBy = CREATED_AT_DESC
-    "Sort order"
-    published: Boolean
-    "Filter by published status"
-    after: String
-    "Return items after this cursor"
-    first: Int = 10
-    "Number of items to return"
-  posts(
-  email: String!
-  name: String!
-  id: ID!
-type User {
-
-}
-  pageInfo: PageInfo!
-  edges: [UserEdge!]!
-type UserConnection {
-
-}
-  cursor: String!
-  node: User!
-type UserEdge {
-
-}
-  totalCount: Int!
-  endCursor: String
-  startCursor: String
-  hasPreviousPage: Boolean!
-  hasNextPage: Boolean!
-type PageInfo {
 """
 Pagination connection pattern (Relay-style)
 """
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+  totalCount: Int!
+}
 
-"""
-Schema demonstrating arguments and default values
+type UserEdge {
+  node: User!
+  cursor: String!
+}
 
+type UserConnection {
+  edges: [UserEdge!]!
+  pageInfo: PageInfo!
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  posts(
+    "Number of items to return"
+    first: Int = 10
+    "Return items after this cursor"
+    after: String
+    "Filter by published status"
+    published: Boolean
+    "Sort order"
+    orderBy: PostOrderBy = CREATED_AT_DESC
+  ): PostConnection!
+
+  followers(first: Int = 20, after: String): UserConnection!
+  following(first: Int = 20, after: String): UserConnection!
+}
+
+type PostEdge {
+  node: Post!
+  cursor: String!
+}
+
+type PostConnection {
+  edges: [PostEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum PostOrderBy {
+  CREATED_AT_ASC
+  CREATED_AT_DESC
+  TITLE_ASC
+  TITLE_DESC
+  LIKES_DESC
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  author: User!
+
+  comments(
+    first: Int = 20
+    after: String
+    orderBy: CommentOrderBy = CREATED_AT_DESC
+  ): CommentConnection!
+}
+
+type CommentEdge {
+  node: Comment!
+  cursor: String!
+}
+
+type CommentConnection {
+  edges: [CommentEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum CommentOrderBy {
+  CREATED_AT_ASC
+  CREATED_AT_DESC
+  LIKES_DESC
+}
+
+type Comment {
+  id: ID!
+  content: String!
+  author: User!
+  post: Post!
+  likes: Int!
+}
+
+type Query {
+  """
+  Get a single user by ID
+  """
+  user(
+    "The unique ID of the user"
+    id: ID!
+  ): User
+
+  """
+  List users with pagination
+  """
+  users(
+    "Number of users to return (max 100)"
+    first: Int = 20
+    "Cursor for pagination"
+    after: String
+    "Filter by name"
+    nameContains: String
+    "Filter by active status"
+    isActive: Boolean = true
+  ): UserConnection!
+
+  """
+  Search for posts
+  """
+  searchPosts(
+    query: String!
+    first: Int = 10
+    after: String
+    authorId: ID
+    tags: [String!]
+    publishedAfter: String
+    publishedBefore: String
+  ): PostConnection!
+}

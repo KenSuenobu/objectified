@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WSDL 1.1 real-world example: shaped like the classic public GlobalWeather
+  SOAP service (a long-running demo weather service widely used in SOAP
+  tutorials). Hand-authored reconstruction of the shape only; no third-party
+  text copied. Two document-literal operations: GetWeather and
+  GetCitiesByCountry.
+-->
+<wsdl:definitions
+    name="GlobalWeather"
+    targetNamespace="http://example.com/globalweather"
+    xmlns:tns="http://example.com/globalweather"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+
+  <wsdl:documentation>Get weather reports and the list of cities for a country.</wsdl:documentation>
+
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://example.com/globalweather" elementFormDefault="qualified">
+      <xsd:complexType name="GetWeather">
+        <xsd:sequence>
+          <xsd:element name="CityName" type="xsd:string"/>
+          <xsd:element name="CountryName" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="GetWeatherResponse">
+        <xsd:sequence>
+          <xsd:element name="GetWeatherResult" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="GetCitiesByCountry">
+        <xsd:sequence>
+          <xsd:element name="CountryName" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="GetCitiesByCountryResponse">
+        <xsd:sequence>
+          <xsd:element name="GetCitiesByCountryResult" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="GetWeather" type="tns:GetWeather"/>
+      <xsd:element name="GetWeatherResponse" type="tns:GetWeatherResponse"/>
+      <xsd:element name="GetCitiesByCountry" type="tns:GetCitiesByCountry"/>
+      <xsd:element name="GetCitiesByCountryResponse" type="tns:GetCitiesByCountryResponse"/>
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="GetWeatherSoapIn">
+    <wsdl:part name="parameters" element="tns:GetWeather"/>
+  </wsdl:message>
+  <wsdl:message name="GetWeatherSoapOut">
+    <wsdl:part name="parameters" element="tns:GetWeatherResponse"/>
+  </wsdl:message>
+  <wsdl:message name="GetCitiesByCountrySoapIn">
+    <wsdl:part name="parameters" element="tns:GetCitiesByCountry"/>
+  </wsdl:message>
+  <wsdl:message name="GetCitiesByCountrySoapOut">
+    <wsdl:part name="parameters" element="tns:GetCitiesByCountryResponse"/>
+  </wsdl:message>
+
+  <wsdl:portType name="GlobalWeatherSoap">
+    <wsdl:operation name="GetWeather">
+      <wsdl:documentation>Get the weather report for a city in a country.</wsdl:documentation>
+      <wsdl:input message="tns:GetWeatherSoapIn"/>
+      <wsdl:output message="tns:GetWeatherSoapOut"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetCitiesByCountry">
+      <wsdl:documentation>Get all major cities of a country.</wsdl:documentation>
+      <wsdl:input message="tns:GetCitiesByCountrySoapIn"/>
+      <wsdl:output message="tns:GetCitiesByCountrySoapOut"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="GlobalWeatherSoapBinding" type="tns:GlobalWeatherSoap">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="GetWeather">
+      <soap:operation soapAction="http://example.com/globalweather/GetWeather"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetCitiesByCountry">
+      <soap:operation soapAction="http://example.com/globalweather/GetCitiesByCountry"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="GlobalWeather">
+    <wsdl:port name="GlobalWeatherSoap" binding="tns:GlobalWeatherSoapBinding">
+      <soap:address location="https://weather.example.com/globalweather.asmx"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

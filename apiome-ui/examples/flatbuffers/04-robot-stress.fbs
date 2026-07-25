@@ -1,0 +1,67 @@
+// FlatBuffers schema example — stress: a union, fixed-layout structs (one
+// nesting another), enums with hex values and unsigned base types, scalar and
+// enum defaults, vectors of scalars/structs/enums, and file metadata
+// declarations (file_identifier / file_extension).
+
+namespace example.robotics;
+
+file_identifier "ROBO";
+file_extension "robo";
+
+enum Axis : ubyte {
+  X = 0,
+  Y = 1,
+  Z = 2,
+}
+
+enum StatusFlags : ushort {
+  Idle = 0x01,
+  Moving = 0x02,
+  Fault = 0x10,
+  EStop = 0x80,
+}
+
+struct Vec3 {
+  x: float;
+  y: float;
+  z: float;
+}
+
+struct Pose {
+  position: Vec3;
+  roll: float;
+  pitch: float;
+  yaw: float;
+}
+
+table Halt {
+  reason: string;
+}
+
+table Move {
+  target: Pose;
+  speed: float = 0.5;
+  axis: Axis = Z;
+}
+
+table Calibrate {
+  iterations: uint = 3;
+}
+
+union Command {
+  Move,
+  Halt,
+  Calibrate,
+}
+
+table Robot {
+  name: string;
+  flags: ushort;
+  axes: [Axis];
+  waypoints: [Vec3];
+  command: Command;
+  ready: bool = false;
+  batteryPct: double = 100.0;
+}
+
+root_type Robot;

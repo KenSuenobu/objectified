@@ -1,0 +1,25 @@
+{
+  "_comment": "Real-world-shaped ISO 8583 field map — the classic ATM cash-withdrawal financial request (MTI 0200) as documented for ISO 8583:1987 card networks: savings-account withdrawal processing code 011000, MCC 6011 (ATM), PIN block, settlement date, and acquirer/terminal identity. Hand-authored reconstruction of the message shape; no third-party text copied.",
+  "mti": "0200",
+  "name": "ATM Cash Withdrawal Request",
+  "dataElements": {
+    "2": { "name": "Primary Account Number", "type": "n", "length": "..19", "value": "5555444433332222" },
+    "3": { "name": "Processing Code", "type": "n", "length": "6", "value": "011000" },
+    "4": { "name": "Amount, Transaction", "type": "n", "length": "12", "value": "000000010000" },
+    "7": { "name": "Transmission Date & Time", "type": "n", "length": "10", "value": "0116181530" },
+    "11": { "name": "System Trace Audit Number", "type": "n", "length": "6", "value": "000123" },
+    "12": { "name": "Local Transaction Time", "type": "n", "length": "6", "value": "131530" },
+    "13": { "name": "Local Transaction Date", "type": "n", "length": "4", "value": "0116" },
+    "15": { "name": "Settlement Date", "type": "n", "length": "4", "value": "0117" },
+    "18": { "name": "Merchant Category Code", "type": "n", "length": "4", "value": "6011" },
+    "22": { "name": "POS Entry Mode", "type": "n", "length": "3", "value": "901" },
+    "32": { "name": "Acquiring Institution ID", "type": "n", "length": "..11", "value": "54321" },
+    "35": { "name": "Track 2 Data", "type": "z", "length": "..37", "value": "5555444433332222=28061011234567890123" },
+    "37": { "name": "Retrieval Reference Number", "type": "an", "length": "12", "value": "600116000123" },
+    "41": { "name": "Card Acceptor Terminal ID", "type": "ans", "length": "8", "value": "ATM00042" },
+    "42": { "name": "Card Acceptor ID Code", "type": "ans", "length": "15", "value": "BANK0000000ATM1" },
+    "43": { "name": "Card Acceptor Name/Location", "type": "ans", "length": "40", "value": "EXAMPLE BANK ATM 42 METROPOLIS NYUS" },
+    "49": { "name": "Currency Code, Transaction", "type": "n", "length": "3", "value": "840" },
+    "52": { "name": "PIN Data", "type": "b", "length": "8", "value": "1122334455667788" }
+  }
+}

@@ -1,0 +1,82 @@
+// Protobuf (proto3) example — stress: less common grammar corners in one file.
+//
+// Exercises oneof, optional scalar fields, reserved field numbers and names,
+// nested messages and nested enums, maps with message values, bytes and
+// fixed-width scalars, a deprecated enum value, and all four gRPC streaming
+// shapes (unary, server-, client-, and bidirectional streaming).
+syntax = "proto3";
+
+package example.telemetry.v1;
+
+option go_package = "example.com/telemetry/v1;telemetryv1";
+
+// Collects and serves sensor readings.
+service TelemetryService {
+  // Unary: fetch the current snapshot of all sensors.
+  rpc GetSnapshot(SnapshotRequest) returns (Snapshot);
+  // Server streaming: follow readings as they arrive.
+  rpc StreamReadings(SnapshotRequest) returns (stream Reading);
+  // Client streaming: upload a batch of readings.
+  rpc UploadReadings(stream Reading) returns (UploadSummary);
+  // Bidirectional streaming: readings in, alerts out.
+  rpc Exchange(stream Reading) returns (stream Alert);
+}
+
+// A single sensor reading.
+message Reading {
+  // Field numbers and names retired from earlier revisions.
+  reserved 3, 8 to 10;
+  reserved "legacy_tag";
+
+  // The reporting sensor.
+  string sensor_id = 1;
+  // Capture time as fixed-width Unix nanoseconds.
+  sfixed64 captured_unix_nanos = 2;
+
+  // Exactly one measured value shape.
+  oneof value {
+    double temperature_c = 4;
+    uint32 humidity_pct = 5;
+    bytes raw_frame = 6;
+  }
+
+  // Optional site label with explicit presence tracking.
+  optional string site = 7;
+
+  // Quality classification recorded with the reading.
+  Quality quality = 11;
+
+  // Nested enum: quality of a reading.
+  enum Quality {
+    QUALITY_UNSPECIFIED = 0;
+    QUALITY_GOOD = 1;
+    QUALITY_SUSPECT = 2 [deprecated = true];
+    QUALITY_BAD = 3;
+  }
+}
+
+// Point-in-time state of every known sensor.
+message Snapshot {
+  // Nested message used as a map value.
+  message SensorState {
+    Reading last_reading = 1;
+    fixed32 sequence = 2;
+  }
+  // Keyed by sensor id.
+  map<string, SensorState> sensors = 1;
+}
+
+message SnapshotRequest {
+  // Restrict to these sensors; empty means all.
+  repeated string sensor_ids = 1;
+}
+
+message UploadSummary {
+  uint64 accepted = 1;
+  uint64 rejected = 2;
+}
+
+message Alert {
+  string sensor_id = 1;
+  string message = 2;
+}

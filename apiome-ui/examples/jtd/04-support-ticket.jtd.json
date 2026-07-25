@@ -1,0 +1,32 @@
+{
+  "_comment": "A typical everyday JTD (RFC 8927) schema — a support ticket. Demonstrates required vs optional members, an inline enum, an inline nested record, a string list via elements, a free-form string map via the values form, and a nullable primitive.",
+  "metadata": {
+    "title": "SupportTicket",
+    "description": "A help-desk ticket with requester details, status, and free-form custom fields."
+  },
+  "properties": {
+    "ticketId": { "type": "string" },
+    "subject": { "type": "string" },
+    "status": { "enum": ["open", "pending", "resolved", "closed"] },
+    "openedAt": { "type": "timestamp" },
+    "requester": {
+      "metadata": { "description": "Who opened the ticket." },
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" }
+      }
+    }
+  },
+  "optionalProperties": {
+    "assignee": { "type": "string", "nullable": true },
+    "priority": { "enum": ["low", "normal", "high", "urgent"] },
+    "tags": {
+      "elements": { "type": "string" }
+    },
+    "customFields": {
+      "metadata": { "description": "Tenant-defined key/value annotations." },
+      "values": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

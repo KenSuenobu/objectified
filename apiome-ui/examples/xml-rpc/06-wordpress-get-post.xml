@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+  XML-RPC real-world example — the shape of the WordPress wp.getPost call.
+
+  Hand-authored faithful reconstruction of WordPress's best-known XML-RPC
+  method: positional blog id, username and password params, the target post id,
+  and the optional trailing array selecting which post fields to return. No
+  third-party text was copied.
+-->
+<methodCall>
+  <methodName>wp.getPost</methodName>
+  <params>
+    <param>
+      <value><int>1</int></value>
+    </param>
+    <param>
+      <value><string>editor</string></value>
+    </param>
+    <param>
+      <value><string>example-app-password</string></value>
+    </param>
+    <param>
+      <value><int>2308</int></value>
+    </param>
+    <param>
+      <value>
+        <array>
+          <data>
+            <value><string>post_title</string></value>
+            <value><string>post_status</string></value>
+            <value><string>post_date</string></value>
+            <value><string>post_author</string></value>
+          </data>
+        </array>
+      </value>
+    </param>
+  </params>
+</methodCall>

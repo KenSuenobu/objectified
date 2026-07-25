@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WADL composition example: nested resources, inherited template params, and
+  grammar reuse.
+
+  Three levels of resource nesting build the URI space; template params
+  declared on an outer resource are inherited by every method beneath it.
+  The grammars section defines Category and Product once, and multiple
+  methods reuse them through element references on their representations.
+-->
+<application xmlns="http://wadl.dev.java.net/2009/02"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:tns="http://example.com/catalog">
+  <doc>Product catalog API</doc>
+
+  <grammars>
+    <xsd:schema targetNamespace="http://example.com/catalog">
+      <xsd:element name="category" type="tns:Category"/>
+      <xsd:element name="product" type="tns:Product"/>
+      <xsd:complexType name="Category">
+        <xsd:sequence>
+          <xsd:element name="id" type="xsd:string"/>
+          <xsd:element name="name" type="xsd:string"/>
+          <xsd:element name="productCount" type="xsd:int"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Product">
+        <xsd:sequence>
+          <xsd:element name="id" type="xsd:string"/>
+          <xsd:element name="name" type="xsd:string"/>
+          <xsd:element name="price" type="xsd:decimal"/>
+          <xsd:element name="inStock" type="xsd:boolean"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+  </grammars>
+
+  <resources base="https://api.example.com/catalog/">
+    <resource path="categories">
+      <method name="GET" id="listCategories">
+        <response status="200">
+          <representation mediaType="application/xml" element="tns:category"/>
+        </response>
+      </method>
+      <resource path="{categoryId}">
+        <param name="categoryId" style="template" type="xsd:string"/>
+        <method name="GET" id="getCategory">
+          <response status="200">
+            <representation mediaType="application/xml" element="tns:category"/>
+          </response>
+          <response status="404"/>
+        </method>
+        <resource path="products">
+          <method name="GET" id="listProducts">
+            <response status="200">
+              <representation mediaType="application/xml" element="tns:product"/>
+            </response>
+          </method>
+          <method name="POST" id="addProduct">
+            <request>
+              <representation mediaType="application/xml" element="tns:product"/>
+            </request>
+            <response status="201">
+              <representation mediaType="application/xml" element="tns:product"/>
+            </response>
+          </method>
+          <resource path="{productId}">
+            <param name="productId" style="template" type="xsd:string"/>
+            <method name="GET" id="getProduct">
+              <response status="200">
+                <representation mediaType="application/xml" element="tns:product"/>
+              </response>
+              <response status="404"/>
+            </method>
+          </resource>
+        </resource>
+      </resource>
+    </resource>
+  </resources>
+</application>

@@ -15,9 +15,10 @@ from app.import_source import DetectionInput, ImportSourceError
 
 # Fixtures come from the corpus manifest (IXH-1.1, #5087), selected by tag
 # rather than hard-coded path: the user record is the corpus's enum example,
-# the order record its nested-records example.
-[_USER_ENTRY] = load_corpus(format="avro", feature="enum")
-[_ORDER_ENTRY] = load_corpus(format="avro", feature="nested-records")
+# the order record its nested-records example. Entries are path-sorted, so the
+# first match stays stable as the corpus grows (IXH-1.2).
+_USER_ENTRY = load_corpus(format="avro", feature="enum")[0]
+_ORDER_ENTRY = load_corpus(format="avro", feature="nested-records")[0]
 _USER_AVSC = _USER_ENTRY.read_text()
 _ORDER_AVSC = _ORDER_ENTRY.read_text()
 

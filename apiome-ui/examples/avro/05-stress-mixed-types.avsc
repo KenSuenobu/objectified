@@ -1,0 +1,79 @@
+{
+  "_comment": "Avro schema example — stress: the less common grammar corners in one document. Exercises fixed types, maps, multi-branch unions (beyond nullable), aliases, field ordering, namespace overrides on nested types, and the uuid / date / time-millis / timestamp-micros / duration-style logical types.",
+  "type": "record",
+  "name": "TelemetryEnvelope",
+  "namespace": "com.example.telemetry",
+  "doc": "A telemetry envelope exercising unions, maps, fixed, aliases, and logical types.",
+  "aliases": ["SensorEnvelope"],
+  "fields": [
+    {
+      "name": "envelopeId",
+      "type": { "type": "string", "logicalType": "uuid" },
+      "doc": "Envelope identifier (uuid logical type)."
+    },
+    {
+      "name": "checksum",
+      "type": { "type": "fixed", "name": "Md5", "size": 16 },
+      "doc": "Fixed 16-byte digest of the payload."
+    },
+    {
+      "name": "payload",
+      "type": [
+        {
+          "type": "record",
+          "name": "GaugeReading",
+          "namespace": "com.example.telemetry.readings",
+          "doc": "A point-in-time gauge value.",
+          "fields": [
+            { "name": "value", "type": "double" },
+            {
+              "name": "unit",
+              "type": "string",
+              "default": "celsius",
+              "order": "ignore"
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "CounterReading",
+          "namespace": "com.example.telemetry.readings",
+          "doc": "A monotonically increasing counter.",
+          "aliases": ["TickReading"],
+          "fields": [
+            { "name": "count", "type": "long", "order": "descending" },
+            {
+              "name": "resetAt",
+              "type": ["null", { "type": "long", "logicalType": "timestamp-micros" }],
+              "default": null
+            }
+          ]
+        },
+        "null"
+      ],
+      "doc": "Multi-branch union: one of two reading records, or null."
+    },
+    {
+      "name": "attributes",
+      "type": { "type": "map", "values": ["null", "string", "double"] },
+      "default": {},
+      "doc": "Free-form attributes whose values are themselves a union."
+    },
+    {
+      "name": "capturedOn",
+      "type": { "type": "int", "logicalType": "date" },
+      "doc": "Capture date (date logical type)."
+    },
+    {
+      "name": "capturedAtTime",
+      "type": { "type": "int", "logicalType": "time-millis" },
+      "doc": "Capture wall-clock time (time-millis logical type)."
+    },
+    {
+      "name": "matrix",
+      "type": { "type": "array", "items": { "type": "array", "items": "float" } },
+      "default": [],
+      "doc": "Array of arrays — nested container types."
+    }
+  ]
+}

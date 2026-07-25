@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WADL typical example: an everyday task-tracker REST API.
+
+  Standard CRUD over a tasks collection: list with query filters, create,
+  fetch, replace, and delete a task, with a Task grammar type shared by all
+  request and response representations.
+-->
+<application xmlns="http://wadl.dev.java.net/2009/02"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:tns="http://example.com/tasks">
+  <doc>Task tracker API</doc>
+
+  <grammars>
+    <xsd:schema targetNamespace="http://example.com/tasks">
+      <xsd:element name="task" type="tns:Task"/>
+      <xsd:complexType name="Task">
+        <xsd:sequence>
+          <xsd:element name="id" type="xsd:string"/>
+          <xsd:element name="title" type="xsd:string"/>
+          <xsd:element name="assignee" type="xsd:string"/>
+          <xsd:element name="dueDate" type="xsd:date"/>
+          <xsd:element name="done" type="xsd:boolean"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+  </grammars>
+
+  <resources base="https://api.example.com/v1/">
+    <resource path="tasks">
+      <method name="GET" id="listTasks">
+        <doc>List tasks, optionally filtered by assignee or completion.</doc>
+        <request>
+          <param name="assignee" style="query" type="xsd:string" required="false"/>
+          <param name="done" style="query" type="xsd:boolean" required="false"/>
+        </request>
+        <response status="200">
+          <representation mediaType="application/xml" element="tns:task"/>
+        </response>
+      </method>
+      <method name="POST" id="createTask">
+        <request>
+          <representation mediaType="application/xml" element="tns:task"/>
+        </request>
+        <response status="201">
+          <representation mediaType="application/xml" element="tns:task"/>
+        </response>
+        <response status="422"/>
+      </method>
+      <resource path="{taskId}">
+        <param name="taskId" style="template" type="xsd:string"/>
+        <method name="GET" id="getTask">
+          <response status="200">
+            <representation mediaType="application/xml" element="tns:task"/>
+          </response>
+          <response status="404"/>
+        </method>
+        <method name="PUT" id="replaceTask">
+          <request>
+            <representation mediaType="application/xml" element="tns:task"/>
+          </request>
+          <response status="200">
+            <representation mediaType="application/xml" element="tns:task"/>
+          </response>
+        </method>
+        <method name="DELETE" id="deleteTask">
+          <response status="204"/>
+        </method>
+      </resource>
+    </resource>
+  </resources>
+</application>

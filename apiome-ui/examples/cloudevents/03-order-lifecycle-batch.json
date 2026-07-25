@@ -1,0 +1,47 @@
+[
+  {
+    "_comment": "CloudEvents 1.0 composition example — batch mode: a JSON array composing three related envelopes (the order lifecycle) into one document, the format's mechanism for aggregating events; the parser yields one document with all three events.",
+    "specversion": "1.0",
+    "id": "b-0001",
+    "type": "com.example.order.created",
+    "source": "/orders/service",
+    "subject": "order/77aa",
+    "time": "2026-02-10T09:00:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "orderId": "77aa",
+      "customerId": "c-1200",
+      "total": 42.5,
+      "currency": "EUR"
+    }
+  },
+  {
+    "specversion": "1.0",
+    "id": "b-0002",
+    "type": "com.example.order.paid",
+    "source": "/payments/service",
+    "subject": "order/77aa",
+    "time": "2026-02-10T09:00:12Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "orderId": "77aa",
+      "paymentId": "p-5501",
+      "amount": 42.5,
+      "method": "card"
+    }
+  },
+  {
+    "specversion": "1.0",
+    "id": "b-0003",
+    "type": "com.example.order.shipped",
+    "source": "/fulfilment/service",
+    "subject": "order/77aa",
+    "time": "2026-02-11T14:30:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "orderId": "77aa",
+      "trackingNumber": "TRK-990031",
+      "carrier": "DHL"
+    }
+  }
+]

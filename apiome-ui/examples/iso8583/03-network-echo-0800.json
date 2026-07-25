@@ -1,0 +1,7 @@
+{
+  "_comment": "Minimal ISO 8583 field map — a network management request (MTI 0800) carrying only DE 70, the Network Management Information Code (301 = echo test). The smallest canonical document: an `mti` plus one numbered data element.",
+  "mti": "0800",
+  "dataElements": {
+    "70": { "name": "Network Management Information Code", "type": "n", "length": "3", "value": "301" }
+  }
+}

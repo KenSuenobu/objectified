@@ -1,0 +1,8 @@
+MSH|^~\&|MYEHR2.5|CLINIC OF GOOD HEALTH|MYIIS|STATE REGISTRY|20260210120000||VXU^V04^VXU_V04|MSG00005|P|2.5.1|||ER|AL
+PID|1||PA-556677^^^MYEHR^MR||Kimura^Aiko^^^^^L||20240612|F||2028-9^Asian^CDCREC|101 Wellness Way^^Columbus^OH^43215^USA^P
+PD1|||||||||||02^Reminder/recall - any method^HL70215|N
+NK1|1|Kimura^Naomi^^^^^L|MTH^Mother^HL70063|101 Wellness Way^^Columbus^OH^43215^USA^P|(555)555-0177^PRN^PH
+ORC|RE||IZ-783274^MYEHR|||||||||276^Tanaka^Ken^^^^^^MYEHR^L
+RXA|0|1|20260210||08^Hep B pediatric^CVX|0.5|mL^milliliters^UCUM||00^New immunization record^NIP001|276^Tanaka^Ken|^^^CLINIC OF GOOD HEALTH||||LOT4459|20270131|SKB^GlaxoSmithKline^MVX|||CP|A
+RXR|IM^Intramuscular^HL70162|LT^Left Thigh^HL70163
+OBX|1|CE|64994-7^Vaccine funding program eligibility^LN|1|V02^VFC eligible - Medicaid^HL70064||||||F|||20260210

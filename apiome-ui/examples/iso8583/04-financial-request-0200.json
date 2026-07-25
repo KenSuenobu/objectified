@@ -1,0 +1,21 @@
+{
+  "_comment": "Typical ISO 8583 field map — a financial transaction request (MTI 0200) for a point-of-sale purchase, with the everyday data elements: PAN, processing code, amount, trace/audit fields, POS entry mode, track 2, retrieval reference, and card-acceptor identity.",
+  "mti": "0200",
+  "name": "Financial Transaction Request",
+  "dataElements": {
+    "2": { "name": "Primary Account Number", "type": "n", "length": "..19", "value": "4111111111111111" },
+    "3": { "name": "Processing Code", "type": "n", "length": "6", "value": "000000" },
+    "4": { "name": "Amount, Transaction", "type": "n", "length": "12", "value": "000000004250" },
+    "7": { "name": "Transmission Date & Time", "type": "n", "length": "10", "value": "0116101500" },
+    "11": { "name": "System Trace Audit Number", "type": "n", "length": "6", "value": "000042" },
+    "12": { "name": "Local Transaction Time", "type": "n", "length": "6", "value": "101500" },
+    "13": { "name": "Local Transaction Date", "type": "n", "length": "4", "value": "0116" },
+    "22": { "name": "POS Entry Mode", "type": "n", "length": "3", "value": "051" },
+    "35": { "name": "Track 2 Data", "type": "z", "length": "..37", "value": "4111111111111111=29121011000012345678" },
+    "37": { "name": "Retrieval Reference Number", "type": "an", "length": "12", "value": "600116000042" },
+    "41": { "name": "Card Acceptor Terminal ID", "type": "ans", "length": "8", "value": "TERM0002" },
+    "42": { "name": "Card Acceptor ID Code", "type": "ans", "length": "15", "value": "MERCH000000001" },
+    "43": { "name": "Card Acceptor Name/Location", "type": "ans", "length": "40", "value": "EXAMPLE GROCERY METROPOLIS NYUS" },
+    "49": { "name": "Currency Code, Transaction", "type": "n", "length": "3", "value": "840" }
+  }
+}

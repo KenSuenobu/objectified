@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WADL real-world example: shaped like the Yahoo News Search API description
+  that accompanied the original W3C WADL member submission (the canonical
+  public WADL sample). Hand-authored reconstruction of the shape only; no
+  third-party text copied. A single GET resource with the familiar appid,
+  query, results, start and sort query parameters.
+-->
+<application xmlns="http://wadl.dev.java.net/2009/02"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:tns="http://example.com/newssearch">
+  <doc>News Search web service</doc>
+
+  <grammars>
+    <xsd:schema targetNamespace="http://example.com/newssearch">
+      <xsd:element name="ResultSet" type="tns:ResultSet"/>
+      <xsd:element name="Error" type="tns:Error"/>
+      <xsd:complexType name="ResultSet">
+        <xsd:sequence>
+          <xsd:element name="totalResultsAvailable" type="xsd:long"/>
+          <xsd:element name="totalResultsReturned" type="xsd:int"/>
+          <xsd:element name="firstResultPosition" type="xsd:int"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Result">
+        <xsd:sequence>
+          <xsd:element name="Title" type="xsd:string"/>
+          <xsd:element name="Summary" type="xsd:string"/>
+          <xsd:element name="Url" type="xsd:anyURI"/>
+          <xsd:element name="NewsSource" type="xsd:string"/>
+          <xsd:element name="PublishDate" type="xsd:long"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Error">
+        <xsd:sequence>
+          <xsd:element name="Message" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+  </grammars>
+
+  <resources base="https://search.example.com/NewsSearchService/V1/">
+    <resource path="newsSearch">
+      <method name="GET" id="search">
+        <doc>Search the news index for matching articles.</doc>
+        <request>
+          <param name="appid" style="query" type="xsd:string"/>
+          <param name="query" style="query" type="xsd:string"/>
+          <param name="type" style="query" type="xsd:string" required="false"/>
+          <param name="results" style="query" type="xsd:int" required="false"/>
+          <param name="start" style="query" type="xsd:int" required="false"/>
+          <param name="sort" style="query" type="xsd:string" required="false"/>
+          <param name="language" style="query" type="xsd:string" required="false"/>
+        </request>
+        <response status="200">
+          <representation mediaType="application/xml" element="tns:ResultSet"/>
+        </response>
+        <response status="400">
+          <representation mediaType="application/xml" element="tns:Error"/>
+        </response>
+      </method>
+    </resource>
+  </resources>
+</application>

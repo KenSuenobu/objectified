@@ -1,0 +1,134 @@
+# AsyncAPI 2.6 real-world example — the shape of the Slack Real Time Messaging API.
+#
+# Hand-authored faithful reconstruction of how Slack's RTM WebSocket API is
+# commonly described in AsyncAPI: a single `/` channel on a wss server where the
+# client receives `hello`, `message` and `reaction_added` events and publishes
+# outgoing chat messages and pings. No third-party text was copied.
+asyncapi: 2.6.0
+info:
+  title: Slack Real Time Messaging API
+  version: 1.0.0
+  description: >-
+    Reconstruction of the shape of Slack's RTM WebSocket event stream for the
+    import example corpus.
+servers:
+  production:
+    url: wss://wss-primary.slack.com/
+    protocol: wss
+    description: WebSocket endpoint returned by the rtm.connect bootstrap call.
+channels:
+  /:
+    subscribe:
+      operationId: receiveEvent
+      summary: Events pushed by Slack over the socket.
+      message:
+        oneOf:
+          - $ref: '#/components/messages/Hello'
+          - $ref: '#/components/messages/ChatMessage'
+          - $ref: '#/components/messages/ReactionAdded'
+    publish:
+      operationId: sendEvent
+      summary: Events the client writes to the socket.
+      message:
+        oneOf:
+          - $ref: '#/components/messages/OutgoingMessage'
+          - $ref: '#/components/messages/Ping'
+components:
+  messages:
+    Hello:
+      name: hello
+      title: Hello
+      summary: Sent once the connection is established.
+      payload:
+        type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            const: hello
+    ChatMessage:
+      name: message
+      title: Channel message
+      payload:
+        type: object
+        required:
+          - type
+          - channel
+          - user
+          - text
+          - ts
+        properties:
+          type:
+            type: string
+            const: message
+          channel:
+            type: string
+            description: Channel, group or DM identifier.
+          user:
+            type: string
+            description: Identifier of the authoring user.
+          text:
+            type: string
+          ts:
+            type: string
+            description: Message timestamp used as its unique id.
+          thread_ts:
+            type: string
+            description: Present when the message is a threaded reply.
+    ReactionAdded:
+      name: reaction_added
+      title: Reaction added
+      payload:
+        type: object
+        required:
+          - type
+          - user
+          - reaction
+        properties:
+          type:
+            type: string
+            const: reaction_added
+          user:
+            type: string
+          reaction:
+            type: string
+            description: Emoji short name without colons.
+          event_ts:
+            type: string
+    OutgoingMessage:
+      name: outgoingMessage
+      title: Outgoing chat message
+      payload:
+        type: object
+        required:
+          - id
+          - type
+          - channel
+          - text
+        properties:
+          id:
+            type: integer
+            description: Client-chosen id echoed back in the reply.
+          type:
+            type: string
+            const: message
+          channel:
+            type: string
+          text:
+            type: string
+    Ping:
+      name: ping
+      title: Ping
+      summary: Keepalive frame; Slack replies with a matching pong.
+      payload:
+        type: object
+        required:
+          - id
+          - type
+        properties:
+          id:
+            type: integer
+          type:
+            type: string
+            const: ping

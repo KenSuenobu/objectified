@@ -1,0 +1,10 @@
+{
+  "_comment": "Minimal JTD (RFC 8927) example — the smallest canonical schema document: a single properties form with one required string member. Demonstrates the ladder's minimal rung for the jtd adapter.",
+  "metadata": {
+    "title": "Ping",
+    "description": "The smallest useful JTD schema: one required string field."
+  },
+  "properties": {
+    "message": { "type": "string" }
+  }
+}

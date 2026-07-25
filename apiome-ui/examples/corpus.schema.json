@@ -26,6 +26,24 @@
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/$defs/entry" }
+    },
+    "rung_waivers": {
+      "description": "Per-adapter justifications for ladder rungs that do not apply (IXH-1.2, #5088). Keyed by ImportSource registry key; each value maps a rung name to a one-sentence reason the rung is not represented in the corpus. A waiver for a rung an adapter already covers is stale and fails the coverage test.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": false,
+        "properties": {
+          "minimal": { "type": "string", "minLength": 1 },
+          "typical": { "type": "string", "minLength": 1 },
+          "composition": { "type": "string", "minLength": 1 },
+          "stress": { "type": "string", "minLength": 1 },
+          "real-world": { "type": "string", "minLength": 1 },
+          "multi-file": { "type": "string", "minLength": 1 }
+        }
+      },
+      "propertyNames": { "pattern": "^[a-z0-9][a-z0-9-]*$" }
     }
   },
   "$defs": {
@@ -79,9 +97,9 @@
       "additionalProperties": false,
       "properties": {
         "path": {
-          "description": "File path relative to apiome-ui/examples/, POSIX separators.",
+          "description": "File path relative to apiome-ui/examples/, POSIX separators. Single-file examples live directly in their format directory; members of a multi-file set live one level deeper in a per-set subdirectory (e.g. protobuf/06-imports-set/api.proto).",
           "type": "string",
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$"
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)?$"
         },
         "format": {
           "description": "Format family key the file belongs to (selection key for load_corpus(format=...)), e.g. openapi, graphql, cobolcopybook.",
@@ -149,6 +167,14 @@
           "description": "Optional free-text caveats, e.g. known detection deviations the hardening epics must reconcile.",
           "type": "string",
           "minLength": 1
+        },
+        "rung": {
+          "description": "Ladder rung the example occupies (IXH-1.2, #5088): minimal (canonical hello-world), typical (a realistic everyday service), composition (inheritance/refs/imports/includes), stress (the format's less common grammar), real-world (public spec or faithful reconstruction; record license/provenance), multi-file (a set the adapter imports together). Required on every valid entry; omitted for invalid/adversarial/scale entries.",
+          "enum": ["minimal", "typical", "composition", "stress", "real-world", "multi-file"]
+        },
+        "fileset_role": {
+          "description": "Role of the file inside a multi-file set: the single root the import starts from, or a member it references. Required for (and only for) files in a per-set subdirectory.",
+          "enum": ["root", "member"]
         }
       }
     }

@@ -1,0 +1,64 @@
+// Connect-RPC example — composition via well-known type imports.
+//
+// Demonstrates the composition rung for a Connect-RPC contract: the file
+// imports the compiler's bundled well-known types (google/protobuf/
+// timestamp.proto, duration.proto, empty.proto) and reuses them across the
+// scheduling messages, alongside cross-message reuse of the Slot type.
+syntax = "proto3";
+
+package scheduling.v1;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "example.com/gen/scheduling/v1;schedulingv1";
+
+// Books appointment slots.
+service SchedulingService {
+  // List open slots in a window.
+  rpc ListSlots(ListSlotsRequest) returns (ListSlotsResponse);
+  // Book a slot for an attendee.
+  rpc BookSlot(BookSlotRequest) returns (Booking);
+  // Release a booking.
+  rpc CancelBooking(CancelBookingRequest) returns (google.protobuf.Empty);
+}
+
+// A bookable window of time.
+message Slot {
+  // Unique slot identifier.
+  string id = 1;
+  // When the slot starts.
+  google.protobuf.Timestamp start_time = 2;
+  // How long the slot lasts.
+  google.protobuf.Duration length = 3;
+}
+
+// A confirmed reservation of a slot.
+message Booking {
+  string id = 1;
+  // The reserved slot, reusing the shared Slot type.
+  Slot slot = 2;
+  // Attendee email address.
+  string attendee = 3;
+  // When the booking was made.
+  google.protobuf.Timestamp booked_at = 4;
+}
+
+message ListSlotsRequest {
+  google.protobuf.Timestamp window_start = 1;
+  google.protobuf.Timestamp window_end = 2;
+}
+
+message ListSlotsResponse {
+  repeated Slot slots = 1;
+}
+
+message BookSlotRequest {
+  string slot_id = 1;
+  string attendee = 2;
+}
+
+message CancelBookingRequest {
+  string booking_id = 1;
+}

@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<!--
+  XML-RPC stress example — every wire type in one methodResponse.
+
+  A single result struct exercising the protocol's full scalar set (`<int>`,
+  `<i4>`, `<i8>`, `<double>`, `<boolean>`, `<string>`, `<dateTime.iso8601>`,
+  `<base64>`, `<nil/>`) plus the two compounds nested inside each other: an
+  array of structs and an array of arrays.
+-->
+<methodResponse>
+  <params>
+    <param>
+      <value>
+        <struct>
+          <member>
+            <name>plainInt</name>
+            <value><int>42</int></value>
+          </member>
+          <member>
+            <name>legacyI4</name>
+            <value><i4>-7</i4></value>
+          </member>
+          <member>
+            <name>bigI8</name>
+            <value><i8>9007199254740993</i8></value>
+          </member>
+          <member>
+            <name>ratio</name>
+            <value><double>-3.14159</double></value>
+          </member>
+          <member>
+            <name>enabled</name>
+            <value><boolean>0</boolean></value>
+          </member>
+          <member>
+            <name>label</name>
+            <value><string>all wire types</string></value>
+          </member>
+          <member>
+            <name>generatedAt</name>
+            <value><dateTime.iso8601>20260504T09:30:00</dateTime.iso8601></value>
+          </member>
+          <member>
+            <name>thumbnail</name>
+            <value><base64>iVBORw0KGgoAAAANSUhEUg==</base64></value>
+          </member>
+          <member>
+            <name>deprecatedField</name>
+            <value><nil/></value>
+          </member>
+          <member>
+            <name>lineItems</name>
+            <value>
+              <array>
+                <data>
+                  <value>
+                    <struct>
+                      <member>
+                        <name>sku</name>
+                        <value><string>WIDGET-001</string></value>
+                      </member>
+                      <member>
+                        <name>quantity</name>
+                        <value><int>2</int></value>
+                      </member>
+                    </struct>
+                  </value>
+                </data>
+              </array>
+            </value>
+          </member>
+          <member>
+            <name>matrix</name>
+            <value>
+              <array>
+                <data>
+                  <value>
+                    <array>
+                      <data>
+                        <value><int>1</int></value>
+                        <value><int>2</int></value>
+                      </data>
+                    </array>
+                  </value>
+                  <value>
+                    <array>
+                      <data>
+                        <value><int>3</int></value>
+                        <value><int>4</int></value>
+                      </data>
+                    </array>
+                  </value>
+                </data>
+              </array>
+            </value>
+          </member>
+        </struct>
+      </value>
+    </param>
+  </params>
+</methodResponse>

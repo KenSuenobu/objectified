@@ -1,6 +1,4 @@
-"""
-Schema demonstrating nested types and relationships
-"""
+# Schema demonstrating nested types and relationships
 
 """
 A company with departments and employees

@@ -1,0 +1,130 @@
+{
+  "info": {
+    "_postman_id": "b1a2c3d4-0000-4000-8000-000000000006",
+    "name": "Payments API (Stripe-style)",
+    "description": "Real-world shaped Postman Collection v2.1 example: a hand-authored reconstruction of the shape of the Stripe API (customers and charges under /v1, form-urlencoded write requests, bearer-key auth header). No third-party text copied.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://api.payments-example.com" },
+    { "key": "secretKey", "value": "sk_test_placeholder" }
+  ],
+  "item": [
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "Create customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{secretKey}}" },
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "email", "value": "jenny.rosen@example.com" },
+                { "key": "name", "value": "Jenny Rosen" }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/customers",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "customers"]
+            },
+            "description": "Create a customer object."
+          },
+          "response": []
+        },
+        {
+          "name": "List customers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{secretKey}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/v1/customers?limit=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "customers"],
+              "query": [{ "key": "limit", "value": "3" }]
+            },
+            "description": "List customers, newest first."
+          },
+          "response": []
+        },
+        {
+          "name": "Retrieve customer",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{secretKey}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/v1/customers/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "customers", ":id"],
+              "variable": [{ "key": "id", "value": "cus_000000000000" }]
+            },
+            "description": "Retrieve a customer by identifier."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Charges",
+      "item": [
+        {
+          "name": "Create charge",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{secretKey}}" },
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "amount", "value": "2000" },
+                { "key": "currency", "value": "usd" },
+                { "key": "customer", "value": "cus_000000000000" },
+                { "key": "description", "value": "Annual subscription" }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/charges",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "charges"]
+            },
+            "description": "Charge a customer's default payment method."
+          },
+          "response": [
+            {
+              "name": "Charge succeeded",
+              "status": "OK",
+              "code": 200,
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"id\": \"ch_000000000000\",\n  \"object\": \"charge\",\n  \"amount\": 2000,\n  \"currency\": \"usd\",\n  \"paid\": true,\n  \"status\": \"succeeded\"\n}",
+                "options": { "raw": { "language": "json" } }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Retrieve charge",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{secretKey}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/v1/charges/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "charges", ":id"],
+              "variable": [{ "key": "id", "value": "ch_000000000000" }]
+            },
+            "description": "Retrieve a charge by identifier."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

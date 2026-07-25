@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/geojson-feature.json",
+  "title": "GeoJSONFeature",
+  "description": "Real-world example: a hand-authored faithful reconstruction of the shape of a GeoJSON (RFC 7946) Feature with its geometry objects; no third-party text copied.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "Fixed object type discriminator for a Feature",
+      "const": "Feature"
+    },
+    "id": {
+      "description": "Optional feature identifier",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "number" }
+      ]
+    },
+    "geometry": {
+      "description": "The feature's geometry, or null for an unlocated feature",
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/Point" },
+        { "$ref": "#/$defs/LineString" },
+        { "$ref": "#/$defs/Polygon" }
+      ]
+    },
+    "properties": {
+      "description": "Arbitrary application properties, or null",
+      "type": ["object", "null"]
+    },
+    "bbox": {
+      "$ref": "#/$defs/BoundingBox"
+    }
+  },
+  "required": ["type", "geometry", "properties"],
+  "$defs": {
+    "Position": {
+      "description": "A coordinate position: longitude, latitude, optional altitude",
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 2,
+      "maxItems": 3
+    },
+    "BoundingBox": {
+      "description": "Coordinate range the geometry falls within",
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 4
+    },
+    "Point": {
+      "description": "A single position",
+      "type": "object",
+      "properties": {
+        "type": { "const": "Point" },
+        "coordinates": { "$ref": "#/$defs/Position" }
+      },
+      "required": ["type", "coordinates"]
+    },
+    "LineString": {
+      "description": "A connected sequence of two or more positions",
+      "type": "object",
+      "properties": {
+        "type": { "const": "LineString" },
+        "coordinates": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Position" },
+          "minItems": 2
+        }
+      },
+      "required": ["type", "coordinates"]
+    },
+    "Polygon": {
+      "description": "One or more closed linear rings",
+      "type": "object",
+      "properties": {
+        "type": { "const": "Polygon" },
+        "coordinates": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/Position" },
+            "minItems": 4
+          }
+        }
+      },
+      "required": ["type", "coordinates"]
+    }
+  }
+}
