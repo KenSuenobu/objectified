@@ -72,6 +72,8 @@ export const PROVIDER_CRED_ENV_KEYS: Record<
   auth0: { clientId: 'AUTH0_CLIENT_ID', clientSecret: 'AUTH0_CLIENT_SECRET' },
   // LINE (OLO-9.41, #5054): credentials-only; no issuer extra.
   line: { clientId: 'LINE_CLIENT_ID', clientSecret: 'LINE_CLIENT_SECRET' },
+  // VK ID (OLO-9.42, #5055): credentials-only; no issuer extra.
+  vk: { clientId: 'VK_CLIENT_ID', clientSecret: 'VK_CLIENT_SECRET' },
 };
 
 /** Default TTL (ms) for the in-process cache; bounded so a DB change lands within ~a cache window. */

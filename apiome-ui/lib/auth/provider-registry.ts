@@ -239,6 +239,15 @@ const PROVIDER_REGISTRY_ENTRIES: readonly Omit<ProviderDescriptor, 'requiredEnvK
     // Multi-channel JP/TW/TH setups use distinct providerIds — see AUTH_PROVIDER_SETUP.md.
     requiredFields: clientCredentialFields('LINE_CLIENT_ID', 'LINE_CLIENT_SECRET'),
   },
+  {
+    id: 'vk',
+    label: 'VK',
+    status: 'available',
+    // VK ID (OLO-9.42, #5055): credentials only. Email arrives with the grant but VK ID does not
+    // assert a verified claim → fail-closed link-first (Better Auth `vk()` hard-codes
+    // emailVerified: false). Country MVP for Russia / CIS — see AUTH_PROVIDER_SETUP.md.
+    requiredFields: clientCredentialFields('VK_CLIENT_ID', 'VK_CLIENT_SECRET'),
+  },
 ];
 
 export const PROVIDER_REGISTRY: readonly ProviderDescriptor[] =

@@ -2,7 +2,7 @@
  * Better Auth OAuth provider construction (OLO-10.7, #5002).
  *
  * Re-expresses the live sign-in providers — github, gitlab, azure, google, okta, aws, keycloak,
- * oidc, auth0, line — on Better Auth's **generic OAuth2/OIDC** plugin, the Better Auth analogue of the
+ * oidc, auth0, line, vk — on Better Auth's **generic OAuth2/OIDC** plugin, the Better Auth analogue of the
  * NextAuth factory map in `nextauth-oauth-providers.ts`. Every provider is driven from the shared
  * provider registry (`provider-registry.ts`) exactly as the NextAuth path is, so the registry stays
  * the single source of the enabled set and the mirror tests (`provider-registry-mirror.test.ts`,
@@ -38,6 +38,8 @@
  *  - **LINE Login (OLO-9.41):** fixed LINE OIDC endpoints (`access.line.me` / `api.line.me`); email
  *    requires an approved channel permission — `email_verified` honored when present, otherwise
  *    fail-closed link-first.
+ *  - **VK ID (OLO-9.42):** fixed VK ID endpoints (`id.vk.com`); email returned with grant but no
+ *    verified claim (Better Auth `vk()` hard-codes `emailVerified: false`) → fail-closed link-first.
  *  - **nOAuth hardening (OLO-1.4):** azure id-token claims (`oid`/`upn`/`xms_edov`/…) pass through
  *    untouched so the engine's `resolveEntraEmailVerified` still rejects a forged token.
  *  - **The account-resolution decision (OLO-1.x):** every callback runs through
@@ -176,7 +178,11 @@ export function applyOauthRedirectOverride(response: Response): Response {
 /** Minimal fetch shape, injectable so tests never touch the network. */
 export type FetchLike = (
   url: string,
-  init: { headers: Record<string, string> }
+  init: {
+    headers: Record<string, string>;
+    method?: string;
+    body?: string;
+  }
 ) => Promise<{ ok: boolean; json: () => Promise<unknown> }>;
 
 /** Remove a single trailing slash so `${base}/path` never doubles the separator. */
@@ -476,6 +482,11 @@ function normalizeAuth0(tokens: OAuth2Tokens): NormalizedOAuthProfile {
 /** LINE Login v2.1 userinfo endpoint (Better Auth `line()` helper). */
 const LINE_USERINFO_URL = 'https://api.line.me/oauth2/v2.1/userinfo';
 
+/** VK ID endpoints (Better Auth `vk()` helper). */
+const VK_AUTHORIZE_URL = 'https://id.vk.com/authorize';
+const VK_TOKEN_URL = 'https://id.vk.com/oauth2/auth';
+const VK_USERINFO_URL = 'https://id.vk.com/oauth2/user_info';
+
 /**
  * Normalize a LINE sign-in (OLO-9.41): prefer id-token claims (email arrives only when the
  * channel has approved email permission and the `email` scope was granted); fall back to the
@@ -501,6 +512,68 @@ async function normalizeLine(
     email: typeof profile.email === 'string' ? profile.email : null,
     name: typeof profile.name === 'string' ? profile.name : null,
     image: typeof profile.picture === 'string' ? profile.picture : null,
+  };
+}
+
+/**
+ * Fetch VK ID user_info via POST form body (`access_token` + `client_id`), matching Better Auth's
+ * `vk()` helper. Fail-soft to null on any transport/parse error.
+ */
+async function fetchVkUserInfo(
+  accessToken: string,
+  clientId: string,
+  fetchImpl: FetchLike
+): Promise<Record<string, unknown> | null> {
+  try {
+    const formBody = new URLSearchParams({
+      access_token: accessToken,
+      client_id: clientId,
+    }).toString();
+    const res = await fetchImpl(VK_USERINFO_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+        'User-Agent': 'apiome',
+      },
+      body: formBody,
+    });
+    if (!res.ok) return null;
+    const body = await res.json();
+    return body && typeof body === 'object' ? (body as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Normalize a VK ID sign-in (OLO-9.42): POST `user_info` with the access token and client id,
+ * then map the nested `user` object. VK returns email with the grant but does **not** assert a
+ * verified claim (Better Auth hard-codes `emailVerified: false`) — leave `email_verified` unset
+ * so `resolveOAuthEmailVerified` fail-closes to link-first. Do not treat `user.verified` (VK
+ * account badge) as email verification.
+ */
+async function normalizeVk(
+  tokens: OAuth2Tokens,
+  env: Record<string, string | undefined>,
+  fetchImpl: FetchLike
+): Promise<NormalizedOAuthProfile> {
+  const accessToken = tokens.accessToken ?? '';
+  const clientId = readEnvString(env, 'VK_CLIENT_ID') ?? '';
+  const body = accessToken ? await fetchVkUserInfo(accessToken, clientId, fetchImpl) : null;
+  const user =
+    body && typeof body.user === 'object' && body.user !== null
+      ? (body.user as Record<string, unknown>)
+      : {};
+  const first = typeof user.first_name === 'string' ? user.first_name : '';
+  const last = typeof user.last_name === 'string' ? user.last_name : '';
+  const name = `${first} ${last}`.trim() || null;
+  return {
+    accountId: typeof user.user_id === 'string' ? user.user_id : '',
+    profile: user,
+    email: typeof user.email === 'string' ? user.email : null,
+    name,
+    image: typeof user.avatar === 'string' ? user.avatar : null,
   };
 }
 
@@ -539,6 +612,7 @@ const NORMALIZERS: Record<
   oidc: (tokens) => normalizeOidc(tokens),
   auth0: (tokens) => normalizeAuth0(tokens),
   line: (tokens, env, fetchImpl) => normalizeLine(tokens, env, fetchImpl),
+  vk: (tokens, env, fetchImpl) => normalizeVk(tokens, env, fetchImpl),
 };
 
 /**
@@ -571,7 +645,7 @@ export async function resolveLinkIntentUserId(provider: string): Promise<string 
  * own account handling sees the identical verified signal the engine decided over.
  *
  * @param provider The provider slug (github | gitlab | azure | google | okta | aws | keycloak |
- *   oidc | auth0 | line).
+ *   oidc | auth0 | line | vk).
  * @param deps Injectable dependencies (store, fetch, link-intent resolver, env).
  * @returns A `getUserInfo` function returning the Better Auth user info on admit, or null otherwise.
  */
@@ -810,6 +884,21 @@ export function buildGenericOAuthConfig(
         tokenUrl: 'https://api.line.me/oauth2/v2.1/token',
         userInfoUrl: LINE_USERINFO_URL,
         scopes: ['openid', 'profile', 'email'],
+        pkce: true,
+        getUserInfo,
+      };
+    }
+    case 'vk': {
+      return {
+        providerId: 'vk',
+        clientId: readEnvString(env, 'VK_CLIENT_ID') ?? '',
+        clientSecret: readEnvString(env, 'VK_CLIENT_SECRET') ?? '',
+        // Fixed VK ID endpoints (Better Auth `vk()` helper). Email arrives with the grant but
+        // no verified claim → fail-closed link-first. user_info is POST form (see normalizeVk).
+        authorizationUrl: VK_AUTHORIZE_URL,
+        tokenUrl: VK_TOKEN_URL,
+        userInfoUrl: VK_USERINFO_URL,
+        scopes: ['email', 'phone'],
         pkce: true,
         getUserInfo,
       };

@@ -11,7 +11,7 @@
  * Adding a provider: add its registry entry, then one `PROVIDER_BRANDS` entry here.
  */
 import { KeyRound } from 'lucide-react';
-import { SiAmazon, SiAuth0, SiGithub, SiGitlab, SiGoogle, SiKeycloak, SiLine, SiOkta } from 'react-icons/si';
+import { SiAmazon, SiAuth0, SiGithub, SiGitlab, SiGoogle, SiKeycloak, SiLine, SiOkta, SiVk } from 'react-icons/si';
 
 /** Props every brand icon accepts (matches the `react-icons` component contract we use). */
 interface BrandIconProps {
@@ -70,6 +70,7 @@ const PROVIDER_BRANDS: Record<string, ProviderBrand> = {
   oidc: { Icon: KeyRound, iconClassName: 'text-slate-600 dark:text-slate-300' },
   auth0: { Icon: SiAuth0, iconClassName: 'text-[#EB5424]' },
   line: { Icon: SiLine, iconClassName: 'text-[#06C755]' },
+  vk: { Icon: SiVk, iconClassName: 'text-[#0077FF]' },
 };
 /** Neutral fallback for provider ids without a brand entry (e.g. a legacy linked account). */
 const FALLBACK_BRAND: ProviderBrand = {

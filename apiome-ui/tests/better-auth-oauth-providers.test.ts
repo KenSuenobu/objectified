@@ -80,6 +80,8 @@ const ALL_ENABLED: Record<string, string> = {
   AUTH0_ISSUER: 'https://acme.auth0.com',
   LINE_CLIENT_ID: 'line-id',
   LINE_CLIENT_SECRET: 'line-secret',
+  VK_CLIENT_ID: 'vk-id',
+  VK_CLIENT_SECRET: 'vk-secret',
 };
 
 const OK_USER: ResolutionUser = {
@@ -184,6 +186,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'oidc',
       'auth0',
       'line',
+      'vk',
     ]);
   });
 
@@ -200,6 +203,7 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
       'oidc',
       'auth0',
       'line',
+      'vk',
     ]);
   });
 
@@ -232,6 +236,9 @@ describe('buildGenericOAuthConfigs — registry is the single source of the enab
     const line = buildGenericOAuthConfig('line', ALL_ENABLED)!;
     expect(line.clientId).toBe('line-id');
     expect(line.clientSecret).toBe('line-secret');
+    const vk = buildGenericOAuthConfig('vk', ALL_ENABLED)!;
+    expect(vk.clientId).toBe('vk-id');
+    expect(vk.clientSecret).toBe('vk-secret');
   });
 
   test('an unknown provider id yields null', () => {
@@ -393,6 +400,16 @@ describe('endpoint & issuer overrides (OLO-7.4)', () => {
     expect(cfg.userInfoUrl).toBe('https://api.line.me/oauth2/v2.1/userinfo');
     expect(cfg.pkce).toBe(true);
     expect(cfg.scopes).toEqual(['openid', 'profile', 'email']);
+    expect(cfg.discoveryUrl).toBeUndefined();
+  });
+
+  test('vk: fixed VK ID endpoints; PKCE on (OLO-9.42)', () => {
+    const cfg = buildGenericOAuthConfig('vk', ALL_ENABLED)!;
+    expect(cfg.authorizationUrl).toBe('https://id.vk.com/authorize');
+    expect(cfg.tokenUrl).toBe('https://id.vk.com/oauth2/auth');
+    expect(cfg.userInfoUrl).toBe('https://id.vk.com/oauth2/user_info');
+    expect(cfg.pkce).toBe(true);
+    expect(cfg.scopes).toEqual(['email', 'phone']);
     expect(cfg.discoveryUrl).toBeUndefined();
   });
 
@@ -1138,6 +1155,140 @@ describe('getUserInfo — LINE email permission states (OLO-9.41)', () => {
       emailVerified: true,
     });
     expect(calls.recordUserLogin).toEqual([OK_USER.id]);
+  });
+});
+
+/* ── getUserInfo: VK ID fail-closed / link-first (OLO-9.42) ─────────────────────────────────── */
+
+describe('getUserInfo — VK ID fail-closed link-first (OLO-9.42)', () => {
+  const vkUserInfo = (user: Record<string, unknown>): FetchLike => {
+    return async (url, init) => {
+      if (url.includes('/oauth2/user_info') && init.method === 'POST') {
+        return {
+          ok: true,
+          json: async () => ({ user }),
+        };
+      }
+      return { ok: false, json: async () => null };
+    };
+  };
+
+  test('known identity signs in without email_verified (subsequent sign-in)', async () => {
+    const { store, calls } = makeStore({
+      identityUserId: OK_USER.id,
+      usersById: { [OK_USER.id]: OK_USER },
+    });
+    const fetchImpl = vkUserInfo({
+      user_id: 'vk-user-1',
+      first_name: 'Ada',
+      last_name: 'Lovelace',
+      email: 'ada@example.com',
+      avatar: 'http://img/vk.png',
+    });
+
+    const { result, override } = await runGetUserInfo(
+      'vk',
+      { accessToken: 'tok' },
+      { store, env: ALL_ENABLED, fetchImpl }
+    );
+
+    expect(override).toBeNull();
+    expect(result).toMatchObject({
+      id: 'vk-user-1',
+      email: 'ada@example.com',
+      emailVerified: false,
+      name: 'Ada Lovelace',
+      image: 'http://img/vk.png',
+    });
+    expect(calls.recordUserLogin).toEqual([OK_USER.id]);
+  });
+
+  test('email without verified claim → fail-closed unverified (no auto-link)', async () => {
+    const { store, calls } = makeStore({ usersByEmail: { 'ada@example.com': OK_USER } });
+    const fetchImpl = vkUserInfo({
+      user_id: 'vk-user-1',
+      first_name: 'Ada',
+      last_name: 'Lovelace',
+      email: 'ada@example.com',
+    });
+
+    const { result, override } = await runGetUserInfo(
+      'vk',
+      { accessToken: 'tok' },
+      { store, env: ALL_ENABLED, fetchImpl }
+    );
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.UNVERIFIED_EMAIL}`);
+    expect(calls.linkIdentity).toHaveLength(0);
+  });
+
+  test('explicit link intent links despite unverified email', async () => {
+    const { store, calls } = makeStore();
+    const fetchImpl = vkUserInfo({
+      user_id: 'vk-user-1',
+      first_name: 'Ada',
+      last_name: 'Lovelace',
+      email: 'ada@example.com',
+    });
+
+    const { result, override } = await runGetUserInfo(
+      'vk',
+      { accessToken: 'tok' },
+      {
+        store,
+        env: ALL_ENABLED,
+        fetchImpl,
+        resolveLinkToUserId: async () => 'session-user',
+      }
+    );
+
+    expect(result).toBeNull();
+    expect(override).toBe('/ade/dashboard/linked-accounts?linked=true');
+    expect(calls.linkIdentity[0].userId).toBe('session-user');
+    expect(calls.linkIdentity[0].identity).toMatchObject({
+      provider: 'vk',
+      providerUserId: 'vk-user-1',
+    });
+  });
+
+  test('no email → email-required rejection', async () => {
+    const { store } = makeStore();
+    const fetchImpl = vkUserInfo({
+      user_id: 'vk-user-1',
+      first_name: 'Ada',
+      last_name: 'Lovelace',
+    });
+
+    const { result, override } = await runGetUserInfo(
+      'vk',
+      { accessToken: 'tok' },
+      { store, env: ALL_ENABLED, fetchImpl }
+    );
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.EMAIL_REQUIRED}`);
+  });
+
+  test('user.verified badge is not treated as email_verified', async () => {
+    const { store, calls } = makeStore({ usersByEmail: { 'ada@example.com': OK_USER } });
+    const fetchImpl = vkUserInfo({
+      user_id: 'vk-user-1',
+      email: 'ada@example.com',
+      verified: true,
+      first_name: 'Ada',
+      last_name: 'Lovelace',
+    });
+
+    const { result, override } = await runGetUserInfo(
+      'vk',
+      { accessToken: 'tok' },
+      { store, env: ALL_ENABLED, fetchImpl }
+    );
+
+    expect(result).toBeNull();
+    expect(override).toBe(`/login?error=${AUTH_ERROR_CODES.UNVERIFIED_EMAIL}`);
+    expect(calls.linkIdentity).toHaveLength(0);
   });
 });
 

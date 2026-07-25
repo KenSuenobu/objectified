@@ -36,7 +36,7 @@ jest.mock('../lib/db/helper', () => ({
 import LinkedAccountsClient from '../src/app/ade/dashboard/linked-accounts/LinkedAccountsClient';
 import type { ProviderSummary } from '../lib/auth/provider-registry';
 
-/** Summaries mirroring a deployment with GitHub + GitLab enabled; azure/google/okta/aws/keycloak/oidc/auth0/line
+/** Summaries mirroring a deployment with GitHub + GitLab enabled; azure/google/okta/aws/keycloak/oidc/auth0/line/vk
  * env-disabled. A synthetic Atlassian entry keeps coming-soon teaser coverage. */
 const GITHUB_GITLAB_ENABLED: ProviderSummary[] = [
   { id: 'github', label: 'GitHub', status: 'available', enabled: true },
@@ -49,6 +49,7 @@ const GITHUB_GITLAB_ENABLED: ProviderSummary[] = [
   { id: 'oidc', label: 'OIDC', status: 'available', enabled: false },
   { id: 'auth0', label: 'Auth0', status: 'available', enabled: false },
   { id: 'line', label: 'LINE', status: 'available', enabled: false },
+  { id: 'vk', label: 'VK', status: 'available', enabled: false },
   { id: 'atlassian', label: 'Atlassian', status: 'coming-soon', enabled: false },
 ];
 
@@ -83,7 +84,7 @@ describe('LinkedAccountsClient — provider cards from the registry (OLO-2.3)', 
     expect(screen.getByText('GitHub')).toBeInTheDocument();
     expect(screen.getByText('GitLab')).toBeInTheDocument();
     expect(screen.getByText('Atlassian')).toBeInTheDocument();
-    // azure, google, okta, aws, keycloak, oidc, auth0, and line are available-but-disabled: no card at all.
+    // azure, google, okta, aws, keycloak, oidc, auth0, line, and vk are available-but-disabled: no card at all.
     expect(screen.queryByText('Microsoft')).not.toBeInTheDocument();
     expect(screen.queryByText('Google')).not.toBeInTheDocument();
     expect(screen.queryByText('Okta')).not.toBeInTheDocument();
