@@ -1220,6 +1220,29 @@ class SpecImportJobResult(BaseModel):
     version_record_id: Optional[str] = None
 
 
+class SpecImportJobError(BaseModel):
+    """Stable, user-facing description of why an import job failed (IXH-1.3/6.4).
+
+    ``code`` comes from the intake error taxonomy (``app.intake_error_taxonomy``)
+    and is additive-only: a shipped code is never renamed or repurposed, so UI
+    remediation copy and CLI exit codes can key off it safely.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    code: str = Field(description="Stable intake-taxonomy error code (additive-only).")
+    category: str = Field(
+        description="Taxonomy category: input, format, capability, policy, resource, "
+        "transport, or internal.",
+    )
+    message: str = Field(description="Human-readable description of the failure.")
+    remediation: str = Field(description="Actionable, user-facing next step.")
+    retriable: bool = Field(
+        description="Whether retrying the identical request may succeed without "
+        "changing the input.",
+    )
+
+
 class SpecImportJobStatus(BaseModel):
     """Poll payload for an import job."""
 
@@ -1230,6 +1253,11 @@ class SpecImportJobStatus(BaseModel):
     progress: Optional[SpecImportProgress] = None
     summary: Optional[Dict[str, Any]] = None
     result: Optional[SpecImportJobResult] = None
+    error: Optional[SpecImportJobError] = Field(
+        None,
+        description="Populated when state is failed: the stable taxonomy code and "
+        "remediation for the terminal failure.",
+    )
 
 
 class SpecImportJobListItem(BaseModel):

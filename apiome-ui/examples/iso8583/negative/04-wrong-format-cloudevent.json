@@ -1,0 +1,13 @@
+{
+  "specversion": "1.0",
+  "type": "com.example.payment.authorized",
+  "source": "/payments/gateway",
+  "id": "b7c12d0e-4f3a-4e5b-9a1d-0c2f6e8a9b3c",
+  "time": "2026-07-24T12:00:00Z",
+  "datacontenttype": "application/json",
+  "data": {
+    "amount": "000000012500",
+    "currency": "840",
+    "approvalCode": "123456"
+  }
+}

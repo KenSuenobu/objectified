@@ -41,6 +41,7 @@ __all__ = [
     "CorpusManifest",
     "ExpectedDetection",
     "ExpectedOutcome",
+    "FailureClass",
     "FilesetRole",
     "Rung",
     "ValidityClass",
@@ -112,6 +113,23 @@ class FilesetRole(str, Enum):
     MEMBER = "member"
 
 
+class FailureClass(str, Enum):
+    """IXH-1.3 failure-taxonomy class a negative example exercises (#5089).
+
+    Every ``invalid`` corpus entry declares exactly one class; the negative
+    coverage test requires each shipped adapter to span at least five distinct
+    classes.
+    """
+
+    SYNTACTIC = "syntactic"  # broken grammar for the claimed format
+    SEMANTIC = "semantic"  # parses, but not a valid instance of the format
+    TRUNCATED = "truncated"  # cut off mid-document
+    WRONG_FORMAT = "wrong-format"  # plausible document of some *other* format
+    ENCODING = "encoding"  # BOM / UTF-16 / invalid UTF-8 / mixed line endings
+    UNRESOLVABLE_REF = "unresolvable-ref"  # dangling $ref / import / include
+    VERSION_OUT_OF_RANGE = "version-out-of-range"  # unsupported format version
+
+
 class CorpusCategory(str, Enum):
     """README grouping section for a corpus directory."""
 
@@ -157,6 +175,10 @@ class CorpusEntry(BaseModel):
         rung: Ladder rung the example occupies (required on valid entries).
         fileset_role: Role inside a multi-file set (set only for files in a
             per-set subdirectory).
+        failure_class: IXH-1.3 failure-taxonomy class (required on invalid
+            entries, omitted otherwise).
+        expected_error_code: Stable intake-taxonomy code the import job must
+            fail with (required on invalid entries, omitted otherwise).
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -174,6 +196,8 @@ class CorpusEntry(BaseModel):
     notes: Optional[str] = None
     rung: Optional[Rung] = None
     fileset_role: Optional[FilesetRole] = None
+    failure_class: Optional[FailureClass] = None
+    expected_error_code: Optional[str] = None
 
     @property
     def absolute_path(self) -> Path:
@@ -190,6 +214,14 @@ class CorpusEntry(BaseModel):
             The file content.
         """
         return self.absolute_path.read_text(encoding=encoding)
+
+    def read_bytes(self) -> bytes:
+        """Return the corpus file's raw bytes.
+
+        Negative encoding-fault fixtures (IXH-1.3) are deliberately not valid
+        UTF-8, so pipeline-driving tests read bytes and let intake decode.
+        """
+        return self.absolute_path.read_bytes()
 
 
 class CorpusDirectory(BaseModel):
@@ -239,6 +271,7 @@ def load_corpus(
     feature: Optional[str] = None,
     adapter_key: Optional[str] = None,
     rung: Optional[Rung | str] = None,
+    failure_class: Optional[FailureClass | str] = None,
 ) -> List[CorpusEntry]:
     """Return the corpus entries matching every given filter (AND semantics).
 
@@ -248,6 +281,7 @@ def load_corpus(
         feature: Feature tag the entry must carry (exact match).
         adapter_key: ImportSource registry key the entry must map to.
         rung: Ladder rung to match, as enum or string.
+        failure_class: IXH-1.3 failure class to match, as enum or string.
 
     Returns:
         Matching entries in manifest (path-sorted) order; empty list when
@@ -255,6 +289,7 @@ def load_corpus(
     """
     wanted_class = ValidityClass(validity_class) if validity_class is not None else None
     wanted_rung = Rung(rung) if rung is not None else None
+    wanted_failure = FailureClass(failure_class) if failure_class is not None else None
     entries = load_manifest().entries
     return [
         entry
@@ -264,6 +299,7 @@ def load_corpus(
         and (feature is None or feature in entry.features)
         and (adapter_key is None or entry.adapter_key == adapter_key)
         and (wanted_rung is None or entry.rung is wanted_rung)
+        and (wanted_failure is None or entry.failure_class is wanted_failure)
     ]
 
 

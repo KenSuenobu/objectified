@@ -1,0 +1,7 @@
+{
+  "mti": "0800",
+  "name": "Network echo test",
+  "dataElements": {
+    "70": { "name": "Network Management Information Code", "type": "n", "length": "3", "value": null }
+  }
+}

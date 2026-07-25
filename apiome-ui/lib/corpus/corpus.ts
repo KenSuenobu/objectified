@@ -46,6 +46,20 @@ export type Rung =
 /** Role of a file inside a multi-file example set. */
 export type FilesetRole = 'root' | 'member';
 
+/**
+ * IXH-1.3 failure-taxonomy class a negative example exercises (#5089).
+ * Present on every `invalid` entry; the negative coverage test requires each
+ * shipped adapter to span at least five distinct classes.
+ */
+export type FailureClass =
+  | 'syntactic'
+  | 'semantic'
+  | 'truncated'
+  | 'wrong-format'
+  | 'encoding'
+  | 'unresolvable-ref'
+  | 'version-out-of-range';
+
 /** README grouping section for a corpus directory. */
 export type CorpusCategory =
   | 'rest-http'
@@ -86,6 +100,13 @@ export interface CorpusEntry {
   rung?: Rung;
   /** Role inside a multi-file set (only for files in a per-set subdirectory). */
   fileset_role?: FilesetRole;
+  /** Failure-taxonomy class (present on every invalid entry). */
+  failure_class?: FailureClass;
+  /**
+   * Stable intake-taxonomy error code the import job must fail with
+   * (apiome-rest `app/intake_error_taxonomy.py`; present on every invalid entry).
+   */
+  expected_error_code?: string;
 }
 
 /** Per-directory human-index metadata used to regenerate the README. */
@@ -121,6 +142,8 @@ export interface CorpusFilter {
   adapterKey?: string;
   /** Ladder rung to match. */
   rung?: Rung;
+  /** Failure-taxonomy class to match. */
+  failureClass?: FailureClass;
 }
 
 const VALIDITY_CLASSES: ReadonlySet<string> = new Set([
@@ -143,6 +166,15 @@ const RUNGS: ReadonlySet<string> = new Set([
   'multi-file',
 ]);
 const FILESET_ROLES: ReadonlySet<string> = new Set(['root', 'member']);
+const FAILURE_CLASSES: ReadonlySet<string> = new Set([
+  'syntactic',
+  'semantic',
+  'truncated',
+  'wrong-format',
+  'encoding',
+  'unresolvable-ref',
+  'version-out-of-range',
+]);
 
 /**
  * Files under the corpus root that are corpus infrastructure, not fixtures —
@@ -213,6 +245,16 @@ function assertEntry(value: unknown, index: number): CorpusEntry {
   if (entry.fileset_role !== undefined && !FILESET_ROLES.has(entry.fileset_role as string)) {
     fail(context, `invalid fileset_role ${JSON.stringify(entry.fileset_role)}`);
   }
+  if (entry.failure_class !== undefined && !FAILURE_CLASSES.has(entry.failure_class as string)) {
+    fail(context, `invalid failure_class ${JSON.stringify(entry.failure_class)}`);
+  }
+  if (
+    entry.expected_error_code !== undefined &&
+    (typeof entry.expected_error_code !== 'string' ||
+      !/^[A-Z][A-Z0-9_]*$/.test(entry.expected_error_code))
+  ) {
+    fail(context, `invalid expected_error_code ${JSON.stringify(entry.expected_error_code)}`);
+  }
   return value as CorpusEntry;
 }
 
@@ -272,14 +314,15 @@ export function loadManifest(): CorpusManifest {
  * @returns Matching entries in manifest (path-sorted) order.
  */
 export function loadCorpus(filter: CorpusFilter = {}): CorpusEntry[] {
-  const { format, validityClass, feature, adapterKey, rung } = filter;
+  const { format, validityClass, feature, adapterKey, rung, failureClass } = filter;
   return loadManifest().entries.filter(
     (entry) =>
       (format === undefined || entry.format === format) &&
       (validityClass === undefined || entry.validity_class === validityClass) &&
       (feature === undefined || entry.features.includes(feature)) &&
       (adapterKey === undefined || entry.adapter_key === adapterKey) &&
-      (rung === undefined || entry.rung === rung),
+      (rung === undefined || entry.rung === rung) &&
+      (failureClass === undefined || entry.failure_class === failureClass),
   );
 }
 

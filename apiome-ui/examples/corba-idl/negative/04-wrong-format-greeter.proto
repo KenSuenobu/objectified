@@ -1,0 +1,17 @@
+// Protobuf (proto3) service definition offered to the CORBA IDL importer
+// to exercise wrong-format rejection.
+syntax = "proto3";
+
+package greet.v1;
+
+service GreetService {
+  rpc Greet(GreetRequest) returns (GreetResponse);
+}
+
+message GreetRequest {
+  string name = 1;
+}
+
+message GreetResponse {
+  string greeting = 1;
+}

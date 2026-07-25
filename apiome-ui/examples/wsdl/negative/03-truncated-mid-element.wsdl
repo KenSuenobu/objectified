@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WSDL 1.1 example — a simple SOAP calculator service.
+
+  Recognized by the format-detection sniffer via the `<wsdl:definitions>` root
+  (routes to the `wsdl` REST/SOAP format). The embedded XSD `complexType`
+  request/response shapes become catalog classes; the portType/operations
+  describe the SOAP surface.
+-->
+<wsdl:definitions
+    name="Calculator"
+    targetNamespace="http://example.com/calculator"
+    xmlns:tns="http://example.com/calculator"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://example.com/calculator">
+      <xsd:complexType name="AddRequest">
+        <xsd:sequence>
+          <xsd:element name="a" type="xsd:double"/>
+          <xsd:element name="b" type="xsd:double"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="AddResponse">
+        <xsd:sequence>
+          <xsd:element name="result" type="xsd:double"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="AddRequest" type="tns:AddRequest"/>
+      <xsd:element name="AddResponse" type="tns:AddResponse"/>
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message

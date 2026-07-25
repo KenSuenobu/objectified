@@ -1,0 +1,5 @@
+// FlatBuffers schema example — minimal document.
+//
+// The smallest canonical .fbs file: a single table and its root_type.
+table Ping {
+  message: 

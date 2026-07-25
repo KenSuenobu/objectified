@@ -1,0 +1,4 @@
+-- A grammatically well-formed module frame that defines no types at all,
+-- so there is nothing to import.
+EmptyModule DEFINITIONS ::= BEGIN
+END

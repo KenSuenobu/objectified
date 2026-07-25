@@ -1,0 +1,5 @@
+asyncapi: 2.6.0
+info:
+  title: Heartbeat Service
+  version: 1.0.0
+channels: just-a-string-where-a-channels-mapping-belongs

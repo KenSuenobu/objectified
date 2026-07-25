@@ -1,0 +1,12 @@
+{
+  "specversion": "1.0",
+  "id": "evt-1002",
+  "type": "com.example.order.shipped",
+  "subject": "orders/PO-77031",
+  "time": "2026-07-01T12:30:00Z",
+  "datacontenttype": "application/json",
+  "data": {
+    "orderId": "PO-77031",
+    "carrier": "EXAMPLE-EXPRESS"
+  }
+}

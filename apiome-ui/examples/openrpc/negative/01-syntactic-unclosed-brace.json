@@ -1,0 +1,17 @@
+{
+  "openrpc": "1.3.2",
+  "info": {
+    "title": "Ping Service",
+    "version": "1.0.0"
+  },
+  "methods": [
+    {
+      "name": "ping",
+      "summary": "Liveness probe.",
+      "params": [],
+      "result": {
+        "name": "pong",
+        "schema": { "type": "string" }
+      }
+    }
+  ]

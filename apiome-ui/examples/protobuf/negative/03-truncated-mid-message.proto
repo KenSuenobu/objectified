@@ -1,0 +1,17 @@
+// Protobuf (proto3) example — a simple user message.
+//
+// Recognized by the format-detection sniffer via the `syntax = "proto3"` marker
+// (routes to the `protobuf` format / data-schema paradigm). Each message becomes
+// a catalog class and each field a property; the enum demonstrates an enumerated
+// property type.
+syntax = "proto3";
+
+package example.user.v1;
+
+option java_package = "com.example.user.v1";
+option go_package = "example.com/user/v1;userv1";
+
+// A registered user of the system.
+message User {
+  // Unique user identifier.
+  string id =

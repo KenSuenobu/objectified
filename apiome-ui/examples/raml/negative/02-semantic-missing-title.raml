@@ -1,0 +1,11 @@
+#%RAML 1.0
+version: v1
+
+/ping:
+  get:
+    description: Liveness probe.
+    responses:
+      200:
+        body:
+          application/json:
+            type: object

@@ -1,0 +1,17 @@
+"""
+A simple user type for testing basic GraphQL import
+"""
+type User {
+  "Unique identifier for the user"
+  id: ID!
+
+  "User's display name"
+  name: String!
+
+  "User's email address"
+  email: String!
+
+  "User's age in years"
+  age: Int
+
+  "Whethe

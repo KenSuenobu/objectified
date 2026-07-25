@@ -1,0 +1,22 @@
+// CORBA IDL (OMG IDL) — inventory lookup service offered to the COBOL
+// copybook importer to exercise wrong-format rejection.
+
+module Inventory {
+
+  typedef sequence<string> StringList;
+
+  struct Item {
+    string sku;
+    long quantity;
+    StringList tags;
+  };
+
+  exception ItemNotFound {
+    string sku;
+  };
+
+  interface Stock {
+    Item lookup(in string sku) raises (ItemNotFound);
+    long count(in string sku);
+  };
+};

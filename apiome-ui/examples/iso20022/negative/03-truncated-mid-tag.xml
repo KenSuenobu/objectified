@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ISO 20022 example — camt.053.001.08 (BankToCustomerStatement).
+  A bank-to-customer account statement with group header, account, and balance.
+-->
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08">
+  <BkToCstmrStmt>
+    <GrpHdr>
+      <MsgId>STMT-20260115-0001</MsgId>
+      <CreDtTm>2026-01-15T09:00:00</CreDtTm>
+    </Grp

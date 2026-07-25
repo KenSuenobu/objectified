@@ -1,0 +1,13 @@
+// FlatBuffers schema for telemetry log events.
+namespace Example.Telemetry;
+
+enum Severity : byte { Debug = 0, Info = 1, Warning = 2, Error = 3 }
+
+table LogEvent {
+  timestamp: ulong;
+  severity: Severity = Info;
+  message: string;
+  tags: [string];
+}
+
+root_type LogEvent;

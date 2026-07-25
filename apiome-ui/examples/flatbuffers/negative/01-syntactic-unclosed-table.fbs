@@ -1,0 +1,9 @@
+// FlatBuffers schema whose only table is missing its closing brace.
+namespace acme.chat;
+
+table ChatMessage {
+  sender: string;
+  body: string;
+  sent_at: long;
+
+root_type ChatMessage;

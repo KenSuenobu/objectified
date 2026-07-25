@@ -1,0 +1,12 @@
+#%RAML 1.0
+title: Task Service
+version: v1
+
+/tasks:
+  get:
+    description: List tasks.
+    responses:
+      200:
+        body:
+          application/json:
+            type: object

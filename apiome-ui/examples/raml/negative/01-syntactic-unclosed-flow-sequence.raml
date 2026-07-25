@@ -1,0 +1,10 @@
+#%RAML 1.0
+title: Ping Service
+version: v1
+
+/ping:
+  get:
+    description: Liveness probe.
+    responses:
+      200:
+        body: [application/json

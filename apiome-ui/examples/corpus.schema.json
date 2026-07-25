@@ -97,7 +97,7 @@
       "additionalProperties": false,
       "properties": {
         "path": {
-          "description": "File path relative to apiome-ui/examples/, POSIX separators. Single-file examples live directly in their format directory; members of a multi-file set live one level deeper in a per-set subdirectory (e.g. protobuf/06-imports-set/api.proto).",
+          "description": "File path relative to apiome-ui/examples/, POSIX separators. Single-file examples live directly in their format directory; members of a multi-file set live one level deeper in a per-set subdirectory (e.g. protobuf/06-imports-set/api.proto); negative examples live in the format's negative/ tier directory (IXH-1.3, e.g. openapi/negative/01-unclosed-brace.json).",
           "type": "string",
           "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)?$"
         },
@@ -173,8 +173,25 @@
           "enum": ["minimal", "typical", "composition", "stress", "real-world", "multi-file"]
         },
         "fileset_role": {
-          "description": "Role of the file inside a multi-file set: the single root the import starts from, or a member it references. Required for (and only for) files in a per-set subdirectory.",
+          "description": "Role of the file inside a multi-file set: the single root the import starts from, or a member it references. Required for (and only for) files in a per-set subdirectory (the negative/ tier directory is not a set).",
           "enum": ["root", "member"]
+        },
+        "failure_class": {
+          "description": "IXH-1.3 failure-taxonomy class a negative example exercises: syntactic (broken grammar), semantic (parses but is not a valid instance), truncated (cut off mid-document), wrong-format (plausible document of some other format), encoding (BOM/UTF-16/invalid UTF-8/mixed line endings), unresolvable-ref (dangling $ref/import/include), version-out-of-range (format version the adapter does not support). Required on every invalid entry; omitted otherwise.",
+          "enum": [
+            "syntactic",
+            "semantic",
+            "truncated",
+            "wrong-format",
+            "encoding",
+            "unresolvable-ref",
+            "version-out-of-range"
+          ]
+        },
+        "expected_error_code": {
+          "description": "Stable intake-taxonomy error code (apiome-rest app/intake_error_taxonomy.py) the import job must fail with, e.g. INPUT_MALFORMED or FORMAT_MISMATCH. Required on every invalid entry; omitted otherwise. Tests validate membership against the taxonomy registry.",
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$"
         }
       }
     }

@@ -1,0 +1,8 @@
+type Query {
+  ping: Pong!
+}
+
+type Pong {
+  message: String!
+  receivedAt: String
+}

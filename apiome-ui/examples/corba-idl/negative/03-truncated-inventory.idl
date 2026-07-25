@@ -1,0 +1,11 @@
+// CORBA IDL (OMG IDL) example — inventory lookup service.
+//
+// Demonstrates sequence typedefs, exceptions, and interface operations with
+// raises clauses outside the banking domain.
+
+module Inventory {
+
+  typedef sequence<string> StringList;
+
+  struct Item {
+    s

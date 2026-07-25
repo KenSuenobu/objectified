@@ -1,0 +1,8 @@
+{
+  "_comment": "CloudEvents 1.0 real-world example — hand-authored faithful reconstruction of the shape of an Azure Event Grid Storage BlobCreated event (CloudEvents schema): resource-path source, blob-path subject, and the storage-diagnostics style data payload; no third-party text copied.",
+  "specversion": "1.0",
+  "id": "9aeb0fdf-c01e-0131-0922-9eb54906e209",
+  "type": "Microsoft.Storage.BlobCreated",
+  "source": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/demo-rg/providers/Microsoft.Storage/storageAccounts/demoaccount",
+  "subject": "/blobServices/default/containers/uploads/blobs/report.pdf",
+  "time": "2026-06-18T20:18:27.9106572Z",

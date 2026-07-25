@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<methodCall>
+  <methodName>system.ping</methodName>
+  <params>
+    <param>
+      <value><string>hello</value>
+    </param>
+  </params>
+</methodCall>

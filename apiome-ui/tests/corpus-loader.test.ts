@@ -68,7 +68,7 @@ describe('corpus manifest loader', () => {
 
   it('filters by validity class', () => {
     const invalid = loadCorpus({ validityClass: 'invalid' });
-    expect(invalid.map((entry) => entry.path)).toContain('arazzo/property-conflicts.yaml');
+    expect(invalid.map((entry) => entry.path)).toContain('arazzo/negative/property-conflicts.yaml');
     for (const entry of invalid) {
       expect(entry.validity_class).toBe('invalid');
       expect(entry.expected_outcome).toBe('rejects');

@@ -1,0 +1,9 @@
+// Grammar-valid proto whose two fields reuse field number 1.
+syntax = "proto3";
+
+package acme.users.v1;
+
+message User {
+  string id = 1;
+  string email = 1;
+}

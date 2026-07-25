@@ -1,0 +1,14 @@
+{
+  "apiRequester": {
+    "name": "PingRequester",
+    "version": "1.0.0"
+  },
+  "operations": [
+    {
+      "operationId": "ping",
+      "method": "GET",
+      "path": "/ping",
+      "responseStructure": "PING-RESPONSE"
+    }
+  ]
+}

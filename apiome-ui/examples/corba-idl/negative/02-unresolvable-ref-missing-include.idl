@@ -1,0 +1,11 @@
+// CORBA IDL (OMG IDL) — billing service that includes a definitions file
+// which is not provided alongside it, so Common::Money cannot resolve.
+#include "common/money.idl"
+
+module Billing {
+
+  interface Invoices {
+    Common::Money total(in string invoice_id);
+    void settle(in string invoice_id, in Common::Money amount);
+  };
+};

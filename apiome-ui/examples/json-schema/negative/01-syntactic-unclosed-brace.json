@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/badge.json",
+  "title": "Badge",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "label": { "type": "string" },
+    "level": { "type": "integer", "minimum": 1, "maximum": 5 }
+  },
+  "required": ["id", "label"]

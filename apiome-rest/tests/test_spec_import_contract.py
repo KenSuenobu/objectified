@@ -494,3 +494,48 @@ def test_resolve_spec_import_worker_invocation_raises_without_runner(monkeypatch
 
     with pytest.raises(RuntimeError, match="SPEC_IMPORT_WORKER_ARGV"):
         resolve_spec_import_worker_invocation()
+
+
+def test_negative_corpus_never_yields_5xx_through_job_api():
+    """IXH-1.3 acceptance: adversarial input never surfaces as an HTTP 5xx.
+
+    Drives one negative corpus fixture per failure class (from tool-free,
+    in-process adapters) through submit -> poll: submission is a 202, every
+    poll is a 200, and the terminal state is ``failed`` with a taxonomy error
+    payload. ``dry_run`` keeps an unexpectedly-parsing fixture from writing.
+    """
+    import base64
+
+    from corpus_loader import ValidityClass, load_corpus
+
+    from app.import_source import get_import_source, load_builtin_import_sources
+
+    load_builtin_import_sources()
+
+    picked = {}
+    for entry in load_corpus(validity_class=ValidityClass.INVALID):
+        if entry.adapter_key is None or entry.adapter_key == "openapi":
+            continue  # the OpenAPI source_kind routes to the tsx worker
+        if get_import_source(entry.adapter_key).required_tools:
+            continue
+        picked.setdefault(entry.failure_class, entry)
+    assert picked, "no eligible negative corpus entries"
+
+    for entry in picked.values():
+        body = {
+            "metadata": {
+                "source_kind": entry.adapter_key,
+                "project": {"name": "Negative", "slug": "negative-smoke"},
+                "version": {"version_id": "0.0.1"},
+                "options": {"dry_run": True},
+            },
+            "document_base64": base64.standard_b64encode(entry.read_bytes()).decode("ascii"),
+            "filename": entry.path.rsplit("/", 1)[-1],
+        }
+        started = client.post("/v1/tenants/acme/imports", json=body)
+        assert started.status_code == 202, f"{entry.path}: {started.status_code} {started.text}"
+        final = _wait_completed(started.json()["job_id"])  # asserts 200 on every poll
+        assert final["state"] == "failed", f"{entry.path}: reached {final['state']}"
+        assert final.get("error"), f"{entry.path}: failed job carries no error payload"
+        assert final["error"]["code"] == entry.expected_error_code, entry.path
+        assert final["error"]["remediation"].strip(), entry.path

@@ -5,6 +5,23 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.173.0] - 2026-07-24
+
+### Added
+- **Intake error taxonomy + negative corpus (#5089, IXH-1.3)** — stable, additive-only
+  error codes for import intake failures (`src/app/intake_error_taxonomy.py`: category,
+  retriability, remediation per code). Failed import jobs now carry a structured
+  `error` object (`code`, `category`, `message`, `remediation`, `retriable`) in the
+  job-status contract; the in-process pipeline classifies parse/normalize failures
+  (empty input, encoding faults, wrong-format-but-plausible uploads, malformed
+  documents) and `ImportSourceError` accepts an optional explicit `code`. Registry-level
+  format detection now treats a raising adapter `detect()`/sniffer as no-match instead
+  of surfacing a 500. The examples corpus gains a `negative/` tier: >= 5 malformed /
+  truncated / misrouted / encoding-fault fixtures per shipped adapter, each with a
+  manifest-declared `failure_class` + `expected_error_code` asserted end-to-end by
+  `tests/test_corpus_negative.py` (pipeline) and `tests/test_spec_import_contract.py`
+  (HTTP, never a 5xx).
+
 ## [1.172.0] - 2026-07-24
 
 ### Added

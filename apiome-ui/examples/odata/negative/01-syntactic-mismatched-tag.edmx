@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:DataServices>
+    <Schema Namespace="Example.Minimal" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <EntityType Name="Item">
+        <Key>
+          <PropertyRef Name="Id"/>
+        </Key>
+        <Property Name="Id" Type="Edm.Int32" Nullable="false"/>
+      <EntityContainer Name="Container">
+        <EntitySet Name="Items" EntityType="Example.Minimal.Item"/>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

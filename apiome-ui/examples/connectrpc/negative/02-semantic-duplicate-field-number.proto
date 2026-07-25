@@ -1,0 +1,18 @@
+// Connect-RPC contract that parses at the grammar level but reuses a
+// field number inside one message, which protobuf forbids.
+syntax = "proto3";
+
+package orders.v1;
+
+service OrderService {
+  rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse);
+}
+
+message ListOrdersRequest {
+  int32 page_size = 1;
+  string page_token = 1;
+}
+
+message ListOrdersResponse {
+  repeated string order_ids = 1;
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<methodCall>
+  <params>
+    <param>
+      <value><string>hello</string></value>
+    </param>
+  </params>
+</methodCall>

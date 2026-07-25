@@ -1,0 +1,9 @@
+-- The SEQUENCE below opens a brace that is never closed, so the module
+-- body cannot be parsed.
+BrokenModule DEFINITIONS ::= BEGIN
+
+  Person ::= SEQUENCE {
+    name  UTF8String,
+    age   INTEGER
+
+END

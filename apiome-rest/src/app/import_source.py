@@ -43,6 +43,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
@@ -55,6 +56,27 @@ from .normalizer import get_normalizer
 
 if TYPE_CHECKING:  # pragma: no cover - import for type checkers only (avoids a runtime cycle)
     from .fileset import IntakeFileset
+
+logger = logging.getLogger(__name__)
+
+
+def _safe_detect(adapter: "ImportSource", payload: DetectionInput) -> DetectionResult:
+    """Call ``adapter.detect`` treating any raise as :data:`NO_MATCH`.
+
+    The SPI contract says sniffers must never raise, but registry-level detection
+    feeds a live endpoint (``POST /v1/import/detect``) and the whole import intake
+    (IXH-1.3: adversarial input must never 5xx), so a buggy adapter is demoted to
+    "did not recognize the input" instead of failing every caller.
+    """
+    try:
+        return adapter.detect(payload)
+    except Exception:  # noqa: BLE001 - a broken sniffer must not break detection
+        logger.warning(
+            "import-source adapter %r raised during detect(); treating as no-match",
+            adapter.key,
+            exc_info=True,
+        )
+        return NO_MATCH
     from .schema_lint import LintResult
 
 __all__ = [
@@ -86,7 +108,19 @@ class ImportSourceError(Exception):
 
     Carries a human-readable message so a route can surface it directly (e.g. a
     400/422 detail) without leaking a stack trace.
+
+    Args:
+        message: Human-readable description of what was wrong with the input.
+        code: Optional stable intake-taxonomy code (see
+            :mod:`app.intake_error_taxonomy`). Adapters that can classify the
+            failure precisely (truncation, unsupported version, unresolved
+            reference, …) pass it; when omitted the pipeline classifies the
+            failure itself with the coarse default for the failing phase.
     """
+
+    def __init__(self, message: str, *, code: Optional[str] = None) -> None:
+        super().__init__(message)
+        self.code = code
 
 
 # ===========================================================================
@@ -706,7 +740,7 @@ def detect_import_source(
     best: Optional[Tuple[ImportSource, DetectionResult]] = None
     for key in sorted(_REGISTRY):
         adapter = _REGISTRY[key]()
-        result = adapter.detect(payload)
+        result = _safe_detect(adapter, payload)
         if not result.matched:
             continue
         if best is None or result.confidence > best[1].confidence:
@@ -728,7 +762,7 @@ def detect_import_source_candidates(
     matches: List[Tuple[ImportSource, DetectionResult]] = []
     for key in sorted(_REGISTRY):
         adapter = _REGISTRY[key]()
-        result = adapter.detect(payload)
+        result = _safe_detect(adapter, payload)
         if result.matched:
             matches.append((adapter, result))
     matches.sort(key=lambda pair: (-pair[1].confidence, pair[0].key))

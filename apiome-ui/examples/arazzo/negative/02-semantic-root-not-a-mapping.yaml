@@ -1,0 +1,17 @@
+# The Arazzo description is wrapped in a YAML list, so the document root is
+# a sequence instead of the required mapping.
+- arazzo: 1.0.1
+  info:
+    title: Wrapped Workflow
+    version: 1.0.0
+  sourceDescriptions:
+    - name: TodoAPI
+      type: openapi
+      url: https://example.com/openapi/todo.json
+  workflows:
+    - name: CreateTodo
+      steps:
+        - name: CreateTodo
+          request:
+            source: TodoAPI
+            operationId: createTodo

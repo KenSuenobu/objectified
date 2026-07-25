@@ -1,0 +1,10 @@
+{
+  "metadata": { "title": "User" },
+  "properties": {
+    "id": { "type": "string" },
+    "email": { "type": "string" },
+    "createdAt": { "type": "timestamp" }
+  },
+  "optionalProperties": {
+    "displayName": { "type": "string" }
+  }

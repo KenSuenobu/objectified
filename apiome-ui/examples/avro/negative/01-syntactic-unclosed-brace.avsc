@@ -1,0 +1,6 @@
+{
+  "type": "record",
+  "name": "Ping",
+  "fields": [
+    { "name": "message", "type": "string" }
+  ]

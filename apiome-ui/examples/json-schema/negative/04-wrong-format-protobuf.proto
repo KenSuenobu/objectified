@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package example.catalog;
+
+message Product {
+  string id = 1;
+  string name = 2;
+  int32 quantity = 3;
+}
+
+message ProductRequest {
+  string id = 1;
+}
+
+service ProductService {
+  rpc GetProduct(ProductRequest) returns (Product);
+}

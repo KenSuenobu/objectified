@@ -1,0 +1,12 @@
+{
+  "_comment": "Avro schema example — a User record. Recognized by the format-detection sniffer via `type: record` + a `fields` array (routes to the `avro` data-schema format). The record becomes a catalog class; each field a property. Demonstrates a nullable union, an enum, a logical type, and a default.",
+  "type": "record",
+  "name": "User",
+  "namespace": "com.example.user",
+  "doc": "A registered user of the system.",
+  "fields": [
+    { "name": "id", "type": "string", "doc": "Unique user identifier." },
+    { "name": "email", "type": "string", "doc": "The user's email address." },
+    {
+      "name": "displayName",
+      "type": ["null", "str

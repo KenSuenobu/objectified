@@ -1,0 +1,15 @@
+openapi: 3.0.3
+info:
+  title: Ping Service
+  version: 1.0.0
+paths:
+  /ping:
+    get:
+      summary: Liveness probe.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object

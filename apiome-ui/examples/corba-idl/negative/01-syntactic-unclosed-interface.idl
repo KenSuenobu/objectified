@@ -1,0 +1,8 @@
+// CORBA IDL (OMG IDL) — catalog lookup whose interface body is never
+// closed: the closing brace and semicolon are missing.
+
+typedef sequence<string> TagList;
+
+interface Catalog {
+  string describe(in string sku);
+  TagList tags(in string sku);

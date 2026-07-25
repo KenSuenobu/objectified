@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://example.com/note"
+           xmlns:n="http://example.com/note"
+           elementFormDefault="qualified">
+
+  <xs:element name="note" type="n:Note"/>
+
+  <xs:complexType name="Note">
+    <xs:sequence>
+      <xs:element name="subject" type="xs:string"/>
+      <xs:element name="body" type="xs:string"/>
+    </xs:complexType>
+  </xs:sequence>
+</xs:schema>
