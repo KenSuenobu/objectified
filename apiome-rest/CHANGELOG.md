@@ -5,6 +5,22 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.174.2] - 2026-07-25
+
+### Added
+- **Round-trip conformance matrix (#5093, IXH-1.7)** — every `(shipped source
+  format × shipped emit target)` cell now runs import → fidelity predict → emit →
+  re-import → `canonical_diff`, then reconciles every difference against the
+  fidelity `LossinessReport` (`DROP`/`APPROX`/`SYNTH` must explain it; unexplained
+  diffs and `OK` over-claims fail). Results publish as
+  `tests/golden/roundtrip/matrix.json` (+ Markdown summary for IXH-1.8). New
+  `src/app/roundtrip_matrix.py` (reusable reconcile/run path for IXH-4.4) and
+  `tests/corpus_roundtrip.py` (representative selection + matrix runner). Regenerate
+  with `pytest tests/test_roundtrip_matrix.py --update-roundtrip-matrix` (or
+  `UPDATE_ROUNDTRIP_MATRIX=1`). First run surfaces 1202 fidelity/emitter/re-import
+  gaps as documented strict xfails in `tests/roundtrip_xfails.py` (fixing a cell
+  fails the suite until its entry is removed); 23 cells already pass.
+
 ## [1.174.1] - 2026-07-24
 
 ### Added

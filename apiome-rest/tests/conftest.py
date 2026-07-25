@@ -13,6 +13,10 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     contract change is a one-command refresh whose diff lands in review. The
     ``UPDATE_CORPUS_GOLDENS=1`` environment variable does the same, mirroring the
     EFP-1.3 projection corpus's idiom.
+
+    ``--update-roundtrip-matrix`` regenerates the IXH-1.7 round-trip matrix
+    artifact (``tests/golden/roundtrip/matrix.json``); ``UPDATE_ROUNDTRIP_MATRIX=1``
+    does the same.
     """
     parser.addoption(
         "--update-golden",
@@ -21,6 +25,15 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help=(
             "Regenerate canonical corpus golden snapshots (tests/golden/corpus/) "
             "instead of asserting against them."
+        ),
+    )
+    parser.addoption(
+        "--update-roundtrip-matrix",
+        action="store_true",
+        default=False,
+        help=(
+            "Regenerate the round-trip conformance matrix artifact "
+            "(tests/golden/roundtrip/matrix.json) instead of asserting against it."
         ),
     )
 
