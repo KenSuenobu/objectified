@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+from corpus_loader import load_corpus
 
 from app.canonical_model import ApiParadigm, TypeKind
 from app.emitter import get_emitter
@@ -14,15 +13,15 @@ from app.fhir_normalizer import FhirNormalizer
 from app.fhir_parser import is_fhir, parse_fhir
 from app.import_source import DetectionInput, ImportSourceError
 
-_PATIENT_INSTANCE = (
-    Path(__file__).resolve().parents[2] / "apiome-ui/examples/fhir/01-patient.json"
-).read_text(encoding="utf-8")
-_OBSERVATION_PROFILE = (
-    Path(__file__).resolve().parents[2] / "apiome-ui/examples/fhir/02-patient-structuredefinition.json"
-).read_text(encoding="utf-8")
-_PATIENT_PROFILE = (
-    Path(__file__).resolve().parents[2] / "apiome-ui/examples/fhir/03-patient-profile.json"
-).read_text(encoding="utf-8")
+# Fixtures come from the corpus manifest (IXH-1.1, #5087), selected by tag
+# rather than hard-coded path: the Patient resource instance, and the two
+# StructureDefinitions profiling Observation and Patient respectively.
+[_PATIENT_ENTRY] = load_corpus(format="fhir", feature="patient")
+[_OBSERVATION_PROFILE_ENTRY] = load_corpus(format="fhir", feature="profiles-observation")
+[_PATIENT_PROFILE_ENTRY] = load_corpus(format="fhir", feature="profiles-patient")
+_PATIENT_INSTANCE = _PATIENT_ENTRY.read_text()
+_OBSERVATION_PROFILE = _OBSERVATION_PROFILE_ENTRY.read_text()
+_PATIENT_PROFILE = _PATIENT_PROFILE_ENTRY.read_text()
 
 
 @pytest.fixture()

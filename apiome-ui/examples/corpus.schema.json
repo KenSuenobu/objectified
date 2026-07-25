@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://apiome.dev/schemas/examples/corpus.manifest.schema.json",
+  "title": "apiome import example corpus manifest",
+  "description": "Machine-readable contract for every file under apiome-ui/examples/ (IXH-1.1, #5087). One entry per corpus file declares what the file demonstrates, whether it is valid, which adapter must claim it, and what detection/import outcome it is expected to produce. README.md files are documentation and are not corpus entries.",
+  "type": "object",
+  "required": ["manifest_version", "directories", "entries"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "description": "Relative pointer to this schema so editors validate the manifest in place.",
+      "type": "string"
+    },
+    "manifest_version": {
+      "description": "Manifest contract version; bump only on breaking shape changes.",
+      "const": 1
+    },
+    "directories": {
+      "description": "Per-directory human-index metadata (label, category, paradigm, detection marker) used to regenerate the examples README. Every entry path's directory must appear here.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/directory" }
+    },
+    "entries": {
+      "description": "One entry per corpus file, sorted by path.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "$defs": {
+    "directory": {
+      "type": "object",
+      "required": ["label", "category", "paradigm", "marker"],
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "description": "Human display name of the format family, e.g. \"OpenAPI 3.x\".",
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "description": "README grouping section for the directory.",
+          "enum": [
+            "rest-http",
+            "rpc",
+            "event-messaging",
+            "graph",
+            "data-schema",
+            "industry-messaging"
+          ]
+        },
+        "paradigm": {
+          "description": "Canonical API paradigm the format maps to (e.g. rest, rpc, event, data_schema, message, soap, graph).",
+          "type": "string",
+          "minLength": 1
+        },
+        "marker": {
+          "description": "The content marker format detection keys on, in Markdown.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "required": [
+        "path",
+        "format",
+        "adapter_key",
+        "validity_class",
+        "expected_detection",
+        "features",
+        "expected_outcome",
+        "source",
+        "license",
+        "provenance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "File path relative to apiome-ui/examples/, POSIX separators.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "format": {
+          "description": "Format family key the file belongs to (selection key for load_corpus(format=...)), e.g. openapi, graphql, cobolcopybook.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9.-]*$"
+        },
+        "adapter_key": {
+          "description": "Registry key of the ImportSource adapter that must claim the file (e.g. grpc for protobuf/), or null when no adapter is expected to handle it.",
+          "type": ["string", "null"],
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "validity_class": {
+          "description": "valid: well-formed, must import cleanly. invalid: malformed on purpose, must be rejected with a useful error. adversarial: crafted to confuse detection or normalization. scale: stresses size/volume limits.",
+          "enum": ["valid", "invalid", "adversarial", "scale"]
+        },
+        "expected_detection": {
+          "description": "The detection contract: format detection must report this format key for the file with at least min_confidence among its candidates. min_confidence 0 means no detection guarantee (e.g. deliberately malformed input).",
+          "type": "object",
+          "required": ["format", "min_confidence"],
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Detection format key (may be more specific than `format`, e.g. openapi-3.1, asyncapi-2, json-schema-2020-12).",
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9.-]*$"
+            },
+            "min_confidence": {
+              "description": "Minimum detection confidence, 0.0-1.0.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "features": {
+          "description": "Tags for what the file demonstrates (spec keywords keep native casing, e.g. oneOf; concepts are kebab-case, e.g. occurs-depending-on). Tests select fixtures by these instead of hard-coding paths.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9.$-]*$"
+          }
+        },
+        "expected_outcome": {
+          "description": "What a full import of the file must do: imports (clean), rejects (clear error, no partial import), or imports_with_warnings (imports but reports fidelity warnings).",
+          "enum": ["imports", "rejects", "imports_with_warnings"]
+        },
+        "source": {
+          "description": "Where the file came from (hand-authored, or an upstream project name).",
+          "type": "string",
+          "minLength": 1
+        },
+        "license": {
+          "description": "SPDX license identifier covering the file's content.",
+          "type": "string",
+          "minLength": 1
+        },
+        "provenance": {
+          "description": "One-sentence origin story for the file.",
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "description": "Optional free-text caveats, e.g. known detection deviations the hardening epics must reconcile.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
