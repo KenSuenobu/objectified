@@ -33,11 +33,17 @@ Two mechanisms appear below, with different obligations:
 | Re-import delta family lists (IXH-3.4) | 50 entries/family (`DELTA_LIST_VIRTUALIZE_ABOVE`) | Windowed | The family list windows ("windowed" note); the focused row is pinned | Scroll; the header chips always state full counts |
 | Raw source viewer (IXH-2.2/3.2) | 400 lines mounted (`RAW_VIEWER_CONTEXT`) | Truncated | "… N earlier lines" / "… N later lines" around the window | Follow any source link — the window re-centers, so every line is reachable |
 
-Draw-budget selection is **worst-first** (`selectDrawnGraphEntries`,
-`importProjectionGraph.ts`): aggregates always draw, then rows by severity
-(critical → warn → info), then by how lossy the status is (dropped → unavailable →
+Draw-budget selection is **worst-first** (`selectDrawnGraphEntries`, shared from
+`components/ade/dashboard/export/projectionGraph.ts`): aggregates always draw, then rows by
+severity (critical → warn → info), then by how lossy the status is (dropped → unavailable →
 approximated → synthesized → transformed → not-applicable → retained). The cap can only
 ever remove clean evidence; a dropped construct is never what the cap hides.
+
+The last three projection-map budgets (aggregation threshold, SVG draw budget, evidence
+table windowing) also bound the **export** side: the Export Studio Review step's
+source-to-target mapping graph (IXH-4.2, `ExportMappingGraphPanel`) renders the same
+primitives over the export preview manifest, with the same statements above budget and the
+same table-is-the-text-alternative contract.
 
 ### Scale material
 

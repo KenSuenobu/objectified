@@ -51,17 +51,19 @@ export const EXPORT_MANIFEST_TREE_VIRTUALIZE_ABOVE = 50;
 export const EXPORT_MANIFEST_PAGES_PER_WINDOW = 5;
 
 /**
- * Projection-map SVG draw budget (IXH-3.3): at most this many view entries are drawn as
- * graph nodes. Entries are selected worst-first (severity, then how lossy the status is),
- * so dropped and critical evidence is never what the cap removes. Above the budget the
- * graph states "drawing X of Y constructs" and points at the table below, which always
- * lists every construct (windowed).
+ * Projection-map SVG draw budget (IXH-3.3, shared with the export mapping graph IXH-4.2):
+ * at most this many view entries are drawn as graph nodes. Entries are selected
+ * worst-first (severity, then how lossy the status is), so dropped and critical evidence
+ * is never what the cap removes. Above the budget the graph states "drawing X of Y
+ * constructs" and points at the table below, which always lists every construct
+ * (windowed).
  */
 export const GRAPH_DRAW_BUDGET = 120;
 
 /**
  * Projection evidence-table display rows (entries plus expanded aggregate members) beyond
- * this count are windowed with `aria-rowcount`/`aria-rowindex` kept correct.
+ * this count are windowed with `aria-rowcount`/`aria-rowindex` kept correct. Shared by the
+ * import projection map (IXH-3.3) and the export mapping graph (IXH-4.2).
  */
 export const PROJECTION_TABLE_VIRTUALIZE_ABOVE = 60;
 
@@ -164,7 +166,7 @@ export const PREVIEW_BUDGETS: readonly PreviewBudget[] = [
   },
   {
     id: 'GRAPH_AGGREGATION_THRESHOLD',
-    surface: 'Projection-map clean rows (IXH-3.3, shared with EFP-2.2)',
+    surface: 'Projection-map clean rows (IXH-3.3 / IXH-4.2, shared with EFP-2.2)',
     budget: GRAPH_AGGREGATION_THRESHOLD,
     unit: 'evidence rows',
     mechanism: 'truncated',
@@ -173,7 +175,7 @@ export const PREVIEW_BUDGETS: readonly PreviewBudget[] = [
   },
   {
     id: 'GRAPH_DRAW_BUDGET',
-    surface: 'Projection-map SVG (IXH-3.3 graph nodes)',
+    surface: 'Projection-map SVG (IXH-3.3 import + IXH-4.2 export mapping graph nodes)',
     budget: GRAPH_DRAW_BUDGET,
     unit: 'drawn graph entries',
     mechanism: 'truncated',
@@ -182,7 +184,7 @@ export const PREVIEW_BUDGETS: readonly PreviewBudget[] = [
   },
   {
     id: 'PROJECTION_TABLE_VIRTUALIZE_ABOVE',
-    surface: 'Projection evidence table (IXH-3.3 text alternative)',
+    surface: 'Projection evidence table (IXH-3.3 / IXH-4.2 text alternative)',
     budget: PROJECTION_TABLE_VIRTUALIZE_ABOVE,
     unit: 'display rows (entries + expanded members)',
     mechanism: 'windowed',

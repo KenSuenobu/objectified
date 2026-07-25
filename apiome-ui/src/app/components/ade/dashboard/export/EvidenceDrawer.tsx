@@ -18,8 +18,14 @@ import { statusPresentation, type ProjectionEvidenceRow, type ProjectionViewEntr
 export interface EvidenceDrawerProps {
   /** The selected view entry (a row or an aggregate) the drawer explains. */
   entry: ProjectionViewEntry;
-  /** The snapshot summary, when loaded — the provenance (emitter/registry versions) source. */
-  summary: ProjectionManifestSummary | null;
+  /**
+   * The snapshot the evidence belongs to, when loaded — only its `target` block is read
+   * (the emitter/registry/apiome versions the provenance line prints). Typed as that one
+   * field so a surface with a different snapshot envelope carrying the same provenance
+   * block — the export preview manifest (IXH-4.1/4.2) — can pass it without fabricating
+   * the summary's other counts.
+   */
+  summary: Pick<ProjectionManifestSummary, 'target'> | null;
   /** Reviewed reason explanations from the capability registry (empty map degrades gracefully). */
   reasons: ReadonlyMap<ProjectionReasonCode, ReasonExplanation>;
   /** Close the drawer (clears the selection). */
@@ -129,7 +135,7 @@ function EvidenceDrawerBody({
   onChangeOptions,
 }: {
   row: ProjectionEvidenceRow;
-  summary: ProjectionManifestSummary | null;
+  summary: Pick<ProjectionManifestSummary, 'target'> | null;
   reasons: ReadonlyMap<ProjectionReasonCode, ReasonExplanation>;
   onChangeTarget?: () => void;
   onChangeOptions?: () => void;

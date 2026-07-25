@@ -266,134 +266,15 @@ export function importViewStatusCounts(
 }
 
 // ---------------------------------------------------------------------------
-// Draw budget + table flattening (IXH-3.6, #5108)
+// Draw budget + table flattening (IXH-3.6, #5108) — shared, not owned here
 // ---------------------------------------------------------------------------
 
-/** Worst-first severity rank, mirroring the shared view ordering (critical → warn → info). */
-const SEVERITY_RANK: Record<'critical' | 'warn' | 'info', number> = {
-  critical: 0,
-  warn: 1,
-  info: 2,
-};
-
-/**
- * How lossy a status is, for the draw-budget selection: statuses that mean "the source
- * lost something" rank before clean outcomes, so capping the drawn graph can only ever
- * remove clean evidence — a dropped construct is never what the cap hides.
- */
-const STATUS_DRAW_PRIORITY: Record<ProjectionStatus, number> = {
-  dropped: 0,
-  unavailable: 1,
-  approximated: 2,
-  synthesized: 3,
-  transformed: 4,
-  'not-applicable': 5,
-  retained: 6,
-};
-
-/** The draw-budget selection: which entries the SVG draws, and what that leaves out. */
-export interface DrawnGraphSelection<LaneKey extends string> {
-  /** The entries to draw, in the view's original order (lane grouping preserved). */
-  drawn: ProjectionViewEntry<LaneKey>[];
-  /** True when the budget removed at least one entry. */
-  truncated: boolean;
-  /** Evidence rows represented by the drawn entries (aggregate members included). */
-  drawnRowCount: number;
-  /** Evidence rows represented by the full view. */
-  totalRowCount: number;
-}
-
-/** Evidence rows an entry represents: 1 for a row, member count for an aggregate. */
-function entryRowCount(entry: ProjectionViewEntry<string>): number {
-  return entry.kind === 'aggregate' ? (entry.members?.length ?? 0) : 1;
-}
-
-/**
- * Select the view entries the SVG graph draws, bounded by the draw budget
- * ({@link GRAPH_DRAW_BUDGET} via `preview-budgets.ts`; tests pass a small value).
- *
- * Selection is **worst-first**: aggregates always draw (each is one box standing for many
- * clean rows — dropping one would hide the most information per node), then rows ordered
- * by severity (critical → warn → info), then by how lossy the status is
- * ({@link STATUS_DRAW_PRIORITY}), then by view position. The survivors keep the view's
- * original order so the lane layout is unchanged — the cap thins lanes from their cleanest
- * tail, it never reorders them.
- *
- * @param entries The ordered entries from {@link buildImportProjectionView}.
- * @param budget Maximum entries to draw (non-positive draws only the always-kept aggregates).
- * @returns The drawn subset plus the represented-row counts for the truncation statement.
- */
-export function selectDrawnGraphEntries<LaneKey extends string>(
-  entries: ProjectionViewEntry<LaneKey>[],
-  budget: number,
-): DrawnGraphSelection<LaneKey> {
-  const totalRowCount = entries.reduce((sum, entry) => sum + entryRowCount(entry), 0);
-  if (entries.length <= budget) {
-    return { drawn: entries, truncated: false, drawnRowCount: totalRowCount, totalRowCount };
-  }
-
-  const ranked = entries
-    .map((entry, index) => ({ entry, index }))
-    .sort((a, b) => {
-      // Aggregates first (always kept), then worst-first, then stable view order.
-      const byKind =
-        (a.entry.kind === 'aggregate' ? 0 : 1) - (b.entry.kind === 'aggregate' ? 0 : 1);
-      if (byKind !== 0) return byKind;
-      const bySeverity = SEVERITY_RANK[a.entry.severity] - SEVERITY_RANK[b.entry.severity];
-      if (bySeverity !== 0) return bySeverity;
-      const byStatus = STATUS_DRAW_PRIORITY[a.entry.status] - STATUS_DRAW_PRIORITY[b.entry.status];
-      if (byStatus !== 0) return byStatus;
-      return a.index - b.index;
-    });
-
-  const aggregateCount = entries.filter((entry) => entry.kind === 'aggregate').length;
-  const keep = Math.max(Math.max(0, budget), aggregateCount);
-  const keptIndexes = new Set(ranked.slice(0, keep).map(({ index }) => index));
-  const drawn = entries.filter((_, index) => keptIndexes.has(index));
-  const drawnRowCount = drawn.reduce((sum, entry) => sum + entryRowCount(entry), 0);
-  return { drawn, truncated: drawn.length < entries.length, drawnRowCount, totalRowCount };
-}
-
-/** One display row of the evidence table: a view entry, or one expanded aggregate member. */
-export interface ProjectionTableRow<LaneKey extends string> {
-  kind: 'entry' | 'member';
-  /** The view entry (for a member row, the aggregate it belongs to). */
-  entry: ProjectionViewEntry<LaneKey>;
-  /** The member evidence row (kind `member` only). */
-  member?: ProjectionEvidenceRow;
-  /** Stable React key. */
-  key: string;
-  /** 1-based position within the table body → `aria-rowindex` (after the +1 header offset). */
-  bodyRowIndex: number;
-}
-
-/**
- * Flatten the view entries plus the expanded aggregates into the display rows the
- * (windowed) evidence table renders — pure, so the windowing arithmetic and the
- * `aria-rowcount`/`aria-rowindex` bookkeeping unit-test without the DOM.
- *
- * @param entries The ordered entries from {@link buildImportProjectionView}.
- * @param expandedAggregates Keys of aggregate entries whose members render in place.
- * @returns One row per entry, with each expanded aggregate's members following it.
- */
-export function buildProjectionTableRows<LaneKey extends string>(
-  entries: ProjectionViewEntry<LaneKey>[],
-  expandedAggregates: ReadonlySet<string>,
-): ProjectionTableRow<LaneKey>[] {
-  const rows: ProjectionTableRow<LaneKey>[] = [];
-  for (const entry of entries) {
-    rows.push({ kind: 'entry', entry, key: entry.key, bodyRowIndex: rows.length + 1 });
-    if (entry.kind === 'aggregate' && expandedAggregates.has(entry.key)) {
-      for (const member of entry.members ?? []) {
-        rows.push({
-          kind: 'member',
-          entry,
-          member,
-          key: `${entry.key}:${member.id}`,
-          bodyRowIndex: rows.length + 1,
-        });
-      }
-    }
-  }
-  return rows;
-}
+// The draw-budget selection and the table flattening live with the other shared graph
+// primitives (`../export/projectionGraph.ts`) so the export mapping graph (IXH-4.2)
+// bounds itself the same way; re-exported here so this module stays the import map's
+// one entry point.
+export {
+  buildProjectionTableRows,
+  selectDrawnGraphEntries,
+} from '../export/projectionGraph';
+export type { DrawnGraphSelection, ProjectionTableRow } from '../export/projectionGraph';
