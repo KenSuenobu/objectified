@@ -65,6 +65,7 @@ from .import_export_quality_policy import (
     evaluate_quality,
     find_active_waiver,
     load_tenant_policy,
+    verdict_response_model,
 )
 from .import_source_pipeline import ImportRunArtifacts, build_job_error, run_adapter_import_job
 from .intake_error_taxonomy import resolve_intake_error_code
@@ -78,7 +79,6 @@ from .models import (
     ImportPreflightFinding,
     ImportPreflightLint,
     ImportPreflightPolicy,
-    ImportPreflightPolicyFailure,
     ImportPreflightReport,
     ImportPreflightRequest,
     ImportPreflightStyleGuide,
@@ -455,32 +455,9 @@ def _policy_verdict(
         severity_counts=dict(lint.severity_counts) if lint is not None else {},
         waiver=waiver,
     )
-    return ImportPreflightPolicy(
-        verdict=verdict.verdict,
-        blocking=verdict.blocking,
-        source=verdict.source,
-        reason=verdict.reason,
-        threshold_score=verdict.threshold_score,
-        allow_override=verdict.allow_override,
-        scope=SCOPE_IMPORT,
-        format_key=verdict.format_key,
-        min_grade=verdict.thresholds.min_grade,
-        block_on_severity=verdict.thresholds.block_on_severity,
-        enforcement=verdict.thresholds.enforcement,
-        failures=[
-            ImportPreflightPolicyFailure(
-                kind=failure["kind"],
-                required=failure.get("required"),
-                actual=failure.get("actual"),
-            )
-            for failure in verdict.failures
-        ],
-        override_roles=list(verdict.override_roles),
-        policy_version_id=verdict.policy_version_id,
-        policy_content_fingerprint=verdict.policy_content_fingerprint,
-        waiver_id=verdict.waiver_id,
-        waiver_expires_at=verdict.waiver_expires_at,
-    )
+    # The verdict → response adaptation lives with the policy engine (IXH-2.4), so the import
+    # pre-flight, the export pre-flight, and the delivery gate cannot drift apart on it.
+    return verdict_response_model(verdict)
 
 
 def _style_guide_model(guide: Any) -> Optional[ImportPreflightStyleGuide]:

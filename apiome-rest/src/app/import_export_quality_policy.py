@@ -48,8 +48,12 @@ Where it is used
   quality step (IXH-2.2) can render "82 / needs 90" and offer the waiver path.
 * :func:`enforce_import_quality_gate` runs at the REST import-start endpoint, so the gate is
   **server-side**: a client that ignores the pre-flight verdict is refused anyway.
-* :func:`evaluate_export_quality` is the export half, ready for the IXH-2.4 pre-flight and the
-  IXH-2.5 delivery gate to call with a source revision's lint roll-up.
+* :func:`evaluate_export_quality` is the export half: :mod:`app.export_preflight` (IXH-2.4) calls
+  it once per ranked target with the source revision's lint roll-up, and the IXH-2.5 delivery gate
+  will call it for the delivery itself.
+* :func:`verdict_response_model` adapts a verdict into the one API shape every surface returns, so
+  the import pre-flight, the export pre-flight, and the delivery gate cannot describe the same
+  policy differently.
 """
 
 from __future__ import annotations
@@ -60,9 +64,12 @@ import json
 import logging
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .database import db
+
+if TYPE_CHECKING:  # pragma: no cover - typing only; the runtime import stays deferred
+    from .models import ImportPreflightPolicy
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +96,8 @@ __all__ = [
     "resolve_thresholds",
     "role_may_override",
     "subject_key_for_document",
+    "subject_key_for_export",
+    "verdict_response_model",
 ]
 
 #: The two gates a policy governs.
@@ -688,6 +697,7 @@ def evaluate_export_quality(
     grade: Optional[str],
     severity_counts: Optional[Mapping[str, int]] = None,
     subject_key: Optional[str] = None,
+    policy: Optional[QualityPolicy] = None,
 ) -> QualityVerdict:
     """Evaluate a source revision's quality against the tenant's **export** policy.
 
@@ -702,30 +712,94 @@ def evaluate_export_quality(
         score: The source revision's lint score.
         grade: The source revision's lint grade.
         severity_counts: The source revision's per-severity tally.
-        subject_key: Identity of the delivery subject (revision id + target), for waiver match.
+        subject_key: Identity of the delivery subject (:func:`subject_key_for_export`), for the
+            waiver match. ``None`` skips the waiver entirely.
+        policy: A pre-loaded policy to evaluate against, so a caller ranking *many* targets for
+            one tenant (the IXH-2.4 export pre-flight) reads the policy once instead of once per
+            target. ``None`` loads the tenant's policy.
 
     Returns:
         The :class:`QualityVerdict` for the delivery.
     """
-    policy = load_tenant_policy(tenant_id)
-    waiver = (
-        find_active_waiver(
-            tenant_id=tenant_id,
-            scope=SCOPE_EXPORT,
-            subject_key=subject_key,
-            format_key=target_key,
-        )
-        if subject_key
-        else None
+    resolved = policy if policy is not None else load_tenant_policy(tenant_id)
+    verdict = evaluate_quality(
+        policy=resolved,
+        scope=SCOPE_EXPORT,
+        format_key=target_key,
+        score=score,
+        grade=grade,
+        severity_counts=severity_counts,
+        waiver=None,
     )
+    # A waiver only ever downgrades a *blocking* verdict (:func:`evaluate_quality` ignores it
+    # otherwise), so the lookup is deferred until it can change the answer. Under the documented
+    # default policy — no floors, advisory — that means a pre-flight ranking 30-odd targets makes
+    # no waiver query at all.
+    if not verdict.blocking or not subject_key:
+        return verdict
+    waiver = find_active_waiver(
+        tenant_id=tenant_id,
+        scope=SCOPE_EXPORT,
+        subject_key=subject_key,
+        format_key=target_key,
+    )
+    if waiver is None:
+        return verdict
     return evaluate_quality(
-        policy=policy,
+        policy=resolved,
         scope=SCOPE_EXPORT,
         format_key=target_key,
         score=score,
         grade=grade,
         severity_counts=severity_counts,
         waiver=waiver,
+    )
+
+
+def verdict_response_model(verdict: QualityVerdict) -> "ImportPreflightPolicy":
+    """Adapt a :class:`QualityVerdict` into the API's policy response model.
+
+    One policy engine, one response shape: the import pre-flight (IXH-2.1/2.3) and the export
+    pre-flight (IXH-2.4) both return :class:`~app.models.ImportPreflightPolicy`, whose ``scope``
+    field names which gate the verdict belongs to. Keeping the adaptation here — rather than one
+    copy per caller — means a new field on the verdict reaches every surface at once.
+
+    The :mod:`app.models` import is local so this policy engine stays importable without the
+    (heavy) response-model module, matching how the rest of this module defers its imports.
+
+    Args:
+        verdict: The verdict to adapt.
+
+    Returns:
+        The populated :class:`~app.models.ImportPreflightPolicy`.
+    """
+    from .models import ImportPreflightPolicy, ImportPreflightPolicyFailure
+
+    return ImportPreflightPolicy(
+        verdict=verdict.verdict,
+        blocking=verdict.blocking,
+        source=verdict.source,
+        reason=verdict.reason,
+        threshold_score=verdict.threshold_score,
+        allow_override=verdict.allow_override,
+        scope=verdict.scope,
+        format_key=verdict.format_key,
+        min_grade=verdict.thresholds.min_grade,
+        block_on_severity=verdict.thresholds.block_on_severity,
+        enforcement=verdict.thresholds.enforcement,
+        failures=[
+            ImportPreflightPolicyFailure(
+                kind=failure["kind"],
+                required=failure.get("required"),
+                actual=failure.get("actual"),
+            )
+            for failure in verdict.failures
+        ],
+        override_roles=list(verdict.override_roles),
+        policy_version_id=verdict.policy_version_id,
+        policy_content_fingerprint=verdict.policy_content_fingerprint,
+        waiver_id=verdict.waiver_id,
+        waiver_expires_at=verdict.waiver_expires_at,
     )
 
 
@@ -742,6 +816,24 @@ def subject_key_for_document(raw: bytes) -> str:
     client re-deriving anything.
     """
     return hashlib.sha256(raw).hexdigest()
+
+
+def subject_key_for_export(version_record_id: str) -> str:
+    """The waiver match key for a delivery: the source revision the artifact is emitted from.
+
+    A revision id rather than a content hash, because a delivery's identity *is* its source
+    revision — the emitted bytes do not exist yet when the export pre-flight (IXH-2.4) asks, and
+    two deliveries of the same revision to the same target are the same accepted risk. The target
+    is **not** folded in: :func:`find_active_waiver` already matches ``format_key`` separately, so
+    a waiver granted for one target never silently covers another.
+
+    Args:
+        version_record_id: The source revision (``versions.id``) being exported.
+
+    Returns:
+        The subject key to record a waiver under and to match one by.
+    """
+    return version_record_id
 
 
 def find_active_waiver(

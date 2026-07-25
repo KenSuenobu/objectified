@@ -30,6 +30,8 @@ import type { EmittedValidationReport } from './exportVerify';
 import { FormatPill } from '../../../ui/catalog/FormatPill';
 import { ProtocolPill } from '../../../ui/catalog/ProtocolPill';
 import { ExportTargetGrid } from './ExportTargetGrid';
+import type { ExportTargetOrder } from './exportReadiness';
+import { useExportPreflight } from './useExportPreflight';
 import { ExportOptionsForm } from './ExportOptionsForm';
 import { VerifyWorkbench, VerdictBanner } from './VerifyWorkbench';
 import { ProjectionGraphPanel } from './ProjectionGraphPanel';
@@ -155,6 +157,11 @@ export function ExportStudio({
   );
 
   const { response, loading, error: targetsError } = useExportTargets(true, artifact, version);
+  // IXH-2.4: rank the same targets by expected outcome — source lint grade, projected fidelity,
+  // capability fit, and the tenant's export policy — so the grid leads with the best bet and shows
+  // a policy-blocked target as blocked rather than as just another card.
+  const { report: preflight, readiness } = useExportPreflight(true, artifact, version);
+  const [targetOrder, setTargetOrder] = useState<ExportTargetOrder>('readiness');
   // Drop the redundant same-format target (e.g. GraphQL→GraphQL); the "Original source" option
   // replaces it when the source's format is known.
   const cards = useMemo(
@@ -675,6 +682,10 @@ export function ExportStudio({
                 cards={cards}
                 selectedKey={selectedKey}
                 onSelect={handleSelectCard}
+                readiness={readiness}
+                preflight={preflight}
+                order={targetOrder}
+                onOrderChange={setTargetOrder}
                 heading={
                   <div className="text-center">
                     <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
