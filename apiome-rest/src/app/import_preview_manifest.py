@@ -81,6 +81,20 @@ byte-stable, and an adapter upgrade is a different snapshot.
 entity list (the cursor codec is shared with the export evidence pages). Truncation is
 *stated*: ``truncated`` is true whenever a page omits rows, and every ``total_*`` field
 reports the full-manifest count, never the page's.
+
+**Re-import delta (IXH-3.4, #5106).** When the wizard's commit would land in an
+*existing* catalog item — the commit resolves its target by slug
+(:func:`app.import_source_pipeline._resolve_import_project`), so the request carries the
+same client-computed ``project_slug`` — the response also carries an
+:class:`ImportReimportDelta`: :func:`app.import_source.canonical_diff` between the
+current revision's canonical model (re-parsed from its stored source, exactly as the
+convert flow does) and the candidate, grouped by entity family, with breaking-change
+annotation joined from :func:`app.breaking_change.classify_models` where a classifier
+grades the format. An identical re-import is an explicit **no-op** (matching
+fingerprints, empty diff) so the client can offer to skip the commit; a first-time
+import (no existing item under the slug) has ``reimport = null``. The delta is computed
+**per request, never cached** — the current revision can move between requests — from
+canonical models, never raw text.
 """
 
 from __future__ import annotations
@@ -111,10 +125,17 @@ from .export_projection import (
     encode_page_cursor,
     first_extra,
 )
+from .breaking_change import classify_models, get_breaking_change_classifier
 from .format_lint_capabilities import FormatLintCapability, capability_for_format
 from .import_preflight import run_import_preflight
-from .import_source import get_import_source, load_builtin_import_sources
-from .import_source_pipeline import ImportRunArtifacts
+from .import_source import (
+    DiffChangeKind,
+    canonical_diff,
+    canonical_fingerprint,
+    get_import_source,
+    load_builtin_import_sources,
+)
+from .import_source_pipeline import ImportRunArtifacts, _normalize_import_project_slug
 from .models import ImportPreflightCounts, ImportPreflightReport, ImportPreflightRequest
 from .projection_taxonomy import ProjectionReason, ProjectionStatus
 
@@ -133,6 +154,9 @@ __all__ = [
     "ImportPreviewManifest",
     "ImportPreviewManifestRequest",
     "ImportPreviewManifestResponse",
+    "ReimportDeltaEntry",
+    "ImportReimportDelta",
+    "build_reimport_delta",
     "build_import_preview_manifest",
     "paginate_import_preview_manifest",
     "run_import_preview_manifest",
@@ -506,6 +530,13 @@ class ImportPreviewManifestRequest(ImportPreflightRequest):
         ge=1,
         description=f"Maximum entities per page; clamped to {MAX_ENTITY_PAGE_SIZE}.",
     )
+    project_slug: Optional[str] = Field(
+        default=None,
+        description="The catalog project slug the commit would target (the wizard computes it "
+        "client-side, exactly as it will at commit time). When set and an existing catalog "
+        "item lives under it, the response carries the IXH-3.4 re-import delta; omitted or "
+        "unmatched, `reimport` is null (a first-time import).",
+    )
 
 
 class ImportPreviewManifestResponse(BaseModel):
@@ -529,6 +560,114 @@ class ImportPreviewManifestResponse(BaseModel):
         default=None,
         description="The requested manifest page; null when the candidate is not importable.",
     )
+    reimport: Optional["ImportReimportDelta"] = Field(
+        default=None,
+        description="The IXH-3.4 re-import delta against the targeted catalog item's current "
+        "revision; null for a first-time import (no existing item under the request's "
+        "`project_slug`), when no slug was sent, for non-catalog routing, or when the current "
+        "revision's source cannot be reconstructed.",
+    )
+
+
+# ===========================================================================
+# Re-import delta (IXH-3.4, #5106)
+# ===========================================================================
+
+
+class ReimportDeltaEntry(BaseModel):
+    """One identity-keyed change a re-import would make, optionally graded.
+
+    The change itself comes from :func:`app.import_source.canonical_diff` (computed over
+    canonical models, never raw text). The severity fields are joined from the format's
+    breaking-change classifier where one graded the same key; entries the classifier did
+    not grade keep them null — absence of a grade is *stated*, never presented as safety.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    entity: str = Field(description="Entity family: root/service/operation/type/channel.")
+    key: str = Field(description="The entity's stable canonical key (empty for ``root``).")
+    change: DiffChangeKind = Field(description="added / removed / changed.")
+    severity: Optional[str] = Field(
+        default=None,
+        description="Breaking-change grade for this change (safe/dangerous/breaking), when the "
+        "classifier graded this key; null when unannotated.",
+    )
+    rule_id: Optional[str] = Field(
+        default=None, description="The classifier rule that produced the grade, when graded."
+    )
+    rationale: Optional[str] = Field(
+        default=None, description="One-line justification for the grade, when graded."
+    )
+
+
+class ImportReimportDelta(BaseModel):
+    """What re-importing this candidate would change on an existing catalog item.
+
+    Computed **before** the commit, per request (never cached — the item's current
+    revision can move between requests), from the two canonical models by stable key. A
+    ``noop`` delta (identical fingerprints, empty ``entries``) tells the client the
+    commit would create an empty revision, so it can offer to skip it.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    target_item_id: str = Field(description="The existing catalog item (project id) the commit would target.")
+    target_item_name: Optional[str] = Field(
+        default=None, description="The existing item's display name."
+    )
+    target_item_slug: str = Field(description="The existing item's slug (the resolution key).")
+    current_version_record_id: Optional[str] = Field(
+        default=None,
+        description="The current revision's record id (``versions.id``) the diff was computed against.",
+    )
+    noop: bool = Field(
+        description="True when the candidate's fingerprint equals the current revision's — the "
+        "re-import would change nothing."
+    )
+    candidate_fingerprint: str = Field(
+        description="The candidate model's canonical fingerprint (same value as the pre-flight's)."
+    )
+    current_fingerprint: str = Field(
+        description="The current revision's canonical fingerprint, recomputed from its stored source."
+    )
+    entries: List[ReimportDeltaEntry] = Field(
+        default_factory=list,
+        description="Every change, sorted (entity, key, change) — empty for a no-op.",
+    )
+    counts: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Total changes per kind: added / removed / changed (zero-filled).",
+    )
+    counts_by_entity: Dict[str, Dict[str, int]] = Field(
+        default_factory=dict,
+        description="Per entity family, the added/removed/changed tallies (families with changes only).",
+    )
+    classifier: Optional[str] = Field(
+        default=None,
+        description="Identifier of the breaking-change classifier that graded the diff "
+        "(``builtin`` for the structural baseline, else the format pack's id); null when "
+        "grading was unavailable or failed — in which case NO entry carries a severity.",
+    )
+    classifier_format_pack: bool = Field(
+        default=False,
+        description="Whether a format-specific classifier pack (not the structural baseline) "
+        "graded the diff.",
+    )
+    overall_severity: Optional[str] = Field(
+        default=None,
+        description="Worst severity across the graded changes (safe/dangerous/breaking); null "
+        "when ungraded.",
+    )
+    severity_counts: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Number of graded changes at each severity (non-zero tiers only).",
+    )
+
+
+# The response references ImportReimportDelta forward (it is documented after the
+# response model); resolve the reference now that both classes exist.
+ImportPreviewManifestResponse.model_rebuild()
 
 
 # ===========================================================================
@@ -548,8 +687,15 @@ class _EntityRows:
 
 @dataclass
 class _FullManifest:
-    """The complete, unpaginated manifest a build produces (cached per content hash)."""
+    """The complete, unpaginated manifest a build produces (cached per content hash).
 
+    Carries the candidate's canonical ``model`` so the per-request re-import delta
+    (IXH-3.4) can be computed on cache hits too — the pipeline artifacts are only
+    collected on the building request. The cache is bounded
+    (:data:`PREVIEW_MANIFEST_CACHE_MAX_ENTRIES`), so the retained models are too.
+    """
+
+    model: CanonicalApi
     manifest_hash: str
     adapter: ImportAdapterReference
     counts: ImportPreflightCounts
@@ -924,6 +1070,7 @@ def build_import_preview_manifest(
     )
 
     return _FullManifest(
+        model=api,
         manifest_hash=manifest_hash,
         adapter=adapter_ref,
         counts=counts,
@@ -993,6 +1140,151 @@ def paginate_import_preview_manifest(
         page_size=limit,
         next_cursor=next_cursor,
         truncated=next_cursor is not None or start > 0,
+    )
+
+
+# ===========================================================================
+# Re-import delta build (IXH-3.4)
+# ===========================================================================
+
+
+def _load_reimport_target(tenant_id: str, project_slug: str) -> Optional[Dict[str, Any]]:
+    """Resolve the existing catalog item a commit under ``project_slug`` would reuse.
+
+    Mirrors the commit's own resolution (:func:`app.import_source_pipeline
+    ._resolve_import_project`): the slug is normalized the same way and matched against
+    the tenant's projects; only a live **non-publishable** row (a catalog item, MFI-23.1)
+    counts — a publishable Project under the slug means the commit would allocate a fresh
+    item, i.e. a first-time import.
+
+    Module-level and synchronous (the psycopg driver is synchronous, matching the policy
+    lookup already on this path) so tests can monkeypatch it with a fabricated item row.
+
+    Args:
+        tenant_id: The tenant the lookup is scoped to.
+        project_slug: The client-computed slug the commit would use.
+
+    Returns:
+        The catalog item row (with its latest revision's ``format_metadata``), or
+        ``None`` when no existing catalog item lives under the slug.
+    """
+    from .database import db
+
+    slug = _normalize_import_project_slug(project_slug, project_slug)
+    if not slug:
+        return None
+    try:
+        existing = db.get_project_by_slug(slug, tenant_id)
+        if not existing or existing.get("publishable"):
+            return None
+        item = db.get_catalog_item_by_id(str(existing["id"]), tenant_id)
+        if item is None:
+            return None
+        # Attach the current revision's record id (best-effort provenance) so the delta
+        # builder stays free of DB access.
+        item = dict(item)
+        item.setdefault(
+            "version_record_id",
+            db.get_latest_revision_id_for_project(str(existing["id"]), tenant_id),
+        )
+        return item
+    except Exception:  # pragma: no cover - degrade on DB faults, never fail the preview
+        logger.exception("re-import target lookup failed for slug %r", project_slug)
+        return None
+
+
+def build_reimport_delta(
+    candidate: CanonicalApi,
+    item: Dict[str, Any],
+) -> Optional[ImportReimportDelta]:
+    """Compute what re-importing ``candidate`` would change on catalog item ``item``.
+
+    The current revision's canonical model is re-parsed from the item's stored source
+    exactly as the convert flow does (:func:`app.catalog_conversion
+    .build_conversion_source`), then diffed against the candidate **by stable canonical
+    key** (:func:`app.import_source.canonical_diff`) — never from raw text, so a
+    re-ordered but structurally identical source is a no-op. Where the format's
+    breaking-change classifier grades the same keys
+    (:func:`app.breaking_change.classify_models`), the grades are joined onto the
+    entries; a failed or unavailable classification leaves every entry ungraded and
+    ``classifier`` null — stated, not implied safe.
+
+    Reads nothing but ``item`` and writes nothing.
+
+    Args:
+        candidate: The candidate document's normalized canonical model.
+        item: The existing catalog item row (from :func:`_load_reimport_target`).
+
+    Returns:
+        The delta, or ``None`` when the item's current source cannot be reconstructed
+        (nothing honest to diff against — the panel is skipped).
+    """
+    from .catalog_conversion import ConversionError, build_conversion_source
+
+    try:
+        source = build_conversion_source(item, source_version_id=item.get("version_record_id"))
+    except ConversionError:
+        return None
+    current = source.api
+
+    candidate_fp = canonical_fingerprint(candidate)
+    current_fp = canonical_fingerprint(current)
+    diff_result = canonical_diff(current, candidate)
+
+    # Best-effort breaking-change annotation: join the classifier's per-change grades
+    # onto the canonical entries by (change kind, stable key). `modified` is the
+    # classifier vocabulary's word for `changed`; unjoined entries stay ungraded.
+    classifier_id: Optional[str] = None
+    overall_severity: Optional[str] = None
+    severity_counts: Dict[str, int] = {}
+    grades: Dict[Tuple[str, str], Any] = {}
+    try:
+        classification = classify_models(current, candidate)
+        classifier_id = classification.classifier
+        overall_severity = classification.overall_severity.value
+        severity_counts = dict(classification.counts_by_severity)
+        for grade in classification.classifications:
+            kind = "changed" if grade.kind.value == "modified" else grade.kind.value
+            grades.setdefault((kind, grade.key), grade)
+    except Exception:  # pragma: no cover - a classifier fault must not lose the delta
+        logger.exception("breaking-change classification failed for re-import delta")
+
+    entries: List[ReimportDeltaEntry] = []
+    counts = {kind.value: 0 for kind in DiffChangeKind}
+    counts_by_entity: Dict[str, Dict[str, int]] = {}
+    for entry in diff_result.entries:
+        counts[entry.change.value] += 1
+        family = counts_by_entity.setdefault(entry.entity, {})
+        family[entry.change.value] = family.get(entry.change.value, 0) + 1
+        grade = grades.get((entry.change.value, entry.key))
+        entries.append(
+            ReimportDeltaEntry(
+                entity=entry.entity,
+                key=entry.key,
+                change=entry.change,
+                severity=grade.severity.value if grade is not None else None,
+                rule_id=grade.rule_id if grade is not None else None,
+                rationale=grade.rationale if grade is not None else None,
+            )
+        )
+
+    return ImportReimportDelta(
+        target_item_id=str(item.get("id") or ""),
+        target_item_name=item.get("name"),
+        target_item_slug=str(item.get("slug") or ""),
+        current_version_record_id=(
+            str(source.source_version_id) if source.source_version_id else None
+        ),
+        noop=candidate_fp == current_fp,
+        candidate_fingerprint=candidate_fp,
+        current_fingerprint=current_fp,
+        entries=entries,
+        counts=counts,
+        counts_by_entity=counts_by_entity,
+        classifier=classifier_id,
+        classifier_format_pack=get_breaking_change_classifier(candidate.format) is not None,
+        overall_severity=overall_severity,
+        severity_counts=severity_counts,
     )
 
 
@@ -1090,10 +1382,11 @@ async def run_import_preview_manifest(
     cache_key = _manifest_cache_key(tenant_id, content_hash, request)
     cached = _manifest_cache.get(cache_key) if content_hash else None
 
-    # The pre-flight request must not carry the pagination fields (its model forbids
-    # extras and its cache key must match a plain pre-flight of the same bytes).
+    # The pre-flight request must not carry the pagination or re-import fields (its
+    # model forbids extras and its cache key must match a plain pre-flight of the same
+    # bytes).
     preflight_request = ImportPreflightRequest(
-        **request.model_dump(exclude={"cursor", "page_size"}, exclude_none=True)
+        **request.model_dump(exclude={"cursor", "page_size", "project_slug"}, exclude_none=True)
     )
 
     if cached is not None:
@@ -1130,4 +1423,19 @@ async def run_import_preview_manifest(
     page = paginate_import_preview_manifest(
         full, cursor=request.cursor, page_size=request.page_size
     )
-    return ImportPreviewManifestResponse(ok=True, preflight=report, manifest=page)
+
+    # IXH-3.4: the re-import delta, per request and never cached — the target item's
+    # current revision can move between requests, and the manifest hash must stay a
+    # function of the candidate alone. Only a commit that would land in an existing
+    # catalog item has a delta: the request names the slug the commit will use, and the
+    # routing decision must be the non-publishable (catalog) direction.
+    reimport: Optional[ImportReimportDelta] = None
+    routing = report.routing or {}
+    if request.project_slug and routing.get("publishable") is False:
+        item = _load_reimport_target(tenant_id, request.project_slug)
+        if item is not None:
+            reimport = build_reimport_delta(full.model, item)
+
+    return ImportPreviewManifestResponse(
+        ok=True, preflight=report, manifest=page, reimport=reimport
+    )

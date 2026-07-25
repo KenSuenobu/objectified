@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.46.0",
+    "version": "1.47.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -39310,7 +39310,7 @@
           "spec-import"
         ],
         "summary": "Preview manifest for a candidate document (entity tree + coverage ledger, no write)",
-        "description": "Describe **what an import would create** before committing it (IXH-3.1). Extends the IXH-2.1 pre-flight: the same detect \u2192 parse \u2192 normalize \u2192 fingerprint \u2192 lint pipeline runs with dry-run semantics, and the response adds the canonical entity tree (services \u2192 operations, types, channels) with stable canonical keys and source locations, per-entity provenance back to the source construct, a coverage ledger that classifies source constructs as mapped / partially-mapped / unsupported-by-canonical-model / not-parsed-by-adapter (the last two are never conflated, and every not-parsed entry names its CLX-2.4 capability-registry reference), the adapter capability reference, and the routing decision (on the embedded pre-flight report). The graph reuses the CPDO-1.3 projection-manifest node/edge vocabulary, so the import graph and the conversion graph share one contract.\n\nThe manifest is deterministic and byte-stable for a fixed input, adapter version, and options (`manifest_hash` is the snapshot id), and is cursor-paginated over the entity tree for large inputs \u2014 truncation is stated in the payload (`truncated`, `total_*`), never silent. A candidate that cannot be imported is still a 200: `ok` is false, `manifest` is null, and the embedded pre-flight report carries the stable intake-taxonomy error. Nothing is persisted.",
+        "description": "Describe **what an import would create** before committing it (IXH-3.1). Extends the IXH-2.1 pre-flight: the same detect \u2192 parse \u2192 normalize \u2192 fingerprint \u2192 lint pipeline runs with dry-run semantics, and the response adds the canonical entity tree (services \u2192 operations, types, channels) with stable canonical keys and source locations, per-entity provenance back to the source construct, a coverage ledger that classifies source constructs as mapped / partially-mapped / unsupported-by-canonical-model / not-parsed-by-adapter (the last two are never conflated, and every not-parsed entry names its CLX-2.4 capability-registry reference), the adapter capability reference, and the routing decision (on the embedded pre-flight report). The graph reuses the CPDO-1.3 projection-manifest node/edge vocabulary, so the import graph and the conversion graph share one contract.\n\nThe manifest is deterministic and byte-stable for a fixed input, adapter version, and options (`manifest_hash` is the snapshot id), and is cursor-paginated over the entity tree for large inputs \u2014 truncation is stated in the payload (`truncated`, `total_*`), never silent. A candidate that cannot be imported is still a 200: `ok` is false, `manifest` is null, and the embedded pre-flight report carries the stable intake-taxonomy error. Nothing is persisted.\n\nWhen the request names the catalog `project_slug` the commit would use and an existing catalog item lives under it, the response also carries the IXH-3.4 **re-import delta**: `canonical_diff` between the current revision's canonical model and the candidate, grouped/counted by entity family, with breaking-change grades joined where the format's classifier is available, and an explicit no-op verdict (matching fingerprints) when the re-import would create an empty revision. First-time imports have `reimport = null`.",
         "operationId": "preview_import_manifest_v1_tenants__tenant_slug__import_preview_manifest_post",
         "parameters": [
           {
@@ -62732,6 +62732,16 @@
         "title": "DetectFormatResponse",
         "description": "The auto-detection verdict for a document."
       },
+      "DiffChangeKind": {
+        "type": "string",
+        "enum": [
+          "added",
+          "removed",
+          "changed"
+        ],
+        "title": "DiffChangeKind",
+        "description": "The kind of change a :class:`CanonicalDiffEntry` records."
+      },
       "DocumentationEvidence": {
         "properties": {
           "specification": {
@@ -68204,6 +68214,20 @@
             "description": "Maximum entities per page; clamped to 1000.",
             "default": 200,
             "example": 50
+          },
+          "project_slug": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for import preview manifest."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import preview manifest."
+              }
+            ],
+            "title": "Project Slug",
+            "description": "The catalog project slug the commit would target (the wizard computes it client-side, exactly as it will at commit time). When set and an existing catalog item lives under it, the response carries the IXH-3.4 re-import delta; omitted or unmatched, `reimport` is null (a first-time import)."
           }
         },
         "additionalProperties": false,
@@ -68237,6 +68261,18 @@
               }
             ],
             "description": "The requested manifest page; null when the candidate is not importable."
+          },
+          "reimport": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImportReimportDelta"
+              },
+              {
+                "type": "null",
+                "description": "Response payload for import preview manifest."
+              }
+            ],
+            "description": "The IXH-3.4 re-import delta against the targeted catalog item's current revision; null for a first-time import (no existing item under the request's `project_slug`), when no slug was sent, for non-catalog routing, or when the current revision's source cannot be reconstructed."
           }
         },
         "additionalProperties": false,
@@ -68247,6 +68283,150 @@
         ],
         "title": "ImportPreviewManifestResponse",
         "description": "The preview-manifest endpoint's response (IXH-3.1).\n\nEmbeds the full IXH-2.1 pre-flight report (detection, routing decision, counts,\nlint, policy verdict, taxonomy error) and adds the manifest. ``manifest`` is null\nexactly when the candidate is not importable (``preflight.ok`` false) \u2014 there is no\nmodel to describe, and the pre-flight's ``error`` says why."
+      },
+      "ImportReimportDelta": {
+        "properties": {
+          "target_item_id": {
+            "type": "string",
+            "title": "Target Item Id",
+            "description": "The existing catalog item (project id) the commit would target.",
+            "example": "target_01h2xcejqtf3fz5y5j0v8k9m2p"
+          },
+          "target_item_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Reimport Delta schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Reimport Delta schema."
+              }
+            ],
+            "title": "Target Item Name",
+            "description": "The existing item's display name."
+          },
+          "target_item_slug": {
+            "type": "string",
+            "title": "Target Item Slug",
+            "description": "The existing item's slug (the resolution key).",
+            "example": "example-resource"
+          },
+          "current_version_record_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Reimport Delta schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Reimport Delta schema."
+              }
+            ],
+            "title": "Current Version Record Id",
+            "description": "The current revision's record id (``versions.id``) the diff was computed against."
+          },
+          "noop": {
+            "type": "boolean",
+            "title": "Noop",
+            "description": "True when the candidate's fingerprint equals the current revision's \u2014 the re-import would change nothing.",
+            "example": false
+          },
+          "candidate_fingerprint": {
+            "type": "string",
+            "title": "Candidate Fingerprint",
+            "description": "The candidate model's canonical fingerprint (same value as the pre-flight's).",
+            "example": "a1b2c3d4e5f6789012345678901234ab"
+          },
+          "current_fingerprint": {
+            "type": "string",
+            "title": "Current Fingerprint",
+            "description": "The current revision's canonical fingerprint, recomputed from its stored source.",
+            "example": "a1b2c3d4e5f6789012345678901234ab"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ReimportDeltaEntry"
+            },
+            "type": "array",
+            "title": "Entries",
+            "description": "Every change, sorted (entity, key, change) \u2014 empty for a no-op.",
+            "maxItems": 100
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Counts",
+            "description": "Total changes per kind: added / removed / changed (zero-filled)."
+          },
+          "counts_by_entity": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Counts By Entity",
+            "description": "Per entity family, the added/removed/changed tallies (families with changes only)."
+          },
+          "classifier": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Reimport Delta schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Reimport Delta schema."
+              }
+            ],
+            "title": "Classifier",
+            "description": "Identifier of the breaking-change classifier that graded the diff (``builtin`` for the structural baseline, else the format pack's id); null when grading was unavailable or failed \u2014 in which case NO entry carries a severity."
+          },
+          "classifier_format_pack": {
+            "type": "boolean",
+            "title": "Classifier Format Pack",
+            "description": "Whether a format-specific classifier pack (not the structural baseline) graded the diff.",
+            "default": false,
+            "example": false
+          },
+          "overall_severity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Reimport Delta schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Reimport Delta schema."
+              }
+            ],
+            "title": "Overall Severity",
+            "description": "Worst severity across the graded changes (safe/dangerous/breaking); null when ungraded."
+          },
+          "severity_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Severity Counts",
+            "description": "Number of graded changes at each severity (non-zero tiers only)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "target_item_id",
+          "target_item_slug",
+          "noop",
+          "candidate_fingerprint",
+          "current_fingerprint"
+        ],
+        "title": "ImportReimportDelta",
+        "description": "What re-importing this candidate would change on an existing catalog item.\n\nComputed **before** the commit, per request (never cached \u2014 the item's current\nrevision can move between requests), from the two canonical models by stable key. A\n``noop`` delta (identical fingerprints, empty ``entries``) tells the client the\ncommit would create an empty revision, so it can offer to skip it."
       },
       "ImportResolution": {
         "properties": {
@@ -88959,6 +89139,77 @@
         ],
         "title": "RegistryHealthResponse",
         "description": "Health/ping response for the Primitives type-registry layer (#3450).\n\nReports whether the registry's storage backend \u2014 the shared\n``apiome-db`` connection backing ``apiome.primitives`` \u2014 is reachable."
+      },
+      "ReimportDeltaEntry": {
+        "properties": {
+          "entity": {
+            "type": "string",
+            "title": "Entity",
+            "description": "Entity family: root/service/operation/type/channel.",
+            "example": "example"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The entity's stable canonical key (empty for ``root``).",
+            "example": "example"
+          },
+          "change": {
+            "$ref": "#/components/schemas/DiffChangeKind",
+            "description": "added / removed / changed."
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Reimport Delta Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Reimport Delta Entry schema."
+              }
+            ],
+            "title": "Severity",
+            "description": "Breaking-change grade for this change (safe/dangerous/breaking), when the classifier graded this key; null when unannotated."
+          },
+          "rule_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Reimport Delta Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Reimport Delta Entry schema."
+              }
+            ],
+            "title": "Rule Id",
+            "description": "The classifier rule that produced the grade, when graded."
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Reimport Delta Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Reimport Delta Entry schema."
+              }
+            ],
+            "title": "Rationale",
+            "description": "One-line justification for the grade, when graded."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "entity",
+          "key",
+          "change"
+        ],
+        "title": "ReimportDeltaEntry",
+        "description": "One identity-keyed change a re-import would make, optionally graded.\n\nThe change itself comes from :func:`app.import_source.canonical_diff` (computed over\ncanonical models, never raw text). The severity fields are joined from the format's\nbreaking-change classifier where one graded the same key; entries the classifier did\nnot grade keep them null \u2014 absence of a grade is *stated*, never presented as safety."
       },
       "RelatedArtifactRef": {
         "properties": {

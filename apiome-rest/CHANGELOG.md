@@ -5,6 +5,37 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.180.0] - 2026-07-25
+
+### Added
+- **Re-import delta on the preview manifest (#5106, IXH-3.4)** — when a
+  `POST /v1/tenants/{tenant_slug}/import/preview-manifest` request names the catalog
+  `project_slug` its commit would use and an existing catalog item lives under it, the
+  response carries a `reimport` block computed **before** the commit: `canonical_diff`
+  between the current revision's canonical model (re-parsed from its stored source,
+  exactly as the convert flow does) and the candidate — by stable key, never raw text —
+  grouped and counted by entity family.
+  - An identical re-import is an explicit **no-op**: matching candidate/current
+    fingerprints (the pre-flight's own revision fingerprint), empty entries, so clients
+    can offer to skip a commit that would create an empty revision.
+  - Where the format's breaking-change classifier grades the diff, per-entry
+    `severity` / `rule_id` / `rationale` and the overall severity are joined on; a
+    failed or unavailable classification leaves every entry ungraded with
+    `classifier: null` — stated, never implied safe.
+  - First-time imports (no existing item under the slug), non-catalog routing, and an
+    unreconstructable current source all yield `reimport: null`. The delta is computed
+    per request and never cached; the manifest cache and hash are unchanged.
+
+## [1.179.0] - 2026-07-25
+
+### Added
+- **Import preview manifest API (#5103, IXH-3.1)** —
+  `POST /v1/tenants/{tenant_slug}/import/preview-manifest`: the pre-flight extended into
+  the full entity tree (services → operations, types, channels) with stable keys, source
+  locations, per-entity provenance, a coverage ledger over the shared CPDO-1.3
+  status/reason taxonomy, the adapter capability reference, and cursor pagination with
+  stated truncation. (Entry recorded retroactively — the release shipped without one.)
+
 ## [1.178.0] - 2026-07-25
 
 ### Added

@@ -105,6 +105,12 @@ export interface CatalogImportQualityStepProps {
   onBack: () => void;
   /** Abandon the import. */
   onCancel: () => void;
+  /**
+   * The catalog project slug the commit would use (the dialog's own derivation, IXH-3.4).
+   * When set, the preview panel requests the re-import delta against any existing item
+   * under that slug; a no-op re-import then offers this step's Cancel exit as "skip".
+   */
+  projectSlug?: string | null;
 }
 
 /** The grade orb: score ring, letter grade, and `score/100`, or an explicit unscored state. */
@@ -235,6 +241,7 @@ export function CatalogImportQualityStep({
   onCommit,
   onBack,
   onCancel,
+  projectSlug = null,
 }: CatalogImportQualityStepProps) {
   // One pre-flight run's outcome, tagged with the run it belongs to. Tagging (rather than a separate
   // `loading` flag set from the effect body) means "still scoring" is *derived* — the step can never
@@ -578,6 +585,8 @@ export function CatalogImportQualityStep({
             rawSourceAvailable={rawSource !== ''}
             rawLineCount={rawAllLines.length}
             onSelectSourceLine={setPreviewLine}
+            projectSlug={projectSlug}
+            onSkipCommit={onCancel}
           />
 
           {(findings.length > 0 || rawSource !== '') && (

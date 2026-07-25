@@ -1,6 +1,6 @@
 [project]
 name = "apiome-rest"
-version = "1.179.0"
+version = "1.180.0"
 description = "REST API for serving OpenAPI specifications from the Apiome database"
 readme = "README.md"
 requires-python = ">=3.11"

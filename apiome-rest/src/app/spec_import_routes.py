@@ -198,7 +198,13 @@ async def preflight_import_candidate(
         "tree for large inputs — truncation is stated in the payload (`truncated`, `total_*`), "
         "never silent. A candidate that cannot be imported is still a 200: `ok` is false, "
         "`manifest` is null, and the embedded pre-flight report carries the stable "
-        "intake-taxonomy error. Nothing is persisted."
+        "intake-taxonomy error. Nothing is persisted.\n\n"
+        "When the request names the catalog `project_slug` the commit would use and an existing "
+        "catalog item lives under it, the response also carries the IXH-3.4 **re-import delta**: "
+        "`canonical_diff` between the current revision's canonical model and the candidate, "
+        "grouped/counted by entity family, with breaking-change grades joined where the format's "
+        "classifier is available, and an explicit no-op verdict (matching fingerprints) when the "
+        "re-import would create an empty revision. First-time imports have `reimport = null`."
     ),
 )
 async def preview_import_manifest(
