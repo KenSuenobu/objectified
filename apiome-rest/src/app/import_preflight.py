@@ -578,6 +578,7 @@ async def run_import_preflight(
     tenant_id: str,
     tenant_slug: str,
     user_id: Optional[str] = None,
+    artifacts: Optional[ImportRunArtifacts] = None,
 ) -> ImportPreflightReport:
     """Score a candidate document without importing it (IXH-2.1).
 
@@ -594,6 +595,12 @@ async def run_import_preflight(
         tenant_slug: The tenant's slug, recorded on the pipeline payload.
         user_id: The requesting user, recorded on the pipeline payload. Nothing is
             written on a dry run, so it is only provenance.
+        artifacts: Optional out-parameter. When supplied, the pipeline records its
+            in-flight objects (canonical model, routing, lint, style guide) on it and the
+            **report cache is bypassed** — a cached report carries no artifacts, and a
+            caller that asks for them (the IXH-3.1 preview manifest) needs the objects
+            from a real run. The report itself is still stored, so a later plain
+            pre-flight of the same bytes hits the cache as before.
 
     Returns:
         The :class:`~app.models.ImportPreflightReport` verdict for the candidate.
@@ -611,7 +618,9 @@ async def run_import_preflight(
 
     content_hash = hashlib.sha256(raw).hexdigest()
     key = _cache_key(tenant_id, content_hash, request)
-    cached = _cache_lookup(key, tenant_id)
+    # An artifacts collector needs the objects behind the report, which only a real run
+    # produces — a cached report cannot populate it, so the serve path is skipped.
+    cached = _cache_lookup(key, tenant_id) if artifacts is None else None
     if cached is not None:
         # The lint verdict is reusable; the *policy* verdict is not. Policy is tenant state that
         # can change between two pre-flights of the same bytes — and recording a waiver is
@@ -664,7 +673,8 @@ async def run_import_preflight(
         _cache_store(key, _CacheEntry(report=report, style_guide_fingerprint=None))
         return report
 
-    artifacts = ImportRunArtifacts()
+    if artifacts is None:
+        artifacts = ImportRunArtifacts()
     payload = _preflight_payload(
         request,
         adapter_key=adapter.key,

@@ -114,6 +114,11 @@ __all__ = [
     "build_export_projection_summary",
     "reconcile_with_report",
     "paginate_evidence",
+    "encode_page_cursor",
+    "decode_page_cursor",
+    "SOURCE_LOCATION_EXTRA_KEYS",
+    "NATIVE_ID_EXTRA_KEYS",
+    "first_extra",
     "DEFAULT_EVIDENCE_PAGE_SIZE",
     "MAX_EVIDENCE_PAGE_SIZE",
     "EVIDENCE_BUILD_SOFT_BUDGET_SECONDS",
@@ -615,8 +620,12 @@ def _target_locator_for(
 
 # Extras keys, in priority order, a normalizer may use for a construct's source
 # location and native id. Read best-effort — absent keys leave the field ``None``.
-_SOURCE_LOCATION_KEYS = ("source_location", "source_range", "source_span", "location", "line")
-_NATIVE_ID_KEYS = ("native_id", "source_id", "id")
+# Public (no underscore alias needed): the IXH-3.1 import preview manifest reads the same
+# keys so both manifests recover provenance identically (CPDO-1.3 shared contract).
+SOURCE_LOCATION_EXTRA_KEYS = ("source_location", "source_range", "source_span", "location", "line")
+NATIVE_ID_EXTRA_KEYS = ("native_id", "source_id", "id")
+_SOURCE_LOCATION_KEYS = SOURCE_LOCATION_EXTRA_KEYS
+_NATIVE_ID_KEYS = NATIVE_ID_EXTRA_KEYS
 
 
 class _ConstructInfo:
@@ -630,8 +639,13 @@ class _ConstructInfo:
         self.extras = extras
 
 
-def _first_extra(extras: Dict[str, Any], keys: tuple) -> Optional[str]:
-    """Return the first present, stringifiable extras value among ``keys``, else ``None``."""
+def first_extra(extras: Dict[str, Any], keys: tuple) -> Optional[str]:
+    """Return the first present, stringifiable extras value among ``keys``, else ``None``.
+
+    Public: the IXH-3.1 import preview manifest recovers native evidence with the same
+    accessor over the same key tuples, so provenance extraction cannot drift between the
+    two manifest surfaces.
+    """
     for key in keys:
         value = extras.get(key)
         if value is not None and not isinstance(value, (dict, list)):
@@ -664,9 +678,9 @@ def _native_evidence(info: Optional[_ConstructInfo], construct_key: str) -> Nati
     if info is None:
         return NativeEvidence(native_name=construct_key)
     return NativeEvidence(
-        native_id=_first_extra(info.extras, _NATIVE_ID_KEYS),
+        native_id=first_extra(info.extras, _NATIVE_ID_KEYS),
         native_name=info.name or construct_key,
-        source_location=_first_extra(info.extras, _SOURCE_LOCATION_KEYS),
+        source_location=first_extra(info.extras, _SOURCE_LOCATION_KEYS),
     )
 
 
@@ -1027,6 +1041,12 @@ def _decode_cursor(cursor: str) -> int:
     if index < 0:
         raise ValueError(f"malformed evidence cursor: {cursor!r}")
     return index
+
+
+#: Public aliases of the cursor codec, shared with the IXH-3.1 import preview manifest so
+#: both manifest surfaces speak one cursor format (part of the CPDO-1.3 shared contract).
+encode_page_cursor = _encode_cursor
+decode_page_cursor = _decode_cursor
 
 
 def paginate_evidence(
