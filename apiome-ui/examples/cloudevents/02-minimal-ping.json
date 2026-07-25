@@ -1,0 +1,7 @@
+{
+  "_comment": "CloudEvents 1.0 minimal example — the smallest canonical envelope: just the four REQUIRED context attributes (specversion, id, type, source) with no optional attributes and no data payload.",
+  "specversion": "1.0",
+  "id": "0001",
+  "type": "com.example.ping",
+  "source": "/system/health"
+}

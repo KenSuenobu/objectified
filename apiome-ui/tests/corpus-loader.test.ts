@@ -95,7 +95,29 @@ describe('corpus manifest loader', () => {
 
   it('composes filters with AND semantics', () => {
     const entries = loadCorpus({ format: 'avro', feature: 'enum' });
-    expect(entries.map((entry) => entry.path)).toEqual(['avro/01-user-record.avsc']);
+    expect(entries.map((entry) => entry.path)).toContain('avro/01-user-record.avsc');
+    for (const entry of entries) {
+      expect(entry.format).toBe('avro');
+      expect(entry.features).toContain('enum');
+    }
+  });
+
+  it('filters by ladder rung', () => {
+    const entries = loadCorpus({ rung: 'minimal' });
+    expect(entries.length).toBeGreaterThan(0);
+    for (const entry of entries) {
+      expect(entry.rung).toBe('minimal');
+    }
+  });
+
+  it('declares a rung on every valid entry and none elsewhere', () => {
+    for (const entry of loadCorpus()) {
+      if (entry.validity_class === 'valid') {
+        expect(entry.rung).toBeDefined();
+      } else {
+        expect(entry.rung).toBeUndefined();
+      }
+    }
   });
 
   it('returns empty for unknown filter values', () => {

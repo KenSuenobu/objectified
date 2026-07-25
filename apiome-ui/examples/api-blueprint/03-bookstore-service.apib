@@ -1,0 +1,53 @@
+FORMAT: 1A
+HOST: https://api.example.com
+
+# Bookstore API
+
+A typical everyday API Blueprint service: a books collection with create and
+list actions, an item resource with URI parameters, and MSON data structures
+for the request and response payloads.
+
+## Books Collection [/books]
+
+### List all books [GET]
+
++ Response 200 (application/json)
+    + Attributes (array[Book])
+
+### Add a book [POST]
+
++ Request (application/json)
+    + Attributes (NewBook)
+
++ Response 201 (application/json)
+    + Attributes (Book)
+
+## Book [/books/{id}]
+
++ Parameters
+    + id (string, required) - Unique book identifier.
+
+### Get a book [GET]
+
++ Response 200 (application/json)
+    + Attributes (Book)
+
++ Response 404
+
+### Remove a book [DELETE]
+
++ Response 204
+
+# Data Structures
+
+## Book (object)
++ id: `b-42` (string, required) - Unique book identifier.
++ title: `The Left Hand of Darkness` (string, required) - Book title.
++ author: `Ursula K. Le Guin` (string, required) - Author name.
++ price: 9.99 (number, required) - Retail price.
++ inStock: true (boolean) - Whether the book is currently stocked.
+
+## NewBook (object)
++ title: `The Left Hand of Darkness` (string, required) - Book title.
++ author: `Ursula K. Le Guin` (string, required) - Author name.
++ price: 9.99 (number, required) - Retail price.

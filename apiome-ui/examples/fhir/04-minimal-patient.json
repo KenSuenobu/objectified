@@ -1,0 +1,5 @@
+{
+  "_comment": "FHIR R4 example — minimal: the smallest canonical FHIR document, a bare Patient resource instance. `resourceType` alone identifies FHIR JSON; every other element of a resource is optional.",
+  "resourceType": "Patient",
+  "id": "example-minimal"
+}

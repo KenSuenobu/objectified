@@ -1,0 +1,70 @@
+// Connect-RPC example — a typical everyday task-management service.
+//
+// Connect-RPC reuses Protobuf (proto3) contracts: this TaskService is what a
+// small production Connect deployment usually looks like — unary CRUD-style
+// methods with paginated listing, request/response message pairs, and an enum
+// for lifecycle state. The same .proto serves Connect, gRPC, and gRPC-Web.
+syntax = "proto3";
+
+package tasks.v1;
+
+option go_package = "example.com/gen/tasks/v1;tasksv1";
+
+// Manages a user's tasks.
+service TaskService {
+  // Create a new task.
+  rpc CreateTask(CreateTaskRequest) returns (Task);
+  // Fetch one task by id.
+  rpc GetTask(GetTaskRequest) returns (Task);
+  // List tasks with pagination.
+  rpc ListTasks(ListTasksRequest) returns (ListTasksResponse);
+  // Mark a task as done.
+  rpc CompleteTask(CompleteTaskRequest) returns (Task);
+}
+
+// A unit of work tracked by the service.
+message Task {
+  // Unique task identifier.
+  string id = 1;
+  // Short human-readable title.
+  string title = 2;
+  // Longer free-form description.
+  string description = 3;
+  // Current lifecycle state.
+  TaskState state = 4;
+  // Labels for filtering.
+  repeated string labels = 5;
+}
+
+// Lifecycle state of a task.
+enum TaskState {
+  TASK_STATE_UNSPECIFIED = 0;
+  TASK_STATE_OPEN = 1;
+  TASK_STATE_DONE = 2;
+}
+
+message CreateTaskRequest {
+  string title = 1;
+  string description = 2;
+  repeated string labels = 3;
+}
+
+message GetTaskRequest {
+  string id = 1;
+}
+
+message ListTasksRequest {
+  // Only return tasks in this state; unspecified means all.
+  TaskState state = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListTasksResponse {
+  repeated Task tasks = 1;
+  string next_page_token = 2;
+}
+
+message CompleteTaskRequest {
+  string id = 1;
+}

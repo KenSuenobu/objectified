@@ -1,0 +1,38 @@
+// Connect-RPC multi-file set (root) — the payment service entry point.
+//
+// Imports payment_types.proto from the same set: uploading both files
+// together lets the Connect-RPC importer resolve the sibling import, which a
+// single-file upload cannot.
+syntax = "proto3";
+
+package payments.v1;
+
+import "payment_types.proto";
+
+option go_package = "example.com/gen/payments/v1;paymentsv1";
+
+// Initiates and tracks payments.
+service PaymentService {
+  // Start a new payment.
+  rpc CreatePayment(CreatePaymentRequest) returns (Payment);
+  // Fetch one payment by id.
+  rpc GetPayment(GetPaymentRequest) returns (Payment);
+  // Server streaming: follow a payment's state changes until settled.
+  rpc WatchPayment(GetPaymentRequest) returns (stream Payment);
+}
+
+message CreatePaymentRequest {
+  // Account the money leaves.
+  string payer_account = 1;
+  // Account the money arrives in.
+  string payee_account = 2;
+  // Amount to transfer, from the shared types file.
+  Money amount = 3;
+  // Client idempotency key.
+  string idempotency_key = 4;
+}
+
+message GetPaymentRequest {
+  // Identifier of the payment to fetch.
+  string id = 1;
+}

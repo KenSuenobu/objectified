@@ -1,6 +1,4 @@
-"""
-Schema demonstrating various scalar types in GraphQL
-"""
+# Schema demonstrating various scalar types in GraphQL
 
 "Custom scalar for date/time"
 scalar DateTime

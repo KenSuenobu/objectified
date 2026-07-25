@@ -1,0 +1,31 @@
+-- ASN.1 example — composition: IMPORTS and type reuse.
+--
+-- Demonstrates the module composition machinery: an EXPORTS clause, an
+-- IMPORTS … FROM clause pulling shared types out of another module by name,
+-- and local definitions that reuse both the imported types and each other.
+OrderModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+  EXPORTS Order, OrderStatus;
+
+  IMPORTS
+    Money, CurrencyCode FROM CommonTypesModule
+    PartyIdentifier FROM PartyModule;
+
+  OrderStatus ::= ENUMERATED { pending(0), confirmed(1), shipped(2), cancelled(3) }
+
+  OrderLine ::= SEQUENCE {
+    sku        UTF8String,
+    quantity   INTEGER,
+    unitPrice  Money
+  }
+
+  Order ::= SEQUENCE {
+    orderId    UTF8String,
+    buyer      PartyIdentifier,
+    currency   CurrencyCode,
+    status     OrderStatus DEFAULT pending,
+    lines      SEQUENCE OF OrderLine,
+    total      Money OPTIONAL
+  }
+
+END

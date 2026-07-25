@@ -1,0 +1,12 @@
+-- ASN.1 example — the smallest canonical module.
+--
+-- A module framed by `DEFINITIONS ::= BEGIN … END` containing a single
+-- SEQUENCE with one member. The SEQUENCE becomes one catalog class with
+-- one property.
+MinimalModule DEFINITIONS ::= BEGIN
+
+  Ping ::= SEQUENCE {
+    message  UTF8String
+  }
+
+END

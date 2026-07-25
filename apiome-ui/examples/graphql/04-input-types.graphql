@@ -1,6 +1,4 @@
-"""
-Schema demonstrating input types for mutations
-"""
+# Schema demonstrating input types for mutations
 
 """
 Input for creating a new user

@@ -1,0 +1,53 @@
+# AsyncAPI 3.0 multi-file example — schemas member.
+#
+# Payload schemas referenced from messages.yaml via `./schemas.yaml#/<Name>`
+# cross-file $refs; the leaf of the set's root -> messages -> schemas ref chain.
+PaymentAuthorizedPayload:
+  type: object
+  description: Details of an authorized payment.
+  required:
+    - paymentId
+    - orderId
+    - amount
+    - authorizedAt
+  properties:
+    paymentId:
+      type: string
+      format: uuid
+      description: Unique payment identifier.
+    orderId:
+      type: string
+      format: uuid
+      description: Order the payment belongs to.
+    amount:
+      type: number
+      format: double
+      description: Authorized amount in the payment currency.
+    currency:
+      type: string
+      description: ISO 4217 currency code.
+      default: USD
+    authorizedAt:
+      type: string
+      format: date-time
+      description: When the processor authorized the payment.
+PaymentCapturedPayload:
+  type: object
+  description: Details of a captured payment.
+  required:
+    - paymentId
+    - capturedAmount
+    - capturedAt
+  properties:
+    paymentId:
+      type: string
+      format: uuid
+      description: The payment that was captured.
+    capturedAmount:
+      type: number
+      format: double
+      description: Amount actually captured.
+    capturedAt:
+      type: string
+      format: date-time
+      description: When the capture settled.

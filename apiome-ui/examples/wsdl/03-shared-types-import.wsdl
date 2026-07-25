@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WSDL 1.1 composition example: type reuse across namespaces.
+
+  The wsdl:types section holds two xsd:schema blocks. The common schema
+  defines shared Money and AuditInfo types; the service schema pulls in
+  that namespace with xsd:import and reuses the shared types in its own
+  request and response shapes. Both operations also reuse the same fault message,
+  showing message-level reuse inside one portType.
+-->
+<wsdl:definitions
+    name="QuoteService"
+    targetNamespace="http://example.com/quotes"
+    xmlns:tns="http://example.com/quotes"
+    xmlns:common="http://example.com/common"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://example.com/common" elementFormDefault="qualified">
+      <xsd:complexType name="Money">
+        <xsd:sequence>
+          <xsd:element name="amount" type="xsd:decimal"/>
+          <xsd:element name="currency" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="AuditInfo">
+        <xsd:sequence>
+          <xsd:element name="requestedBy" type="xsd:string"/>
+          <xsd:element name="requestedAt" type="xsd:dateTime"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+
+    <xsd:schema targetNamespace="http://example.com/quotes" elementFormDefault="qualified"
+                xmlns:common="http://example.com/common">
+      <xsd:import namespace="http://example.com/common"/>
+      <xsd:complexType name="QuoteRequest">
+        <xsd:sequence>
+          <xsd:element name="productCode" type="xsd:string"/>
+          <xsd:element name="quantity" type="xsd:positiveInteger"/>
+          <xsd:element name="audit" type="common:AuditInfo"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="QuoteResponse">
+        <xsd:sequence>
+          <xsd:element name="quoteId" type="xsd:string"/>
+          <xsd:element name="price" type="common:Money"/>
+          <xsd:element name="validUntil" type="xsd:date"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="AcceptQuoteRequest">
+        <xsd:sequence>
+          <xsd:element name="quoteId" type="xsd:string"/>
+          <xsd:element name="audit" type="common:AuditInfo"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="AcceptQuoteResponse">
+        <xsd:sequence>
+          <xsd:element name="orderId" type="xsd:string"/>
+          <xsd:element name="charged" type="common:Money"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="QuoteFault">
+        <xsd:sequence>
+          <xsd:element name="code" type="xsd:string"/>
+          <xsd:element name="detail" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="QuoteRequest" type="tns:QuoteRequest"
+                   xmlns:tns="http://example.com/quotes"/>
+      <xsd:element name="QuoteResponse" type="tns:QuoteResponse"
+                   xmlns:tns="http://example.com/quotes"/>
+      <xsd:element name="AcceptQuoteRequest" type="tns:AcceptQuoteRequest"
+                   xmlns:tns="http://example.com/quotes"/>
+      <xsd:element name="AcceptQuoteResponse" type="tns:AcceptQuoteResponse"
+                   xmlns:tns="http://example.com/quotes"/>
+      <xsd:element name="QuoteFault" type="tns:QuoteFault"
+                   xmlns:tns="http://example.com/quotes"/>
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="RequestQuoteInput">
+    <wsdl:part name="parameters" element="tns:QuoteRequest"/>
+  </wsdl:message>
+  <wsdl:message name="RequestQuoteOutput">
+    <wsdl:part name="parameters" element="tns:QuoteResponse"/>
+  </wsdl:message>
+  <wsdl:message name="AcceptQuoteInput">
+    <wsdl:part name="parameters" element="tns:AcceptQuoteRequest"/>
+  </wsdl:message>
+  <wsdl:message name="AcceptQuoteOutput">
+    <wsdl:part name="parameters" element="tns:AcceptQuoteResponse"/>
+  </wsdl:message>
+  <wsdl:message name="QuoteFaultMessage">
+    <wsdl:part name="fault" element="tns:QuoteFault"/>
+  </wsdl:message>
+
+  <wsdl:portType name="QuotePort">
+    <wsdl:operation name="RequestQuote">
+      <wsdl:input message="tns:RequestQuoteInput"/>
+      <wsdl:output message="tns:RequestQuoteOutput"/>
+      <wsdl:fault name="quoteFault" message="tns:QuoteFaultMessage"/>
+    </wsdl:operation>
+    <wsdl:operation name="AcceptQuote">
+      <wsdl:input message="tns:AcceptQuoteInput"/>
+      <wsdl:output message="tns:AcceptQuoteOutput"/>
+      <wsdl:fault name="quoteFault" message="tns:QuoteFaultMessage"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="QuoteBinding" type="tns:QuotePort">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="RequestQuote">
+      <soap:operation soapAction="http://example.com/quotes/RequestQuote"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+      <wsdl:fault name="quoteFault"><soap:fault name="quoteFault" use="literal"/></wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="AcceptQuote">
+      <soap:operation soapAction="http://example.com/quotes/AcceptQuote"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+      <wsdl:fault name="quoteFault"><soap:fault name="quoteFault" use="literal"/></wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="QuoteService">
+    <wsdl:port name="QuotePort" binding="tns:QuoteBinding">
+      <soap:address location="https://api.example.com/soap/quotes"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

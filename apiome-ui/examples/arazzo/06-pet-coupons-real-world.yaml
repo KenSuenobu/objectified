@@ -1,0 +1,78 @@
+# Real-world shaped Arazzo workflow: a hand-authored reconstruction of the shape of
+# the OpenAPI Initiative's well-known "pet coupons" Arazzo sample (find an available
+# pet in the Swagger Petstore, look up an applicable coupon, place a discounted
+# order). No third-party text is copied; spec-shaped keys (workflowId, stepId,
+# successCriteria, runtime expressions) are used throughout.
+arazzo: 1.0.1
+info:
+  title: Petstore Coupon Ordering
+  version: 1.0.0
+  description: >
+    Find an available pet, look up an applicable coupon, and place a discounted
+    order, in the style of the OAI pet-coupons Arazzo sample.
+
+sourceDescriptions:
+  - name: petStoreApi
+    type: openapi
+    url: https://example.com/openapi/petstore.json
+
+workflows:
+  - workflowId: place-discounted-order
+    summary: Find a pet and place a discounted order
+    description: >
+      Searches for pets by status, retrieves a coupon for the selected pet,
+      and places an order that applies the coupon.
+    inputs:
+      type: object
+      properties:
+        petStatus:
+          type: string
+          description: Availability status to search for (e.g. available)
+        couponCode:
+          type: string
+          description: Promotional coupon code supplied by the shopper
+        quantity:
+          type: integer
+          description: How many of the selected pet to order
+    steps:
+      - stepId: find-pet
+        description: Search the store for pets matching the requested status
+        operationId: findPetsByStatus
+        parameters:
+          - name: status
+            in: query
+            value: $inputs.petStatus
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          petId: $response.body#/0/id
+
+      - stepId: find-coupon
+        description: Look up a coupon applicable to the selected pet
+        operationId: getPetCoupons
+        parameters:
+          - name: petId
+            in: path
+            value: $steps.find-pet.outputs.petId
+          - name: code
+            in: query
+            value: $inputs.couponCode
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          couponId: $response.body#/id
+
+      - stepId: place-order
+        description: Place the order with the coupon applied
+        operationId: placeOrder
+        requestBody:
+          contentType: application/json
+          payload:
+            petId: $steps.find-pet.outputs.petId
+            couponId: $steps.find-coupon.outputs.couponId
+            quantity: $inputs.quantity
+            status: placed
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          orderId: $response.body#/id

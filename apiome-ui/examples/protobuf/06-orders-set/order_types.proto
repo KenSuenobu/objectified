@@ -1,0 +1,37 @@
+// Protobuf multi-file set (member) — shared order domain types.
+//
+// Imported by order_service.proto in the same set; demonstrates how a
+// fileset upload lets buf resolve imports between sibling .proto files.
+syntax = "proto3";
+
+package example.orders.v1;
+
+option go_package = "example.com/orders/v1;ordersv1";
+
+// A customer order.
+message Order {
+  // Unique order identifier.
+  string id = 1;
+  // The purchasing customer.
+  string customer_id = 2;
+  // Lines making up the order.
+  repeated OrderLine lines = 3;
+  // Current lifecycle status.
+  OrderStatus status = 4;
+}
+
+// One line item of an order.
+message OrderLine {
+  string sku = 1;
+  uint32 quantity = 2;
+  // Unit price in minor currency units.
+  int64 unit_price_cents = 3;
+}
+
+// Lifecycle status of an order.
+enum OrderStatus {
+  ORDER_STATUS_UNSPECIFIED = 0;
+  ORDER_STATUS_PENDING = 1;
+  ORDER_STATUS_SHIPPED = 2;
+  ORDER_STATUS_CANCELLED = 3;
+}

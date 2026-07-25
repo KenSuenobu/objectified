@@ -1,0 +1,37 @@
+// FlatBuffers schema example — a typical sensor telemetry schema.
+//
+// An everyday data-schema surface: an enum of units, a fixed-layout struct
+// for coordinates, and tables composed into a root batch record.
+namespace example.telemetry;
+
+enum Unit : byte {
+  Celsius = 0,
+  Pascal = 1,
+  Lux = 2,
+  Volt = 3,
+}
+
+struct GeoPoint {
+  lat: double;
+  lon: double;
+}
+
+table Sensor {
+  id: string;
+  unit: Unit;
+  location: GeoPoint;
+}
+
+table Reading {
+  sensorId: string;
+  timestampMs: long;
+  value: double;
+  unit: Unit;
+}
+
+table Batch {
+  sensor: Sensor;
+  readings: [Reading];
+}
+
+root_type Batch;

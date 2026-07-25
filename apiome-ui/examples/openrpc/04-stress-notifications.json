@@ -1,0 +1,96 @@
+{
+  "_comment": "OpenRPC stress example — the spec's less common grammar corners at once: a notification-style method with no result, by-name paramStructure, a deprecated method, method-level errors and tags, externalDocs, servers with runtime variables, paired examples, and oneOf/enum schema shapes.",
+  "openrpc": "1.3.2",
+  "info": {
+    "title": "Telemetry Ingest API",
+    "version": "3.4.1",
+    "description": "JSON-RPC telemetry service exercising the wider OpenRPC grammar.",
+    "termsOfService": "https://example.com/terms",
+    "contact": { "name": "Platform Team", "email": "platform@example.com" },
+    "license": { "name": "Apache 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+  },
+  "externalDocs": {
+    "description": "Ingest pipeline handbook.",
+    "url": "https://docs.example.com/telemetry"
+  },
+  "servers": [
+    {
+      "name": "regional",
+      "url": "https://{region}.rpc.example.com/telemetry",
+      "description": "Region-scoped ingest endpoint.",
+      "variables": {
+        "region": { "default": "eu-west", "enum": ["eu-west", "us-east", "ap-south"] }
+      }
+    }
+  ],
+  "methods": [
+    {
+      "name": "emitReading",
+      "summary": "Fire-and-forget sensor reading (notification: no result).",
+      "paramStructure": "by-name",
+      "params": [
+        { "name": "sensorId", "required": true, "schema": { "type": "string" } },
+        {
+          "name": "reading",
+          "required": true,
+          "schema": {
+            "oneOf": [
+              { "type": "number", "description": "Scalar reading." },
+              {
+                "type": "object",
+                "required": ["value", "unit"],
+                "properties": {
+                  "value": { "type": "number" },
+                  "unit": { "type": "string", "enum": ["celsius", "pascal", "lux"] }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "queryReadings",
+      "summary": "Query stored readings for a sensor.",
+      "paramStructure": "either",
+      "tags": [ { "name": "query" } ],
+      "params": [
+        { "name": "sensorId", "required": true, "schema": { "type": "string" } },
+        { "name": "since", "schema": { "type": "string", "format": "date-time" } },
+        { "name": "limit", "schema": { "type": "integer", "default": 100, "maximum": 1000 } }
+      ],
+      "result": {
+        "name": "readings",
+        "schema": {
+          "type": "array",
+          "items": { "type": "number" }
+        }
+      },
+      "errors": [
+        { "code": -32050, "message": "Sensor unknown" },
+        { "code": -32051, "message": "Window too large", "data": { "type": "object" } }
+      ],
+      "examples": [
+        {
+          "name": "lastHour",
+          "params": [
+            { "name": "sensorId", "value": "s-17" },
+            { "name": "limit", "value": 3 }
+          ],
+          "result": { "name": "readings", "value": [20.1, 20.4, 20.2] }
+        }
+      ]
+    },
+    {
+      "name": "flushBuffer",
+      "summary": "Deprecated synchronous flush.",
+      "deprecated": true,
+      "tags": [ { "name": "admin" } ],
+      "params": [],
+      "result": {
+        "name": "flushed",
+        "schema": { "type": "boolean" }
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+// Connect-RPC multi-file set (member) — shared payment domain types.
+//
+// Imported by payment_service.proto in the same set; a fileset upload lets
+// the Connect-RPC importer resolve imports between sibling .proto files.
+syntax = "proto3";
+
+package payments.v1;
+
+option go_package = "example.com/gen/payments/v1;paymentsv1";
+
+// An amount of money in a specific currency.
+message Money {
+  // ISO 4217 currency code.
+  string currency_code = 1;
+  // Amount in minor currency units (e.g. cents).
+  int64 minor_units = 2;
+}
+
+// A payment moving money from a payer to a payee.
+message Payment {
+  // Unique payment identifier.
+  string id = 1;
+  // Account the money leaves.
+  string payer_account = 2;
+  // Account the money arrives in.
+  string payee_account = 3;
+  // Amount transferred.
+  Money amount = 4;
+  // Current processing state.
+  PaymentState state = 5;
+}
+
+// Processing state of a payment.
+enum PaymentState {
+  PAYMENT_STATE_UNSPECIFIED = 0;
+  PAYMENT_STATE_PENDING = 1;
+  PAYMENT_STATE_SETTLED = 2;
+  PAYMENT_STATE_FAILED = 3;
+}

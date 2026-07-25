@@ -13,8 +13,9 @@ from app.smithy_normalizer import SmithyNormalizer
 from app.smithy_parser import is_smithy, parse_smithy
 
 # Fixtures come from the corpus manifest (IXH-1.1, #5087), selected by tag
-# rather than hard-coded path.
-[_WEATHER_ENTRY] = load_corpus(format="smithy", feature="service")
+# rather than hard-coded path. Entries are path-sorted, so the first match
+# stays stable as the corpus grows (IXH-1.2).
+_WEATHER_ENTRY = load_corpus(format="smithy", feature="service")[0]
 _WEATHER_SERVICE = _WEATHER_ENTRY.read_text()
 
 

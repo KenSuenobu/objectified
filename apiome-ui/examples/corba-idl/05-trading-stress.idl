@@ -1,0 +1,71 @@
+// CORBA IDL (OMG IDL) example — stress: oneway operations, out/inout parameter
+// directions, interface attributes, char/wstring/octet/any types, nested
+// sequences, and multi-exception raises clauses.
+module Trading {
+
+  typedef sequence<sequence<double>> Matrix;
+  typedef sequence<octet> Bytes;
+
+  enum Side {
+    BUY,
+    SELL
+  };
+
+  enum OrderState {
+    NEW,
+    PARTIAL,
+    FILLED,
+    CANCELLED,
+    REJECTED,
+    EXPIRED
+  };
+
+  struct Quote {
+    string symbol;
+    double bid;
+    double ask;
+    long depth;
+  };
+
+  struct Fill {
+    string orderId;
+    double price;
+    long quantity;
+    char venueCode;
+    wstring venueName;
+  };
+
+  exception Halted {
+    string symbol;
+  };
+
+  exception Throttled {
+    long retryAfterMillis;
+  };
+
+  exception UnknownSymbol {
+    string symbol;
+  };
+
+  interface MarketData {
+    attribute string sessionName;
+
+    Quote snapshot(in string symbol) raises (UnknownSymbol, Halted);
+
+    Matrix history(in string symbol, in long bars) raises (UnknownSymbol);
+
+    void subscribe(in string symbol, out Quote initial)
+      raises (UnknownSymbol, Throttled);
+
+    oneway void heartbeat(in long sequenceNumber);
+  };
+
+  interface OrderEntry {
+    string place(in string symbol, in Side side, in long quantity, inout double limitPrice)
+      raises (Halted, Throttled, UnknownSymbol);
+
+    void cancel(in string orderId);
+
+    any status(in string orderId);
+  };
+};

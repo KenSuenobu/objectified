@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!--
+  XML-RPC composition example — system.multicall.
+
+  XML-RPC has no refs or includes; its composition idiom is `system.multicall`,
+  which boxes several calls into one request. Each element of the single array
+  param is a struct reusing the call shape itself: a `methodName` string plus a
+  nested `params` array. Two inventory calls are composed here.
+-->
+<methodCall>
+  <methodName>system.multicall</methodName>
+  <params>
+    <param>
+      <value>
+        <array>
+          <data>
+            <value>
+              <struct>
+                <member>
+                  <name>methodName</name>
+                  <value><string>inventory.reserveStock</string></value>
+                </member>
+                <member>
+                  <name>params</name>
+                  <value>
+                    <array>
+                      <data>
+                        <value><string>WIDGET-001</string></value>
+                        <value><int>2</int></value>
+                      </data>
+                    </array>
+                  </value>
+                </member>
+              </struct>
+            </value>
+            <value>
+              <struct>
+                <member>
+                  <name>methodName</name>
+                  <value><string>inventory.releaseStock</string></value>
+                </member>
+                <member>
+                  <name>params</name>
+                  <value>
+                    <array>
+                      <data>
+                        <value><string>GADGET-007</string></value>
+                        <value><int>1</int></value>
+                      </data>
+                    </array>
+                  </value>
+                </member>
+              </struct>
+            </value>
+          </data>
+        </array>
+      </value>
+    </param>
+  </params>
+</methodCall>

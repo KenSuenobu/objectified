@@ -1,0 +1,51 @@
+// CORBA IDL (OMG IDL) example — composition: nested modules, typedef chains,
+// and data shapes reused across several interfaces.
+//
+// `Commerce` nests `Catalog`, `Ordering`, and `Search` sub-modules; typedefs
+// build on each other (Sku -> SkuList, Product -> ProductList) and the same
+// structs and exceptions are shared by more than one interface.
+module Commerce {
+
+  module Catalog {
+    typedef string Sku;
+    typedef sequence<Sku> SkuList;
+
+    struct Product {
+      Sku sku;
+      string name;
+      double price;
+    };
+
+    typedef sequence<Product> ProductList;
+  };
+
+  module Ordering {
+    struct OrderLine {
+      Sku sku;
+      long quantity;
+    };
+
+    typedef sequence<OrderLine> OrderLineList;
+
+    struct Order {
+      string id;
+      OrderLineList lines;
+    };
+
+    exception OutOfStock {
+      Sku sku;
+    };
+
+    interface Orders {
+      Order place(in OrderLineList lines) raises (OutOfStock);
+      Order getOrder(in string id);
+    };
+  };
+
+  module Search {
+    interface Finder {
+      ProductList byName(in string query);
+      SkuList allSkus();
+    };
+  };
+};

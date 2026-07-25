@@ -1,0 +1,24 @@
+{
+  "_comment": "CloudEvents 1.0 real-world example — hand-authored faithful reconstruction of the shape of an Azure Event Grid Storage BlobCreated event (CloudEvents schema): resource-path source, blob-path subject, and the storage-diagnostics style data payload; no third-party text copied.",
+  "specversion": "1.0",
+  "id": "9aeb0fdf-c01e-0131-0922-9eb54906e209",
+  "type": "Microsoft.Storage.BlobCreated",
+  "source": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/demo-rg/providers/Microsoft.Storage/storageAccounts/demoaccount",
+  "subject": "/blobServices/default/containers/uploads/blobs/report.pdf",
+  "time": "2026-06-18T20:18:27.9106572Z",
+  "datacontenttype": "application/json",
+  "data": {
+    "api": "PutBlob",
+    "clientRequestId": "6d79dbfb-0e37-4fc4-981f-442c9ca65760",
+    "requestId": "831e1650-001e-001b-66ab-eeb76e000000",
+    "eTag": "0x8D4BCC2E4835CD0",
+    "contentType": "application/pdf",
+    "contentLength": 524288,
+    "blobType": "BlockBlob",
+    "url": "https://demoaccount.blob.core.windows.net/uploads/report.pdf",
+    "sequencer": "00000000000004420000000000028963",
+    "storageDiagnostics": {
+      "batchId": "b68529f3-68cd-4744-baa4-3c0498ec19f0"
+    }
+  }
+}

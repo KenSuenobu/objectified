@@ -1,0 +1,72 @@
+{
+  "info": {
+    "_postman_id": "b1a2c3d4-0000-4000-8000-000000000003",
+    "name": "Orders API",
+    "description": "Typical everyday Postman Collection v2.1 example: CRUD requests for an orders service with headers, JSON request bodies, a collection variable for the base URL, and a path variable on the item requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://api.example.com" }
+  ],
+  "item": [
+    {
+      "name": "List orders",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{baseUrl}}/orders?status=placed",
+          "host": ["{{baseUrl}}"],
+          "path": ["orders"],
+          "query": [{ "key": "status", "value": "placed" }]
+        },
+        "description": "List orders, optionally filtered by status."
+      },
+      "response": []
+    },
+    {
+      "name": "Place order",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"c-77\",\n  \"items\": [\n    { \"sku\": \"SKU-1\", \"quantity\": 2 }\n  ]\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] },
+        "description": "Place a new order."
+      },
+      "response": []
+    },
+    {
+      "name": "Get order",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{baseUrl}}/orders/:orderId",
+          "host": ["{{baseUrl}}"],
+          "path": ["orders", ":orderId"],
+          "variable": [{ "key": "orderId", "value": "o-1001" }]
+        },
+        "description": "Fetch a single order by id."
+      },
+      "response": []
+    },
+    {
+      "name": "Cancel order",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/orders/:orderId",
+          "host": ["{{baseUrl}}"],
+          "path": ["orders", ":orderId"],
+          "variable": [{ "key": "orderId", "value": "o-1001" }]
+        },
+        "description": "Cancel an order that has not shipped yet."
+      },
+      "response": []
+    }
+  ]
+}

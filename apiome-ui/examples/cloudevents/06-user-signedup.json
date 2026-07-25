@@ -1,0 +1,17 @@
+{
+  "_comment": "CloudEvents 1.0 typical example — an everyday application event: a user signed up. A routine single structured-mode envelope with the usual optional attributes and a small JSON data payload whose shape becomes a catalog class.",
+  "specversion": "1.0",
+  "id": "5f8a2e10-77c1-4b6f-9d02-1a3b5c7d9e0f",
+  "type": "com.example.user.signedup",
+  "source": "/accounts/service",
+  "subject": "user/u-3301",
+  "time": "2026-03-22T08:15:30Z",
+  "datacontenttype": "application/json",
+  "data": {
+    "userId": "u-3301",
+    "email": "new.user@example.com",
+    "displayName": "New User",
+    "plan": "free",
+    "signedUpAt": "2026-03-22T08:15:29Z"
+  }
+}

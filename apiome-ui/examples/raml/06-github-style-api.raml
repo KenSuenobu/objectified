@@ -1,0 +1,136 @@
+#%RAML 1.0
+# Real-world RAML 1.0 example — a hand-authored reconstruction of the shape of
+# the GitHub REST API v3 (repositories and issues surface). No third-party
+# text was copied; resource layout and field names follow the public API's
+# well-known structure.
+title: Code Hosting API
+version: v3
+baseUri: https://api.example-codehost.com
+mediaType: application/json
+description: Repository and issue tracking endpoints shaped like GitHub v3.
+
+types:
+  Owner:
+    type: object
+    description: Account that owns repositories.
+    properties:
+      login:
+        type: string
+        description: Account login name.
+      id:
+        type: integer
+        description: Numeric account id.
+      type:
+        type: string
+        description: Account kind (User or Organization).
+  Repository:
+    type: object
+    description: A source code repository.
+    properties:
+      id:
+        type: integer
+        description: Numeric repository id.
+      name:
+        type: string
+        description: Repository short name.
+      full_name:
+        type: string
+        description: owner/name form.
+      private:
+        type: boolean
+        description: Whether the repository is private.
+      description?:
+        type: string
+        description: Optional repository description.
+      default_branch:
+        type: string
+        description: Name of the default branch.
+      stargazers_count:
+        type: integer
+        description: Number of stars.
+  Issue:
+    type: object
+    description: An issue on a repository.
+    properties:
+      number:
+        type: integer
+        description: Issue number unique within the repository.
+      title:
+        type: string
+        description: Issue title.
+      state:
+        type: string
+        description: open or closed.
+      body?:
+        type: string
+        description: Markdown body of the issue.
+      created_at:
+        type: datetime
+        description: Creation timestamp.
+  NewIssue:
+    type: object
+    description: Payload to open an issue.
+    properties:
+      title: string
+      body?: string
+
+/repos:
+  description: Repository resources.
+  /{owner}:
+    uriParameters:
+      owner:
+        type: string
+        description: Login of the owning account.
+    /{repo}:
+      uriParameters:
+        repo:
+          type: string
+          description: Short name of the repository.
+      get:
+        description: Fetch a repository.
+        responses:
+          200:
+            body:
+              application/json:
+                type: Repository
+          404:
+            description: Repository not found or not visible.
+      /issues:
+        get:
+          description: List issues of the repository.
+          queryParameters:
+            state:
+              type: string
+              required: false
+              description: Filter by issue state (open, closed, all).
+            per_page:
+              type: integer
+              required: false
+              description: Page size, max 100.
+          responses:
+            200:
+              body:
+                application/json:
+                  type: Issue[]
+        post:
+          description: Open a new issue.
+          body:
+            application/json:
+              type: NewIssue
+          responses:
+            201:
+              body:
+                application/json:
+                  type: Issue
+        /{issue_number}:
+          uriParameters:
+            issue_number:
+              type: integer
+              description: Number of the issue.
+          get:
+            description: Fetch a single issue.
+            responses:
+              200:
+                body:
+                  application/json:
+                    type: Issue

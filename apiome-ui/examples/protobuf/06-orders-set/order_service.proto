@@ -1,0 +1,40 @@
+// Protobuf multi-file set (root) — the order service entry point.
+//
+// Imports order_types.proto from the same set: uploading both files together
+// lets buf resolve the sibling import, which a single-file upload cannot.
+syntax = "proto3";
+
+package example.orders.v1;
+
+import "order_types.proto";
+
+option go_package = "example.com/orders/v1;ordersv1";
+
+// Manages customer orders.
+service OrderService {
+  // Fetch one order by id.
+  rpc GetOrder(GetOrderRequest) returns (Order);
+  // Create a new order from its lines.
+  rpc CreateOrder(CreateOrderRequest) returns (Order);
+  // Cancel an order that has not shipped.
+  rpc CancelOrder(CancelOrderRequest) returns (Order);
+}
+
+message GetOrderRequest {
+  // Identifier of the order to fetch.
+  string id = 1;
+}
+
+message CreateOrderRequest {
+  // The purchasing customer.
+  string customer_id = 1;
+  // Lines to place, from the shared types file.
+  repeated OrderLine lines = 2;
+}
+
+message CancelOrderRequest {
+  // Identifier of the order to cancel.
+  string id = 1;
+  // Free-form cancellation reason.
+  string reason = 2;
+}

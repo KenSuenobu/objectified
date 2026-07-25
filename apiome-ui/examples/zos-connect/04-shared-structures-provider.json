@@ -1,0 +1,52 @@
+{
+  "_comment": "z/OS Connect composition example — the format's reuse mechanism is named copybook data structures shared across operations. Three operations against one CICS program (ACCTMGR) reuse the same ACCOUNT-RECORD response structure and the same ACCOUNT-KEY request structure, so a single copybook change propagates to every binding.",
+  "apiProvider": {
+    "name": "AccountProvider",
+    "version": "2.1.0",
+    "description": "Inbound provider whose operations share copybook-derived structures."
+  },
+  "api": {
+    "title": "Account API",
+    "specification": "openapi-3.0",
+    "basePath": "https://mainframe.example.com/accounts"
+  },
+  "language": {
+    "type": "cobol",
+    "codepage": "IBM-1047"
+  },
+  "operations": [
+    {
+      "operationId": "getAccount",
+      "method": "GET",
+      "path": "/accounts/{accountId}",
+      "program": "ACCTMGR",
+      "requestStructure": "ACCOUNT-KEY",
+      "responseStructure": "ACCOUNT-RECORD",
+      "pathParameters": [
+        { "name": "accountId", "field": "ACCT-ID", "type": "string" }
+      ]
+    },
+    {
+      "operationId": "replaceAccount",
+      "method": "PUT",
+      "path": "/accounts/{accountId}",
+      "program": "ACCTMGR",
+      "requestStructure": "ACCOUNT-RECORD",
+      "responseStructure": "ACCOUNT-RECORD",
+      "pathParameters": [
+        { "name": "accountId", "field": "ACCT-ID", "type": "string" }
+      ]
+    },
+    {
+      "operationId": "deleteAccount",
+      "method": "DELETE",
+      "path": "/accounts/{accountId}",
+      "program": "ACCTMGR",
+      "requestStructure": "ACCOUNT-KEY",
+      "responseStructure": "ACCOUNT-STATUS",
+      "pathParameters": [
+        { "name": "accountId", "field": "ACCT-ID", "type": "string" }
+      ]
+    }
+  ]
+}

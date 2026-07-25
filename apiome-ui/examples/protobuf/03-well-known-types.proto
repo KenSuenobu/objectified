@@ -1,0 +1,51 @@
+// Protobuf (proto3) example — composition via well-known type imports.
+//
+// Demonstrates the composition rung: this single file imports the compiler's
+// bundled well-known types (google/protobuf/timestamp.proto, duration.proto)
+// and reuses them across messages, alongside cross-message reuse of a shared
+// Money type. Imports of sibling files need a multi-file set; well-known types
+// resolve from a single upload.
+syntax = "proto3";
+
+package example.billing.v1;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "example.com/billing/v1;billingv1";
+
+// An amount of money in a specific currency.
+message Money {
+  // ISO 4217 currency code.
+  string currency_code = 1;
+  // Whole units of the amount.
+  int64 units = 2;
+  // Nano units (10^-9) of the amount, same sign as units.
+  sint32 nanos = 3;
+}
+
+// A subscription that bills on a fixed interval.
+message Subscription {
+  // Unique subscription identifier.
+  string id = 1;
+  // Price charged per interval.
+  Money price = 2;
+  // Interval between charges.
+  google.protobuf.Duration billing_interval = 3;
+  // When the subscription started.
+  google.protobuf.Timestamp started_at = 4;
+  // When the next charge is due.
+  google.protobuf.Timestamp next_charge_at = 5;
+}
+
+// One charge produced by a subscription.
+message Charge {
+  // Unique charge identifier.
+  string id = 1;
+  // The subscription this charge belongs to.
+  string subscription_id = 2;
+  // Amount charged, reusing the shared Money type.
+  Money amount = 3;
+  // When the charge was made.
+  google.protobuf.Timestamp charged_at = 4;
+}

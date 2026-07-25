@@ -1,0 +1,83 @@
+{
+  "_comment": "OpenRPC typical example — a realistic everyday JSON-RPC service: a meeting-room booking API with a handful of methods, plain object schemas, two servers, and simple string/enum parameters.",
+  "openrpc": "1.3.2",
+  "info": {
+    "title": "Room Booking API",
+    "version": "1.4.0",
+    "description": "Book and manage meeting rooms over JSON-RPC."
+  },
+  "servers": [
+    { "name": "production", "url": "https://rpc.example.com/booking" },
+    { "name": "staging", "url": "https://rpc.staging.example.com/booking" }
+  ],
+  "methods": [
+    {
+      "name": "listRooms",
+      "summary": "List rooms, optionally filtered by capacity.",
+      "params": [
+        { "name": "minCapacity", "schema": { "type": "integer", "minimum": 1 } }
+      ],
+      "result": {
+        "name": "rooms",
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/Room" }
+        }
+      }
+    },
+    {
+      "name": "bookRoom",
+      "summary": "Reserve a room for a time window.",
+      "params": [
+        { "name": "roomId", "required": true, "schema": { "type": "string" } },
+        { "name": "start", "required": true, "schema": { "type": "string", "format": "date-time" } },
+        { "name": "end", "required": true, "schema": { "type": "string", "format": "date-time" } },
+        { "name": "organizer", "required": true, "schema": { "type": "string", "format": "email" } }
+      ],
+      "result": {
+        "name": "booking",
+        "schema": { "$ref": "#/components/schemas/Booking" }
+      }
+    },
+    {
+      "name": "cancelBooking",
+      "summary": "Cancel an existing booking.",
+      "params": [
+        { "name": "bookingId", "required": true, "schema": { "type": "string" } }
+      ],
+      "result": {
+        "name": "cancelled",
+        "schema": { "type": "boolean" }
+      }
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Room": {
+        "type": "object",
+        "description": "A bookable meeting room.",
+        "required": ["roomId", "name", "capacity"],
+        "properties": {
+          "roomId": { "type": "string" },
+          "name": { "type": "string" },
+          "capacity": { "type": "integer" },
+          "floor": { "type": "integer" },
+          "hasVideoConference": { "type": "boolean" }
+        }
+      },
+      "Booking": {
+        "type": "object",
+        "description": "A confirmed room reservation.",
+        "required": ["bookingId", "roomId", "start", "end", "status"],
+        "properties": {
+          "bookingId": { "type": "string" },
+          "roomId": { "type": "string" },
+          "start": { "type": "string", "format": "date-time" },
+          "end": { "type": "string", "format": "date-time" },
+          "organizer": { "type": "string", "format": "email" },
+          "status": { "type": "string", "enum": ["confirmed", "cancelled"] }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,47 @@
+// Connect-RPC example — real-world rung: a hand-authored reconstruction of the
+// shape of Buf's Connect-RPC Eliza demo API (connectrpc.eliza.v1). No
+// third-party text is copied; the service and method shapes follow the public
+// demo surface: one unary method, one bidirectional stream, and one
+// server-streaming introduction.
+syntax = "proto3";
+
+package eliza.v1;
+
+option go_package = "example.com/gen/eliza/v1;elizav1";
+
+// A Rogerian psychotherapist chatbot.
+service ElizaService {
+  // Unary: one statement in, one reply out.
+  rpc Say(SayRequest) returns (SayResponse);
+  // Bidirectional streaming conversation.
+  rpc Converse(stream ConverseRequest) returns (stream ConverseResponse);
+  // Server streaming: Eliza introduces herself to the named person.
+  rpc Introduce(IntroduceRequest) returns (stream IntroduceResponse);
+}
+
+message SayRequest {
+  // What the user said.
+  string sentence = 1;
+}
+
+message SayResponse {
+  // Eliza's reply.
+  string sentence = 1;
+}
+
+message ConverseRequest {
+  string sentence = 1;
+}
+
+message ConverseResponse {
+  string sentence = 1;
+}
+
+message IntroduceRequest {
+  // The name to introduce Eliza to.
+  string name = 1;
+}
+
+message IntroduceResponse {
+  string sentence = 1;
+}

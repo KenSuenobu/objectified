@@ -1,0 +1,70 @@
+// FlatBuffers schema example — real-world shape: the FlatBuffers reflection
+// schema.
+//
+// Hand-authored reconstruction of the shape of reflection.fbs (the schema
+// FlatBuffers itself emits for compiled schemas: Schema / Object / Field /
+// Type / Enum); no third-party text was copied and attributes are omitted.
+namespace reflection;
+
+enum BaseType : byte {
+  None = 0,
+  UType = 1,
+  Bool = 2,
+  Byte = 3,
+  Short = 5,
+  Int = 7,
+  Long = 9,
+  Float = 11,
+  Double = 12,
+  String = 13,
+  Vector = 14,
+  Obj = 15,
+  Union = 16,
+}
+
+table Type {
+  base_type: BaseType;
+  element: BaseType;
+  index: int = -1;
+}
+
+table EnumVal {
+  name: string;
+  value: long;
+}
+
+table Enum {
+  name: string;
+  values: [EnumVal];
+  is_union: bool = false;
+  underlying_type: Type;
+}
+
+table Field {
+  name: string;
+  type: Type;
+  id: ushort;
+  offset: ushort;
+  default_integer: long = 0;
+  default_real: double = 0.0;
+  deprecated: bool = false;
+  optional: bool = false;
+}
+
+table Object {
+  name: string;
+  fields: [Field];
+  is_struct: bool = false;
+  minalign: int;
+  bytesize: int;
+}
+
+table Schema {
+  objects: [Object];
+  enums: [Enum];
+  file_ident: string;
+  file_ext: string;
+  root_table: Object;
+}
+
+root_type Schema;

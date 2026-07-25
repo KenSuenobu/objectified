@@ -1,0 +1,108 @@
+{
+  "_comment": "FHIR R4 example — stress: a StructureDefinition carrying both `snapshot` and `differential` (the importer prefers the snapshot), choice-type elements (`effective[x]`, `value[x]`) listing multiple type codes, a profile-constrained Reference type, unbounded `max: *` cardinalities, and nested component paths.",
+  "resourceType": "StructureDefinition",
+  "id": "VitalSignsPanel",
+  "url": "http://example.com/fhir/StructureDefinition/VitalSignsPanel",
+  "version": "1.0.0",
+  "name": "VitalSignsPanel",
+  "title": "Vital Signs Panel Profile",
+  "status": "active",
+  "experimental": false,
+  "date": "2026-01-15",
+  "publisher": "Example Health",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Observation",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation",
+  "derivation": "constraint",
+  "snapshot": {
+    "element": [
+      {
+        "id": "Observation.status",
+        "path": "Observation.status",
+        "min": 1,
+        "max": "1",
+        "type": [{ "code": "code" }],
+        "short": "Status of the observation (registered, preliminary, final, amended)"
+      },
+      {
+        "id": "Observation.category",
+        "path": "Observation.category",
+        "min": 1,
+        "max": "*",
+        "type": [{ "code": "CodeableConcept" }],
+        "short": "Classification: vital-signs"
+      },
+      {
+        "id": "Observation.code",
+        "path": "Observation.code",
+        "min": 1,
+        "max": "1",
+        "type": [{ "code": "CodeableConcept" }],
+        "short": "LOINC panel code"
+      },
+      {
+        "id": "Observation.subject",
+        "path": "Observation.subject",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "profile": ["http://hl7.org/fhir/StructureDefinition/Patient"]
+          }
+        ],
+        "short": "The patient the vital signs belong to"
+      },
+      {
+        "id": "Observation.effective[x]",
+        "path": "Observation.effective[x]",
+        "min": 0,
+        "max": "1",
+        "type": [{ "code": "dateTime" }, { "code": "Period" }],
+        "short": "Clinically relevant time of the panel"
+      },
+      {
+        "id": "Observation.value[x]",
+        "path": "Observation.value[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          { "code": "Quantity" },
+          { "code": "string" },
+          { "code": "CodeableConcept" }
+        ],
+        "short": "Panel-level result value"
+      },
+      {
+        "id": "Observation.component",
+        "path": "Observation.component",
+        "min": 0,
+        "max": "*",
+        "type": [{ "code": "BackboneElement" }],
+        "short": "One component per individual vital sign"
+      },
+      {
+        "id": "Observation.component.code",
+        "path": "Observation.component.code",
+        "min": 1,
+        "max": "1",
+        "type": [{ "code": "CodeableConcept" }],
+        "short": "Vital-sign component code"
+      }
+    ]
+  },
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.category",
+        "path": "Observation.category",
+        "min": 1,
+        "max": "*",
+        "type": [{ "code": "CodeableConcept" }],
+        "short": "Classification: vital-signs"
+      }
+    ]
+  }
+}

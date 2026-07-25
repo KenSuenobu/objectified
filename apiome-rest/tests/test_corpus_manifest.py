@@ -30,12 +30,18 @@ from corpus_loader import (
     MANIFEST_PATH,
     SCHEMA_PATH,
     CorpusEntry,
+    FilesetRole,
+    Rung,
     ValidityClass,
     corpus_files,
     load_corpus,
     load_manifest,
 )
 from jsonschema import Draft202012Validator
+
+#: The floor every non-preview adapter's valid-example count must reach
+#: (IXH-1.2 acceptance criterion, #5088).
+MIN_VALID_EXAMPLES_PER_ADAPTER = 6
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _README_PATH = EXAMPLES_DIR / "README.md"
@@ -44,6 +50,22 @@ _GENERATOR_PATH = _REPO_ROOT / "scripts" / "generate_examples_readme.py"
 
 def _raw_manifest() -> dict:
     return json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+
+
+def _non_preview_adapter_keys() -> set[str]:
+    """Registry keys of every adapter the corpus floor applies to."""
+    from app.import_source import (
+        available_import_sources,
+        get_import_source,
+        load_builtin_import_sources,
+    )
+
+    load_builtin_import_sources()
+    return {
+        key
+        for key in available_import_sources()
+        if not get_import_source(key).preview_only
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +193,9 @@ def test_load_corpus_filters_by_adapter_key():
 
 def test_load_corpus_filters_compose_with_and_semantics():
     entries = load_corpus(format="avro", feature="enum")
-    assert [entry.path for entry in entries] == ["avro/01-user-record.avsc"]
+    paths = [entry.path for entry in entries]
+    assert "avro/01-user-record.avsc" in paths
+    assert all(entry.format == "avro" and "enum" in entry.features for entry in entries)
 
 
 def test_load_corpus_unknown_filter_values_return_empty():
@@ -186,9 +210,120 @@ def test_load_corpus_rejects_unknown_validity_class():
 
 
 def test_entries_read_text_returns_content():
-    [weather] = load_corpus(format="smithy")
-    text = weather.read_text()
+    entries = load_corpus(format="smithy")
+    assert entries, "no smithy entries in the corpus"
+    text = entries[0].read_text()
     assert "$version" in text
+
+
+# ---------------------------------------------------------------------------
+# Depth ladder (IXH-1.2, #5088)
+# ---------------------------------------------------------------------------
+
+
+def test_load_corpus_filters_by_rung():
+    entries = load_corpus(rung=Rung.MINIMAL)
+    assert entries, "no minimal-rung entries in the corpus"
+    assert all(entry.rung is Rung.MINIMAL for entry in entries)
+    assert load_corpus(rung="minimal") == entries
+
+
+def test_every_valid_entry_declares_a_rung():
+    untagged = sorted(
+        entry.path
+        for entry in load_corpus(validity_class=ValidityClass.VALID)
+        if entry.rung is None
+    )
+    assert not untagged, f"valid entries missing a ladder rung: {untagged}"
+
+
+def test_only_valid_entries_declare_rungs():
+    mistagged = sorted(
+        entry.path
+        for entry in load_corpus()
+        if entry.validity_class is not ValidityClass.VALID and entry.rung is not None
+    )
+    assert not mistagged, f"non-valid entries must not declare a rung: {mistagged}"
+
+
+def test_every_non_preview_adapter_has_the_valid_example_floor():
+    counts = {key: 0 for key in _non_preview_adapter_keys()}
+    for entry in load_corpus(validity_class=ValidityClass.VALID):
+        if entry.adapter_key in counts:
+            counts[entry.adapter_key] += 1
+    short = {
+        key: count
+        for key, count in sorted(counts.items())
+        if count < MIN_VALID_EXAMPLES_PER_ADAPTER
+    }
+    assert not short, (
+        f"adapters below the {MIN_VALID_EXAMPLES_PER_ADAPTER}-valid-example floor "
+        f"(IXH-1.2): {short}"
+    )
+
+
+def test_every_non_preview_adapter_covers_all_rungs_or_waives():
+    manifest = load_manifest()
+    covered: dict[str, set[Rung]] = {key: set() for key in _non_preview_adapter_keys()}
+    for entry in load_corpus(validity_class=ValidityClass.VALID):
+        if entry.adapter_key in covered and entry.rung is not None:
+            covered[entry.adapter_key].add(entry.rung)
+    problems = []
+    for key, rungs in sorted(covered.items()):
+        waived = set(manifest.rung_waivers.get(key, {}))
+        missing = sorted(r.value for r in set(Rung) - rungs - waived)
+        if missing:
+            problems.append(f"{key}: uncovered, unwaived rungs {missing}")
+    assert not problems, (
+        "every adapter must cover all six ladder rungs or record a waiver "
+        "in rung_waivers:\n  " + "\n  ".join(problems)
+    )
+
+
+def test_rung_waivers_are_registered_and_not_stale():
+    manifest = load_manifest()
+    non_preview = _non_preview_adapter_keys()
+    covered: dict[str, set[Rung]] = {}
+    for entry in load_corpus(validity_class=ValidityClass.VALID):
+        if entry.adapter_key is not None and entry.rung is not None:
+            covered.setdefault(entry.adapter_key, set()).add(entry.rung)
+    problems = []
+    for key, waivers in sorted(manifest.rung_waivers.items()):
+        if key not in non_preview:
+            problems.append(f"{key}: waiver for an unknown or preview-only adapter")
+            continue
+        stale = sorted(r.value for r in set(waivers) & covered.get(key, set()))
+        if stale:
+            problems.append(f"{key}: stale waivers for covered rungs {stale}")
+    assert not problems, "rung_waivers problems:\n  " + "\n  ".join(problems)
+
+
+def test_fileset_entries_are_consistent():
+    """Files in a per-set subdirectory form coherent multi-file sets.
+
+    Every nested entry must carry a ``fileset_role`` and sit on the
+    ``multi-file`` rung; flat entries must not carry a role; and every set
+    directory must contain exactly one ``root``.
+    """
+    problems = []
+    roots_by_set: dict[str, int] = {}
+    for entry in load_corpus():
+        nested = entry.path.count("/") == 2
+        if nested:
+            set_dir = entry.path.rsplit("/", 1)[0]
+            roots_by_set.setdefault(set_dir, 0)
+            if entry.fileset_role is None:
+                problems.append(f"{entry.path}: nested file missing fileset_role")
+            elif entry.fileset_role is FilesetRole.ROOT:
+                roots_by_set[set_dir] += 1
+            if entry.validity_class is ValidityClass.VALID and entry.rung is not Rung.MULTI_FILE:
+                problems.append(f"{entry.path}: set member must sit on the multi-file rung")
+        elif entry.fileset_role is not None:
+            problems.append(f"{entry.path}: fileset_role on a file outside a set directory")
+    for set_dir, count in sorted(roots_by_set.items()):
+        if count != 1:
+            problems.append(f"{set_dir}/: expected exactly one fileset root, found {count}")
+    assert not problems, "multi-file set problems:\n  " + "\n  ".join(problems)
 
 
 # ---------------------------------------------------------------------------

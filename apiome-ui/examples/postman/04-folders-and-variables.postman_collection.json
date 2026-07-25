@@ -1,0 +1,87 @@
+{
+  "info": {
+    "_postman_id": "b1a2c3d4-0000-4000-8000-000000000004",
+    "name": "Workspace API",
+    "description": "Composition Postman Collection v2.1 example: requests grouped into nested folders (Users, and Admin containing a Reports subfolder) that all reuse the collection-level baseUrl and apiVersion variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://api.example.com" },
+    { "key": "apiVersion", "value": "v2" }
+  ],
+  "item": [
+    {
+      "name": "Users",
+      "description": "User management requests.",
+      "item": [
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiVersion}}", "users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invite user",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"kai@example.com\",\n  \"role\": \"member\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/users/invitations",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiVersion}}", "users", "invitations"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "Administrative requests, including a nested Reports subfolder.",
+      "item": [
+        {
+          "name": "Audit log",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/admin/audit",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiVersion}}", "admin", "audit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reports",
+          "item": [
+            {
+              "name": "Usage report",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/{{apiVersion}}/admin/reports/usage?month=2026-06",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["{{apiVersion}}", "admin", "reports", "usage"],
+                  "query": [{ "key": "month", "value": "2026-06" }]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

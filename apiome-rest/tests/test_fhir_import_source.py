@@ -16,9 +16,11 @@ from app.import_source import DetectionInput, ImportSourceError
 # Fixtures come from the corpus manifest (IXH-1.1, #5087), selected by tag
 # rather than hard-coded path: the Patient resource instance, and the two
 # StructureDefinitions profiling Observation and Patient respectively.
-[_PATIENT_ENTRY] = load_corpus(format="fhir", feature="patient")
-[_OBSERVATION_PROFILE_ENTRY] = load_corpus(format="fhir", feature="profiles-observation")
-[_PATIENT_PROFILE_ENTRY] = load_corpus(format="fhir", feature="profiles-patient")
+# Entries are path-sorted, so the first match stays stable as the corpus
+# grows (IXH-1.2).
+_PATIENT_ENTRY = load_corpus(format="fhir", feature="patient")[0]
+_OBSERVATION_PROFILE_ENTRY = load_corpus(format="fhir", feature="profiles-observation")[0]
+_PATIENT_PROFILE_ENTRY = load_corpus(format="fhir", feature="profiles-patient")[0]
 _PATIENT_INSTANCE = _PATIENT_ENTRY.read_text()
 _OBSERVATION_PROFILE = _OBSERVATION_PROFILE_ENTRY.read_text()
 _PATIENT_PROFILE = _PATIENT_PROFILE_ENTRY.read_text()

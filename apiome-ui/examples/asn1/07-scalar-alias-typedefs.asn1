@@ -1,0 +1,24 @@
+-- ASN.1 example — top-level scalar and list typedefs.
+--
+-- Exercises module-level typedefs that are neither SEQUENCE, SET, CHOICE, nor
+-- ENUMERATED: an INTEGER with named numbers, a constrained IA5String, a
+-- BIT STRING with named bits, and a top-level SEQUENCE OF alias. These are
+-- common in telecom and PKI modules (e.g. version numbers and name lists).
+ScalarTypedefModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+  SchemaVersion ::= INTEGER { initial(0), extended(1) }
+
+  HostName ::= IA5String (SIZE (1..255))
+
+  AccessFlags ::= BIT STRING { read(0), write(1), admin(2) }
+
+  HostList ::= SEQUENCE OF HostName
+
+  Registration ::= SEQUENCE {
+    version  SchemaVersion DEFAULT initial,
+    primary  HostName,
+    mirrors  HostList OPTIONAL,
+    flags    AccessFlags OPTIONAL
+  }
+
+END

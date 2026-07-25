@@ -30,6 +30,22 @@ export type ValidityClass = 'valid' | 'invalid' | 'adversarial' | 'scale';
 /** What a full import of the file must do. */
 export type ExpectedOutcome = 'imports' | 'rejects' | 'imports_with_warnings';
 
+/**
+ * Ladder rung a valid example occupies — the IXH-1.2 depth ladder (#5088).
+ * Every valid entry sits on exactly one rung; adapters justify inapplicable
+ * rungs in the manifest's `rung_waivers`.
+ */
+export type Rung =
+  | 'minimal'
+  | 'typical'
+  | 'composition'
+  | 'stress'
+  | 'real-world'
+  | 'multi-file';
+
+/** Role of a file inside a multi-file example set. */
+export type FilesetRole = 'root' | 'member';
+
 /** README grouping section for a corpus directory. */
 export type CorpusCategory =
   | 'rest-http'
@@ -66,6 +82,10 @@ export interface CorpusEntry {
   license: string;
   provenance: string;
   notes?: string;
+  /** Ladder rung the example occupies (present on every valid entry). */
+  rung?: Rung;
+  /** Role inside a multi-file set (only for files in a per-set subdirectory). */
+  fileset_role?: FilesetRole;
 }
 
 /** Per-directory human-index metadata used to regenerate the README. */
@@ -82,6 +102,11 @@ export interface CorpusManifest {
   manifest_version: 1;
   directories: Record<string, CorpusDirectoryMeta>;
   entries: CorpusEntry[];
+  /**
+   * Per-adapter justifications for ladder rungs that do not apply
+   * (adapter registry key -> rung -> one-sentence reason).
+   */
+  rung_waivers?: Record<string, Partial<Record<Rung, string>>>;
 }
 
 /** Filters for {@link loadCorpus}; all given filters must match (AND). */
@@ -94,6 +119,8 @@ export interface CorpusFilter {
   feature?: string;
   /** ImportSource registry key the entry must map to. */
   adapterKey?: string;
+  /** Ladder rung to match. */
+  rung?: Rung;
 }
 
 const VALIDITY_CLASSES: ReadonlySet<string> = new Set([
@@ -107,6 +134,15 @@ const EXPECTED_OUTCOMES: ReadonlySet<string> = new Set([
   'rejects',
   'imports_with_warnings',
 ]);
+const RUNGS: ReadonlySet<string> = new Set([
+  'minimal',
+  'typical',
+  'composition',
+  'stress',
+  'real-world',
+  'multi-file',
+]);
+const FILESET_ROLES: ReadonlySet<string> = new Set(['root', 'member']);
 
 /**
  * Files under the corpus root that are corpus infrastructure, not fixtures —
@@ -171,6 +207,12 @@ function assertEntry(value: unknown, index: number): CorpusEntry {
   if (entry.notes !== undefined && typeof entry.notes !== 'string') {
     fail(context, 'notes must be a string when present');
   }
+  if (entry.rung !== undefined && !RUNGS.has(entry.rung as string)) {
+    fail(context, `invalid rung ${JSON.stringify(entry.rung)}`);
+  }
+  if (entry.fileset_role !== undefined && !FILESET_ROLES.has(entry.fileset_role as string)) {
+    fail(context, `invalid fileset_role ${JSON.stringify(entry.fileset_role)}`);
+  }
   return value as CorpusEntry;
 }
 
@@ -187,6 +229,22 @@ function assertManifest(value: unknown): CorpusManifest {
     fail('<root>', 'missing entries array');
   }
   manifest.entries.forEach(assertEntry);
+  if (manifest.rung_waivers !== undefined) {
+    if (typeof manifest.rung_waivers !== 'object' || manifest.rung_waivers === null) {
+      fail('<root>', 'rung_waivers must be an object when present');
+    }
+    for (const [adapter, waivers] of Object.entries(manifest.rung_waivers)) {
+      if (typeof waivers !== 'object' || waivers === null) {
+        fail(`rung_waivers.${adapter}`, 'must be an object');
+      }
+      for (const [rung, reason] of Object.entries(waivers as Record<string, unknown>)) {
+        if (!RUNGS.has(rung)) fail(`rung_waivers.${adapter}`, `invalid rung ${JSON.stringify(rung)}`);
+        if (typeof reason !== 'string' || !reason) {
+          fail(`rung_waivers.${adapter}.${rung}`, 'justification must be a non-empty string');
+        }
+      }
+    }
+  }
   return value as CorpusManifest;
 }
 
@@ -214,13 +272,14 @@ export function loadManifest(): CorpusManifest {
  * @returns Matching entries in manifest (path-sorted) order.
  */
 export function loadCorpus(filter: CorpusFilter = {}): CorpusEntry[] {
-  const { format, validityClass, feature, adapterKey } = filter;
+  const { format, validityClass, feature, adapterKey, rung } = filter;
   return loadManifest().entries.filter(
     (entry) =>
       (format === undefined || entry.format === format) &&
       (validityClass === undefined || entry.validity_class === validityClass) &&
       (feature === undefined || entry.features.includes(feature)) &&
-      (adapterKey === undefined || entry.adapter_key === adapterKey),
+      (adapterKey === undefined || entry.adapter_key === adapterKey) &&
+      (rung === undefined || entry.rung === rung),
   );
 }
 

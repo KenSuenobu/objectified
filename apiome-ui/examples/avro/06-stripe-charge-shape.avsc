@@ -1,0 +1,93 @@
+{
+  "_comment": "Avro schema example — real-world shape: a hand-authored reconstruction of the shape of the Stripe Charge resource (amount, currency, status, billing details, outcome) expressed as an Avro record. No third-party text copied; field selection and naming follow the public API's documented shape.",
+  "type": "record",
+  "name": "Charge",
+  "namespace": "com.example.payments.stripe",
+  "doc": "A card charge, shaped like the Stripe Charge resource.",
+  "fields": [
+    { "name": "id", "type": "string", "doc": "Unique charge identifier." },
+    { "name": "object", "type": "string", "default": "charge", "doc": "Object type discriminator." },
+    { "name": "amount", "type": "long", "doc": "Amount intended to be collected, in minor units." },
+    { "name": "amountCaptured", "type": "long", "default": 0, "doc": "Amount captured so far, in minor units." },
+    { "name": "amountRefunded", "type": "long", "default": 0, "doc": "Amount refunded so far, in minor units." },
+    { "name": "currency", "type": "string", "doc": "Three-letter ISO 4217 currency code." },
+    { "name": "captured", "type": "boolean", "default": false, "doc": "Whether the charge has been captured." },
+    { "name": "livemode", "type": "boolean", "default": false, "doc": "True for live-mode objects." },
+    { "name": "paid", "type": "boolean", "default": false, "doc": "Whether the charge succeeded." },
+    {
+      "name": "status",
+      "type": {
+        "type": "enum",
+        "name": "ChargeStatus",
+        "doc": "Lifecycle status of the charge.",
+        "symbols": ["succeeded", "pending", "failed"]
+      },
+      "default": "pending",
+      "doc": "Status of the payment."
+    },
+    { "name": "customer", "type": ["null", "string"], "default": null, "doc": "Identifier of the customer this charge is for, if any." },
+    { "name": "description", "type": ["null", "string"], "default": null, "doc": "Arbitrary description attached at creation." },
+    { "name": "receiptEmail", "type": ["null", "string"], "default": null, "doc": "Email address the receipt was sent to." },
+    {
+      "name": "billingDetails",
+      "type": {
+        "type": "record",
+        "name": "BillingDetails",
+        "doc": "Billing information associated with the payment method.",
+        "fields": [
+          { "name": "name", "type": ["null", "string"], "default": null },
+          { "name": "email", "type": ["null", "string"], "default": null },
+          { "name": "phone", "type": ["null", "string"], "default": null },
+          {
+            "name": "address",
+            "type": {
+              "type": "record",
+              "name": "PostalAddress",
+              "doc": "A postal address.",
+              "fields": [
+                { "name": "line1", "type": ["null", "string"], "default": null },
+                { "name": "line2", "type": ["null", "string"], "default": null },
+                { "name": "city", "type": ["null", "string"], "default": null },
+                { "name": "state", "type": ["null", "string"], "default": null },
+                { "name": "postalCode", "type": ["null", "string"], "default": null },
+                { "name": "country", "type": ["null", "string"], "default": null }
+              ]
+            },
+            "doc": "Billing address."
+          }
+        ]
+      },
+      "doc": "Billing details captured with the payment method."
+    },
+    {
+      "name": "outcome",
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "ChargeOutcome",
+          "doc": "Details about whether and why the charge was accepted.",
+          "fields": [
+            { "name": "networkStatus", "type": ["null", "string"], "default": null },
+            { "name": "reason", "type": ["null", "string"], "default": null },
+            { "name": "riskLevel", "type": ["null", "string"], "default": null },
+            { "name": "sellerMessage", "type": ["null", "string"], "default": null }
+          ]
+        }
+      ],
+      "default": null,
+      "doc": "Outcome of the charge, when available."
+    },
+    {
+      "name": "metadata",
+      "type": { "type": "map", "values": "string" },
+      "default": {},
+      "doc": "Set of key-value pairs attached to the charge."
+    },
+    {
+      "name": "created",
+      "type": { "type": "long", "logicalType": "timestamp-millis" },
+      "doc": "Time at which the charge was created."
+    }
+  ]
+}

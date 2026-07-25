@@ -1,0 +1,55 @@
+{
+  "_comment": "Avro schema example — composition by named-type reference. `Money` and `Currency` are defined once (inline, inside the first field that uses them) and then reused by name in later fields, including inside an array and a map. Exercises reference resolution across the document: Invoice, Money, and Currency all become catalog classes.",
+  "type": "record",
+  "name": "Invoice",
+  "namespace": "com.example.billing",
+  "doc": "An invoice whose monetary fields all reuse one shared Money record.",
+  "fields": [
+    {
+      "name": "subtotal",
+      "type": {
+        "type": "record",
+        "name": "Money",
+        "doc": "A monetary amount tagged with its currency.",
+        "fields": [
+          {
+            "name": "amount",
+            "type": { "type": "bytes", "logicalType": "decimal", "precision": 14, "scale": 2 },
+            "doc": "Decimal amount."
+          },
+          {
+            "name": "currency",
+            "type": {
+              "type": "enum",
+              "name": "Currency",
+              "doc": "Supported settlement currencies.",
+              "symbols": ["USD", "EUR", "GBP", "JPY"]
+            },
+            "default": "USD",
+            "doc": "ISO 4217 currency code."
+          }
+        ]
+      },
+      "doc": "Sum of line amounts before tax."
+    },
+    { "name": "tax", "type": "Money", "doc": "Tax amount, reusing Money by name." },
+    { "name": "total", "type": "Money", "doc": "Grand total, reusing Money by name." },
+    {
+      "name": "lineAmounts",
+      "type": { "type": "array", "items": "Money" },
+      "doc": "Per-line amounts — an array of the shared Money record."
+    },
+    {
+      "name": "exchangeRatesUsed",
+      "type": { "type": "map", "values": "double" },
+      "default": {},
+      "doc": "Currency-pair exchange rates applied, keyed by pair code."
+    },
+    {
+      "name": "billingCurrency",
+      "type": "Currency",
+      "default": "USD",
+      "doc": "Reuses the Currency enum by name."
+    }
+  ]
+}

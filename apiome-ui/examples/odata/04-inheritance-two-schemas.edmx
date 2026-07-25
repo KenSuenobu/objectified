@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OData v4 CSDL (EDMX) composition example — type inheritance and cross-schema reuse.
+
+  Two Schema elements share one EDMX document: `Example.Core` defines an abstract
+  base EntityType and a reusable ComplexType; `Example.Sales` derives entity types
+  from the Core base via BaseType, reuses the Core complex type, and wires
+  bidirectional navigation with Partner attributes.
+-->
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:DataServices>
+    <Schema Namespace="Example.Core" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <EntityType Name="AuditedEntity" Abstract="true">
+        <Key>
+          <PropertyRef Name="Id"/>
+        </Key>
+        <Property Name="Id" Type="Edm.Guid" Nullable="false"/>
+        <Property Name="CreatedAt" Type="Edm.DateTimeOffset" Nullable="false"/>
+        <Property Name="UpdatedAt" Type="Edm.DateTimeOffset"/>
+      </EntityType>
+
+      <ComplexType Name="Money">
+        <Property Name="Amount" Type="Edm.Decimal" Nullable="false"/>
+        <Property Name="Currency" Type="Edm.String" Nullable="false"/>
+      </ComplexType>
+    </Schema>
+
+    <Schema Namespace="Example.Sales" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <EntityType Name="Invoice" BaseType="Example.Core.AuditedEntity">
+        <Property Name="Number" Type="Edm.String" Nullable="false"/>
+        <Property Name="Total" Type="Example.Core.Money"/>
+        <NavigationProperty Name="Lines" Type="Collection(Example.Sales.InvoiceLine)" Partner="Invoice"/>
+      </EntityType>
+
+      <EntityType Name="InvoiceLine" BaseType="Example.Core.AuditedEntity">
+        <Property Name="Description" Type="Edm.String"/>
+        <Property Name="Quantity" Type="Edm.Int32" Nullable="false"/>
+        <Property Name="UnitPrice" Type="Example.Core.Money"/>
+        <NavigationProperty Name="Invoice" Type="Example.Sales.Invoice" Partner="Lines"/>
+      </EntityType>
+
+      <EntityType Name="CreditNote" BaseType="Example.Sales.Invoice">
+        <Property Name="Reason" Type="Edm.String"/>
+      </EntityType>
+
+      <EntityContainer Name="SalesContainer">
+        <EntitySet Name="Invoices" EntityType="Example.Sales.Invoice"/>
+        <EntitySet Name="InvoiceLines" EntityType="Example.Sales.InvoiceLine"/>
+        <EntitySet Name="CreditNotes" EntityType="Example.Sales.CreditNote"/>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

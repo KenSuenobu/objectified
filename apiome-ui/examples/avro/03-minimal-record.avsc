@@ -1,0 +1,8 @@
+{
+  "_comment": "Avro schema example — the smallest canonical Avro document: a single record with one string field. Recognized via `type: record` + a `fields` array; the record becomes one catalog class with one property.",
+  "type": "record",
+  "name": "Ping",
+  "fields": [
+    { "name": "message", "type": "string" }
+  ]
+}

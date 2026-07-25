@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  XSD typical example: an everyday employee-directory schema.
+
+  Realistic HR document shape: a directory of departments and employees
+  with an enumerated employment status, date fields, optional elements,
+  and occurrence bounds.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://example.com/hr"
+           xmlns:hr="http://example.com/hr"
+           elementFormDefault="qualified">
+
+  <xs:element name="directory" type="hr:Directory"/>
+
+  <xs:simpleType name="EmploymentStatus">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="active"/>
+      <xs:enumeration value="on-leave"/>
+      <xs:enumeration value="terminated"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="Employee">
+    <xs:sequence>
+      <xs:element name="employeeId" type="xs:string"/>
+      <xs:element name="givenName" type="xs:string"/>
+      <xs:element name="familyName" type="xs:string"/>
+      <xs:element name="email" type="xs:string"/>
+      <xs:element name="phone" type="xs:string" minOccurs="0"/>
+      <xs:element name="hireDate" type="xs:date"/>
+      <xs:element name="status" type="hr:EmploymentStatus"/>
+    </xs:sequence>
+    <xs:attribute name="managerId" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="Department">
+    <xs:sequence>
+      <xs:element name="code" type="xs:string"/>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="costCenter" type="xs:string" minOccurs="0"/>
+      <xs:element name="employee" type="hr:Employee" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Directory">
+    <xs:sequence>
+      <xs:element name="company" type="xs:string"/>
+      <xs:element name="generatedAt" type="xs:dateTime"/>
+      <xs:element name="department" type="hr:Department" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

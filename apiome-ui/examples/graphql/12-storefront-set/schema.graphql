@@ -1,0 +1,16 @@
+# Root of the multi-file storefront set (import the three files together):
+# defines the shared DateTime scalar, the Node interface, and the base Query type
+# that the sibling files (products.graphql, reviews.graphql) extend.
+
+"ISO 8601 date-time string"
+scalar DateTime
+
+"An object with a globally unique ID"
+interface Node {
+  id: ID!
+}
+
+type Query {
+  "Fetch any object by its global ID"
+  node(id: ID!): Node
+}

@@ -41,6 +41,8 @@ __all__ = [
     "CorpusManifest",
     "ExpectedDetection",
     "ExpectedOutcome",
+    "FilesetRole",
+    "Rung",
     "ValidityClass",
     "corpus_files",
     "load_corpus",
@@ -87,6 +89,29 @@ class ExpectedOutcome(str, Enum):
     IMPORTS_WITH_WARNINGS = "imports_with_warnings"
 
 
+class Rung(str, Enum):
+    """Ladder rung a valid example occupies — the IXH-1.2 depth ladder (#5088).
+
+    Every valid corpus entry sits on exactly one rung; every non-preview
+    adapter must cover all six rungs or carry a manifest ``rung_waivers``
+    justification for the rungs that do not apply to its format.
+    """
+
+    MINIMAL = "minimal"
+    TYPICAL = "typical"
+    COMPOSITION = "composition"
+    STRESS = "stress"
+    REAL_WORLD = "real-world"
+    MULTI_FILE = "multi-file"
+
+
+class FilesetRole(str, Enum):
+    """Role of a file inside a multi-file example set."""
+
+    ROOT = "root"
+    MEMBER = "member"
+
+
 class CorpusCategory(str, Enum):
     """README grouping section for a corpus directory."""
 
@@ -129,6 +154,9 @@ class CorpusEntry(BaseModel):
         license: SPDX license identifier covering the file's content.
         provenance: One-sentence origin story.
         notes: Optional caveats (e.g. known detection deviations).
+        rung: Ladder rung the example occupies (required on valid entries).
+        fileset_role: Role inside a multi-file set (set only for files in a
+            per-set subdirectory).
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -144,6 +172,8 @@ class CorpusEntry(BaseModel):
     license: str
     provenance: str
     notes: Optional[str] = None
+    rung: Optional[Rung] = None
+    fileset_role: Optional[FilesetRole] = None
 
     @property
     def absolute_path(self) -> Path:
@@ -182,6 +212,9 @@ class CorpusManifest(BaseModel):
     manifest_version: Literal[1]
     directories: Dict[str, CorpusDirectory]
     entries: List[CorpusEntry]
+    #: Per-adapter justifications for ladder rungs that do not apply
+    #: (adapter registry key -> rung -> one-sentence reason).
+    rung_waivers: Dict[str, Dict[Rung, str]] = Field(default_factory=dict)
 
 
 @lru_cache(maxsize=1)
@@ -205,6 +238,7 @@ def load_corpus(
     validity_class: Optional[ValidityClass | str] = None,
     feature: Optional[str] = None,
     adapter_key: Optional[str] = None,
+    rung: Optional[Rung | str] = None,
 ) -> List[CorpusEntry]:
     """Return the corpus entries matching every given filter (AND semantics).
 
@@ -213,12 +247,14 @@ def load_corpus(
         validity_class: Validity class to match, as enum or string.
         feature: Feature tag the entry must carry (exact match).
         adapter_key: ImportSource registry key the entry must map to.
+        rung: Ladder rung to match, as enum or string.
 
     Returns:
         Matching entries in manifest (path-sorted) order; empty list when
         nothing matches. With no filters, the full corpus.
     """
     wanted_class = ValidityClass(validity_class) if validity_class is not None else None
+    wanted_rung = Rung(rung) if rung is not None else None
     entries = load_manifest().entries
     return [
         entry
@@ -227,6 +263,7 @@ def load_corpus(
         and (wanted_class is None or entry.validity_class is wanted_class)
         and (feature is None or feature in entry.features)
         and (adapter_key is None or entry.adapter_key == adapter_key)
+        and (wanted_rung is None or entry.rung is wanted_rung)
     ]
 
 

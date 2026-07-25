@@ -1,0 +1,10 @@
+// CORBA IDL (OMG IDL) example — minimal document.
+//
+// The smallest canonical OMG IDL file: one module with one interface and a
+// single operation.
+module Ping {
+
+  interface Echo {
+    string echo(in string message);
+  };
+};

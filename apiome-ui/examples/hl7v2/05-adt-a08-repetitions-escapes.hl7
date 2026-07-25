@@ -1,0 +1,11 @@
+MSH|^~\&|REG^GHH^L|GOOD HEALTH HOSPITAL|EMR|GOOD HEALTH HOSPITAL|20260117141530||ADT^A08^ADT_A01|MSG00004|P|2.5|||AL|NE
+EVN|A08|20260117141500|||004777^Smith^John^A^III^DR
+PID|1||MRN-13579^^^GHH^MR~ACCT-9922^^^GHH^AN||Garcia^Maria^Isabel^^Sra~Lopez^Maria^^^^^M||19851102|F||2106-3^White^HL70005|12 Camino Real^Unit 4^Santa Fe^NM^87501^USA^H~PO Box 77^^Santa Fe^NM^87502^USA^M||(555)555-0142^PRN^PH~maria.garcia@example.com^NET^Internet|||M
+AL1|1|DA|70618^Penicillin^L|SV|Hives \T\ facial swelling
+AL1|2|FA|33333^Peanut^L|MO|Anaphylaxis
+DG1|1|I10|E11.9^Type 2 diabetes without complications^I10||20240110|W
+DG1|2|I10|I10^Essential hypertension^I10||20220305|W
+OBX|1|ST|NOTE^Comment||Escaped separators demo: \F\ field \S\ component \R\ repetition \E\ escape||||||F
+IN1|1|PLAN001|INS-77|Acme Health \T\ Life|500 Insurance Way^^Albany^NY^12207|||GRP-88&Corporate&EastDivision
+ZPD|1|Preferred pharmacy|Central Pharmacy^123 Main St^Santa Fe^NM
+PV1|1|I|3N^301^A|||004777^Smith^John^A^III^DR||||MED||||ADM|A0

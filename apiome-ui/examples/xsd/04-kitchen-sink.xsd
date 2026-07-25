@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  XSD stress example: many schema features in one document.
+
+  Exercises annotation and documentation, simpleType restriction facets
+  (pattern, length, numeric bounds), a list type, a union type, nested
+  sequences, a choice group, optional and defaulted attributes, nillable
+  and defaulted elements, occurrence bounds, and an open content wildcard.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://example.com/shipping"
+           xmlns:sh="http://example.com/shipping"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+  <xs:annotation>
+    <xs:documentation>Shipping manifest schema stressing rarely combined features.</xs:documentation>
+  </xs:annotation>
+
+  <xs:element name="manifest" type="sh:Manifest"/>
+
+  <xs:simpleType name="TrackingCode">
+    <xs:annotation>
+      <xs:documentation>Two uppercase letters followed by nine digits.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Z]{2}[0-9]{9}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CountryCode">
+    <xs:restriction base="xs:string">
+      <xs:length value="2"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="WeightKg">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="1000"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RouteCodes">
+    <xs:annotation>
+      <xs:documentation>Whitespace-separated list of hub codes.</xs:documentation>
+    </xs:annotation>
+    <xs:list itemType="sh:CountryCode"/>
+  </xs:simpleType>
+
+  <xs:simpleType name="ParcelRef">
+    <xs:annotation>
+      <xs:documentation>Union of a tracking code and a plain integer id.</xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes="sh:TrackingCode xs:positiveInteger"/>
+  </xs:simpleType>
+
+  <xs:complexType name="Dimensions">
+    <xs:sequence>
+      <xs:element name="lengthCm" type="xs:decimal"/>
+      <xs:element name="widthCm" type="xs:decimal"/>
+      <xs:element name="heightCm" type="xs:decimal"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Parcel">
+    <xs:sequence>
+      <xs:element name="ref" type="sh:ParcelRef"/>
+      <xs:element name="weight" type="sh:WeightKg"/>
+      <xs:element name="dimensions" type="sh:Dimensions" minOccurs="0"/>
+      <xs:element name="declaredValue" type="xs:decimal" nillable="true" minOccurs="0"/>
+      <xs:choice>
+        <xs:element name="dropOffPoint" type="xs:string"/>
+        <xs:element name="homeAddress" type="xs:string"/>
+      </xs:choice>
+      <xs:element name="handlingNote" type="xs:string" default="none" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="fragile" type="xs:boolean" default="false"/>
+    <xs:attribute name="priority" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="Manifest">
+    <xs:sequence>
+      <xs:element name="manifestId" type="xs:string"/>
+      <xs:element name="origin" type="sh:CountryCode"/>
+      <xs:element name="destination" type="sh:CountryCode"/>
+      <xs:element name="route" type="sh:RouteCodes" minOccurs="0"/>
+      <xs:element name="parcels" type="sh:Parcel" minOccurs="1" maxOccurs="500"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="version" type="xs:string" use="required"/>
+    <xs:anyAttribute namespace="##other" processContents="skip"/>
+  </xs:complexType>
+</xs:schema>

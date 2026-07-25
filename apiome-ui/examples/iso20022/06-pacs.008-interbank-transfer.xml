@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ISO 20022 example — pacs.008.001.08 (FIToFICustomerCreditTransfer), shaped like
+  the interbank credit transfer exchanged over SWIFT CBPR+ / SEPA clearing:
+  settlement information in the group header, a UETR end-to-end reference,
+  instructing/instructed agents, and charge-bearer conventions.
+  Hand-authored reconstruction of the message shape; no third-party text copied.
+-->
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
+  <FIToFICstmrCdtTrf>
+    <GrpHdr>
+      <MsgId>PACS8-20260116-0001</MsgId>
+      <CreDtTm>2026-01-16T09:30:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <SttlmInf>
+        <SttlmMtd>INDA</SttlmMtd>
+      </SttlmInf>
+      <InstgAgt>
+        <FinInstnId><BICFI>COBADEFFXXX</BICFI></FinInstnId>
+      </InstgAgt>
+      <InstdAgt>
+        <FinInstnId><BICFI>BNPAFRPPXXX</BICFI></FinInstnId>
+      </InstdAgt>
+    </GrpHdr>
+    <CdtTrfTxInf>
+      <PmtId>
+        <InstrId>INSTR-0001</InstrId>
+        <EndToEndId>E2E-PACS8-0001</EndToEndId>
+        <UETR>eb6305c9-1f7f-49de-aed0-16487c27b42d</UETR>
+      </PmtId>
+      <IntrBkSttlmAmt Ccy="EUR">25000.00</IntrBkSttlmAmt>
+      <IntrBkSttlmDt>2026-01-16</IntrBkSttlmDt>
+      <ChrgBr>SHAR</ChrgBr>
+      <Dbtr>
+        <Nm>Example Corp</Nm>
+        <PstlAdr><Ctry>DE</Ctry></PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id><IBAN>DE89370400440532013000</IBAN></Id>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId><BICFI>COBADEFFXXX</BICFI></FinInstnId>
+      </DbtrAgt>
+      <CdtrAgt>
+        <FinInstnId><BICFI>BNPAFRPPXXX</BICFI></FinInstnId>
+      </CdtrAgt>
+      <Cdtr>
+        <Nm>Fournisseur SARL</Nm>
+        <PstlAdr><Ctry>FR</Ctry></PstlAdr>
+      </Cdtr>
+      <CdtrAcct>
+        <Id><IBAN>FR7630006000011234567890189</IBAN></Id>
+      </CdtrAcct>
+      <RmtInf>
+        <Ustrd>Contract 2026-77 milestone 1</Ustrd>
+      </RmtInf>
+    </CdtTrfTxInf>
+  </FIToFICstmrCdtTrf>
+</Document>

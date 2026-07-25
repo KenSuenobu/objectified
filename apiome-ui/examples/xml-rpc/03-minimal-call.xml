@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+  XML-RPC minimal example — the smallest canonical methodCall.
+
+  A `<methodCall>` needs only a `<methodName>`; here it carries one positional
+  `<string>` param, the floor of the protocol's grammar: no structs, no arrays,
+  no response.
+-->
+<methodCall>
+  <methodName>system.ping</methodName>
+  <params>
+    <param>
+      <value><string>hello</string></value>
+    </param>
+  </params>
+</methodCall>

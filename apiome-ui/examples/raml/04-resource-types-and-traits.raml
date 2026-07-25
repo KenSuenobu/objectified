@@ -1,0 +1,105 @@
+#%RAML 1.0
+# Composition RAML 1.0 example — reuse constructs: a trait applied with `is`,
+# a resourceType applied with `type`, and data-type inheritance (Device
+# extends Auditable; DeviceStatus is a constrained enum type).
+title: Device Registry API
+version: v2
+baseUri: https://api.example.com/registry/v2
+mediaType: application/json
+
+traits:
+  paged:
+    queryParameters:
+      page:
+        type: integer
+        required: false
+        description: Zero-based page index.
+      pageSize:
+        type: integer
+        required: false
+        description: Number of entries per page.
+
+resourceTypes:
+  collection:
+    get:
+      description: List the items of the collection resource.
+
+types:
+  Auditable:
+    type: object
+    description: Mixin base carrying audit timestamps.
+    properties:
+      createdAt:
+        type: datetime
+        description: Creation timestamp.
+      updatedAt:
+        type: datetime
+        description: Last modification timestamp.
+  DeviceStatus:
+    type: string
+    description: Lifecycle state of a device.
+    enum:
+      - provisioned
+      - active
+      - retired
+  Device:
+    type: Auditable
+    description: A registered device; inherits audit fields from Auditable.
+    properties:
+      id:
+        type: string
+        description: Unique device identifier.
+      name:
+        type: string
+        description: Human-readable device name.
+      status:
+        type: DeviceStatus
+        description: Current lifecycle state.
+  DevicePage:
+    type: object
+    description: One page of devices.
+    properties:
+      items:
+        type: array
+        description: Devices on this page.
+        items: Device
+      total:
+        type: integer
+        description: Total number of devices.
+
+/devices:
+  type: collection
+  description: Registered devices.
+  get:
+    is:
+      - paged
+    description: List registered devices page by page.
+    responses:
+      200:
+        body:
+          application/json:
+            type: DevicePage
+  post:
+    description: Register a device.
+    body:
+      application/json:
+        type: Device
+    responses:
+      201:
+        body:
+          application/json:
+            type: Device
+  /{deviceId}:
+    uriParameters:
+      deviceId:
+        type: string
+        description: Identifier of the device.
+    get:
+      description: Fetch one device.
+      responses:
+        200:
+          body:
+            application/json:
+              type: Device
+        404:
+          description: Unknown device.

@@ -1,0 +1,151 @@
+#%RAML 1.0
+# Stress RAML 1.0 example — less common grammar corners in one document:
+# baseUriParameters, protocols, securitySchemes, annotationTypes and an
+# applied annotation, optional properties via the `?` suffix, file/date-only/
+# time-only/datetime scalar types, enum types, array shorthand (Attachment[]),
+# deep resource nesting, and head/options/patch methods.
+title: Archive Vault API
+description: Exercises the less common corners of the RAML 1.0 grammar.
+version: v3
+baseUri: https://{region}.vault.example.com/{version}
+baseUriParameters:
+  region:
+    type: string
+    description: Deployment region code, e.g. eu-central.
+protocols:
+  - HTTPS
+mediaType: application/json
+
+securitySchemes:
+  apiKey:
+    type: Pass Through
+    description: Static API key sent on every request.
+    describedBy:
+      headers:
+        X-Api-Key:
+          type: string
+          description: Issued API key.
+
+annotationTypes:
+  internalOnly:
+    type: nil
+    description: Marks a method as internal to the platform team.
+
+types:
+  Attachment:
+    type: object
+    description: Binary payload metadata.
+    properties:
+      fileName:
+        type: string
+        description: Original client-side file name.
+      content:
+        type: file
+        description: The uploaded bytes.
+      sizeBytes:
+        type: integer
+        description: Payload size in bytes.
+      checksum?:
+        type: string
+        description: Optional SHA-256 checksum supplied by the client.
+  ArchiveState:
+    type: string
+    description: Lifecycle state of an archive.
+    enum:
+      - open
+      - sealed
+      - purged
+  ArchiveEntry:
+    type: object
+    description: One archive held in the vault.
+    properties:
+      id:
+        type: string
+        description: Archive identifier.
+      state:
+        type: ArchiveState
+        description: Current lifecycle state.
+      createdOn:
+        type: date-only
+        description: Creation date.
+      sealedAt?:
+        type: datetime
+        description: When the archive was sealed, if it was.
+      dailyCutoff?:
+        type: time-only
+        description: Daily ingest cutoff time, if configured.
+      tags:
+        type: array
+        description: Free-form labels.
+        items: string
+      attachments?:
+        type: Attachment[]
+        description: Files stored in the archive.
+
+/archives:
+  description: The vault's archives.
+  securedBy:
+    - apiKey
+  get:
+    description: List archives with optional filters.
+    queryParameters:
+      state:
+        type: ArchiveState
+        required: false
+        description: Filter by lifecycle state.
+      createdAfter:
+        type: date-only
+        required: false
+        description: Only archives created after this date.
+    responses:
+      200:
+        body:
+          application/json:
+            type: ArchiveEntry[]
+  /{archiveId}:
+    uriParameters:
+      archiveId:
+        type: string
+        description: Identifier of the archive.
+    get:
+      description: Fetch one archive.
+      responses:
+        200:
+          body:
+            application/json:
+              type: ArchiveEntry
+        404:
+          description: Unknown archive.
+    patch:
+      (internalOnly):
+      description: Partially update archive metadata.
+      body:
+        application/json:
+          type: object
+      responses:
+        200:
+          body:
+            application/json:
+              type: ArchiveEntry
+    head:
+      description: Existence probe without a response body.
+      responses:
+        204:
+          description: The archive exists.
+    /attachments:
+      description: Files stored inside one archive.
+      post:
+        description: Attach a file to the archive.
+        body:
+          multipart/form-data:
+            type: Attachment
+        responses:
+          201:
+            body:
+              application/json:
+                type: Attachment
+      options:
+        description: Discover the allowed methods.
+        responses:
+          204:
+            description: No content.

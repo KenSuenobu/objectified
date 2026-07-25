@@ -1,0 +1,76 @@
+FORMAT: 1A
+HOST: https://api.example.com
+
+# Ticketing API
+
+Stress example for the less common grammar corners: an enum data structure,
+optional fields, action-level path overrides (a search action and a close
+action living on other paths), resource-level plus action-level parameters,
+and multiple alternative responses per action.
+
+## Tickets Collection [/tickets]
+
++ Parameters
+    + status (string, optional) - Filter the collection by ticket status.
+
+### List tickets [GET]
+
++ Response 200 (application/json)
+    + Attributes (array[Ticket])
+
+### Search tickets [GET /tickets/search]
+
++ Parameters
+    + q (string, required) - Full-text query string.
+    + limit (number, optional) - Maximum number of results to return.
+
++ Response 200 (application/json)
+    + Attributes (array[Ticket])
+
++ Response 400 (application/json)
+    + Attributes (Error)
+
+## Ticket [/tickets/{id}]
+
++ Parameters
+    + id (string, required) - Ticket identifier.
+
+### Get a ticket [GET]
+
++ Response 200 (application/json)
+    + Attributes (Ticket)
+
++ Response 404 (application/json)
+    + Attributes (Error)
+
+### Close a ticket [POST /tickets/{id}/close]
+
++ Request (application/json)
+    + Attributes (CloseRequest)
+
++ Response 200 (application/json)
+    + Attributes (Ticket)
+
++ Response 409 (application/json)
+    + Attributes (Error)
+
+# Data Structures
+
+## Ticket (object)
++ id: `T-100` (string, required) - Ticket identifier.
++ subject: `Printer on fire` (string, required) - Short subject line.
++ status: `open` (TicketStatus, required) - Lifecycle state.
++ assignee: `kai` (string, optional) - Current assignee, if any.
++ priority: 2 (number, optional) - Priority from 1 (highest) to 5.
+
+## TicketStatus (enum)
++ open
++ pending
++ closed
+
+## CloseRequest (object)
++ reason: `resolved` (string, required) - Why the ticket is being closed.
+
+## Error (object)
++ code: `not_found` (string, required) - Machine-readable error code.
++ message: `Ticket not found` (string, required) - Human-readable message.

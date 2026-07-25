@@ -1,6 +1,4 @@
-"""
-Schema demonstrating enum types in GraphQL
-"""
+# Schema demonstrating enum types in GraphQL
 
 """
 User role in the system

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  XSD composition example: type derivation and reuse.
+
+  A base Publication type is extended twice via complexContent extension
+  (Book adds an ISBN, Journal adds an ISSN); the Isbn simpleType is defined
+  once and reused, and the Shelf type composes Publication-derived members
+  by reference to their shared shapes.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://example.com/library"
+           xmlns:lib="http://example.com/library"
+           elementFormDefault="qualified">
+
+  <xs:element name="shelf" type="lib:Shelf"/>
+
+  <xs:simpleType name="Isbn">
+    <xs:restriction base="xs:string">
+      <xs:length value="13"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="Publication">
+    <xs:sequence>
+      <xs:element name="title" type="xs:string"/>
+      <xs:element name="publisher" type="xs:string"/>
+      <xs:element name="publishedYear" type="xs:gYear"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Book">
+    <xs:complexContent>
+      <xs:extension base="lib:Publication">
+        <xs:sequence>
+          <xs:element name="isbn" type="lib:Isbn"/>
+          <xs:element name="author" type="xs:string" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="Journal">
+    <xs:complexContent>
+      <xs:extension base="lib:Publication">
+        <xs:sequence>
+          <xs:element name="issn" type="xs:string"/>
+          <xs:element name="issueNumber" type="xs:positiveInteger"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="Shelf">
+    <xs:sequence>
+      <xs:element name="label" type="xs:string"/>
+      <xs:element name="book" type="lib:Book" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="journal" type="lib:Journal" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="section" type="xs:string"/>
+  </xs:complexType>
+</xs:schema>
