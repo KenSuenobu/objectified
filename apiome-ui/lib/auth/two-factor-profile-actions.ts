@@ -18,6 +18,7 @@ import { resolveBetterAuthSecret } from './better-auth-session';
 import {
   TRUST_DEVICE_COOKIE_NAMES,
 } from './two-factor-trust-cookie';
+import { isTwoFactorEmailOtpConfigured } from './send-two-factor-email-otp';
 
 /**
  * Read the Better Auth trust-device cookie value from the request cookie jar, if present.
@@ -171,4 +172,16 @@ export async function revokeThisTrustedDevice(): Promise<{ ok: boolean }> {
 
   expireTrustDeviceCookies(store);
   return { ok: true };
+}
+
+/**
+ * Whether email OTP is available as a login second factor (OLO-9.50 #5070).
+ *
+ * Better Auth registers `otpOptions.sendOTP` only when SendGrid is configured; the Profile
+ * Security UI uses this so TOTP-only deployments do not advertise email OTP.
+ *
+ * @returns `{ available: true }` when `SENDGRID_API_KEY` and `EMAIL_FROM` are set.
+ */
+export async function getEmailOtpAvailability(): Promise<{ available: boolean }> {
+  return { available: isTwoFactorEmailOtpConfigured() };
 }

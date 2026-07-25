@@ -17,6 +17,8 @@ linked-accounts panel, Better Auth sign-in route). No code changes are needed ei
 |---|---|---|---|
 | `BETTER_AUTH_URL` | all | Yes | Public base URL of the app; every OAuth callback URL below derives from it |
 | `BETTER_AUTH_SECRET` | all | Yes | Shared signing secret for the Better Auth session and the downstream REST JWT (`openssl rand -base64 32`) |
+| `SENDGRID_API_KEY` | 2FA email OTP | To enable email OTP | SendGrid API key used by `otpOptions.sendOTP` (OLO-9.50) |
+| `EMAIL_FROM` | 2FA email OTP | To enable email OTP | Verified SendGrid sender (`addr@domain` or `Name <addr@domain>`) |
 | `GITHUB_ID` | GitHub | To enable GitHub | OAuth app **Client ID** |
 | `GITHUB_SECRET` | GitHub | To enable GitHub | OAuth app **Client secret** |
 | `GITLAB_CLIENT_ID` | GitLab | To enable GitLab | Application **Application ID** |
@@ -592,3 +594,16 @@ non-provider host.
 **Never set the GitHub / GitLab / Azure authority / Google issuer overrides in a real deployment** —
 they redirect the entire sign-in flow to the named host. Unset (the default) the real provider
 endpoints are used; the boot-time validation matrix above is unaffected by them.
+
+## Two-factor email OTP (OLO-9.50)
+
+Email OTP is an alternate **login** second factor once a user has 2FA enabled (TOTP enroll). It is
+**not** a separate per-user enrollment: Better Auth registers `otpOptions.sendOTP` at the server
+level when both env vars are set.
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `SENDGRID_API_KEY` | To enable email OTP | SendGrid API key |
+| `EMAIL_FROM` | To enable email OTP | Verified sender address |
+
+Unset either variable → credential 2FA stays TOTP-only (`twoFactorMethods` will not include `otp`).

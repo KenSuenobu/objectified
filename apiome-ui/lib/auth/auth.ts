@@ -27,6 +27,10 @@ import {
 } from './better-auth-oauth-providers';
 import { LINKABLE_PROVIDERS } from './account-resolution';
 import { resolveProviderEnv, type EnvMap } from './provider-config-resolver';
+import {
+  isTwoFactorEmailOtpConfigured,
+  sendTwoFactorEmailOtp,
+} from './send-two-factor-email-otp';
 import type { GenericOAuthConfig } from 'better-auth/plugins/generic-oauth';
 
 // The Better Auth server instance shares the same Postgres pool the rest of apiome-ui uses, so a
@@ -130,9 +134,7 @@ function buildBetterAuthConfig(oauthConfigs: GenericOAuthConfig[]) {
   // 10.6 resolution adapter already recognises; it must come before `nextCookies()` (which stays
   // last so Better Auth can set cookies from Next.js server actions).
   //
-  // 2FA foundation (OLO-10.10 #5005): register the `twoFactor` plugin so the TOTP / backup-code /
-  // trusted-device endpoints exist on the migrated stack for OLO-9.13/9.14 to build on — this ticket
-  // stands the plugin up only; no enrollment/login UX is added here.
+  // 2FA (OLO-10.10 #5005 + OLO-9.13/9.15/9.50):
   //   - `issuer: appName` — the label shown in the user's authenticator app (design §2.5).
   //   - `twoFactorTable: TWO_FACTOR_TABLE` — map the plugin's `twoFactor` model onto apiome's
   //     snake_case `two_factor` table (V201). The plugin's own field names stay Better Auth's native
@@ -142,6 +144,9 @@ function buildBetterAuthConfig(oauthConfigs: GenericOAuthConfig[]) {
   //     secret (`resolveBetterAuthSecret()` above). This is the OLO-10.10 resolution of design R11:
   //     use the plugin's built-in symmetric encryption rather than a bespoke OLO-8.3 envelope, so no
   //     new key-management surface is introduced (docs/BETTER_AUTH_MIGRATION.md §2.5 / R11).
+  //   - Email OTP (OLO-9.50 #5070): when SendGrid is configured (`SENDGRID_API_KEY` + `EMAIL_FROM`),
+  //     register `otpOptions.sendOTP`. Better Auth then includes `"otp"` in `twoFactorMethods` for
+  //     every `twoFactorEnabled` user at credential sign-in (server-level, not per-user enroll).
   // Placed before `nextCookies()`, which must stay last (see above).
   // `customSession` (OLO-10.12 #5007) shapes every session read into the app contract the UI and the
   // ~106 API routes consume — `session.user.user_id` (= Better Auth's `user.id`) plus the validated
@@ -161,7 +166,18 @@ function buildBetterAuthConfig(oauthConfigs: GenericOAuthConfig[]) {
   // from the Next.js server action that calls it (`better-auth-one-time-code-actions.ts`).
   plugins: [
     genericOAuth({ config: oauthConfigs }),
-    twoFactor({ issuer: APP_NAME, twoFactorTable: TWO_FACTOR_TABLE }),
+    twoFactor({
+      issuer: APP_NAME,
+      twoFactorTable: TWO_FACTOR_TABLE,
+      ...(isTwoFactorEmailOtpConfigured()
+        ? {
+            otpOptions: {
+              sendOTP: ({ user, otp }: { user: { email: string; name?: string | null }; otp: string }) =>
+                sendTwoFactorEmailOtp({ user, otp }),
+            },
+          }
+        : {}),
+    }),
     oneTimeCodePlugin(),
     customSession(async ({ user, session }) => ({
       session,

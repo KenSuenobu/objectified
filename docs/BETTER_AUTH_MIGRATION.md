@@ -268,6 +268,12 @@ Plus `user.twoFactorEnabled boolean` (§2.1). Registered via `twoFactor()` on th
 > `viewBackupCodes`), password-gated regenerate, forget-this-browser (trust-device cookie), and
 > recovery guidance on Profile Security. Better Auth has no multi-device trust list — revoke is
 > per-browser. Backup-code login, trust-on-verify checkbox, and lockout UX remain OLO-9.14 (#5006).
+>
+> **✅ Email OTP implemented (OLO-9.50 #5070).** When `SENDGRID_API_KEY` + `EMAIL_FROM` are set,
+> `twoFactor({ otpOptions: { sendOTP } })` is registered. Better Auth then includes `"otp"` in
+> `twoFactorMethods` for every `twoFactorEnabled` user (server-level — not a separate per-user
+> enroll). `/login/2fa` offers Authenticator and/or email send/verify from that list; Profile
+> Security surfaces Email OTP when SendGrid is configured. Unset either env → TOTP-only.
 
 ### 2.6 Tables that stay as-is
 

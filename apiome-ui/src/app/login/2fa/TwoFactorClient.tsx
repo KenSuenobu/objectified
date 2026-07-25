@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, KeyRound, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, KeyRound, ArrowLeft, Mail } from 'lucide-react';
 import { authClient } from '@lib/auth/auth-client';
 import {
+  peekTwoFactorMethods,
   takeTwoFactorCallbackUrl,
+  takeTwoFactorMethods,
   TWO_FACTOR_DEFAULT_CALLBACK,
+  type TwoFactorMethod,
 } from '@lib/auth/two-factor-callback';
 import { browserNavigate } from '@lib/auth/browser-navigate';
 import { useDarkMode } from '../../hooks/useDarkMode';
@@ -28,6 +31,11 @@ const iconWrapClasses = 'absolute inset-y-0 left-0 pl-3.5 flex items-center poin
 const fieldIconClasses =
   'text-slate-400 group-focus-within:text-indigo-500 transition-colors dark:text-slate-500 dark:group-focus-within:text-indigo-300';
 
+const methodTabActive =
+  'bg-indigo-600 text-white shadow-sm dark:bg-indigo-500';
+const methodTabIdle =
+  'bg-white/70 text-slate-600 hover:bg-white dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/[0.07]';
+
 interface TwoFactorClientProps {
   /** Validated by the page (resolveCallbackUrl) before being passed in. */
   callbackUrl?: string;
@@ -35,22 +43,35 @@ interface TwoFactorClientProps {
 }
 
 /**
- * TOTP verification form for the password-path second factor (OLO-9.13 #5014).
+ * Second-factor verification after password sign-in (OLO-9.13 #5014 + OLO-9.50 #5070).
  *
- * Submits a 6-digit authenticator code via `authClient.twoFactor.verifyTotp`, then navigates to
- * the stored/queried callback URL once Better Auth issues the full session.
+ * Honors `twoFactorMethods` from the challenge: TOTP (`verifyTotp`), email OTP (`sendOtp` /
+ * `verifyOtp`), or a switcher when both are offered.
  */
 const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
   callbackUrl = TWO_FACTOR_DEFAULT_CALLBACK,
   error,
 }) => {
+  const methods = useMemo(() => peekTwoFactorMethods(), []);
+  const [activeMethod, setActiveMethod] = useState<TwoFactorMethod>(() =>
+    methods.includes('totp') ? 'totp' : methods[0] ?? 'totp'
+  );
   const [code, setCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const isDark = useDarkMode();
   const queryError = getAuthErrorCopy(error);
+  const showMethodSwitcher = methods.includes('totp') && methods.includes('otp');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const finishSuccess = () => {
+    takeTwoFactorMethods();
+    const destination = takeTwoFactorCallbackUrl(callbackUrl);
+    browserNavigate(destination);
+  };
+
+  const handleTotpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = code.replace(/\s/g, '');
     if (!/^\d{6}$/.test(trimmed)) {
@@ -69,13 +90,69 @@ const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
         setIsSubmitting(false);
         return;
       }
-      const destination = takeTwoFactorCallbackUrl(callbackUrl);
-      browserNavigate(destination);
+      finishSuccess();
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : 'Verification failed. Please try again.');
       setIsSubmitting(false);
     }
   };
+
+  const handleSendOtp = async () => {
+    setIsSendingOtp(true);
+    setLocalError(null);
+    try {
+      const res = await authClient.twoFactor.sendOtp({});
+      if (res?.error) {
+        setLocalError(res.error.message || 'Could not send the email code. Try again.');
+        return;
+      }
+      setOtpSent(true);
+    } catch (err) {
+      setLocalError(err instanceof Error ? err.message : 'Could not send the email code.');
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = code.replace(/\s/g, '');
+    if (!/^\d{6}$/.test(trimmed)) {
+      setLocalError('Enter the 6-digit code from your email.');
+      return;
+    }
+    setIsSubmitting(true);
+    setLocalError(null);
+    try {
+      const res = await authClient.twoFactor.verifyOtp({ code: trimmed });
+      if (res?.error) {
+        setLocalError(
+          res.error.message || 'That code was not accepted. Request a new email code and try again.'
+        );
+        setIsSubmitting(false);
+        return;
+      }
+      finishSuccess();
+    } catch (err) {
+      setLocalError(err instanceof Error ? err.message : 'Verification failed. Please try again.');
+      setIsSubmitting(false);
+    }
+  };
+
+  const selectMethod = (method: TwoFactorMethod) => {
+    setActiveMethod(method);
+    setCode('');
+    setLocalError(null);
+  };
+
+  const heading =
+    activeMethod === 'otp' ? 'Check your email' : 'Two-factor authentication';
+  const description =
+    activeMethod === 'otp'
+      ? otpSent
+        ? 'Enter the 6-digit code we emailed you.'
+        : 'We will email a 6-digit code to the address on your account.'
+      : 'Enter the 6-digit code from Authy, Google Authenticator, or another TOTP app.';
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
@@ -102,15 +179,51 @@ const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
 
               <div className="mb-8 text-center">
                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-100 dark:bg-indigo-900/40">
-                  <ShieldCheck className="h-6 w-6 text-indigo-600 dark:text-indigo-300" aria-hidden />
+                  {activeMethod === 'otp' ? (
+                    <Mail className="h-6 w-6 text-indigo-600 dark:text-indigo-300" aria-hidden />
+                  ) : (
+                    <ShieldCheck className="h-6 w-6 text-indigo-600 dark:text-indigo-300" aria-hidden />
+                  )}
                 </div>
                 <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-                  Two-factor authentication
+                  {heading}
                 </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Enter the 6-digit code from Authy, Google Authenticator, or another TOTP app.
-                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{description}</p>
               </div>
+
+              {showMethodSwitcher && (
+                <div
+                  className="mb-6 grid grid-cols-2 gap-2 rounded-2xl border border-slate-200/80 p-1 dark:border-white/10"
+                  role="tablist"
+                  aria-label="Verification method"
+                  data-testid="two-factor-method-switcher"
+                >
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeMethod === 'totp'}
+                    data-testid="two-factor-method-totp"
+                    className={`rounded-xl px-3 py-2 text-sm font-medium transition ${
+                      activeMethod === 'totp' ? methodTabActive : methodTabIdle
+                    }`}
+                    onClick={() => selectMethod('totp')}
+                  >
+                    Authenticator
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeMethod === 'otp'}
+                    data-testid="two-factor-method-otp"
+                    className={`rounded-xl px-3 py-2 text-sm font-medium transition ${
+                      activeMethod === 'otp' ? methodTabActive : methodTabIdle
+                    }`}
+                    onClick={() => selectMethod('otp')}
+                  >
+                    Email code
+                  </button>
+                </div>
+              )}
 
               {(queryError || localError) && (
                 <div
@@ -122,46 +235,101 @@ const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-                <div className="group">
-                  <label htmlFor="totp-code" className={labelClasses}>
-                    Authentication code
-                  </label>
-                  <div className="relative">
-                    <span className={iconWrapClasses}>
-                      <KeyRound className={`h-5 w-5 ${fieldIconClasses}`} aria-hidden />
-                    </span>
-                    <input
-                      id="totp-code"
-                      name="code"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      autoFocus
-                      maxLength={6}
-                      pattern="\d{6}"
-                      placeholder="000000"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      className={`${inputClasses} font-mono tracking-[0.35em]`}
-                      disabled={isSubmitting}
-                      aria-invalid={Boolean(localError)}
-                    />
-                  </div>
-                </div>
+              {activeMethod === 'otp' ? (
+                <form onSubmit={handleOtpSubmit} className="space-y-5" noValidate>
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    disabled={isSendingOtp || isSubmitting}
+                    data-testid="two-factor-send-otp"
+                    className="w-full rounded-2xl border border-slate-200/90 bg-white/70 px-4 py-3 text-sm font-semibold
+                      text-slate-800 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60
+                      dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.07]"
+                  >
+                    {isSendingOtp ? 'Sending…' : otpSent ? 'Resend email code' : 'Send email code'}
+                  </button>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting || code.length !== 6}
-                  data-testid="two-factor-submit"
-                  className={`${styles.shine} w-full rounded-2xl px-4 py-3.5 font-semibold text-white
-                    bg-gradient-to-r from-indigo-600 to-violet-600
-                    transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/25
-                    disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
-                >
-                  {isSubmitting ? 'Verifying…' : 'Verify and continue'}
-                </button>
-              </form>
+                  <div className="group">
+                    <label htmlFor="email-otp-code" className={labelClasses}>
+                      Email code
+                    </label>
+                    <div className="relative">
+                      <span className={iconWrapClasses}>
+                        <Mail className={`h-5 w-5 ${fieldIconClasses}`} aria-hidden />
+                      </span>
+                      <input
+                        id="email-otp-code"
+                        name="code"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={6}
+                        pattern="\d{6}"
+                        placeholder="000000"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        className={`${inputClasses} font-mono tracking-[0.35em]`}
+                        disabled={isSubmitting}
+                        aria-invalid={Boolean(localError)}
+                        data-testid="two-factor-otp-code"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || code.length !== 6}
+                    data-testid="two-factor-otp-submit"
+                    className={`${styles.shine} w-full rounded-2xl px-4 py-3.5 font-semibold text-white
+                      bg-gradient-to-r from-indigo-600 to-violet-600
+                      transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/25
+                      disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
+                  >
+                    {isSubmitting ? 'Verifying…' : 'Verify and continue'}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleTotpSubmit} className="space-y-5" noValidate>
+                  <div className="group">
+                    <label htmlFor="totp-code" className={labelClasses}>
+                      Authentication code
+                    </label>
+                    <div className="relative">
+                      <span className={iconWrapClasses}>
+                        <KeyRound className={`h-5 w-5 ${fieldIconClasses}`} aria-hidden />
+                      </span>
+                      <input
+                        id="totp-code"
+                        name="code"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        autoFocus
+                        maxLength={6}
+                        pattern="\d{6}"
+                        placeholder="000000"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        className={`${inputClasses} font-mono tracking-[0.35em]`}
+                        disabled={isSubmitting}
+                        aria-invalid={Boolean(localError)}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || code.length !== 6}
+                    data-testid="two-factor-submit"
+                    className={`${styles.shine} w-full rounded-2xl px-4 py-3.5 font-semibold text-white
+                      bg-gradient-to-r from-indigo-600 to-violet-600
+                      transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/25
+                      disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
+                  >
+                    {isSubmitting ? 'Verifying…' : 'Verify and continue'}
+                  </button>
+                </form>
+              )}
 
               <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
                 <Link

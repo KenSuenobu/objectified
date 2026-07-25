@@ -1,20 +1,22 @@
 'use client';
 
 /**
- * Profile TOTP settings (OLO-9.13 #5014 + OLO-9.15 #5015).
+ * Profile TOTP settings (OLO-9.13 #5014 + OLO-9.15 #5015 + OLO-9.50 #5070).
  *
  * Password-gated enable (QR + confirm + one-time backup reveal) and disable, plus self-service
  * management when enrolled: remaining backup-code count, password-gated regenerate, forget-this-
- * device (per-browser trust cookie), and recovery guidance.
+ * device (per-browser trust cookie), recovery guidance, and Email OTP availability when SendGrid
+ * is configured (server-level OTP — no separate enroll).
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
-import { ShieldCheck, Copy, Check, KeyRound, MonitorSmartphone } from 'lucide-react';
+import { ShieldCheck, Copy, Check, KeyRound, MonitorSmartphone, Mail } from 'lucide-react';
 import { authClient } from '@lib/auth/auth-client';
 import { useAuthSession } from '@lib/auth/session-client';
 import {
   getBackupCodeStatus,
+  getEmailOtpAvailability,
   getTrustedDeviceStatus,
   revokeThisTrustedDevice,
 } from '@lib/auth/two-factor-profile-actions';
@@ -64,24 +66,29 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [trusted, setTrusted] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
+  const [emailOtpAvailable, setEmailOtpAvailable] = useState(false);
 
   const refreshManagementStatus = useCallback(async () => {
     if (!enabled) {
       setRemaining(null);
       setTrusted(false);
+      setEmailOtpAvailable(false);
       return;
     }
     setStatusLoading(true);
     try {
-      const [codes, device] = await Promise.all([
+      const [codes, device, emailOtp] = await Promise.all([
         getBackupCodeStatus(),
         getTrustedDeviceStatus(),
+        getEmailOtpAvailability(),
       ]);
       setRemaining(codes.remaining);
       setTrusted(device.trusted);
+      setEmailOtpAvailable(emailOtp.available);
     } catch {
       setRemaining(null);
       setTrusted(false);
+      setEmailOtpAvailable(false);
     } finally {
       setStatusLoading(false);
     }
@@ -314,9 +321,35 @@ export function TwoFactorSettings({ className }: TwoFactorSettingsProps) {
 
       {enabled ? (
         <div className="space-y-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400" data-testid="two-factor-methods">
-            Enrolled method: Authenticator app (TOTP)
-          </p>
+          <div data-testid="two-factor-methods">
+            <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Sign-in methods
+            </p>
+            <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+              <li>Authenticator app (TOTP)</li>
+              {emailOtpAvailable && (
+                <li data-testid="two-factor-method-email-otp">
+                  Email OTP — available at sign-in (no separate enrollment)
+                </li>
+              )}
+            </ul>
+          </div>
+
+          {emailOtpAvailable && (
+            <div
+              className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-2"
+              data-testid="two-factor-email-otp-info"
+            >
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
+                <Mail className="h-4 w-4 text-indigo-500" aria-hidden />
+                Email one-time code
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                After your password, you can request a code emailed to your account address instead
+                of (or in addition to) using your authenticator app.
+              </p>
+            </div>
+          )}
 
           <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">

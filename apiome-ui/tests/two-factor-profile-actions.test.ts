@@ -163,4 +163,31 @@ describe('two-factor-profile-actions', () => {
       );
     });
   });
+
+  describe('getEmailOtpAvailability', () => {
+    const originalKey = process.env.SENDGRID_API_KEY;
+    const originalFrom = process.env.EMAIL_FROM;
+
+    afterEach(() => {
+      if (originalKey === undefined) delete process.env.SENDGRID_API_KEY;
+      else process.env.SENDGRID_API_KEY = originalKey;
+      if (originalFrom === undefined) delete process.env.EMAIL_FROM;
+      else process.env.EMAIL_FROM = originalFrom;
+    });
+
+    it('reports available when SendGrid env is set', async () => {
+      process.env.SENDGRID_API_KEY = 'sg-key';
+      process.env.EMAIL_FROM = 'noreply@example.com';
+      const { getEmailOtpAvailability } = await import('@lib/auth/two-factor-profile-actions');
+      expect(await getEmailOtpAvailability()).toEqual({ available: true });
+    });
+
+    it('reports unavailable when SendGrid env is missing', async () => {
+      delete process.env.SENDGRID_API_KEY;
+      delete process.env.EMAIL_FROM;
+      jest.resetModules();
+      const { getEmailOtpAvailability } = await import('@lib/auth/two-factor-profile-actions');
+      expect(await getEmailOtpAvailability()).toEqual({ available: false });
+    });
+  });
 });
