@@ -1,0 +1,468 @@
+{
+  "adapter": "cobolcopybook",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "cobolcopybook_root": "WAREHOUSE-SNAPSHOT",
+      "cobolcopybook_tree": {
+        "children": [
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "WH-ID",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(4)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "WH-REGION-CODE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(2)",
+            "usage": "COMP"
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "WH-CAPACITY-UNITS",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(8)",
+            "usage": "BINARY"
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "WH-UTILIZATION-PCT",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "S9(3)V9(2)",
+            "usage": "COMP-3"
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "FILLER",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(5)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "WH-BIN-COUNT",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(3)",
+            "usage": null
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "BIN-ID",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(6)",
+                "usage": null
+              },
+              {
+                "children": [],
+                "conditions": [
+                  {
+                    "name": "BIN-ACTIVE",
+                    "value": "A"
+                  },
+                  {
+                    "name": "BIN-UNUSABLE",
+                    "value": "B' 'X"
+                  }
+                ],
+                "depending_on": null,
+                "level": 10,
+                "name": "BIN-STATUS",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(1)",
+                "usage": null
+              },
+              {
+                "children": [
+                  {
+                    "children": [],
+                    "conditions": [],
+                    "depending_on": null,
+                    "level": 15,
+                    "name": "BIN-WEIGHT-KG",
+                    "occurs_max": null,
+                    "occurs_min": null,
+                    "picture": "S9(5)V9(3)",
+                    "usage": "COMP-3"
+                  },
+                  {
+                    "children": [],
+                    "conditions": [],
+                    "depending_on": null,
+                    "level": 15,
+                    "name": "BIN-VOLUME-M3",
+                    "occurs_max": null,
+                    "occurs_min": null,
+                    "picture": "S9(3)V9(3)",
+                    "usage": "COMP-3"
+                  }
+                ],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "BIN-MEASURES",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": null,
+                "usage": null
+              },
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "BIN-LAST-COUNTED",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "9(8)",
+                "usage": null
+              }
+            ],
+            "conditions": [],
+            "depending_on": "WH-BIN-COUNT",
+            "level": 5,
+            "name": "WH-BINS",
+            "occurs_max": 10,
+            "occurs_min": 1,
+            "picture": null,
+            "usage": null
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "WH-AUDIT-USER",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(8)",
+                "usage": null
+              },
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "WH-AUDIT-TS",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "9(14)",
+                "usage": null
+              }
+            ],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "WH-AUDIT",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": null,
+            "usage": null
+          }
+        ],
+        "conditions": [],
+        "depending_on": null,
+        "level": 1,
+        "name": "WAREHOUSE-SNAPSHOT",
+        "occurs_max": null,
+        "occurs_min": null,
+        "picture": null,
+        "usage": null
+      }
+    },
+    "format": "cobolcopybook",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "WAREHOUSE-SNAPSHOT",
+      "namespace": "WAREHOUSE-SNAPSHOT"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "WAREHOUSE-SNAPSHOT",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cobol_kind": "group",
+          "cobol_level": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(5)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(5)",
+              "cobol_usage": null
+            },
+            "field_number": 5,
+            "key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.FILLER",
+            "name": "FILLER",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": null,
+              "cobol_usage": null
+            },
+            "field_number": 8,
+            "key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-AUDIT",
+            "name": "WH-AUDIT",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "WAREHOUSE-SNAPSHOT.WH-AUDIT",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(3)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(3)",
+              "cobol_usage": null
+            },
+            "field_number": 6,
+            "key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BIN-COUNT",
+            "name": "WH-BIN-COUNT",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": "WH-BIN-COUNT",
+              "cobol_level": 5,
+              "cobol_occurs_max": 10,
+              "cobol_occurs_min": 1,
+              "cobol_picture": null,
+              "cobol_usage": null
+            },
+            "field_number": 7,
+            "key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BINS",
+            "name": "WH-BINS",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "WAREHOUSE-SNAPSHOT.WH-BINS",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(8)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(8)",
+              "cobol_usage": "BINARY"
+            },
+            "field_number": 3,
+            "key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-CAPACITY-UNITS",
+            "name": "WH-CAPACITY-UNITS",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(4)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(4)",
+              "cobol_usage": null
+            },
+            "field_number": 1,
+            "key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-ID",
+            "name": "WH-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(2)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(2)",
+              "cobol_usage": "COMP"
+            },
+            "field_number": 2,
+            "key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-REGION-CODE",
+            "name": "WH-REGION-CODE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "S9(3)V9(2)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "S9(3)V9(2)",
+              "cobol_usage": "COMP-3"
+            },
+            "field_number": 4,
+            "key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-UTILIZATION-PCT",
+            "name": "WH-UTILIZATION-PCT",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT",
+        "key_type": null,
+        "kind": "record",
+        "name": "WAREHOUSE-SNAPSHOT",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cobol-copybook/04-warehouse-stress.cpy",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cobolcopybook"
+  },
+  "fingerprint": "sha256:47b2c532b84853b8c39d8ed73c261b87fc13a9e4287dc91e329a6ff8007464f9",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "a539cfde528b5536f1081b3a5ffbaec2d5c8189234f46550cf35bc014c702752",
+    "score": 93,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

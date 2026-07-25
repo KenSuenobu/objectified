@@ -1,0 +1,226 @@
+{
+  "adapter": "cloudevents",
+  "canonical": {
+    "channels": [
+      {
+        "address": "com.example.user.signedup",
+        "bindings": {},
+        "description": "CloudEvents channel for `com.example.user.signedup`",
+        "extras": {
+          "cloudevents_source": "/accounts/service",
+          "cloudevents_subject": "user/u-3301"
+        },
+        "key": "com.example.user.signedup",
+        "name": "com.example.user.signedup",
+        "parameters": [],
+        "protocol": "cloudevents"
+      }
+    ],
+    "description": null,
+    "extras": {
+      "cloudevents_event_count": 1
+    },
+    "format": "cloudevents",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "com.example.user.signedup",
+      "namespace": null
+    },
+    "paradigm": "event",
+    "protocol": "cloudevents",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "com.example.user.signedup",
+        "name": "com.example.user.signedup",
+        "operations": [
+          {
+            "channel_ref": "com.example.user.signedup",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cloudevents_datacontenttype": "application/json",
+              "cloudevents_id": "5f8a2e10-77c1-4b6f-9d02-1a3b5c7d9e0f",
+              "cloudevents_source": "/accounts/service",
+              "cloudevents_specversion": "1.0",
+              "cloudevents_subject": "user/u-3301",
+              "cloudevents_time": "2026-03-22T08:15:30Z",
+              "cloudevents_type": "com.example.user.signedup"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "5f8a2e10-77c1-4b6f-9d02-1a3b5c7d9e0f",
+            "kind": "publish",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "cloudevents_data_sample": {
+                    "displayName": "New User",
+                    "email": "new.user@example.com",
+                    "plan": "free",
+                    "signedUpAt": "2026-03-22T08:15:29Z",
+                    "userId": "u-3301"
+                  },
+                  "cloudevents_payload_schema": {
+                    "$ref": "#/components/schemas/UserSignedup"
+                  }
+                },
+                "headers": [],
+                "key": "5f8a2e10-77c1-4b6f-9d02-1a3b5c7d9e0f#event.UserSignedup",
+                "name": "UserSignedup",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UserSignedup",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "5f8a2e10-77c1-4b6f-9d02-1a3b5c7d9e0f",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "com.example.user.signedup",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserSignedup.displayName",
+            "name": "displayName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserSignedup.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserSignedup.plan",
+            "name": "plan",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserSignedup.signedUpAt",
+            "name": "signedUpAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserSignedup.userId",
+            "name": "userId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "UserSignedup",
+        "key_type": null,
+        "kind": "record",
+        "name": "UserSignedup",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cloudevents/06-user-signedup.json",
+  "counts": {
+    "channels": 1,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cloudevents"
+  },
+  "fingerprint": "sha256:bc36dfff2390d55bdf7b0798a9ad94a462446568c0e529e0666c0045bad0439e",
+  "lint": {
+    "findings": 9,
+    "grade": "B",
+    "report_fingerprint": "e9ee546d02df521a4ce6be0b8174d0fd19342a732939695de05944475475c56f",
+    "score": 85,
+    "severity_counts": {
+      "error": 0,
+      "info": 7,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

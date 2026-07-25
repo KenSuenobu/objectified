@@ -1,0 +1,148 @@
+{
+  "adapter": "openapi",
+  "canonical": {
+    "channels": [],
+    "description": "Demonstrates property name constraints with format, length, and pattern",
+    "extras": {},
+    "format": "openapi-3.1",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Property Name Constraints Example",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Property Name Constraints Example",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Object where property names must be valid email addresses",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "User data keyed by email addresses",
+            "extras": {},
+            "field_number": null,
+            "key": "EmailKeyedObject.users",
+            "name": "users",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "EmailKeyedObject",
+        "key_type": null,
+        "kind": "record",
+        "name": "EmailKeyedObject",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Object with strict property name constraints",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Object where property names must follow specific rules",
+            "extras": {},
+            "field_number": null,
+            "key": "StrictObject.data",
+            "name": "data",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "StrictObject",
+        "key_type": null,
+        "kind": "record",
+        "name": "StrictObject",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Object where property names must be UUIDs",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Records keyed by UUID",
+            "extras": {},
+            "field_number": null,
+            "key": "UUIDKeyedData.records",
+            "name": "records",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "UUIDKeyedData",
+        "key_type": null,
+        "kind": "record",
+        "name": "UUIDKeyedData",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "openapi/13-property-name-constraints.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "openapi-3.1"
+  },
+  "fingerprint": "sha256:fda54d56bb9e43fe502401f30988a3dfa892621dfbfc7c414336fa4cbb06db8f",
+  "lint": {
+    "findings": 0,
+    "grade": "A",
+    "report_fingerprint": "49f00aff0ad03525a1e73592c60211f9f8572853ba37d488054fdb78f1f77bd1",
+    "score": 100,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

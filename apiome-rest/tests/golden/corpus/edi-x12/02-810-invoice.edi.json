@@ -1,0 +1,471 @@
+{
+  "adapter": "edix12",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "x12_envelope": {
+        "element_separator": "*",
+        "functional_id": "IN",
+        "group_control_number": "2",
+        "group_receiver": "BUYER01",
+        "group_sender": "VENDOR01",
+        "interchange_control_number": "000000002",
+        "interchange_version": "00401",
+        "receiver_id": "BUYER01",
+        "segment_terminator": "~",
+        "sender_id": "VENDOR01"
+      },
+      "x12_set_id": "810",
+      "x12_transactions": [
+        {
+          "control_number": "0002",
+          "segments": [
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "BIG01",
+                  "value": "20260115"
+                },
+                {
+                  "position": "02",
+                  "ref": "BIG02",
+                  "value": "INV-10042"
+                },
+                {
+                  "position": "03",
+                  "ref": "BIG03",
+                  "value": "20260101"
+                },
+                {
+                  "position": "04",
+                  "ref": "BIG04",
+                  "value": "PO-0001"
+                }
+              ],
+              "id": "BIG"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "REF01",
+                  "value": "DP"
+                },
+                {
+                  "position": "02",
+                  "ref": "REF02",
+                  "value": "DEPT-42"
+                }
+              ],
+              "id": "REF"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "N101",
+                  "value": "ST"
+                },
+                {
+                  "position": "02",
+                  "ref": "N102",
+                  "value": "Example Corp"
+                },
+                {
+                  "position": "03",
+                  "ref": "N103",
+                  "value": "92"
+                },
+                {
+                  "position": "04",
+                  "ref": "N104",
+                  "value": "BUYER01"
+                }
+              ],
+              "id": "N1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "IT101",
+                  "value": "1"
+                },
+                {
+                  "position": "02",
+                  "ref": "IT102",
+                  "value": "100"
+                },
+                {
+                  "position": "03",
+                  "ref": "IT103",
+                  "value": "EA"
+                },
+                {
+                  "position": "04",
+                  "ref": "IT104",
+                  "value": "185.50"
+                },
+                {
+                  "position": "06",
+                  "ref": "IT106",
+                  "value": "BP"
+                },
+                {
+                  "position": "07",
+                  "ref": "IT107",
+                  "value": "WIDGET-001"
+                }
+              ],
+              "id": "IT1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "TDS01",
+                  "value": "18550"
+                }
+              ],
+              "id": "TDS"
+            }
+          ],
+          "set_id": "810"
+        }
+      ],
+      "x12_version": "004010"
+    },
+    "format": "edix12",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "X12 810",
+      "namespace": "X12-810"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "X12 810",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "20260115",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-810.TransactionSet810.BIG01",
+            "name": "BIG01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "INV-10042",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-810.TransactionSet810.BIG02",
+            "name": "BIG02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260101",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-810.TransactionSet810.BIG03",
+            "name": "BIG03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "PO-0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "X12-810.TransactionSet810.BIG04",
+            "name": "BIG04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 11,
+            "key": "X12-810.TransactionSet810.IT101",
+            "name": "IT101",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "100",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 12,
+            "key": "X12-810.TransactionSet810.IT102",
+            "name": "IT102",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "EA",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 13,
+            "key": "X12-810.TransactionSet810.IT103",
+            "name": "IT103",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "185.50",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 14,
+            "key": "X12-810.TransactionSet810.IT104",
+            "name": "IT104",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "BP",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 15,
+            "key": "X12-810.TransactionSet810.IT106",
+            "name": "IT106",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "WIDGET-001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 16,
+            "key": "X12-810.TransactionSet810.IT107",
+            "name": "IT107",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ST",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "X12-810.TransactionSet810.N101",
+            "name": "N101",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Example Corp",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 8,
+            "key": "X12-810.TransactionSet810.N102",
+            "name": "N102",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "92",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 9,
+            "key": "X12-810.TransactionSet810.N103",
+            "name": "N103",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "BUYER01",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 10,
+            "key": "X12-810.TransactionSet810.N104",
+            "name": "N104",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "DP",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "X12-810.TransactionSet810.REF01",
+            "name": "REF01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "DEPT-42",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 6,
+            "key": "X12-810.TransactionSet810.REF02",
+            "name": "REF02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "18550",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 17,
+            "key": "X12-810.TransactionSet810.TDS01",
+            "name": "TDS01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-810.TransactionSet810",
+        "key_type": null,
+        "kind": "record",
+        "name": "TransactionSet810",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "edi-x12/02-810-invoice.edi",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "edix12"
+  },
+  "fingerprint": "sha256:4f2fbde247bb1de13a4b8f3ecf2601c6f74d192f4e3527dedf994ace5d81574c",
+  "lint": {
+    "findings": 19,
+    "grade": "C",
+    "report_fingerprint": "98428efb5b382a2f2ee34b95c9fb595df31d55cc1d0de13db6264a7d5cd656a6",
+    "score": 78,
+    "severity_counts": {
+      "error": 0,
+      "info": 18,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

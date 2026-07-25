@@ -1,0 +1,238 @@
+{
+  "adapter": "avro",
+  "canonical": {
+    "channels": [],
+    "description": "A registered user of the system.",
+    "extras": {
+      "avro_root": "com.example.user.User"
+    },
+    "format": "avro",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "User",
+      "namespace": "com.example.user"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "User",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.user.Status.ACTIVE",
+            "name": "ACTIVE",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.user.Status.SUSPENDED",
+            "name": "SUSPENDED",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.user.Status.DELETED",
+            "name": "DELETED",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "avro_kind": "enum"
+        },
+        "fields": [],
+        "key": "com.example.user.Status",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Status",
+        "namespace": "com.example.user",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A registered user of the system.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "When the account was created.",
+            "extras": {
+              "avro_type": "long",
+              "logicalType": "timestamp-millis"
+            },
+            "field_number": 6,
+            "key": "com.example.user.User.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Optional human-readable display name.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 3,
+            "key": "com.example.user.User.displayName",
+            "name": "displayName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The user's email address.",
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.user.User.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Unique user identifier.",
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.user.User.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": [],
+            "deprecated": false,
+            "description": "Roles assigned to the user.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 5,
+            "key": "com.example.user.User.roles",
+            "name": "roles",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ACTIVE",
+            "deprecated": false,
+            "description": "Lifecycle status of the account.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 4,
+            "key": "com.example.user.User.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.user.Status",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.user.User",
+        "key_type": null,
+        "kind": "record",
+        "name": "User",
+        "namespace": "com.example.user",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "avro/01-user-record.avsc",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "avro"
+  },
+  "fingerprint": "sha256:396d1162b310a068d2ba7d52cf77aa2056bad9a7d6a2a13882c5dc8858b67506",
+  "lint": {
+    "findings": 1,
+    "grade": "A",
+    "report_fingerprint": "909ca5bf82d2d564ab7a7e2937d91743f077be183be1b0546e4e16ec4b99cfe6",
+    "score": 96,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

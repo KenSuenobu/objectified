@@ -1,0 +1,489 @@
+{
+  "adapter": "xsd",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "xsd_elements": [
+        {
+          "name": "directory",
+          "type": "Directory"
+        }
+      ],
+      "xsd_root_element": "directory",
+      "xsd_target_namespace": "http://example.com/hr"
+    },
+    "format": "xsd",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "directory",
+      "namespace": "http://example.com/hr"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "directory",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/hr.Department.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_min_occurs": "0",
+              "xsd_type": "string"
+            },
+            "field_number": 3,
+            "key": "http://example.com/hr.Department.costCenter",
+            "name": "costCenter",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_max_occurs": "unbounded",
+              "xsd_min_occurs": "0",
+              "xsd_type": "Employee"
+            },
+            "field_number": 4,
+            "key": "http://example.com/hr.Department.employee",
+            "name": "employee",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "http://example.com/hr.Employee",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/hr.Department.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/hr.Department",
+        "key_type": null,
+        "kind": "record",
+        "name": "Department",
+        "namespace": "http://example.com/hr",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/hr.Directory.company",
+            "name": "company",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_max_occurs": "unbounded",
+              "xsd_type": "Department"
+            },
+            "field_number": 3,
+            "key": "http://example.com/hr.Directory.department",
+            "name": "department",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "http://example.com/hr.Department",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "dateTime"
+            },
+            "field_number": 2,
+            "key": "http://example.com/hr.Directory.generatedAt",
+            "name": "generatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/hr.Directory",
+        "key_type": null,
+        "kind": "record",
+        "name": "Directory",
+        "namespace": "http://example.com/hr",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 4,
+            "key": "http://example.com/hr.Employee.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/hr.Employee.employeeId",
+            "name": "employeeId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 3,
+            "key": "http://example.com/hr.Employee.familyName",
+            "name": "familyName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/hr.Employee.givenName",
+            "name": "givenName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "date"
+            },
+            "field_number": 6,
+            "key": "http://example.com/hr.Employee.hireDate",
+            "name": "hireDate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "attribute",
+              "xsd_type": "string"
+            },
+            "field_number": 8,
+            "key": "http://example.com/hr.Employee.managerId",
+            "name": "managerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_min_occurs": "0",
+              "xsd_type": "string"
+            },
+            "field_number": 5,
+            "key": "http://example.com/hr.Employee.phone",
+            "name": "phone",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "EmploymentStatus"
+            },
+            "field_number": 7,
+            "key": "http://example.com/hr.Employee.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/hr.EmploymentStatus",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/hr.Employee",
+        "key_type": null,
+        "kind": "record",
+        "name": "Employee",
+        "namespace": "http://example.com/hr",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "http://example.com/hr.EmploymentStatus.active",
+            "name": "active",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "http://example.com/hr.EmploymentStatus.on-leave",
+            "name": "on-leave",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "http://example.com/hr.EmploymentStatus.terminated",
+            "name": "terminated",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "xsd_base": "string",
+          "xsd_kind": "simpleType"
+        },
+        "fields": [],
+        "key": "http://example.com/hr.EmploymentStatus",
+        "key_type": null,
+        "kind": "enum",
+        "name": "EmploymentStatus",
+        "namespace": "http://example.com/hr",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "xsd/06-employee-directory.xsd",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "xsd"
+  },
+  "fingerprint": "sha256:125f1524c2887d5b122c8a113d93150df0a220c965c533f868bf5d0de90f16a0",
+  "lint": {
+    "findings": 20,
+    "grade": "D",
+    "report_fingerprint": "7a8b208dc6b19a53dbdc75600a595509997196b90d32c14f7cb51e0eaa2e525d",
+    "score": 68,
+    "severity_counts": {
+      "error": 0,
+      "info": 16,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

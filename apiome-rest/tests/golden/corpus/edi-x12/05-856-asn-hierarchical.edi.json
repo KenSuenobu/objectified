@@ -1,0 +1,929 @@
+{
+  "adapter": "edix12",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "x12_envelope": {
+        "element_separator": "*",
+        "functional_id": "SH",
+        "group_control_number": "5",
+        "group_receiver": "BUYER01",
+        "group_sender": "VENDOR01",
+        "interchange_control_number": "000000005",
+        "interchange_version": "00401",
+        "receiver_id": "BUYER01",
+        "segment_terminator": "~",
+        "sender_id": "VENDOR01"
+      },
+      "x12_set_id": "856",
+      "x12_transactions": [
+        {
+          "control_number": "0001",
+          "segments": [
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "BSN01",
+                  "value": "00"
+                },
+                {
+                  "position": "02",
+                  "ref": "BSN02",
+                  "value": "SHIP-0001"
+                },
+                {
+                  "position": "03",
+                  "ref": "BSN03",
+                  "value": "20260117"
+                },
+                {
+                  "position": "04",
+                  "ref": "BSN04",
+                  "value": "0700"
+                }
+              ],
+              "id": "BSN"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "HL01",
+                  "value": "1"
+                },
+                {
+                  "position": "03",
+                  "ref": "HL03",
+                  "value": "S"
+                }
+              ],
+              "id": "HL"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "TD101",
+                  "value": "CTN25"
+                },
+                {
+                  "position": "02",
+                  "ref": "TD102",
+                  "value": "2"
+                }
+              ],
+              "id": "TD1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "REF01",
+                  "value": "BM"
+                },
+                {
+                  "position": "02",
+                  "ref": "REF02",
+                  "value": "BOL-8891"
+                }
+              ],
+              "id": "REF"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "DTM01",
+                  "value": "011"
+                },
+                {
+                  "position": "02",
+                  "ref": "DTM02",
+                  "value": "20260117"
+                }
+              ],
+              "id": "DTM"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "HL01",
+                  "value": "2"
+                },
+                {
+                  "position": "02",
+                  "ref": "HL02",
+                  "value": "1"
+                },
+                {
+                  "position": "03",
+                  "ref": "HL03",
+                  "value": "O"
+                }
+              ],
+              "id": "HL"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "PRF01",
+                  "value": "PO-0001"
+                }
+              ],
+              "id": "PRF"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "HL01",
+                  "value": "3"
+                },
+                {
+                  "position": "02",
+                  "ref": "HL02",
+                  "value": "2"
+                },
+                {
+                  "position": "03",
+                  "ref": "HL03",
+                  "value": "I"
+                }
+              ],
+              "id": "HL"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "LIN01",
+                  "value": "1"
+                },
+                {
+                  "position": "02",
+                  "ref": "LIN02",
+                  "value": "BP"
+                },
+                {
+                  "position": "03",
+                  "ref": "LIN03",
+                  "value": "WIDGET-001"
+                }
+              ],
+              "id": "LIN"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "SN101",
+                  "value": "1"
+                },
+                {
+                  "position": "02",
+                  "ref": "SN102",
+                  "value": "100"
+                },
+                {
+                  "position": "03",
+                  "ref": "SN103",
+                  "value": "EA"
+                }
+              ],
+              "id": "SN1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "HL01",
+                  "value": "4"
+                },
+                {
+                  "position": "02",
+                  "ref": "HL02",
+                  "value": "2"
+                },
+                {
+                  "position": "03",
+                  "ref": "HL03",
+                  "value": "I"
+                }
+              ],
+              "id": "HL"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "LIN01",
+                  "value": "2"
+                },
+                {
+                  "position": "02",
+                  "ref": "LIN02",
+                  "value": "BP"
+                },
+                {
+                  "position": "03",
+                  "ref": "LIN03",
+                  "value": "GADGET-007"
+                }
+              ],
+              "id": "LIN"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "SN101",
+                  "value": "2"
+                },
+                {
+                  "position": "02",
+                  "ref": "SN102",
+                  "value": "50"
+                },
+                {
+                  "position": "03",
+                  "ref": "SN103",
+                  "value": "EA"
+                }
+              ],
+              "id": "SN1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "CTT01",
+                  "value": "4"
+                }
+              ],
+              "id": "CTT"
+            }
+          ],
+          "set_id": "856"
+        },
+        {
+          "control_number": "0002",
+          "segments": [
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "BSN01",
+                  "value": "00"
+                },
+                {
+                  "position": "02",
+                  "ref": "BSN02",
+                  "value": "SHIP-0002"
+                },
+                {
+                  "position": "03",
+                  "ref": "BSN03",
+                  "value": "20260117"
+                },
+                {
+                  "position": "04",
+                  "ref": "BSN04",
+                  "value": "0705"
+                }
+              ],
+              "id": "BSN"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "HL01",
+                  "value": "1"
+                },
+                {
+                  "position": "03",
+                  "ref": "HL03",
+                  "value": "S"
+                }
+              ],
+              "id": "HL"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "REF01",
+                  "value": "BM"
+                },
+                {
+                  "position": "02",
+                  "ref": "REF02",
+                  "value": "BOL-8892"
+                }
+              ],
+              "id": "REF"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "HL01",
+                  "value": "2"
+                },
+                {
+                  "position": "02",
+                  "ref": "HL02",
+                  "value": "1"
+                },
+                {
+                  "position": "03",
+                  "ref": "HL03",
+                  "value": "O"
+                }
+              ],
+              "id": "HL"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "PRF01",
+                  "value": "PO-0002"
+                }
+              ],
+              "id": "PRF"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "HL01",
+                  "value": "3"
+                },
+                {
+                  "position": "02",
+                  "ref": "HL02",
+                  "value": "2"
+                },
+                {
+                  "position": "03",
+                  "ref": "HL03",
+                  "value": "I"
+                }
+              ],
+              "id": "HL"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "LIN01",
+                  "value": "1"
+                },
+                {
+                  "position": "02",
+                  "ref": "LIN02",
+                  "value": "BP"
+                },
+                {
+                  "position": "03",
+                  "ref": "LIN03",
+                  "value": "PART-100"
+                }
+              ],
+              "id": "LIN"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "SN101",
+                  "value": "1"
+                },
+                {
+                  "position": "02",
+                  "ref": "SN102",
+                  "value": "10"
+                },
+                {
+                  "position": "03",
+                  "ref": "SN103",
+                  "value": "EA"
+                }
+              ],
+              "id": "SN1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "CTT01",
+                  "value": "3"
+                }
+              ],
+              "id": "CTT"
+            }
+          ],
+          "set_id": "856"
+        }
+      ],
+      "x12_version": "004010"
+    },
+    "format": "edix12",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "X12 856",
+      "namespace": "X12-856"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "X12 856",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-856.HL.HL01",
+            "name": "HL01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "S",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-856.HL.HL03",
+            "name": "HL03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-856.HL",
+        "key_type": null,
+        "kind": "record",
+        "name": "HL",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-856.LIN.LIN01",
+            "name": "LIN01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "BP",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-856.LIN.LIN02",
+            "name": "LIN02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "WIDGET-001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-856.LIN.LIN03",
+            "name": "LIN03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-856.LIN",
+        "key_type": null,
+        "kind": "record",
+        "name": "LIN",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-856.SN1.SN101",
+            "name": "SN101",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "100",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-856.SN1.SN102",
+            "name": "SN102",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "EA",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-856.SN1.SN103",
+            "name": "SN103",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-856.SN1",
+        "key_type": null,
+        "kind": "record",
+        "name": "SN1",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "00",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-856.TransactionSet856.BSN01",
+            "name": "BSN01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "SHIP-0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-856.TransactionSet856.BSN02",
+            "name": "BSN02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260117",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-856.TransactionSet856.BSN03",
+            "name": "BSN03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "0700",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "X12-856.TransactionSet856.BSN04",
+            "name": "BSN04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "4",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 15,
+            "key": "X12-856.TransactionSet856.CTT01",
+            "name": "CTT01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "011",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 10,
+            "key": "X12-856.TransactionSet856.DTM01",
+            "name": "DTM01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260117",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 11,
+            "key": "X12-856.TransactionSet856.DTM02",
+            "name": "DTM02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "X12-856.TransactionSet856.HL",
+            "name": "HL",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "X12-856.HL",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 13,
+            "key": "X12-856.TransactionSet856.LIN",
+            "name": "LIN",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "X12-856.LIN",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "PO-0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 12,
+            "key": "X12-856.TransactionSet856.PRF01",
+            "name": "PRF01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "BM",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 8,
+            "key": "X12-856.TransactionSet856.REF01",
+            "name": "REF01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "BOL-8891",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 9,
+            "key": "X12-856.TransactionSet856.REF02",
+            "name": "REF02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 14,
+            "key": "X12-856.TransactionSet856.SN1",
+            "name": "SN1",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "X12-856.SN1",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "CTN25",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 6,
+            "key": "X12-856.TransactionSet856.TD101",
+            "name": "TD101",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "2",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "X12-856.TransactionSet856.TD102",
+            "name": "TD102",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-856.TransactionSet856",
+        "key_type": null,
+        "kind": "record",
+        "name": "TransactionSet856",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "edi-x12/05-856-asn-hierarchical.edi",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "edix12"
+  },
+  "fingerprint": "sha256:8773cc838f53965ab9a2961367eb9628930e7a96215bbf878599c9cdc227a679",
+  "lint": {
+    "findings": 28,
+    "grade": "D",
+    "report_fingerprint": "b764d1b537c1ff3109229dad3e2c36ea2dedf74ef4da09b711a2fd8d4ce65c5a",
+    "score": 63,
+    "severity_counts": {
+      "error": 0,
+      "info": 24,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

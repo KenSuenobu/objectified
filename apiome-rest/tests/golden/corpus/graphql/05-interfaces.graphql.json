@@ -1,0 +1,970 @@
+{
+  "adapter": "graphql",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {},
+    "format": "graphql",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "GraphQL Schema",
+      "namespace": null
+    },
+    "paradigm": "graph",
+    "protocol": "graphql",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Query",
+        "name": "Query",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.node",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.node#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Node",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "node",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.node#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.post",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.post#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Post",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "post",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.post#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.posts",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.posts#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Post",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "posts",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.posts#arg.published",
+                "location": "query",
+                "name": "published",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Boolean",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A comment on a post",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "interfaces": [
+            "Node",
+            "Ownable"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Comment.content",
+            "name": "content",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Comment.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Comment.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Comment.likes",
+            "name": "likes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Comment.owner",
+            "name": "owner",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "User",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Comment.post",
+            "name": "post",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Post",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Comment.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Comment",
+        "key_type": null,
+        "kind": "record",
+        "name": "Comment",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A media file",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "interfaces": [
+            "Node",
+            "Ownable"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Media.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Media.filename",
+            "name": "filename",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Media.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Media.mimeType",
+            "name": "mimeType",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Media.owner",
+            "name": "owner",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "User",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Media.size",
+            "name": "size",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Media.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Media.url",
+            "name": "url",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Media",
+        "key_type": null,
+        "kind": "record",
+        "name": "Media",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Base interface for all nodes in the system",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "interface"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "When the record was created",
+            "extras": {},
+            "field_number": null,
+            "key": "Node.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Global unique identifier",
+            "extras": {},
+            "field_number": null,
+            "key": "Node.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "When the record was last updated",
+            "extras": {},
+            "field_number": null,
+            "key": "Node.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Node",
+        "key_type": null,
+        "kind": "record",
+        "name": "Node",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Interface for entities that can be owned by a user",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "interface"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The owner of this entity",
+            "extras": {},
+            "field_number": null,
+            "key": "Ownable.owner",
+            "name": "owner",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "User",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Ownable",
+        "key_type": null,
+        "kind": "record",
+        "name": "Ownable",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A blog post",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "interfaces": [
+            "Node",
+            "Ownable",
+            "Publishable"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.comments",
+            "name": "comments",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Comment",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.content",
+            "name": "content",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.excerpt",
+            "name": "excerpt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.isPublished",
+            "name": "isPublished",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.owner",
+            "name": "owner",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "User",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.publishedAt",
+            "name": "publishedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.tags",
+            "name": "tags",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Post.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Post",
+        "key_type": null,
+        "kind": "record",
+        "name": "Post",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Interface for entities that can be published",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "interface"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Whether this is published",
+            "extras": {},
+            "field_number": null,
+            "key": "Publishable.isPublished",
+            "name": "isPublished",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "When it was published",
+            "extras": {},
+            "field_number": null,
+            "key": "Publishable.publishedAt",
+            "name": "publishedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Publishable",
+        "key_type": null,
+        "kind": "record",
+        "name": "Publishable",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A user in the system",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "interfaces": [
+            "Node"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "User",
+        "key_type": null,
+        "kind": "record",
+        "name": "User",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "graphql/05-interfaces.graphql",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 7
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "graphql"
+  },
+  "fingerprint": "sha256:8ec22126a744d2c215287ab9f21b2b16281a574f999dd111a47c4c8c4d56a4c9",
+  "lint": {
+    "findings": 41,
+    "grade": "D",
+    "report_fingerprint": "daecbe6a4f4a387641a05c49bb699ae5aa27a2b59fc909f28813022c566754af",
+    "score": 61,
+    "severity_counts": {
+      "error": 0,
+      "info": 38,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

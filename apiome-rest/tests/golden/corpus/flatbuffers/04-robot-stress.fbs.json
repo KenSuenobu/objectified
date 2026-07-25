@@ -1,0 +1,608 @@
+{
+  "adapter": "flatbuffers",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "fbs_includes": [],
+      "fbs_root_type": "Robot"
+    },
+    "format": "flatbuffers",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.robotics",
+      "namespace": "example.robotics"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.robotics.Axis.X",
+            "name": "X",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.robotics.Axis.Y",
+            "name": "Y",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.robotics.Axis.Z",
+            "name": "Z",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "fbs_base_type": "ubyte",
+          "fbs_kind": "enum"
+        },
+        "fields": [],
+        "key": "example.robotics.Axis",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Axis",
+        "namespace": "example.robotics",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "3",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "3"
+            },
+            "field_number": 1,
+            "key": "example.robotics.Calibrate.iterations",
+            "name": "iterations",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.robotics.Calibrate",
+        "key_type": null,
+        "kind": "record",
+        "name": "Calibrate",
+        "namespace": "example.robotics",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "union"
+        },
+        "fields": [],
+        "key": "example.robotics.Command",
+        "key_type": null,
+        "kind": "union",
+        "name": "Command",
+        "namespace": "example.robotics",
+        "union_members": [
+          "example.robotics.Move",
+          "example.robotics.Halt",
+          "example.robotics.Calibrate"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.robotics.Halt.reason",
+            "name": "reason",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.robotics.Halt",
+        "key_type": null,
+        "kind": "record",
+        "name": "Halt",
+        "namespace": "example.robotics",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "Z",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "Z"
+            },
+            "field_number": 3,
+            "key": "example.robotics.Move.axis",
+            "name": "axis",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.robotics.Axis",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "0.5",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "0.5"
+            },
+            "field_number": 2,
+            "key": "example.robotics.Move.speed",
+            "name": "speed",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.robotics.Move.target",
+            "name": "target",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.robotics.Pose",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.robotics.Move",
+        "key_type": null,
+        "kind": "record",
+        "name": "Move",
+        "namespace": "example.robotics",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "example.robotics.Pose.pitch",
+            "name": "pitch",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.robotics.Pose.position",
+            "name": "position",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.robotics.Vec3",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "example.robotics.Pose.roll",
+            "name": "roll",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "example.robotics.Pose.yaw",
+            "name": "yaw",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.robotics.Pose",
+        "key_type": null,
+        "kind": "record",
+        "name": "Pose",
+        "namespace": "example.robotics",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "example.robotics.Robot.axes",
+            "name": "axes",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "example.robotics.Axis",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "100.0",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "100.0"
+            },
+            "field_number": 7,
+            "key": "example.robotics.Robot.batteryPct",
+            "name": "batteryPct",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "example.robotics.Robot.command",
+            "name": "command",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.robotics.Command",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "example.robotics.Robot.flags",
+            "name": "flags",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.robotics.Robot.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "false",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "false"
+            },
+            "field_number": 6,
+            "key": "example.robotics.Robot.ready",
+            "name": "ready",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "example.robotics.Robot.waypoints",
+            "name": "waypoints",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "example.robotics.Vec3",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.robotics.Robot",
+        "key_type": null,
+        "kind": "record",
+        "name": "Robot",
+        "namespace": "example.robotics",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.robotics.StatusFlags.Idle",
+            "name": "Idle",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.robotics.StatusFlags.Moving",
+            "name": "Moving",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.robotics.StatusFlags.Fault",
+            "name": "Fault",
+            "value": 16
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.robotics.StatusFlags.EStop",
+            "name": "EStop",
+            "value": 128
+          }
+        ],
+        "extras": {
+          "fbs_base_type": "ushort",
+          "fbs_kind": "enum"
+        },
+        "fields": [],
+        "key": "example.robotics.StatusFlags",
+        "key_type": null,
+        "kind": "enum",
+        "name": "StatusFlags",
+        "namespace": "example.robotics",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.robotics.Vec3.x",
+            "name": "x",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "example.robotics.Vec3.y",
+            "name": "y",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "example.robotics.Vec3.z",
+            "name": "z",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.robotics.Vec3",
+        "key_type": null,
+        "kind": "record",
+        "name": "Vec3",
+        "namespace": "example.robotics",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "flatbuffers/04-robot-stress.fbs",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "flatbuffers"
+  },
+  "fingerprint": "sha256:15d63a1a5200f8bf181a894094a0cad6de5541676af10a989d63d927cc926507",
+  "lint": {
+    "findings": 29,
+    "grade": "D",
+    "report_fingerprint": "484e6a9432c58b9a5d14058ea419173cbed7265ef98778e223cc41b5722e7c25",
+    "score": 60,
+    "severity_counts": {
+      "error": 0,
+      "info": 20,
+      "warning": 9
+    }
+  },
+  "snapshot_version": 1
+}

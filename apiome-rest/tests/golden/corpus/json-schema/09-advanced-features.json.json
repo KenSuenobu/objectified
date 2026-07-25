@@ -1,0 +1,722 @@
+{
+  "adapter": "json-schema",
+  "canonical": {
+    "channels": [],
+    "description": "Schema demonstrating advanced JSON Schema features",
+    "extras": {},
+    "format": "json-schema",
+    "identity": {
+      "extras": {},
+      "id": "https://example.com/advanced.json",
+      "name": "AdvancedFeatures",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "AdvancedFeatures",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Demonstrates tuple validation with prefixItems",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "TupleExample.coordinates",
+            "name": "coordinates",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "object",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "TupleExample.rgb",
+            "name": "rgb",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "object",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "TupleExample",
+        "key_type": null,
+        "kind": "record",
+        "name": "TupleExample",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Demonstrates patternProperties for dynamic keys",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PatternPropertiesExample.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "PatternPropertiesExample",
+        "key_type": null,
+        "kind": "record",
+        "name": "PatternPropertiesExample",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Demonstrates contains for array validation",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Array must contain 1-3 objects with type='required'",
+            "extras": {},
+            "field_number": null,
+            "key": "ContainsExample.mixedArray",
+            "name": "mixedArray",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "object",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Array must contain at least one number >= 100",
+            "extras": {},
+            "field_number": null,
+            "key": "ContainsExample.numbers",
+            "name": "numbers",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "integer",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "ContainsExample",
+        "key_type": null,
+        "kind": "record",
+        "name": "ContainsExample",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Demonstrates dependentSchemas and dependentRequired",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "DependentSchemasExample.creditCard",
+            "name": "creditCard",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "DependentSchemasExample.cvv",
+            "name": "cvv",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "DependentSchemasExample.billingAddress",
+            "name": "billingAddress",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "DependentSchemasExample.shippingAddress",
+            "name": "shippingAddress",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "DependentSchemasExample.sameAsShipping",
+            "name": "sameAsShipping",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "boolean",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "DependentSchemasExample",
+        "key_type": null,
+        "kind": "record",
+        "name": "DependentSchemasExample",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Demonstrates propertyNames validation",
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "PropertyNamesExample",
+        "key_type": null,
+        "kind": "record",
+        "name": "PropertyNamesExample",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Demonstrates const and enum usage",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "API version must be exactly 'v1'",
+            "extras": {},
+            "field_number": null,
+            "key": "ConstAndEnumExample.apiVersion",
+            "name": "apiVersion",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Kubernetes resource kind",
+            "extras": {},
+            "field_number": null,
+            "key": "ConstAndEnumExample.kind",
+            "name": "kind",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ConstAndEnumExample.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ConstAndEnumExample.priority",
+            "name": "priority",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "ConstAndEnumExample",
+        "key_type": null,
+        "kind": "record",
+        "name": "ConstAndEnumExample",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A recursive schema for tree structures",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "RecursiveSchema.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "RecursiveSchema.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "RecursiveSchema.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "RecursiveSchema.children",
+            "name": "children",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "RecursiveSchema",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "RecursiveSchema.parent",
+            "name": "parent",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "RecursiveSchema",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "RecursiveSchema",
+        "key_type": null,
+        "kind": "record",
+        "name": "RecursiveSchema",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Demonstrates nullable types in JSON Schema 2020-12",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "NullableTypes.requiredString",
+            "name": "requiredString",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "NullableTypes.nullableString",
+            "name": "nullableString",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "NullableTypes.nullableNumber",
+            "name": "nullableNumber",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "NullableTypes.optionalOrNull",
+            "name": "optionalOrNull",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "NullableTypes",
+        "key_type": null,
+        "kind": "record",
+        "name": "NullableTypes",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Schema demonstrating advanced JSON Schema features",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AdvancedFeatures.tuples",
+            "name": "tuples",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "TupleExample",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AdvancedFeatures.patterns",
+            "name": "patterns",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PatternPropertiesExample",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AdvancedFeatures.contains",
+            "name": "contains",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ContainsExample",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AdvancedFeatures.dependent",
+            "name": "dependent",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DependentSchemasExample",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AdvancedFeatures.propertyNames",
+            "name": "propertyNames",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PropertyNamesExample",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AdvancedFeatures.constEnum",
+            "name": "constEnum",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ConstAndEnumExample",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AdvancedFeatures.recursive",
+            "name": "recursive",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "RecursiveSchema",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AdvancedFeatures.nullable",
+            "name": "nullable",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "NullableTypes",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "AdvancedFeatures",
+        "key_type": null,
+        "kind": "record",
+        "name": "AdvancedFeatures",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "json-schema/09-advanced-features.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "json-schema-2020-12"
+  },
+  "fingerprint": "sha256:9a4890b8edfb38c2759a69aadf91dcb5eefcac2345c37de839f17790357731a4",
+  "lint": {
+    "findings": 27,
+    "grade": "B",
+    "report_fingerprint": "8dada13c4e6b29ed62e453da561a5f7b0c377bdb0eda2496b0feedc7cc8e63cf",
+    "score": 80,
+    "severity_counts": {
+      "error": 0,
+      "info": 27,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

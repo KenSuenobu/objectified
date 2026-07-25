@@ -1,0 +1,268 @@
+{
+  "adapter": "postman",
+  "canonical": {
+    "channels": [],
+    "description": "Composition Postman Collection v2.1 example: requests grouped into nested folders (Users, and Admin containing a Reports subfolder) that all reuse the collection-level baseUrl and apiVersion variables.",
+    "extras": {
+      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "postman_variables": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.example.com"
+        },
+        {
+          "key": "apiVersion",
+          "value": "v2"
+        }
+      ]
+    },
+    "format": "postman",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Workspace API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From Postman collection variable",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Workspace API",
+        "name": "Workspace API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "postman_folder_path": [
+                "Admin"
+              ],
+              "postman_headers": []
+            },
+            "http_method": "GET",
+            "http_path": "/admin/audit",
+            "key": "GET /admin/audit",
+            "kind": "request_response",
+            "messages": [],
+            "name": "Audit log",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "postman_folder_path": [
+                "Admin",
+                "Reports"
+              ],
+              "postman_headers": []
+            },
+            "http_method": "GET",
+            "http_path": "/admin/reports/usage",
+            "key": "GET /admin/reports/usage",
+            "kind": "request_response",
+            "messages": [],
+            "name": "Usage report",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_sample": "2026-06",
+                  "postman_style": "query"
+                },
+                "key": "GET /admin/reports/usage#query.month",
+                "location": "query",
+                "name": "month",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "postman_folder_path": [
+                "Users"
+              ],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "http_method": "GET",
+            "http_path": "/users",
+            "key": "GET /users",
+            "kind": "request_response",
+            "messages": [],
+            "name": "List users",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "postman_folder_path": [
+                "Users"
+              ],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "http_method": "POST",
+            "http_path": "/users/invitations",
+            "key": "POST /users/invitations",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "postman_body_language": "json",
+                  "postman_body_mode": "raw",
+                  "postman_body_raw": "{\n  \"email\": \"kai@example.com\",\n  \"role\": \"member\"\n}",
+                  "postman_body_schema": {
+                    "$ref": "#/components/schemas/Invitation"
+                  }
+                },
+                "headers": [],
+                "key": "POST /users/invitations#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Invitation",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "Invite user",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Workspace API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Invitation.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Invitation.role",
+            "name": "role",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Invitation",
+        "key_type": null,
+        "kind": "record",
+        "name": "Invitation",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "postman/04-folders-and-variables.postman_collection.json",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 1,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "postman"
+  },
+  "fingerprint": "sha256:a729edb0d25c1e34fbf93800fa3c854c462f83d56794360a5f45d2f5d64ae92b",
+  "lint": {
+    "findings": 8,
+    "grade": "C",
+    "report_fingerprint": "82c7b9a28bbe57b9399ba041de09d5d601a8c33eaae4707356cfb6fc53e36b49",
+    "score": 77,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

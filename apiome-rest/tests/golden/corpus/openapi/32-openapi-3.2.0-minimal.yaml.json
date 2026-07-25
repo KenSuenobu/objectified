@@ -1,0 +1,239 @@
+{
+  "adapter": "openapi",
+  "canonical": {
+    "channels": [],
+    "description": "A minimal OpenAPI 3.2.0 document for import acceptance tests.",
+    "extras": {},
+    "format": "openapi-3.2",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Minimal 3.2.0 API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "widgets",
+        "name": "widgets",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List widgets",
+            "extras": {
+              "operationId": "listWidgets",
+              "summary": "List widgets"
+            },
+            "http_method": "GET",
+            "http_path": "/widgets",
+            "key": "GET /widgets",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "A list of widgets",
+                "extras": {},
+                "headers": [],
+                "key": "GET /widgets#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Widget",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listWidgets",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "widgets"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Create a widget",
+            "extras": {
+              "operationId": "createWidget",
+              "summary": "Create a widget"
+            },
+            "http_method": "POST",
+            "http_path": "/widgets",
+            "key": "POST /widgets",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /widgets#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "The created widget",
+                "extras": {},
+                "headers": [],
+                "key": "POST /widgets#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createWidget",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "widgets"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Minimal 3.2.0 API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A simple widget.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Unique widget identifier.",
+            "extras": {},
+            "field_number": null,
+            "key": "Widget.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Human-readable widget name.",
+            "extras": {},
+            "field_number": null,
+            "key": "Widget.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Number of widgets in stock.",
+            "extras": {},
+            "field_number": null,
+            "key": "Widget.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Widget",
+        "key_type": null,
+        "kind": "record",
+        "name": "Widget",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "openapi/32-openapi-3.2.0-minimal.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "openapi-3.2"
+  },
+  "fingerprint": "sha256:a50ea72b5d50214a30cf469725d1c43993f0a8a756bfc1c29cd09dec37de37d1",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "72997bab24d830ded8f20c313c75003a9510fbbf9e0698ea9472aeea6a224d7d",
+    "score": 97,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

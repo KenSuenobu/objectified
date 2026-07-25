@@ -1,0 +1,313 @@
+{
+  "adapter": "cloudevents",
+  "canonical": {
+    "channels": [
+      {
+        "address": "Microsoft.Storage.BlobCreated",
+        "bindings": {},
+        "description": "CloudEvents channel for `Microsoft.Storage.BlobCreated`",
+        "extras": {
+          "cloudevents_source": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/demo-rg/providers/Microsoft.Storage/storageAccounts/demoaccount",
+          "cloudevents_subject": "/blobServices/default/containers/uploads/blobs/report.pdf"
+        },
+        "key": "Microsoft.Storage.BlobCreated",
+        "name": "Microsoft.Storage.BlobCreated",
+        "parameters": [],
+        "protocol": "cloudevents"
+      }
+    ],
+    "description": null,
+    "extras": {
+      "cloudevents_event_count": 1
+    },
+    "format": "cloudevents",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Microsoft.Storage.BlobCreated",
+      "namespace": null
+    },
+    "paradigm": "event",
+    "protocol": "cloudevents",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Microsoft.Storage.BlobCreated",
+        "name": "Microsoft.Storage.BlobCreated",
+        "operations": [
+          {
+            "channel_ref": "Microsoft.Storage.BlobCreated",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cloudevents_datacontenttype": "application/json",
+              "cloudevents_id": "9aeb0fdf-c01e-0131-0922-9eb54906e209",
+              "cloudevents_source": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/demo-rg/providers/Microsoft.Storage/storageAccounts/demoaccount",
+              "cloudevents_specversion": "1.0",
+              "cloudevents_subject": "/blobServices/default/containers/uploads/blobs/report.pdf",
+              "cloudevents_time": "2026-06-18T20:18:27.9106572Z",
+              "cloudevents_type": "Microsoft.Storage.BlobCreated"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "9aeb0fdf-c01e-0131-0922-9eb54906e209",
+            "kind": "publish",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "cloudevents_data_sample": {
+                    "api": "PutBlob",
+                    "blobType": "BlockBlob",
+                    "clientRequestId": "6d79dbfb-0e37-4fc4-981f-442c9ca65760",
+                    "contentLength": 524288,
+                    "contentType": "application/pdf",
+                    "eTag": "0x8D4BCC2E4835CD0",
+                    "requestId": "831e1650-001e-001b-66ab-eeb76e000000",
+                    "sequencer": "00000000000004420000000000028963",
+                    "storageDiagnostics": {
+                      "batchId": "b68529f3-68cd-4744-baa4-3c0498ec19f0"
+                    },
+                    "url": "https://demoaccount.blob.core.windows.net/uploads/report.pdf"
+                  },
+                  "cloudevents_payload_schema": {
+                    "$ref": "#/components/schemas/StorageBlobCreated"
+                  }
+                },
+                "headers": [],
+                "key": "9aeb0fdf-c01e-0131-0922-9eb54906e209#event.StorageBlobCreated",
+                "name": "StorageBlobCreated",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "StorageBlobCreated",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "9aeb0fdf-c01e-0131-0922-9eb54906e209",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Microsoft.Storage.BlobCreated",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "StorageBlobCreated.api",
+            "name": "api",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "StorageBlobCreated.blobType",
+            "name": "blobType",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "StorageBlobCreated.clientRequestId",
+            "name": "clientRequestId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "StorageBlobCreated.contentLength",
+            "name": "contentLength",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "StorageBlobCreated.contentType",
+            "name": "contentType",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "StorageBlobCreated.eTag",
+            "name": "eTag",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "StorageBlobCreated.requestId",
+            "name": "requestId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "StorageBlobCreated.sequencer",
+            "name": "sequencer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "StorageBlobCreated.storageDiagnostics",
+            "name": "storageDiagnostics",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "StorageBlobCreated.url",
+            "name": "url",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "StorageBlobCreated",
+        "key_type": null,
+        "kind": "record",
+        "name": "StorageBlobCreated",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cloudevents/05-azure-blob-created.json",
+  "counts": {
+    "channels": 1,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cloudevents"
+  },
+  "fingerprint": "sha256:39168a3917fdcb0ddde5243f8ea3cc71149eb06dcec37837054e52e7ac6ce0d6",
+  "lint": {
+    "findings": 14,
+    "grade": "B",
+    "report_fingerprint": "5dd0f88581913f345f09b02e72680532f363c4a7ed07f6bfafb975155fc100ef",
+    "score": 80,
+    "severity_counts": {
+      "error": 0,
+      "info": 12,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

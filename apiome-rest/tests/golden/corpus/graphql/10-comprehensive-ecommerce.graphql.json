@@ -1,0 +1,6266 @@
+{
+  "adapter": "graphql",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {},
+    "format": "graphql",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "GraphQL Schema",
+      "namespace": null
+    },
+    "paradigm": "graph",
+    "protocol": "graphql",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Mutation",
+        "name": "Mutation",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.addAddress",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.addAddress#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Address",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "addAddress",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.addAddress#arg.input",
+                "location": "query",
+                "name": "input",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "AddressInput",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.addToCart",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.addToCart#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Cart",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "addToCart",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.addToCart#arg.input",
+                "location": "query",
+                "name": "input",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "AddToCartInput",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.addToWishlist",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.addToWishlist#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Product",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "addToWishlist",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.addToWishlist#arg.productId",
+                "location": "query",
+                "name": "productId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.applyCoupon",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.applyCoupon#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Cart",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "applyCoupon",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.applyCoupon#arg.code",
+                "location": "query",
+                "name": "code",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.cancelOrder",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.cancelOrder#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "cancelOrder",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.cancelOrder#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.checkout",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.checkout#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "checkout",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.checkout#arg.input",
+                "location": "query",
+                "name": "input",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CheckoutInput",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.clearCart",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.clearCart#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Cart",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "clearCart",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.createReview",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.createReview#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Review",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "createReview",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.createReview#arg.content",
+                "location": "query",
+                "name": "content",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.createReview#arg.productId",
+                "location": "query",
+                "name": "productId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.createReview#arg.rating",
+                "location": "query",
+                "name": "rating",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.createReview#arg.title",
+                "location": "query",
+                "name": "title",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.deleteAddress",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.deleteAddress#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Boolean",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "deleteAddress",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.deleteAddress#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.deleteReview",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.deleteReview#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Boolean",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "deleteReview",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.deleteReview#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.register",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.register#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "User",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "register",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.register#arg.input",
+                "location": "query",
+                "name": "input",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CreateUserInput",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.removeCoupon",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.removeCoupon#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Cart",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "removeCoupon",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.removeFromCart",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.removeFromCart#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Cart",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "removeFromCart",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.removeFromCart#arg.itemId",
+                "location": "query",
+                "name": "itemId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.removeFromWishlist",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.removeFromWishlist#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Product",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "removeFromWishlist",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.removeFromWishlist#arg.productId",
+                "location": "query",
+                "name": "productId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.updateAddress",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.updateAddress#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Address",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "updateAddress",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.updateAddress#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.updateAddress#arg.input",
+                "location": "query",
+                "name": "input",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "AddressInput",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.updateCartItem",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.updateCartItem#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Cart",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "updateCartItem",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.updateCartItem#arg.itemId",
+                "location": "query",
+                "name": "itemId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.updateCartItem#arg.quantity",
+                "location": "query",
+                "name": "quantity",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.updateProfile",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.updateProfile#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "User",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "updateProfile",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.updateProfile#arg.firstName",
+                "location": "query",
+                "name": "firstName",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.updateProfile#arg.lastName",
+                "location": "query",
+                "name": "lastName",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.updateProfile#arg.phone",
+                "location": "query",
+                "name": "phone",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Query",
+        "name": "Query",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.cart",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.cart#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Cart",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "cart",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.categories",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.categories#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Category",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "categories",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.categories#arg.parentId",
+                "location": "query",
+                "name": "parentId",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.category",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.category#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Category",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "category",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.category#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.categoryBySlug",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.categoryBySlug#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Category",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "categoryBySlug",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.categoryBySlug#arg.slug",
+                "location": "query",
+                "name": "slug",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.me",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.me#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "User",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "me",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.order",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.order#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "order",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.order#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.orders",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.orders#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Order",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "orders",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.orders#arg.after",
+                "location": "query",
+                "name": "after",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": 20,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.orders#arg.first",
+                "location": "query",
+                "name": "first",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.orders#arg.status",
+                "location": "query",
+                "name": "status",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "OrderStatus",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.product",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.product#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Product",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "product",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.product#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.productBySlug",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.productBySlug#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Product",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "productBySlug",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.productBySlug#arg.slug",
+                "location": "query",
+                "name": "slug",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.products",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.products#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ProductConnection",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "products",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.products#arg.after",
+                "location": "query",
+                "name": "after",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.products#arg.filter",
+                "location": "query",
+                "name": "filter",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ProductFilterInput",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": 20,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.products#arg.first",
+                "location": "query",
+                "name": "first",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.products#arg.sortBy",
+                "location": "query",
+                "name": "sortBy",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.search",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.search#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Product",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "search",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": 20,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.search#arg.first",
+                "location": "query",
+                "name": "first",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.search#arg.query",
+                "location": "query",
+                "name": "query",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "String",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.user",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.user#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "User",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "user",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.user#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Subscription",
+        "name": "Subscription",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Subscription.cartUpdated",
+            "kind": "subscription",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Subscription.cartUpdated#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Cart",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "cartUpdated",
+            "parameters": [],
+            "streaming": "server",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Subscription.orderStatusChanged",
+            "kind": "subscription",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Subscription.orderStatusChanged#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "orderStatusChanged",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Subscription.orderStatusChanged#arg.orderId",
+                "location": "query",
+                "name": "orderId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UUID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "server",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "input"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddToCartInput.productId",
+            "name": "productId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": 1,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddToCartInput.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddToCartInput.variantId",
+            "name": "variantId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "AddToCartInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "AddToCartInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Address.company",
+            "name": "company",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Address.country",
+            "name": "country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Address.firstName",
+            "name": "firstName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Address.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Address.isDefault",
+            "name": "isDefault",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Address.lastName",
+            "name": "lastName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Address.line1",
+            "name": "line1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Address.line2",
+            "name": "line2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Address.phone",
+            "name": "phone",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Address.postalCode",
+            "name": "postalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Address.state",
+            "name": "state",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "Address",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "input"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.company",
+            "name": "company",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.country",
+            "name": "country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.firstName",
+            "name": "firstName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": false,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.isDefault",
+            "name": "isDefault",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.lastName",
+            "name": "lastName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.line1",
+            "name": "line1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.line2",
+            "name": "line2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.phone",
+            "name": "phone",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.postalCode",
+            "name": "postalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.state",
+            "name": "state",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "AddressInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "AddressInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "BankAccount.accountType",
+            "name": "accountType",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "BankAccount.bankName",
+            "name": "bankName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "BankAccount.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "BankAccount.lastFour",
+            "name": "lastFour",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "BankAccount",
+        "key_type": null,
+        "kind": "record",
+        "name": "BankAccount",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.couponCode",
+            "name": "couponCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.discount",
+            "name": "discount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.itemCount",
+            "name": "itemCount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "CartItem",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.shipping",
+            "name": "shipping",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.subtotal",
+            "name": "subtotal",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.tax",
+            "name": "tax",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.user",
+            "name": "user",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "User",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Cart",
+        "key_type": null,
+        "kind": "record",
+        "name": "Cart",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CartItem.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CartItem.product",
+            "name": "product",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Product",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CartItem.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CartItem.totalPrice",
+            "name": "totalPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CartItem.unitPrice",
+            "name": "unitPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CartItem.variant",
+            "name": "variant",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ProductVariant",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "CartItem",
+        "key_type": null,
+        "kind": "record",
+        "name": "CartItem",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "interfaces": [
+            "Node"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Category.children",
+            "name": "children",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Category",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Category.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Category.description",
+            "name": "description",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Category.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Category.image",
+            "name": "image",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Image",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Category.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Category.parent",
+            "name": "parent",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Category",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arguments": [
+                {
+                  "name": "first",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Int",
+                    "nullable": true
+                  }
+                },
+                {
+                  "name": "after",
+                  "type": {
+                    "extras": {},
+                    "item": null,
+                    "name": "String",
+                    "nullable": true
+                  }
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "Category.products",
+            "name": "products",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ProductConnection",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Category.slug",
+            "name": "slug",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Category.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Category",
+        "key_type": null,
+        "kind": "record",
+        "name": "Category",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "input"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CheckoutInput.billingAddressId",
+            "name": "billingAddressId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CheckoutInput.couponCode",
+            "name": "couponCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CheckoutInput.notes",
+            "name": "notes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CheckoutInput.paymentMethodId",
+            "name": "paymentMethodId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CheckoutInput.shippingAddressId",
+            "name": "shippingAddressId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CheckoutInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "CheckoutInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "input"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CreateUserInput.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CreateUserInput.firstName",
+            "name": "firstName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CreateUserInput.lastName",
+            "name": "lastName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CreateUserInput.password",
+            "name": "password",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CreateUserInput.phone",
+            "name": "phone",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "CreateUserInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "CreateUserInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CreditCard.brand",
+            "name": "brand",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CreditCard.expiryMonth",
+            "name": "expiryMonth",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CreditCard.expiryYear",
+            "name": "expiryYear",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CreditCard.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CreditCard.lastFour",
+            "name": "lastFour",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CreditCard",
+        "key_type": null,
+        "kind": "record",
+        "name": "CreditCard",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Currency.USD",
+            "name": "USD",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Currency.EUR",
+            "name": "EUR",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Currency.GBP",
+            "name": "GBP",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Currency.JPY",
+            "name": "JPY",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Currency.CAD",
+            "name": "CAD",
+            "value": null
+          }
+        ],
+        "extras": {
+          "graphql_type": "enum"
+        },
+        "fields": [],
+        "key": "Currency",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Currency",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "scalar"
+        },
+        "fields": [],
+        "key": "DateTime",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "DateTime",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "scalar"
+        },
+        "fields": [],
+        "key": "Decimal",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "Decimal",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Image.alt",
+            "name": "alt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Image.height",
+            "name": "height",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Image.url",
+            "name": "url",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "URL",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Image.width",
+            "name": "width",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Image",
+        "key_type": null,
+        "kind": "record",
+        "name": "Image",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Inventory.allowBackorder",
+            "name": "allowBackorder",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Inventory.available",
+            "name": "available",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Inventory.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Inventory.reserved",
+            "name": "reserved",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Inventory.trackInventory",
+            "name": "trackInventory",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Inventory",
+        "key_type": null,
+        "kind": "record",
+        "name": "Inventory",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "scalar"
+        },
+        "fields": [],
+        "key": "JSON",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "JSON",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Money.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Money.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Currency",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Money",
+        "key_type": null,
+        "kind": "record",
+        "name": "Money",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "interface"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Node.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Node.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Node.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Node",
+        "key_type": null,
+        "kind": "record",
+        "name": "Node",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "interfaces": [
+            "Node"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.billingAddress",
+            "name": "billingAddress",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Address",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.discount",
+            "name": "discount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "OrderItem",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.notes",
+            "name": "notes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.orderNumber",
+            "name": "orderNumber",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.payment",
+            "name": "payment",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Payment",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.shipments",
+            "name": "shipments",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Shipment",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.shipping",
+            "name": "shipping",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.shippingAddress",
+            "name": "shippingAddress",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Address",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "OrderStatus",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.subtotal",
+            "name": "subtotal",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.tax",
+            "name": "tax",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.user",
+            "name": "user",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "User",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderItem.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderItem.product",
+            "name": "product",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Product",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderItem.productName",
+            "name": "productName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderItem.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderItem.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderItem.totalPrice",
+            "name": "totalPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderItem.unitPrice",
+            "name": "unitPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderItem.variant",
+            "name": "variant",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ProductVariant",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderItem.variantName",
+            "name": "variantName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "OrderItem",
+        "key_type": null,
+        "kind": "record",
+        "name": "OrderItem",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "OrderStatus.PENDING",
+            "name": "PENDING",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "OrderStatus.CONFIRMED",
+            "name": "CONFIRMED",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "OrderStatus.PROCESSING",
+            "name": "PROCESSING",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "OrderStatus.SHIPPED",
+            "name": "SHIPPED",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "OrderStatus.DELIVERED",
+            "name": "DELIVERED",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "OrderStatus.CANCELLED",
+            "name": "CANCELLED",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "OrderStatus.REFUNDED",
+            "name": "REFUNDED",
+            "value": null
+          }
+        ],
+        "extras": {
+          "graphql_type": "enum"
+        },
+        "fields": [],
+        "key": "OrderStatus",
+        "key_type": null,
+        "kind": "enum",
+        "name": "OrderStatus",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PageInfo.endCursor",
+            "name": "endCursor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PageInfo.hasNextPage",
+            "name": "hasNextPage",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PageInfo.hasPreviousPage",
+            "name": "hasPreviousPage",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PageInfo.startCursor",
+            "name": "startCursor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "PageInfo",
+        "key_type": null,
+        "kind": "record",
+        "name": "PageInfo",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PayPalAccount.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PayPalAccount.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PayPalAccount",
+        "key_type": null,
+        "kind": "record",
+        "name": "PayPalAccount",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "interfaces": [
+            "Node"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Payment.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Payment.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Payment.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Payment.method",
+            "name": "method",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PaymentMethod",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Payment.order",
+            "name": "order",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Order",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Payment.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PaymentStatus",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Payment.transactionId",
+            "name": "transactionId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Payment.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Payment",
+        "key_type": null,
+        "kind": "record",
+        "name": "Payment",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "union"
+        },
+        "fields": [],
+        "key": "PaymentMethod",
+        "key_type": null,
+        "kind": "union",
+        "name": "PaymentMethod",
+        "namespace": null,
+        "union_members": [
+          "CreditCard",
+          "BankAccount",
+          "PayPalAccount"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PaymentStatus.PENDING",
+            "name": "PENDING",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PaymentStatus.AUTHORIZED",
+            "name": "AUTHORIZED",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PaymentStatus.CAPTURED",
+            "name": "CAPTURED",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PaymentStatus.FAILED",
+            "name": "FAILED",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "PaymentStatus.REFUNDED",
+            "name": "REFUNDED",
+            "value": null
+          }
+        ],
+        "extras": {
+          "graphql_type": "enum"
+        },
+        "fields": [],
+        "key": "PaymentStatus",
+        "key_type": null,
+        "kind": "enum",
+        "name": "PaymentStatus",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "interfaces": [
+            "Node"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.attributes",
+            "name": "attributes",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "ProductAttribute",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.averageRating",
+            "name": "averageRating",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.category",
+            "name": "category",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Category",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.compareAtPrice",
+            "name": "compareAtPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.description",
+            "name": "description",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.images",
+            "name": "images",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Image",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.inventory",
+            "name": "inventory",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Inventory",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.isAvailable",
+            "name": "isAvailable",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.relatedProducts",
+            "name": "relatedProducts",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Product",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.reviewCount",
+            "name": "reviewCount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.reviews",
+            "name": "reviews",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Review",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.shortDescription",
+            "name": "shortDescription",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.slug",
+            "name": "slug",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.tags",
+            "name": "tags",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.variants",
+            "name": "variants",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "ProductVariant",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Product",
+        "key_type": null,
+        "kind": "record",
+        "name": "Product",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductAttribute.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductAttribute.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ProductAttribute",
+        "key_type": null,
+        "kind": "record",
+        "name": "ProductAttribute",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductConnection.edges",
+            "name": "edges",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "ProductEdge",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductConnection.pageInfo",
+            "name": "pageInfo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PageInfo",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductConnection.totalCount",
+            "name": "totalCount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ProductConnection",
+        "key_type": null,
+        "kind": "record",
+        "name": "ProductConnection",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductEdge.cursor",
+            "name": "cursor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductEdge.node",
+            "name": "node",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Product",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ProductEdge",
+        "key_type": null,
+        "kind": "record",
+        "name": "ProductEdge",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "input"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductFilterInput.categoryId",
+            "name": "categoryId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductFilterInput.inStock",
+            "name": "inStock",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductFilterInput.maxPrice",
+            "name": "maxPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductFilterInput.minPrice",
+            "name": "minPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductFilterInput.searchQuery",
+            "name": "searchQuery",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductFilterInput.tags",
+            "name": "tags",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "ProductFilterInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "ProductFilterInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "interfaces": [
+            "Node"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductVariant.attributes",
+            "name": "attributes",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "VariantAttribute",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductVariant.compareAtPrice",
+            "name": "compareAtPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductVariant.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductVariant.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductVariant.image",
+            "name": "image",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Image",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductVariant.inventory",
+            "name": "inventory",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Inventory",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductVariant.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductVariant.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductVariant.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProductVariant.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ProductVariant",
+        "key_type": null,
+        "kind": "record",
+        "name": "ProductVariant",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "interfaces": [
+            "Node"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Review.author",
+            "name": "author",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "User",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Review.content",
+            "name": "content",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Review.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Review.helpfulCount",
+            "name": "helpfulCount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Review.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Review.isVerifiedPurchase",
+            "name": "isVerifiedPurchase",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Review.product",
+            "name": "product",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Product",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Review.rating",
+            "name": "rating",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Review.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Review.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Review",
+        "key_type": null,
+        "kind": "record",
+        "name": "Review",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "interfaces": [
+            "Node"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Shipment.carrier",
+            "name": "carrier",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Shipment.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Shipment.estimatedDelivery",
+            "name": "estimatedDelivery",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Shipment.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Shipment.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "ShipmentItem",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Shipment.order",
+            "name": "order",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Order",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Shipment.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Shipment.trackingNumber",
+            "name": "trackingNumber",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Shipment.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Shipment",
+        "key_type": null,
+        "kind": "record",
+        "name": "Shipment",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ShipmentItem.orderItem",
+            "name": "orderItem",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "OrderItem",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ShipmentItem.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ShipmentItem",
+        "key_type": null,
+        "kind": "record",
+        "name": "ShipmentItem",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "interface"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Timestamped.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Timestamped.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Timestamped",
+        "key_type": null,
+        "kind": "record",
+        "name": "Timestamped",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "scalar"
+        },
+        "fields": [],
+        "key": "URL",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "URL",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "scalar"
+        },
+        "fields": [],
+        "key": "UUID",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "UUID",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object",
+          "interfaces": [
+            "Node"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.addresses",
+            "name": "addresses",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Address",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.cart",
+            "name": "cart",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Cart",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.defaultBillingAddress",
+            "name": "defaultBillingAddress",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.defaultShippingAddress",
+            "name": "defaultShippingAddress",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.firstName",
+            "name": "firstName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UUID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.lastName",
+            "name": "lastName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.orders",
+            "name": "orders",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Order",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.phone",
+            "name": "phone",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.reviews",
+            "name": "reviews",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Review",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.role",
+            "name": "role",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "UserRole",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.wishlist",
+            "name": "wishlist",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Product",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "User",
+        "key_type": null,
+        "kind": "record",
+        "name": "User",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "UserRole.CUSTOMER",
+            "name": "CUSTOMER",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "UserRole.VENDOR",
+            "name": "VENDOR",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "UserRole.ADMIN",
+            "name": "ADMIN",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "UserRole.SUPPORT",
+            "name": "SUPPORT",
+            "value": null
+          }
+        ],
+        "extras": {
+          "graphql_type": "enum"
+        },
+        "fields": [],
+        "key": "UserRole",
+        "key_type": null,
+        "kind": "enum",
+        "name": "UserRole",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "VariantAttribute.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "VariantAttribute.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "VariantAttribute",
+        "key_type": null,
+        "kind": "record",
+        "name": "VariantAttribute",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "graphql/10-comprehensive-ecommerce.graphql",
+  "counts": {
+    "channels": 0,
+    "operations": 31,
+    "servers": 0,
+    "services": 3,
+    "types": 41
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "graphql"
+  },
+  "fingerprint": "sha256:66e48f8bcdf9b7677cbaff6a12309e5c732394542a53736a9c1e157978cb060f",
+  "lint": {
+    "findings": 373,
+    "grade": "F",
+    "report_fingerprint": "99da1456e9eace4c7f8f86f8985fa11d8aea8d653ed71378d1fefff601a3d777",
+    "score": 0,
+    "severity_counts": {
+      "error": 0,
+      "info": 301,
+      "warning": 72
+    }
+  },
+  "snapshot_version": 1
+}

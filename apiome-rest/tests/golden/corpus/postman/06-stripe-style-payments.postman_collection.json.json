@@ -1,0 +1,301 @@
+{
+  "adapter": "postman",
+  "canonical": {
+    "channels": [],
+    "description": "Real-world shaped Postman Collection v2.1 example: a hand-authored reconstruction of the shape of the Stripe API (customers and charges under /v1, form-urlencoded write requests, bearer-key auth header). No third-party text copied.",
+    "extras": {
+      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "postman_variables": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.payments-example.com"
+        },
+        {
+          "key": "secretKey",
+          "value": "sk_test_placeholder"
+        }
+      ]
+    },
+    "format": "postman",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Payments API (Stripe-style)",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From Postman collection variable",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.payments-example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Payments API (Stripe-style)",
+        "name": "Payments API (Stripe-style)",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Retrieve a charge by identifier.",
+            "extras": {
+              "postman_folder_path": [
+                "Charges"
+              ],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Authorization",
+                  "value": "Bearer {{secretKey}}"
+                }
+              ]
+            },
+            "http_method": "GET",
+            "http_path": "/v1/charges/{id}",
+            "key": "GET /v1/charges/{id}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "Retrieve charge",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_style": "path"
+                },
+                "key": "GET /v1/charges/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List customers, newest first.",
+            "extras": {
+              "postman_folder_path": [
+                "Customers"
+              ],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Authorization",
+                  "value": "Bearer {{secretKey}}"
+                }
+              ]
+            },
+            "http_method": "GET",
+            "http_path": "/v1/customers",
+            "key": "GET /v1/customers",
+            "kind": "request_response",
+            "messages": [],
+            "name": "List customers",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_sample": "3",
+                  "postman_style": "query"
+                },
+                "key": "GET /v1/customers#query.limit",
+                "location": "query",
+                "name": "limit",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Retrieve a customer by identifier.",
+            "extras": {
+              "postman_folder_path": [
+                "Customers"
+              ],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Authorization",
+                  "value": "Bearer {{secretKey}}"
+                }
+              ]
+            },
+            "http_method": "GET",
+            "http_path": "/v1/customers/{id}",
+            "key": "GET /v1/customers/{id}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "Retrieve customer",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_style": "path"
+                },
+                "key": "GET /v1/customers/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Charge a customer's default payment method.",
+            "extras": {
+              "postman_folder_path": [
+                "Charges"
+              ],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Authorization",
+                  "value": "Bearer {{secretKey}}"
+                },
+                {
+                  "disabled": false,
+                  "key": "Content-Type",
+                  "value": "application/x-www-form-urlencoded"
+                }
+              ]
+            },
+            "http_method": "POST",
+            "http_path": "/v1/charges",
+            "key": "POST /v1/charges",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200",
+                  "postman_body_raw": "{\n  \"id\": \"ch_000000000000\",\n  \"object\": \"charge\",\n  \"amount\": 2000,\n  \"currency\": \"usd\",\n  \"paid\": true,\n  \"status\": \"succeeded\"\n}"
+                },
+                "headers": [],
+                "key": "POST /v1/charges#response.200",
+                "name": "Charge succeeded",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Create charge",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Create a customer object.",
+            "extras": {
+              "postman_folder_path": [
+                "Customers"
+              ],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Authorization",
+                  "value": "Bearer {{secretKey}}"
+                },
+                {
+                  "disabled": false,
+                  "key": "Content-Type",
+                  "value": "application/x-www-form-urlencoded"
+                }
+              ]
+            },
+            "http_method": "POST",
+            "http_path": "/v1/customers",
+            "key": "POST /v1/customers",
+            "kind": "request_response",
+            "messages": [],
+            "name": "Create customer",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Payments API (Stripe-style)",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "postman/06-stripe-style-payments.postman_collection.json",
+  "counts": {
+    "channels": 0,
+    "operations": 5,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "postman"
+  },
+  "fingerprint": "sha256:e356c98ab1040ff2020929ee66ee421839421946415e451ceaa761036820aa99",
+  "lint": {
+    "findings": 1,
+    "grade": "A",
+    "report_fingerprint": "3e5d860553f36d3e087d72057c727a50a0040d0dda9b5e7466681278fe7e1875",
+    "score": 99,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

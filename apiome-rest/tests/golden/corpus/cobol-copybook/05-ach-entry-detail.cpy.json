@@ -1,0 +1,512 @@
+{
+  "adapter": "cobolcopybook",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "cobolcopybook_root": "ACH-ENTRY-DETAIL",
+      "cobolcopybook_tree": {
+        "children": [
+          {
+            "children": [],
+            "conditions": [
+              {
+                "name": "ACH-IS-ENTRY-DETAIL",
+                "value": "6"
+              }
+            ],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACH-RECORD-TYPE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(1)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [
+              {
+                "name": "ACH-CHECKING-CREDIT",
+                "value": "22"
+              },
+              {
+                "name": "ACH-CHECKING-DEBIT",
+                "value": "27"
+              },
+              {
+                "name": "ACH-SAVINGS-CREDIT",
+                "value": "32"
+              },
+              {
+                "name": "ACH-SAVINGS-DEBIT",
+                "value": "37"
+              }
+            ],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACH-TRANSACTION-CODE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(2)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACH-RECEIVING-DFI-ID",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(8)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACH-CHECK-DIGIT",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(1)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACH-DFI-ACCOUNT-NUMBER",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(17)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACH-AMOUNT",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(8)V99",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACH-INDIVIDUAL-ID",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(15)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACH-INDIVIDUAL-NAME",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(22)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACH-DISCRETIONARY-DATA",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(2)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACH-ADDENDA-INDICATOR",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(1)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ACH-TRACE-NUMBER",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(15)",
+            "usage": null
+          }
+        ],
+        "conditions": [],
+        "depending_on": null,
+        "level": 1,
+        "name": "ACH-ENTRY-DETAIL",
+        "occurs_max": null,
+        "occurs_min": null,
+        "picture": null,
+        "usage": null
+      }
+    },
+    "format": "cobolcopybook",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "ACH-ENTRY-DETAIL",
+      "namespace": "ACH-ENTRY-DETAIL"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "ACH-ENTRY-DETAIL",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cobol_kind": "group",
+          "cobol_level": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(1)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(1)",
+              "cobol_usage": null
+            },
+            "field_number": 10,
+            "key": "ACH-ENTRY-DETAIL.ACH-ENTRY-DETAIL.ACH-ADDENDA-INDICATOR",
+            "name": "ACH-ADDENDA-INDICATOR",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(8)V99",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(8)V99",
+              "cobol_usage": null
+            },
+            "field_number": 6,
+            "key": "ACH-ENTRY-DETAIL.ACH-ENTRY-DETAIL.ACH-AMOUNT",
+            "name": "ACH-AMOUNT",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(1)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(1)",
+              "cobol_usage": null
+            },
+            "field_number": 4,
+            "key": "ACH-ENTRY-DETAIL.ACH-ENTRY-DETAIL.ACH-CHECK-DIGIT",
+            "name": "ACH-CHECK-DIGIT",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(17)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(17)",
+              "cobol_usage": null
+            },
+            "field_number": 5,
+            "key": "ACH-ENTRY-DETAIL.ACH-ENTRY-DETAIL.ACH-DFI-ACCOUNT-NUMBER",
+            "name": "ACH-DFI-ACCOUNT-NUMBER",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(2)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(2)",
+              "cobol_usage": null
+            },
+            "field_number": 9,
+            "key": "ACH-ENTRY-DETAIL.ACH-ENTRY-DETAIL.ACH-DISCRETIONARY-DATA",
+            "name": "ACH-DISCRETIONARY-DATA",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(15)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(15)",
+              "cobol_usage": null
+            },
+            "field_number": 7,
+            "key": "ACH-ENTRY-DETAIL.ACH-ENTRY-DETAIL.ACH-INDIVIDUAL-ID",
+            "name": "ACH-INDIVIDUAL-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(22)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(22)",
+              "cobol_usage": null
+            },
+            "field_number": 8,
+            "key": "ACH-ENTRY-DETAIL.ACH-ENTRY-DETAIL.ACH-INDIVIDUAL-NAME",
+            "name": "ACH-INDIVIDUAL-NAME",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(8)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(8)",
+              "cobol_usage": null
+            },
+            "field_number": 3,
+            "key": "ACH-ENTRY-DETAIL.ACH-ENTRY-DETAIL.ACH-RECEIVING-DFI-ID",
+            "name": "ACH-RECEIVING-DFI-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(1)",
+            "extras": {
+              "cobol_conditions": [
+                {
+                  "name": "ACH-IS-ENTRY-DETAIL",
+                  "value": "6"
+                }
+              ],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(1)",
+              "cobol_usage": null
+            },
+            "field_number": 1,
+            "key": "ACH-ENTRY-DETAIL.ACH-ENTRY-DETAIL.ACH-RECORD-TYPE",
+            "name": "ACH-RECORD-TYPE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(15)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(15)",
+              "cobol_usage": null
+            },
+            "field_number": 11,
+            "key": "ACH-ENTRY-DETAIL.ACH-ENTRY-DETAIL.ACH-TRACE-NUMBER",
+            "name": "ACH-TRACE-NUMBER",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(2)",
+            "extras": {
+              "cobol_conditions": [
+                {
+                  "name": "ACH-CHECKING-CREDIT",
+                  "value": "22"
+                },
+                {
+                  "name": "ACH-CHECKING-DEBIT",
+                  "value": "27"
+                },
+                {
+                  "name": "ACH-SAVINGS-CREDIT",
+                  "value": "32"
+                },
+                {
+                  "name": "ACH-SAVINGS-DEBIT",
+                  "value": "37"
+                }
+              ],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(2)",
+              "cobol_usage": null
+            },
+            "field_number": 2,
+            "key": "ACH-ENTRY-DETAIL.ACH-ENTRY-DETAIL.ACH-TRANSACTION-CODE",
+            "name": "ACH-TRANSACTION-CODE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ACH-ENTRY-DETAIL.ACH-ENTRY-DETAIL",
+        "key_type": null,
+        "kind": "record",
+        "name": "ACH-ENTRY-DETAIL",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cobol-copybook/05-ach-entry-detail.cpy",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cobolcopybook"
+  },
+  "fingerprint": "sha256:47855fb689670d5eaa94e863d970723fab0b42f80aca6e68ffb6419eb4f29d99",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "011d4d25d01a972c765f2a03dcb0fed669e53e4b9427f37428d78d95757fd59e",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

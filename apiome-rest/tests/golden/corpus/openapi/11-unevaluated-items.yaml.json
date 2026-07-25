@@ -1,0 +1,163 @@
+{
+  "adapter": "openapi",
+  "canonical": {
+    "channels": [],
+    "description": "Demonstrates unevaluatedItems for array validation",
+    "extras": {},
+    "format": "openapi-3.1",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Unevaluated Items Example",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Unevaluated Items Example",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Object with flexible tuple validation",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "First three items are structured, rest must be strings",
+            "extras": {},
+            "field_number": null,
+            "key": "FlexibleTuple.data",
+            "name": "data",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": null,
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "FlexibleTuple",
+        "key_type": null,
+        "kind": "record",
+        "name": "FlexibleTuple",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Object with mixed array validation",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Array with known items and constrained additional items",
+            "extras": {},
+            "field_number": null,
+            "key": "MixedArray.values",
+            "name": "values",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "number",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "MixedArray",
+        "key_type": null,
+        "kind": "record",
+        "name": "MixedArray",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Object with strict tuple validation",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "2D coordinates [x, y] with no additional items",
+            "extras": {},
+            "field_number": null,
+            "key": "StrictTuple.coordinates",
+            "name": "coordinates",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": null,
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "StrictTuple",
+        "key_type": null,
+        "kind": "record",
+        "name": "StrictTuple",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "openapi/11-unevaluated-items.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "openapi-3.1"
+  },
+  "fingerprint": "sha256:313e95f133d45494cafd6cca1b8c78cefa5583bfecbe39b07c0fd437f761ee79",
+  "lint": {
+    "findings": 3,
+    "grade": "B",
+    "report_fingerprint": "ea244705ab7ecb428f5bf1d9d49e65e28100ea5eb8a52125ba36128b5bd6e63f",
+    "score": 88,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

@@ -5,6 +5,26 @@ from pathlib import Path
 import pytest
 
 
+def pytest_addoption(parser: pytest.Parser) -> None:
+    """Register repo-wide test options.
+
+    ``--update-golden`` regenerates the IXH-1.6 canonical corpus snapshots
+    (``tests/golden/corpus/``) instead of comparing against them, so an intended
+    contract change is a one-command refresh whose diff lands in review. The
+    ``UPDATE_CORPUS_GOLDENS=1`` environment variable does the same, mirroring the
+    EFP-1.3 projection corpus's idiom.
+    """
+    parser.addoption(
+        "--update-golden",
+        action="store_true",
+        default=False,
+        help=(
+            "Regenerate canonical corpus golden snapshots (tests/golden/corpus/) "
+            "instead of asserting against them."
+        ),
+    )
+
+
 @pytest.fixture(autouse=True)
 def _disable_rate_limiting(monkeypatch):
     """

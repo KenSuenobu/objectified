@@ -1,0 +1,187 @@
+{
+  "adapter": "arazzo",
+  "canonical": {
+    "channels": [],
+    "description": "Tests conditional steps, missing outputs, and array/object signatures",
+    "extras": {
+      "arazzo": "1.0.1",
+      "sourceDescriptions": [
+        {
+          "name": "ContentAPI",
+          "type": "openapi",
+          "url": "https://example.com/openapi/content.json"
+        }
+      ]
+    },
+    "format": "arazzo",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Edge Cases Workflow",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Create article, optionally add tags, then publish",
+        "extras": {
+          "stepOrder": [
+            "CreateArticle",
+            "AddTags",
+            "Publish"
+          ],
+          "workflowId": "PublishContent"
+        },
+        "key": "PublishContent",
+        "name": "PublishContent",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "request": {
+                "operationId": "addTags",
+                "parameters": {
+                  "body": {
+                    "tags": [
+                      "testing",
+                      "arazzo",
+                      "import"
+                    ]
+                  },
+                  "path": {
+                    "id": "${articleId}"
+                  }
+                },
+                "source": "ContentAPI"
+              },
+              "stepId": "AddTags",
+              "stepIndex": 1,
+              "when": {
+                "expression": "${articleId != null}"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "PublishContent#AddTags",
+            "kind": "one_way",
+            "messages": [],
+            "name": "AddTags",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "PublishContent"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "outputs": [
+                {
+                  "name": "articleId",
+                  "path": "$.id"
+                }
+              ],
+              "request": {
+                "operationId": "createArticle",
+                "parameters": {
+                  "body": {
+                    "author": {
+                      "email": "kenji@example.com",
+                      "name": "Kenji"
+                    },
+                    "content": "This is a test article",
+                    "title": "Arazzo Testing"
+                  }
+                },
+                "source": "ContentAPI"
+              },
+              "stepId": "CreateArticle",
+              "stepIndex": 0
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "PublishContent#CreateArticle",
+            "kind": "one_way",
+            "messages": [],
+            "name": "CreateArticle",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "PublishContent"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "assertions": [
+                {
+                  "description": "Publish succeeded",
+                  "expression": "${response.status == 200}"
+                }
+              ],
+              "request": {
+                "operationId": "publish",
+                "parameters": {
+                  "path": {
+                    "id": "${articleId}"
+                  }
+                },
+                "source": "ContentAPI"
+              },
+              "stepId": "Publish",
+              "stepIndex": 2
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "PublishContent#Publish",
+            "kind": "one_way",
+            "messages": [],
+            "name": "Publish",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "PublishContent"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Edge Cases Workflow",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "arazzo/edge-cases.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "arazzo"
+  },
+  "fingerprint": "sha256:f302cfca8f1340e7e5417b802b02b12c0205c8c43fff482b415888e5645b06b0",
+  "lint": {
+    "findings": 6,
+    "grade": "C",
+    "report_fingerprint": "7e04babe8d653c51db6a897565dff0a32786602cc74965d28208043c4053c2ad",
+    "score": 76,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

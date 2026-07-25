@@ -1,0 +1,502 @@
+{
+  "adapter": "oncrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "oncrpc_programs": [
+        {
+          "name": "INV_PROG",
+          "number": 536870915,
+          "versions": [
+            {
+              "name": "INV_VERS",
+              "number": 1,
+              "procedures": [
+                {
+                  "arg_type": "sku",
+                  "name": "INV_LOOKUP",
+                  "number": 1,
+                  "return_type": "inv_lookup_res"
+                },
+                {
+                  "arg_type": "inv_adjust_args",
+                  "name": "INV_ADJUST",
+                  "number": 2,
+                  "return_type": "inv_status"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "oncrpc_typedefs": {
+        "sku": "string<64>"
+      }
+    },
+    "format": "oncrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "INV_PROG",
+      "namespace": "INV_PROG"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "INV_PROG.INV_PROG",
+        "name": "INV_PROG",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 2
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "INV_PROG.INV_PROG.INV_ADJUST",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "INV_PROG.INV_PROG.INV_ADJUST#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "INV_PROG.inv_adjust_args",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "INV_PROG.INV_PROG.INV_ADJUST#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "INV_PROG.inv_status",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "INV_ADJUST",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 1
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "INV_PROG.INV_PROG.INV_LOOKUP",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "INV_PROG.INV_PROG.INV_LOOKUP#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "INV_PROG.INV_PROG.INV_LOOKUP#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "INV_PROG.inv_lookup_res",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "INV_LOOKUP",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 64,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "sku"
+            },
+            "field_number": 1,
+            "key": "INV_PROG.inv_adjust_args.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "int"
+            },
+            "field_number": 2,
+            "key": "INV_PROG.inv_adjust_args.delta",
+            "name": "delta",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "INV_PROG.inv_adjust_args",
+        "key_type": null,
+        "kind": "record",
+        "name": "inv_adjust_args",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 64,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "sku"
+            },
+            "field_number": 1,
+            "key": "INV_PROG.inv_item.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "inv_location"
+            },
+            "field_number": 3,
+            "key": "INV_PROG.inv_item.location",
+            "name": "location",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "INV_PROG.inv_location",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "unsigned int"
+            },
+            "field_number": 2,
+            "key": "INV_PROG.inv_item.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "INV_PROG.inv_item",
+        "key_type": null,
+        "kind": "record",
+        "name": "inv_item",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "unsigned int"
+            },
+            "field_number": 2,
+            "key": "INV_PROG.inv_location.shelf",
+            "name": "shelf",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 32,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "string<32>"
+            },
+            "field_number": 1,
+            "key": "INV_PROG.inv_location.warehouse",
+            "name": "warehouse",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "INV_PROG.inv_location",
+        "key_type": null,
+        "kind": "record",
+        "name": "inv_location",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "union",
+          "oncrpc_switch_field": "status",
+          "oncrpc_switch_type": "inv_status",
+          "oncrpc_union_cases": [
+            {
+              "canonical_type": "INV_PROG.inv_item",
+              "field": "item",
+              "label": "INV_OK",
+              "type": "inv_item"
+            },
+            {
+              "label": "default",
+              "type": "void"
+            }
+          ]
+        },
+        "fields": [],
+        "key": "INV_PROG.inv_lookup_res",
+        "key_type": null,
+        "kind": "union",
+        "name": "inv_lookup_res",
+        "namespace": null,
+        "union_members": [
+          "INV_PROG.inv_item",
+          "void"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "INV_PROG.inv_status.INV_OK",
+            "name": "INV_OK",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "INV_PROG.inv_status.INV_NOT_FOUND",
+            "name": "INV_NOT_FOUND",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "INV_PROG.inv_status.INV_ERROR",
+            "name": "INV_ERROR",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "oncrpc_kind": "enum"
+        },
+        "fields": [],
+        "key": "INV_PROG.inv_status",
+        "key_type": null,
+        "kind": "enum",
+        "name": "inv_status",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "onc-rpc/03-inventory-composition.x",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 1,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "oncrpc"
+  },
+  "fingerprint": "sha256:7906f77617709fdb35fbf893c138460ef1212fdfd0e2bc531d88cbbf485ba726",
+  "lint": {
+    "findings": 19,
+    "grade": "D",
+    "report_fingerprint": "6a919a00597471ef7f5f79fb94b6a8e080d623d26fd3819df19583398764c4c1",
+    "score": 60,
+    "severity_counts": {
+      "error": 0,
+      "info": 12,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

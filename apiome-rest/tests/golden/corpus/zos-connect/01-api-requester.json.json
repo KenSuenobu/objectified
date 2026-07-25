@@ -1,0 +1,381 @@
+{
+  "adapter": "zosconnect",
+  "canonical": {
+    "channels": [],
+    "description": "Outbound API requester invoked from a CICS COBOL program.",
+    "extras": {
+      "zosconnect_api": {
+        "basePath": "https://api.example.com/inventory",
+        "specification": "openapi-3.0",
+        "title": "Inventory API"
+      },
+      "zosconnect_descriptor": {
+        "description": "Outbound API requester invoked from a CICS COBOL program.",
+        "name": "InventoryRequester",
+        "version": "1.0.0"
+      },
+      "zosconnect_kind": "requester",
+      "zosconnect_language": {
+        "codepage": "IBM-1047",
+        "type": "cobol"
+      },
+      "zosconnect_operations": [
+        {
+          "method": "GET",
+          "operationId": "getStockLevel",
+          "path": "/items/{sku}/stock",
+          "pathParameters": [
+            {
+              "field": "REQ-SKU",
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "requestStructure": "GET-STOCK-REQUEST",
+          "responseStructure": "GET-STOCK-RESPONSE"
+        },
+        {
+          "method": "POST",
+          "operationId": "reserveStock",
+          "path": "/items/{sku}/reservations",
+          "pathParameters": [
+            {
+              "field": "RES-SKU",
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "requestStructure": "RESERVE-REQUEST",
+          "responseStructure": "RESERVE-RESPONSE"
+        }
+      ]
+    },
+    "format": "zosconnect",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Inventory API",
+      "namespace": "InventoryRequester"
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From z/OS Connect `api.basePath`",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/inventory",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "InventoryRequester.InventoryRequester",
+        "name": "InventoryRequester",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": null,
+              "zosconnect_request_structure": "GET-STOCK-REQUEST",
+              "zosconnect_response_structure": "GET-STOCK-RESPONSE"
+            },
+            "http_method": "GET",
+            "http_path": "/items/{sku}/stock",
+            "key": "GET /items/{sku}/stock",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /items/{sku}/stock#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "InventoryRequester.GET-STOCK-REQUEST",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "GET /items/{sku}/stock#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "InventoryRequester.GET-STOCK-RESPONSE",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "getStockLevel",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "REQ-SKU",
+                  "zosconnect_type": "string"
+                },
+                "key": "GET /items/{sku}/stock#path.sku",
+                "location": "path",
+                "name": "sku",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": null,
+              "zosconnect_request_structure": "RESERVE-REQUEST",
+              "zosconnect_response_structure": "RESERVE-RESPONSE"
+            },
+            "http_method": "POST",
+            "http_path": "/items/{sku}/reservations",
+            "key": "POST /items/{sku}/reservations",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /items/{sku}/reservations#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "InventoryRequester.RESERVE-REQUEST",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "POST /items/{sku}/reservations#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "InventoryRequester.RESERVE-RESPONSE",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "reserveStock",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "RES-SKU",
+                  "zosconnect_type": "string"
+                },
+                "key": "POST /items/{sku}/reservations#path.sku",
+                "location": "path",
+                "name": "sku",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Inventory API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Path parameter `sku`",
+            "extras": {
+              "zosconnect_path_parameter": "sku"
+            },
+            "field_number": 1,
+            "key": "InventoryRequester.GET-STOCK-REQUEST.REQ-SKU",
+            "name": "REQ-SKU",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "InventoryRequester.GET-STOCK-REQUEST",
+        "key_type": null,
+        "kind": "record",
+        "name": "GET-STOCK-REQUEST",
+        "namespace": "InventoryRequester",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "InventoryRequester.GET-STOCK-RESPONSE",
+        "key_type": null,
+        "kind": "record",
+        "name": "GET-STOCK-RESPONSE",
+        "namespace": "InventoryRequester",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Path parameter `sku`",
+            "extras": {
+              "zosconnect_path_parameter": "sku"
+            },
+            "field_number": 1,
+            "key": "InventoryRequester.RESERVE-REQUEST.RES-SKU",
+            "name": "RES-SKU",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "InventoryRequester.RESERVE-REQUEST",
+        "key_type": null,
+        "kind": "record",
+        "name": "RESERVE-REQUEST",
+        "namespace": "InventoryRequester",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "InventoryRequester.RESERVE-RESPONSE",
+        "key_type": null,
+        "kind": "record",
+        "name": "RESERVE-RESPONSE",
+        "namespace": "InventoryRequester",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "zos-connect/01-api-requester.json",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "zosconnect"
+  },
+  "fingerprint": "sha256:8a2dc4036398257036ba3094c64e38a2ed059475efed0bbe03a34ad77301b8cd",
+  "lint": {
+    "findings": 10,
+    "grade": "C",
+    "report_fingerprint": "a5e82448e8ab700097000705bffafc5ee07fff236fd98539ae9fc52ab4d067db",
+    "score": 72,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

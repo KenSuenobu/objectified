@@ -1,0 +1,383 @@
+{
+  "adapter": "zosconnect",
+  "canonical": {
+    "channels": [],
+    "description": "Inbound z/OS Connect provider exposing a CICS COBOL program as REST.",
+    "extras": {
+      "zosconnect_api": {
+        "basePath": "https://mainframe.example.com/customer",
+        "specification": "openapi-3.0",
+        "title": "Customer API"
+      },
+      "zosconnect_descriptor": {
+        "description": "Inbound z/OS Connect provider exposing a CICS COBOL program as REST.",
+        "name": "CustomerProvider",
+        "version": "1.0.0"
+      },
+      "zosconnect_kind": "provider",
+      "zosconnect_language": {
+        "codepage": "IBM-1047",
+        "type": "cobol"
+      },
+      "zosconnect_operations": [
+        {
+          "method": "GET",
+          "operationId": "getCustomer",
+          "path": "/customers/{customerId}",
+          "pathParameters": [
+            {
+              "field": "CUST-ID",
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "program": "CUSTGET",
+          "requestStructure": "GET-CUSTOMER-REQUEST",
+          "responseStructure": "GET-CUSTOMER-RESPONSE"
+        },
+        {
+          "method": "PUT",
+          "operationId": "updateCustomer",
+          "path": "/customers/{customerId}",
+          "pathParameters": [
+            {
+              "field": "CUST-ID",
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "program": "CUSTPUT",
+          "requestStructure": "UPDATE-CUSTOMER-REQUEST",
+          "responseStructure": "UPDATE-CUSTOMER-RESPONSE"
+        }
+      ]
+    },
+    "format": "zosconnect",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Customer API",
+      "namespace": "CustomerProvider"
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From z/OS Connect `api.basePath`",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://mainframe.example.com/customer",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "CustomerProvider.CustomerProvider",
+        "name": "CustomerProvider",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": "CUSTGET",
+              "zosconnect_request_structure": "GET-CUSTOMER-REQUEST",
+              "zosconnect_response_structure": "GET-CUSTOMER-RESPONSE"
+            },
+            "http_method": "GET",
+            "http_path": "/customers/{customerId}",
+            "key": "GET /customers/{customerId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /customers/{customerId}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CustomerProvider.GET-CUSTOMER-REQUEST",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "GET /customers/{customerId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CustomerProvider.GET-CUSTOMER-RESPONSE",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "getCustomer",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "CUST-ID",
+                  "zosconnect_type": "string"
+                },
+                "key": "GET /customers/{customerId}#path.customerId",
+                "location": "path",
+                "name": "customerId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": "CUSTPUT",
+              "zosconnect_request_structure": "UPDATE-CUSTOMER-REQUEST",
+              "zosconnect_response_structure": "UPDATE-CUSTOMER-RESPONSE"
+            },
+            "http_method": "PUT",
+            "http_path": "/customers/{customerId}",
+            "key": "PUT /customers/{customerId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PUT /customers/{customerId}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CustomerProvider.UPDATE-CUSTOMER-REQUEST",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "PUT /customers/{customerId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CustomerProvider.UPDATE-CUSTOMER-RESPONSE",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "updateCustomer",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "CUST-ID",
+                  "zosconnect_type": "string"
+                },
+                "key": "PUT /customers/{customerId}#path.customerId",
+                "location": "path",
+                "name": "customerId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Customer API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Path parameter `customerId`",
+            "extras": {
+              "zosconnect_path_parameter": "customerId"
+            },
+            "field_number": 1,
+            "key": "CustomerProvider.GET-CUSTOMER-REQUEST.CUST-ID",
+            "name": "CUST-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "CustomerProvider.GET-CUSTOMER-REQUEST",
+        "key_type": null,
+        "kind": "record",
+        "name": "GET-CUSTOMER-REQUEST",
+        "namespace": "CustomerProvider",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "CustomerProvider.GET-CUSTOMER-RESPONSE",
+        "key_type": null,
+        "kind": "record",
+        "name": "GET-CUSTOMER-RESPONSE",
+        "namespace": "CustomerProvider",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Path parameter `customerId`",
+            "extras": {
+              "zosconnect_path_parameter": "customerId"
+            },
+            "field_number": 1,
+            "key": "CustomerProvider.UPDATE-CUSTOMER-REQUEST.CUST-ID",
+            "name": "CUST-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "CustomerProvider.UPDATE-CUSTOMER-REQUEST",
+        "key_type": null,
+        "kind": "record",
+        "name": "UPDATE-CUSTOMER-REQUEST",
+        "namespace": "CustomerProvider",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "CustomerProvider.UPDATE-CUSTOMER-RESPONSE",
+        "key_type": null,
+        "kind": "record",
+        "name": "UPDATE-CUSTOMER-RESPONSE",
+        "namespace": "CustomerProvider",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "zos-connect/02-api-provider.json",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "zosconnect"
+  },
+  "fingerprint": "sha256:80910481df5099899254a037469494259febbafd73caa27ca7708cc597754291",
+  "lint": {
+    "findings": 10,
+    "grade": "C",
+    "report_fingerprint": "319d22e388030b332cc8fb62dbadb90b3bac3abc57f95296459b5552f1a0a0d6",
+    "score": 72,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

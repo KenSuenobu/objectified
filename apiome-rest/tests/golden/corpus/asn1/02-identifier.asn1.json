@@ -1,0 +1,172 @@
+{
+  "adapter": "asn1",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "asn1_module_name": "IdentifierModule",
+      "asn1_tags": "AUTOMATIC"
+    },
+    "format": "asn1",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "IdentifierModule",
+      "namespace": "IdentifierModule"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Color",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "IdentifierModule.Color.red",
+            "name": "red",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "IdentifierModule.Color.green",
+            "name": "green",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "IdentifierModule.Color.blue",
+            "name": "blue",
+            "value": 2
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "IdentifierModule.Color",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Color",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "asn1_choice_members": [
+            {
+              "name": "id",
+              "type": "integer"
+            },
+            {
+              "name": "code",
+              "type": "string"
+            }
+          ]
+        },
+        "fields": [],
+        "key": "IdentifierModule.Identifier",
+        "key_type": null,
+        "kind": "union",
+        "name": "Identifier",
+        "namespace": null,
+        "union_members": [
+          "integer",
+          "string"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "red",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "IdentifierModule.Item.color",
+            "name": "color",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "IdentifierModule.Color",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "IdentifierModule.Item.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "IdentifierModule.Item",
+        "key_type": null,
+        "kind": "record",
+        "name": "Item",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "asn1/02-identifier.asn1",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "asn1"
+  },
+  "fingerprint": "sha256:39b3c1d00e4bdcdf5f46138c0d9114e79539bfc131a6fbd704edbbae0e4c5c36",
+  "lint": {
+    "findings": 6,
+    "grade": "B",
+    "report_fingerprint": "2a8d971ef19f32e8e21321c85b5366ba77666721def535da8ca5f7da02c307ab",
+    "score": 85,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

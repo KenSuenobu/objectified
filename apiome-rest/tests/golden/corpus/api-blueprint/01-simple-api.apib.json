@@ -1,0 +1,392 @@
+{
+  "adapter": "apiblueprint",
+  "canonical": {
+    "channels": [],
+    "description": "A small API Blueprint example describing a task list.\nRecognized by the format-detection sniffer via the `FORMAT: 1A` marker (routes to\nthe `api-blueprint` REST format). The `+ Attributes` data structures (MSON)\ndescribe the Task resource that becomes a catalog class.",
+    "extras": {
+      "apib_format_version": "1A",
+      "apib_host": "https://api.example.com"
+    },
+    "format": "apiblueprint",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Task API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From API Blueprint HOST",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Task API",
+        "name": "Task API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/tasks",
+            "key": "GET /tasks",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "apib_response_array": "Task",
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /tasks#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Task",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "List all tasks",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/tasks/{id}",
+            "key": "GET /tasks/{id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /tasks/{id}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Task",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "404"
+                },
+                "headers": [],
+                "key": "GET /tasks/{id}#response.404",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Get a task",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Unique task identifier.",
+                "extras": {
+                  "apib_type": "string"
+                },
+                "key": "GET /tasks/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "POST",
+            "http_path": "/tasks",
+            "key": "POST /tasks",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /tasks#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "NewTask",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "201"
+                },
+                "headers": [],
+                "key": "POST /tasks#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Task",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Create a task",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Task API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "apib_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Due date (ISO 8601).",
+            "extras": {
+              "apib_sample": "2026-01-31",
+              "apib_type": "string"
+            },
+            "field_number": 2,
+            "key": "NewTask.dueDate",
+            "name": "dueDate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Short summary of the task.",
+            "extras": {
+              "apib_sample": "Buy milk",
+              "apib_type": "string"
+            },
+            "field_number": 1,
+            "key": "NewTask.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "NewTask",
+        "key_type": null,
+        "kind": "record",
+        "name": "NewTask",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "apib_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Whether the task is complete.",
+            "extras": {
+              "apib_sample": "false",
+              "apib_type": "boolean"
+            },
+            "field_number": 3,
+            "key": "Task.done",
+            "name": "done",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Due date (ISO 8601).",
+            "extras": {
+              "apib_sample": "2026-01-31",
+              "apib_type": "string"
+            },
+            "field_number": 4,
+            "key": "Task.dueDate",
+            "name": "dueDate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Unique task identifier.",
+            "extras": {
+              "apib_sample": "t-123",
+              "apib_type": "string"
+            },
+            "field_number": 1,
+            "key": "Task.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Short summary of the task.",
+            "extras": {
+              "apib_sample": "Buy milk",
+              "apib_type": "string"
+            },
+            "field_number": 2,
+            "key": "Task.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Task",
+        "key_type": null,
+        "kind": "record",
+        "name": "Task",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "api-blueprint/01-simple-api.apib",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 1,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "api-blueprint"
+  },
+  "fingerprint": "sha256:8fc62318155019bab5855516026d9d8ddc6dedf0d5505118a18400bd441dad46",
+  "lint": {
+    "findings": 10,
+    "grade": "C",
+    "report_fingerprint": "188bfab56e9e03ec01ecaaa65e758e2b7a02bd0097cd6f4042205382ff28644e",
+    "score": 75,
+    "severity_counts": {
+      "error": 0,
+      "info": 5,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

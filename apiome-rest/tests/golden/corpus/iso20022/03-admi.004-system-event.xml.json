@@ -1,0 +1,217 @@
+{
+  "adapter": "iso20022",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "iso20022_business_element": "SysEvtNtfctn",
+      "iso20022_message_id": "admi.004.001.02",
+      "iso20022_namespace": "urn:iso:std:iso:20022:tech:xsd:admi.004.001.02",
+      "iso20022_tree": {
+        "attributes": [],
+        "children": [
+          {
+            "attributes": [],
+            "children": [
+              {
+                "attributes": [],
+                "children": [
+                  {
+                    "attributes": [],
+                    "children": [],
+                    "tag": "EvtCd",
+                    "text": "CLSD"
+                  },
+                  {
+                    "attributes": [],
+                    "children": [],
+                    "tag": "EvtTm",
+                    "text": "2026-01-16T17:00:00"
+                  }
+                ],
+                "tag": "EvtInf",
+                "text": null
+              }
+            ],
+            "tag": "SysEvtNtfctn",
+            "text": null
+          }
+        ],
+        "tag": "Document",
+        "text": null
+      }
+    },
+    "format": "iso20022",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "SysEvtNtfctn (admi.004.001.02)",
+      "namespace": "admi.004.001.02"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "SysEvtNtfctn (admi.004.001.02)",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "admi.004.001.02.Document.SysEvtNtfctn",
+            "name": "SysEvtNtfctn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "admi.004.001.02.SysEvtNtfctn",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "admi.004.001.02.Document",
+        "key_type": null,
+        "kind": "record",
+        "name": "Document",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "CLSD",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "admi.004.001.02.EvtInf.EvtCd",
+            "name": "EvtCd",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "2026-01-16T17:00:00",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 2,
+            "key": "admi.004.001.02.EvtInf.EvtTm",
+            "name": "EvtTm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "admi.004.001.02.EvtInf",
+        "key_type": null,
+        "kind": "record",
+        "name": "EvtInf",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "admi.004.001.02.SysEvtNtfctn.EvtInf",
+            "name": "EvtInf",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "admi.004.001.02.EvtInf",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "admi.004.001.02.SysEvtNtfctn",
+        "key_type": null,
+        "kind": "record",
+        "name": "SysEvtNtfctn",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "iso20022/03-admi.004-system-event.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "iso20022"
+  },
+  "fingerprint": "sha256:4f6d62b8bd0301000d241a259b099cb4a4555d5cb7f45c87c1dd0055f7d7785a",
+  "lint": {
+    "findings": 8,
+    "grade": "B",
+    "report_fingerprint": "33e9e916e3287337191b81b50011bdca7872c6b250ab93104511bec88db5caba",
+    "score": 83,
+    "severity_counts": {
+      "error": 0,
+      "info": 5,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

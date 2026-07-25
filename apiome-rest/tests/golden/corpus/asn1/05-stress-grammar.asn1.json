@@ -1,0 +1,408 @@
+{
+  "adapter": "asn1",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "asn1_module_name": "StressModule",
+      "asn1_tags": "EXPLICIT"
+    },
+    "format": "asn1",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "StressModule",
+      "namespace": "StressModule"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Priority",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "StressModule.Endpoint.host",
+            "name": "host",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "StressModule.Endpoint.port",
+            "name": "port",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "StressModule.Endpoint.tag",
+            "name": "tag",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "StressModule.Endpoint",
+        "key_type": null,
+        "kind": "record",
+        "name": "Endpoint",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "StressModule.Envelope.contentType",
+            "name": "contentType",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "StressModule.OBJECT IDENTIFIER",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "StressModule.Envelope.flags",
+            "name": "flags",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "StressModule.Envelope.hops",
+            "name": "hops",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "StressModule.Endpoint",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 8,
+            "key": "StressModule.Envelope.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "StressModule.Payload",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "normal",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "StressModule.Envelope.priority",
+            "name": "priority",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "StressModule.Priority",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 6,
+            "key": "StressModule.Envelope.source",
+            "name": "source",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "StressModule.Endpoint",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "tcp",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "StressModule.Envelope.transport",
+            "name": "transport",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "StressModule.EnvelopeTransport",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 9,
+            "key": "StressModule.Envelope.ttlSeconds",
+            "name": "ttlSeconds",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "StressModule.Envelope.version",
+            "name": "version",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "StressModule.Envelope",
+        "key_type": null,
+        "kind": "record",
+        "name": "Envelope",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "StressModule.EnvelopeTransport.tcp",
+            "name": "tcp",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "StressModule.EnvelopeTransport.udp",
+            "name": "udp",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "StressModule.EnvelopeTransport.quic",
+            "name": "quic",
+            "value": 2
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "StressModule.EnvelopeTransport",
+        "key_type": null,
+        "kind": "enum",
+        "name": "EnvelopeTransport",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "asn1_choice_members": [
+            {
+              "name": "text",
+              "type": "string"
+            },
+            {
+              "name": "binary",
+              "type": "bytes"
+            },
+            {
+              "name": "empty",
+              "type": "null"
+            }
+          ]
+        },
+        "fields": [],
+        "key": "StressModule.Payload",
+        "key_type": null,
+        "kind": "union",
+        "name": "Payload",
+        "namespace": null,
+        "union_members": [
+          "string",
+          "bytes",
+          "null"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "StressModule.Priority.low",
+            "name": "low",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "StressModule.Priority.normal",
+            "name": "normal",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "StressModule.Priority.high",
+            "name": "high",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "StressModule.Priority.critical",
+            "name": "critical",
+            "value": 3
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "StressModule.Priority",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Priority",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "asn1/05-stress-grammar.asn1",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "asn1"
+  },
+  "fingerprint": "sha256:b66113d7d1a58568f4ad93ed81b5ee625a9208e4e9e39f09058d824d686a36ca",
+  "lint": {
+    "findings": 18,
+    "grade": "D",
+    "report_fingerprint": "14ce1b7ab029cd1a2bdb0172ee2185b56e43fe720829e8d931080292a969fd36",
+    "score": 67,
+    "severity_counts": {
+      "error": 0,
+      "info": 13,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

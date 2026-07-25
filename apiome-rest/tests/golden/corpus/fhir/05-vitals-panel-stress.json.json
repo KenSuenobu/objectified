@@ -1,0 +1,589 @@
+{
+  "adapter": "fhir",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "fhir_kind": "structure_definition",
+      "fhir_structure_definition": {
+        "abstract": false,
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation",
+        "derivation": "constraint",
+        "elements": [
+          {
+            "field_name": "status",
+            "max": "1",
+            "min": 1,
+            "path": "Observation.status",
+            "short": "Status of the observation (registered, preliminary, final, amended)",
+            "types": [
+              {
+                "code": "code",
+                "profile": null
+              }
+            ]
+          },
+          {
+            "field_name": "category",
+            "max": "*",
+            "min": 1,
+            "path": "Observation.category",
+            "short": "Classification: vital-signs",
+            "types": [
+              {
+                "code": "CodeableConcept",
+                "profile": null
+              }
+            ]
+          },
+          {
+            "field_name": "code",
+            "max": "1",
+            "min": 1,
+            "path": "Observation.code",
+            "short": "LOINC panel code",
+            "types": [
+              {
+                "code": "CodeableConcept",
+                "profile": null
+              }
+            ]
+          },
+          {
+            "field_name": "subject",
+            "max": "1",
+            "min": 1,
+            "path": "Observation.subject",
+            "short": "The patient the vital signs belong to",
+            "types": [
+              {
+                "code": "Reference",
+                "profile": "http://hl7.org/fhir/StructureDefinition/Patient"
+              }
+            ]
+          },
+          {
+            "field_name": "effective[x]",
+            "max": "1",
+            "min": 0,
+            "path": "Observation.effective[x]",
+            "short": "Clinically relevant time of the panel",
+            "types": [
+              {
+                "code": "dateTime",
+                "profile": null
+              },
+              {
+                "code": "Period",
+                "profile": null
+              }
+            ]
+          },
+          {
+            "field_name": "value[x]",
+            "max": "1",
+            "min": 0,
+            "path": "Observation.value[x]",
+            "short": "Panel-level result value",
+            "types": [
+              {
+                "code": "Quantity",
+                "profile": null
+              },
+              {
+                "code": "string",
+                "profile": null
+              },
+              {
+                "code": "CodeableConcept",
+                "profile": null
+              }
+            ]
+          },
+          {
+            "field_name": "component",
+            "max": "*",
+            "min": 0,
+            "path": "Observation.component",
+            "short": "One component per individual vital sign",
+            "types": [
+              {
+                "code": "BackboneElement",
+                "profile": null
+              }
+            ]
+          }
+        ],
+        "id": "VitalSignsPanel",
+        "kind": "resource",
+        "name": "VitalSignsPanel",
+        "status": "active",
+        "type": "Observation",
+        "url": "http://example.com/fhir/StructureDefinition/VitalSignsPanel"
+      }
+    },
+    "format": "fhir",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "VitalSignsPanel",
+      "namespace": "VitalSignsPanel"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "VitalSignsPanel.Observation",
+        "name": "Observation",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fhir_interaction": "search-type"
+            },
+            "http_method": "GET",
+            "http_path": "/Observation",
+            "key": "GET /Observation",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/fhir+json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Observation#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "VitalSignsPanel.Observation",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "searchObservation",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Observation#query._count",
+                "location": "query",
+                "name": "_count",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fhir_interaction": "read"
+            },
+            "http_method": "GET",
+            "http_path": "/Observation/{id}",
+            "key": "GET /Observation/{id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/fhir+json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Observation/{id}#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "VitalSignsPanel.Observation",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "readObservation",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fhir_interaction": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Observation",
+            "key": "POST /Observation",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/fhir+json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Observation#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "VitalSignsPanel.Observation",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/fhir+json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Observation#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "VitalSignsPanel.Observation",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createObservation",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "VitalSignsPanel",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fhir_kind": "complex",
+          "fhir_placeholder": true
+        },
+        "fields": [],
+        "key": "VitalSignsPanel.BackboneElement",
+        "key_type": null,
+        "kind": "record",
+        "name": "BackboneElement",
+        "namespace": "VitalSignsPanel",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fhir_kind": "complex",
+          "fhir_placeholder": true
+        },
+        "fields": [],
+        "key": "VitalSignsPanel.CodeableConcept",
+        "key_type": null,
+        "kind": "record",
+        "name": "CodeableConcept",
+        "namespace": "VitalSignsPanel",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fhir_kind": "resource"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Classification: vital-signs",
+            "extras": {
+              "fhir_max": "*",
+              "fhir_min": 1,
+              "fhir_path": "Observation.category",
+              "fhir_profiles": [],
+              "fhir_type": "CodeableConcept"
+            },
+            "field_number": 2,
+            "key": "VitalSignsPanel.Observation.category",
+            "name": "category",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "VitalSignsPanel.CodeableConcept",
+                "nullable": true
+              },
+              "name": "VitalSignsPanel.CodeableConcept",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "LOINC panel code",
+            "extras": {
+              "fhir_max": "1",
+              "fhir_min": 1,
+              "fhir_path": "Observation.code",
+              "fhir_profiles": [],
+              "fhir_type": "CodeableConcept"
+            },
+            "field_number": 3,
+            "key": "VitalSignsPanel.Observation.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "VitalSignsPanel.CodeableConcept",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "One component per individual vital sign",
+            "extras": {
+              "fhir_max": "*",
+              "fhir_min": 0,
+              "fhir_path": "Observation.component",
+              "fhir_profiles": [],
+              "fhir_type": "BackboneElement"
+            },
+            "field_number": 7,
+            "key": "VitalSignsPanel.Observation.component",
+            "name": "component",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "VitalSignsPanel.BackboneElement",
+                "nullable": true
+              },
+              "name": "VitalSignsPanel.BackboneElement",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Clinically relevant time of the panel",
+            "extras": {
+              "fhir_max": "1",
+              "fhir_min": 0,
+              "fhir_path": "Observation.effective[x]",
+              "fhir_profiles": [],
+              "fhir_type": "dateTime"
+            },
+            "field_number": 5,
+            "key": "VitalSignsPanel.Observation.effective[x]",
+            "name": "effective[x]",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Status of the observation (registered, preliminary, final, amended)",
+            "extras": {
+              "fhir_max": "1",
+              "fhir_min": 1,
+              "fhir_path": "Observation.status",
+              "fhir_profiles": [],
+              "fhir_type": "code"
+            },
+            "field_number": 1,
+            "key": "VitalSignsPanel.Observation.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The patient the vital signs belong to",
+            "extras": {
+              "fhir_max": "1",
+              "fhir_min": 1,
+              "fhir_path": "Observation.subject",
+              "fhir_profiles": [
+                "http://hl7.org/fhir/StructureDefinition/Patient"
+              ],
+              "fhir_type": "Reference"
+            },
+            "field_number": 4,
+            "key": "VitalSignsPanel.Observation.subject",
+            "name": "subject",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "VitalSignsPanel.Reference",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Panel-level result value",
+            "extras": {
+              "fhir_max": "1",
+              "fhir_min": 0,
+              "fhir_path": "Observation.value[x]",
+              "fhir_profiles": [],
+              "fhir_type": "Quantity"
+            },
+            "field_number": 6,
+            "key": "VitalSignsPanel.Observation.value[x]",
+            "name": "value[x]",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "VitalSignsPanel.Quantity",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "VitalSignsPanel.Observation",
+        "key_type": null,
+        "kind": "record",
+        "name": "Observation",
+        "namespace": "VitalSignsPanel",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fhir_kind": "complex",
+          "fhir_placeholder": true
+        },
+        "fields": [],
+        "key": "VitalSignsPanel.Quantity",
+        "key_type": null,
+        "kind": "record",
+        "name": "Quantity",
+        "namespace": "VitalSignsPanel",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fhir_kind": "complex",
+          "fhir_placeholder": true
+        },
+        "fields": [],
+        "key": "VitalSignsPanel.Reference",
+        "key_type": null,
+        "kind": "record",
+        "name": "Reference",
+        "namespace": "VitalSignsPanel",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "fhir/05-vitals-panel-stress.json",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "fhir"
+  },
+  "fingerprint": "sha256:2f22af1443fd1ccd2b141e21d9454bd21505c40a86a171ebcf1c5bd7797c5898",
+  "lint": {
+    "findings": 13,
+    "grade": "D",
+    "report_fingerprint": "bb7d889c11d8f9ee334914934d8e10c15bcd408dd877c2b6c1d500caa96976b1",
+    "score": 63,
+    "severity_counts": {
+      "error": 0,
+      "info": 5,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

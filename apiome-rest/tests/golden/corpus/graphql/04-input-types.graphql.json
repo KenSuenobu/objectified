@@ -1,0 +1,1060 @@
+{
+  "adapter": "graphql",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {},
+    "format": "graphql",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "GraphQL Schema",
+      "namespace": null
+    },
+    "paradigm": "graph",
+    "protocol": "graphql",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Mutation",
+        "name": "Mutation",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.createUser",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.createUser#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "User",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "createUser",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.createUser#arg.input",
+                "location": "query",
+                "name": "input",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CreateUserInput",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.deleteUser",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.deleteUser#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Boolean",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "deleteUser",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.deleteUser#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Mutation.updateUser",
+            "kind": "mutation",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Mutation.updateUser#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "User",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "updateUser",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.updateUser#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ID",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Mutation.updateUser#arg.input",
+                "location": "query",
+                "name": "input",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UpdateUserInput",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Query",
+        "name": "Query",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.users",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.users#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "User",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "users",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.users#arg.filter",
+                "location": "query",
+                "name": "filter",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "UserFilterInput",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.users#arg.pagination",
+                "location": "query",
+                "name": "pagination",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PaginationInput",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Input for creating an address",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "input"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.country",
+            "name": "country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.postalCode",
+            "name": "postalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.state",
+            "name": "state",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "AddressInput.street",
+            "name": "street",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "AddressInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "AddressInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Input for creating a new user",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "input"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "User's email address",
+            "extras": {},
+            "field_number": null,
+            "key": "CreateUserInput.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "User's display name",
+            "extras": {},
+            "field_number": null,
+            "key": "CreateUserInput.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "User's password (will be hashed)",
+            "extras": {},
+            "field_number": null,
+            "key": "CreateUserInput.password",
+            "name": "password",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Optional profile information",
+            "extras": {},
+            "field_number": null,
+            "key": "CreateUserInput.profile",
+            "name": "profile",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ProfileInput",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "CreateUserInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "CreateUserInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Pagination input",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "input"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": 1,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PaginationInput.page",
+            "name": "page",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": 20,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PaginationInput.pageSize",
+            "name": "pageSize",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PaginationInput.sortBy",
+            "name": "sortBy",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ASC",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PaginationInput.sortOrder",
+            "name": "sortOrder",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "SortOrder",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "PaginationInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "PaginationInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Profile.avatar",
+            "name": "avatar",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Profile.bio",
+            "name": "bio",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Profile.birthday",
+            "name": "birthday",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Profile.location",
+            "name": "location",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Profile.website",
+            "name": "website",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Profile",
+        "key_type": null,
+        "kind": "record",
+        "name": "Profile",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "User profile information",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "input"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProfileInput.avatar",
+            "name": "avatar",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProfileInput.bio",
+            "name": "bio",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProfileInput.birthday",
+            "name": "birthday",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProfileInput.location",
+            "name": "location",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ProfileInput.website",
+            "name": "website",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "ProfileInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "ProfileInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Sort order",
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SortOrder.ASC",
+            "name": "ASC",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SortOrder.DESC",
+            "name": "DESC",
+            "value": null
+          }
+        ],
+        "extras": {
+          "graphql_type": "enum"
+        },
+        "fields": [],
+        "key": "SortOrder",
+        "key_type": null,
+        "kind": "enum",
+        "name": "SortOrder",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Input for updating a user",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "input"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UpdateUserInput.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UpdateUserInput.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UpdateUserInput.profile",
+            "name": "profile",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ProfileInput",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "UpdateUserInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "UpdateUserInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "User.profile",
+            "name": "profile",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Profile",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "User",
+        "key_type": null,
+        "kind": "record",
+        "name": "User",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Filter input for searching",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "input"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserFilterInput.createdAfter",
+            "name": "createdAfter",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserFilterInput.createdBefore",
+            "name": "createdBefore",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserFilterInput.emailContains",
+            "name": "emailContains",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserFilterInput.isActive",
+            "name": "isActive",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "UserFilterInput.nameContains",
+            "name": "nameContains",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "UserFilterInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "UserFilterInput",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "graphql/04-input-types.graphql",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 2,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "graphql"
+  },
+  "fingerprint": "sha256:bea9bc914ca8553f8aa4ebfaaf409e4ebfeeeabc411254d9ad736a625ffca044",
+  "lint": {
+    "findings": 50,
+    "grade": "F",
+    "report_fingerprint": "fa168f1197a3a7cad6bc435002ba8d319bf997393485a812a43e2dde8a6dc252",
+    "score": 43,
+    "severity_counts": {
+      "error": 0,
+      "info": 44,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,519 @@
+{
+  "adapter": "graphql",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {},
+    "format": "graphql",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "GraphQL Schema",
+      "namespace": null
+    },
+    "paradigm": "graph",
+    "protocol": "graphql",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Query",
+        "name": "Query",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.product",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.product#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Product",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "product",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.product#arg.id",
+                "location": "query",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ID",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Query.products",
+            "kind": "query",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Query.products#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Product",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "products",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.products#arg.limit",
+                "location": "query",
+                "name": "limit",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "Query.products#arg.offset",
+                "location": "query",
+                "name": "offset",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Int",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Custom scalar for date/time",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "scalar"
+        },
+        "fields": [],
+        "key": "DateTime",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "DateTime",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Product dimensions",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Height in centimeters",
+            "extras": {},
+            "field_number": null,
+            "key": "Dimensions.height",
+            "name": "height",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Float",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Length in centimeters",
+            "extras": {},
+            "field_number": null,
+            "key": "Dimensions.length",
+            "name": "length",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Float",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Weight in kilograms",
+            "extras": {},
+            "field_number": null,
+            "key": "Dimensions.weight",
+            "name": "weight",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Width in centimeters",
+            "extras": {},
+            "field_number": null,
+            "key": "Dimensions.width",
+            "name": "width",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Float",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Dimensions",
+        "key_type": null,
+        "kind": "record",
+        "name": "Dimensions",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Custom scalar for JSON data",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "scalar"
+        },
+        "fields": [],
+        "key": "JSON",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "JSON",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Product with various field types",
+        "enum_values": [],
+        "extras": {
+          "graphql_type": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "When the product was created",
+            "extras": {},
+            "field_number": null,
+            "key": "Product.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Product description",
+            "extras": {},
+            "field_number": null,
+            "key": "Product.description",
+            "name": "description",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Product identifier",
+            "extras": {},
+            "field_number": null,
+            "key": "Product.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ID",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Whether product is available",
+            "extras": {},
+            "field_number": null,
+            "key": "Product.inStock",
+            "name": "inStock",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Boolean",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Product metadata",
+            "extras": {},
+            "field_number": null,
+            "key": "Product.metadata",
+            "name": "metadata",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "JSON",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Product name",
+            "extras": {},
+            "field_number": null,
+            "key": "Product.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "String",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Price in cents",
+            "extras": {},
+            "field_number": null,
+            "key": "Product.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Price with decimals",
+            "extras": {},
+            "field_number": null,
+            "key": "Product.priceFloat",
+            "name": "priceFloat",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Float",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Product rating (0-5)",
+            "extras": {},
+            "field_number": null,
+            "key": "Product.rating",
+            "name": "rating",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Number of items in stock",
+            "extras": {},
+            "field_number": null,
+            "key": "Product.stockCount",
+            "name": "stockCount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Int",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Product tags",
+            "extras": {},
+            "field_number": null,
+            "key": "Product.tags",
+            "name": "tags",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "String",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "When the product was last updated",
+            "extras": {},
+            "field_number": null,
+            "key": "Product.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DateTime",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Product",
+        "key_type": null,
+        "kind": "record",
+        "name": "Product",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "graphql/02-scalar-types.graphql",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "graphql"
+  },
+  "fingerprint": "sha256:200408232c59a4e20119653ea6ebbdc619c401a6f80a7360fde8fab4c780bc72",
+  "lint": {
+    "findings": 8,
+    "grade": "B",
+    "report_fingerprint": "dfc6c66eb234d95a15677ea386173776045d86a331a4bcb6581fccc2044d4120",
+    "score": 86,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

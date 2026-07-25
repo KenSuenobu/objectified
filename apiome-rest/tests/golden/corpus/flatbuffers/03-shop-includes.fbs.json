@@ -1,0 +1,271 @@
+{
+  "adapter": "flatbuffers",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "fbs_includes": [
+        "common.fbs"
+      ],
+      "fbs_root_type": "Order"
+    },
+    "format": "flatbuffers",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.shop",
+      "namespace": "example.shop"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.shop.Currency.USD",
+            "name": "USD",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.shop.Currency.EUR",
+            "name": "EUR",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.shop.Currency.JPY",
+            "name": "JPY",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "fbs_base_type": "byte",
+          "fbs_kind": "enum"
+        },
+        "fields": [],
+        "key": "example.shop.Currency",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Currency",
+        "namespace": "example.shop",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "USD",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fbs_default": "USD"
+            },
+            "field_number": 4,
+            "key": "example.shop.LineItem.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.shop.Currency",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "example.shop.LineItem.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.shop.LineItem.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "example.shop.LineItem.unitPriceMinor",
+            "name": "unitPriceMinor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.shop.LineItem",
+        "key_type": null,
+        "kind": "record",
+        "name": "LineItem",
+        "namespace": "example.shop",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fbs_kind": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "example.shop.Order.audit",
+            "name": "audit",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "[common.AuditEntry]",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "example.shop.Order.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "example.shop.Order.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "example.shop.LineItem",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "example.shop.Order.tags",
+            "name": "tags",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "[common.Tag]",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.shop.Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": "example.shop",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "flatbuffers/03-shop-includes.fbs",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "flatbuffers"
+  },
+  "fingerprint": "sha256:cb1cc927c4042bfb1ea73fb6e2574c3a9e9b1b8750be0ad02c3b56ecb9210d78",
+  "lint": {
+    "findings": 12,
+    "grade": "C",
+    "report_fingerprint": "a9701a2dd59cf97c0d15d669d318102178b0add56a4640cb7c639e0233ec52fc",
+    "score": 79,
+    "severity_counts": {
+      "error": 0,
+      "info": 9,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

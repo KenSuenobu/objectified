@@ -1,0 +1,414 @@
+{
+  "adapter": "cobolcopybook",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "cobolcopybook_root": "PAYMENT-RECORD",
+      "cobolcopybook_tree": {
+        "children": [
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "PAYMENT-ID",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(10)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [
+              {
+                "name": "PAY-BY-CARD",
+                "value": "C"
+              },
+              {
+                "name": "PAY-BY-BANK",
+                "value": "B"
+              }
+            ],
+            "depending_on": null,
+            "level": 5,
+            "name": "PAYMENT-TYPE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(1)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "PAYMENT-AMOUNT",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "S9(9)V99",
+            "usage": "COMP-3"
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "PAYMENT-DETAIL",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(30)",
+            "usage": null
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "CARD-NUMBER",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "9(16)",
+                "usage": null
+              },
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "CARD-EXPIRY-YYMM",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "9(4)",
+                "usage": null
+              },
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "FILLER",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(10)",
+                "usage": null
+              }
+            ],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "CARD-DETAIL",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": null,
+            "usage": null
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "BANK-ROUTING",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "9(9)",
+                "usage": null
+              },
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "BANK-ACCOUNT",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(17)",
+                "usage": null
+              },
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "FILLER",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(4)",
+                "usage": null
+              }
+            ],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "BANK-DETAIL",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": null,
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "PAYMENT-POSTED-DATE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(8)",
+            "usage": null
+          }
+        ],
+        "conditions": [],
+        "depending_on": null,
+        "level": 1,
+        "name": "PAYMENT-RECORD",
+        "occurs_max": null,
+        "occurs_min": null,
+        "picture": null,
+        "usage": null
+      }
+    },
+    "format": "cobolcopybook",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "PAYMENT-RECORD",
+      "namespace": "PAYMENT-RECORD"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "PAYMENT-RECORD",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cobol_kind": "group",
+          "cobol_level": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": null,
+              "cobol_usage": null
+            },
+            "field_number": 6,
+            "key": "PAYMENT-RECORD.PAYMENT-RECORD.BANK-DETAIL",
+            "name": "BANK-DETAIL",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PAYMENT-RECORD.BANK-DETAIL",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": null,
+              "cobol_usage": null
+            },
+            "field_number": 5,
+            "key": "PAYMENT-RECORD.PAYMENT-RECORD.CARD-DETAIL",
+            "name": "CARD-DETAIL",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "PAYMENT-RECORD.CARD-DETAIL",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "S9(9)V99",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "S9(9)V99",
+              "cobol_usage": "COMP-3"
+            },
+            "field_number": 3,
+            "key": "PAYMENT-RECORD.PAYMENT-RECORD.PAYMENT-AMOUNT",
+            "name": "PAYMENT-AMOUNT",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(30)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(30)",
+              "cobol_usage": null
+            },
+            "field_number": 4,
+            "key": "PAYMENT-RECORD.PAYMENT-RECORD.PAYMENT-DETAIL",
+            "name": "PAYMENT-DETAIL",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(10)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(10)",
+              "cobol_usage": null
+            },
+            "field_number": 1,
+            "key": "PAYMENT-RECORD.PAYMENT-RECORD.PAYMENT-ID",
+            "name": "PAYMENT-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(8)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(8)",
+              "cobol_usage": null
+            },
+            "field_number": 7,
+            "key": "PAYMENT-RECORD.PAYMENT-RECORD.PAYMENT-POSTED-DATE",
+            "name": "PAYMENT-POSTED-DATE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(1)",
+            "extras": {
+              "cobol_conditions": [
+                {
+                  "name": "PAY-BY-CARD",
+                  "value": "C"
+                },
+                {
+                  "name": "PAY-BY-BANK",
+                  "value": "B"
+                }
+              ],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(1)",
+              "cobol_usage": null
+            },
+            "field_number": 2,
+            "key": "PAYMENT-RECORD.PAYMENT-RECORD.PAYMENT-TYPE",
+            "name": "PAYMENT-TYPE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PAYMENT-RECORD.PAYMENT-RECORD",
+        "key_type": null,
+        "kind": "record",
+        "name": "PAYMENT-RECORD",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cobol-copybook/03-payment-redefines.cpy",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cobolcopybook"
+  },
+  "fingerprint": "sha256:ebdb2cbc9dd6799ebc76f9b27d513b8f65041095d735a5c4268c3846ecb500ff",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "5a74b60218425822b6a768d3d8333ef99ac39fd7dd40a768644652749eacbc15",
+    "score": 93,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,2265 @@
+{
+  "adapter": "hl7v2",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "hl7v2_control_id": "MSG00005",
+      "hl7v2_envelope": {
+        "encoding_characters": "^~\\&",
+        "field_separator": "|",
+        "processing_id": "P",
+        "receiving_application": "MYIIS",
+        "receiving_facility": "STATE REGISTRY",
+        "sending_application": "MYEHR2.5",
+        "sending_facility": "CLINIC OF GOOD HEALTH"
+      },
+      "hl7v2_message_type": "VXU^V04^VXU_V04",
+      "hl7v2_segments": [
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "|"
+            },
+            {
+              "index": 2,
+              "value": "^~\\&"
+            },
+            {
+              "index": 3,
+              "value": "MYEHR2.5"
+            },
+            {
+              "index": 4,
+              "value": "CLINIC OF GOOD HEALTH"
+            },
+            {
+              "index": 5,
+              "value": "MYIIS"
+            },
+            {
+              "index": 6,
+              "value": "STATE REGISTRY"
+            },
+            {
+              "index": 7,
+              "value": "20260210120000"
+            },
+            {
+              "index": 8,
+              "value": ""
+            },
+            {
+              "index": 9,
+              "value": "VXU^V04^VXU_V04"
+            },
+            {
+              "index": 10,
+              "value": "MSG00005"
+            },
+            {
+              "index": 11,
+              "value": "P"
+            },
+            {
+              "index": 12,
+              "value": "2.5.1"
+            },
+            {
+              "index": 13,
+              "value": ""
+            },
+            {
+              "index": 14,
+              "value": ""
+            },
+            {
+              "index": 15,
+              "value": "ER"
+            },
+            {
+              "index": 16,
+              "value": "AL"
+            }
+          ],
+          "id": "MSH"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": ""
+            },
+            {
+              "index": 3,
+              "value": "PA-556677^^^MYEHR^MR"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": "Kimura^Aiko^^^^^L"
+            },
+            {
+              "index": 6,
+              "value": ""
+            },
+            {
+              "index": 7,
+              "value": "20240612"
+            },
+            {
+              "index": 8,
+              "value": "F"
+            },
+            {
+              "index": 9,
+              "value": ""
+            },
+            {
+              "index": 10,
+              "value": "2028-9^Asian^CDCREC"
+            },
+            {
+              "index": 11,
+              "value": "101 Wellness Way^^Columbus^OH^43215^USA^P"
+            }
+          ],
+          "id": "PID"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": ""
+            },
+            {
+              "index": 2,
+              "value": ""
+            },
+            {
+              "index": 3,
+              "value": ""
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": ""
+            },
+            {
+              "index": 6,
+              "value": ""
+            },
+            {
+              "index": 7,
+              "value": ""
+            },
+            {
+              "index": 8,
+              "value": ""
+            },
+            {
+              "index": 9,
+              "value": ""
+            },
+            {
+              "index": 10,
+              "value": ""
+            },
+            {
+              "index": 11,
+              "value": "02^Reminder/recall - any method^HL70215"
+            },
+            {
+              "index": 12,
+              "value": "N"
+            }
+          ],
+          "id": "PD1"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": "Kimura^Naomi^^^^^L"
+            },
+            {
+              "index": 3,
+              "value": "MTH^Mother^HL70063"
+            },
+            {
+              "index": 4,
+              "value": "101 Wellness Way^^Columbus^OH^43215^USA^P"
+            },
+            {
+              "index": 5,
+              "value": "(555)555-0177^PRN^PH"
+            }
+          ],
+          "id": "NK1"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "RE"
+            },
+            {
+              "index": 2,
+              "value": ""
+            },
+            {
+              "index": 3,
+              "value": "IZ-783274^MYEHR"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": ""
+            },
+            {
+              "index": 6,
+              "value": ""
+            },
+            {
+              "index": 7,
+              "value": ""
+            },
+            {
+              "index": 8,
+              "value": ""
+            },
+            {
+              "index": 9,
+              "value": ""
+            },
+            {
+              "index": 10,
+              "value": ""
+            },
+            {
+              "index": 11,
+              "value": ""
+            },
+            {
+              "index": 12,
+              "value": "276^Tanaka^Ken^^^^^^MYEHR^L"
+            }
+          ],
+          "id": "ORC"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "0"
+            },
+            {
+              "index": 2,
+              "value": "1"
+            },
+            {
+              "index": 3,
+              "value": "20260210"
+            },
+            {
+              "index": 4,
+              "value": ""
+            },
+            {
+              "index": 5,
+              "value": "08^Hep B pediatric^CVX"
+            },
+            {
+              "index": 6,
+              "value": "0.5"
+            },
+            {
+              "index": 7,
+              "value": "mL^milliliters^UCUM"
+            },
+            {
+              "index": 8,
+              "value": ""
+            },
+            {
+              "index": 9,
+              "value": "00^New immunization record^NIP001"
+            },
+            {
+              "index": 10,
+              "value": "276^Tanaka^Ken"
+            },
+            {
+              "index": 11,
+              "value": "^^^CLINIC OF GOOD HEALTH"
+            },
+            {
+              "index": 12,
+              "value": ""
+            },
+            {
+              "index": 13,
+              "value": ""
+            },
+            {
+              "index": 14,
+              "value": ""
+            },
+            {
+              "index": 15,
+              "value": "LOT4459"
+            },
+            {
+              "index": 16,
+              "value": "20270131"
+            },
+            {
+              "index": 17,
+              "value": "SKB^GlaxoSmithKline^MVX"
+            },
+            {
+              "index": 18,
+              "value": ""
+            },
+            {
+              "index": 19,
+              "value": ""
+            },
+            {
+              "index": 20,
+              "value": "CP"
+            },
+            {
+              "index": 21,
+              "value": "A"
+            }
+          ],
+          "id": "RXA"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "IM^Intramuscular^HL70162"
+            },
+            {
+              "index": 2,
+              "value": "LT^Left Thigh^HL70163"
+            }
+          ],
+          "id": "RXR"
+        },
+        {
+          "fields": [
+            {
+              "index": 1,
+              "value": "1"
+            },
+            {
+              "index": 2,
+              "value": "CE"
+            },
+            {
+              "index": 3,
+              "value": "64994-7^Vaccine funding program eligibility^LN"
+            },
+            {
+              "index": 4,
+              "value": "1"
+            },
+            {
+              "index": 5,
+              "value": "V02^VFC eligible - Medicaid^HL70064"
+            },
+            {
+              "index": 6,
+              "value": ""
+            },
+            {
+              "index": 7,
+              "value": ""
+            },
+            {
+              "index": 8,
+              "value": ""
+            },
+            {
+              "index": 9,
+              "value": ""
+            },
+            {
+              "index": 10,
+              "value": ""
+            },
+            {
+              "index": 11,
+              "value": "F"
+            },
+            {
+              "index": 12,
+              "value": ""
+            },
+            {
+              "index": 13,
+              "value": ""
+            },
+            {
+              "index": 14,
+              "value": "20260210"
+            }
+          ],
+          "id": "OBX"
+        }
+      ],
+      "hl7v2_version": "2.5.1"
+    },
+    "format": "hl7v2",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "VXU^V04^VXU_V04",
+      "namespace": "VXU-V04-VXU_V04"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "VXU^V04^VXU_V04",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "hl7v2_kind": "segment"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "|",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1
+            },
+            "field_number": 1,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-01",
+            "name": "MSH-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "^~\\&",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2
+            },
+            "field_number": 2,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-02",
+            "name": "MSH-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "MYEHR2.5",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3
+            },
+            "field_number": 3,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-03",
+            "name": "MSH-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "CLINIC OF GOOD HEALTH",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4
+            },
+            "field_number": 4,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-04",
+            "name": "MSH-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "MYIIS",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5
+            },
+            "field_number": 5,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-05",
+            "name": "MSH-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "STATE REGISTRY",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6
+            },
+            "field_number": 6,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-06",
+            "name": "MSH-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260210120000",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7
+            },
+            "field_number": 7,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-07",
+            "name": "MSH-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8
+            },
+            "field_number": 8,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-08",
+            "name": "MSH-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "VXU^V04^VXU_V04",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9
+            },
+            "field_number": 9,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-09",
+            "name": "MSH-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "MSG00005",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10
+            },
+            "field_number": 10,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-10",
+            "name": "MSH-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "P",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11
+            },
+            "field_number": 11,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-11",
+            "name": "MSH-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "2.5.1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 12
+            },
+            "field_number": 12,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-12",
+            "name": "MSH-12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 13
+            },
+            "field_number": 13,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-13",
+            "name": "MSH-13",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 14
+            },
+            "field_number": 14,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-14",
+            "name": "MSH-14",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ER",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 15
+            },
+            "field_number": 15,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-15",
+            "name": "MSH-15",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "AL",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 16
+            },
+            "field_number": 16,
+            "key": "VXU-V04-VXU_V04.MSH.MSH-16",
+            "name": "MSH-16",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "VXU-V04-VXU_V04.MSH",
+        "key_type": null,
+        "kind": "record",
+        "name": "MSH",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "hl7v2_kind": "message"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "NK1"
+            },
+            "field_number": 24,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.NK1-01",
+            "name": "NK1-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Kimura^Naomi^^^^^L",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "NK1"
+            },
+            "field_number": 25,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.NK1-02",
+            "name": "NK1-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "MTH^Mother^HL70063",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "NK1"
+            },
+            "field_number": 26,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.NK1-03",
+            "name": "NK1-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "101 Wellness Way^^Columbus^OH^43215^USA^P",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "NK1"
+            },
+            "field_number": 27,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.NK1-04",
+            "name": "NK1-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "(555)555-0177^PRN^PH",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "NK1"
+            },
+            "field_number": 28,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.NK1-05",
+            "name": "NK1-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 64,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-01",
+            "name": "OBX-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "CE",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 65,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-02",
+            "name": "OBX-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "64994-7^Vaccine funding program eligibility^LN",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 66,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-03",
+            "name": "OBX-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 67,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-04",
+            "name": "OBX-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "V02^VFC eligible - Medicaid^HL70064",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 68,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-05",
+            "name": "OBX-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 69,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-06",
+            "name": "OBX-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 70,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-07",
+            "name": "OBX-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 71,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-08",
+            "name": "OBX-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 72,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-09",
+            "name": "OBX-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 73,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-10",
+            "name": "OBX-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "F",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 74,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-11",
+            "name": "OBX-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 12,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 75,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-12",
+            "name": "OBX-12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 13,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 76,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-13",
+            "name": "OBX-13",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260210",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 14,
+              "hl7v2_segment": "OBX"
+            },
+            "field_number": 77,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.OBX-14",
+            "name": "OBX-14",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "RE",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "ORC"
+            },
+            "field_number": 29,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.ORC-01",
+            "name": "ORC-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "ORC"
+            },
+            "field_number": 30,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.ORC-02",
+            "name": "ORC-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "IZ-783274^MYEHR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "ORC"
+            },
+            "field_number": 31,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.ORC-03",
+            "name": "ORC-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "ORC"
+            },
+            "field_number": 32,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.ORC-04",
+            "name": "ORC-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "ORC"
+            },
+            "field_number": 33,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.ORC-05",
+            "name": "ORC-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "ORC"
+            },
+            "field_number": 34,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.ORC-06",
+            "name": "ORC-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "ORC"
+            },
+            "field_number": 35,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.ORC-07",
+            "name": "ORC-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8,
+              "hl7v2_segment": "ORC"
+            },
+            "field_number": 36,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.ORC-08",
+            "name": "ORC-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9,
+              "hl7v2_segment": "ORC"
+            },
+            "field_number": 37,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.ORC-09",
+            "name": "ORC-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10,
+              "hl7v2_segment": "ORC"
+            },
+            "field_number": 38,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.ORC-10",
+            "name": "ORC-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11,
+              "hl7v2_segment": "ORC"
+            },
+            "field_number": 39,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.ORC-11",
+            "name": "ORC-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "276^Tanaka^Ken^^^^^^MYEHR^L",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 12,
+              "hl7v2_segment": "ORC"
+            },
+            "field_number": 40,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.ORC-12",
+            "name": "ORC-12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "PD1"
+            },
+            "field_number": 12,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PD1-01",
+            "name": "PD1-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "PD1"
+            },
+            "field_number": 13,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PD1-02",
+            "name": "PD1-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "PD1"
+            },
+            "field_number": 14,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PD1-03",
+            "name": "PD1-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "PD1"
+            },
+            "field_number": 15,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PD1-04",
+            "name": "PD1-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "PD1"
+            },
+            "field_number": 16,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PD1-05",
+            "name": "PD1-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "PD1"
+            },
+            "field_number": 17,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PD1-06",
+            "name": "PD1-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "PD1"
+            },
+            "field_number": 18,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PD1-07",
+            "name": "PD1-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8,
+              "hl7v2_segment": "PD1"
+            },
+            "field_number": 19,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PD1-08",
+            "name": "PD1-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9,
+              "hl7v2_segment": "PD1"
+            },
+            "field_number": 20,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PD1-09",
+            "name": "PD1-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10,
+              "hl7v2_segment": "PD1"
+            },
+            "field_number": 21,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PD1-10",
+            "name": "PD1-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "02^Reminder/recall - any method^HL70215",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11,
+              "hl7v2_segment": "PD1"
+            },
+            "field_number": 22,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PD1-11",
+            "name": "PD1-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "N",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 12,
+              "hl7v2_segment": "PD1"
+            },
+            "field_number": 23,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PD1-12",
+            "name": "PD1-12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 1,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PID-01",
+            "name": "PID-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 2,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PID-02",
+            "name": "PID-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "PA-556677^^^MYEHR^MR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 3,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PID-03",
+            "name": "PID-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 4,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PID-04",
+            "name": "PID-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "Kimura^Aiko^^^^^L",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 5,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PID-05",
+            "name": "PID-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 6,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PID-06",
+            "name": "PID-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20240612",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 7,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PID-07",
+            "name": "PID-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "F",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 8,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PID-08",
+            "name": "PID-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 9,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PID-09",
+            "name": "PID-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "2028-9^Asian^CDCREC",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 10,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PID-10",
+            "name": "PID-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "101 Wellness Way^^Columbus^OH^43215^USA^P",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11,
+              "hl7v2_segment": "PID"
+            },
+            "field_number": 11,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.PID-11",
+            "name": "PID-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "0",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 41,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-01",
+            "name": "RXA-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 42,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-02",
+            "name": "RXA-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20260210",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 3,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 43,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-03",
+            "name": "RXA-03",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 4,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 44,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-04",
+            "name": "RXA-04",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "08^Hep B pediatric^CVX",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 5,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 45,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-05",
+            "name": "RXA-05",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "0.5",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 6,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 46,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-06",
+            "name": "RXA-06",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "mL^milliliters^UCUM",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 7,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 47,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-07",
+            "name": "RXA-07",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 8,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 48,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-08",
+            "name": "RXA-08",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "00^New immunization record^NIP001",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 9,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 49,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-09",
+            "name": "RXA-09",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "276^Tanaka^Ken",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 10,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 50,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-10",
+            "name": "RXA-10",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "^^^CLINIC OF GOOD HEALTH",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 11,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 51,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-11",
+            "name": "RXA-11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 12,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 52,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-12",
+            "name": "RXA-12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 13,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 53,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-13",
+            "name": "RXA-13",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 14,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 54,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-14",
+            "name": "RXA-14",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "LOT4459",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 15,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 55,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-15",
+            "name": "RXA-15",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "20270131",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 16,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 56,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-16",
+            "name": "RXA-16",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "SKB^GlaxoSmithKline^MVX",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 17,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 57,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-17",
+            "name": "RXA-17",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 18,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 58,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-18",
+            "name": "RXA-18",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 19,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 59,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-19",
+            "name": "RXA-19",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "CP",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 20,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 60,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-20",
+            "name": "RXA-20",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "A",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 21,
+              "hl7v2_segment": "RXA"
+            },
+            "field_number": 61,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXA-21",
+            "name": "RXA-21",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "IM^Intramuscular^HL70162",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 1,
+              "hl7v2_segment": "RXR"
+            },
+            "field_number": 62,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXR-01",
+            "name": "RXR-01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "LT^Left Thigh^HL70163",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "hl7v2_field_index": 2,
+              "hl7v2_segment": "RXR"
+            },
+            "field_number": 63,
+            "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04.RXR-02",
+            "name": "RXR-02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "VXU-V04-VXU_V04.MessageVXUV04VXU_V04",
+        "key_type": null,
+        "kind": "record",
+        "name": "MessageVXUV04VXU_V04",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "hl7v2/06-vxu-v04-immunization.hl7",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "hl7v2"
+  },
+  "fingerprint": "sha256:468b3956f31cf25560e84ca923105f554ad57dd6c7a8f5e4ad161e9d9a9e872d",
+  "lint": {
+    "findings": 96,
+    "grade": "C",
+    "report_fingerprint": "a6a53e5bb034f6baf8ef31725a9204e9d9969a11ef7b7d0cad50feee41fcca31",
+    "score": 71,
+    "severity_counts": {
+      "error": 0,
+      "info": 94,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

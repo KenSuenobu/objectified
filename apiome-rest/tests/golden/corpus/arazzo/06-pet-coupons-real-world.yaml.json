@@ -1,0 +1,205 @@
+{
+  "adapter": "arazzo",
+  "canonical": {
+    "channels": [],
+    "description": "Find an available pet, look up an applicable coupon, and place a discounted order, in the style of the OAI pet-coupons Arazzo sample.\n",
+    "extras": {
+      "arazzo": "1.0.1",
+      "sourceDescriptions": [
+        {
+          "name": "petStoreApi",
+          "type": "openapi",
+          "url": "https://example.com/openapi/petstore.json"
+        }
+      ]
+    },
+    "format": "arazzo",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Petstore Coupon Ordering",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Searches for pets by status, retrieves a coupon for the selected pet, and places an order that applies the coupon.\n",
+        "extras": {
+          "inputs": {
+            "properties": {
+              "couponCode": {
+                "description": "Promotional coupon code supplied by the shopper",
+                "type": "string"
+              },
+              "petStatus": {
+                "description": "Availability status to search for (e.g. available)",
+                "type": "string"
+              },
+              "quantity": {
+                "description": "How many of the selected pet to order",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "stepOrder": [
+            "find-pet",
+            "find-coupon",
+            "place-order"
+          ],
+          "workflowId": "place-discounted-order"
+        },
+        "key": "place-discounted-order",
+        "name": "place-discounted-order",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Look up a coupon applicable to the selected pet",
+            "extras": {
+              "operationId": "getPetCoupons",
+              "outputs": {
+                "couponId": "$response.body#/id"
+              },
+              "parameters": [
+                {
+                  "in": "path",
+                  "name": "petId",
+                  "value": "$steps.find-pet.outputs.petId"
+                },
+                {
+                  "in": "query",
+                  "name": "code",
+                  "value": "$inputs.couponCode"
+                }
+              ],
+              "stepId": "find-coupon",
+              "stepIndex": 1,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 200"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "place-discounted-order#find-coupon",
+            "kind": "one_way",
+            "messages": [],
+            "name": "find-coupon",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "place-discounted-order"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Search the store for pets matching the requested status",
+            "extras": {
+              "operationId": "findPetsByStatus",
+              "outputs": {
+                "petId": "$response.body#/0/id"
+              },
+              "parameters": [
+                {
+                  "in": "query",
+                  "name": "status",
+                  "value": "$inputs.petStatus"
+                }
+              ],
+              "stepId": "find-pet",
+              "stepIndex": 0,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 200"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "place-discounted-order#find-pet",
+            "kind": "one_way",
+            "messages": [],
+            "name": "find-pet",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "place-discounted-order"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Place the order with the coupon applied",
+            "extras": {
+              "operationId": "placeOrder",
+              "outputs": {
+                "orderId": "$response.body#/id"
+              },
+              "requestBody": {
+                "contentType": "application/json",
+                "payload": {
+                  "couponId": "$steps.find-coupon.outputs.couponId",
+                  "petId": "$steps.find-pet.outputs.petId",
+                  "quantity": "$inputs.quantity",
+                  "status": "placed"
+                }
+              },
+              "stepId": "place-order",
+              "stepIndex": 2,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 200"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "place-discounted-order#place-order",
+            "kind": "one_way",
+            "messages": [],
+            "name": "place-order",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "place-discounted-order"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Petstore Coupon Ordering",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "arazzo/06-pet-coupons-real-world.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "arazzo"
+  },
+  "fingerprint": "sha256:6b14c3abbdddf453eff2b8f002a7ef74ca4b1eae5dc8e695ac037392503f10b6",
+  "lint": {
+    "findings": 0,
+    "grade": "A",
+    "report_fingerprint": "49f00aff0ad03525a1e73592c60211f9f8572853ba37d488054fdb78f1f77bd1",
+    "score": 100,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

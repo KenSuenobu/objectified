@@ -1,0 +1,442 @@
+{
+  "adapter": "raml",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "raml_media_type": "application/json",
+      "raml_version": "1.0"
+    },
+    "format": "raml",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Device Registry API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From RAML baseUri",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/registry/v2",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Device Registry API",
+        "name": "Device Registry API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List registered devices page by page.",
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/devices",
+            "key": "GET /devices",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /devices#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "DevicePage",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GET /devices",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Fetch one device.",
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/devices/{deviceId}",
+            "key": "GET /devices/{deviceId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /devices/{deviceId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Device",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GET /devices/{deviceId}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Identifier of the device.",
+                "extras": {
+                  "raml_type": "string"
+                },
+                "key": "GET /devices/{deviceId}#path.deviceId",
+                "location": "path",
+                "name": "deviceId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Register a device.",
+            "extras": {},
+            "http_method": "POST",
+            "http_path": "/devices",
+            "key": "POST /devices",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /devices#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Device",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "201"
+                },
+                "headers": [],
+                "key": "POST /devices#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Device",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "POST /devices",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Device Registry API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Mixin base carrying audit timestamps.",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Creation timestamp.",
+            "extras": {
+              "raml_type": "datetime"
+            },
+            "field_number": 1,
+            "key": "Auditable.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Last modification timestamp.",
+            "extras": {
+              "raml_type": "datetime"
+            },
+            "field_number": 2,
+            "key": "Auditable.updatedAt",
+            "name": "updatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Auditable",
+        "key_type": null,
+        "kind": "record",
+        "name": "Auditable",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A registered device; inherits audit fields from Auditable.",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Unique device identifier.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 1,
+            "key": "Device.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Human-readable device name.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 2,
+            "key": "Device.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Current lifecycle state.",
+            "extras": {
+              "raml_type": "DeviceStatus"
+            },
+            "field_number": 3,
+            "key": "Device.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "DeviceStatus",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Device",
+        "key_type": null,
+        "kind": "record",
+        "name": "Device",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One page of devices.",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Devices on this page.",
+            "extras": {
+              "raml_type": "array"
+            },
+            "field_number": 1,
+            "key": "DevicePage.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "array",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Total number of devices.",
+            "extras": {
+              "raml_type": "integer"
+            },
+            "field_number": 2,
+            "key": "DevicePage.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "DevicePage",
+        "key_type": null,
+        "kind": "record",
+        "name": "DevicePage",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Lifecycle state of a device.",
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "DeviceStatus.provisioned",
+            "name": "provisioned",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "DeviceStatus.active",
+            "name": "active",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "DeviceStatus.retired",
+            "name": "retired",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "raml_kind": "enum"
+        },
+        "fields": [],
+        "key": "DeviceStatus",
+        "key_type": null,
+        "kind": "enum",
+        "name": "DeviceStatus",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v2"
+  },
+  "corpus_path": "raml/04-resource-types-and-traits.raml",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 1,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "raml"
+  },
+  "fingerprint": "sha256:ffe78fe90f64952e2000fc82b91270188d261755e3fd1f406ac04d43c9487bcc",
+  "lint": {
+    "findings": 5,
+    "grade": "A",
+    "report_fingerprint": "2293566f31f09a5e74bde4f8e02f032f21a6acbb260f0f9e506d00fa331008eb",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 5,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,96 @@
+{
+  "adapter": "openrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "openrpc_version": "1.3.2"
+    },
+    "format": "openrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ping Service",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": "jsonrpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Ping Service",
+        "name": "Ping Service",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Liveness probe.",
+            "extras": {
+              "openrpc_result_name": "pong",
+              "openrpc_summary": "Liveness probe."
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Ping Service.ping",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Ping Service.ping#response",
+                "name": "pong",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "ping",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Ping Service",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "openrpc/02-minimal-ping.json",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "openrpc"
+  },
+  "fingerprint": "sha256:7b8486e8362b86bd9e61ce269a50bba2c862b09a5e823c5a8bb6fd747c38d3af",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "d40a9e3f4580a7298cc01f54cde0911c3bc205b4d0f41783ead089ac0536e354",
+    "score": 98,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

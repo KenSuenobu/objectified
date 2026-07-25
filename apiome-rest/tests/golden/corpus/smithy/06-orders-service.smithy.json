@@ -1,0 +1,583 @@
+{
+  "adapter": "smithy",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "smithy_namespace": "example.orders",
+      "smithy_version": "2.0"
+    },
+    "format": "smithy",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "OrderService",
+      "namespace": "example.orders"
+    },
+    "paradigm": "rpc",
+    "protocol": "smithy",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "smithy_operations": [
+            "CreateOrder",
+            "GetOrder",
+            "CancelOrder"
+          ],
+          "smithy_version": "2026-03-01"
+        },
+        "key": "example.orders.OrderService",
+        "name": "OrderService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.orders.OrderService.CancelOrder",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.orders.OrderService.CancelOrder#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.orders.GetOrderInput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.orders.OrderService.CancelOrder#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.orders.Order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "CancelOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.orders.OrderService.CreateOrder",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.orders.OrderService.CreateOrder#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.orders.CreateOrderInput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.orders.OrderService.CreateOrder#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.orders.Order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "CreateOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.orders.OrderService.GetOrder",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.orders.OrderService.GetOrder#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.orders.GetOrderInput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.orders.OrderService.GetOrder#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.orders.Order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GetOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "OrderService",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.orders.CreateOrderInput.customerId",
+            "name": "customerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.orders.CreateOrderInput.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.orders.OrderLineList",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.orders.CreateOrderInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "CreateOrderInput",
+        "namespace": "example.orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.orders.GetOrderInput.orderId",
+            "name": "orderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.orders.GetOrderInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "GetOrderInput",
+        "namespace": "example.orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.orders.Order.customerId",
+            "name": "customerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.orders.Order.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.orders.OrderLineList",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.orders.Order.orderId",
+            "name": "orderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.orders.Order.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.orders.OrderStatus",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.orders.Order.totalMinor",
+            "name": "totalMinor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Long",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.orders.Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": "example.orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.orders.OrderLine.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.orders.OrderLine.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.orders.OrderLine.unitPriceMinor",
+            "name": "unitPriceMinor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Long",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.orders.OrderLine",
+        "key_type": null,
+        "kind": "record",
+        "name": "OrderLine",
+        "namespace": "example.orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": {
+            "extras": {},
+            "item": null,
+            "name": "example.orders.OrderLine",
+            "nullable": false
+          },
+          "name": null,
+          "nullable": false
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "list"
+        },
+        "fields": [],
+        "key": "example.orders.OrderLineList",
+        "key_type": null,
+        "kind": "alias",
+        "name": "OrderLineList",
+        "namespace": "example.orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.orders.OrderStatus.OPEN",
+            "name": "OPEN",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.orders.OrderStatus.SHIPPED",
+            "name": "SHIPPED",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.orders.OrderStatus.CANCELLED",
+            "name": "CANCELLED",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "smithy_kind": "enum"
+        },
+        "fields": [],
+        "key": "example.orders.OrderStatus",
+        "key_type": null,
+        "kind": "enum",
+        "name": "OrderStatus",
+        "namespace": "example.orders",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "smithy/06-orders-service.smithy",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "smithy"
+  },
+  "fingerprint": "sha256:a294d69057b5d3c387c832202dd5a76b901ad9b77d3a55d8133354524c1872c9",
+  "lint": {
+    "findings": 27,
+    "grade": "F",
+    "report_fingerprint": "5971d90d2ea5195839ce1a83889db5abb5765a3d878cf6ebc0e0a977d611b5c1",
+    "score": 50,
+    "severity_counts": {
+      "error": 0,
+      "info": 18,
+      "warning": 9
+    }
+  },
+  "snapshot_version": 1
+}

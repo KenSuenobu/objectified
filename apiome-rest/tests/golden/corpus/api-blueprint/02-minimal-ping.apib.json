@@ -1,0 +1,93 @@
+{
+  "adapter": "apiblueprint",
+  "canonical": {
+    "channels": [],
+    "description": "The smallest canonical API Blueprint document: a metadata section, one\nresource, and a single action with one response.",
+    "extras": {
+      "apib_format_version": "1A",
+      "apib_host": null
+    },
+    "format": "apiblueprint",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ping API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Ping API",
+        "name": "Ping API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/ping",
+            "key": "GET /ping",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /ping#response.200",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Check liveness",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Ping API",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "api-blueprint/02-minimal-ping.apib",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "api-blueprint"
+  },
+  "fingerprint": "sha256:4d4b1a2821193fc11d9b527bd3ccf5119305af0020ef54bc2cd9848a1ec4cd37",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "08bc53fd6771cef3e2a2f4693f84a2c373ee8020a958decf36f03d4f9cb0e1c9",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

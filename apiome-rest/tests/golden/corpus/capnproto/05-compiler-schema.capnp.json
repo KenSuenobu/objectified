@@ -1,0 +1,519 @@
+{
+  "adapter": "capnproto",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "capnp_file_id": "0xc90fa3d8b12e6754",
+      "capnp_imports": []
+    },
+    "format": "capnproto",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Node.NestedNode",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "CodeGeneratorRequest.nodes",
+            "name": "nodes",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Node",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "field_number": 1,
+            "key": "CodeGeneratorRequest.requestedFiles",
+            "name": "requestedFiles",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "RequestedFile",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "CodeGeneratorRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "CodeGeneratorRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "field_number": 1,
+            "key": "Field.codeOrder",
+            "name": "codeOrder",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 2
+            },
+            "field_number": 2,
+            "key": "Field.discriminantValue",
+            "name": "discriminantValue",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "Field.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 3
+            },
+            "field_number": 3,
+            "key": "Field.offset",
+            "name": "offset",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 4
+            },
+            "field_number": 4,
+            "key": "Field.typeName",
+            "name": "typeName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Field",
+        "key_type": null,
+        "kind": "record",
+        "name": "Field",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "field_number": 1,
+            "key": "Node.displayName",
+            "name": "displayName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "Node.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 4
+            },
+            "field_number": 4,
+            "key": "Node.kind",
+            "name": "kind",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Node.Kind",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 3
+            },
+            "field_number": 3,
+            "key": "Node.nestedNodes",
+            "name": "nestedNodes",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Node.NestedNode",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 2
+            },
+            "field_number": 2,
+            "key": "Node.scopeId",
+            "name": "scopeId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Node",
+        "key_type": null,
+        "kind": "record",
+        "name": "Node",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Node.Kind.file",
+            "name": "file",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Node.Kind.structNode",
+            "name": "structNode",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Node.Kind.enumNode",
+            "name": "enumNode",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Node.Kind.interfaceNode",
+            "name": "interfaceNode",
+            "value": 3
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Node.Kind.constNode",
+            "name": "constNode",
+            "value": 4
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Node.Kind.annotationNode",
+            "name": "annotationNode",
+            "value": 5
+          }
+        ],
+        "extras": {
+          "capnp_kind": "enum",
+          "capnp_qualified_name": "Node.Kind"
+        },
+        "fields": [],
+        "key": "Node.Kind",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Kind",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct",
+          "capnp_qualified_name": "Node.NestedNode"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "field_number": 1,
+            "key": "Node.NestedNode.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "Node.NestedNode.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Node.NestedNode",
+        "key_type": null,
+        "kind": "record",
+        "name": "NestedNode",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "field_number": 1,
+            "key": "RequestedFile.filename",
+            "name": "filename",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "RequestedFile.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "RequestedFile",
+        "key_type": null,
+        "kind": "record",
+        "name": "RequestedFile",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "capnproto/05-compiler-schema.capnp",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "capnproto"
+  },
+  "fingerprint": "sha256:053d2a1d780386db67e6e91c3aa44941a6879a580c77295985fd0f2cf9cc5115",
+  "lint": {
+    "findings": 23,
+    "grade": "D",
+    "report_fingerprint": "f67c1834fd03337f77e1e2fbab4a41d6c5c60fa63752b1715bfe5c29271ed40c",
+    "score": 63,
+    "severity_counts": {
+      "error": 0,
+      "info": 17,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

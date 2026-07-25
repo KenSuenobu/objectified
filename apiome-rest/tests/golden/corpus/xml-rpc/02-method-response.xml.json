@@ -1,0 +1,197 @@
+{
+  "adapter": "xmlrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "xmlrpc_kind": "methodResponse"
+    },
+    "format": "xmlrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "XML-RPC Response",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": "xmlrpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "XML-RPC Response",
+        "name": "XML-RPC Response",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xmlrpc_fault_code": null,
+              "xmlrpc_fault_string": null,
+              "xmlrpc_kind": "methodResponse"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "XML-RPC Response.response",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "xmlrpc_result_schema": {
+                    "$ref": "#/components/schemas/ResponseResponse"
+                  },
+                  "xmlrpc_sample": {
+                    "remaining": 120,
+                    "reservationId": "resv-0001",
+                    "reserved": 5,
+                    "sku": "WIDGET-001"
+                  }
+                },
+                "headers": [],
+                "key": "XML-RPC Response.response#response",
+                "name": "result",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ResponseResponse",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "response",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "XML-RPC Response",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xmlrpc_kind": "struct",
+          "xmlrpc_samples": {
+            "remaining": 120,
+            "reservationId": "resv-0001",
+            "reserved": 5,
+            "sku": "WIDGET-001"
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "ResponseResponse.remaining",
+            "name": "remaining",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "ResponseResponse.reservationId",
+            "name": "reservationId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "ResponseResponse.reserved",
+            "name": "reserved",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "ResponseResponse.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ResponseResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "ResponseResponse",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "xml-rpc/02-method-response.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "xmlrpc"
+  },
+  "fingerprint": "sha256:01ea10e00c6d492f29816ad63a119f3e86ddb332965754be9f250b099dbbc211",
+  "lint": {
+    "findings": 8,
+    "grade": "B",
+    "report_fingerprint": "9bba55d36844b03fdb040d766cdd1bb4a6795b575694dcbcc19bab89302b50e3",
+    "score": 86,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

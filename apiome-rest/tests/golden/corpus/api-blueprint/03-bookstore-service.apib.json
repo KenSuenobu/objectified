@@ -1,0 +1,481 @@
+{
+  "adapter": "apiblueprint",
+  "canonical": {
+    "channels": [],
+    "description": "A typical everyday API Blueprint service: a books collection with create and\nlist actions, an item resource with URI parameters, and MSON data structures\nfor the request and response payloads.",
+    "extras": {
+      "apib_format_version": "1A",
+      "apib_host": "https://api.example.com"
+    },
+    "format": "apiblueprint",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Bookstore API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From API Blueprint HOST",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Bookstore API",
+        "name": "Bookstore API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "DELETE",
+            "http_path": "/books/{id}",
+            "key": "DELETE /books/{id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "204"
+                },
+                "headers": [],
+                "key": "DELETE /books/{id}#response.204",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Remove a book",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Unique book identifier.",
+                "extras": {
+                  "apib_type": "string"
+                },
+                "key": "DELETE /books/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/books",
+            "key": "GET /books",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "apib_response_array": "Book",
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /books#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Book",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "List all books",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/books/{id}",
+            "key": "GET /books/{id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /books/{id}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Book",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "404"
+                },
+                "headers": [],
+                "key": "GET /books/{id}#response.404",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Get a book",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Unique book identifier.",
+                "extras": {
+                  "apib_type": "string"
+                },
+                "key": "GET /books/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "POST",
+            "http_path": "/books",
+            "key": "POST /books",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /books#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "NewBook",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "201"
+                },
+                "headers": [],
+                "key": "POST /books#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Book",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Add a book",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Bookstore API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "apib_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Author name.",
+            "extras": {
+              "apib_sample": "Ursula K. Le Guin",
+              "apib_type": "string"
+            },
+            "field_number": 3,
+            "key": "Book.author",
+            "name": "author",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Unique book identifier.",
+            "extras": {
+              "apib_sample": "b-42",
+              "apib_type": "string"
+            },
+            "field_number": 1,
+            "key": "Book.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Whether the book is currently stocked.",
+            "extras": {
+              "apib_sample": "true",
+              "apib_type": "boolean"
+            },
+            "field_number": 5,
+            "key": "Book.inStock",
+            "name": "inStock",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Retail price.",
+            "extras": {
+              "apib_sample": "9.99",
+              "apib_type": "number"
+            },
+            "field_number": 4,
+            "key": "Book.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Book title.",
+            "extras": {
+              "apib_sample": "The Left Hand of Darkness",
+              "apib_type": "string"
+            },
+            "field_number": 2,
+            "key": "Book.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Book",
+        "key_type": null,
+        "kind": "record",
+        "name": "Book",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "apib_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Author name.",
+            "extras": {
+              "apib_sample": "Ursula K. Le Guin",
+              "apib_type": "string"
+            },
+            "field_number": 2,
+            "key": "NewBook.author",
+            "name": "author",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Retail price.",
+            "extras": {
+              "apib_sample": "9.99",
+              "apib_type": "number"
+            },
+            "field_number": 3,
+            "key": "NewBook.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Book title.",
+            "extras": {
+              "apib_sample": "The Left Hand of Darkness",
+              "apib_type": "string"
+            },
+            "field_number": 1,
+            "key": "NewBook.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "NewBook",
+        "key_type": null,
+        "kind": "record",
+        "name": "NewBook",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "api-blueprint/03-bookstore-service.apib",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 1,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "api-blueprint"
+  },
+  "fingerprint": "sha256:30f3fc6b4fb887924600893e65a9a93ac7022e3b74206a5f451b77b62470504f",
+  "lint": {
+    "findings": 12,
+    "grade": "C",
+    "report_fingerprint": "87f25bd6bc67c3f33ae8e5ffc9c2905b7325de3523d17e71426715c7372a7fbe",
+    "score": 70,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

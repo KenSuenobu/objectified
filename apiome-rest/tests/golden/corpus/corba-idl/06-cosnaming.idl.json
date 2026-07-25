@@ -1,0 +1,1193 @@
+{
+  "adapter": "corbaidl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "corbaidl_interfaces": [
+        {
+          "name": "BindingIterator",
+          "operations": [
+            {
+              "name": "nextOne",
+              "parameters": [
+                {
+                  "direction": "out",
+                  "name": "b",
+                  "type": "Binding"
+                }
+              ],
+              "raises": [],
+              "return_type": "boolean"
+            },
+            {
+              "name": "destroy",
+              "parameters": [],
+              "raises": [],
+              "return_type": "void"
+            }
+          ]
+        },
+        {
+          "name": "NamingContext",
+          "operations": [
+            {
+              "name": "bind",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "n",
+                  "type": "sequence<NameComponent>"
+                },
+                {
+                  "direction": "in",
+                  "name": "obj",
+                  "type": "Object"
+                }
+              ],
+              "raises": [
+                "NotFound",
+                "CannotProceed",
+                "InvalidName",
+                "AlreadyBound"
+              ],
+              "return_type": "void"
+            },
+            {
+              "name": "rebind",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "n",
+                  "type": "sequence<NameComponent>"
+                },
+                {
+                  "direction": "in",
+                  "name": "obj",
+                  "type": "Object"
+                }
+              ],
+              "raises": [
+                "NotFound",
+                "CannotProceed",
+                "InvalidName"
+              ],
+              "return_type": "void"
+            },
+            {
+              "name": "resolve",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "n",
+                  "type": "sequence<NameComponent>"
+                }
+              ],
+              "raises": [
+                "NotFound",
+                "CannotProceed",
+                "InvalidName"
+              ],
+              "return_type": "Object"
+            },
+            {
+              "name": "unbind",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "n",
+                  "type": "sequence<NameComponent>"
+                }
+              ],
+              "raises": [
+                "NotFound",
+                "CannotProceed",
+                "InvalidName"
+              ],
+              "return_type": "void"
+            },
+            {
+              "name": "newContext",
+              "parameters": [],
+              "raises": [],
+              "return_type": "NamingContext"
+            },
+            {
+              "name": "destroy",
+              "parameters": [],
+              "raises": [
+                "NotEmpty"
+              ],
+              "return_type": "void"
+            },
+            {
+              "name": "list",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "howMany",
+                  "type": "long"
+                },
+                {
+                  "direction": "out",
+                  "name": "bl",
+                  "type": "sequence<Binding>"
+                },
+                {
+                  "direction": "out",
+                  "name": "bi",
+                  "type": "BindingIterator"
+                }
+              ],
+              "raises": [],
+              "return_type": "void"
+            }
+          ]
+        }
+      ],
+      "corbaidl_module": "CosNaming",
+      "corbaidl_typedefs": {
+        "BindingList": "sequence<Binding>",
+        "Istring": "string",
+        "Name": "sequence<NameComponent>"
+      }
+    },
+    "format": "corbaidl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "CosNaming",
+      "namespace": "CosNaming"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "CosNaming.BindingIterator",
+        "name": "BindingIterator",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "CosNaming.BindingIterator.destroy",
+            "kind": "request_response",
+            "messages": [],
+            "name": "destroy",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "CosNaming.BindingIterator.nextOne",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "out"
+                },
+                "headers": [],
+                "key": "CosNaming.BindingIterator.nextOne#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.Binding",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "response",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "CosNaming.BindingIterator.nextOne#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "bool",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "nextOne",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "CosNaming.NamingContext",
+        "name": "NamingContext",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "CosNaming.NamingContext.bind",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 4
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.bind#error.AlreadyBound",
+                "name": "AlreadyBound",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.AlreadyBound",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 2
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.bind#error.CannotProceed",
+                "name": "CannotProceed",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.CannotProceed",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 3
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.bind#error.InvalidName",
+                "name": "InvalidName",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.InvalidName",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.bind#error.NotFound",
+                "name": "NotFound",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.NotFound",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_parameters": [
+                    {
+                      "direction": "in",
+                      "name": "n",
+                      "type": "sequence<NameComponent>"
+                    },
+                    {
+                      "direction": "in",
+                      "name": "obj",
+                      "type": "Object"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.bind#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "bind",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "CosNaming.NamingContext.destroy",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.destroy#error.NotEmpty",
+                "name": "NotEmpty",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.NotEmpty",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              }
+            ],
+            "name": "destroy",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "CosNaming.NamingContext.list",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_parameters": [
+                    {
+                      "direction": "in",
+                      "name": "howMany",
+                      "type": "long"
+                    },
+                    {
+                      "direction": "out",
+                      "name": "bl",
+                      "type": "sequence<Binding>"
+                    },
+                    {
+                      "direction": "out",
+                      "name": "bi",
+                      "type": "BindingIterator"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.list#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "list",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "CosNaming.NamingContext.newContext",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "CosNaming.NamingContext.newContext#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "NamingContext",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "newContext",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "CosNaming.NamingContext.rebind",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 2
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.rebind#error.CannotProceed",
+                "name": "CannotProceed",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.CannotProceed",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 3
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.rebind#error.InvalidName",
+                "name": "InvalidName",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.InvalidName",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.rebind#error.NotFound",
+                "name": "NotFound",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.NotFound",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_parameters": [
+                    {
+                      "direction": "in",
+                      "name": "n",
+                      "type": "sequence<NameComponent>"
+                    },
+                    {
+                      "direction": "in",
+                      "name": "obj",
+                      "type": "Object"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.rebind#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "rebind",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "CosNaming.NamingContext.resolve",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 2
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.resolve#error.CannotProceed",
+                "name": "CannotProceed",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.CannotProceed",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 3
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.resolve#error.InvalidName",
+                "name": "InvalidName",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.InvalidName",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.resolve#error.NotFound",
+                "name": "NotFound",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.NotFound",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.resolve#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "CosNaming.NameComponent",
+                    "nullable": false
+                  },
+                  "name": "CosNaming.NameComponent",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "CosNaming.NamingContext.resolve#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "resolve",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "CosNaming.NamingContext.unbind",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 2
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.unbind#error.CannotProceed",
+                "name": "CannotProceed",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.CannotProceed",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 3
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.unbind#error.InvalidName",
+                "name": "InvalidName",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.InvalidName",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.unbind#error.NotFound",
+                "name": "NotFound",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CosNaming.NotFound",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "CosNaming.NamingContext.unbind#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "CosNaming.NameComponent",
+                    "nullable": false
+                  },
+                  "name": "CosNaming.NameComponent",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "unbind",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "exception"
+        },
+        "fields": [],
+        "key": "CosNaming.AlreadyBound",
+        "key_type": null,
+        "kind": "record",
+        "name": "AlreadyBound",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "sequence<NameComponent>"
+            },
+            "field_number": 1,
+            "key": "CosNaming.Binding.bindingName",
+            "name": "bindingName",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "CosNaming.NameComponent",
+                "nullable": false
+              },
+              "name": "CosNaming.NameComponent",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "BindingType"
+            },
+            "field_number": 2,
+            "key": "CosNaming.Binding.bindingType",
+            "name": "bindingType",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CosNaming.BindingType",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CosNaming.Binding",
+        "key_type": null,
+        "kind": "record",
+        "name": "Binding",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "CosNaming.BindingType.nobject",
+            "name": "nobject",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "CosNaming.BindingType.ncontext",
+            "name": "ncontext",
+            "value": 1
+          }
+        ],
+        "extras": {
+          "corbaidl_kind": "enum"
+        },
+        "fields": [],
+        "key": "CosNaming.BindingType",
+        "key_type": null,
+        "kind": "enum",
+        "name": "BindingType",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "exception"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "sequence<NameComponent>"
+            },
+            "field_number": 1,
+            "key": "CosNaming.CannotProceed.restOfName",
+            "name": "restOfName",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "CosNaming.NameComponent",
+                "nullable": false
+              },
+              "name": "CosNaming.NameComponent",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CosNaming.CannotProceed",
+        "key_type": null,
+        "kind": "record",
+        "name": "CannotProceed",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "exception"
+        },
+        "fields": [],
+        "key": "CosNaming.InvalidName",
+        "key_type": null,
+        "kind": "record",
+        "name": "InvalidName",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "CosNaming.NameComponent.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 2,
+            "key": "CosNaming.NameComponent.kind",
+            "name": "kind",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CosNaming.NameComponent",
+        "key_type": null,
+        "kind": "record",
+        "name": "NameComponent",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "exception"
+        },
+        "fields": [],
+        "key": "CosNaming.NotEmpty",
+        "key_type": null,
+        "kind": "record",
+        "name": "NotEmpty",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "exception"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "sequence<NameComponent>"
+            },
+            "field_number": 2,
+            "key": "CosNaming.NotFound.restOfName",
+            "name": "restOfName",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "CosNaming.NameComponent",
+                "nullable": false
+              },
+              "name": "CosNaming.NameComponent",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "NotFoundReason"
+            },
+            "field_number": 1,
+            "key": "CosNaming.NotFound.why",
+            "name": "why",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CosNaming.NotFoundReason",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CosNaming.NotFound",
+        "key_type": null,
+        "kind": "record",
+        "name": "NotFound",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "CosNaming.NotFoundReason.missingNode",
+            "name": "missingNode",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "CosNaming.NotFoundReason.notContext",
+            "name": "notContext",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "CosNaming.NotFoundReason.notObject",
+            "name": "notObject",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "corbaidl_kind": "enum"
+        },
+        "fields": [],
+        "key": "CosNaming.NotFoundReason",
+        "key_type": null,
+        "kind": "enum",
+        "name": "NotFoundReason",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "corba-idl/06-cosnaming.idl",
+  "counts": {
+    "channels": 0,
+    "operations": 9,
+    "servers": 0,
+    "services": 2,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "corbaidl"
+  },
+  "fingerprint": "sha256:2f9915985dbfb0042e0667ed60834f00b40b5836577498035f504ca6578b8aaf",
+  "lint": {
+    "findings": 49,
+    "grade": "F",
+    "report_fingerprint": "d0f5aff478c4b0848c0ee43eb9f6beefa9c5dc371c8521886df7db19c8870e6e",
+    "score": 32,
+    "severity_counts": {
+      "error": 0,
+      "info": 31,
+      "warning": 18
+    }
+  },
+  "snapshot_version": 1
+}

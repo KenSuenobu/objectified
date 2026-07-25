@@ -1,0 +1,258 @@
+{
+  "adapter": "cobolcopybook",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "cobolcopybook_root": "ORDER-LINE",
+      "cobolcopybook_tree": {
+        "children": [
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ORDER-ID",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(10)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ORDER-ITEM-SKU",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(12)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ORDER-QUANTITY",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(4)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ORDER-UNIT-PRICE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "S9(7)V99",
+            "usage": "COMP-3"
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "ORDER-LINE-TOTAL",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "S9(9)V99",
+            "usage": "COMP-3"
+          }
+        ],
+        "conditions": [],
+        "depending_on": null,
+        "level": 1,
+        "name": "ORDER-LINE",
+        "occurs_max": null,
+        "occurs_min": null,
+        "picture": null,
+        "usage": null
+      }
+    },
+    "format": "cobolcopybook",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "ORDER-LINE",
+      "namespace": "ORDER-LINE"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "ORDER-LINE",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cobol_kind": "group",
+          "cobol_level": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(10)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(10)",
+              "cobol_usage": null
+            },
+            "field_number": 1,
+            "key": "ORDER-LINE.ORDER-LINE.ORDER-ID",
+            "name": "ORDER-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(12)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(12)",
+              "cobol_usage": null
+            },
+            "field_number": 2,
+            "key": "ORDER-LINE.ORDER-LINE.ORDER-ITEM-SKU",
+            "name": "ORDER-ITEM-SKU",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "S9(9)V99",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "S9(9)V99",
+              "cobol_usage": "COMP-3"
+            },
+            "field_number": 5,
+            "key": "ORDER-LINE.ORDER-LINE.ORDER-LINE-TOTAL",
+            "name": "ORDER-LINE-TOTAL",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(4)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(4)",
+              "cobol_usage": null
+            },
+            "field_number": 3,
+            "key": "ORDER-LINE.ORDER-LINE.ORDER-QUANTITY",
+            "name": "ORDER-QUANTITY",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "S9(7)V99",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "S9(7)V99",
+              "cobol_usage": "COMP-3"
+            },
+            "field_number": 4,
+            "key": "ORDER-LINE.ORDER-LINE.ORDER-UNIT-PRICE",
+            "name": "ORDER-UNIT-PRICE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ORDER-LINE.ORDER-LINE",
+        "key_type": null,
+        "kind": "record",
+        "name": "ORDER-LINE",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cobol-copybook/02-order-line.cpy",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cobolcopybook"
+  },
+  "fingerprint": "sha256:834ece5f295868f343d6569564659392091df075125c02f6c9c70c694a2c50aa",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "8df0072f492a118c205bd2ca262ebbd1f96f88c072bf07b7fcbac80195de7e19",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

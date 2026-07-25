@@ -1,0 +1,781 @@
+{
+  "adapter": "connectrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "rpc_stack": "connect"
+    },
+    "format": "connectrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "chat.v1",
+      "namespace": "chat.v1"
+    },
+    "paradigm": "rpc",
+    "protocol": "grpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "chat.v1.ChatService",
+        "name": "ChatService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "chat.v1.ChatService.Converse",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "chat.v1.ChatService.Converse#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "chat.v1.Event",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "chat.v1.ChatService.Converse#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "chat.v1.Event",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Converse",
+            "parameters": [],
+            "streaming": "bidirectional",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "chat.v1.ChatService.GetRoom",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "chat.v1.ChatService.GetRoom#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "chat.v1.GetRoomRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "chat.v1.ChatService.GetRoom#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "chat.v1.Room",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GetRoom",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "chat.v1.ChatService.ImportHistory",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "chat.v1.ChatService.ImportHistory#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "chat.v1.Event",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "chat.v1.ChatService.ImportHistory#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "chat.v1.ImportSummary",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "ImportHistory",
+            "parameters": [],
+            "streaming": "client",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "chat.v1.ChatService.Subscribe",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "chat.v1.ChatService.Subscribe#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "chat.v1.GetRoomRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "chat.v1.ChatService.Subscribe#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "chat.v1.Event",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Subscribe",
+            "parameters": [],
+            "streaming": "server",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oneofs": [
+            "payload"
+          ],
+          "reserved_names": [
+            "author_nick"
+          ],
+          "reserved_ranges": [
+            [
+              2,
+              3
+            ],
+            [
+              6,
+              9
+            ]
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional",
+              "proto3_optional": true
+            },
+            "field_number": 9,
+            "key": "chat.v1.Event.client_event_id",
+            "name": "client_event_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional",
+              "oneof": "payload"
+            },
+            "field_number": 3,
+            "key": "chat.v1.Event.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "chat.v1.Event.Message",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional",
+              "oneof": "payload"
+            },
+            "field_number": 5,
+            "key": "chat.v1.Event.presence",
+            "name": "presence",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "chat.v1.Event.Presence",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional",
+              "oneof": "payload"
+            },
+            "field_number": 4,
+            "key": "chat.v1.Event.reaction",
+            "name": "reaction",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "chat.v1.Event.Reaction",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "chat.v1.Event.room_id",
+            "name": "room_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "chat.v1.Event",
+        "key_type": null,
+        "kind": "record",
+        "name": "Event",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "chat.v1.Event.Message.author",
+            "name": "author",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "chat.v1.Event.Message.text",
+            "name": "text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "chat.v1.Event.Message",
+        "key_type": null,
+        "kind": "record",
+        "name": "Message",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "chat.v1.Event.Presence.kind",
+            "name": "kind",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "chat.v1.Event.Presence.Kind",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "chat.v1.Event.Presence.member",
+            "name": "member",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "chat.v1.Event.Presence",
+        "key_type": null,
+        "kind": "record",
+        "name": "Presence",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "chat.v1.Event.Presence.Kind.KIND_UNSPECIFIED",
+            "name": "KIND_UNSPECIFIED",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "chat.v1.Event.Presence.Kind.KIND_JOINED",
+            "name": "KIND_JOINED",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "chat.v1.Event.Presence.Kind.KIND_LEFT",
+            "name": "KIND_LEFT",
+            "value": 2
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "chat.v1.Event.Presence.Kind",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Kind",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "chat.v1.Event.Reaction.emoji",
+            "name": "emoji",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "chat.v1.Event.Reaction.target_event_id",
+            "name": "target_event_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "chat.v1.Event.Reaction",
+        "key_type": null,
+        "kind": "record",
+        "name": "Reaction",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "chat.v1.GetRoomRequest.room_id",
+            "name": "room_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "chat.v1.GetRoomRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "GetRoomRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "chat.v1.ImportSummary.imported",
+            "name": "imported",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "chat.v1.ImportSummary.skipped",
+            "name": "skipped",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "chat.v1.ImportSummary",
+        "key_type": null,
+        "kind": "record",
+        "name": "ImportSummary",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "chat.v1.Room.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 3,
+            "key": "chat.v1.Room.members",
+            "name": "members",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "chat.v1.Room.MembersEntry",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "chat.v1.Room.topic",
+            "name": "topic",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "chat.v1.Room",
+        "key_type": null,
+        "kind": "record",
+        "name": "Room",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "chat.v1.Room.MembersEntry",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "MembersEntry",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        }
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "connectrpc/04-chat-stress.proto",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 1,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "connectrpc"
+  },
+  "fingerprint": "sha256:842f2e0dcd8c5d575c66c95091e3dcdc28f17db78d6107961811962c3cd31612",
+  "lint": {
+    "findings": 39,
+    "grade": "F",
+    "report_fingerprint": "fe29036346796100cd44ac91d24322a4132cfc415445b037b4d32dd22cd675a5",
+    "score": 38,
+    "severity_counts": {
+      "error": 0,
+      "info": 26,
+      "warning": 13
+    }
+  },
+  "snapshot_version": 1
+}

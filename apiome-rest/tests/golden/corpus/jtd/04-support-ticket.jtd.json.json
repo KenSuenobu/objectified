@@ -1,0 +1,362 @@
+{
+  "adapter": "jtd",
+  "canonical": {
+    "channels": [],
+    "description": "A help-desk ticket with requester details, status, and free-form custom fields.",
+    "extras": {},
+    "format": "jtd",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "SupportTicket",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "SupportTicket",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SupportTicketStatus.open",
+            "name": "open",
+            "value": "open"
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SupportTicketStatus.pending",
+            "name": "pending",
+            "value": "pending"
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SupportTicketStatus.resolved",
+            "name": "resolved",
+            "value": "resolved"
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SupportTicketStatus.closed",
+            "name": "closed",
+            "value": "closed"
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "SupportTicketStatus",
+        "key_type": null,
+        "kind": "enum",
+        "name": "SupportTicketStatus",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Who opened the ticket.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SupportTicketRequester.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SupportTicketRequester.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "SupportTicketRequester",
+        "key_type": null,
+        "kind": "record",
+        "name": "SupportTicketRequester",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SupportTicketPriority.low",
+            "name": "low",
+            "value": "low"
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SupportTicketPriority.normal",
+            "name": "normal",
+            "value": "normal"
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SupportTicketPriority.high",
+            "name": "high",
+            "value": "high"
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SupportTicketPriority.urgent",
+            "name": "urgent",
+            "value": "urgent"
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "SupportTicketPriority",
+        "key_type": null,
+        "kind": "enum",
+        "name": "SupportTicketPriority",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A help-desk ticket with requester details, status, and free-form custom fields.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SupportTicket.ticketId",
+            "name": "ticketId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SupportTicket.subject",
+            "name": "subject",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SupportTicket.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "SupportTicketStatus",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SupportTicket.openedAt",
+            "name": "openedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Who opened the ticket.",
+            "extras": {},
+            "field_number": null,
+            "key": "SupportTicket.requester",
+            "name": "requester",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "SupportTicketRequester",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SupportTicket.assignee",
+            "name": "assignee",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SupportTicket.priority",
+            "name": "priority",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "SupportTicketPriority",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SupportTicket.tags",
+            "name": "tags",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Tenant-defined key/value annotations.",
+            "extras": {},
+            "field_number": null,
+            "key": "SupportTicket.customFields",
+            "name": "customFields",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "SupportTicket",
+        "key_type": null,
+        "kind": "record",
+        "name": "SupportTicket",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "jtd/04-support-ticket.jtd.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "jtd"
+  },
+  "fingerprint": "sha256:a51a4a3253271f692c48e1589dbcb9739805fdc8e1ea9e0819b6f523371717fd",
+  "lint": {
+    "findings": 11,
+    "grade": "B",
+    "report_fingerprint": "125464f975496dc125766fbec29277ff1863cd1881b6ed9d2b1cd9d4b2a1f1da",
+    "score": 83,
+    "severity_counts": {
+      "error": 0,
+      "info": 9,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

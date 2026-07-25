@@ -1,0 +1,246 @@
+{
+  "adapter": "arazzo",
+  "canonical": {
+    "channels": [],
+    "description": "Reuse and conflicts combined with branching and assertions",
+    "extras": {
+      "arazzo": "1.0.1",
+      "sourceDescriptions": [
+        {
+          "name": "AuthAPI",
+          "type": "openapi",
+          "url": "https://example.com/openapi/auth.json"
+        },
+        {
+          "name": "ProfileAPI",
+          "type": "openapi",
+          "url": "https://example.com/openapi/profile.json"
+        },
+        {
+          "name": "NotifyAPI",
+          "type": "openapi",
+          "url": "https://example.com/openapi/notify.json"
+        }
+      ]
+    },
+    "format": "arazzo",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Mixed Scenarios Workflow",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "User signs up, logs in, and creates profile; sends notification if verified",
+        "extras": {
+          "stepOrder": [
+            "Signup",
+            "Login",
+            "CreateProfile",
+            "Notify"
+          ],
+          "workflowId": "SignupLoginProfile"
+        },
+        "key": "SignupLoginProfile",
+        "name": "SignupLoginProfile",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "outputs": [
+                {
+                  "name": "profileId",
+                  "path": "$.id"
+                }
+              ],
+              "request": {
+                "operationId": "createProfile",
+                "parameters": {
+                  "body": {
+                    "displayName": "Test User",
+                    "id": "${userId}",
+                    "tags": [
+                      "alpha",
+                      "beta"
+                    ]
+                  },
+                  "headers": {
+                    "Authorization": "Bearer ${token}"
+                  }
+                },
+                "source": "ProfileAPI"
+              },
+              "stepId": "CreateProfile",
+              "stepIndex": 2,
+              "when": {
+                "expression": "${token != null}"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "SignupLoginProfile#CreateProfile",
+            "kind": "one_way",
+            "messages": [],
+            "name": "CreateProfile",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "SignupLoginProfile"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "outputs": [
+                {
+                  "name": "token",
+                  "path": "$.token"
+                }
+              ],
+              "request": {
+                "operationId": "login",
+                "parameters": {
+                  "body": {
+                    "email": "user@example.com",
+                    "password": "example-Password1"
+                  }
+                },
+                "source": "AuthAPI"
+              },
+              "stepId": "Login",
+              "stepIndex": 1
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "SignupLoginProfile#Login",
+            "kind": "one_way",
+            "messages": [],
+            "name": "Login",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "SignupLoginProfile"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "assertions": [
+                {
+                  "description": "Notification queued",
+                  "expression": "${response.status == 202}"
+                }
+              ],
+              "request": {
+                "operationId": "send",
+                "parameters": {
+                  "body": {
+                    "content": "Your profile ${profileId} was created",
+                    "subject": "Welcome",
+                    "to": "user@example.com"
+                  }
+                },
+                "source": "NotifyAPI"
+              },
+              "stepId": "Notify",
+              "stepIndex": 3,
+              "when": {
+                "expression": "${verified == true}"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "SignupLoginProfile#Notify",
+            "kind": "one_way",
+            "messages": [],
+            "name": "Notify",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "SignupLoginProfile"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "outputs": [
+                {
+                  "name": "userId",
+                  "path": "$.id"
+                },
+                {
+                  "name": "verified",
+                  "path": "$.verified"
+                }
+              ],
+              "request": {
+                "operationId": "signup",
+                "parameters": {
+                  "body": {
+                    "email": "user@example.com",
+                    "password": "example-Password1"
+                  }
+                },
+                "source": "AuthAPI"
+              },
+              "stepId": "Signup",
+              "stepIndex": 0
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "SignupLoginProfile#Signup",
+            "kind": "one_way",
+            "messages": [],
+            "name": "Signup",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "SignupLoginProfile"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Mixed Scenarios Workflow",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "arazzo/mixed-scenarios.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "arazzo"
+  },
+  "fingerprint": "sha256:7312f699dbaa4c0a68d990bc615dc02930caf589828b224c58822b7181128adc",
+  "lint": {
+    "findings": 8,
+    "grade": "D",
+    "report_fingerprint": "dd78e8243db1bdc686852c03a40a8f653b38613387f67846daff8f30e404d81c",
+    "score": 68,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,387 @@
+{
+  "adapter": "fhir",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "fhir_kind": "structure_definition",
+      "fhir_structure_definition": {
+        "abstract": false,
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation",
+        "derivation": "constraint",
+        "elements": [
+          {
+            "field_name": "status",
+            "max": "1",
+            "min": 1,
+            "path": "Observation.status",
+            "short": "registered | preliminary | final | amended",
+            "types": [
+              {
+                "code": "code",
+                "profile": null
+              }
+            ]
+          },
+          {
+            "field_name": "code",
+            "max": "1",
+            "min": 1,
+            "path": "Observation.code",
+            "short": "Type of observation (what was measured)",
+            "types": [
+              {
+                "code": "CodeableConcept",
+                "profile": null
+              }
+            ]
+          },
+          {
+            "field_name": "valueQuantity",
+            "max": "1",
+            "min": 0,
+            "path": "Observation.valueQuantity",
+            "short": "Measured value",
+            "types": [
+              {
+                "code": "Quantity",
+                "profile": null
+              }
+            ]
+          }
+        ],
+        "id": "SimpleObservation",
+        "kind": "resource",
+        "name": "SimpleObservation",
+        "status": "draft",
+        "type": "Observation",
+        "url": "http://example.com/fhir/StructureDefinition/SimpleObservation"
+      }
+    },
+    "format": "fhir",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "SimpleObservation",
+      "namespace": "SimpleObservation"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "SimpleObservation.Observation",
+        "name": "Observation",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fhir_interaction": "search-type"
+            },
+            "http_method": "GET",
+            "http_path": "/Observation",
+            "key": "GET /Observation",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/fhir+json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Observation#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "SimpleObservation.Observation",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "searchObservation",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Observation#query._count",
+                "location": "query",
+                "name": "_count",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fhir_interaction": "read"
+            },
+            "http_method": "GET",
+            "http_path": "/Observation/{id}",
+            "key": "GET /Observation/{id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/fhir+json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Observation/{id}#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "SimpleObservation.Observation",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "readObservation",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "fhir_interaction": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Observation",
+            "key": "POST /Observation",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/fhir+json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Observation#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "SimpleObservation.Observation",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/fhir+json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Observation#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "SimpleObservation.Observation",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createObservation",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "SimpleObservation",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fhir_kind": "complex",
+          "fhir_placeholder": true
+        },
+        "fields": [],
+        "key": "SimpleObservation.CodeableConcept",
+        "key_type": null,
+        "kind": "record",
+        "name": "CodeableConcept",
+        "namespace": "SimpleObservation",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fhir_kind": "resource"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Type of observation (what was measured)",
+            "extras": {
+              "fhir_max": "1",
+              "fhir_min": 1,
+              "fhir_path": "Observation.code",
+              "fhir_profiles": [],
+              "fhir_type": "CodeableConcept"
+            },
+            "field_number": 2,
+            "key": "SimpleObservation.Observation.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "SimpleObservation.CodeableConcept",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "registered | preliminary | final | amended",
+            "extras": {
+              "fhir_max": "1",
+              "fhir_min": 1,
+              "fhir_path": "Observation.status",
+              "fhir_profiles": [],
+              "fhir_type": "code"
+            },
+            "field_number": 1,
+            "key": "SimpleObservation.Observation.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Measured value",
+            "extras": {
+              "fhir_max": "1",
+              "fhir_min": 0,
+              "fhir_path": "Observation.valueQuantity",
+              "fhir_profiles": [],
+              "fhir_type": "Quantity"
+            },
+            "field_number": 3,
+            "key": "SimpleObservation.Observation.valueQuantity",
+            "name": "valueQuantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "SimpleObservation.Quantity",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "SimpleObservation.Observation",
+        "key_type": null,
+        "kind": "record",
+        "name": "Observation",
+        "namespace": "SimpleObservation",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "fhir_kind": "complex",
+          "fhir_placeholder": true
+        },
+        "fields": [],
+        "key": "SimpleObservation.Quantity",
+        "key_type": null,
+        "kind": "record",
+        "name": "Quantity",
+        "namespace": "SimpleObservation",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "fhir/02-patient-structuredefinition.json",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "fhir"
+  },
+  "fingerprint": "sha256:8215a5396d34ccdba7494319a78e0034aa00feab082fd1978b84a31e831c9670",
+  "lint": {
+    "findings": 11,
+    "grade": "C",
+    "report_fingerprint": "9129409e425eda867ea42a907df8644981b1797e44008588935e3bb5a4d6c563",
+    "score": 71,
+    "severity_counts": {
+      "error": 0,
+      "info": 5,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

@@ -3,102 +3,38 @@
 Every valid corpus entry must (a) be claimed by its own adapter's ``detect()``
 at the confidence the manifest records, and (b) run parse → normalize → lint
 without an unhandled exception. Known adapter bugs are recorded explicitly in
-:data:`KNOWN_DETECTION_BUGS` / :data:`KNOWN_IMPORT_BUGS` (strict xfail, so a
-fixed adapter forces the entry's removal) rather than silently skipped —
-mirroring the manifest's ``notes`` convention from IXH-1.1.
+:data:`~tests.corpus_adapter_support.KNOWN_DETECTION_BUGS` /
+:data:`~tests.corpus_adapter_support.KNOWN_IMPORT_BUGS` (strict xfail, so a fixed
+adapter forces the entry's removal) rather than silently skipped — mirroring the
+manifest's ``notes`` convention from IXH-1.1.
 
 Multi-file sets are exercised through their root via
 :meth:`~app.import_source.ImportSource.parse_fileset`; member files are not
 parsed standalone (they only exist to be referenced by their set's root).
+
+The entry selection, tool gating, known-bug maps, and fileset assembly live in
+:mod:`tests.corpus_adapter_support`, shared with the IXH-1.6 golden runner
+(:mod:`tests.test_corpus_golden`) so both suites gate on the same knowledge.
 """
 
 from __future__ import annotations
 
-from functools import lru_cache
 from pathlib import PurePosixPath
-from typing import Dict, List
 
 import pytest
-from corpus_loader import (
-    CorpusEntry,
-    FilesetRole,
-    ValidityClass,
-    load_corpus,
+from corpus_adapter_support import (
+    KNOWN_DETECTION_BUGS,
+    KNOWN_IMPORT_BUGS,
+    adapter_for,
+    build_fileset,
+    missing_tools,
+    valid_entries,
 )
+from corpus_loader import CorpusEntry, FilesetRole
 
-from app.fileset import IntakeFileset
-from app.import_source import (
-    DetectionInput,
-    get_import_source,
-    load_builtin_import_sources,
-)
-from app.toolchain_packaging import probe_tool
+from app.import_source import DetectionInput, load_builtin_import_sources
 
 load_builtin_import_sources()
-
-#: Corpus entries whose own adapter cannot claim them yet. Path -> reason.
-#: Keep in sync with the entry's manifest ``notes``; strict xfail means a
-#: fixed adapter fails the suite until the entry is removed from this map.
-KNOWN_DETECTION_BUGS: Dict[str, str] = {
-    "fix/02-orchestra.xml": (
-        "FIX Orchestra XML is not yet recognized by the fix adapter "
-        "(no Orchestra parser); the manifest records the intended contract."
-    ),
-    "cloudevents/03-order-lifecycle-batch.json": (
-        "The cloudevents adapter's detect delegates to parse_document, which "
-        "rejects top-level JSON arrays, so a spec-valid CloudEvents batch "
-        "returns NO_MATCH even though is_cloudevents_document accepts lists."
-    ),
-}
-
-#: Corpus entries whose import (parse/normalize/lint) crashes on a known
-#: adapter bug. Path -> reason. Same strict-xfail convention as above.
-KNOWN_IMPORT_BUGS: Dict[str, str] = {
-    "fix/02-orchestra.xml": (
-        "The fix adapter has no Orchestra parser; parse raises until the "
-        "detection-hardening epic adds one."
-    ),
-    "asn1/07-scalar-alias-typedefs.asn1": (
-        "asn1_normalizer builds Type(scalar=...) / Type(alias_of=...) for "
-        "top-level scalar and SEQUENCE OF typedefs, but canonical Type has "
-        "no such fields, so normalize raises a pydantic ValidationError."
-    ),
-    "cloudevents/03-order-lifecycle-batch.json": (
-        "parse_cloudevents documents a batch-array mode, but it delegates to "
-        "parse_document, which raises IngestionError for top-level arrays, "
-        "making the batch branch unreachable."
-    ),
-}
-
-@lru_cache(maxsize=None)
-def _tool_available(tool: str) -> bool:
-    """Whether an adapter-required external tool resolves in this runtime."""
-    return bool(getattr(probe_tool(tool), "available", False))
-
-
-def _missing_tools(adapter_key: str) -> List[str]:
-    """The adapter's ``required_tools`` that are unavailable in this runtime.
-
-    Mirrors test_grpc_import_source's buf gate: parse steps that shell out to
-    a bundled tool (buf, asyncapi-parser, ...) are skipped, not failed, when
-    the tool cannot resolve.
-    """
-    adapter = get_import_source(adapter_key)
-    return [
-        tool
-        for tool in getattr(adapter, "required_tools", ())
-        if not _tool_available(tool)
-    ]
-
-
-def _valid_entries() -> List[CorpusEntry]:
-    """Valid entries owned by an adapter, excluding fileset members."""
-    return [
-        entry
-        for entry in load_corpus(validity_class=ValidityClass.VALID)
-        if entry.adapter_key is not None
-        and entry.fileset_role is not FilesetRole.MEMBER
-    ]
 
 
 def _detection_param(entry: CorpusEntry) -> "pytest.param":
@@ -112,7 +48,7 @@ def _import_param(entry: CorpusEntry) -> "pytest.param":
     marks = []
     if entry.path in KNOWN_IMPORT_BUGS:
         marks.append(pytest.mark.xfail(reason=KNOWN_IMPORT_BUGS[entry.path], strict=True))
-    missing = _missing_tools(entry.adapter_key or "")
+    missing = missing_tools(entry.adapter_key or "")
     if missing:
         marks.append(
             pytest.mark.skip(
@@ -122,20 +58,9 @@ def _import_param(entry: CorpusEntry) -> "pytest.param":
     return pytest.param(entry, id=entry.path, marks=marks)
 
 
-def _build_fileset(entry: CorpusEntry) -> IntakeFileset:
-    """Assemble the IntakeFileset for a multi-file set's root entry."""
-    set_dir = entry.absolute_path.parent
-    members = {
-        path.name: path.read_text(encoding="utf-8")
-        for path in sorted(set_dir.iterdir())
-        if path.is_file()
-    }
-    return IntakeFileset.from_members(members, root=entry.absolute_path.name)
-
-
-@pytest.mark.parametrize("entry", [_detection_param(e) for e in _valid_entries()])
+@pytest.mark.parametrize("entry", [_detection_param(e) for e in valid_entries()])
 def test_adapter_claims_example_at_recorded_confidence(entry: CorpusEntry) -> None:
-    adapter = get_import_source(entry.adapter_key)
+    adapter = adapter_for(entry)
     result = adapter.detect(
         DetectionInput(
             text=entry.read_text(),
@@ -153,11 +78,11 @@ def test_adapter_claims_example_at_recorded_confidence(entry: CorpusEntry) -> No
     )
 
 
-@pytest.mark.parametrize("entry", [_import_param(e) for e in _valid_entries()])
+@pytest.mark.parametrize("entry", [_import_param(e) for e in valid_entries()])
 def test_example_parses_normalizes_and_lints(entry: CorpusEntry) -> None:
-    adapter = get_import_source(entry.adapter_key)
+    adapter = adapter_for(entry)
     if entry.fileset_role is FilesetRole.ROOT:
-        native_ast = adapter.parse_fileset(_build_fileset(entry), source_label=entry.path)
+        native_ast = adapter.parse_fileset(build_fileset(entry), source_label=entry.path)
     else:
         native_ast = adapter.parse(entry.read_text(), source_label=entry.path)
     model = adapter.normalize(native_ast)

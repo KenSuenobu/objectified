@@ -1,0 +1,440 @@
+{
+  "adapter": "zosconnect",
+  "canonical": {
+    "channels": [],
+    "description": "Inbound provider whose operations share copybook-derived structures.",
+    "extras": {
+      "zosconnect_api": {
+        "basePath": "https://mainframe.example.com/accounts",
+        "specification": "openapi-3.0",
+        "title": "Account API"
+      },
+      "zosconnect_descriptor": {
+        "description": "Inbound provider whose operations share copybook-derived structures.",
+        "name": "AccountProvider",
+        "version": "2.1.0"
+      },
+      "zosconnect_kind": "provider",
+      "zosconnect_language": {
+        "codepage": "IBM-1047",
+        "type": "cobol"
+      },
+      "zosconnect_operations": [
+        {
+          "method": "GET",
+          "operationId": "getAccount",
+          "path": "/accounts/{accountId}",
+          "pathParameters": [
+            {
+              "field": "ACCT-ID",
+              "name": "accountId",
+              "type": "string"
+            }
+          ],
+          "program": "ACCTMGR",
+          "requestStructure": "ACCOUNT-KEY",
+          "responseStructure": "ACCOUNT-RECORD"
+        },
+        {
+          "method": "PUT",
+          "operationId": "replaceAccount",
+          "path": "/accounts/{accountId}",
+          "pathParameters": [
+            {
+              "field": "ACCT-ID",
+              "name": "accountId",
+              "type": "string"
+            }
+          ],
+          "program": "ACCTMGR",
+          "requestStructure": "ACCOUNT-RECORD",
+          "responseStructure": "ACCOUNT-RECORD"
+        },
+        {
+          "method": "DELETE",
+          "operationId": "deleteAccount",
+          "path": "/accounts/{accountId}",
+          "pathParameters": [
+            {
+              "field": "ACCT-ID",
+              "name": "accountId",
+              "type": "string"
+            }
+          ],
+          "program": "ACCTMGR",
+          "requestStructure": "ACCOUNT-KEY",
+          "responseStructure": "ACCOUNT-STATUS"
+        }
+      ]
+    },
+    "format": "zosconnect",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Account API",
+      "namespace": "AccountProvider"
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From z/OS Connect `api.basePath`",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://mainframe.example.com/accounts",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "AccountProvider.AccountProvider",
+        "name": "AccountProvider",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": "ACCTMGR",
+              "zosconnect_request_structure": "ACCOUNT-KEY",
+              "zosconnect_response_structure": "ACCOUNT-STATUS"
+            },
+            "http_method": "DELETE",
+            "http_path": "/accounts/{accountId}",
+            "key": "DELETE /accounts/{accountId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "DELETE /accounts/{accountId}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "AccountProvider.ACCOUNT-KEY",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "DELETE /accounts/{accountId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "AccountProvider.ACCOUNT-STATUS",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "deleteAccount",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "ACCT-ID",
+                  "zosconnect_type": "string"
+                },
+                "key": "DELETE /accounts/{accountId}#path.accountId",
+                "location": "path",
+                "name": "accountId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": "ACCTMGR",
+              "zosconnect_request_structure": "ACCOUNT-KEY",
+              "zosconnect_response_structure": "ACCOUNT-RECORD"
+            },
+            "http_method": "GET",
+            "http_path": "/accounts/{accountId}",
+            "key": "GET /accounts/{accountId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /accounts/{accountId}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "AccountProvider.ACCOUNT-KEY",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "GET /accounts/{accountId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "AccountProvider.ACCOUNT-RECORD",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "getAccount",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "ACCT-ID",
+                  "zosconnect_type": "string"
+                },
+                "key": "GET /accounts/{accountId}#path.accountId",
+                "location": "path",
+                "name": "accountId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": "ACCTMGR",
+              "zosconnect_request_structure": "ACCOUNT-RECORD",
+              "zosconnect_response_structure": "ACCOUNT-RECORD"
+            },
+            "http_method": "PUT",
+            "http_path": "/accounts/{accountId}",
+            "key": "PUT /accounts/{accountId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PUT /accounts/{accountId}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "AccountProvider.ACCOUNT-RECORD",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "PUT /accounts/{accountId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "AccountProvider.ACCOUNT-RECORD",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "replaceAccount",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "ACCT-ID",
+                  "zosconnect_type": "string"
+                },
+                "key": "PUT /accounts/{accountId}#path.accountId",
+                "location": "path",
+                "name": "accountId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Account API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Path parameter `accountId`",
+            "extras": {
+              "zosconnect_path_parameter": "accountId"
+            },
+            "field_number": 1,
+            "key": "AccountProvider.ACCOUNT-KEY.ACCT-ID",
+            "name": "ACCT-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "AccountProvider.ACCOUNT-KEY",
+        "key_type": null,
+        "kind": "record",
+        "name": "ACCOUNT-KEY",
+        "namespace": "AccountProvider",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "AccountProvider.ACCOUNT-RECORD",
+        "key_type": null,
+        "kind": "record",
+        "name": "ACCOUNT-RECORD",
+        "namespace": "AccountProvider",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "AccountProvider.ACCOUNT-STATUS",
+        "key_type": null,
+        "kind": "record",
+        "name": "ACCOUNT-STATUS",
+        "namespace": "AccountProvider",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "2.1.0"
+  },
+  "corpus_path": "zos-connect/04-shared-structures-provider.json",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 1,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "zosconnect"
+  },
+  "fingerprint": "sha256:09f4e94a3f44e5f16ab276f9703d8be6884665aefa5cd9d27a427e6fd547ea4e",
+  "lint": {
+    "findings": 12,
+    "grade": "C",
+    "report_fingerprint": "2be07781a3f98467bf2aebed464b6bde0653b7bc962905cf65455ab975958c81",
+    "score": 70,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,421 @@
+{
+  "adapter": "xmlrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "xmlrpc_kind": "methodResponse"
+    },
+    "format": "xmlrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "XML-RPC Response",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": "xmlrpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "XML-RPC Response",
+        "name": "XML-RPC Response",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xmlrpc_fault_code": null,
+              "xmlrpc_fault_string": null,
+              "xmlrpc_kind": "methodResponse"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "XML-RPC Response.response",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "xmlrpc_result_schema": {
+                    "$ref": "#/components/schemas/ResponseResponse"
+                  },
+                  "xmlrpc_sample": {
+                    "bigI8": 9007199254740993,
+                    "deprecatedField": null,
+                    "enabled": false,
+                    "generatedAt": "20260504T09:30:00",
+                    "label": "all wire types",
+                    "legacyI4": -7,
+                    "lineItems": [
+                      {
+                        "quantity": 2,
+                        "sku": "WIDGET-001"
+                      }
+                    ],
+                    "matrix": [
+                      [
+                        1,
+                        2
+                      ],
+                      [
+                        3,
+                        4
+                      ]
+                    ],
+                    "plainInt": 42,
+                    "ratio": -3.14159,
+                    "thumbnail": "iVBORw0KGgoAAAANSUhEUg=="
+                  }
+                },
+                "headers": [],
+                "key": "XML-RPC Response.response#response",
+                "name": "result",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ResponseResponse",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "response",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "XML-RPC Response",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xmlrpc_kind": "struct",
+          "xmlrpc_samples": {
+            "bigI8": 9007199254740993,
+            "deprecatedField": null,
+            "enabled": false,
+            "generatedAt": "20260504T09:30:00",
+            "label": "all wire types",
+            "legacyI4": -7,
+            "lineItems": [
+              {
+                "quantity": 2,
+                "sku": "WIDGET-001"
+              }
+            ],
+            "matrix": [
+              [
+                1,
+                2
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "plainInt": 42,
+            "ratio": -3.14159,
+            "thumbnail": "iVBORw0KGgoAAAANSUhEUg=="
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "ResponseResponse.bigI8",
+            "name": "bigI8",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 9,
+            "key": "ResponseResponse.deprecatedField",
+            "name": "deprecatedField",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "null",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "ResponseResponse.enabled",
+            "name": "enabled",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "ResponseResponse.generatedAt",
+            "name": "generatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 6,
+            "key": "ResponseResponse.label",
+            "name": "label",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "ResponseResponse.legacyI4",
+            "name": "legacyI4",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 10,
+            "key": "ResponseResponse.lineItems",
+            "name": "lineItems",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "ResponseResponse_lineItemsItem",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 11,
+            "key": "ResponseResponse.matrix",
+            "name": "matrix",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": false
+                },
+                "name": null,
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "ResponseResponse.plainInt",
+            "name": "plainInt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "ResponseResponse.ratio",
+            "name": "ratio",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 8,
+            "key": "ResponseResponse.thumbnail",
+            "name": "thumbnail",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ResponseResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "ResponseResponse",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xmlrpc_kind": "struct",
+          "xmlrpc_samples": {
+            "quantity": 2,
+            "sku": "WIDGET-001"
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "ResponseResponse_lineItemsItem.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "ResponseResponse_lineItemsItem.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ResponseResponse_lineItemsItem",
+        "key_type": null,
+        "kind": "record",
+        "name": "ResponseResponse_lineItemsItem",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "xml-rpc/05-all-types-response.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "xmlrpc"
+  },
+  "fingerprint": "sha256:0a8559e496a9d59b3fad1cc4c5add5b3f781f1f942aa17dc3027e6456a8ff115",
+  "lint": {
+    "findings": 18,
+    "grade": "C",
+    "report_fingerprint": "697e472b9fc227ad174cce06ccc079ed714239ba3be50958c2a81724fa52c56b",
+    "score": 73,
+    "severity_counts": {
+      "error": 0,
+      "info": 15,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

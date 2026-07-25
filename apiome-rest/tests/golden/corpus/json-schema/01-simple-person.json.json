@@ -1,0 +1,130 @@
+{
+  "adapter": "json-schema",
+  "canonical": {
+    "channels": [],
+    "description": "A simple person schema for testing basic JSON Schema import",
+    "extras": {},
+    "format": "json-schema",
+    "identity": {
+      "extras": {},
+      "id": "https://example.com/person.json",
+      "name": "Person",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Person",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A simple person schema for testing basic JSON Schema import",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The person's first name",
+            "extras": {},
+            "field_number": null,
+            "key": "Person.firstName",
+            "name": "firstName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The person's last name",
+            "extras": {},
+            "field_number": null,
+            "key": "Person.lastName",
+            "name": "lastName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Age in years",
+            "extras": {},
+            "field_number": null,
+            "key": "Person.age",
+            "name": "age",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Email address",
+            "extras": {},
+            "field_number": null,
+            "key": "Person.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Person",
+        "key_type": null,
+        "kind": "record",
+        "name": "Person",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "json-schema/01-simple-person.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "json-schema-2020-12"
+  },
+  "fingerprint": "sha256:4ddf8f1c393e11be6c02971d554efe9452ea50b174fae307cf39a15785904e27",
+  "lint": {
+    "findings": 0,
+    "grade": "A",
+    "report_fingerprint": "49f00aff0ad03525a1e73592c60211f9f8572853ba37d488054fdb78f1f77bd1",
+    "score": 100,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

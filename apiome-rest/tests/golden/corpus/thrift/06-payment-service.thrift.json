@@ -1,0 +1,528 @@
+{
+  "adapter": "thrift",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "thrift_includes": [],
+      "thrift_namespaces": {
+        "java": "com.example.payments"
+      },
+      "thrift_typedefs": {}
+    },
+    "format": "thrift",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "com.example.payments",
+      "namespace": "com.example.payments"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "com.example.payments.PaymentService",
+        "name": "PaymentService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_oneway": false
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.payments.PaymentService.authorize",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "thrift_throw_id": 1
+                },
+                "headers": [],
+                "key": "com.example.payments.PaymentService.authorize#error.d",
+                "name": "d",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.PaymentDeclined",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.payments.PaymentService.authorize#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.Payment",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.payments.PaymentService.authorize#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.Payment",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "authorize",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_oneway": false
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.payments.PaymentService.capture",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.payments.PaymentService.capture#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.payments.PaymentService.capture#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.Payment",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "capture",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_oneway": false
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.payments.PaymentService.refund",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "thrift_throw_id": 1
+                },
+                "headers": [],
+                "key": "com.example.payments.PaymentService.refund#error.d",
+                "name": "d",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.PaymentDeclined",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.payments.PaymentService.refund#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.RefundRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.payments.PaymentService.refund#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.Payment",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "refund",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": true
+            },
+            "field_number": 2,
+            "key": "com.example.payments.Payment.amountMinor",
+            "name": "amountMinor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": true
+            },
+            "field_number": 3,
+            "key": "com.example.payments.Payment.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": true
+            },
+            "field_number": 1,
+            "key": "com.example.payments.Payment.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 4,
+            "key": "com.example.payments.Payment.method",
+            "name": "method",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.PaymentMethod",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 5,
+            "key": "com.example.payments.Payment.reference",
+            "name": "reference",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.payments.Payment",
+        "key_type": null,
+        "kind": "record",
+        "name": "Payment",
+        "namespace": "com.example.payments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_kind": "exception"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 2,
+            "key": "com.example.payments.PaymentDeclined.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 1,
+            "key": "com.example.payments.PaymentDeclined.reason",
+            "name": "reason",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.payments.PaymentDeclined",
+        "key_type": null,
+        "kind": "record",
+        "name": "PaymentDeclined",
+        "namespace": "com.example.payments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.PaymentMethod.CARD",
+            "name": "CARD",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.PaymentMethod.BANK",
+            "name": "BANK",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.PaymentMethod.WALLET",
+            "name": "WALLET",
+            "value": 3
+          }
+        ],
+        "extras": {
+          "thrift_kind": "enum"
+        },
+        "fields": [],
+        "key": "com.example.payments.PaymentMethod",
+        "key_type": null,
+        "kind": "enum",
+        "name": "PaymentMethod",
+        "namespace": "com.example.payments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "thrift_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": false
+            },
+            "field_number": 2,
+            "key": "com.example.payments.RefundRequest.amountMinor",
+            "name": "amountMinor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "thrift_required": true
+            },
+            "field_number": 1,
+            "key": "com.example.payments.RefundRequest.paymentId",
+            "name": "paymentId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.payments.RefundRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "RefundRequest",
+        "namespace": "com.example.payments",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "thrift/06-payment-service.thrift",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "thrift"
+  },
+  "fingerprint": "sha256:da65b7e03263221202e58f0459bda276e942b44938d9c7acd1a80e8987e74527",
+  "lint": {
+    "findings": 25,
+    "grade": "F",
+    "report_fingerprint": "d4ae8518444124586007fa8f9f4c8dec89fa8cc937bca67f2801ba4aebcf9a02",
+    "score": 54,
+    "severity_counts": {
+      "error": 0,
+      "info": 18,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

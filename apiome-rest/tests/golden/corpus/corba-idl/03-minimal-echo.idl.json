@@ -1,0 +1,133 @@
+{
+  "adapter": "corbaidl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "corbaidl_interfaces": [
+        {
+          "name": "Echo",
+          "operations": [
+            {
+              "name": "echo",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "message",
+                  "type": "string"
+                }
+              ],
+              "raises": [],
+              "return_type": "string"
+            }
+          ]
+        }
+      ],
+      "corbaidl_module": "Ping",
+      "corbaidl_typedefs": {}
+    },
+    "format": "corbaidl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ping",
+      "namespace": "Ping"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Ping.Echo",
+        "name": "Echo",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Ping.Echo.echo",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "Ping.Echo.echo#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Ping.Echo.echo#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "echo",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "corba-idl/03-minimal-echo.idl",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "corbaidl"
+  },
+  "fingerprint": "sha256:899854493083a9b8629c6b9223a68811735bc5c9b2af858f2666e5207c75d4f8",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "2dbe1dfc239ab2653e145141c72aeb862c81eac38550d3923b501029a7ec3324",
+    "score": 93,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

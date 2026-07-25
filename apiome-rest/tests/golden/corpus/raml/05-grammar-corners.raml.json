@@ -1,0 +1,663 @@
+{
+  "adapter": "raml",
+  "canonical": {
+    "channels": [],
+    "description": "Exercises the less common corners of the RAML 1.0 grammar.",
+    "extras": {
+      "raml_media_type": "application/json",
+      "raml_version": "1.0"
+    },
+    "format": "raml",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Archive Vault API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From RAML baseUri",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://{region}.vault.example.com/v3",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Archive Vault API",
+        "name": "Archive Vault API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List archives with optional filters.",
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/archives",
+            "key": "GET /archives",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /archives#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ArchiveEntry",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GET /archives",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Only archives created after this date.",
+                "extras": {
+                  "raml_type": "date-only"
+                },
+                "key": "GET /archives#query.createdAfter",
+                "location": "query",
+                "name": "createdAfter",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Filter by lifecycle state.",
+                "extras": {
+                  "raml_type": "ArchiveState"
+                },
+                "key": "GET /archives#query.state",
+                "location": "query",
+                "name": "state",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ArchiveState",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Fetch one archive.",
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/archives/{archiveId}",
+            "key": "GET /archives/{archiveId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /archives/{archiveId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ArchiveEntry",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GET /archives/{archiveId}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Identifier of the archive.",
+                "extras": {
+                  "raml_type": "string"
+                },
+                "key": "GET /archives/{archiveId}#path.archiveId",
+                "location": "path",
+                "name": "archiveId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Existence probe without a response body.",
+            "extras": {},
+            "http_method": "HEAD",
+            "http_path": "/archives/{archiveId}",
+            "key": "HEAD /archives/{archiveId}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "HEAD /archives/{archiveId}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Identifier of the archive.",
+                "extras": {
+                  "raml_type": "string"
+                },
+                "key": "HEAD /archives/{archiveId}#path.archiveId",
+                "location": "path",
+                "name": "archiveId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Discover the allowed methods.",
+            "extras": {},
+            "http_method": "OPTIONS",
+            "http_path": "/archives/{archiveId}/attachments",
+            "key": "OPTIONS /archives/{archiveId}/attachments",
+            "kind": "request_response",
+            "messages": [],
+            "name": "OPTIONS /archives/{archiveId}/attachments",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Partially update archive metadata.",
+            "extras": {},
+            "http_method": "PATCH",
+            "http_path": "/archives/{archiveId}",
+            "key": "PATCH /archives/{archiveId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PATCH /archives/{archiveId}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "object",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "PATCH /archives/{archiveId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ArchiveEntry",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "PATCH /archives/{archiveId}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Identifier of the archive.",
+                "extras": {
+                  "raml_type": "string"
+                },
+                "key": "PATCH /archives/{archiveId}#path.archiveId",
+                "location": "path",
+                "name": "archiveId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Attach a file to the archive.",
+            "extras": {},
+            "http_method": "POST",
+            "http_path": "/archives/{archiveId}/attachments",
+            "key": "POST /archives/{archiveId}/attachments",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /archives/{archiveId}/attachments#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Attachment",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "201"
+                },
+                "headers": [],
+                "key": "POST /archives/{archiveId}/attachments#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Attachment",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "POST /archives/{archiveId}/attachments",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Archive Vault API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One archive held in the vault.",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Files stored in the archive.",
+            "extras": {
+              "raml_type": "Attachment[]"
+            },
+            "field_number": 7,
+            "key": "ArchiveEntry.attachments",
+            "name": "attachments",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Attachment",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Creation date.",
+            "extras": {
+              "raml_type": "date-only"
+            },
+            "field_number": 3,
+            "key": "ArchiveEntry.createdOn",
+            "name": "createdOn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Daily ingest cutoff time, if configured.",
+            "extras": {
+              "raml_type": "time-only"
+            },
+            "field_number": 5,
+            "key": "ArchiveEntry.dailyCutoff",
+            "name": "dailyCutoff",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Archive identifier.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 1,
+            "key": "ArchiveEntry.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "When the archive was sealed, if it was.",
+            "extras": {
+              "raml_type": "datetime"
+            },
+            "field_number": 4,
+            "key": "ArchiveEntry.sealedAt",
+            "name": "sealedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Current lifecycle state.",
+            "extras": {
+              "raml_type": "ArchiveState"
+            },
+            "field_number": 2,
+            "key": "ArchiveEntry.state",
+            "name": "state",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ArchiveState",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Free-form labels.",
+            "extras": {
+              "raml_type": "array"
+            },
+            "field_number": 6,
+            "key": "ArchiveEntry.tags",
+            "name": "tags",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "array",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ArchiveEntry",
+        "key_type": null,
+        "kind": "record",
+        "name": "ArchiveEntry",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Lifecycle state of an archive.",
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "ArchiveState.open",
+            "name": "open",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "ArchiveState.sealed",
+            "name": "sealed",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "ArchiveState.purged",
+            "name": "purged",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "raml_kind": "enum"
+        },
+        "fields": [],
+        "key": "ArchiveState",
+        "key_type": null,
+        "kind": "enum",
+        "name": "ArchiveState",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Binary payload metadata.",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Optional SHA-256 checksum supplied by the client.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 4,
+            "key": "Attachment.checksum",
+            "name": "checksum",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The uploaded bytes.",
+            "extras": {
+              "raml_type": "file"
+            },
+            "field_number": 2,
+            "key": "Attachment.content",
+            "name": "content",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Original client-side file name.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 1,
+            "key": "Attachment.fileName",
+            "name": "fileName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Payload size in bytes.",
+            "extras": {
+              "raml_type": "integer"
+            },
+            "field_number": 3,
+            "key": "Attachment.sizeBytes",
+            "name": "sizeBytes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Attachment",
+        "key_type": null,
+        "kind": "record",
+        "name": "Attachment",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v3"
+  },
+  "corpus_path": "raml/05-grammar-corners.raml",
+  "counts": {
+    "channels": 0,
+    "operations": 6,
+    "servers": 1,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "raml"
+  },
+  "fingerprint": "sha256:4fa767326d2a13ec80584c51d5351998e6a219b5d18518c05c8b09706bdcd7df",
+  "lint": {
+    "findings": 6,
+    "grade": "A",
+    "report_fingerprint": "1ba1fac7350b886965dd9d83078024d36af2718b5aa40db2ea1859253c16f468",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

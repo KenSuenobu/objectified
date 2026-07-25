@@ -1,0 +1,228 @@
+{
+  "adapter": "grpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {},
+    "format": "protobuf",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.user.v1",
+      "namespace": "example.user.v1"
+    },
+    "paradigm": "rpc",
+    "protocol": "grpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.user.v1.Status.STATUS_UNSPECIFIED",
+            "name": "STATUS_UNSPECIFIED",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.user.v1.Status.STATUS_ACTIVE",
+            "name": "STATUS_ACTIVE",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.user.v1.Status.STATUS_SUSPENDED",
+            "name": "STATUS_SUSPENDED",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.user.v1.Status.STATUS_DELETED",
+            "name": "STATUS_DELETED",
+            "value": 3
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "example.user.v1.Status",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Status",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 6,
+            "key": "example.user.v1.User.created_at",
+            "name": "created_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "example.user.v1.User.display_name",
+            "name": "display_name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.user.v1.User.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.user.v1.User.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 5,
+            "key": "example.user.v1.User.roles",
+            "name": "roles",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 4,
+            "key": "example.user.v1.User.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.user.v1.Status",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.user.v1.User",
+        "key_type": null,
+        "kind": "record",
+        "name": "User",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "protobuf/01-simple-user.proto",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "protobuf"
+  },
+  "fingerprint": "sha256:6b00301cf794355c133719868cad5a75cc718b4fb65ecdfbffa92c647d1df589",
+  "lint": {
+    "findings": 9,
+    "grade": "B",
+    "report_fingerprint": "426eeb4980d2006dc93e5c451651f0af75f0a3aa6f8bbc98ad50adf6763c60f0",
+    "score": 85,
+    "severity_counts": {
+      "error": 0,
+      "info": 7,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

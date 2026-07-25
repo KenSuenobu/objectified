@@ -1,0 +1,259 @@
+{
+  "adapter": "cloudevents",
+  "canonical": {
+    "channels": [
+      {
+        "address": "com.example.order.created",
+        "bindings": {},
+        "description": "CloudEvents channel for `com.example.order.created`",
+        "extras": {
+          "cloudevents_source": "/orders/service",
+          "cloudevents_subject": "order/9f2c"
+        },
+        "key": "com.example.order.created",
+        "name": "com.example.order.created",
+        "parameters": [],
+        "protocol": "cloudevents"
+      }
+    ],
+    "description": null,
+    "extras": {
+      "cloudevents_event_count": 1
+    },
+    "format": "cloudevents",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "com.example.order.created",
+      "namespace": null
+    },
+    "paradigm": "event",
+    "protocol": "cloudevents",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "com.example.order.created",
+        "name": "com.example.order.created",
+        "operations": [
+          {
+            "channel_ref": "com.example.order.created",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cloudevents_datacontenttype": "application/json",
+              "cloudevents_id": "A234-1234-1234",
+              "cloudevents_source": "/orders/service",
+              "cloudevents_specversion": "1.0",
+              "cloudevents_subject": "order/9f2c",
+              "cloudevents_time": "2026-01-15T10:30:00Z",
+              "cloudevents_type": "com.example.order.created"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "A234-1234-1234",
+            "kind": "publish",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "cloudevents_data_sample": {
+                    "currency": "USD",
+                    "customerId": "c-7781",
+                    "items": [
+                      {
+                        "quantity": 2,
+                        "sku": "WIDGET-1",
+                        "unitPrice": 49.95
+                      },
+                      {
+                        "quantity": 1,
+                        "sku": "GADGET-7",
+                        "unitPrice": 30.05
+                      }
+                    ],
+                    "orderId": "9f2c-aa01",
+                    "placedAt": "2026-01-15T10:29:58Z",
+                    "total": 129.95
+                  },
+                  "cloudevents_payload_schema": {
+                    "$ref": "#/components/schemas/OrderCreated"
+                  }
+                },
+                "headers": [],
+                "key": "A234-1234-1234#event.OrderCreated",
+                "name": "OrderCreated",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "OrderCreated",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "event",
+                "status_code": null
+              }
+            ],
+            "name": "A234-1234-1234",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "com.example.order.created",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderCreated.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderCreated.customerId",
+            "name": "customerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderCreated.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": null,
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderCreated.orderId",
+            "name": "orderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderCreated.placedAt",
+            "name": "placedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderCreated.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "OrderCreated",
+        "key_type": null,
+        "kind": "record",
+        "name": "OrderCreated",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cloudevents/01-order-created.json",
+  "counts": {
+    "channels": 1,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cloudevents"
+  },
+  "fingerprint": "sha256:c88b701f6b8d34774f505263ef7b17e53aa96c1a400400c4c5c0d46b179ff4ea",
+  "lint": {
+    "findings": 10,
+    "grade": "B",
+    "report_fingerprint": "33ad861a3ece99341e0f83eeb2d8229697bd73841e3134fffc9c3bf14d44c841",
+    "score": 84,
+    "severity_counts": {
+      "error": 0,
+      "info": 8,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

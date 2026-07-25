@@ -1,0 +1,86 @@
+{
+  "adapter": "avro",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "avro_root": "Ping"
+    },
+    "format": "avro",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ping",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Ping",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "Ping.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Ping",
+        "key_type": null,
+        "kind": "record",
+        "name": "Ping",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "avro/03-minimal-record.avsc",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "avro"
+  },
+  "fingerprint": "sha256:cc2ac8aa638df28a20bf937f8be878a7ee47a29b9ec4481c2eb1bfcaeedaee75",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "846e087b1bd45a12d2fc8652bb8c8c282e6c0e18723412fbe3a1093a116705a8",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

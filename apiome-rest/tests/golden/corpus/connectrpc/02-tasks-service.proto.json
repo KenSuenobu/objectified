@@ -1,0 +1,696 @@
+{
+  "adapter": "connectrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "rpc_stack": "connect"
+    },
+    "format": "connectrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "tasks.v1",
+      "namespace": "tasks.v1"
+    },
+    "paradigm": "rpc",
+    "protocol": "grpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "tasks.v1.TaskService",
+        "name": "TaskService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "tasks.v1.TaskService.CompleteTask",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "tasks.v1.TaskService.CompleteTask#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "tasks.v1.CompleteTaskRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "tasks.v1.TaskService.CompleteTask#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "tasks.v1.Task",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "CompleteTask",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "tasks.v1.TaskService.CreateTask",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "tasks.v1.TaskService.CreateTask#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "tasks.v1.CreateTaskRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "tasks.v1.TaskService.CreateTask#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "tasks.v1.Task",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "CreateTask",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "tasks.v1.TaskService.GetTask",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "tasks.v1.TaskService.GetTask#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "tasks.v1.GetTaskRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "tasks.v1.TaskService.GetTask#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "tasks.v1.Task",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GetTask",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "tasks.v1.TaskService.ListTasks",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "tasks.v1.TaskService.ListTasks#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "tasks.v1.ListTasksRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "tasks.v1.TaskService.ListTasks#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "tasks.v1.ListTasksResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "ListTasks",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "tasks.v1.CompleteTaskRequest.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "tasks.v1.CompleteTaskRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "CompleteTaskRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "tasks.v1.CreateTaskRequest.description",
+            "name": "description",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 3,
+            "key": "tasks.v1.CreateTaskRequest.labels",
+            "name": "labels",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "tasks.v1.CreateTaskRequest.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "tasks.v1.CreateTaskRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "CreateTaskRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "tasks.v1.GetTaskRequest.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "tasks.v1.GetTaskRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "GetTaskRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "tasks.v1.ListTasksRequest.page_size",
+            "name": "page_size",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "tasks.v1.ListTasksRequest.page_token",
+            "name": "page_token",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "tasks.v1.ListTasksRequest.state",
+            "name": "state",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "tasks.v1.TaskState",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "tasks.v1.ListTasksRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "ListTasksRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "tasks.v1.ListTasksResponse.next_page_token",
+            "name": "next_page_token",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 1,
+            "key": "tasks.v1.ListTasksResponse.tasks",
+            "name": "tasks",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "tasks.v1.Task",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "tasks.v1.ListTasksResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "ListTasksResponse",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "tasks.v1.Task.description",
+            "name": "description",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "tasks.v1.Task.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 5,
+            "key": "tasks.v1.Task.labels",
+            "name": "labels",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 4,
+            "key": "tasks.v1.Task.state",
+            "name": "state",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "tasks.v1.TaskState",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "tasks.v1.Task.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "tasks.v1.Task",
+        "key_type": null,
+        "kind": "record",
+        "name": "Task",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "tasks.v1.TaskState.TASK_STATE_UNSPECIFIED",
+            "name": "TASK_STATE_UNSPECIFIED",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "tasks.v1.TaskState.TASK_STATE_OPEN",
+            "name": "TASK_STATE_OPEN",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "tasks.v1.TaskState.TASK_STATE_DONE",
+            "name": "TASK_STATE_DONE",
+            "value": 2
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "tasks.v1.TaskState",
+        "key_type": null,
+        "kind": "enum",
+        "name": "TaskState",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "connectrpc/02-tasks-service.proto",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 1,
+    "types": 7
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "connectrpc"
+  },
+  "fingerprint": "sha256:0f517b685315e3deb5e0c54fa5d026e432c08b95d077fbdc3d809d4bd07f4c4e",
+  "lint": {
+    "findings": 35,
+    "grade": "F",
+    "report_fingerprint": "7876f5bbf81eac8130caf640c5517fba2e9ef755f2273fe8f4e621af4bfdba2b",
+    "score": 40,
+    "severity_counts": {
+      "error": 0,
+      "info": 24,
+      "warning": 11
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,845 @@
+{
+  "adapter": "xsd",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "xsd_elements": [
+        {
+          "name": "Invoice",
+          "type": "InvoiceType"
+        }
+      ],
+      "xsd_root_element": "Invoice",
+      "xsd_target_namespace": "http://example.com/ubl-shape/invoice"
+    },
+    "format": "xsd",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Invoice",
+      "namespace": "http://example.com/ubl-shape/invoice"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Invoice",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/ubl-shape/invoice.AddressType.CityName",
+            "name": "CityName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 4,
+            "key": "http://example.com/ubl-shape/invoice.AddressType.CountryCode",
+            "name": "CountryCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 3,
+            "key": "http://example.com/ubl-shape/invoice.AddressType.PostalZone",
+            "name": "PostalZone",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/ubl-shape/invoice.AddressType.StreetName",
+            "name": "StreetName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/ubl-shape/invoice.AddressType",
+        "key_type": null,
+        "kind": "record",
+        "name": "AddressType",
+        "namespace": "http://example.com/ubl-shape/invoice",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "decimal"
+            },
+            "field_number": 1,
+            "key": "http://example.com/ubl-shape/invoice.AmountType.Value",
+            "name": "Value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "attribute",
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/ubl-shape/invoice.AmountType.currencyID",
+            "name": "currencyID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/ubl-shape/invoice.AmountType",
+        "key_type": null,
+        "kind": "record",
+        "name": "AmountType",
+        "namespace": "http://example.com/ubl-shape/invoice",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceLineType.ID",
+            "name": "ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "decimal"
+            },
+            "field_number": 2,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceLineType.InvoicedQuantity",
+            "name": "InvoicedQuantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "ItemType"
+            },
+            "field_number": 4,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceLineType.Item",
+            "name": "Item",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/ubl-shape/invoice.ItemType",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "AmountType"
+            },
+            "field_number": 3,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceLineType.LineExtensionAmount",
+            "name": "LineExtensionAmount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/ubl-shape/invoice.AmountType",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "AmountType"
+            },
+            "field_number": 5,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceLineType.PriceAmount",
+            "name": "PriceAmount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/ubl-shape/invoice.AmountType",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/ubl-shape/invoice.InvoiceLineType",
+        "key_type": null,
+        "kind": "record",
+        "name": "InvoiceLineType",
+        "namespace": "http://example.com/ubl-shape/invoice",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "PartyType"
+            },
+            "field_number": 7,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceType.AccountingCustomerParty",
+            "name": "AccountingCustomerParty",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/ubl-shape/invoice.PartyType",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "PartyType"
+            },
+            "field_number": 6,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceType.AccountingSupplierParty",
+            "name": "AccountingSupplierParty",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/ubl-shape/invoice.PartyType",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 5,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceType.DocumentCurrencyCode",
+            "name": "DocumentCurrencyCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_min_occurs": "0",
+              "xsd_type": "date"
+            },
+            "field_number": 3,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceType.DueDate",
+            "name": "DueDate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceType.ID",
+            "name": "ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_max_occurs": "unbounded",
+              "xsd_type": "InvoiceLineType"
+            },
+            "field_number": 8,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceType.InvoiceLine",
+            "name": "InvoiceLine",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "http://example.com/ubl-shape/invoice.InvoiceLineType",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "InvoiceTypeCodeType"
+            },
+            "field_number": 4,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceType.InvoiceTypeCode",
+            "name": "InvoiceTypeCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/ubl-shape/invoice.InvoiceTypeCodeType",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "date"
+            },
+            "field_number": 2,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceType.IssueDate",
+            "name": "IssueDate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "MonetaryTotalType"
+            },
+            "field_number": 9,
+            "key": "http://example.com/ubl-shape/invoice.InvoiceType.LegalMonetaryTotal",
+            "name": "LegalMonetaryTotal",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/ubl-shape/invoice.MonetaryTotalType",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/ubl-shape/invoice.InvoiceType",
+        "key_type": null,
+        "kind": "record",
+        "name": "InvoiceType",
+        "namespace": "http://example.com/ubl-shape/invoice",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "http://example.com/ubl-shape/invoice.InvoiceTypeCodeType.380",
+            "name": "380",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "http://example.com/ubl-shape/invoice.InvoiceTypeCodeType.381",
+            "name": "381",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "http://example.com/ubl-shape/invoice.InvoiceTypeCodeType.384",
+            "name": "384",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "xsd_base": "string",
+          "xsd_kind": "simpleType"
+        },
+        "fields": [],
+        "key": "http://example.com/ubl-shape/invoice.InvoiceTypeCodeType",
+        "key_type": null,
+        "kind": "enum",
+        "name": "InvoiceTypeCodeType",
+        "namespace": "http://example.com/ubl-shape/invoice",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_min_occurs": "0",
+              "xsd_type": "string"
+            },
+            "field_number": 3,
+            "key": "http://example.com/ubl-shape/invoice.ItemType.ClassifiedTaxCategory",
+            "name": "ClassifiedTaxCategory",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/ubl-shape/invoice.ItemType.Name",
+            "name": "Name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_min_occurs": "0",
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/ubl-shape/invoice.ItemType.SellersItemIdentification",
+            "name": "SellersItemIdentification",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/ubl-shape/invoice.ItemType",
+        "key_type": null,
+        "kind": "record",
+        "name": "ItemType",
+        "namespace": "http://example.com/ubl-shape/invoice",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "AmountType"
+            },
+            "field_number": 1,
+            "key": "http://example.com/ubl-shape/invoice.MonetaryTotalType.LineExtensionAmount",
+            "name": "LineExtensionAmount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/ubl-shape/invoice.AmountType",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "AmountType"
+            },
+            "field_number": 4,
+            "key": "http://example.com/ubl-shape/invoice.MonetaryTotalType.PayableAmount",
+            "name": "PayableAmount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/ubl-shape/invoice.AmountType",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "AmountType"
+            },
+            "field_number": 2,
+            "key": "http://example.com/ubl-shape/invoice.MonetaryTotalType.TaxExclusiveAmount",
+            "name": "TaxExclusiveAmount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/ubl-shape/invoice.AmountType",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "AmountType"
+            },
+            "field_number": 3,
+            "key": "http://example.com/ubl-shape/invoice.MonetaryTotalType.TaxInclusiveAmount",
+            "name": "TaxInclusiveAmount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/ubl-shape/invoice.AmountType",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/ubl-shape/invoice.MonetaryTotalType",
+        "key_type": null,
+        "kind": "record",
+        "name": "MonetaryTotalType",
+        "namespace": "http://example.com/ubl-shape/invoice",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xsd_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_min_occurs": "0",
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/ubl-shape/invoice.PartyType.CompanyID",
+            "name": "CompanyID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/ubl-shape/invoice.PartyType.PartyName",
+            "name": "PartyName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_kind": "element",
+              "xsd_type": "AddressType"
+            },
+            "field_number": 3,
+            "key": "http://example.com/ubl-shape/invoice.PartyType.PostalAddress",
+            "name": "PostalAddress",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/ubl-shape/invoice.AddressType",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/ubl-shape/invoice.PartyType",
+        "key_type": null,
+        "kind": "record",
+        "name": "PartyType",
+        "namespace": "http://example.com/ubl-shape/invoice",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "xsd/05-ubl-invoice-shape.xsd",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 8
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "xsd"
+  },
+  "fingerprint": "sha256:df29ee7688d14e80b621e15eeca28834753887200f2f516a96e0789c9b258a2c",
+  "lint": {
+    "findings": 39,
+    "grade": "F",
+    "report_fingerprint": "02df61747e4f03023de79dbbb95b121804ea2cc4120e20535d9a07b291a87162",
+    "score": 59,
+    "severity_counts": {
+      "error": 0,
+      "info": 31,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

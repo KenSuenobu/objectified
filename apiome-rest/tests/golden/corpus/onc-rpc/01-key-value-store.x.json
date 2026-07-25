@@ -1,0 +1,504 @@
+{
+  "adapter": "oncrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "oncrpc_programs": [
+        {
+          "name": "KV_PROG",
+          "number": 536870913,
+          "versions": [
+            {
+              "name": "KV_VERS",
+              "number": 1,
+              "procedures": [
+                {
+                  "arg_type": "kv_key",
+                  "name": "KV_GET",
+                  "number": 1,
+                  "return_type": "kv_get_res"
+                },
+                {
+                  "arg_type": "kv_put_args",
+                  "name": "KV_PUT",
+                  "number": 2,
+                  "return_type": "kv_status"
+                },
+                {
+                  "arg_type": "kv_key",
+                  "name": "KV_DELETE",
+                  "number": 3,
+                  "return_type": "kv_status"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "oncrpc_typedefs": {
+        "kv_key": "string<256>"
+      }
+    },
+    "format": "oncrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "KV_PROG",
+      "namespace": "KV_PROG"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "KV_PROG.KV_PROG",
+        "name": "KV_PROG",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 3
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "KV_PROG.KV_PROG.KV_DELETE",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "KV_PROG.KV_PROG.KV_DELETE#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "KV_PROG.KV_PROG.KV_DELETE#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "KV_PROG.kv_status",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "KV_DELETE",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 1
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "KV_PROG.KV_PROG.KV_GET",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "KV_PROG.KV_PROG.KV_GET#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "KV_PROG.KV_PROG.KV_GET#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "KV_PROG.kv_get_res",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "KV_GET",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 2
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "KV_PROG.KV_PROG.KV_PUT",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "KV_PROG.KV_PROG.KV_PUT#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "KV_PROG.kv_put_args",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "KV_PROG.KV_PROG.KV_PUT#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "KV_PROG.kv_status",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "KV_PUT",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 256,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "kv_key"
+            },
+            "field_number": 1,
+            "key": "KV_PROG.kv_entry.key",
+            "name": "key",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 1024,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "opaque<1024>"
+            },
+            "field_number": 2,
+            "key": "KV_PROG.kv_entry.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "KV_PROG.kv_entry",
+        "key_type": null,
+        "kind": "record",
+        "name": "kv_entry",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "union",
+          "oncrpc_switch_field": "status",
+          "oncrpc_switch_type": "kv_status",
+          "oncrpc_union_cases": [
+            {
+              "canonical_type": "KV_PROG.kv_entry",
+              "field": "entry",
+              "label": "KV_OK",
+              "type": "kv_entry"
+            },
+            {
+              "label": "default",
+              "type": "void"
+            }
+          ]
+        },
+        "fields": [],
+        "key": "KV_PROG.kv_get_res",
+        "key_type": null,
+        "kind": "union",
+        "name": "kv_get_res",
+        "namespace": null,
+        "union_members": [
+          "KV_PROG.kv_entry",
+          "void"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 256,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "kv_key"
+            },
+            "field_number": 1,
+            "key": "KV_PROG.kv_put_args.key",
+            "name": "key",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 1024,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "opaque<1024>"
+            },
+            "field_number": 2,
+            "key": "KV_PROG.kv_put_args.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "KV_PROG.kv_put_args",
+        "key_type": null,
+        "kind": "record",
+        "name": "kv_put_args",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "KV_PROG.kv_status.KV_OK",
+            "name": "KV_OK",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "KV_PROG.kv_status.KV_NOT_FOUND",
+            "name": "KV_NOT_FOUND",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "KV_PROG.kv_status.KV_ERROR",
+            "name": "KV_ERROR",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "oncrpc_kind": "enum"
+        },
+        "fields": [],
+        "key": "KV_PROG.kv_status",
+        "key_type": null,
+        "kind": "enum",
+        "name": "kv_status",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "onc-rpc/01-key-value-store.x",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "oncrpc"
+  },
+  "fingerprint": "sha256:3c3e675f5c9bab4ccca54e0c93775759233776626229066e44065756babd38e8",
+  "lint": {
+    "findings": 18,
+    "grade": "D",
+    "report_fingerprint": "514d890c30d1f365c46115facec83b997f1fae6fe95dd7c0d51ff6757e7c76c1",
+    "score": 61,
+    "severity_counts": {
+      "error": 0,
+      "info": 11,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

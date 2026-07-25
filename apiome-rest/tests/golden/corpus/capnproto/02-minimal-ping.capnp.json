@@ -1,0 +1,89 @@
+{
+  "adapter": "capnproto",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "capnp_file_id": "0xd3a1f5c8e7b2a904",
+      "capnp_imports": []
+    },
+    "format": "capnproto",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ping",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "Ping.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Ping",
+        "key_type": null,
+        "kind": "record",
+        "name": "Ping",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "capnproto/02-minimal-ping.capnp",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "capnproto"
+  },
+  "fingerprint": "sha256:cfe97df10546625c045306cbeef4468e27f3a761e8246485c47e5be9f7971007",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "846e087b1bd45a12d2fc8652bb8c8c282e6c0e18723412fbe3a1093a116705a8",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

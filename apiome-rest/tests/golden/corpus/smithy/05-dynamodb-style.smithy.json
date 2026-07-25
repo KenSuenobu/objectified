@@ -1,0 +1,705 @@
+{
+  "adapter": "smithy",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "smithy_namespace": "example.dynamodb",
+      "smithy_version": "2.0"
+    },
+    "format": "smithy",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "DynamoDbLike",
+      "namespace": "example.dynamodb"
+    },
+    "paradigm": "rpc",
+    "protocol": "smithy",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "smithy_operations": [
+            "PutItem",
+            "GetItem",
+            "Query"
+          ],
+          "smithy_version": "2026-01-01"
+        },
+        "key": "example.dynamodb.DynamoDbLike",
+        "name": "DynamoDbLike",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.dynamodb.DynamoDbLike.GetItem",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.dynamodb.DynamoDbLike.GetItem#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.dynamodb.GetItemInput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.dynamodb.DynamoDbLike.GetItem#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.dynamodb.GetItemOutput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GetItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.dynamodb.DynamoDbLike.PutItem",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.dynamodb.DynamoDbLike.PutItem#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.dynamodb.PutItemInput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.dynamodb.DynamoDbLike.PutItem#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.dynamodb.PutItemOutput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "PutItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.dynamodb.DynamoDbLike.Query",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.dynamodb.DynamoDbLike.Query#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.dynamodb.QueryInput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.dynamodb.DynamoDbLike.Query#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.dynamodb.QueryOutput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Query",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "DynamoDbLike",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "map"
+        },
+        "fields": [],
+        "key": "example.dynamodb.AttributeMap",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": false
+        },
+        "kind": "map",
+        "name": "AttributeMap",
+        "namespace": "example.dynamodb",
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "example.dynamodb.AttributeValue",
+          "nullable": false
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "union"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.dynamodb.AttributeValue.boolValue",
+            "name": "boolValue",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "boolean",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.dynamodb.AttributeValue.n",
+            "name": "n",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.dynamodb.AttributeValue.s",
+            "name": "s",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.dynamodb.AttributeValue",
+        "key_type": null,
+        "kind": "union",
+        "name": "AttributeValue",
+        "namespace": "example.dynamodb",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Fetch a",
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.dynamodb.GetItemInput.consistentRead",
+            "name": "consistentRead",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "boolean",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.dynamodb.GetItemInput.tableName",
+            "name": "tableName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.dynamodb.GetItemInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "GetItemInput",
+        "namespace": "example.dynamodb",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Query items sharing",
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.dynamodb.GetItemOutput.item",
+            "name": "item",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.dynamodb.AttributeMap",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.dynamodb.GetItemOutput",
+        "key_type": null,
+        "kind": "record",
+        "name": "GetItemOutput",
+        "namespace": "example.dynamodb",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": {
+            "extras": {},
+            "item": null,
+            "name": "example.dynamodb.AttributeMap",
+            "nullable": false
+          },
+          "name": null,
+          "nullable": false
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "list"
+        },
+        "fields": [],
+        "key": "example.dynamodb.ItemList",
+        "key_type": null,
+        "kind": "alias",
+        "name": "ItemList",
+        "namespace": "example.dynamodb",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.dynamodb.PutItemInput.item",
+            "name": "item",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.dynamodb.AttributeMap",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.dynamodb.PutItemInput.tableName",
+            "name": "tableName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.dynamodb.PutItemInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "PutItemInput",
+        "namespace": "example.dynamodb",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.dynamodb.PutItemOutput.consumedCapacityUnits",
+            "name": "consumedCapacityUnits",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.dynamodb.PutItemOutput",
+        "key_type": null,
+        "kind": "record",
+        "name": "PutItemOutput",
+        "namespace": "example.dynamodb",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.dynamodb.QueryInput.expressionValues",
+            "name": "expressionValues",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.dynamodb.AttributeMap",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.dynamodb.QueryInput.keyConditionExpression",
+            "name": "keyConditionExpression",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.dynamodb.QueryInput.limit",
+            "name": "limit",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.dynamodb.QueryInput.scanIndexForward",
+            "name": "scanIndexForward",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "boolean",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.dynamodb.QueryInput.tableName",
+            "name": "tableName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.dynamodb.QueryInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "QueryInput",
+        "namespace": "example.dynamodb",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.dynamodb.QueryOutput.count",
+            "name": "count",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.dynamodb.QueryOutput.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.dynamodb.ItemList",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.dynamodb.QueryOutput.lastEvaluatedKey",
+            "name": "lastEvaluatedKey",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.dynamodb.AttributeMap",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.dynamodb.QueryOutput",
+        "key_type": null,
+        "kind": "record",
+        "name": "QueryOutput",
+        "namespace": "example.dynamodb",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "smithy/05-dynamodb-style.smithy",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "smithy"
+  },
+  "fingerprint": "sha256:082651f6088d1bbe4ed8b623e4519fce087142b11fa3ff798afbc928c524f386",
+  "lint": {
+    "findings": 34,
+    "grade": "F",
+    "report_fingerprint": "ca2c306aac974807c43e0846027c8d47821083d29572e10a9c428bd324dd8ffd",
+    "score": 44,
+    "severity_counts": {
+      "error": 0,
+      "info": 24,
+      "warning": 10
+    }
+  },
+  "snapshot_version": 1
+}

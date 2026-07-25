@@ -1,0 +1,627 @@
+{
+  "adapter": "typespec",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "typespec_enums": [
+        {
+          "documentation": null,
+          "name": "IssueState",
+          "values": [
+            "open",
+            "closed"
+          ]
+        }
+      ],
+      "typespec_imports": [
+        "import \"@typespec/http\"",
+        "import \"@typespec/rest\""
+      ],
+      "typespec_interfaces": [
+        {
+          "documentation": "Payload to creat",
+          "name": "UserRepos",
+          "operations": [
+            {
+              "documentation": null,
+              "is_array_return": true,
+              "name": "list",
+              "parameters": [
+                {
+                  "location": "query",
+                  "name": "visibility",
+                  "type": "string"
+                }
+              ],
+              "return_type": "Repository",
+              "verb": "get"
+            },
+            {
+              "documentation": null,
+              "is_array_return": false,
+              "name": "create",
+              "parameters": [
+                {
+                  "location": "body",
+                  "name": "repo",
+                  "type": "NewRepository"
+                }
+              ],
+              "return_type": "Repository",
+              "verb": "post"
+            }
+          ],
+          "route_prefix": "/user/repos"
+        },
+        {
+          "documentation": null,
+          "name": "Issues",
+          "operations": [
+            {
+              "documentation": null,
+              "is_array_return": true,
+              "name": "list",
+              "parameters": [
+                {
+                  "location": "path",
+                  "name": "fullName",
+                  "type": "string"
+                },
+                {
+                  "location": "query",
+                  "name": "state",
+                  "type": "string"
+                }
+              ],
+              "return_type": "Issue",
+              "verb": "get"
+            },
+            {
+              "documentation": null,
+              "is_array_return": false,
+              "name": "create",
+              "parameters": [
+                {
+                  "location": "path",
+                  "name": "fullName",
+                  "type": "string"
+                },
+                {
+                  "location": "body",
+                  "name": "issue",
+                  "type": "NewIssue"
+                }
+              ],
+              "return_type": "Issue",
+              "verb": "post"
+            }
+          ],
+          "route_prefix": "/user/repos"
+        }
+      ],
+      "typespec_models": [
+        {
+          "documentation": null,
+          "fields": [],
+          "name": "Owner"
+        },
+        {
+          "documentation": null,
+          "fields": [],
+          "name": "Repository"
+        },
+        {
+          "documentation": "The account that owns a repo",
+          "fields": [],
+          "name": "NewRepository"
+        },
+        {
+          "documentation": "A",
+          "fields": [],
+          "name": "Issue"
+        },
+        {
+          "documentation": null,
+          "fields": [],
+          "name": "NewIssue"
+        }
+      ],
+      "typespec_namespace": "GitHubStyle",
+      "typespec_service_title": "GitHub-style Repos API",
+      "typespec_usings": [
+        "TypeSpec.Http",
+        "TypeSpec.Rest"
+      ]
+    },
+    "format": "typespec",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "GitHub-style Repos API",
+      "namespace": "GitHubStyle"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "typespec_route_prefix": "/user/repos"
+        },
+        "key": "GitHubStyle.Issues",
+        "name": "Issues",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "typespec_interface": "Issues",
+              "typespec_route_prefix": "/user/repos",
+              "typespec_verb": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/user/repos/{fullName}",
+            "key": "GET /user/repos/{fullName}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /user/repos/{fullName}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "GitHubStyle.Issue",
+                    "nullable": true
+                  },
+                  "name": "GitHubStyle.Issue",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "list",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "typespec_location": "path",
+                  "typespec_type": "string"
+                },
+                "key": "GET /user/repos/{fullName}#path.fullName",
+                "location": "path",
+                "name": "fullName",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "typespec_location": "query",
+                  "typespec_type": "string"
+                },
+                "key": "GET /user/repos/{fullName}#query.state",
+                "location": "query",
+                "name": "state",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "typespec_interface": "Issues",
+              "typespec_route_prefix": "/user/repos",
+              "typespec_verb": "post"
+            },
+            "http_method": "POST",
+            "http_path": "/user/repos/{fullName}",
+            "key": "POST /user/repos/{fullName}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /user/repos/{fullName}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "GitHubStyle.NewIssue",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /user/repos/{fullName}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "GitHubStyle.Issue",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "create",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "typespec_location": "path",
+                  "typespec_type": "string"
+                },
+                "key": "POST /user/repos/{fullName}#path.fullName",
+                "location": "path",
+                "name": "fullName",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": "Payload to creat",
+        "extras": {
+          "typespec_route_prefix": "/user/repos"
+        },
+        "key": "GitHubStyle.UserRepos",
+        "name": "UserRepos",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "typespec_interface": "UserRepos",
+              "typespec_route_prefix": "/user/repos",
+              "typespec_verb": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/user/repos",
+            "key": "GET /user/repos",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /user/repos#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "GitHubStyle.Repository",
+                    "nullable": true
+                  },
+                  "name": "GitHubStyle.Repository",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "list",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "typespec_location": "query",
+                  "typespec_type": "string"
+                },
+                "key": "GET /user/repos#query.visibility",
+                "location": "query",
+                "name": "visibility",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "typespec_interface": "UserRepos",
+              "typespec_route_prefix": "/user/repos",
+              "typespec_verb": "post"
+            },
+            "http_method": "POST",
+            "http_path": "/user/repos",
+            "key": "POST /user/repos",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /user/repos#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "GitHubStyle.NewRepository",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /user/repos#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "GitHubStyle.Repository",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "create",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A",
+        "enum_values": [],
+        "extras": {
+          "typespec_key_fields": [],
+          "typespec_kind": "model"
+        },
+        "fields": [],
+        "key": "GitHubStyle.Issue",
+        "key_type": null,
+        "kind": "record",
+        "name": "Issue",
+        "namespace": "GitHubStyle",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "GitHubStyle.IssueState.open",
+            "name": "open",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "GitHubStyle.IssueState.closed",
+            "name": "closed",
+            "value": 1
+          }
+        ],
+        "extras": {
+          "typespec_kind": "enum",
+          "typespec_values": [
+            "open",
+            "closed"
+          ]
+        },
+        "fields": [],
+        "key": "GitHubStyle.IssueState",
+        "key_type": null,
+        "kind": "enum",
+        "name": "IssueState",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "typespec_key_fields": [],
+          "typespec_kind": "model"
+        },
+        "fields": [],
+        "key": "GitHubStyle.NewIssue",
+        "key_type": null,
+        "kind": "record",
+        "name": "NewIssue",
+        "namespace": "GitHubStyle",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "The account that owns a repo",
+        "enum_values": [],
+        "extras": {
+          "typespec_key_fields": [],
+          "typespec_kind": "model"
+        },
+        "fields": [],
+        "key": "GitHubStyle.NewRepository",
+        "key_type": null,
+        "kind": "record",
+        "name": "NewRepository",
+        "namespace": "GitHubStyle",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "typespec_key_fields": [],
+          "typespec_kind": "model"
+        },
+        "fields": [],
+        "key": "GitHubStyle.Owner",
+        "key_type": null,
+        "kind": "record",
+        "name": "Owner",
+        "namespace": "GitHubStyle",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "typespec_key_fields": [],
+          "typespec_kind": "model"
+        },
+        "fields": [],
+        "key": "GitHubStyle.Repository",
+        "key_type": null,
+        "kind": "record",
+        "name": "Repository",
+        "namespace": "GitHubStyle",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "typespec/06-github-style.tsp",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 2,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "typespec"
+  },
+  "fingerprint": "sha256:59fcfc70822e81b48dc602d84eefd0e3b074eb82601db91baef7fe9e02b6bdf4",
+  "lint": {
+    "findings": 15,
+    "grade": "D",
+    "report_fingerprint": "fe27d081792ac44a45b96bcaca657643e9a97a672a1428c56e95350e4a8db0ef",
+    "score": 61,
+    "severity_counts": {
+      "error": 0,
+      "info": 7,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

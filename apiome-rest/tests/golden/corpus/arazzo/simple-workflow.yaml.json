@@ -1,0 +1,152 @@
+{
+  "adapter": "arazzo",
+  "canonical": {
+    "channels": [],
+    "description": "A minimal Arazzo example with a single workflow and two steps",
+    "extras": {
+      "arazzo": "1.0.1",
+      "sourceDescriptions": [
+        {
+          "name": "TodoAPI",
+          "type": "openapi",
+          "url": "https://example.com/openapi/todo.json"
+        }
+      ]
+    },
+    "format": "arazzo",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Simple Todo Workflow",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Creates a todo item and then retrieves it",
+        "extras": {
+          "stepOrder": [
+            "CreateTodo",
+            "GetTodo"
+          ],
+          "workflowId": "CreateAndGetTodo"
+        },
+        "key": "CreateAndGetTodo",
+        "name": "CreateAndGetTodo",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Create a todo item",
+            "extras": {
+              "outputs": [
+                {
+                  "description": "The created todo ID",
+                  "name": "todoId",
+                  "path": "$.id"
+                }
+              ],
+              "request": {
+                "operationId": "createTodo",
+                "parameters": {
+                  "body": {
+                    "dueDate": "2025-12-25",
+                    "priority": "high",
+                    "title": "Buy milk"
+                  }
+                },
+                "source": "TodoAPI"
+              },
+              "stepId": "CreateTodo",
+              "stepIndex": 0
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "CreateAndGetTodo#CreateTodo",
+            "kind": "one_way",
+            "messages": [],
+            "name": "CreateTodo",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "CreateAndGetTodo"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Get the created todo item by ID",
+            "extras": {
+              "assertions": [
+                {
+                  "description": "Response should be 200 OK",
+                  "expression": "${response.status == 200}"
+                },
+                {
+                  "description": "Title should match the created value",
+                  "expression": "${response.body.title == \"Buy milk\"}"
+                }
+              ],
+              "request": {
+                "operationId": "getTodo",
+                "parameters": {
+                  "path": {
+                    "id": "${todoId}"
+                  }
+                },
+                "source": "TodoAPI"
+              },
+              "stepId": "GetTodo",
+              "stepIndex": 1,
+              "when": {
+                "expression": "${todoId != null}"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "CreateAndGetTodo#GetTodo",
+            "kind": "one_way",
+            "messages": [],
+            "name": "GetTodo",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "CreateAndGetTodo"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Simple Todo Workflow",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "arazzo/simple-workflow.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "arazzo"
+  },
+  "fingerprint": "sha256:e1d97cd5ffdd42b2866f4f47e844165b8bcdbb51da47c7e9458ffeadf29e6464",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "6e630fcbd583be3caf43879814e5b311712ce7bef13171dff2bf4ef745f0cf71",
+    "score": 92,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,262 @@
+{
+  "adapter": "avro",
+  "canonical": {
+    "channels": [],
+    "description": "A customer order.",
+    "extras": {
+      "avro_root": "com.example.order.Order"
+    },
+    "format": "avro",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Order",
+      "namespace": "com.example.order"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Order",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A single line item within an order.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Number of units ordered.",
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.order.LineItem.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Stock keeping unit.",
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.order.LineItem.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "decimal",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Price per unit.",
+            "extras": {
+              "avro_type": "bytes",
+              "logicalType": "decimal",
+              "precision": 12,
+              "scale": 2
+            },
+            "field_number": 3,
+            "key": "com.example.order.LineItem.unitPrice",
+            "name": "unitPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.order.LineItem",
+        "key_type": null,
+        "kind": "record",
+        "name": "LineItem",
+        "namespace": "com.example.order",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A customer order.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "USD",
+            "deprecated": false,
+            "description": "ISO 4217 currency code.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 4,
+            "key": "com.example.order.Order.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Customer who placed the order.",
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.order.Order.customerId",
+            "name": "customerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The line items in the order.",
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.order.Order.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "com.example.order.LineItem",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Unique order identifier.",
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.order.Order.orderId",
+            "name": "orderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "When the order was placed.",
+            "extras": {
+              "avro_type": "long",
+              "logicalType": "timestamp-millis"
+            },
+            "field_number": 5,
+            "key": "com.example.order.Order.placedAt",
+            "name": "placedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.order.Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": "com.example.order",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "avro/02-order-record.avsc",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "avro"
+  },
+  "fingerprint": "sha256:e7db1a32a7873381d5d5a188eace1b6c323b90b15e4553fe7d603ca5b40c6a08",
+  "lint": {
+    "findings": 0,
+    "grade": "A",
+    "report_fingerprint": "49f00aff0ad03525a1e73592c60211f9f8572853ba37d488054fdb78f1f77bd1",
+    "score": 100,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,440 @@
+{
+  "adapter": "zosconnect",
+  "canonical": {
+    "channels": [],
+    "description": "Inbound provider exposing the CICS catalog manager sample program as REST.",
+    "extras": {
+      "zosconnect_api": {
+        "basePath": "https://mainframe.example.com/catalogManager",
+        "specification": "openapi-3.0",
+        "title": "Catalog Manager API"
+      },
+      "zosconnect_descriptor": {
+        "description": "Inbound provider exposing the CICS catalog manager sample program as REST.",
+        "name": "CatalogManagerProvider",
+        "version": "1.0.0"
+      },
+      "zosconnect_kind": "provider",
+      "zosconnect_language": {
+        "codepage": "IBM-1047",
+        "type": "cobol"
+      },
+      "zosconnect_operations": [
+        {
+          "method": "GET",
+          "operationId": "inquireCatalog",
+          "path": "/items",
+          "pathParameters": [],
+          "program": "DFH0XCMN",
+          "requestStructure": "CA-INQUIRE-REQUEST",
+          "responseStructure": "CA-CAT-ITEM-LIST"
+        },
+        {
+          "method": "GET",
+          "operationId": "inquireSingle",
+          "path": "/items/{itemNumber}",
+          "pathParameters": [
+            {
+              "field": "CA-ITEM-REF-NUMBER",
+              "name": "itemNumber",
+              "type": "integer"
+            }
+          ],
+          "program": "DFH0XCMN",
+          "requestStructure": "CA-INQUIRE-SINGLE",
+          "responseStructure": "CA-CAT-ITEM"
+        },
+        {
+          "method": "POST",
+          "operationId": "placeOrder",
+          "path": "/orders",
+          "pathParameters": [],
+          "program": "DFH0XCMN",
+          "requestStructure": "CA-ORDER-REQUEST",
+          "responseStructure": "CA-ORDER-RESPONSE"
+        }
+      ]
+    },
+    "format": "zosconnect",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Catalog Manager API",
+      "namespace": "CatalogManagerProvider"
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From z/OS Connect `api.basePath`",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://mainframe.example.com/catalogManager",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "CatalogManagerProvider.CatalogManagerProvider",
+        "name": "CatalogManagerProvider",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": "DFH0XCMN",
+              "zosconnect_request_structure": "CA-INQUIRE-REQUEST",
+              "zosconnect_response_structure": "CA-CAT-ITEM-LIST"
+            },
+            "http_method": "GET",
+            "http_path": "/items",
+            "key": "GET /items",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /items#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CatalogManagerProvider.CA-INQUIRE-REQUEST",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "GET /items#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CatalogManagerProvider.CA-CAT-ITEM-LIST",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "inquireCatalog",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": "DFH0XCMN",
+              "zosconnect_request_structure": "CA-INQUIRE-SINGLE",
+              "zosconnect_response_structure": "CA-CAT-ITEM"
+            },
+            "http_method": "GET",
+            "http_path": "/items/{itemNumber}",
+            "key": "GET /items/{itemNumber}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /items/{itemNumber}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CatalogManagerProvider.CA-INQUIRE-SINGLE",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "GET /items/{itemNumber}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CatalogManagerProvider.CA-CAT-ITEM",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "inquireSingle",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "zosconnect_field": "CA-ITEM-REF-NUMBER",
+                  "zosconnect_type": "integer"
+                },
+                "key": "GET /items/{itemNumber}#path.itemNumber",
+                "location": "path",
+                "name": "itemNumber",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": "DFH0XCMN",
+              "zosconnect_request_structure": "CA-ORDER-REQUEST",
+              "zosconnect_response_structure": "CA-ORDER-RESPONSE"
+            },
+            "http_method": "POST",
+            "http_path": "/orders",
+            "key": "POST /orders",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /orders#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CatalogManagerProvider.CA-ORDER-REQUEST",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "POST /orders#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CatalogManagerProvider.CA-ORDER-RESPONSE",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "placeOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Catalog Manager API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "CatalogManagerProvider.CA-CAT-ITEM",
+        "key_type": null,
+        "kind": "record",
+        "name": "CA-CAT-ITEM",
+        "namespace": "CatalogManagerProvider",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "CatalogManagerProvider.CA-CAT-ITEM-LIST",
+        "key_type": null,
+        "kind": "record",
+        "name": "CA-CAT-ITEM-LIST",
+        "namespace": "CatalogManagerProvider",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "CatalogManagerProvider.CA-INQUIRE-REQUEST",
+        "key_type": null,
+        "kind": "record",
+        "name": "CA-INQUIRE-REQUEST",
+        "namespace": "CatalogManagerProvider",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Path parameter `itemNumber`",
+            "extras": {
+              "zosconnect_path_parameter": "itemNumber"
+            },
+            "field_number": 1,
+            "key": "CatalogManagerProvider.CA-INQUIRE-SINGLE.CA-ITEM-REF-NUMBER",
+            "name": "CA-ITEM-REF-NUMBER",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "CatalogManagerProvider.CA-INQUIRE-SINGLE",
+        "key_type": null,
+        "kind": "record",
+        "name": "CA-INQUIRE-SINGLE",
+        "namespace": "CatalogManagerProvider",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "CatalogManagerProvider.CA-ORDER-REQUEST",
+        "key_type": null,
+        "kind": "record",
+        "name": "CA-ORDER-REQUEST",
+        "namespace": "CatalogManagerProvider",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "CatalogManagerProvider.CA-ORDER-RESPONSE",
+        "key_type": null,
+        "kind": "record",
+        "name": "CA-ORDER-RESPONSE",
+        "namespace": "CatalogManagerProvider",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "zos-connect/06-cics-catalog-provider.json",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 1,
+    "services": 1,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "zosconnect"
+  },
+  "fingerprint": "sha256:89e41462f25ca3d8c1c542774ba1090e5f91da1cbcc222c7d80b5834bb49b7a5",
+  "lint": {
+    "findings": 15,
+    "grade": "D",
+    "report_fingerprint": "a193bf4a23f07c557aa904914478edbd168b6172a8fa05d2d48a09931e450b12",
+    "score": 62,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 9
+    }
+  },
+  "snapshot_version": 1
+}

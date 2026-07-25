@@ -1,0 +1,151 @@
+{
+  "adapter": "zosconnect",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "zosconnect_api": {
+        "basePath": "https://api.example.com/ping",
+        "specification": "openapi-3.0",
+        "title": "Ping API"
+      },
+      "zosconnect_descriptor": {
+        "description": null,
+        "name": "PingRequester",
+        "version": "1.0.0"
+      },
+      "zosconnect_kind": "requester",
+      "zosconnect_language": {
+        "codepage": null,
+        "type": null
+      },
+      "zosconnect_operations": [
+        {
+          "method": "GET",
+          "operationId": "ping",
+          "path": "/ping",
+          "pathParameters": [],
+          "requestStructure": null,
+          "responseStructure": "PING-RESPONSE"
+        }
+      ]
+    },
+    "format": "zosconnect",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ping API",
+      "namespace": "PingRequester"
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From z/OS Connect `api.basePath`",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/ping",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "PingRequester.PingRequester",
+        "name": "PingRequester",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "zosconnect_program": null,
+              "zosconnect_request_structure": null,
+              "zosconnect_response_structure": "PING-RESPONSE"
+            },
+            "http_method": "GET",
+            "http_path": "/ping",
+            "key": "GET /ping",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": 200
+                },
+                "headers": [],
+                "key": "GET /ping#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PingRequester.PING-RESPONSE",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "ping",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Ping API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "zosconnect_kind": "structure"
+        },
+        "fields": [],
+        "key": "PingRequester.PING-RESPONSE",
+        "key_type": null,
+        "kind": "record",
+        "name": "PING-RESPONSE",
+        "namespace": "PingRequester",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "zos-connect/03-minimal-requester.json",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 1,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "zosconnect"
+  },
+  "fingerprint": "sha256:9e830a47bf34554c0d4df88dc3058905101bc195e1d6ef02c52b8880ee87adbf",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "4eddbeb2369169e8e738f776bbfb98b701ebc1409ec9f7c2444ce1337ad2aa77",
+    "score": 90,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

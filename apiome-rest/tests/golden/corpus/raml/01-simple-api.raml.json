@@ -1,0 +1,398 @@
+{
+  "adapter": "raml",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "raml_media_type": "application/json",
+      "raml_version": "1.0"
+    },
+    "format": "raml",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Bookstore API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From RAML baseUri",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/v1",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Bookstore API",
+        "name": "Bookstore API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List all books.",
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/books",
+            "key": "GET /books",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /books#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Book",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GET /books",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Fetch a book by id.",
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/books/{bookId}",
+            "key": "GET /books/{bookId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /books/{bookId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Book",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GET /books/{bookId}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Identifier of the book.",
+                "extras": {
+                  "raml_type": "string"
+                },
+                "key": "GET /books/{bookId}#path.bookId",
+                "location": "path",
+                "name": "bookId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Add a new book.",
+            "extras": {},
+            "http_method": "POST",
+            "http_path": "/books",
+            "key": "POST /books",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /books#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "NewBook",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "201"
+                },
+                "headers": [],
+                "key": "POST /books#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Book",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "POST /books",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Bookstore API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A book in the store.",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Author name.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 3,
+            "key": "Book.author",
+            "name": "author",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Unique book identifier.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 1,
+            "key": "Book.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Retail price.",
+            "extras": {
+              "raml_type": "number"
+            },
+            "field_number": 4,
+            "key": "Book.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Publication date.",
+            "extras": {
+              "raml_type": "date-only"
+            },
+            "field_number": 5,
+            "key": "Book.published",
+            "name": "published",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Book title.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 2,
+            "key": "Book.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Book",
+        "key_type": null,
+        "kind": "record",
+        "name": "Book",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Payload to create a book (server assigns the id).",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 2,
+            "key": "NewBook.author",
+            "name": "author",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "raml_type": "number"
+            },
+            "field_number": 3,
+            "key": "NewBook.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 1,
+            "key": "NewBook.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "NewBook",
+        "key_type": null,
+        "kind": "record",
+        "name": "NewBook",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v1"
+  },
+  "corpus_path": "raml/01-simple-api.raml",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 1,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "raml"
+  },
+  "fingerprint": "sha256:0af8e23a4b3a039f794eda43f82efb55a92e13b4a4ee1524c859c8c2ee873138",
+  "lint": {
+    "findings": 8,
+    "grade": "A",
+    "report_fingerprint": "220663b8ed4059a8c7d62df05d7f106230cb592d3487ebf9274260fcdb7ec6b5",
+    "score": 92,
+    "severity_counts": {
+      "error": 0,
+      "info": 8,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,634 @@
+{
+  "adapter": "smithy",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "smithy_namespace": "example.bookstore",
+      "smithy_version": "2.0"
+    },
+    "format": "smithy",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "BookstoreService",
+      "namespace": "example.bookstore"
+    },
+    "paradigm": "rpc",
+    "protocol": "smithy",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "smithy_operations": [
+            "GetBook",
+            "ListBooks",
+            "CreateBook"
+          ],
+          "smithy_version": "2026-01-01"
+        },
+        "key": "example.bookstore.BookstoreService",
+        "name": "BookstoreService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "A book catalog entry",
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.bookstore.BookstoreService.CreateBook",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.bookstore.BookstoreService.CreateBook#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.bookstore.CreateBookInput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.bookstore.BookstoreService.CreateBook#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.bookstore.BookSummary",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "CreateBook",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.bookstore.BookstoreService.GetBook",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.bookstore.BookstoreService.GetBook#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.bookstore.GetBookInput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.bookstore.BookstoreService.GetBook#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.bookstore.BookSummary",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GetBook",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.bookstore.BookstoreService.ListBooks",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.bookstore.BookstoreService.ListBooks#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.bookstore.ListBooksInput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.bookstore.BookstoreService.ListBooks#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.bookstore.ListBooksOutput",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "ListBooks",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "BookstoreService",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "resource"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.bookstore.Book.create",
+            "name": "create",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CreateBook",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.bookstore.Book.list",
+            "name": "list",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ListBooks",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.bookstore.Book.read",
+            "name": "read",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "GetBook",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.bookstore.Book",
+        "key_type": null,
+        "kind": "record",
+        "name": "Book",
+        "namespace": "example.bookstore",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.bookstore.BookSummary.author",
+            "name": "author",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.bookstore.BookSummary.bookId",
+            "name": "bookId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.bookstore.BookSummary.isbn",
+            "name": "isbn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.bookstore.BookSummary.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.bookstore.BookSummary",
+        "key_type": null,
+        "kind": "record",
+        "name": "BookSummary",
+        "namespace": "example.bookstore",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": {
+            "extras": {},
+            "item": null,
+            "name": "example.bookstore.BookSummary",
+            "nullable": false
+          },
+          "name": null,
+          "nullable": false
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "list"
+        },
+        "fields": [],
+        "key": "example.bookstore.BookSummaryList",
+        "key_type": null,
+        "kind": "alias",
+        "name": "BookSummaryList",
+        "namespace": "example.bookstore",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.bookstore.CreateBookInput.author",
+            "name": "author",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.bookstore.CreateBookInput.isbn",
+            "name": "isbn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.bookstore.CreateBookInput.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.bookstore.CreateBookInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "CreateBookInput",
+        "namespace": "example.bookstore",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.bookstore.GetBookInput.bookId",
+            "name": "bookId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.bookstore.GetBookInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "GetBookInput",
+        "namespace": "example.bookstore",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Fetch a single book by",
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.bookstore.ListBooksInput.pageSize",
+            "name": "pageSize",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.bookstore.ListBooksInput.pageToken",
+            "name": "pageToken",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.bookstore.ListBooksInput",
+        "key_type": null,
+        "kind": "record",
+        "name": "ListBooksInput",
+        "namespace": "example.bookstore",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.bookstore.ListBooksOutput.books",
+            "name": "books",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.bookstore.BookSummaryList",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.bookstore.ListBooksOutput.nextPageToken",
+            "name": "nextPageToken",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.bookstore.ListBooksOutput",
+        "key_type": null,
+        "kind": "record",
+        "name": "ListBooksOutput",
+        "namespace": "example.bookstore",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "smithy/03-bookstore-resource.smithy",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 7
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "smithy"
+  },
+  "fingerprint": "sha256:bb5af0cf14d1b05aa65bb5ffc61192241f864787a097a944c5c0de60227874f1",
+  "lint": {
+    "findings": 30,
+    "grade": "F",
+    "report_fingerprint": "97b934b05931333e9e11657fd54b75ef4ffe1e7f616f1fe89c82b877c14e5f6a",
+    "score": 50,
+    "severity_counts": {
+      "error": 0,
+      "info": 22,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

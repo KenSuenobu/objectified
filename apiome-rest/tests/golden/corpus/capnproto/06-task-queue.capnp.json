@@ -1,0 +1,468 @@
+{
+  "adapter": "capnproto",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "capnp_file_id": "0xb7e2d4f9a1c8e365",
+      "capnp_imports": []
+    },
+    "format": "capnproto",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "TaskQueue",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "TaskQueue",
+        "name": "TaskQueue",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "TaskQueue.claim",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "capnp_param_name": "queue"
+                },
+                "headers": [],
+                "key": "TaskQueue.claim#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "capnp_result_name": "claim"
+                },
+                "headers": [],
+                "key": "TaskQueue.claim#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Claim",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "claim",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 2
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "TaskQueue.complete",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "capnp_param_name": "id"
+                },
+                "headers": [],
+                "key": "TaskQueue.complete#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "uint64",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "capnp_result_name": "state"
+                },
+                "headers": [],
+                "key": "TaskQueue.complete#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "TaskState",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "complete",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "TaskQueue.enqueue",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "capnp_param_name": "task"
+                },
+                "headers": [],
+                "key": "TaskQueue.enqueue#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Task",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "capnp_result_name": "id"
+                },
+                "headers": [],
+                "key": "TaskQueue.enqueue#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "uint64",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "enqueue",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "field_number": 1,
+            "key": "Claim.leaseSeconds",
+            "name": "leaseSeconds",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "Claim.task",
+            "name": "task",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Task",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Claim",
+        "key_type": null,
+        "kind": "record",
+        "name": "Claim",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 4
+            },
+            "field_number": 4,
+            "key": "Task.attempts",
+            "name": "attempts",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint8",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "Task.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 5
+            },
+            "field_number": 5,
+            "key": "Task.notBefore",
+            "name": "notBefore",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 2
+            },
+            "field_number": 2,
+            "key": "Task.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "field_number": 1,
+            "key": "Task.queue",
+            "name": "queue",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 3
+            },
+            "field_number": 3,
+            "key": "Task.state",
+            "name": "state",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "TaskState",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Task",
+        "key_type": null,
+        "kind": "record",
+        "name": "Task",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "TaskState.pending",
+            "name": "pending",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "TaskState.claimed",
+            "name": "claimed",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "TaskState.done",
+            "name": "done",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "TaskState.failed",
+            "name": "failed",
+            "value": 3
+          }
+        ],
+        "extras": {
+          "capnp_kind": "enum"
+        },
+        "fields": [],
+        "key": "TaskState",
+        "key_type": null,
+        "kind": "enum",
+        "name": "TaskState",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "capnproto/06-task-queue.capnp",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "capnproto"
+  },
+  "fingerprint": "sha256:f4634e610960231a846d16ff85095efb2928a02377d5c5c97c2bb2342a26a3c1",
+  "lint": {
+    "findings": 21,
+    "grade": "D",
+    "report_fingerprint": "bfe9a8cca4a728a877b60e51907099448cd7f11b27c2cfd383edd5db469ccdac",
+    "score": 61,
+    "severity_counts": {
+      "error": 0,
+      "info": 15,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,662 @@
+{
+  "adapter": "corbaidl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "corbaidl_interfaces": [
+        {
+          "name": "Bank",
+          "operations": [
+            {
+              "name": "openAccount",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "owner",
+                  "type": "string"
+                },
+                {
+                  "direction": "in",
+                  "name": "kind",
+                  "type": "AccountKind"
+                }
+              ],
+              "raises": [],
+              "return_type": "Account"
+            },
+            {
+              "name": "getAccount",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "raises": [
+                "AccountNotFound"
+              ],
+              "return_type": "Account"
+            },
+            {
+              "name": "deposit",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "direction": "in",
+                  "name": "amount",
+                  "type": "double"
+                }
+              ],
+              "raises": [
+                "AccountNotFound"
+              ],
+              "return_type": "double"
+            },
+            {
+              "name": "withdraw",
+              "parameters": [
+                {
+                  "direction": "in",
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "direction": "in",
+                  "name": "amount",
+                  "type": "double"
+                }
+              ],
+              "raises": [
+                "AccountNotFound",
+                "InsufficientFunds"
+              ],
+              "return_type": "double"
+            }
+          ]
+        }
+      ],
+      "corbaidl_module": "Banking",
+      "corbaidl_typedefs": {
+        "AccountId": "string"
+      }
+    },
+    "format": "corbaidl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Banking",
+      "namespace": "Banking"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Banking.Bank",
+        "name": "Bank",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Banking.Bank.deposit",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "Banking.Bank.deposit#error.AccountNotFound",
+                "name": "AccountNotFound",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Banking.AccountNotFound",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_parameters": [
+                    {
+                      "direction": "in",
+                      "name": "id",
+                      "type": "string"
+                    },
+                    {
+                      "direction": "in",
+                      "name": "amount",
+                      "type": "double"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Banking.Bank.deposit#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Banking.Bank.deposit#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "double",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "deposit",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Banking.Bank.getAccount",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "Banking.Bank.getAccount#error.AccountNotFound",
+                "name": "AccountNotFound",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Banking.AccountNotFound",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_direction": "in"
+                },
+                "headers": [],
+                "key": "Banking.Bank.getAccount#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Banking.Bank.getAccount#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Banking.Account",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "getAccount",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Banking.Bank.openAccount",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_parameters": [
+                    {
+                      "direction": "in",
+                      "name": "owner",
+                      "type": "string"
+                    },
+                    {
+                      "direction": "in",
+                      "name": "kind",
+                      "type": "AccountKind"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Banking.Bank.openAccount#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Banking.Bank.openAccount#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Banking.Account",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "openAccount",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "Banking.Bank.withdraw",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 1
+                },
+                "headers": [],
+                "key": "Banking.Bank.withdraw#error.AccountNotFound",
+                "name": "AccountNotFound",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Banking.AccountNotFound",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_raise_index": 2
+                },
+                "headers": [],
+                "key": "Banking.Bank.withdraw#error.InsufficientFunds",
+                "name": "InsufficientFunds",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Banking.InsufficientFunds",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "corbaidl_parameters": [
+                    {
+                      "direction": "in",
+                      "name": "id",
+                      "type": "string"
+                    },
+                    {
+                      "direction": "in",
+                      "name": "amount",
+                      "type": "double"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "Banking.Bank.withdraw#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "Banking.Bank.withdraw#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "double",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "withdraw",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "double"
+            },
+            "field_number": 4,
+            "key": "Banking.Account.balance",
+            "name": "balance",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "Banking.Account.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "AccountKind"
+            },
+            "field_number": 3,
+            "key": "Banking.Account.kind",
+            "name": "kind",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Banking.AccountKind",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 2,
+            "key": "Banking.Account.owner",
+            "name": "owner",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Banking.Account",
+        "key_type": null,
+        "kind": "record",
+        "name": "Account",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Banking.AccountKind.CHECKING",
+            "name": "CHECKING",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Banking.AccountKind.SAVINGS",
+            "name": "SAVINGS",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Banking.AccountKind.CREDIT",
+            "name": "CREDIT",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "corbaidl_kind": "enum"
+        },
+        "fields": [],
+        "key": "Banking.AccountKind",
+        "key_type": null,
+        "kind": "enum",
+        "name": "AccountKind",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "exception"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "string"
+            },
+            "field_number": 1,
+            "key": "Banking.AccountNotFound.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Banking.AccountNotFound",
+        "key_type": null,
+        "kind": "record",
+        "name": "AccountNotFound",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "corbaidl_kind": "exception"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "corbaidl_type_expr": "double"
+            },
+            "field_number": 1,
+            "key": "Banking.InsufficientFunds.shortfall",
+            "name": "shortfall",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Banking.InsufficientFunds",
+        "key_type": null,
+        "kind": "record",
+        "name": "InsufficientFunds",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "corba-idl/01-bank.idl",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "corbaidl"
+  },
+  "fingerprint": "sha256:4a553c34e0455d8537b6c056ea33947e93951a0d1bff776bb9d10e8b24ece07c",
+  "lint": {
+    "findings": 27,
+    "grade": "F",
+    "report_fingerprint": "2b902c6a10ba3ef9b7fd2d211b066f3c7f88ec382769936d6005b2756e945626",
+    "score": 49,
+    "severity_counts": {
+      "error": 0,
+      "info": 19,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,680 @@
+{
+  "adapter": "apiblueprint",
+  "canonical": {
+    "channels": [],
+    "description": "Stress example for the less common grammar corners: an enum data structure,\noptional fields, action-level path overrides (a search action and a close\naction living on other paths), resource-level plus action-level parameters,\nand multiple alternative responses per action.",
+    "extras": {
+      "apib_format_version": "1A",
+      "apib_host": "https://api.example.com"
+    },
+    "format": "apiblueprint",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ticketing API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From API Blueprint HOST",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Ticketing API",
+        "name": "Ticketing API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/tickets",
+            "key": "GET /tickets",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "apib_response_array": "Ticket",
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /tickets#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Ticket",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "List tickets",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Filter the collection by ticket status.",
+                "extras": {
+                  "apib_type": "string"
+                },
+                "key": "GET /tickets#path.status",
+                "location": "path",
+                "name": "status",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/tickets/search",
+            "key": "GET /tickets/search",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "apib_response_array": "Ticket",
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /tickets/search#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Ticket",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "400"
+                },
+                "headers": [],
+                "key": "GET /tickets/search#response.400",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Search tickets",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Maximum number of results to return.",
+                "extras": {
+                  "apib_type": "number"
+                },
+                "key": "GET /tickets/search#path.limit",
+                "location": "path",
+                "name": "limit",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "double",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Full-text query string.",
+                "extras": {
+                  "apib_type": "string"
+                },
+                "key": "GET /tickets/search#path.q",
+                "location": "path",
+                "name": "q",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Filter the collection by ticket status.",
+                "extras": {
+                  "apib_type": "string"
+                },
+                "key": "GET /tickets/search#path.status",
+                "location": "path",
+                "name": "status",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/tickets/{id}",
+            "key": "GET /tickets/{id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /tickets/{id}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Ticket",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "404"
+                },
+                "headers": [],
+                "key": "GET /tickets/{id}#response.404",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Get a ticket",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Ticket identifier.",
+                "extras": {
+                  "apib_type": "string"
+                },
+                "key": "GET /tickets/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "POST",
+            "http_path": "/tickets/{id}/close",
+            "key": "POST /tickets/{id}/close",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /tickets/{id}/close#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CloseRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /tickets/{id}/close#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Ticket",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "http_status": "409"
+                },
+                "headers": [],
+                "key": "POST /tickets/{id}/close#response.409",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Error",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Close a ticket",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Ticket identifier.",
+                "extras": {
+                  "apib_type": "string"
+                },
+                "key": "POST /tickets/{id}/close#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Ticketing API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "apib_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Why the ticket is being closed.",
+            "extras": {
+              "apib_sample": "resolved",
+              "apib_type": "string"
+            },
+            "field_number": 1,
+            "key": "CloseRequest.reason",
+            "name": "reason",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CloseRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "CloseRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "apib_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Machine-readable error code.",
+            "extras": {
+              "apib_sample": "not_found",
+              "apib_type": "string"
+            },
+            "field_number": 1,
+            "key": "Error.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Human-readable message.",
+            "extras": {
+              "apib_sample": "Ticket not found",
+              "apib_type": "string"
+            },
+            "field_number": 2,
+            "key": "Error.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Error",
+        "key_type": null,
+        "kind": "record",
+        "name": "Error",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "apib_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Current assignee, if any.",
+            "extras": {
+              "apib_sample": "kai",
+              "apib_type": "string"
+            },
+            "field_number": 4,
+            "key": "Ticket.assignee",
+            "name": "assignee",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Ticket identifier.",
+            "extras": {
+              "apib_sample": "T-100",
+              "apib_type": "string"
+            },
+            "field_number": 1,
+            "key": "Ticket.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Priority from 1 (highest) to 5.",
+            "extras": {
+              "apib_sample": "2",
+              "apib_type": "number"
+            },
+            "field_number": 5,
+            "key": "Ticket.priority",
+            "name": "priority",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Lifecycle state.",
+            "extras": {
+              "apib_sample": "open",
+              "apib_type": "TicketStatus"
+            },
+            "field_number": 3,
+            "key": "Ticket.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "TicketStatus",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Short subject line.",
+            "extras": {
+              "apib_sample": "Printer on fire",
+              "apib_type": "string"
+            },
+            "field_number": 2,
+            "key": "Ticket.subject",
+            "name": "subject",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Ticket",
+        "key_type": null,
+        "kind": "record",
+        "name": "Ticket",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "TicketStatus.open",
+            "name": "open",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "TicketStatus.pending",
+            "name": "pending",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "TicketStatus.closed",
+            "name": "closed",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "apib_kind": "enum"
+        },
+        "fields": [],
+        "key": "TicketStatus",
+        "key_type": null,
+        "kind": "enum",
+        "name": "TicketStatus",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "api-blueprint/05-grammar-corners.apib",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 1,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "api-blueprint"
+  },
+  "fingerprint": "sha256:15ca64c702fc4619eb320b2aeb0e3a9503ae99c0e50ee2e986f7a3cad1026a85",
+  "lint": {
+    "findings": 16,
+    "grade": "D",
+    "report_fingerprint": "82b295282f382a128e01829d5046371219b1d5e63f085939d2b47b69e7d55388",
+    "score": 60,
+    "severity_counts": {
+      "error": 0,
+      "info": 8,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

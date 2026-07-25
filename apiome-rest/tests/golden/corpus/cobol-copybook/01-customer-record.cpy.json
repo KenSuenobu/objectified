@@ -1,0 +1,405 @@
+{
+  "adapter": "cobolcopybook",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "cobolcopybook_root": "CUSTOMER-RECORD",
+      "cobolcopybook_tree": {
+        "children": [
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "CUST-ID",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(8)",
+            "usage": null
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "CUST-FIRST-NAME",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(20)",
+                "usage": null
+              },
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "CUST-LAST-NAME",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(20)",
+                "usage": null
+              }
+            ],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "CUST-NAME",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": null,
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [
+              {
+                "name": "CUST-ACTIVE",
+                "value": "A"
+              },
+              {
+                "name": "CUST-SUSPENDED",
+                "value": "S"
+              },
+              {
+                "name": "CUST-CLOSED",
+                "value": "C"
+              }
+            ],
+            "depending_on": null,
+            "level": 5,
+            "name": "CUST-STATUS",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(1)",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "CUST-BALANCE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "S9(9)V99",
+            "usage": "COMP-3"
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "CUST-PHONE-COUNT",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(2)",
+            "usage": null
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "CUST-PHONE-TYPE",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(1)",
+                "usage": null
+              },
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "CUST-PHONE-NUMBER",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(15)",
+                "usage": null
+              }
+            ],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "CUST-PHONES",
+            "occurs_max": 5,
+            "occurs_min": 1,
+            "picture": null,
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "CUST-CREATED-DATE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(8)",
+            "usage": null
+          }
+        ],
+        "conditions": [],
+        "depending_on": null,
+        "level": 1,
+        "name": "CUSTOMER-RECORD",
+        "occurs_max": null,
+        "occurs_min": null,
+        "picture": null,
+        "usage": null
+      }
+    },
+    "format": "cobolcopybook",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "CUSTOMER-RECORD",
+      "namespace": "CUSTOMER-RECORD"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "CUSTOMER-RECORD",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cobol_kind": "group",
+          "cobol_level": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "S9(9)V99",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "S9(9)V99",
+              "cobol_usage": "COMP-3"
+            },
+            "field_number": 4,
+            "key": "CUSTOMER-RECORD.CUSTOMER-RECORD.CUST-BALANCE",
+            "name": "CUST-BALANCE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(8)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(8)",
+              "cobol_usage": null
+            },
+            "field_number": 7,
+            "key": "CUSTOMER-RECORD.CUSTOMER-RECORD.CUST-CREATED-DATE",
+            "name": "CUST-CREATED-DATE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(8)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(8)",
+              "cobol_usage": null
+            },
+            "field_number": 1,
+            "key": "CUSTOMER-RECORD.CUSTOMER-RECORD.CUST-ID",
+            "name": "CUST-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": null,
+              "cobol_usage": null
+            },
+            "field_number": 2,
+            "key": "CUSTOMER-RECORD.CUSTOMER-RECORD.CUST-NAME",
+            "name": "CUST-NAME",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "CUSTOMER-RECORD.CUST-NAME",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(2)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(2)",
+              "cobol_usage": null
+            },
+            "field_number": 5,
+            "key": "CUSTOMER-RECORD.CUSTOMER-RECORD.CUST-PHONE-COUNT",
+            "name": "CUST-PHONE-COUNT",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": 5,
+              "cobol_occurs_min": 1,
+              "cobol_picture": null,
+              "cobol_usage": null
+            },
+            "field_number": 6,
+            "key": "CUSTOMER-RECORD.CUSTOMER-RECORD.CUST-PHONES",
+            "name": "CUST-PHONES",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "CUSTOMER-RECORD.CUST-PHONES",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(1)",
+            "extras": {
+              "cobol_conditions": [
+                {
+                  "name": "CUST-ACTIVE",
+                  "value": "A"
+                },
+                {
+                  "name": "CUST-SUSPENDED",
+                  "value": "S"
+                },
+                {
+                  "name": "CUST-CLOSED",
+                  "value": "C"
+                }
+              ],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(1)",
+              "cobol_usage": null
+            },
+            "field_number": 3,
+            "key": "CUSTOMER-RECORD.CUSTOMER-RECORD.CUST-STATUS",
+            "name": "CUST-STATUS",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CUSTOMER-RECORD.CUSTOMER-RECORD",
+        "key_type": null,
+        "kind": "record",
+        "name": "CUSTOMER-RECORD",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cobol-copybook/01-customer-record.cpy",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cobolcopybook"
+  },
+  "fingerprint": "sha256:69950dd01819a21ebe18f532fae00381b74bc5e4dd0f860908a170b017dd6e09",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "c9739026c7db3753499829b39e08c2123bac216dab6daf68f6298abaf175c792",
+    "score": 93,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

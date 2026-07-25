@@ -1,0 +1,91 @@
+{
+  "adapter": "smithy",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "smithy_namespace": "example.minimal",
+      "smithy_version": "2.0"
+    },
+    "format": "smithy",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.minimal",
+      "namespace": "example.minimal"
+    },
+    "paradigm": "rpc",
+    "protocol": "smithy",
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "example.minimal",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "smithy_kind": "structure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "smithy_traits": [
+                "required"
+              ]
+            },
+            "field_number": null,
+            "key": "example.minimal.Greeting.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.minimal.Greeting",
+        "key_type": null,
+        "kind": "record",
+        "name": "Greeting",
+        "namespace": "example.minimal",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "smithy/02-minimal-greeting.smithy",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "smithy"
+  },
+  "fingerprint": "sha256:9b8a801187aeab95a8c8a0e77b45671477519e9ccdf62231e65ad8721baa0604",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "362aff42193de22a127ccd0705ca3db971b0ca04d35fd24089509d3295b3619e",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

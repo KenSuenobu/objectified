@@ -1,0 +1,276 @@
+{
+  "adapter": "oncrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "oncrpc_programs": [
+        {
+          "name": "FILE_PROG",
+          "number": 536870914,
+          "versions": [
+            {
+              "name": "FILE_VERS",
+              "number": 1,
+              "procedures": [
+                {
+                  "arg_type": "file_stat_args",
+                  "name": "FILE_STAT",
+                  "number": 1,
+                  "return_type": "file_stat_res"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "oncrpc_typedefs": {}
+    },
+    "format": "oncrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "FILE_PROG",
+      "namespace": "FILE_PROG"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "FILE_PROG.FILE_PROG",
+        "name": "FILE_PROG",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 1
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "FILE_PROG.FILE_PROG.FILE_STAT",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "FILE_PROG.FILE_PROG.FILE_STAT#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "FILE_PROG.file_stat_args",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "FILE_PROG.FILE_PROG.FILE_STAT#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "FILE_PROG.file_stat_res",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "FILE_STAT",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "FILE_PROG.file_kind.FILE_REGULAR",
+            "name": "FILE_REGULAR",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "FILE_PROG.file_kind.FILE_DIRECTORY",
+            "name": "FILE_DIRECTORY",
+            "value": 1
+          }
+        ],
+        "extras": {
+          "oncrpc_kind": "enum"
+        },
+        "fields": [],
+        "key": "FILE_PROG.file_kind",
+        "key_type": null,
+        "kind": "enum",
+        "name": "file_kind",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 256,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "string<256>"
+            },
+            "field_number": 1,
+            "key": "FILE_PROG.file_stat_args.path",
+            "name": "path",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "FILE_PROG.file_stat_args",
+        "key_type": null,
+        "kind": "record",
+        "name": "file_stat_args",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "file_kind"
+            },
+            "field_number": 1,
+            "key": "FILE_PROG.file_stat_res.kind",
+            "name": "kind",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "FILE_PROG.file_kind",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "hyper"
+            },
+            "field_number": 2,
+            "key": "FILE_PROG.file_stat_res.size",
+            "name": "size",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "FILE_PROG.file_stat_res",
+        "key_type": null,
+        "kind": "record",
+        "name": "file_stat_res",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "onc-rpc/02-file-stat.x",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "oncrpc"
+  },
+  "fingerprint": "sha256:9f7cca5bf6af52b32fa332168c1f84d5d9139aa3f9f3cb214f9258ac7caffc6b",
+  "lint": {
+    "findings": 10,
+    "grade": "C",
+    "report_fingerprint": "eefab191a8e6c9e3d2ad7582dd58ccc3708ac3f0b73da5c4512a948c9ec81c81",
+    "score": 78,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,99 @@
+{
+  "adapter": "wadl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "wadl_target_namespace": null
+    },
+    "format": "wadl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "WADL API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From WADL resources@base",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "WADL API",
+        "name": "WADL API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/status",
+            "key": "GET /status",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /status#response.200",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "getStatus",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "wadl/02-status-ping.wadl",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wadl"
+  },
+  "fingerprint": "sha256:95c3e76ed9524557b7d4052a8db786a7011cbd26eb040851fc9c17a567b3c9b6",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "544d6bd51e6090d2b20706410f620ee6e3e06610db77ecb20bcb6b3c7098c55e",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

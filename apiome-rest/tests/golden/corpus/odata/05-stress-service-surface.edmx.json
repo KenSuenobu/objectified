@@ -1,0 +1,729 @@
+{
+  "adapter": "odata",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "odata_entity_sets": [
+        {
+          "entity_type": "Example.Warehouse.Bin",
+          "name": "Bins"
+        }
+      ],
+      "odata_schemas": [
+        {
+          "complex_types": [
+            {
+              "name": "Dimension",
+              "properties": [
+                {
+                  "name": "Length",
+                  "nullable": false,
+                  "type": "Edm.Double"
+                },
+                {
+                  "name": "Width",
+                  "nullable": false,
+                  "type": "Edm.Double"
+                },
+                {
+                  "name": "Height",
+                  "nullable": false,
+                  "type": "Edm.Double"
+                }
+              ]
+            }
+          ],
+          "entity_container": {
+            "entity_sets": [
+              {
+                "entity_type": "Example.Warehouse.Bin",
+                "name": "Bins"
+              }
+            ],
+            "name": "WarehouseService"
+          },
+          "entity_types": [
+            {
+              "key_properties": [
+                "Code"
+              ],
+              "name": "Bin",
+              "navigation_properties": [
+                {
+                  "name": "Contents",
+                  "partner": null,
+                  "type": "Collection(Example.Warehouse.Pallet)"
+                }
+              ],
+              "properties": [
+                {
+                  "name": "Code",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "Flags",
+                  "nullable": null,
+                  "type": "Example.Warehouse.StorageFlags"
+                },
+                {
+                  "name": "Sku",
+                  "nullable": null,
+                  "type": "Example.Warehouse.Sku"
+                },
+                {
+                  "name": "Slots",
+                  "nullable": null,
+                  "type": "Collection(Example.Warehouse.Dimension)"
+                },
+                {
+                  "name": "Location",
+                  "nullable": null,
+                  "type": "Edm.GeographyPoint"
+                }
+              ]
+            },
+            {
+              "key_properties": [
+                "Id"
+              ],
+              "name": "Pallet",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "name": "Id",
+                  "nullable": false,
+                  "type": "Edm.Int64"
+                },
+                {
+                  "name": "Weight",
+                  "nullable": null,
+                  "type": "Edm.Decimal"
+                },
+                {
+                  "name": "Barcode",
+                  "nullable": null,
+                  "type": "Edm.Binary"
+                },
+                {
+                  "name": "ReceivedOn",
+                  "nullable": null,
+                  "type": "Edm.Date"
+                },
+                {
+                  "name": "Dwell",
+                  "nullable": null,
+                  "type": "Edm.Duration"
+                }
+              ]
+            }
+          ],
+          "enum_types": [
+            {
+              "members": [
+                {
+                  "name": "None",
+                  "value": 0
+                },
+                {
+                  "name": "Refrigerated",
+                  "value": 1
+                },
+                {
+                  "name": "Fragile",
+                  "value": 2
+                },
+                {
+                  "name": "Hazardous",
+                  "value": 4
+                },
+                {
+                  "name": "Oversized",
+                  "value": 8
+                }
+              ],
+              "name": "StorageFlags"
+            }
+          ],
+          "namespace": "Example.Warehouse"
+        }
+      ],
+      "odata_version": "4.0"
+    },
+    "format": "odata",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Example.Warehouse",
+      "namespace": "Example.Warehouse"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Example.Warehouse.Bins",
+        "name": "Bins",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Bins",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Bins",
+            "key": "GET /Bins",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Bins#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Warehouse.Bin",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listBins",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Bins#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Bins",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Bins({key})",
+            "key": "GET /Bins({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Bins({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Warehouse.Bin",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getBin",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Bins",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Bins",
+            "key": "POST /Bins",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Bins#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Warehouse.Bin",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Bins#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Warehouse.Bin",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createBin",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "Code"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": [
+            {
+              "name": "Contents",
+              "partner": null,
+              "type": "Collection(Example.Warehouse.Pallet)"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Example.Warehouse.Bin.Code",
+            "name": "Code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Example.Warehouse.StorageFlags"
+            },
+            "field_number": 2,
+            "key": "Example.Warehouse.Bin.Flags",
+            "name": "Flags",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Example.Warehouse.StorageFlags",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.GeographyPoint"
+            },
+            "field_number": 5,
+            "key": "Example.Warehouse.Bin.Location",
+            "name": "Location",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Example.Warehouse.GeographyPoint",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Example.Warehouse.Sku"
+            },
+            "field_number": 3,
+            "key": "Example.Warehouse.Bin.Sku",
+            "name": "Sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Example.Warehouse.Sku",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Collection(Example.Warehouse.Dimension)"
+            },
+            "field_number": 4,
+            "key": "Example.Warehouse.Bin.Slots",
+            "name": "Slots",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Example.Warehouse.Dimension",
+                "nullable": true
+              },
+              "name": "Example.Warehouse.Dimension",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Example.Warehouse.Bin",
+        "key_type": null,
+        "kind": "record",
+        "name": "Bin",
+        "namespace": "Example.Warehouse",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Double"
+            },
+            "field_number": 3,
+            "key": "Example.Warehouse.Dimension.Height",
+            "name": "Height",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Double"
+            },
+            "field_number": 1,
+            "key": "Example.Warehouse.Dimension.Length",
+            "name": "Length",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Double"
+            },
+            "field_number": 2,
+            "key": "Example.Warehouse.Dimension.Width",
+            "name": "Width",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Example.Warehouse.Dimension",
+        "key_type": null,
+        "kind": "record",
+        "name": "Dimension",
+        "namespace": "Example.Warehouse",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "Id"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Binary"
+            },
+            "field_number": 3,
+            "key": "Example.Warehouse.Pallet.Barcode",
+            "name": "Barcode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Duration"
+            },
+            "field_number": 5,
+            "key": "Example.Warehouse.Pallet.Dwell",
+            "name": "Dwell",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Example.Warehouse.Duration",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Int64"
+            },
+            "field_number": 1,
+            "key": "Example.Warehouse.Pallet.Id",
+            "name": "Id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Date"
+            },
+            "field_number": 4,
+            "key": "Example.Warehouse.Pallet.ReceivedOn",
+            "name": "ReceivedOn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Decimal"
+            },
+            "field_number": 2,
+            "key": "Example.Warehouse.Pallet.Weight",
+            "name": "Weight",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Example.Warehouse.Pallet",
+        "key_type": null,
+        "kind": "record",
+        "name": "Pallet",
+        "namespace": "Example.Warehouse",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Example.Warehouse.StorageFlags.None",
+            "name": "None",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Example.Warehouse.StorageFlags.Refrigerated",
+            "name": "Refrigerated",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Example.Warehouse.StorageFlags.Fragile",
+            "name": "Fragile",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Example.Warehouse.StorageFlags.Hazardous",
+            "name": "Hazardous",
+            "value": 4
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Example.Warehouse.StorageFlags.Oversized",
+            "name": "Oversized",
+            "value": 8
+          }
+        ],
+        "extras": {
+          "odata_kind": "enum"
+        },
+        "fields": [],
+        "key": "Example.Warehouse.StorageFlags",
+        "key_type": null,
+        "kind": "enum",
+        "name": "StorageFlags",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "4.0"
+  },
+  "corpus_path": "odata/05-stress-service-surface.edmx",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "odata"
+  },
+  "fingerprint": "sha256:32ef24b88dfb65c49036a4fbaa8a83305f13c96dca43020718c21f4a90d1e161",
+  "lint": {
+    "findings": 25,
+    "grade": "F",
+    "report_fingerprint": "8b9b2647e4ac75d291f5e30d784f0f1a1d3c973a81dfd7dd367771f8f8d0158a",
+    "score": 54,
+    "severity_counts": {
+      "error": 0,
+      "info": 18,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

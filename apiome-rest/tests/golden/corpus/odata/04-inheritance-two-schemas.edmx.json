@@ -1,0 +1,1007 @@
+{
+  "adapter": "odata",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "odata_entity_sets": [
+        {
+          "entity_type": "Example.Sales.Invoice",
+          "name": "Invoices"
+        },
+        {
+          "entity_type": "Example.Sales.InvoiceLine",
+          "name": "InvoiceLines"
+        },
+        {
+          "entity_type": "Example.Sales.CreditNote",
+          "name": "CreditNotes"
+        }
+      ],
+      "odata_schemas": [
+        {
+          "complex_types": [
+            {
+              "name": "Money",
+              "properties": [
+                {
+                  "name": "Amount",
+                  "nullable": false,
+                  "type": "Edm.Decimal"
+                },
+                {
+                  "name": "Currency",
+                  "nullable": false,
+                  "type": "Edm.String"
+                }
+              ]
+            }
+          ],
+          "entity_container": null,
+          "entity_types": [
+            {
+              "key_properties": [
+                "Id"
+              ],
+              "name": "AuditedEntity",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "name": "Id",
+                  "nullable": false,
+                  "type": "Edm.Guid"
+                },
+                {
+                  "name": "CreatedAt",
+                  "nullable": false,
+                  "type": "Edm.DateTimeOffset"
+                },
+                {
+                  "name": "UpdatedAt",
+                  "nullable": null,
+                  "type": "Edm.DateTimeOffset"
+                }
+              ]
+            }
+          ],
+          "enum_types": [],
+          "namespace": "Example.Core"
+        },
+        {
+          "complex_types": [],
+          "entity_container": {
+            "entity_sets": [
+              {
+                "entity_type": "Example.Sales.Invoice",
+                "name": "Invoices"
+              },
+              {
+                "entity_type": "Example.Sales.InvoiceLine",
+                "name": "InvoiceLines"
+              },
+              {
+                "entity_type": "Example.Sales.CreditNote",
+                "name": "CreditNotes"
+              }
+            ],
+            "name": "SalesContainer"
+          },
+          "entity_types": [
+            {
+              "key_properties": [],
+              "name": "Invoice",
+              "navigation_properties": [
+                {
+                  "name": "Lines",
+                  "partner": "Invoice",
+                  "type": "Collection(Example.Sales.InvoiceLine)"
+                }
+              ],
+              "properties": [
+                {
+                  "name": "Number",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "Total",
+                  "nullable": null,
+                  "type": "Example.Core.Money"
+                }
+              ]
+            },
+            {
+              "key_properties": [],
+              "name": "InvoiceLine",
+              "navigation_properties": [
+                {
+                  "name": "Invoice",
+                  "partner": "Lines",
+                  "type": "Example.Sales.Invoice"
+                }
+              ],
+              "properties": [
+                {
+                  "name": "Description",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "Quantity",
+                  "nullable": false,
+                  "type": "Edm.Int32"
+                },
+                {
+                  "name": "UnitPrice",
+                  "nullable": null,
+                  "type": "Example.Core.Money"
+                }
+              ]
+            },
+            {
+              "key_properties": [],
+              "name": "CreditNote",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "name": "Reason",
+                  "nullable": null,
+                  "type": "Edm.String"
+                }
+              ]
+            }
+          ],
+          "enum_types": [],
+          "namespace": "Example.Sales"
+        }
+      ],
+      "odata_version": "4.0"
+    },
+    "format": "odata",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Example.Core",
+      "namespace": "Example.Core"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Example.Core.CreditNotes",
+        "name": "CreditNotes",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "CreditNotes",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/CreditNotes",
+            "key": "GET /CreditNotes",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /CreditNotes#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Core.CreditNote",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listCreditNotes",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /CreditNotes#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "CreditNotes",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/CreditNotes({key})",
+            "key": "GET /CreditNotes({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /CreditNotes({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Core.CreditNote",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getCreditNote",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "CreditNotes",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/CreditNotes",
+            "key": "POST /CreditNotes",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /CreditNotes#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Core.CreditNote",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /CreditNotes#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Core.CreditNote",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createCreditNote",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Example.Core.InvoiceLines",
+        "name": "InvoiceLines",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "InvoiceLines",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/InvoiceLines",
+            "key": "GET /InvoiceLines",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /InvoiceLines#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Core.InvoiceLine",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listInvoiceLines",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /InvoiceLines#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "InvoiceLines",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/InvoiceLines({key})",
+            "key": "GET /InvoiceLines({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /InvoiceLines({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Core.InvoiceLine",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getInvoiceLine",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "InvoiceLines",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/InvoiceLines",
+            "key": "POST /InvoiceLines",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /InvoiceLines#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Core.InvoiceLine",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /InvoiceLines#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Core.InvoiceLine",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createInvoiceLine",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Example.Core.Invoices",
+        "name": "Invoices",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Invoices",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Invoices",
+            "key": "GET /Invoices",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Invoices#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Core.Invoice",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listInvoices",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Invoices#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Invoices",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Invoices({key})",
+            "key": "GET /Invoices({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Invoices({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Core.Invoice",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getInvoice",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Invoices",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Invoices",
+            "key": "POST /Invoices",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Invoices#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Core.Invoice",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Invoices#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Example.Core.Invoice",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createInvoice",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "Id"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.DateTimeOffset"
+            },
+            "field_number": 2,
+            "key": "Example.Core.AuditedEntity.CreatedAt",
+            "name": "CreatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Guid"
+            },
+            "field_number": 1,
+            "key": "Example.Core.AuditedEntity.Id",
+            "name": "Id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.DateTimeOffset"
+            },
+            "field_number": 3,
+            "key": "Example.Core.AuditedEntity.UpdatedAt",
+            "name": "UpdatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Example.Core.AuditedEntity",
+        "key_type": null,
+        "kind": "record",
+        "name": "AuditedEntity",
+        "namespace": "Example.Core",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Example.Core.CreditNote.Reason",
+            "name": "Reason",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Example.Core.CreditNote",
+        "key_type": null,
+        "kind": "record",
+        "name": "CreditNote",
+        "namespace": "Example.Core",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [],
+          "odata_kind": "entity",
+          "odata_navigation_properties": [
+            {
+              "name": "Lines",
+              "partner": "Invoice",
+              "type": "Collection(Example.Sales.InvoiceLine)"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Example.Core.Invoice.Number",
+            "name": "Number",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Example.Core.Money"
+            },
+            "field_number": 2,
+            "key": "Example.Core.Invoice.Total",
+            "name": "Total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Example.Core.Money",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Example.Core.Invoice",
+        "key_type": null,
+        "kind": "record",
+        "name": "Invoice",
+        "namespace": "Example.Core",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [],
+          "odata_kind": "entity",
+          "odata_navigation_properties": [
+            {
+              "name": "Invoice",
+              "partner": "Lines",
+              "type": "Example.Sales.Invoice"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Example.Core.InvoiceLine.Description",
+            "name": "Description",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Int32"
+            },
+            "field_number": 2,
+            "key": "Example.Core.InvoiceLine.Quantity",
+            "name": "Quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Example.Core.Money"
+            },
+            "field_number": 3,
+            "key": "Example.Core.InvoiceLine.UnitPrice",
+            "name": "UnitPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Example.Core.Money",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Example.Core.InvoiceLine",
+        "key_type": null,
+        "kind": "record",
+        "name": "InvoiceLine",
+        "namespace": "Example.Core",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Decimal"
+            },
+            "field_number": 1,
+            "key": "Example.Core.Money.Amount",
+            "name": "Amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "Example.Core.Money.Currency",
+            "name": "Currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Example.Core.Money",
+        "key_type": null,
+        "kind": "record",
+        "name": "Money",
+        "namespace": "Example.Core",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "4.0"
+  },
+  "corpus_path": "odata/04-inheritance-two-schemas.edmx",
+  "counts": {
+    "channels": 0,
+    "operations": 9,
+    "servers": 0,
+    "services": 3,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "odata"
+  },
+  "fingerprint": "sha256:cba44b468a5eb95e67b21e87d3d817084738707313d60ad12c5317c90ac55dd5",
+  "lint": {
+    "findings": 38,
+    "grade": "F",
+    "report_fingerprint": "77ea55be0f7c35862ec2e31ddd5014878b01c0a3fecb206c4da9f33621706163",
+    "score": 36,
+    "severity_counts": {
+      "error": 0,
+      "info": 24,
+      "warning": 14
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,1791 @@
+{
+  "adapter": "iso20022",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "iso20022_business_element": "BkToCstmrDbtCdtNtfctn",
+      "iso20022_message_id": "camt.054.001.08",
+      "iso20022_namespace": "urn:iso:std:iso:20022:tech:xsd:camt.054.001.08",
+      "iso20022_tree": {
+        "attributes": [],
+        "children": [
+          {
+            "attributes": [],
+            "children": [
+              {
+                "attributes": [],
+                "children": [
+                  {
+                    "attributes": [],
+                    "children": [],
+                    "tag": "MsgId",
+                    "text": "NTFY-20260116-0001"
+                  },
+                  {
+                    "attributes": [],
+                    "children": [],
+                    "tag": "CreDtTm",
+                    "text": "2026-01-16T18:00:00"
+                  }
+                ],
+                "tag": "GrpHdr",
+                "text": null
+              },
+              {
+                "attributes": [],
+                "children": [
+                  {
+                    "attributes": [],
+                    "children": [],
+                    "tag": "Id",
+                    "text": "NTFY-001"
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "IBAN",
+                            "text": "DE89370400440532013000"
+                          }
+                        ],
+                        "tag": "Id",
+                        "text": null
+                      },
+                      {
+                        "attributes": [],
+                        "children": [],
+                        "tag": "Ccy",
+                        "text": "EUR"
+                      }
+                    ],
+                    "tag": "Acct",
+                    "text": null
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [
+                          [
+                            "Ccy",
+                            "EUR"
+                          ]
+                        ],
+                        "children": [],
+                        "tag": "Amt",
+                        "text": "1500.00"
+                      },
+                      {
+                        "attributes": [],
+                        "children": [],
+                        "tag": "CdtDbtInd",
+                        "text": "CRDT"
+                      },
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "Cd",
+                            "text": "BOOK"
+                          }
+                        ],
+                        "tag": "Sts",
+                        "text": null
+                      },
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "DtTm",
+                            "text": "2026-01-16T17:45:00"
+                          }
+                        ],
+                        "tag": "BookgDt",
+                        "text": null
+                      },
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [
+                              {
+                                "attributes": [],
+                                "children": [],
+                                "tag": "Cd",
+                                "text": "PMNT"
+                              },
+                              {
+                                "attributes": [],
+                                "children": [
+                                  {
+                                    "attributes": [],
+                                    "children": [],
+                                    "tag": "Cd",
+                                    "text": "RCDT"
+                                  },
+                                  {
+                                    "attributes": [],
+                                    "children": [],
+                                    "tag": "SubFmlyCd",
+                                    "text": "ESCT"
+                                  }
+                                ],
+                                "tag": "Fmly",
+                                "text": null
+                              }
+                            ],
+                            "tag": "Domn",
+                            "text": null
+                          }
+                        ],
+                        "tag": "BkTxCd",
+                        "text": null
+                      },
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [
+                              {
+                                "attributes": [],
+                                "children": [
+                                  {
+                                    "attributes": [],
+                                    "children": [],
+                                    "tag": "EndToEndId",
+                                    "text": "E2E-0001"
+                                  },
+                                  {
+                                    "attributes": [],
+                                    "children": [],
+                                    "tag": "TxId",
+                                    "text": "TX-20260116-0001"
+                                  }
+                                ],
+                                "tag": "Refs",
+                                "text": null
+                              },
+                              {
+                                "attributes": [],
+                                "children": [
+                                  {
+                                    "attributes": [],
+                                    "children": [
+                                      {
+                                        "attributes": [
+                                          [
+                                            "Ccy",
+                                            "EUR"
+                                          ]
+                                        ],
+                                        "children": [],
+                                        "tag": "Amt",
+                                        "text": "1500.00"
+                                      }
+                                    ],
+                                    "tag": "TxAmt",
+                                    "text": null
+                                  }
+                                ],
+                                "tag": "AmtDtls",
+                                "text": null
+                              },
+                              {
+                                "attributes": [],
+                                "children": [
+                                  {
+                                    "attributes": [],
+                                    "children": [
+                                      {
+                                        "attributes": [],
+                                        "children": [
+                                          {
+                                            "attributes": [],
+                                            "children": [],
+                                            "tag": "Nm",
+                                            "text": "Example Corp"
+                                          }
+                                        ],
+                                        "tag": "Pty",
+                                        "text": null
+                                      }
+                                    ],
+                                    "tag": "Dbtr",
+                                    "text": null
+                                  }
+                                ],
+                                "tag": "RltdPties",
+                                "text": null
+                              },
+                              {
+                                "attributes": [],
+                                "children": [
+                                  {
+                                    "attributes": [],
+                                    "children": [],
+                                    "tag": "Ustrd",
+                                    "text": "Invoice 2026-0042"
+                                  }
+                                ],
+                                "tag": "RmtInf",
+                                "text": null
+                              }
+                            ],
+                            "tag": "TxDtls",
+                            "text": null
+                          }
+                        ],
+                        "tag": "NtryDtls",
+                        "text": null
+                      }
+                    ],
+                    "tag": "Ntry",
+                    "text": null
+                  },
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [
+                          [
+                            "Ccy",
+                            "USD"
+                          ]
+                        ],
+                        "children": [],
+                        "tag": "Amt",
+                        "text": "42.50"
+                      },
+                      {
+                        "attributes": [],
+                        "children": [],
+                        "tag": "CdtDbtInd",
+                        "text": "DBIT"
+                      },
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "Cd",
+                            "text": "BOOK"
+                          }
+                        ],
+                        "tag": "Sts",
+                        "text": null
+                      },
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "DtTm",
+                            "text": "2026-01-16T17:50:00"
+                          }
+                        ],
+                        "tag": "BookgDt",
+                        "text": null
+                      },
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [
+                              {
+                                "attributes": [],
+                                "children": [],
+                                "tag": "Cd",
+                                "text": "PMNT"
+                              },
+                              {
+                                "attributes": [],
+                                "children": [
+                                  {
+                                    "attributes": [],
+                                    "children": [],
+                                    "tag": "Cd",
+                                    "text": "ICDT"
+                                  },
+                                  {
+                                    "attributes": [],
+                                    "children": [],
+                                    "tag": "SubFmlyCd",
+                                    "text": "XBCT"
+                                  }
+                                ],
+                                "tag": "Fmly",
+                                "text": null
+                              }
+                            ],
+                            "tag": "Domn",
+                            "text": null
+                          }
+                        ],
+                        "tag": "BkTxCd",
+                        "text": null
+                      },
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [
+                              {
+                                "attributes": [],
+                                "children": [
+                                  {
+                                    "attributes": [],
+                                    "children": [],
+                                    "tag": "EndToEndId",
+                                    "text": "E2E-0002"
+                                  }
+                                ],
+                                "tag": "Refs",
+                                "text": null
+                              },
+                              {
+                                "attributes": [],
+                                "children": [
+                                  {
+                                    "attributes": [
+                                      [
+                                        "Ccy",
+                                        "USD"
+                                      ]
+                                    ],
+                                    "children": [],
+                                    "tag": "TtlChrgsAndTaxAmt",
+                                    "text": "1.25"
+                                  }
+                                ],
+                                "tag": "Chrgs",
+                                "text": null
+                              }
+                            ],
+                            "tag": "TxDtls",
+                            "text": null
+                          }
+                        ],
+                        "tag": "NtryDtls",
+                        "text": null
+                      }
+                    ],
+                    "tag": "Ntry",
+                    "text": null
+                  }
+                ],
+                "tag": "Ntfctn",
+                "text": null
+              },
+              {
+                "attributes": [],
+                "children": [
+                  {
+                    "attributes": [],
+                    "children": [
+                      {
+                        "attributes": [],
+                        "children": [
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "Channel",
+                            "text": "MOBILE"
+                          },
+                          {
+                            "attributes": [],
+                            "children": [],
+                            "tag": "SessionRef",
+                            "text": "SESS-8842"
+                          }
+                        ],
+                        "tag": "ChannelInfo",
+                        "text": null
+                      }
+                    ],
+                    "tag": "Envlp",
+                    "text": null
+                  }
+                ],
+                "tag": "SplmtryData",
+                "text": null
+              }
+            ],
+            "tag": "BkToCstmrDbtCdtNtfctn",
+            "text": null
+          }
+        ],
+        "tag": "Document",
+        "text": null
+      }
+    },
+    "format": "iso20022",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "BkToCstmrDbtCdtNtfctn (camt.054.001.08)",
+      "namespace": "camt.054.001.08"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "BkToCstmrDbtCdtNtfctn (camt.054.001.08)",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "EUR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 2,
+            "key": "camt.054.001.08.Acct.Ccy",
+            "name": "Ccy",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Acct.Id",
+            "name": "Id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.Id",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Acct",
+        "key_type": null,
+        "kind": "record",
+        "name": "Acct",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.AmtDtls.TxAmt",
+            "name": "TxAmt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.TxAmt",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.AmtDtls",
+        "key_type": null,
+        "kind": "record",
+        "name": "AmtDtls",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.BkToCstmrDbtCdtNtfctn.GrpHdr",
+            "name": "GrpHdr",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.GrpHdr",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 2,
+            "key": "camt.054.001.08.BkToCstmrDbtCdtNtfctn.Ntfctn",
+            "name": "Ntfctn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.Ntfctn",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 3,
+            "key": "camt.054.001.08.BkToCstmrDbtCdtNtfctn.SplmtryData",
+            "name": "SplmtryData",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.SplmtryData",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.BkToCstmrDbtCdtNtfctn",
+        "key_type": null,
+        "kind": "record",
+        "name": "BkToCstmrDbtCdtNtfctn",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.BkTxCd.Domn",
+            "name": "Domn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.Domn",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.BkTxCd",
+        "key_type": null,
+        "kind": "record",
+        "name": "BkTxCd",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "2026-01-16T17:45:00",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.BookgDt.DtTm",
+            "name": "DtTm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.BookgDt",
+        "key_type": null,
+        "kind": "record",
+        "name": "BookgDt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "MOBILE",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.ChannelInfo.Channel",
+            "name": "Channel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "SESS-8842",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 2,
+            "key": "camt.054.001.08.ChannelInfo.SessionRef",
+            "name": "SessionRef",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.ChannelInfo",
+        "key_type": null,
+        "kind": "record",
+        "name": "ChannelInfo",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "1.25",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [
+                [
+                  "Ccy",
+                  "USD"
+                ]
+              ],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Chrgs.TtlChrgsAndTaxAmt",
+            "name": "TtlChrgsAndTaxAmt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Chrgs",
+        "key_type": null,
+        "kind": "record",
+        "name": "Chrgs",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Dbtr.Pty",
+            "name": "Pty",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.Pty",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Dbtr",
+        "key_type": null,
+        "kind": "record",
+        "name": "Dbtr",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Document.BkToCstmrDbtCdtNtfctn",
+            "name": "BkToCstmrDbtCdtNtfctn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.BkToCstmrDbtCdtNtfctn",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Document",
+        "key_type": null,
+        "kind": "record",
+        "name": "Document",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "PMNT",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Domn.Cd",
+            "name": "Cd",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 2,
+            "key": "camt.054.001.08.Domn.Fmly",
+            "name": "Fmly",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.Fmly",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Domn",
+        "key_type": null,
+        "kind": "record",
+        "name": "Domn",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Envlp.ChannelInfo",
+            "name": "ChannelInfo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.ChannelInfo",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Envlp",
+        "key_type": null,
+        "kind": "record",
+        "name": "Envlp",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "RCDT",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Fmly.Cd",
+            "name": "Cd",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "ESCT",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 2,
+            "key": "camt.054.001.08.Fmly.SubFmlyCd",
+            "name": "SubFmlyCd",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Fmly",
+        "key_type": null,
+        "kind": "record",
+        "name": "Fmly",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "2026-01-16T18:00:00",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 2,
+            "key": "camt.054.001.08.GrpHdr.CreDtTm",
+            "name": "CreDtTm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "NTFY-20260116-0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.GrpHdr.MsgId",
+            "name": "MsgId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.GrpHdr",
+        "key_type": null,
+        "kind": "record",
+        "name": "GrpHdr",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "DE89370400440532013000",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Id.IBAN",
+            "name": "IBAN",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Id",
+        "key_type": null,
+        "kind": "record",
+        "name": "Id",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 2,
+            "key": "camt.054.001.08.Ntfctn.Acct",
+            "name": "Acct",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.Acct",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "NTFY-001",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Ntfctn.Id",
+            "name": "Id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 3,
+            "key": "camt.054.001.08.Ntfctn.Ntry",
+            "name": "Ntry",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "camt.054.001.08.Ntry",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 4,
+            "key": "camt.054.001.08.Ntfctn.Ntry",
+            "name": "Ntry",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "camt.054.001.08.Ntry",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Ntfctn",
+        "key_type": null,
+        "kind": "record",
+        "name": "Ntfctn",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "1500.00",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [
+                [
+                  "Ccy",
+                  "EUR"
+                ]
+              ],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Ntry.Amt",
+            "name": "Amt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 5,
+            "key": "camt.054.001.08.Ntry.BkTxCd",
+            "name": "BkTxCd",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.BkTxCd",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 4,
+            "key": "camt.054.001.08.Ntry.BookgDt",
+            "name": "BookgDt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.BookgDt",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "CRDT",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 2,
+            "key": "camt.054.001.08.Ntry.CdtDbtInd",
+            "name": "CdtDbtInd",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 6,
+            "key": "camt.054.001.08.Ntry.NtryDtls",
+            "name": "NtryDtls",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.NtryDtls",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 3,
+            "key": "camt.054.001.08.Ntry.Sts",
+            "name": "Sts",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.Sts",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Ntry",
+        "key_type": null,
+        "kind": "record",
+        "name": "Ntry",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.NtryDtls.TxDtls",
+            "name": "TxDtls",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.TxDtls",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.NtryDtls",
+        "key_type": null,
+        "kind": "record",
+        "name": "NtryDtls",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "Example Corp",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Pty.Nm",
+            "name": "Nm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Pty",
+        "key_type": null,
+        "kind": "record",
+        "name": "Pty",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "E2E-0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Refs.EndToEndId",
+            "name": "EndToEndId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "TX-20260116-0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 2,
+            "key": "camt.054.001.08.Refs.TxId",
+            "name": "TxId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Refs",
+        "key_type": null,
+        "kind": "record",
+        "name": "Refs",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.RltdPties.Dbtr",
+            "name": "Dbtr",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.Dbtr",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.RltdPties",
+        "key_type": null,
+        "kind": "record",
+        "name": "RltdPties",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "Invoice 2026-0042",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.RmtInf.Ustrd",
+            "name": "Ustrd",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.RmtInf",
+        "key_type": null,
+        "kind": "record",
+        "name": "RmtInf",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.SplmtryData.Envlp",
+            "name": "Envlp",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.Envlp",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.SplmtryData",
+        "key_type": null,
+        "kind": "record",
+        "name": "SplmtryData",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "BOOK",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.Sts.Cd",
+            "name": "Cd",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.Sts",
+        "key_type": null,
+        "kind": "record",
+        "name": "Sts",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "1500.00",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_attributes": [
+                [
+                  "Ccy",
+                  "EUR"
+                ]
+              ],
+              "iso20022_kind": "leaf"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.TxAmt.Amt",
+            "name": "Amt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.TxAmt",
+        "key_type": null,
+        "kind": "record",
+        "name": "TxAmt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "iso20022_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 2,
+            "key": "camt.054.001.08.TxDtls.AmtDtls",
+            "name": "AmtDtls",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.AmtDtls",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 1,
+            "key": "camt.054.001.08.TxDtls.Refs",
+            "name": "Refs",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.Refs",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 3,
+            "key": "camt.054.001.08.TxDtls.RltdPties",
+            "name": "RltdPties",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.RltdPties",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "iso20022_kind": "element"
+            },
+            "field_number": 4,
+            "key": "camt.054.001.08.TxDtls.RmtInf",
+            "name": "RmtInf",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "camt.054.001.08.RmtInf",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "camt.054.001.08.TxDtls",
+        "key_type": null,
+        "kind": "record",
+        "name": "TxDtls",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "iso20022/05-camt.054-notification.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 25
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "iso20022"
+  },
+  "fingerprint": "sha256:d63e05210e4e255a02b372d04f59e602d336dd31b1c91a860ee863cdf8ac6177",
+  "lint": {
+    "findings": 70,
+    "grade": "F",
+    "report_fingerprint": "858bee73fe0c675b643c1dfdd2c8ebcb75098dc5e4da3a08011ade3335464a95",
+    "score": 59,
+    "severity_counts": {
+      "error": 0,
+      "info": 45,
+      "warning": 25
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,720 @@
+{
+  "adapter": "wsdl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "wsdl_target_namespace": "http://example.com/orders"
+    },
+    "format": "wsdl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "OrderService",
+      "namespace": "http://example.com/orders"
+    },
+    "paradigm": "rest",
+    "protocol": "soap",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "OrderService/OrderPort",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/soap/orders",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "http://example.com/orders.OrderPort",
+        "name": "OrderPort",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "http://example.com/orders.OrderPort.CancelOrder",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/orders.OrderPort.CancelOrder#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/orders.CancelOrderRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/orders.OrderPort.CancelOrder#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/orders.CancelOrderResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "CancelOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "http://example.com/orders.OrderPort.CreateOrder",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/orders.OrderPort.CreateOrder#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/orders.CreateOrderRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/orders.OrderPort.CreateOrder#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/orders.CreateOrderResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "CreateOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "http://example.com/orders.OrderPort.GetOrder",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/orders.OrderPort.GetOrder#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/orders.GetOrderRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/orders.OrderPort.GetOrder#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/orders.GetOrderResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GetOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/orders.CancelOrderRequest.orderId",
+            "name": "orderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/orders.CancelOrderRequest.reason",
+            "name": "reason",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/orders.CancelOrderRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "CancelOrderRequest",
+        "namespace": "http://example.com/orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "boolean"
+            },
+            "field_number": 1,
+            "key": "http://example.com/orders.CancelOrderResponse.cancelled",
+            "name": "cancelled",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/orders.CancelOrderResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "CancelOrderResponse",
+        "namespace": "http://example.com/orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/orders.CreateOrderRequest.customerId",
+            "name": "customerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "OrderLine"
+            },
+            "field_number": 2,
+            "key": "http://example.com/orders.CreateOrderRequest.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/orders.OrderLine",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/orders.CreateOrderRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "CreateOrderRequest",
+        "namespace": "http://example.com/orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "Order"
+            },
+            "field_number": 1,
+            "key": "http://example.com/orders.CreateOrderResponse.order",
+            "name": "order",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/orders.Order",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/orders.CreateOrderResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "CreateOrderResponse",
+        "namespace": "http://example.com/orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/orders.GetOrderRequest.orderId",
+            "name": "orderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/orders.GetOrderRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "GetOrderRequest",
+        "namespace": "http://example.com/orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "Order"
+            },
+            "field_number": 1,
+            "key": "http://example.com/orders.GetOrderResponse.order",
+            "name": "order",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/orders.Order",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/orders.GetOrderResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "GetOrderResponse",
+        "namespace": "http://example.com/orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/orders.Order.customerId",
+            "name": "customerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "OrderLine"
+            },
+            "field_number": 4,
+            "key": "http://example.com/orders.Order.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/orders.OrderLine",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/orders.Order.orderId",
+            "name": "orderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "dateTime"
+            },
+            "field_number": 3,
+            "key": "http://example.com/orders.Order.placedAt",
+            "name": "placedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "decimal"
+            },
+            "field_number": 5,
+            "key": "http://example.com/orders.Order.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/orders.Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": "http://example.com/orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/orders.OrderFault.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/orders.OrderFault.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/orders.OrderFault",
+        "key_type": null,
+        "kind": "record",
+        "name": "OrderFault",
+        "namespace": "http://example.com/orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "positiveInteger"
+            },
+            "field_number": 2,
+            "key": "http://example.com/orders.OrderLine.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "positiveInteger",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/orders.OrderLine.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "decimal"
+            },
+            "field_number": 3,
+            "key": "http://example.com/orders.OrderLine.unitPrice",
+            "name": "unitPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/orders.OrderLine",
+        "key_type": null,
+        "kind": "record",
+        "name": "OrderLine",
+        "namespace": "http://example.com/orders",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "wsdl/02-order-service.wsdl",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 1,
+    "services": 1,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wsdl"
+  },
+  "fingerprint": "sha256:a0ec50674e72d7195458d1e00b311d9331613eee72b7f60be7e5a0c14ec9b78e",
+  "lint": {
+    "findings": 37,
+    "grade": "F",
+    "report_fingerprint": "5a16019ea418513c81a757b75d063e02ec4f9787b80330a75c65d5f02042d8c9",
+    "score": 43,
+    "severity_counts": {
+      "error": 0,
+      "info": 25,
+      "warning": 12
+    }
+  },
+  "snapshot_version": 1
+}

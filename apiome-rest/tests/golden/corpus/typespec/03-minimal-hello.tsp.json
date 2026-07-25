@@ -1,0 +1,86 @@
+{
+  "adapter": "typespec",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "typespec_enums": [],
+      "typespec_imports": [
+        "import \"@typespec/http\""
+      ],
+      "typespec_interfaces": [],
+      "typespec_models": [
+        {
+          "documentation": null,
+          "fields": [],
+          "name": "Greeting"
+        }
+      ],
+      "typespec_namespace": "HelloService",
+      "typespec_service_title": null,
+      "typespec_usings": [
+        "TypeSpec.Http"
+      ]
+    },
+    "format": "typespec",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "HelloService",
+      "namespace": "HelloService"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "typespec_key_fields": [],
+          "typespec_kind": "model"
+        },
+        "fields": [],
+        "key": "HelloService.Greeting",
+        "key_type": null,
+        "kind": "record",
+        "name": "Greeting",
+        "namespace": "HelloService",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "typespec/03-minimal-hello.tsp",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "typespec"
+  },
+  "fingerprint": "sha256:0d4ca4604fcc047f301910afb642c9b3986269cc820e135c78e7c8d4ddfa9d59",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "b75a4de47f838d23a71b352385c7254bf165df0b5f0c8bb477f053b2ac2b61f3",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

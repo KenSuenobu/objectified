@@ -1,0 +1,186 @@
+{
+  "adapter": "xmlrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "xmlrpc_kind": "methodCall"
+    },
+    "format": "xmlrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "system.multicall",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": "xmlrpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "system.multicall",
+        "name": "system.multicall",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xmlrpc_fault_code": null,
+              "xmlrpc_fault_string": null,
+              "xmlrpc_kind": "methodCall"
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "system.multicall.system.multicall",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "xmlrpc_params": [
+                    {
+                      "index": 0,
+                      "name": "param0",
+                      "required": true,
+                      "sample": [
+                        {
+                          "methodName": "inventory.reserveStock",
+                          "params": [
+                            "WIDGET-001",
+                            2
+                          ]
+                        },
+                        {
+                          "methodName": "inventory.releaseStock",
+                          "params": [
+                            "GADGET-007",
+                            1
+                          ]
+                        }
+                      ],
+                      "schema": {
+                        "items": {
+                          "$ref": "#/components/schemas/SystemMulticallParam1Item"
+                        },
+                        "type": "array"
+                      }
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "system.multicall.system.multicall#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "system.multicall",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "system.multicall",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "xmlrpc_kind": "struct",
+          "xmlrpc_samples": {
+            "methodName": "inventory.reserveStock",
+            "params": [
+              "WIDGET-001",
+              2
+            ]
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "SystemMulticallParam1Item.methodName",
+            "name": "methodName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "SystemMulticallParam1Item.params",
+            "name": "params",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "SystemMulticallParam1Item",
+        "key_type": null,
+        "kind": "record",
+        "name": "SystemMulticallParam1Item",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "xml-rpc/04-system-multicall.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "xmlrpc"
+  },
+  "fingerprint": "sha256:f1b71ed20f7a82eb430679a47a4ce3d568cb7bc58dbe8fd22479943140d37de4",
+  "lint": {
+    "findings": 6,
+    "grade": "B",
+    "report_fingerprint": "6e1dfc29624e5644817bf3adaee6a884ffd9edeeb3b7c61c769f1c77248e5084",
+    "score": 88,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

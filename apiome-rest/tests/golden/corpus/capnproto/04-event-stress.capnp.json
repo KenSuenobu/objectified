@@ -1,0 +1,528 @@
+{
+  "adapter": "capnproto",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "capnp_file_id": "0xe59b7c31a8d40f26",
+      "capnp_imports": []
+    },
+    "format": "capnproto",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Collector",
+      "namespace": null
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Collector",
+        "name": "Collector",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 2
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Collector.ping",
+            "kind": "request_response",
+            "messages": [],
+            "name": "ping",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "Collector.publish",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "capnp_param_name": "batch"
+                },
+                "headers": [],
+                "key": "Collector.publish#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Batch",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "capnp_result_name": "accepted"
+                },
+                "headers": [],
+                "key": "Collector.publish#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "uint32",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "publish",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "Batch.events",
+            "name": "events",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Event",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "field_number": 1,
+            "key": "Batch.next",
+            "name": "next",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "AnyPointer",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Batch",
+        "key_type": null,
+        "kind": "record",
+        "name": "Batch",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 5
+            },
+            "field_number": 5,
+            "key": "Event.created",
+            "name": "created",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Event.Created",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 6
+            },
+            "field_number": 6,
+            "key": "Event.deleted",
+            "name": "deleted",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Event.Deleted",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "Event.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 8
+            },
+            "field_number": 8,
+            "key": "Event.latitude",
+            "name": "latitude",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 9
+            },
+            "field_number": 9,
+            "key": "Event.longitude",
+            "name": "longitude",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 2
+            },
+            "field_number": 2,
+            "key": "Event.matrix",
+            "name": "matrix",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "List(List(Float64))",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 7
+            },
+            "field_number": 7,
+            "key": "Event.note",
+            "name": "note",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 1
+            },
+            "field_number": 1,
+            "key": "Event.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 4
+            },
+            "field_number": 4,
+            "key": "Event.severity",
+            "name": "severity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Event.Severity",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 3
+            },
+            "field_number": 3,
+            "key": "Event.tags",
+            "name": "tags",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Event",
+        "key_type": null,
+        "kind": "record",
+        "name": "Event",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct",
+          "capnp_qualified_name": "Event.Created"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "Event.Created.actor",
+            "name": "actor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Event.Created",
+        "key_type": null,
+        "kind": "record",
+        "name": "Created",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "capnp_kind": "struct",
+          "capnp_qualified_name": "Event.Deleted"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "capnp_slot": 0
+            },
+            "field_number": 0,
+            "key": "Event.Deleted.reason",
+            "name": "reason",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Event.Deleted",
+        "key_type": null,
+        "kind": "record",
+        "name": "Deleted",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Event.Severity.debug",
+            "name": "debug",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Event.Severity.info",
+            "name": "info",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Event.Severity.warning",
+            "name": "warning",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Event.Severity.error",
+            "name": "error",
+            "value": 3
+          }
+        ],
+        "extras": {
+          "capnp_kind": "enum",
+          "capnp_qualified_name": "Event.Severity"
+        },
+        "fields": [],
+        "key": "Event.Severity",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Severity",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "capnproto/04-event-stress.capnp",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 1,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "capnproto"
+  },
+  "fingerprint": "sha256:4be47f2076a066ef56aa7c0464d8fee36d12850408c52a60da9709e5ea6250bd",
+  "lint": {
+    "findings": 24,
+    "grade": "F",
+    "report_fingerprint": "8aa569e09a426f0b49b15050fa65d6cedcb3ef01e81dc024c6b558199332f8e8",
+    "score": 55,
+    "severity_counts": {
+      "error": 0,
+      "info": 17,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

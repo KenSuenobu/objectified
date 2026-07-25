@@ -1,0 +1,604 @@
+{
+  "adapter": "oncrpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "oncrpc_programs": [
+        {
+          "name": "PMAP_PROG",
+          "number": 100000,
+          "versions": [
+            {
+              "name": "PMAP_VERS",
+              "number": 2,
+              "procedures": [
+                {
+                  "arg_type": "void",
+                  "name": "PMAPPROC_NULL",
+                  "number": 0,
+                  "return_type": "void"
+                },
+                {
+                  "arg_type": "mapping",
+                  "name": "PMAPPROC_SET",
+                  "number": 1,
+                  "return_type": "bool"
+                },
+                {
+                  "arg_type": "mapping",
+                  "name": "PMAPPROC_UNSET",
+                  "number": 2,
+                  "return_type": "bool"
+                },
+                {
+                  "arg_type": "mapping",
+                  "name": "PMAPPROC_GETPORT",
+                  "number": 3,
+                  "return_type": "unsigned int"
+                },
+                {
+                  "arg_type": "call_args",
+                  "name": "PMAPPROC_CALLIT",
+                  "number": 5,
+                  "return_type": "call_result"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "oncrpc_typedefs": {}
+    },
+    "format": "oncrpc",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "PMAP_PROG",
+      "namespace": "PMAP_PROG"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "PMAP_PROG.PMAP_PROG",
+        "name": "PMAP_PROG",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 5
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_CALLIT",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_CALLIT#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PMAP_PROG.call_args",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_CALLIT#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PMAP_PROG.call_result",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "PMAPPROC_CALLIT",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 3
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_GETPORT",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_GETPORT#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PMAP_PROG.mapping",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_GETPORT#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "uint32",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "PMAPPROC_GETPORT",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 0
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_NULL",
+            "kind": "request_response",
+            "messages": [],
+            "name": "PMAPPROC_NULL",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 1
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_SET",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_SET#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PMAP_PROG.mapping",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_SET#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "bool",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "PMAPPROC_SET",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_procedure_number": 2
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_UNSET",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_UNSET#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PMAP_PROG.mapping",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "PMAP_PROG.PMAP_PROG.PMAPPROC_UNSET#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "bool",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "PMAPPROC_UNSET",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 2048,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "opaque<2048>"
+            },
+            "field_number": 4,
+            "key": "PMAP_PROG.call_args.args",
+            "name": "args",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "unsigned int"
+            },
+            "field_number": 3,
+            "key": "PMAP_PROG.call_args.proc",
+            "name": "proc",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "unsigned int"
+            },
+            "field_number": 1,
+            "key": "PMAP_PROG.call_args.prog",
+            "name": "prog",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "unsigned int"
+            },
+            "field_number": 2,
+            "key": "PMAP_PROG.call_args.vers",
+            "name": "vers",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PMAP_PROG.call_args",
+        "key_type": null,
+        "kind": "record",
+        "name": "call_args",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "unsigned int"
+            },
+            "field_number": 1,
+            "key": "PMAP_PROG.call_result.port",
+            "name": "port",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 2048,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "opaque<2048>"
+            },
+            "field_number": 2,
+            "key": "PMAP_PROG.call_result.res",
+            "name": "res",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PMAP_PROG.call_result",
+        "key_type": null,
+        "kind": "record",
+        "name": "call_result",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oncrpc_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "unsigned int"
+            },
+            "field_number": 4,
+            "key": "PMAP_PROG.mapping.port",
+            "name": "port",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "unsigned int"
+            },
+            "field_number": 1,
+            "key": "PMAP_PROG.mapping.prog",
+            "name": "prog",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "unsigned int"
+            },
+            "field_number": 3,
+            "key": "PMAP_PROG.mapping.prot",
+            "name": "prot",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "oncrpc_type_expr": "unsigned int"
+            },
+            "field_number": 2,
+            "key": "PMAP_PROG.mapping.vers",
+            "name": "vers",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PMAP_PROG.mapping",
+        "key_type": null,
+        "kind": "record",
+        "name": "mapping",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "onc-rpc/05-portmapper-style.x",
+  "counts": {
+    "channels": 0,
+    "operations": 5,
+    "servers": 0,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "oncrpc"
+  },
+  "fingerprint": "sha256:e1f3101bc72320be84b8196df931a18acafb32077efc71b5ccea8f9f194725ae",
+  "lint": {
+    "findings": 27,
+    "grade": "F",
+    "report_fingerprint": "a494edced5db450213e1ac9a8597c6626189c374b4554c7b5dd80921993e120b",
+    "score": 49,
+    "severity_counts": {
+      "error": 0,
+      "info": 19,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

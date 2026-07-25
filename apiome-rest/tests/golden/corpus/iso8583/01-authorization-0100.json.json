@@ -1,0 +1,800 @@
+{
+  "adapter": "iso8583",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "iso8583_data_elements": [
+        {
+          "length": "..19",
+          "name": "Primary Account Number",
+          "number": "2",
+          "type": "n",
+          "value": "4111111111111111"
+        },
+        {
+          "length": "6",
+          "name": "Processing Code",
+          "number": "3",
+          "type": "n",
+          "value": "000000"
+        },
+        {
+          "length": "12",
+          "name": "Amount, Transaction",
+          "number": "4",
+          "type": "n",
+          "value": "000000018550"
+        },
+        {
+          "length": "10",
+          "name": "Transmission Date & Time",
+          "number": "7",
+          "type": "n",
+          "value": "0115083000"
+        },
+        {
+          "length": "6",
+          "name": "System Trace Audit Number",
+          "number": "11",
+          "type": "n",
+          "value": "000001"
+        },
+        {
+          "length": "6",
+          "name": "Local Transaction Time",
+          "number": "12",
+          "type": "n",
+          "value": "083000"
+        },
+        {
+          "length": "4",
+          "name": "Local Transaction Date",
+          "number": "13",
+          "type": "n",
+          "value": "0115"
+        },
+        {
+          "length": "4",
+          "name": "Merchant Category Code",
+          "number": "18",
+          "type": "n",
+          "value": "5411"
+        },
+        {
+          "length": "..11",
+          "name": "Acquiring Institution ID",
+          "number": "32",
+          "type": "n",
+          "value": "12345"
+        },
+        {
+          "length": "8",
+          "name": "Card Acceptor Terminal ID",
+          "number": "41",
+          "type": "ans",
+          "value": "TERM0001"
+        },
+        {
+          "length": "3",
+          "name": "Currency Code, Transaction",
+          "number": "49",
+          "type": "n",
+          "value": "840"
+        }
+      ],
+      "iso8583_mti": "0100",
+      "iso8583_name": "Authorization Request"
+    },
+    "format": "iso8583",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Authorization Request",
+      "namespace": "0100"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Authorization Request",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "System Trace Audit Number",
+        "enum_values": [],
+        "extras": {
+          "iso8583_de_length": "6",
+          "iso8583_de_name": "System Trace Audit Number",
+          "iso8583_de_number": "11",
+          "iso8583_de_type": "n"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "000001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "0100.DE11.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0100.DE11",
+        "key_type": null,
+        "kind": "record",
+        "name": "DE11",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Local Transaction Time",
+        "enum_values": [],
+        "extras": {
+          "iso8583_de_length": "6",
+          "iso8583_de_name": "Local Transaction Time",
+          "iso8583_de_number": "12",
+          "iso8583_de_type": "n"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "083000",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "0100.DE12.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0100.DE12",
+        "key_type": null,
+        "kind": "record",
+        "name": "DE12",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Local Transaction Date",
+        "enum_values": [],
+        "extras": {
+          "iso8583_de_length": "4",
+          "iso8583_de_name": "Local Transaction Date",
+          "iso8583_de_number": "13",
+          "iso8583_de_type": "n"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "0115",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "0100.DE13.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0100.DE13",
+        "key_type": null,
+        "kind": "record",
+        "name": "DE13",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Merchant Category Code",
+        "enum_values": [],
+        "extras": {
+          "iso8583_de_length": "4",
+          "iso8583_de_name": "Merchant Category Code",
+          "iso8583_de_number": "18",
+          "iso8583_de_type": "n"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "5411",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "0100.DE18.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0100.DE18",
+        "key_type": null,
+        "kind": "record",
+        "name": "DE18",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Primary Account Number",
+        "enum_values": [],
+        "extras": {
+          "iso8583_de_length": "..19",
+          "iso8583_de_name": "Primary Account Number",
+          "iso8583_de_number": "2",
+          "iso8583_de_type": "n"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "4111111111111111",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "0100.DE2.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0100.DE2",
+        "key_type": null,
+        "kind": "record",
+        "name": "DE2",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Processing Code",
+        "enum_values": [],
+        "extras": {
+          "iso8583_de_length": "6",
+          "iso8583_de_name": "Processing Code",
+          "iso8583_de_number": "3",
+          "iso8583_de_type": "n"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "000000",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "0100.DE3.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0100.DE3",
+        "key_type": null,
+        "kind": "record",
+        "name": "DE3",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Acquiring Institution ID",
+        "enum_values": [],
+        "extras": {
+          "iso8583_de_length": "..11",
+          "iso8583_de_name": "Acquiring Institution ID",
+          "iso8583_de_number": "32",
+          "iso8583_de_type": "n"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "12345",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "0100.DE32.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0100.DE32",
+        "key_type": null,
+        "kind": "record",
+        "name": "DE32",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Amount, Transaction",
+        "enum_values": [],
+        "extras": {
+          "iso8583_de_length": "12",
+          "iso8583_de_name": "Amount, Transaction",
+          "iso8583_de_number": "4",
+          "iso8583_de_type": "n"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "000000018550",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "0100.DE4.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0100.DE4",
+        "key_type": null,
+        "kind": "record",
+        "name": "DE4",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Card Acceptor Terminal ID",
+        "enum_values": [],
+        "extras": {
+          "iso8583_de_length": "8",
+          "iso8583_de_name": "Card Acceptor Terminal ID",
+          "iso8583_de_number": "41",
+          "iso8583_de_type": "ans"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "TERM0001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "0100.DE41.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0100.DE41",
+        "key_type": null,
+        "kind": "record",
+        "name": "DE41",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Currency Code, Transaction",
+        "enum_values": [],
+        "extras": {
+          "iso8583_de_length": "3",
+          "iso8583_de_name": "Currency Code, Transaction",
+          "iso8583_de_number": "49",
+          "iso8583_de_type": "n"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "840",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "0100.DE49.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0100.DE49",
+        "key_type": null,
+        "kind": "record",
+        "name": "DE49",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Transmission Date & Time",
+        "enum_values": [],
+        "extras": {
+          "iso8583_de_length": "10",
+          "iso8583_de_name": "Transmission Date & Time",
+          "iso8583_de_number": "7",
+          "iso8583_de_type": "n"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "0115083000",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "0100.DE7.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0100.DE7",
+        "key_type": null,
+        "kind": "record",
+        "name": "DE7",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Authorization Request",
+        "enum_values": [],
+        "extras": {
+          "iso8583_kind": "message",
+          "iso8583_mti": "0100"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "000001",
+            "deprecated": false,
+            "description": "System Trace Audit Number",
+            "extras": {
+              "iso8583_de_length": "6",
+              "iso8583_de_name": "System Trace Audit Number",
+              "iso8583_de_number": "11",
+              "iso8583_de_type": "n"
+            },
+            "field_number": 5,
+            "key": "0100.Message0100.DE11",
+            "name": "DE11",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "083000",
+            "deprecated": false,
+            "description": "Local Transaction Time",
+            "extras": {
+              "iso8583_de_length": "6",
+              "iso8583_de_name": "Local Transaction Time",
+              "iso8583_de_number": "12",
+              "iso8583_de_type": "n"
+            },
+            "field_number": 6,
+            "key": "0100.Message0100.DE12",
+            "name": "DE12",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "0115",
+            "deprecated": false,
+            "description": "Local Transaction Date",
+            "extras": {
+              "iso8583_de_length": "4",
+              "iso8583_de_name": "Local Transaction Date",
+              "iso8583_de_number": "13",
+              "iso8583_de_type": "n"
+            },
+            "field_number": 7,
+            "key": "0100.Message0100.DE13",
+            "name": "DE13",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "5411",
+            "deprecated": false,
+            "description": "Merchant Category Code",
+            "extras": {
+              "iso8583_de_length": "4",
+              "iso8583_de_name": "Merchant Category Code",
+              "iso8583_de_number": "18",
+              "iso8583_de_type": "n"
+            },
+            "field_number": 8,
+            "key": "0100.Message0100.DE18",
+            "name": "DE18",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "4111111111111111",
+            "deprecated": false,
+            "description": "Primary Account Number",
+            "extras": {
+              "iso8583_de_length": "..19",
+              "iso8583_de_name": "Primary Account Number",
+              "iso8583_de_number": "2",
+              "iso8583_de_type": "n"
+            },
+            "field_number": 1,
+            "key": "0100.Message0100.DE2",
+            "name": "DE2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "000000",
+            "deprecated": false,
+            "description": "Processing Code",
+            "extras": {
+              "iso8583_de_length": "6",
+              "iso8583_de_name": "Processing Code",
+              "iso8583_de_number": "3",
+              "iso8583_de_type": "n"
+            },
+            "field_number": 2,
+            "key": "0100.Message0100.DE3",
+            "name": "DE3",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "12345",
+            "deprecated": false,
+            "description": "Acquiring Institution ID",
+            "extras": {
+              "iso8583_de_length": "..11",
+              "iso8583_de_name": "Acquiring Institution ID",
+              "iso8583_de_number": "32",
+              "iso8583_de_type": "n"
+            },
+            "field_number": 9,
+            "key": "0100.Message0100.DE32",
+            "name": "DE32",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "000000018550",
+            "deprecated": false,
+            "description": "Amount, Transaction",
+            "extras": {
+              "iso8583_de_length": "12",
+              "iso8583_de_name": "Amount, Transaction",
+              "iso8583_de_number": "4",
+              "iso8583_de_type": "n"
+            },
+            "field_number": 3,
+            "key": "0100.Message0100.DE4",
+            "name": "DE4",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "TERM0001",
+            "deprecated": false,
+            "description": "Card Acceptor Terminal ID",
+            "extras": {
+              "iso8583_de_length": "8",
+              "iso8583_de_name": "Card Acceptor Terminal ID",
+              "iso8583_de_number": "41",
+              "iso8583_de_type": "ans"
+            },
+            "field_number": 10,
+            "key": "0100.Message0100.DE41",
+            "name": "DE41",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "840",
+            "deprecated": false,
+            "description": "Currency Code, Transaction",
+            "extras": {
+              "iso8583_de_length": "3",
+              "iso8583_de_name": "Currency Code, Transaction",
+              "iso8583_de_number": "49",
+              "iso8583_de_type": "n"
+            },
+            "field_number": 11,
+            "key": "0100.Message0100.DE49",
+            "name": "DE49",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "0115083000",
+            "deprecated": false,
+            "description": "Transmission Date & Time",
+            "extras": {
+              "iso8583_de_length": "10",
+              "iso8583_de_name": "Transmission Date & Time",
+              "iso8583_de_number": "7",
+              "iso8583_de_type": "n"
+            },
+            "field_number": 4,
+            "key": "0100.Message0100.DE7",
+            "name": "DE7",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "0100.Message0100",
+        "key_type": null,
+        "kind": "record",
+        "name": "Message0100",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "iso8583/01-authorization-0100.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 12
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "iso8583"
+  },
+  "fingerprint": "sha256:003373981b10079b3cd5140e0c904acf519876968014e3f07886b4aa7d52b4db",
+  "lint": {
+    "findings": 12,
+    "grade": "B",
+    "report_fingerprint": "42395f37051cda1c0228b1f8cc6c6d38e2ffa627bde90892e542ce3aac870ed5",
+    "score": 88,
+    "severity_counts": {
+      "error": 0,
+      "info": 12,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

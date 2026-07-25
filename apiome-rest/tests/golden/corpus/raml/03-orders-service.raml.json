@@ -1,0 +1,545 @@
+{
+  "adapter": "raml",
+  "canonical": {
+    "channels": [],
+    "description": "Order intake and fulfilment tracking for the web store.",
+    "extras": {
+      "raml_media_type": "application/json",
+      "raml_version": "1.0"
+    },
+    "format": "raml",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Orders API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From RAML baseUri",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/orders/v1",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Orders API",
+        "name": "Orders API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Cancel an order that has not shipped yet.",
+            "extras": {},
+            "http_method": "DELETE",
+            "http_path": "/orders/{orderId}",
+            "key": "DELETE /orders/{orderId}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "DELETE /orders/{orderId}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Identifier of the order.",
+                "extras": {
+                  "raml_type": "string"
+                },
+                "key": "DELETE /orders/{orderId}#path.orderId",
+                "location": "path",
+                "name": "orderId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List orders, optionally filtered.",
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/orders",
+            "key": "GET /orders",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /orders#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GET /orders",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Only return orders for this customer.",
+                "extras": {
+                  "raml_type": "string"
+                },
+                "key": "GET /orders#query.customerId",
+                "location": "query",
+                "name": "customerId",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Only return orders in this status.",
+                "extras": {
+                  "raml_type": "string"
+                },
+                "key": "GET /orders#query.status",
+                "location": "query",
+                "name": "status",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Fetch an order by id.",
+            "extras": {},
+            "http_method": "GET",
+            "http_path": "/orders/{orderId}",
+            "key": "GET /orders/{orderId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /orders/{orderId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "GET /orders/{orderId}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Identifier of the order.",
+                "extras": {
+                  "raml_type": "string"
+                },
+                "key": "GET /orders/{orderId}#path.orderId",
+                "location": "path",
+                "name": "orderId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Place a new order.",
+            "extras": {},
+            "http_method": "POST",
+            "http_path": "/orders",
+            "key": "POST /orders",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /orders#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "NewOrder",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "201"
+                },
+                "headers": [],
+                "key": "POST /orders#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "POST /orders",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Orders API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Payload to place an order (server assigns id and status).",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 1,
+            "key": "NewOrder.customerId",
+            "name": "customerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "raml_type": "array"
+            },
+            "field_number": 2,
+            "key": "NewOrder.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "array",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "NewOrder",
+        "key_type": null,
+        "kind": "record",
+        "name": "NewOrder",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A customer order.",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Identifier of the ordering customer.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 2,
+            "key": "Order.customerId",
+            "name": "customerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Unique order identifier.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 1,
+            "key": "Order.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Lines of the order.",
+            "extras": {
+              "raml_type": "array"
+            },
+            "field_number": 5,
+            "key": "Order.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "array",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "When the order was placed.",
+            "extras": {
+              "raml_type": "datetime"
+            },
+            "field_number": 4,
+            "key": "Order.placedAt",
+            "name": "placedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Fulfilment status (placed, shipped, delivered, cancelled).",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 3,
+            "key": "Order.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Order total in the shop currency.",
+            "extras": {
+              "raml_type": "number"
+            },
+            "field_number": 6,
+            "key": "Order.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A single line in an order.",
+        "enum_values": [],
+        "extras": {
+          "raml_kind": "object"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Number of units ordered.",
+            "extras": {
+              "raml_type": "integer"
+            },
+            "field_number": 2,
+            "key": "OrderItem.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Stock keeping unit of the product.",
+            "extras": {
+              "raml_type": "string"
+            },
+            "field_number": 1,
+            "key": "OrderItem.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Price per unit at order time.",
+            "extras": {
+              "raml_type": "number"
+            },
+            "field_number": 3,
+            "key": "OrderItem.unitPrice",
+            "name": "unitPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "OrderItem",
+        "key_type": null,
+        "kind": "record",
+        "name": "OrderItem",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v1"
+  },
+  "corpus_path": "raml/03-orders-service.raml",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 1,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "raml"
+  },
+  "fingerprint": "sha256:77ebb757e64798c5b07bba3cfef973842aba7fcd01d21097775ae47748b8911d",
+  "lint": {
+    "findings": 6,
+    "grade": "A",
+    "report_fingerprint": "1c91ffd7147379e99ce7e00c790cf9b1612a6fbe0afd7319c6b7d3760e0b10ef",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

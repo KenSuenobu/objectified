@@ -1,0 +1,475 @@
+{
+  "adapter": "jtd",
+  "canonical": {
+    "channels": [],
+    "description": "A telemetry envelope that touches every JTD schema form at once.",
+    "extras": {},
+    "format": "jtd",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "SensorEnvelope",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "SensorEnvelope",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One sampled reading from a sensor channel.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Reading.seq",
+            "name": "seq",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Reading.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Reading",
+        "key_type": null,
+        "kind": "record",
+        "name": "Reading",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A GPS position fix.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "GpsFix.lat",
+            "name": "lat",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "GpsFix.lon",
+            "name": "lon",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "GpsFix.altitudeMeters",
+            "name": "altitudeMeters",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int16",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "GpsFix",
+        "key_type": null,
+        "kind": "record",
+        "name": "GpsFix",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SensorEnvelopePriority.low",
+            "name": "low",
+            "value": "low"
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SensorEnvelopePriority.normal",
+            "name": "normal",
+            "value": "normal"
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "SensorEnvelopePriority.high",
+            "name": "high",
+            "value": "high"
+          }
+        ],
+        "extras": {},
+        "fields": [],
+        "key": "SensorEnvelopePriority",
+        "key_type": null,
+        "kind": "enum",
+        "name": "SensorEnvelopePriority",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Tagged union: a ref branch and an inline properties branch.",
+        "enum_values": [],
+        "extras": {
+          "jtd_discriminator": "kind"
+        },
+        "fields": [],
+        "key": "SensorEnvelopePosition",
+        "key_type": null,
+        "kind": "union",
+        "name": "SensorEnvelopePosition",
+        "namespace": null,
+        "union_members": [
+          "GpsFix"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A telemetry envelope that touches every JTD schema form at once.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.envelopeId",
+            "name": "envelopeId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.recordedAt",
+            "name": "recordedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.flags",
+            "name": "flags",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint8",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.clockSkew",
+            "name": "clockSkew",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int8",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.sampleCount",
+            "name": "sampleCount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint16",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.driftTicks",
+            "name": "driftTicks",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.healthy",
+            "name": "healthy",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "boolean",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.priority",
+            "name": "priority",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "SensorEnvelopePriority",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.readings",
+            "name": "readings",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Reading",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Free-form string map via the values form.",
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.attributes",
+            "name": "attributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "object",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Tagged union: a ref branch and an inline properties branch.",
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.position",
+            "name": "position",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "SensorEnvelopePosition",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.annotations",
+            "name": "annotations",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "SensorEnvelopeAnnotations",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Empty form: any JSON value passes.",
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.rawPayload",
+            "name": "rawPayload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "SensorEnvelope.batteryPercent",
+            "name": "batteryPercent",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float32",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "SensorEnvelope",
+        "key_type": null,
+        "kind": "record",
+        "name": "SensorEnvelope",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "jtd/05-sensor-envelope-stress.jtd.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "jtd"
+  },
+  "fingerprint": "sha256:3aa38798812ccedf8e45d659ee802e53553c42f0bf84a65865349007d06b3328",
+  "lint": {
+    "findings": 17,
+    "grade": "B",
+    "report_fingerprint": "79698ae827b425ad85114219264c6926a82b27e78dc5d8bdcc4b6f18d8c72ba4",
+    "score": 80,
+    "severity_counts": {
+      "error": 0,
+      "info": 16,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

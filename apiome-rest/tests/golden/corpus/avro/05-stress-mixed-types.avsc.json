@@ -1,0 +1,443 @@
+{
+  "adapter": "avro",
+  "canonical": {
+    "channels": [],
+    "description": "A telemetry envelope exercising unions, maps, fixed, aliases, and logical types.",
+    "extras": {
+      "avro_root": "com.example.telemetry.TelemetryEnvelope"
+    },
+    "format": "avro",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "TelemetryEnvelope",
+      "namespace": "com.example.telemetry"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "TelemetryEnvelope",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "map"
+        },
+        "fields": [],
+        "key": "com.example.telemetry.Map_['null', 'string', 'double']",
+        "key_type": null,
+        "kind": "map",
+        "name": "Map_['null', 'string', 'double']",
+        "namespace": "com.example.telemetry",
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "com.example.telemetry.Union_null_string_double",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "fixed",
+          "avro_size": 16,
+          "avro_type": "fixed"
+        },
+        "fields": [],
+        "key": "com.example.telemetry.Md5",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "Md5",
+        "namespace": "com.example.telemetry",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A telemetry envelope exercising unions, maps, fixed, aliases, and logical types.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": {},
+            "deprecated": false,
+            "description": "Free-form attributes whose values are themselves a union.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 4,
+            "key": "com.example.telemetry.TelemetryEnvelope.attributes",
+            "name": "attributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.telemetry.Map_['null', 'string', 'double']",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Capture wall-clock time (time-millis logical type).",
+            "extras": {
+              "avro_type": "int",
+              "logicalType": "time-millis"
+            },
+            "field_number": 6,
+            "key": "com.example.telemetry.TelemetryEnvelope.capturedAtTime",
+            "name": "capturedAtTime",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Capture date (date logical type).",
+            "extras": {
+              "avro_type": "int",
+              "logicalType": "date"
+            },
+            "field_number": 5,
+            "key": "com.example.telemetry.TelemetryEnvelope.capturedOn",
+            "name": "capturedOn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Fixed 16-byte digest of the payload.",
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.telemetry.TelemetryEnvelope.checksum",
+            "name": "checksum",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.telemetry.Md5",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Envelope identifier (uuid logical type).",
+            "extras": {
+              "avro_type": "string",
+              "logicalType": "uuid"
+            },
+            "field_number": 1,
+            "key": "com.example.telemetry.TelemetryEnvelope.envelopeId",
+            "name": "envelopeId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": [],
+            "deprecated": false,
+            "description": "Array of arrays — nested container types.",
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 7,
+            "key": "com.example.telemetry.TelemetryEnvelope.matrix",
+            "name": "matrix",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": {
+                  "extras": {},
+                  "item": null,
+                  "name": "float",
+                  "nullable": false
+                },
+                "name": null,
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Multi-branch union: one of two reading records, or null.",
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.telemetry.TelemetryEnvelope.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.telemetry.Union_com_example_telemetry_readings_GaugeReading_com_example_telemetry_readings_CounterReading_null",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.telemetry.TelemetryEnvelope",
+        "key_type": null,
+        "kind": "record",
+        "name": "TelemetryEnvelope",
+        "namespace": "com.example.telemetry",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "union"
+        },
+        "fields": [],
+        "key": "com.example.telemetry.Union_com_example_telemetry_readings_GaugeReading_com_example_telemetry_readings_CounterReading_null",
+        "key_type": null,
+        "kind": "union",
+        "name": "Union_com_example_telemetry_readings_GaugeReading_com_example_telemetry_readings_CounterReading_null",
+        "namespace": "com.example.telemetry",
+        "union_members": [
+          "com.example.telemetry.readings.GaugeReading",
+          "com.example.telemetry.readings.CounterReading",
+          "null"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "union"
+        },
+        "fields": [],
+        "key": "com.example.telemetry.Union_null_string_double",
+        "key_type": null,
+        "kind": "union",
+        "name": "Union_null_string_double",
+        "namespace": "com.example.telemetry",
+        "union_members": [
+          "null",
+          "string",
+          "double"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A monotonically increasing counter.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.telemetry.readings.CounterReading.count",
+            "name": "count",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.telemetry.readings.CounterReading.resetAt",
+            "name": "resetAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.telemetry.readings.CounterReading",
+        "key_type": null,
+        "kind": "record",
+        "name": "CounterReading",
+        "namespace": "com.example.telemetry.readings",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A point-in-time gauge value.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": "celsius",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.telemetry.readings.GaugeReading.unit",
+            "name": "unit",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.telemetry.readings.GaugeReading.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.telemetry.readings.GaugeReading",
+        "key_type": null,
+        "kind": "record",
+        "name": "GaugeReading",
+        "namespace": "com.example.telemetry.readings",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "avro/05-stress-mixed-types.avsc",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 7
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "avro"
+  },
+  "fingerprint": "sha256:1ab9c04a8ae9d9fe77a350765087643290bb6e0c9065cc1c3f5bee44ad9243f1",
+  "lint": {
+    "findings": 8,
+    "grade": "B",
+    "report_fingerprint": "448aca69c66176f2820a59e4361938148692986ef298ed21ddf5a57532f6949c",
+    "score": 80,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}
