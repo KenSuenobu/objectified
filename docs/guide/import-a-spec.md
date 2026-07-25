@@ -74,6 +74,22 @@ stable code (for example `INPUT_MALFORMED`, `FORMAT_UNRECOGNIZED`, `INPUT_TOO_LA
 remediation text — key your automation off the code, not the message. Pre-flighting the same bytes
 twice is served from cache and says so in `cache.hit`.
 
+### In the catalog import wizard
+
+The wizard runs this for you. Its steps are **Source → Detect & route → Options → Quality →
+Import**: the **Quality** step shows the grade orb and score, the error/warning/info tally, the
+ranked findings (each links to its line in the source pane beside the list), and the style guide
+that scored them. Nothing is written to the catalog until you confirm there — **Cancel** and
+**Back** leave no trace.
+
+When a quality policy blocks the document, **Import** is disabled with the reason stated; if the
+policy permits an override, **Import anyway** commits it and records a waiver against that report's
+fingerprint. If pre-flight itself cannot run, the step says so and offers **Retry pre-flight** or an
+explicit import without a score.
+
+Tick **Skip this step for clean imports** to stop pausing here for documents that pass. The
+pre-flight still runs, and the step still stops whenever the verdict blocks or cannot be produced.
+
 ## Verify
 
 - **UI:** the imported classes are listed in the Designer.

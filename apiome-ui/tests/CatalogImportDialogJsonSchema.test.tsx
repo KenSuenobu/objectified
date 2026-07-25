@@ -3,7 +3,8 @@
  *
  * JSON Schema is adapter-backed and routes directly to the catalog store-raw flow,
  * like GraphQL. The dialog shows the standard "Store in catalog" note and persists
- * the document via `/api/catalog/import` with `source_kind: 'json-schema'`.
+ * the document via `/api/catalog/import` with `source_kind: 'json-schema'` — from the
+ * quality step's confirmation, since IXH-2.2 moved the commit behind the pre-flight gate.
  */
 
 import React from 'react';
@@ -35,6 +36,23 @@ const JSON_SCHEMA_DOC = JSON.stringify({
   properties: { id: { type: 'string' } },
 });
 
+/** A clean, non-blocking pre-flight verdict, so the quality step allows the commit (IXH-2.2). */
+const PREFLIGHT = {
+  ok: true,
+  detection: { adapter_key: 'json-schema', confidence: 0.95, matched: true, importable: true },
+  lint: { score: 95, grade: 'A', report_fingerprint: 'fp', severity_counts: { error: 0, warning: 0, info: 0 }, findings: [] },
+  style_guide: { guide_id: null, name: 'Apiome defaults', source: 'fallback', fingerprint: 'sg' },
+  policy: {
+    verdict: 'pass',
+    blocking: false,
+    source: 'default',
+    reason: 'No import quality policy is configured.',
+    threshold_score: null,
+    allow_override: true,
+  },
+  cache: { hit: false, key: 'k', content_hash: 'sha' },
+};
+
 function mockFetch(detection: unknown, opts: { jobState?: string } = {}): jest.Mock {
   const calls: Array<{ url: string; body?: unknown }> = [];
   const fn = jest.fn((input: unknown, init?: { body?: string }) => {
@@ -46,6 +64,9 @@ function mockFetch(detection: unknown, opts: { jobState?: string } = {}): jest.M
     }
     if (url.includes('/api/import/detect')) {
       return Promise.resolve({ ok: true, json: () => Promise.resolve(detection) });
+    }
+    if (url.includes('/api/import/preflight')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, ...PREFLIGHT }) });
     }
     if (url.match(/\/api\/catalog\/import\/.+/)) {
       return Promise.resolve({
@@ -110,9 +131,13 @@ describe('CatalogImportDialog — JSON Schema catalog import (MFI-26.7)', () => 
     );
     await pasteAndDetect(JSON_SCHEMA_DOC);
 
-    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
     expect(screen.getAllByText(/Store in catalog/i).length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole('button', { name: /store in catalog/i }));
+
+    // The commit is the quality step's confirmation now, not the options step's button (IXH-2.2).
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
+    await waitFor(() => expect(screen.getByTestId('import-quality-grade')).toBeInTheDocument());
+    fireEvent.click(screen.getByTestId('import-quality-import'));
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalled(), { timeout: 3000 });
 

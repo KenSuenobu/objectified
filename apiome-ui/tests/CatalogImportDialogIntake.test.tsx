@@ -2,7 +2,7 @@
  * CatalogImportDialog — URL + clipboard/paste intake (MFI-26.2, #4095).
  *
  * These tests exercise the two non-file intake paths end to end — Source → Detect & route →
- * Options → Import — with the import job engine mocked:
+ * Options → Quality → Import (the quality gate is IXH-2.2) — with the import job engine mocked:
  *
  *  1. URL Import: fetch a remote document, detect it, store it in the catalog, and poll the job to
  *     completion. Asserts the start request carries `source_kind: 'graphql'` (the adapter) AND
@@ -10,9 +10,10 @@
  *  2. Clipboard Paste: the same flow from pasted SDL, asserting `options.input_kind: 'paste'`.
  *  3. Errors are surfaced when the import fails to start.
  *
- * The registry (`/api/import/sources`), detection (`/api/import/detect`), the raw URL fetch, the
- * import start (`POST /api/catalog/import`) and the job poll (`GET /api/catalog/import/{id}`) are all
- * served by a single routing fetch mock that records the start request bodies for assertion.
+ * The registry (`/api/import/sources`), detection (`/api/import/detect`), the pre-flight
+ * (`POST /api/import/preflight`), the raw URL fetch, the import start (`POST /api/catalog/import`)
+ * and the job poll (`GET /api/catalog/import/{id}`) are all served by a single routing fetch mock
+ * that records the start request bodies for assertion.
  */
 
 import React from 'react';
@@ -45,6 +46,23 @@ const DETECTION = {
   detected: { format: 'graphql', confidence: 0.95, reason: 'SDL type definitions', importable: true },
 };
 
+/** A clean, non-blocking pre-flight verdict, so the quality step allows the commit. */
+const PREFLIGHT = {
+  ok: true,
+  detection: { adapter_key: 'graphql', confidence: 0.95, matched: true, importable: true },
+  lint: { score: 91, grade: 'A', report_fingerprint: 'fp', severity_counts: { error: 0, warning: 0, info: 0 }, findings: [] },
+  style_guide: { guide_id: null, name: 'Apiome defaults', source: 'fallback', fingerprint: 'sg' },
+  policy: {
+    verdict: 'pass',
+    blocking: false,
+    source: 'default',
+    reason: 'No import quality policy is configured.',
+    threshold_score: null,
+    allow_override: true,
+  },
+  cache: { hit: false, key: 'k', content_hash: 'sha' },
+};
+
 interface StartCall {
   body: Record<string, unknown>;
 }
@@ -63,6 +81,9 @@ function mockFetch(starts: StartCall[]): jest.Mock {
     }
     if (url.includes('/api/import/detect')) {
       return Promise.resolve({ ok: true, json: () => Promise.resolve(DETECTION) });
+    }
+    if (url.includes('/api/import/preflight')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, ...PREFLIGHT }) });
     }
     // The job poll (`/api/catalog/import/{id}`) — matched before the bare start path.
     if (url.includes('/api/catalog/import/')) {
@@ -93,6 +114,16 @@ function startMetadata(starts: StartCall[]): Record<string, unknown> {
   return (starts[0].body.metadata ?? {}) as Record<string, unknown>;
 }
 
+/**
+ * Cross the quality step (IXH-2.2): Continue from Options, wait for the pre-flight verdict, then
+ * confirm the import. The commit now originates here, not from the Options step.
+ */
+async function confirmThroughQualityStep() {
+  fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
+  await waitFor(() => expect(screen.getByTestId('import-quality-grade')).toBeInTheDocument());
+  fireEvent.click(screen.getByTestId('import-quality-import'));
+}
+
 describe('CatalogImportDialog — URL + paste intake (MFI-26.2)', () => {
   afterEach(() => {
     jest.restoreAllMocks();
@@ -117,9 +148,9 @@ describe('CatalogImportDialog — URL + paste intake (MFI-26.2)', () => {
     await waitFor(() => expect(screen.getByText(/Auto-detected:/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
 
-    // Step 3 (Options): store the source; the job polls to completion.
+    // Step 3 (Options) → Step 4 (Quality): confirm the verdict; the job then polls to completion.
     await waitFor(() => expect(screen.getByText(/kept verbatim/i)).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /store in catalog/i }));
+    await confirmThroughQualityStep();
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1), { timeout: 3000 });
     expect(screen.getByText(/Stored in the catalog/i)).toBeInTheDocument();
@@ -149,7 +180,7 @@ describe('CatalogImportDialog — URL + paste intake (MFI-26.2)', () => {
     fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
 
     await waitFor(() => expect(screen.getByText(/kept verbatim/i)).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /store in catalog/i }));
+    await confirmThroughQualityStep();
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1), { timeout: 3000 });
 
@@ -169,6 +200,9 @@ describe('CatalogImportDialog — URL + paste intake (MFI-26.2)', () => {
       }
       if (url.includes('/api/import/detect')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve(DETECTION) });
+      }
+      if (url.includes('/api/import/preflight')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, ...PREFLIGHT }) });
       }
       if (url.endsWith('/api/catalog/import') && method === 'POST') {
         return Promise.resolve({
@@ -190,7 +224,7 @@ describe('CatalogImportDialog — URL + paste intake (MFI-26.2)', () => {
     await waitFor(() => expect(screen.getByText(/Auto-detected:/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
     await waitFor(() => expect(screen.getByText(/kept verbatim/i)).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /store in catalog/i }));
+    await confirmThroughQualityStep();
 
     await waitFor(() => expect(screen.getByText('Adapter unavailable.')).toBeInTheDocument());
     expect(starts).toHaveLength(0);

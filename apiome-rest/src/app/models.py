@@ -1513,6 +1513,15 @@ class ImportPreflightPolicy(BaseModel):
     threshold_score: Optional[int] = Field(
         None, description="Minimum score policy requires, or null when no threshold applies."
     )
+    allow_override: bool = Field(
+        True,
+        description=(
+            "Whether a user may commit anyway against a blocking verdict by recording a waiver. "
+            "Only meaningful when ``blocking`` is true; false means the gate is absolute and the "
+            "client must not offer an override path. Always true until IXH-2.3 lands tenant policy, "
+            "because nothing blocks yet."
+        ),
+    )
 
 
 class ImportPreflightCache(BaseModel):

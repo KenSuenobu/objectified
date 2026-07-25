@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.42.0",
+    "version": "1.43.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -66024,6 +66024,13 @@
             ],
             "title": "Threshold Score",
             "description": "Minimum score policy requires, or null when no threshold applies."
+          },
+          "allow_override": {
+            "type": "boolean",
+            "title": "Allow Override",
+            "description": "Whether a user may commit anyway against a blocking verdict by recording a waiver. Only meaningful when ``blocking`` is true; false means the gate is absolute and the client must not offer an override path. Always true until IXH-2.3 lands tenant policy, because nothing blocks yet.",
+            "default": true,
+            "example": false
           }
         },
         "additionalProperties": false,
