@@ -82,6 +82,10 @@ class InputFormat:
     OPENAPI = "openapi"
     ASYNCAPI = "asyncapi"
     GRAPHQL = "graphql"
+    #: XML documents checked against an XML-schema-backed grammar (XSD, and the XSD embedded
+    #: in a WSDL). Added by IXH-5.1 (#5113) so instance validation dispatches XML through this
+    #: seam rather than inlining a second toolchain.
+    XML = "xml"
     GENERIC = "generic"
 
 
@@ -276,12 +280,16 @@ def load_builtin_adapters() -> None:
     # CLX-2.4 (#4854): GraphQL ESLint adapter (evidence contract migration).
     from . import graphql_eslint_adapter as _gql_eslint  # noqa: F401
 
+    # IXH-5.1 (#5113): xmllint XML instance validation.
+    from . import xml_instance_validation as _xml_validate  # noqa: F401
+
     _ = (
         _oas_packs.SpectralOasAdapter,
         _oas_packs.VacuumOasAdapter,
         _oas_packs.RedoclyOasAdapter,
         _oas_compat.OasdiffAdapter,
         _gql_eslint.GraphqlEslintAdapter,
+        _xml_validate.XmllintValidateAdapter,
     )
     _builtin_adapters_loaded = True
 
@@ -359,6 +367,26 @@ class ExternalLinterAdapter(ABC):
     def parse_output(self, stdout: str) -> List[NormalizedToolFinding]:
         """Parse tool stdout using this adapter's declared output format."""
         return parse_tool_output(stdout, self.output_format)
+
+    def parse_streams(self, stdout: str, stderr: str) -> List[NormalizedToolFinding]:
+        """Parse a completed run's output streams into findings.
+
+        The hook :func:`run_adapter` actually calls. It defaults to
+        :meth:`parse_output` over stdout — the shape every machine-readable linter here uses —
+        and exists for tools whose diagnostics are written to **stderr** instead, which is the
+        POSIX convention that ``xmllint`` (IXH-5.1, #5113) follows. Overriding this keeps such
+        an adapter self-contained rather than making its caller reach into
+        :attr:`AdapterRunResult.stderr` and re-parse it.
+
+        Args:
+            stdout: The run's captured standard output.
+            stderr: The run's captured standard error.
+
+        Returns:
+            The adapter's normalized findings.
+        """
+        _ = stderr
+        return self.parse_output(stdout)
 
     def map_envelope(
         self, raw_findings: Sequence[NormalizedToolFinding]
@@ -476,7 +504,7 @@ def _parse_success(
     base.stderr = outcome.stderr
     base.duration_ms = outcome.duration_ms
     try:
-        raw = adapter.parse_output(outcome.stdout)
+        raw = adapter.parse_streams(outcome.stdout, outcome.stderr)
     except AdapterOutputError as exc:
         base.failure_kind = FAILURE_MALFORMED
         base.diagnostics = str(exc)

@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.48.0
+  version: 1.49.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -28562,6 +28562,132 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for rollbackacommittedspecificationimportresponse422.
+  /v1/tenants/{tenant_slug}/schemas/{schema_ref}/validate:
+    post:
+      tags:
+      - schema-validation
+      summary: Validate a JSON or XML payload against a cataloged schema
+      description: 'Answer ''does this payload satisfy this schema?'' for any schema
+        Apiome holds (IXH-5.1). Nothing is persisted.
+
+
+        **Addressing.** ``schema_ref`` is a path-shaped reference naming one of three
+        sources:
+
+
+        * ``project/{project_slug}/{version}[/{type}]`` — a publishable Project''s
+        revision;
+
+        * ``catalog/{item}/{version}[/{type}]`` — a Catalog item''s revision, by slug
+        or id;
+
+        * ``registry/{namespace}/{name}`` — a type-registry type, addressed by the
+        same path a relative ``$ref`` inside the registry would use.
+
+
+        ``{version}`` is a source-declared version label (``1.0.0``), a revision id,
+        or ``latest``. ``{type}`` names one canonical type by its stable key (``acme.Pet``)
+        or its source name (``Pet``); omit it to address the whole revision, which
+        XML validation needs and which JSON validation accepts when the revision defines
+        exactly one type.
+
+
+        **Findings** carry the JSON Pointer into the instance, the failing keyword,
+        what the schema expected, what the instance actually held, a human-readable
+        message, and the JSON Pointer into the schema. Order is deterministic — instance
+        pointer (array indices numerically), then schema pointer, keyword, message
+        — so two runs over the same input are byte-identical and reports diff cleanly
+        across revisions.
+
+
+        **``valid`` is never guessed.** It is ``true`` only when a validator ran and
+        found nothing, ``false`` only when a validator ran and found something, and
+        ``null`` whenever no validator ran — for instance on a deployment without
+        the XML toolchain, which reports ``validated: false`` with an ``ADAPTER_UNAVAILABLE``
+        diagnostic rather than passing an unchecked payload.
+
+
+        **Bounds.** ``$ref`` resolution is depth- and fan-out-bounded and cycle-safe,
+        and resolves only against this tenant''s registry — validation performs no
+        network fetch, and a reference that cannot be resolved is reported as a diagnostic,
+        never ignored. The instance is bounded by the import resource guards (size,
+        alias expansion, nesting depth); XML documents additionally pass the hardened
+        XML parser, so no DTD, entity, or external reference is ever expanded.
+
+
+        A payload that cannot be checked is **not** an HTTP error: the response is
+        a 200 with ``ok: false`` and a stable intake-taxonomy ``error`` code plus
+        remediation. Only addressing faults are HTTP errors — 400 for a malformed
+        reference, 404 for one that names nothing visible, 422 for one that resolves
+        to material no schema can be derived from.'
+      operationId: validate_instance_against_schema_v1_tenants__tenant_slug__schemas__schema_ref__validate_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: schema_ref
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Schema Ref
+          description: Schema Ref schema.
+        description: Path parameter identifying the schema ref segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Validatea Jsonor Xmlpayloadagainstacatalogauthorization schema.
+          - type: 'null'
+            description: Validatea Jsonor Xmlpayloadagainstacatalogauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Validatea Jsonor Xmlpayloadagainstacatalog Xapikey schema.
+          - type: 'null'
+            description: Validatea Jsonor Xmlpayloadagainstacatalog Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaInstanceValidationRequest'
+              description: Request body for validatea jsonor xmlpayloadagainstacatalogrequest.
+        description: Request body for validate a json or xml payload against a cataloged
+          schema.
+      responses:
+        '200':
+          description: Successful response for validate a json or xml payload against
+            a cataloged schema.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaInstanceValidationResponse'
+                description: Response payload for validatea jsonor xmlpayloadagainstacatalogresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for validatea jsonor xmlpayloadagainstacatalogresponse422.
   /v1/import/sources:
     get:
       tags:
@@ -51003,6 +51129,88 @@ components:
       title: InsightsLaneResponse
       description: A lane's complete observability configuration, and what it actually
         measures.
+    InstanceFinding:
+      properties:
+        pointer:
+          type: string
+          title: Pointer
+          description: JSON Pointer to the offending value in the instance.
+          example: example
+        keyword:
+          type: string
+          title: Keyword
+          description: The schema keyword that failed.
+          example: example
+        schema_pointer:
+          type: string
+          title: Schema Pointer
+          description: JSON Pointer to the failing keyword in the schema.
+          default: ''
+          example: example
+        expected:
+          anyOf:
+          - description: Instance Finding schema.
+          - type: 'null'
+            description: Instance Finding schema.
+          title: Expected
+          description: What the schema required, rendered.
+        actual:
+          anyOf:
+          - description: Instance Finding schema.
+          - type: 'null'
+            description: Instance Finding schema.
+          title: Actual
+          description: What the instance held at ``pointer``, rendered.
+        message:
+          type: string
+          title: Message
+          description: Human-readable failure description.
+          example: Example validation message.
+        line:
+          anyOf:
+          - type: integer
+            description: Instance Finding schema.
+          - type: 'null'
+            description: Instance Finding schema.
+          title: Line
+          description: 1-based line number when known.
+        column:
+          anyOf:
+          - type: integer
+            description: Instance Finding schema.
+          - type: 'null'
+            description: Instance Finding schema.
+          title: Column
+          description: 1-based column number when known.
+        truncated:
+          type: boolean
+          title: Truncated
+          description: Whether ``expected``/``actual`` were summarized rather than
+            reproduced.
+          default: false
+          example: false
+      additionalProperties: false
+      type: object
+      required:
+      - pointer
+      - keyword
+      - message
+      title: InstanceFinding
+      description: "One structured way an instance failed its schema.\n\nAttributes:\n\
+        \    pointer: RFC 6901 JSON Pointer to the offending value **in the instance**\n\
+        \        (``\"\"`` for the document root).\n    keyword: The schema keyword\
+        \ that failed (``required``, ``type``, ``pattern``, …).\n    schema_pointer:\
+        \ JSON Pointer to the failing keyword **in the schema**, so a UI can\n   \
+        \     link the finding to the constraint that produced it.\n    expected:\
+        \ What the schema demanded — the keyword's value, rendered (and summarized\n\
+        \        when large, see :attr:`truncated`).\n    actual: What the instance\
+        \ held at :attr:`pointer`, rendered the same way.\n    message: Human-readable\
+        \ description of the failure.\n    line: 1-based line number, when the validator\
+        \ reports one (XML instances only).\n    column: 1-based column number, when\
+        \ the validator reports one (XML instances only).\n    truncated: ``True``\
+        \ when :attr:`expected` or :attr:`actual` was summarized rather than\n   \
+        \     reproduced verbatim, so a caller never mistakes a summary for the real\
+        \ value."
     InvocationBody:
       properties:
         id:
@@ -68065,6 +68273,201 @@ components:
       - runtimes
       title: RuntimesResponse
       description: The execution runtime catalog.
+    SchemaInstanceValidationRequest:
+      properties:
+        instance:
+          anyOf:
+          - description: Request body for schema instance validation.
+          - type: 'null'
+            description: Request body for schema instance validation.
+          title: Instance
+          description: The payload as an already-parsed JSON value. Mutually exclusive
+            with ``instance_text``. Sending an explicit ``null`` here validates the
+            JSON value ``null``, which is a legitimate instance.
+        instance_text:
+          anyOf:
+          - type: string
+            description: Request body for schema instance validation.
+          - type: 'null'
+            description: Request body for schema instance validation.
+          title: Instance Text
+          description: The payload as raw text — JSON or XML, per ``media_type``.
+            Mutually exclusive with ``instance``, and required for XML.
+        media_type:
+          type: string
+          enum:
+          - application/json
+          - application/xml
+          title: Media Type
+          description: How ``instance_text`` should be read. XML requires ``instance_text``.
+          default: application/json
+          example: application/json
+        max_findings:
+          type: integer
+          maximum: 1000.0
+          minimum: 1.0
+          title: Max Findings
+          description: Cap on returned findings; the true total is always reported
+            separately.
+          default: 100
+          example: 1
+        assert_formats:
+          type: boolean
+          title: Assert Formats
+          description: 'Assert JSON Schema ``format`` rather than treating it as an
+            annotation. Off by default: ``format`` is an annotation in every modern
+            draft, and checkers whose optional dependency is absent are skipped silently,
+            so an asserted-format pass is weaker evidence than a keyword pass.'
+          default: false
+          example: false
+      additionalProperties: false
+      type: object
+      title: SchemaInstanceValidationRequest
+      description: 'A payload to check against the schema named in the URL.
+
+
+        Exactly one of ``instance`` and ``instance_text`` must be supplied. ``instance``
+        is the
+
+        convenient form for a JSON payload a caller already holds as a value; ``instance_text``
+        is
+
+        the exact-bytes form, and the only form an XML payload can take.'
+    SchemaInstanceValidationResponse:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+          description: Whether the request was serviceable at all.
+          example: false
+        valid:
+          anyOf:
+          - type: boolean
+            description: Response payload for schema instance validation.
+          - type: 'null'
+            description: Response payload for schema instance validation.
+          title: Valid
+          description: '``true`` when a validator ran and found nothing, ``false``
+            when it ran and found something, ``null`` when no validator ran — never
+            a stand-in for a pass.'
+        validated:
+          type: boolean
+          title: Validated
+          description: Whether a validator actually executed over the instance.
+          example: false
+        validator:
+          anyOf:
+          - type: string
+            description: Response payload for schema instance validation.
+          - type: 'null'
+            description: Response payload for schema instance validation.
+          title: Validator
+          description: Which validator ran (``jsonschema/2020-12``, ``xmllint.validate``).
+        schema_ref:
+          type: string
+          title: Schema Ref
+          description: The schema reference exactly as it was requested.
+          example: example
+        media_type:
+          type: string
+          title: Media Type
+          description: How the instance was read.
+          example: example
+        source:
+          anyOf:
+          - $ref: '#/components/schemas/SchemaSourceInfo'
+          - type: 'null'
+            description: Response payload for schema instance validation.
+          description: What the reference resolved to.
+        findings:
+          items:
+            $ref: '#/components/schemas/InstanceFinding'
+          type: array
+          title: Findings
+          description: 'Ways the instance failed the schema, in a deterministic order:
+            by instance pointer (array indices numerically), then schema pointer,
+            keyword, and message.'
+          maxItems: 1000
+        total_findings:
+          type: integer
+          title: Total Findings
+          description: How many findings existed before ``max_findings`` truncation.
+          default: 0
+          example: 1
+        truncated:
+          type: boolean
+          title: Truncated
+          description: Whether ``findings`` was cut short by ``max_findings``.
+          default: false
+          example: false
+        diagnostics:
+          items:
+            $ref: '#/components/schemas/ValidationDiagnostic'
+          type: array
+          title: Diagnostics
+          description: Conditions that limited the check — an unresolvable ``$ref``,
+            a bound that tripped, a source scalar with no JSON Schema equivalent,
+            a missing toolchain. Never failures of the instance itself.
+          maxItems: 1000
+        error:
+          anyOf:
+          - $ref: '#/components/schemas/SpecImportJobError'
+          - type: 'null'
+            description: Response payload for schema instance validation.
+          description: 'Populated when ``ok`` is false: stable taxonomy code plus
+            remediation.'
+      additionalProperties: false
+      type: object
+      required:
+      - ok
+      - validated
+      - schema_ref
+      - media_type
+      title: SchemaInstanceValidationResponse
+      description: The verdict on one payload.
+    SchemaSourceInfo:
+      properties:
+        kind:
+          type: string
+          title: Kind
+          description: '``project``, ``catalog``, or ``registry``.'
+          example: example
+        source_format:
+          anyOf:
+          - type: string
+            description: Schema Source Info schema.
+          - type: 'null'
+            description: Schema Source Info schema.
+          title: Source Format
+          description: Import-source format key the schema derives from.
+        dialect:
+          anyOf:
+          - type: string
+            description: Schema Source Info schema.
+          - type: 'null'
+            description: Schema Source Info schema.
+          title: Dialect
+          description: JSON Schema dialect the schema was validated under.
+        projected:
+          type: boolean
+          title: Projected
+          description: Whether the schema was projected from the canonical model (project/catalog
+            references) rather than used verbatim (registry references).
+          example: false
+        coordinates:
+          additionalProperties: true
+          type: object
+          title: Coordinates
+          description: Resolved coordinates — artifact id, revision id, version label,
+            type key.
+      additionalProperties: false
+      type: object
+      required:
+      - kind
+      - projected
+      title: SchemaSourceInfo
+      description: What the reference actually resolved to, echoed back so a caller
+        can confirm it.
     SchemasChangeSection:
       properties:
         added:
@@ -74835,6 +75238,41 @@ components:
       - service
       title: UsageRollupBody
       description: One service's usage rolled up over the period.
+    ValidationDiagnostic:
+      properties:
+        code:
+          type: string
+          title: Code
+          description: Stable intake-taxonomy code for the condition.
+          example: example
+        message:
+          type: string
+          title: Message
+          description: Human-readable explanation.
+          example: Example validation message.
+        pointer:
+          anyOf:
+          - type: string
+            description: Validation Diagnostic schema.
+          - type: 'null'
+            description: Validation Diagnostic schema.
+          title: Pointer
+          description: JSON Pointer into the schema, when the condition has a site.
+      additionalProperties: false
+      type: object
+      required:
+      - code
+      - message
+      title: ValidationDiagnostic
+      description: "Something that limited the validation, as opposed to a failure\
+        \ of the instance.\n\nAn unresolvable ``$ref``, a bound that tripped, a scalar\
+        \ the canonical projection could not\nconstrain, or a toolchain that is not\
+        \ installed. Diagnostics are reported separately from\nfindings so a caller\
+        \ never confuses \"your payload is wrong\" with \"we could not fully check\n\
+        your payload\".\n\nAttributes:\n    code: Stable :mod:`app.intake_error_taxonomy`\
+        \ code (e.g. ``INPUT_REFERENCE_UNRESOLVED``).\n    message: Human-readable\
+        \ explanation, naming the specific ref/limit/tool.\n    pointer: JSON Pointer\
+        \ into the schema where the condition arose, when known."
     ValidationError:
       properties:
         loc:

@@ -31,6 +31,7 @@ __all__ = [
     "ExportSource",
     "load_export_source",
     "load_public_export_source",
+    "resolve_revision_id",
 ]
 
 
@@ -104,6 +105,13 @@ def _resolve_revision_id(
             status_code=404,
         )
     return str(row["id"])
+
+
+#: Public alias for the revision resolver. The export loader is not the only surface that has to
+#: turn ``(artifact, "1.0.0" | uuid | None)`` into a concrete ``versions.id`` — schema-reference
+#: resolution (IXH-5.1, #5113) needs exactly the same three-way rule, and re-deriving it there
+#: would let the two drift apart.
+resolve_revision_id = _resolve_revision_id
 
 
 def load_export_source(

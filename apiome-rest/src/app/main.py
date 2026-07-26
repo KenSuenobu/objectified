@@ -82,6 +82,7 @@ from .slate_insights_routes import router as slate_insights_router
 from .slate_routes import router as slate_router
 from .slate_security_routes import router as slate_security_router
 from .source_review_routes import router as source_review_router
+from .schema_validation_routes import router as schema_validation_router
 from .spec_import_routes import router as spec_import_router
 from .style_guide_routes import router as style_guide_router
 from .tenant_repositories_routes import router as tenant_repositories_router
@@ -105,7 +106,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.48.0",
+    version="1.49.0",
 )
 
 
@@ -306,6 +307,10 @@ app.include_router(mcp_policy_router)
 # MCP API key lifecycle (MTG-3.2, #4776): tenant-admin CRUD over mcp_api_keys.
 app.include_router(mcp_key_router)
 app.include_router(spec_import_router)
+# Schema instance validation (IXH-5.1, #5113): POST /v1/tenants/{tenant}/schemas/{ref}/validate
+# — does this payload satisfy this schema? Mounted next to the import surface because the
+# reference grammar addresses the same project/catalog revisions imports create.
+app.include_router(schema_validation_router)
 app.include_router(import_sources_router)
 # Multi-format export (MFX-2.5, #3842): tenant-scoped fidelity report surfacing — per-target
 # fidelity badges (/export/{tenant}/targets) and the dry-run preview (/export/{tenant}/preview).
