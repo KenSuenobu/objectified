@@ -154,6 +154,20 @@ describe('exportJob — classifyExportFailure', () => {
     const info = classifyExportFailure(null);
     expect(info.class).toBe('unknown');
     expect(info.action).toBe('retry');
+    expect(info.retriable).toBe(true);
+  });
+
+  it('prefers server remediation and retriable over local copy (IXH-6.4)', () => {
+    const info = classifyExportFailure({
+      code: 'UNSUPPORTED_TARGET',
+      message: 'Target gone',
+      category: 'capability',
+      remediation: 'Pick another target from the registry.',
+      retriable: false,
+    });
+    expect(info.description).toBe('Pick another target from the registry.');
+    expect(info.retriable).toBe(false);
+    expect(info.action).toBe('reconfigure-target');
   });
 });
 

@@ -377,12 +377,13 @@ async def test_source_load_failure_fails_the_job_with_structured_event():
     assert errors[0]["code"] == "SOURCE_LOAD_FAILED"
     assert errors[0]["context"] == {"status_code": 404}
 
-    # MFX-3.4: the same failure is mirrored as a structured error for pollers.
-    assert status["error"] == {
-        "code": "SOURCE_LOAD_FAILED",
-        "message": "Artifact 'missing' was not found.",
-        "context": {"status_code": 404},
-    }
+    # MFX-3.4 / IXH-6.4: the same failure is mirrored as a structured taxonomy error.
+    assert status["error"]["code"] == "SOURCE_LOAD_FAILED"
+    assert status["error"]["category"] == "transport"
+    assert status["error"]["retriable"] is True
+    assert status["error"]["remediation"].strip()
+    assert status["error"]["message"] == "Artifact 'missing' was not found."
+    assert status["error"]["context"] == {"status_code": 404}
 
 
 async def test_unexpected_exception_fails_the_job():
@@ -397,10 +398,17 @@ async def test_unexpected_exception_fails_the_job():
 
     assert status["state"] == "failed"
     assert status["events"][-1]["code"] == "EXPORT_EXCEPTION"
-    assert "boom" in status["events"][-1]["message"]
-    # MFX-3.4: an unclassified crash still yields a structured error.
+    # IXH-6.4: internal faults never surface a bare stringified exception on the
+    # user-facing message; the job id is the correlation id.
+    assert "boom" not in status["events"][-1]["message"]
+    assert accepted.job_id in status["events"][-1]["message"]
+    assert status["events"][-1]["context"].get("detail") == "boom"
     assert status["error"]["code"] == "EXPORT_EXCEPTION"
-    assert "boom" in status["error"]["message"]
+    assert status["error"]["category"] == "internal"
+    assert status["error"]["retriable"] is True
+    assert status["error"]["remediation"].strip()
+    assert "boom" not in status["error"]["message"]
+    assert accepted.job_id in status["error"]["message"]
 
 
 async def test_invalid_emitted_artifact_fails_the_job():

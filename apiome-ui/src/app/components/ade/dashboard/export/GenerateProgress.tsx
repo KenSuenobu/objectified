@@ -321,7 +321,12 @@ function FailureSurface({
           <div className="text-sm font-semibold text-rose-900 dark:text-rose-100">
             {failure.title}
           </div>
-          <p className="text-xs text-rose-800/90 dark:text-rose-200/90">{failure.description}</p>
+          <p
+            className="text-xs text-rose-800/90 dark:text-rose-200/90"
+            data-testid="generate-failure-remediation"
+          >
+            {failure.description}
+          </p>
           {status.error?.message && (
             <p
               className="mt-1 rounded bg-rose-100/60 px-2 py-1 font-mono text-xs text-rose-900 dark:bg-rose-900/30 dark:text-rose-100"
@@ -352,8 +357,8 @@ function FailureSurface({
       )}
 
       <div className="flex flex-wrap justify-end gap-2">
-        {/* Retry is always available as a secondary action, except when it is the primary one. */}
-        {failure.action !== 'retry' && (
+        {/* Secondary retry only when the taxonomy says the same request may succeed (IXH-6.4). */}
+        {failure.action !== 'retry' && failure.retriable && (
           <Button variant="outline" data-testid="generate-failure-retry" onClick={onRetry} disabled={submitting}>
             <RefreshCw className="h-4 w-4" aria-hidden />
             Retry export
@@ -362,7 +367,7 @@ function FailureSurface({
         <Button
           data-testid="generate-failure-action"
           onClick={() => runRecovery(failure.action)}
-          disabled={submitting}
+          disabled={submitting || (failure.action === 'retry' && !failure.retriable)}
         >
           {recoveryIcon(failure.action)}
           {failure.actionLabel}

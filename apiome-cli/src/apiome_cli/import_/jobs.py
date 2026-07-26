@@ -10,9 +10,10 @@ import typer
 
 from apiome_cli.client import api_paths
 from apiome_cli.client.http import RestClient
-from apiome_cli.exit_codes import EXIT_ERROR
 from apiome_cli.cli_context import DEFAULT_IMPORT_TIMEOUT
+from apiome_cli.exit_codes import EXIT_ERROR
 from apiome_cli.progress import import_progress
+from apiome_cli.taxonomy_exit import taxonomy_failure_from_payload
 
 DEFAULT_POLL_INTERVAL = 1.0
 
@@ -28,13 +29,14 @@ def format_import_progress(state: str, *, elapsed_seconds: float) -> str:
 def _failure_detail(payload: dict[str, Any]) -> str | None:
     """Best-effort human-readable reason for a non-completed terminal import.
 
-    Prefers ``summary.message``, but the REST import engine only populates ``summary`` for
-    *completed* imports — a failed worker or import records its reason in the job's ``events``
-    (e.g. ``code="WORKER_FAILED"``) with no summary. Without this fallback the CLI collapses a
-    real failure into a bare "Import failed." with the actual cause swallowed. Returns the joined
-    error-level event messages (prefixed with their ``code`` when present), or ``None`` when the
+    Prefers the structured taxonomy ``error`` object (IXH-6.4), then
+    ``summary.message``, then error-level events. Returns ``None`` when the
     payload carries no usable detail.
     """
+    taxonomy_detail, _ = taxonomy_failure_from_payload(payload)
+    if taxonomy_detail:
+        return taxonomy_detail
+
     summary = payload.get("summary")
     if isinstance(summary, dict):
         message = summary.get("message")
@@ -63,6 +65,18 @@ def _failure_detail(payload: dict[str, Any]) -> str | None:
     return None
 
 
+def _exit_code_for_failure(payload: dict[str, Any]) -> int:
+    """Derive the process exit code from the taxonomy category when present."""
+    _, exit_code = taxonomy_failure_from_payload(payload)
+    error = payload.get("error")
+    if isinstance(error, dict) and (
+        (isinstance(error.get("code"), str) and error["code"].strip())
+        or (isinstance(error.get("category"), str) and error["category"].strip())
+    ):
+        return exit_code
+    return EXIT_ERROR
+
+
 def wait_for_import_job(
     client: RestClient,
     tenant_slug: str,
@@ -83,23 +97,27 @@ def wait_for_import_job(
     # "Import running… (0s)Import failed: …"). Inside the loop we only set `error_message` and break;
     # the message is echoed below, once the spinner has been cleared.
     error_message: str | None = None
+    failure_exit: int = EXIT_ERROR
     with import_progress(enabled=not no_progress) as status:
         while True:
             if monotonic() >= deadline:
                 timeout_seconds = int(timeout)
                 unit = "second" if timeout_seconds == 1 else "seconds"
                 error_message = f"Import timed out after {timeout_seconds} {unit}."
+                failure_exit = EXIT_ERROR
                 break
 
             response = client.get(path)
             payload = response.json()
             if not isinstance(payload, dict):
                 error_message = "Import status response was not a JSON object."
+                failure_exit = EXIT_ERROR
                 break
 
             job_state = payload.get("state")
             if not isinstance(job_state, str) or not job_state:
                 error_message = "Import status response missing state field."
+                failure_exit = EXIT_ERROR
                 break
 
             elapsed = timeout - (deadline - monotonic())
@@ -113,6 +131,7 @@ def wait_for_import_job(
                     return payload
                 detail = _failure_detail(payload)
                 error_message = f"Import {job_state}: {detail}" if detail else f"Import {job_state}."
+                failure_exit = _exit_code_for_failure(payload)
                 break
 
             remaining = deadline - monotonic()
@@ -121,4 +140,4 @@ def wait_for_import_job(
             sleep(min(poll_interval, remaining))
 
     typer.echo(error_message, err=True)
-    raise typer.Exit(EXIT_ERROR)
+    raise typer.Exit(failure_exit)

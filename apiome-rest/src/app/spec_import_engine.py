@@ -465,7 +465,7 @@ def _default_result_status(
         ],
         # IXH-1.3: every terminal failure carries a stable taxonomy code +
         # remediation, keyed off the engine's legacy event code.
-        error=build_job_error(code, message),
+        error=build_job_error(code, message, correlation_id=job_id),
     )
 
 

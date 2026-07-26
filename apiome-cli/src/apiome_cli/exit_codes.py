@@ -7,6 +7,9 @@ export commands. They exist so a CI job can tell "the spec is not good enough" a
 from "the network was down" (:data:`EXIT_ERROR`) or "the credentials were wrong"
 (:data:`EXIT_USAGE`, which every 4xx — including 401/403 — maps to), which is the whole
 point of gating in a pipeline.
+
+Failed import/export **jobs** reuse codes 1–3 via :mod:`apiome_cli.taxonomy_exit`
+(IXH-6.4): taxonomy ``policy`` → 3, caller-fault categories → 2, transport/internal → 1.
 """
 
 #: The command did what was asked.

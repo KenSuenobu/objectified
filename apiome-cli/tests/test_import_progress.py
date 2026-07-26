@@ -146,6 +146,60 @@ def test_failure_detail_prefers_summary_then_falls_back_to_events() -> None:
     assert _failure_detail({"events": [{"level": "info", "message": "fyi"}]}) is None
 
 
+def test_failure_detail_prefers_taxonomy_error() -> None:
+    """IXH-6.4: structured error beats summary and events."""
+    detail = _failure_detail(
+        {
+            "summary": {"message": "ignored summary"},
+            "events": [{"level": "error", "code": "PARSE_ERROR", "message": "legacy"}],
+            "error": {
+                "code": "INPUT_MALFORMED",
+                "category": "input",
+                "message": "not valid SDL",
+                "remediation": "Fix the syntax and re-import.",
+                "retriable": False,
+            },
+        }
+    )
+    assert detail == (
+        "[INPUT_MALFORMED] not valid SDL — Fix the syntax and re-import."
+    )
+
+
+def test_wait_for_import_job_failed_uses_taxonomy_exit(
+    httpx_mock: object, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A failed job with category=input exits EXIT_USAGE (2), not EXIT_ERROR."""
+    from apiome_cli.exit_codes import EXIT_USAGE
+
+    httpx_mock.add_response(
+        url="http://localhost:8000/v1/tenants/acme-corp/imports/job-tax",
+        json={
+            "state": "failed",
+            "error": {
+                "code": "INPUT_MALFORMED",
+                "category": "input",
+                "message": "not valid",
+                "remediation": "Fix it.",
+                "retriable": False,
+            },
+        },
+    )
+    client = RestClient(CliSettings(), timeout=30.0)
+    with pytest.raises(typer.Exit) as exc_info:
+        wait_for_import_job(
+            client,
+            "acme-corp",
+            "job-tax",
+            no_progress=True,
+            sleep=lambda _seconds: None,
+        )
+    assert exc_info.value.exit_code == EXIT_USAGE
+    err = capsys.readouterr().err
+    assert "[INPUT_MALFORMED]" in err
+    assert "Fix it." in err
+
+
 def test_wait_for_import_job_failed_surfaces_event_error(
     httpx_mock: object, capsys: pytest.CaptureFixture[str]
 ) -> None:

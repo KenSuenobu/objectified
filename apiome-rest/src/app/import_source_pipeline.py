@@ -252,20 +252,44 @@ class _AdapterRunState:
         )
 
 
-def build_job_error(code: Optional[str], message: str) -> SpecImportJobError:
+def build_job_error(
+    code: Optional[str],
+    message: str,
+    *,
+    correlation_id: Optional[str] = None,
+) -> SpecImportJobError:
     """Build the terminal :class:`SpecImportJobError` for a failed job.
 
     ``code`` may be a taxonomy code, a legacy event/engine code, or ``None``;
     anything unrecognized falls back to ``INTERNAL_ADAPTER_FAULT`` so a failed job
     always carries a valid taxonomy code with non-empty remediation (IXH-1.3).
+
+    Internal-category codes never echo a bare stringified exception: the user-facing
+    ``message`` is a generic sentence that includes ``correlation_id`` (typically the
+    job id) when provided (IXH-6.4).
     """
+    from .intake_error_taxonomy import JobErrorCategory
+
     resolved = resolve_intake_error_code(code) or "INTERNAL_ADAPTER_FAULT"
     descriptor = descriptor_for(resolved)
     assert descriptor is not None  # every resolved code is registered
+    if descriptor.category is JobErrorCategory.INTERNAL:
+        if correlation_id:
+            safe_message = (
+                f"An internal error occurred while processing this request "
+                f"(correlation id: {correlation_id})."
+            )
+        else:
+            safe_message = (
+                "An internal error occurred while processing this request. "
+                "Retry once, and if it persists report the job id to support."
+            )
+    else:
+        safe_message = message
     return SpecImportJobError(
         code=descriptor.code,
         category=descriptor.category.value,
-        message=message,
+        message=safe_message,
         remediation=descriptor.remediation,
         retriable=descriptor.retriable,
     )
@@ -996,7 +1020,7 @@ async def run_adapter_import_job(
         return state.snapshot(
             state="failed",
             percent=_PCT_INIT,
-            error=build_job_error(error_code, str(exc)),
+            error=build_job_error(error_code, str(exc), correlation_id=job_id),
         )
     state.event("PARSE_OK", "Parsed source into the format's native representation.")
     await publish(state.snapshot(state="running", percent=_PCT_PARSED))
@@ -1016,7 +1040,7 @@ async def run_adapter_import_job(
         return state.snapshot(
             state="failed",
             percent=_PCT_PARSED,
-            error=build_job_error(error_code, str(exc)),
+            error=build_job_error(error_code, str(exc), correlation_id=job_id),
         )
     if artifacts is not None:
         artifacts.model = model
@@ -1131,7 +1155,9 @@ async def run_adapter_import_job(
                 state="failed",
                 percent=_PCT_LINTED,
                 error=build_job_error(
-                    "INTERNAL_PERSIST_FAULT", f"Failed to store the import: {exc}"
+                    "INTERNAL_PERSIST_FAULT",
+                    f"Failed to store the import: {exc}",
+                    correlation_id=job_id,
                 ),
             )
 

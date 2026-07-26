@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.55.0
+  version: 1.56.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -28131,8 +28131,8 @@ paths:
       - spec-import
       summary: List specification import jobs
       description: Paginated tenant import jobs from the shared store (IXH-6.3), newest
-        first. Supports state and created_after / created_before filters. Default page
-        size is 50 (max 200).
+        first. Supports ``state`` and ``created_after`` / ``created_before`` filters.
+        Default page size is 50 (max 200).
       operationId: list_spec_import_jobs_v1_tenants__tenant_slug__imports_get
       parameters:
       - name: tenant_slug
@@ -28148,11 +28148,11 @@ paths:
         required: false
         schema:
           type: integer
-          minimum: 1
           maximum: 200
+          minimum: 1
+          description: Page size (default 50, max 200).
           default: 50
           title: Limit
-          description: Page size (default 50, max 200).
         description: Page size (default 50, max 200).
       - name: offset
         in: query
@@ -28160,9 +28160,9 @@ paths:
         schema:
           type: integer
           minimum: 0
+          description: Number of matching jobs to skip.
           default: 0
           title: Offset
-          description: Number of matching jobs to skip.
         description: Number of matching jobs to skip.
       - name: state
         in: query
@@ -28170,9 +28170,11 @@ paths:
         schema:
           anyOf:
           - type: string
+            description: Listspecificationimportjobsstate schema.
           - type: 'null'
+            description: Listspecificationimportjobsstate schema.
+          description: Exact job state filter (e.g. completed, failed, running).
           title: State
-          description: Exact job state filter.
         description: Exact job state filter (e.g. completed, failed, running).
       - name: created_after
         in: query
@@ -28181,9 +28183,11 @@ paths:
           anyOf:
           - type: string
             format: date-time
+            description: Listspecificationimportjobscreatedafter schema.
           - type: 'null'
+            description: Listspecificationimportjobscreatedafter schema.
+          description: Inclusive lower bound on job created_at (ISO-8601).
           title: Created After
-          description: Inclusive lower bound on job created_at.
         description: Inclusive lower bound on job created_at (ISO-8601).
       - name: created_before
         in: query
@@ -28192,9 +28196,11 @@ paths:
           anyOf:
           - type: string
             format: date-time
+            description: Listspecificationimportjobscreatedbefore schema.
           - type: 'null'
+            description: Listspecificationimportjobscreatedbefore schema.
+          description: Inclusive upper bound on job created_at (ISO-8601).
           title: Created Before
-          description: Inclusive upper bound on job created_at.
         description: Inclusive upper bound on job created_at (ISO-8601).
       - name: authorization
         in: header
@@ -29879,8 +29885,8 @@ paths:
       - export-jobs
       summary: List export jobs
       description: Paginated tenant export jobs from the shared store (IXH-6.3), newest
-        first. Supports state and created_after / created_before filters. Default page
-        size is 50 (max 200).
+        first. Supports ``state`` and ``created_after`` / ``created_before`` filters.
+        Default page size is 50 (max 200).
       operationId: list_export_jobs_v1_export__tenant_slug__jobs_get
       parameters:
       - name: tenant_slug
@@ -29896,11 +29902,11 @@ paths:
         required: false
         schema:
           type: integer
-          minimum: 1
           maximum: 200
+          minimum: 1
+          description: Page size (default 50, max 200).
           default: 50
           title: Limit
-          description: Page size (default 50, max 200).
         description: Page size (default 50, max 200).
       - name: offset
         in: query
@@ -29908,9 +29914,9 @@ paths:
         schema:
           type: integer
           minimum: 0
+          description: Number of matching jobs to skip.
           default: 0
           title: Offset
-          description: Number of matching jobs to skip.
         description: Number of matching jobs to skip.
       - name: state
         in: query
@@ -29918,9 +29924,11 @@ paths:
         schema:
           anyOf:
           - type: string
+            description: Listexportjobsstate schema.
           - type: 'null'
+            description: Listexportjobsstate schema.
+          description: Exact job state filter (e.g. completed, failed, running).
           title: State
-          description: Exact job state filter.
         description: Exact job state filter (e.g. completed, failed, running).
       - name: created_after
         in: query
@@ -29929,9 +29937,11 @@ paths:
           anyOf:
           - type: string
             format: date-time
+            description: Listexportjobscreatedafter schema.
           - type: 'null'
+            description: Listexportjobscreatedafter schema.
+          description: Inclusive lower bound on job created_at (ISO-8601).
           title: Created After
-          description: Inclusive lower bound on job created_at.
         description: Inclusive lower bound on job created_at (ISO-8601).
       - name: created_before
         in: query
@@ -29940,9 +29950,11 @@ paths:
           anyOf:
           - type: string
             format: date-time
+            description: Listexportjobscreatedbefore schema.
           - type: 'null'
+            description: Listexportjobscreatedbefore schema.
+          description: Inclusive upper bound on job created_at (ISO-8601).
           title: Created Before
-          description: Inclusive upper bound on job created_at.
         description: Inclusive upper bound on job created_at (ISO-8601).
       - name: authorization
         in: header
@@ -47200,13 +47212,31 @@ components:
         code:
           type: string
           title: Code
-          description: Stable error code (same code as the terminal error event).
+          description: Stable delivery-taxonomy error code (additive-only; same as
+            the terminal error event).
           example: example
+        category:
+          type: string
+          title: Category
+          description: 'Taxonomy category: input, format, capability, policy, resource,
+            transport, or internal.'
+          example: domain
         message:
           type: string
           title: Message
           description: Human-readable failure description.
           example: Example validation message.
+        remediation:
+          type: string
+          title: Remediation
+          description: Actionable, user-facing next step.
+          example: example
+        retriable:
+          type: boolean
+          title: Retriable
+          description: Whether retrying the identical request may succeed without
+            changing the input.
+          example: false
         context:
           anyOf:
           - additionalProperties: true
@@ -47221,9 +47251,13 @@ components:
       type: object
       required:
       - code
+      - category
       - message
+      - remediation
+      - retriable
       title: ExportJobError
-      description: 'Structured terminal error for a ``failed`` export job (MFX-3.4).
+      description: 'Structured terminal error for a ``failed`` export job (MFX-3.4
+        / IXH-6.4).
 
 
         The machine-readable twin of a job''s terminal error event: a poller shows
@@ -47233,7 +47267,16 @@ components:
         — resubmit
 
         with ``confirm`` — from ``SOURCE_LOAD_FAILED``) without scraping the free-form
-        event log.'
+        event log.
+
+
+        ``code`` / ``category`` / ``remediation`` / ``retriable`` come from the delivery
+        error
+
+        taxonomy (:mod:`app.delivery_error_taxonomy`) and are additive-only, so UI
+        remediation
+
+        copy and CLI exit codes can key off them safely.'
     ExportJobEvent:
       properties:
         id:
@@ -47401,27 +47444,30 @@ components:
           maxItems: 1000
         total:
           type: integer
-          minimum: 0
+          minimum: 0.0
           title: Total
           description: Total jobs matching the filter (not just this page).
+          default: 0
+          example: 1
         limit:
           type: integer
-          minimum: 1
-          maximum: 200
+          maximum: 200.0
+          minimum: 1.0
           title: Limit
           description: Page size applied to this response.
+          default: 50
+          example: 50
         offset:
           type: integer
-          minimum: 0
+          minimum: 0.0
           title: Offset
           description: Number of matching jobs skipped before this page.
+          default: 0
+          example: 0
       additionalProperties: false
       type: object
       required:
       - jobs
-      - total
-      - limit
-      - offset
       title: ExportJobListResponse
       description: Paginated tenant-scoped export jobs (IXH-6.3).
     ExportJobProgress:
@@ -71652,27 +71698,30 @@ components:
           maxItems: 1000
         total:
           type: integer
-          minimum: 0
+          minimum: 0.0
           title: Total
           description: Total jobs matching the filter (not just this page).
+          default: 0
+          example: 1
         limit:
           type: integer
-          minimum: 1
-          maximum: 200
+          maximum: 200.0
+          minimum: 1.0
           title: Limit
           description: Page size applied to this response.
+          default: 50
+          example: 50
         offset:
           type: integer
-          minimum: 0
+          minimum: 0.0
           title: Offset
           description: Number of matching jobs skipped before this page.
+          default: 0
+          example: 0
       additionalProperties: false
       type: object
       required:
       - jobs
-      - total
-      - limit
-      - offset
       title: SpecImportJobListResponse
       description: Paginated tenant-scoped import jobs (IXH-6.3).
     SpecImportJobResult:
