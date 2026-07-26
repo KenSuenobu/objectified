@@ -396,6 +396,31 @@ def _postman_with_secrets() -> bytes:
     return json.dumps(collection, indent=2).encode("utf-8")
 
 
+def _http_file_with_secrets() -> bytes:
+    """An ``.http`` request file carrying synthetic credentials in headers and URLs."""
+    secrets = SYNTHETIC_SECRETS
+    return (
+        f"@token = {secrets['github_token']}\n"
+        f"@awsKey = {secrets['aws_access_key_id']}\n"
+        "\n"
+        "### Authenticated ping\n"
+        f"GET https://svc:{secrets['basic_auth_password']}@api.example.com/v1/ping\n"
+        f"Authorization: Bearer {secrets['jwt']}\n"
+        f"X-Api-Key: {secrets['google_api_key']}\n"
+        f"Cookie: session={secrets['session_cookie']}\n"
+        "\n"
+        "### Create charge\n"
+        "POST https://api.example.com/v1/charges\n"
+        "Content-Type: application/json\n"
+        f"Authorization: Bearer {secrets['stripe_key']}\n"
+        "\n"
+        "{\n"
+        f'  "awsAccessKeyId": "{secrets["aws_access_key_id"]}",\n'
+        f'  "token": "{secrets["slack_token"]}"\n'
+        "}\n"
+    ).encode("utf-8")
+
+
 # ===========================================================================
 # Spec
 # ===========================================================================
@@ -552,6 +577,26 @@ GENERATED_FIXTURES: List[GeneratedFixture] = [
         builder=_postman_with_secrets,
         approx_bytes=1_600,
         features=["adversarial", "secret-scrubbing", "bearer-token", "api-key", "session-cookie"],
+    ),
+    GeneratedFixture(
+        name="secrets-http-file.http",
+        guard="secret-scrubbing",
+        adapter_key="http-file",
+        expected_error_code=None,
+        description=(
+            "HTTP request file carrying synthetic bearer/JWT/AWS/basic-auth-URL credentials; "
+            "intake must redact them before persisting."
+        ),
+        builder=_http_file_with_secrets,
+        approx_bytes=900,
+        features=[
+            "adversarial",
+            "secret-scrubbing",
+            "basic-auth-url",
+            "aws-key",
+            "bearer-token",
+            "jwt",
+        ],
     ),
     GeneratedFixture(
         name="sparse-one-gigabyte.json",

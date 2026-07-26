@@ -1,0 +1,164 @@
+{
+  "adapter": "http-file",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "path_inferences": [
+        {
+          "generalized_segments": [
+            {
+              "index": 0,
+              "kind": "literal",
+              "value": "users"
+            },
+            {
+              "index": 1,
+              "kind": "param",
+              "value": "id"
+            }
+          ],
+          "method": "GET",
+          "sample_urls": [
+            "https://api.example.com/users/1",
+            "https://api.example.com/users/2",
+            "https://api.example.com/users/42"
+          ],
+          "template": "/users/{id}"
+        }
+      ],
+      "provenance": "inferred",
+      "sample_counts": {
+        "GET /users/{id}": 3
+      }
+    },
+    "format": "http-file",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "http-file/03-path-templating.http",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {
+          "provenance": "inferred",
+          "source_file": "http-file/03-path-templating.http"
+        },
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "provenance": "inferred"
+        },
+        "key": "http-file/03-path-templating.http",
+        "name": "http-file/03-path-templating.http",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "users"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "param",
+                    "value": "id"
+                  }
+                ],
+                "method": "GET",
+                "sample_urls": [
+                  "https://api.example.com/users/1",
+                  "https://api.example.com/users/2",
+                  "https://api.example.com/users/42"
+                ],
+                "template": "/users/{id}"
+              },
+              "provenance": "inferred",
+              "sample_count": 3,
+              "source_files": [
+                "http-file/03-path-templating.http"
+              ],
+              "source_label": "http-file/03-path-templating.http",
+              "source_location": "2:1"
+            },
+            "http_method": "GET",
+            "http_path": "/users/{id}",
+            "key": "GET /users/{id}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /users/{id}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 3
+                },
+                "key": "GET /users/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "http-file/03-path-templating.http",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "http-file/03-path-templating.http",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "http-file"
+  },
+  "fingerprint": "sha256:344e25bbabbbd77e622e5971495542ec2c6e86575d9f91efcf3038ef2bca1e94",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "259bf4a763d2f426f6fa70e3bfe389907399be8e055bd134fb20ea85bbbb4832",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

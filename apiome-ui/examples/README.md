@@ -4,7 +4,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Generated file — do not edit.** This README is the human index of [`corpus.manifest.json`](corpus.manifest.json) (schema: [`corpus.schema.json`](corpus.schema.json)). Edit the manifest, then run `python3 scripts/generate_examples_readme.py` from the repo root; CI fails on drift.
 
-The corpus holds **475 files** across **39 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **488 files** across **40 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -21,6 +21,7 @@ The corpus holds **475 files** across **39 format directories**. Every file has 
 | `api-blueprint/` | API Blueprint | rest | `FORMAT: 1A` metadata line | 11 |
 | `arazzo/` | Arazzo workflows | rest | top-level `arazzo:` version | 11 |
 | `discovery/` | Google API Discovery | rest | `kind: discovery#restDescription` / `discoveryVersion` | 11 |
+| `http-file/` | HTTP Request File | rest | HTTP request line / `###` separators / `curl` / `.http` `.rest` | 13 |
 | `odata/` | OData v4 (EDMX) | rest | `<edmx:Edmx>` root | 12 |
 | `openapi/` | OpenAPI 3.x | rest | top-level `openapi:` version | 38 |
 | `postman/` | Postman v2.1 | rest | collection `info.schema` URL | 11 |
@@ -436,6 +437,28 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/03-truncated-mid-msh.hl7` | — | `hl7v2` (no guarantee) | invalid | `negative`, `truncated`, `mid-msh` |
 | `negative/04-wrong-format-fix-order.fix` | — | `hl7v2` (no guarantee) | invalid | `negative`, `wrong-format`, `fix-message` |
 | `negative/05-encoding-utf16-ack.hl7` | — | `hl7v2` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
+
+### `http-file/` — HTTP Request File
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-ping.http` | minimal | `http-file` ≥ 0.9 | valid | `minimal`, `get` |
+| `02-typical-vars-auth.http` | typical | `http-file` ≥ 0.9 | valid | `variables`, `bearer`, `json-body`, `request-name` |
+| `03-path-templating.http` | composition | `http-file` ≥ 0.9 | valid | `path-templating`, `inferred`, `repeated-urls` |
+| `04-stress-methods-curl.http` | stress | `http-file` ≥ 0.9 | valid | `stress`, `methods`, `curl`, `query` |
+| `05-vscode-style-orders.http` | real-world | `http-file` ≥ 0.9 | valid | `real-world`, `vscode`, `uuid-path`, `api-key` |
+| `06-users-set/admin.http` ⚠ | multi-file (member) | `http-file` (no guarantee) | valid | `multi-file`, `member` |
+| `06-users-set/api.http` | multi-file (root) | `http-file` ≥ 0.9 | valid | `multi-file`, `env`, `provenance` |
+| `06-users-set/http-client.env.json` ⚠ | multi-file (member) | `http-file` (no guarantee) | valid | `multi-file`, `env` |
+| `negative/01-syntactic-no-request.http` | — | `http-file` (no guarantee) | invalid | `negative`, `syntactic` |
+| `negative/02-semantic-curl-missing-url.http` | — | `http-file` (no guarantee) | invalid | `negative`, `semantic`, `curl` |
+| `negative/03-truncated-mid-body.http` | — | `http-file` (no guarantee) | invalid | `negative`, `truncated` |
+| `negative/04-wrong-format-openapi.json` | — | `http-file` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi` |
+| `negative/05-encoding-utf16.http` | — | `http-file` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+
+> ⚠ **`06-users-set/admin.http`** — Fileset member imported through the set root api.http together with http-client.env.json.
+
+> ⚠ **`06-users-set/http-client.env.json`** — JetBrains-style environment file; not independently importable as requests.
 
 ### `iso20022/` — ISO 20022
 

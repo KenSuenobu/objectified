@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.60.0
+  version: 1.61.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -45347,6 +45347,7 @@ components:
       enum:
       - mapped
       - partially-mapped
+      - inferred
       - unsupported-by-canonical-model
       - not-parsed-by-adapter
       title: CoverageClass
@@ -45361,7 +45362,10 @@ components:
 
         :class:`~app.projection_taxonomy.ProjectionReason` pair (see
 
-        :data:`STATUS_FOR_COVERAGE`) — never a parallel status vocabulary.'
+        :data:`STATUS_FOR_COVERAGE`) — never a parallel status vocabulary.
+
+        ``inferred`` marks constructs synthesized from observations (request files /
+        traffic) and is never presented as declared.'
     CoverageEntry:
       properties:
         source_construct:

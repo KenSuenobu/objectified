@@ -359,10 +359,77 @@ def test_entities_carry_stable_keys_and_parser_provided_source_locations():
 
 
 def test_provenance_keys_match_the_export_manifest():
-    """Both manifests must read provenance from the same extras keys."""
-    assert PROVENANCE_EXTRA_KEYS == frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(
-        NATIVE_ID_EXTRA_KEYS
+    """Import provenance keys are a superset of the export manifest's extras keys.
+
+    Inference bookkeeping (``provenance``, ``sample_count``, path evidence, …) is
+    import-only and must not flip entities to ``partially-mapped``.
+    """
+    export_keys = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE_ID_EXTRA_KEYS)
+    assert export_keys <= PROVENANCE_EXTRA_KEYS
+    assert {"provenance", "sample_count", "inference_evidence", "path_inferences"} <= PROVENANCE_EXTRA_KEYS
+
+
+def test_inferred_provenance_is_inferred_coverage_not_mapped():
+    """Constructs stamped ``extras.provenance = inferred`` land as ``inferred``."""
+    from app.canonical_model import StreamingMode
+
+    api = CanonicalApi(
+        paradigm=ApiParadigm.REST,
+        format="http-file",
+        identity=ApiIdentity(name="Users"),
+        services=[
+            Service(
+                key="Users",
+                name="Users",
+                operations=[
+                    Operation(
+                        key="GET /users/{id}",
+                        name="GET /users/{id}",
+                        kind=OperationKind.REQUEST_RESPONSE,
+                        streaming=StreamingMode.NONE,
+                        http_method="GET",
+                        http_path="/users/{id}",
+                        extras={
+                            "provenance": "inferred",
+                            "sample_count": 3,
+                            "inference_evidence": {
+                                "template": "/users/{id}",
+                                "method": "GET",
+                                "sample_urls": [
+                                    "https://api.example.com/users/1",
+                                    "https://api.example.com/users/2",
+                                ],
+                            },
+                        },
+                    )
+                ],
+                extras={"provenance": "inferred"},
+            )
+        ],
+        extras={
+            "provenance": "inferred",
+            "path_inferences": [
+                {
+                    "template": "/users/{id}",
+                    "method": "GET",
+                    "sample_urls": [
+                        "https://api.example.com/users/1",
+                        "https://api.example.com/users/2",
+                    ],
+                }
+            ],
+        },
     )
+    page = paginate_import_preview_manifest(
+        build_import_preview_manifest(api, adapter_key="http-file", options={})
+    )
+    op = next(e for e in page.entities if e.entity_kind == "operation")
+    assert op.coverage is CoverageClass.INFERRED
+    assert op.unmodeled_extras == []
+    path_rows = [r for r in page.coverage if r.source_construct.startswith("path-template#")]
+    assert len(path_rows) == 1
+    assert path_rows[0].coverage is CoverageClass.INFERRED
+    assert "sample URL" in path_rows[0].detail
 
 
 # ---------------------------------------------------------------------------

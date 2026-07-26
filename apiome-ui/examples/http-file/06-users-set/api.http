@@ -1,0 +1,6 @@
+### Ping
+GET {{host}}/ping
+
+### List
+GET {{host}}/users?limit=10
+Authorization: Bearer {{token}}

@@ -1,0 +1,114 @@
+{
+  "adapter": "http-file",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "path_inferences": [],
+      "provenance": "inferred",
+      "sample_counts": {
+        "GET /ping": 1
+      }
+    },
+    "format": "http-file",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "http-file/01-minimal-ping.http",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {
+          "provenance": "inferred",
+          "source_file": "http-file/01-minimal-ping.http"
+        },
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "provenance": "inferred"
+        },
+        "key": "http-file/01-minimal-ping.http",
+        "name": "http-file/01-minimal-ping.http",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "ping"
+                  }
+                ],
+                "method": "GET",
+                "sample_urls": [
+                  "https://api.example.com/ping"
+                ],
+                "template": "/ping"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/01-minimal-ping.http"
+              ],
+              "source_label": "http-file/01-minimal-ping.http",
+              "source_location": "1:1"
+            },
+            "http_method": "GET",
+            "http_path": "/ping",
+            "key": "GET /ping",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /ping",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "http-file/01-minimal-ping.http",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "http-file/01-minimal-ping.http",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "http-file"
+  },
+  "fingerprint": "sha256:7e9513cf0dde1c5effef9f433a6ce7178bf37d2a4f45b4c222382c536cc88e49",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "05978cba908b21b3c493f13d8fffbba002880baa5961d21a6b307b92f7fe6ff9",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

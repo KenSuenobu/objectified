@@ -117,6 +117,8 @@ const REMEDIATION: Record<PreviewCoverageClass, string> = {
   mapped: 'Fully represented by canonical fields — nothing to remediate.',
   'partially-mapped':
     'The unmodeled attributes are preserved in the entity’s extras bag and survive round-trip, but are not first-class canonical fields.',
+  inferred:
+    'Synthesized from observations (request files / traffic) — never a declared source construct. Confirm templates and sample counts before publishing.',
   'unsupported-by-canonical-model':
     'No canonical field models this construct; it is preserved only in the extras bag. If it must be first-class, that is a canonical-model gap, not an adapter bug.',
   'not-parsed-by-adapter':
