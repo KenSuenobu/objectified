@@ -41,6 +41,8 @@ jest.mock('sonner', () => ({
 }));
 
 import { ExportStudio } from '../src/app/components/ade/dashboard/export/ExportStudio';
+import { EXPORT_STUDIO_PATH } from '../src/app/components/ade/dashboard/export/exportStudioLink';
+import { decodeStudioOptions } from '../src/app/components/ade/dashboard/export/exportStudioUrlState';
 import { __resetExportJobTrackerForTests } from '../src/app/components/ade/dashboard/export/exportJobTracker';
 import { buildZip } from '../src/app/components/ade/dashboard/export/zipBundle';
 import type { ExportTargetsResponse } from '../src/app/components/ade/dashboard/export/exportTargetCatalog';
@@ -1199,5 +1201,194 @@ describe('ExportStudio — job progress & failure recovery (MFX-46.2)', () => {
     render(<ExportStudio artifact="proj-petstore" artifactLabel="Pet Store API" version="rev-1" />);
     await waitFor(() => expect(screen.getByTestId('export-artifact-preview')).toBeInTheDocument());
     expect(screen.queryByTestId('export-studio-generate')).not.toBeInTheDocument();
+  });
+});
+
+describe('ExportStudio — deep links & resumable state (MFX-41.4)', () => {
+  beforeEach(() => {
+    // The Studio only rewrites the address bar on its own route; put jsdom there.
+    window.history.replaceState(null, '', EXPORT_STUDIO_PATH);
+  });
+
+  afterEach(() => {
+    window.history.replaceState(null, '', '/');
+  });
+
+  /** The Studio's current URL state, as a teammate would receive it. */
+  function currentLinkParams(): URLSearchParams {
+    return new URLSearchParams(window.location.search);
+  }
+
+  /** A targets response that fails with `status` — a stale link's source load. */
+  function failingTargetsFetch(status: number, error: string): jest.Mock {
+    return jest.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/export/targets')) {
+        return Promise.resolve({
+          ok: false,
+          status,
+          json: () => Promise.resolve({ success: false, error }),
+        });
+      }
+      return Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({}) });
+    }) as unknown as jest.Mock;
+  }
+
+  it('mirrors the session — source, target, options, step — into the address bar', async () => {
+    await renderStudio(mockFetch(), { initialTarget: 'proto' });
+    await waitFor(() => expect(currentLinkParams().get('target')).toBe('proto'));
+    expect(currentLinkParams().get('artifact')).toBe('proj-petstore');
+    expect(currentLinkParams().get('version')).toBe('rev-1');
+    expect(currentLinkParams().get('label')).toBe('Pet Store API');
+
+    // The step follows the user: advancing to Options is in the link a teammate would receive.
+    fireEvent.click(screen.getByRole('button', { name: /choose target/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i })); // → options
+    await waitFor(() => expect(currentLinkParams().get('step')).toBe('options'));
+
+    // …and so do the non-default options, compactly encoded.
+    fireEvent.change(screen.getByLabelText(/Package/i), { target: { value: 'com.example' } });
+    await waitFor(() =>
+      expect(decodeStudioOptions(currentLinkParams().get('opts'))).toEqual({
+        package: 'com.example',
+      }),
+    );
+  });
+
+  it('keeps the deep link intact instead of overwriting it on load', async () => {
+    await renderStudio(mockFetch(), { initialTarget: 'openapi', initialStep: 'verify' });
+    await waitFor(() => expect(screen.getByTestId('verify-run')).toBeInTheDocument());
+    const params = currentLinkParams();
+    expect(params.get('target')).toBe('openapi');
+    expect(params.get('step')).toBe('verify');
+  });
+
+  it('copies an absolute link to the clipboard', async () => {
+    const writeText = jest.fn(() => Promise.resolve());
+    Object.defineProperty(window.navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    });
+    await renderStudio(mockFetch(), { initialTarget: 'proto' });
+    // The link the button copies is always the live session — wait for the deep link to restore.
+    await waitFor(() => expect(currentLinkParams().get('target')).toBe('proto'));
+
+    fireEvent.click(screen.getByTestId('export-studio-copy-link'));
+    await waitFor(() => expect(writeText).toHaveBeenCalled());
+    const copied = new URL(String(writeText.mock.calls[0][0]));
+    expect(copied.origin).toBe(window.location.origin);
+    expect(copied.pathname).toBe(EXPORT_STUDIO_PATH);
+    expect(copied.searchParams.get('artifact')).toBe('proj-petstore');
+    expect(copied.searchParams.get('target')).toBe('proto');
+    expect(await screen.findByText(/link copied/i)).toBeInTheDocument();
+  });
+
+  it('reproduces a shared session: the link resumes on its step', async () => {
+    await renderStudio(mockFetch(), { initialTarget: 'openapi', initialStep: 'verify' });
+    await waitFor(() =>
+      expect(screen.getByTestId('export-studio-step-verify')).toHaveAttribute('data-state', 'current'),
+    );
+    expect(screen.getByTestId('verify-run')).toBeInTheDocument();
+  });
+
+  it('resumes with the link’s option overrides applied', async () => {
+    await renderStudio(mockFetch(), {
+      initialTarget: 'proto',
+      initialOptions: { package: 'com.example' },
+      initialStep: 'verify',
+    });
+    await waitFor(() => expect(screen.getByTestId('verify-run')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /^back$/i })); // → options
+    expect(screen.getByLabelText(/Package/i)).toHaveValue('com.example');
+  });
+
+  it('never resumes straight onto Review — the recipient re-verifies', async () => {
+    await renderStudio(mockFetch(), { initialTarget: 'openapi', initialStep: 'review' });
+    await waitFor(() =>
+      expect(screen.getByTestId('export-studio-step-verify')).toHaveAttribute('data-state', 'current'),
+    );
+    expect(screen.queryByTestId('export-studio-generate')).not.toBeInTheDocument();
+  });
+
+  it('stops at Options when the link’s options do not satisfy the target schema', async () => {
+    // `proto` requires `package`, which this link never set: Verify is not reachable yet.
+    await renderStudio(mockFetch(), { initialTarget: 'proto', initialStep: 'verify' });
+    await waitFor(() =>
+      expect(screen.getByTestId('export-studio-step-options')).toHaveAttribute('data-state', 'current'),
+    );
+    expect(screen.getByText(/Package is required\./)).toBeInTheDocument();
+  });
+
+  it('degrades a link whose target is no longer registered', async () => {
+    await renderStudio(mockFetch(), { initialTarget: 'thrift', initialStep: 'verify' });
+    const notice = await screen.findByTestId('export-studio-link-notice');
+    expect(notice).toHaveTextContent(/thrift/);
+    expect(notice).toHaveTextContent(/not available for this source/i);
+    // The user lands where they can fix it, with nothing selected.
+    expect(screen.getByTestId('export-studio-step-target')).toHaveAttribute('data-state', 'current');
+  });
+
+  it('degrades a link whose target cannot run for this source', async () => {
+    await renderStudio(mockFetch(), { initialTarget: 'avro', initialStep: 'verify' });
+    const notice = await screen.findByTestId('export-studio-link-notice');
+    expect(notice).toHaveTextContent(/Avro/);
+    expect(notice).toHaveTextContent(/Requires the avro toolchain/);
+    expect(screen.getByTestId('export-studio-step-target')).toHaveAttribute('data-state', 'current');
+  });
+
+  it('ignores link options the target does not define, and says so', async () => {
+    await renderStudio(mockFetch(), {
+      initialTarget: 'proto',
+      initialOptions: { package: 'com.example', legacy_flag: true },
+    });
+    const notice = await screen.findByTestId('export-studio-link-notice');
+    expect(notice).toHaveTextContent(/legacy_flag/);
+    expect(notice).toHaveTextContent(/ignored/i);
+    fireEvent.click(screen.getByRole('button', { name: /choose target/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i })); // → options
+    expect(screen.getByLabelText(/Package/i)).toHaveValue('com.example');
+  });
+
+  it('drops the stale-target notice once the user picks a target', async () => {
+    await renderStudio(mockFetch(), { initialTarget: 'thrift' });
+    await screen.findByTestId('export-studio-link-notice');
+
+    fireEvent.click(screen.getByRole('button', { name: /OpenAPI 3\.1/i }));
+    await waitFor(() =>
+      expect(screen.queryByTestId('export-studio-link-notice')).not.toBeInTheDocument(),
+    );
+    expect(currentLinkParams().get('target')).toBe('openapi');
+  });
+
+  it('renders the notices the route’s URL validation produced', async () => {
+    await renderStudio(mockFetch(), {
+      initialTarget: 'openapi',
+      linkIssues: [
+        {
+          code: 'options-redacted',
+          message: 'Credentials are never carried in a link: api_key was ignored.',
+        },
+      ],
+    });
+    expect(screen.getByTestId('export-studio-link-notice')).toHaveTextContent(
+      /credentials are never carried in a link/i,
+    );
+  });
+
+  it('explains a link whose source or version no longer exists', async () => {
+    global.fetch = failingTargetsFetch(404, 'Version not found') as unknown as typeof fetch;
+    render(<ExportStudio artifact="proj-gone" version="rev-9" initialTarget="openapi" />);
+    const error = await screen.findByTestId('export-studio-error');
+    expect(error).toHaveTextContent(/no longer exists/i);
+    expect(screen.getByRole('link', { name: /back to versions/i })).toBeInTheDocument();
+    // One explanation, not two: the target cannot be judged against a registry that never loaded.
+    expect(screen.queryByTestId('export-studio-link-notice')).not.toBeInTheDocument();
+  });
+
+  it('explains a link to a source in another workspace (tenant scoping)', async () => {
+    global.fetch = failingTargetsFetch(403, 'Forbidden') as unknown as typeof fetch;
+    render(<ExportStudio artifact="proj-other-tenant" initialTarget="openapi" />);
+    const error = await screen.findByTestId('export-studio-error');
+    expect(error).toHaveTextContent(/not available in your workspace/i);
   });
 });

@@ -33,6 +33,7 @@ import {
   recentExportsStorageKey,
   type RecentExport,
 } from '../src/app/components/ade/dashboard/export/recentExports';
+import { decodeStudioOptions } from '../src/app/components/ade/dashboard/export/exportStudioUrlState';
 
 const ARTIFACT = 'proj-petstore';
 const VERSION = 'rev-1';
@@ -252,7 +253,8 @@ describe('VersionExportPanel — recent exports (MFX-6.5, MFX-41.3)', () => {
     expect(params.get('version')).toBe(VERSION);
     expect(params.get('target')).toBe('proto');
     expect(params.get('from')).toBe('versions');
-    expect(JSON.parse(params.get('options') ?? '{}')).toEqual({
+    // The overrides travel compactly (MFX-41.4); decode them through the shared contract.
+    expect(decodeStudioOptions(params.get('opts'))).toEqual({
       package: 'com.example',
       emit_services: false,
     });
@@ -277,7 +279,7 @@ describe('VersionExportPanel — recent exports (MFX-6.5, MFX-41.3)', () => {
       screen.getByTestId('version-recent-export-rerun').getAttribute('href') ?? '',
     );
     expect(params.get('target')).toBe('openapi');
-    expect(params.get('options')).toBeNull();
+    expect(params.get('opts')).toBeNull();
   });
 
   it('re-reads the list when refreshToken bumps', async () => {

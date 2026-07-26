@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import {
   ArrowLeft,
+  Check,
   CheckCircle2,
   Download,
   FileArchive,
   FileOutput,
+  Link2,
   Loader2,
   Package,
   PanelsTopLeft,
@@ -60,7 +63,21 @@ import {
 } from './exportBundle';
 import { buildZip, looksLikeZip, readZip } from './zipBundle';
 import { downloadBlob, filenameFromDisposition } from './exportDownload';
-import { resolveStudioBack } from './exportStudioLink';
+import {
+  EXPORT_STUDIO_PATH,
+  buildExportStudioShareUrl,
+  exportStudioHref,
+  resolveStudioBack,
+  type ExportStudioScope,
+} from './exportStudioLink';
+import {
+  EXPORT_STUDIO_STEP_ORDER,
+  describeStudioSourceFailure,
+  isExportStudioStep,
+  resolveResumableStep,
+  type ExportStudioLinkIssue,
+  type ExportStudioStep,
+} from './exportStudioUrlState';
 import type { ExportedArtifactSummary } from './ExportDialog';
 import {
   changedOptions,
@@ -88,6 +105,16 @@ interface ExportStudioProps {
    * during the same seeding pass that selects the target; ignored without an `initialTarget`.
    */
   initialOptions?: Record<string, unknown> | null;
+  /**
+   * The stepper stop the deep link asked to resume on (MFX-41.4). Clamped to what the link can
+   * actually establish — a link cannot carry a verify verdict, so `review` resumes at Verify.
+   */
+  initialStep?: string | null;
+  /**
+   * Notices the route's URL parser already produced (unreadable options, redacted credentials),
+   * rendered with the ones the Studio derives once the target registry has loaded (MFX-41.4).
+   */
+  linkIssues?: ExportStudioLinkIssue[];
   /** Where the export was launched from — resolves the back link (Versions vs Catalog). */
   origin?: string | null;
   /**
@@ -99,8 +126,11 @@ interface ExportStudioProps {
   onGenerated?: (summary: ExportedArtifactSummary) => void;
 }
 
-/** The Studio's five stepper stops (MFX-41.1). */
-type StudioStep = 'source' | 'target' | 'options' | 'verify' | 'review';
+/**
+ * The Studio's five stepper stops (MFX-41.1). The key list is owned by `exportStudioUrlState`
+ * because the URL's `step` param is validated against it (MFX-41.4); the labels stay here.
+ */
+type StudioStep = ExportStudioStep;
 
 const STUDIO_STEPS: { key: StudioStep; label: string }[] = [
   { key: 'source', label: 'Source' },
@@ -110,7 +140,36 @@ const STUDIO_STEPS: { key: StudioStep; label: string }[] = [
   { key: 'review', label: 'Review & Generate' },
 ];
 
-const STEP_ORDER: StudioStep[] = STUDIO_STEPS.map((s) => s.key);
+const STEP_ORDER: readonly StudioStep[] = EXPORT_STUDIO_STEP_ORDER;
+
+/** A stable empty default, so the `linkIssues` prop never changes identity between renders. */
+const EMPTY_LINK_ISSUES: ExportStudioLinkIssue[] = [];
+
+/**
+ * Seed an options form for a target: every option at its default, overridden by the matching keys
+ * of a deep link's overrides. Foreign keys are ignored, so a stale or hand-edited link can never
+ * inject an option the target does not have.
+ *
+ * @param card The selected target card.
+ * @param seedOptions The link's overrides (or null for a plain default seed).
+ * @returns The option values to render, plus the seed keys the target does not define.
+ */
+function seedOptionValues(
+  card: ExportTargetCard,
+  seedOptions?: Record<string, unknown> | null,
+): { values: Record<string, unknown>; foreignKeys: string[] } {
+  const values: Record<string, unknown> = {};
+  const fields = optionFieldsFromSchema(card.entry.options_schema, card.entry.default_options);
+  for (const field of fields) {
+    values[field.key] =
+      seedOptions && Object.prototype.hasOwnProperty.call(seedOptions, field.key)
+        ? seedOptions[field.key]
+        : field.defaultValue;
+  }
+  const known = new Set(fields.map((field) => field.key));
+  const foreignKeys = seedOptions ? Object.keys(seedOptions).filter((key) => !known.has(key)) : [];
+  return { values, foreignKeys };
+}
 
 /**
  * ExportStudio — the full-page export workspace (MFX-41.1, #4348).
@@ -134,6 +193,8 @@ export function ExportStudio({
   version = null,
   initialTarget = null,
   initialOptions = null,
+  initialStep = null,
+  linkIssues = EMPTY_LINK_ISSUES,
   origin = null,
   sourceFormat = null,
   onGenerated,
@@ -167,7 +228,12 @@ export function ExportStudio({
     null,
   );
 
-  const { response, loading, error: targetsError } = useExportTargets(true, artifact, version);
+  const {
+    response,
+    loading,
+    error: targetsError,
+    status: targetsStatus,
+  } = useExportTargets(true, artifact, version);
   // IXH-2.4: rank the same targets by expected outcome — source lint grade, projected fidelity,
   // capability fit, and the tenant's export policy — so the grid leads with the best bet and shows
   // a policy-blocked target as blocked rather than as just another card.
@@ -289,29 +355,89 @@ export function ExportStudio({
       setBundle(null);
       setProblemReveal(null);
       resetVerify();
-      const values: Record<string, unknown> = {};
-      for (const field of optionFieldsFromSchema(card.entry.options_schema, card.entry.default_options)) {
-        values[field.key] =
-          seedOptions && Object.prototype.hasOwnProperty.call(seedOptions, field.key)
-            ? seedOptions[field.key]
-            : field.defaultValue;
-      }
-      setOptionValues(values);
+      setOptionValues(seedOptionValues(card, seedOptions).values);
     },
     [resetVerify],
   );
 
-  // Pre-select the target carried from the dialog escalation (and pre-fill a re-run's prior
-  // options, MFX-41.3), once the target list has loaded. Runs at most once (guarded by the ref)
-  // so a later manual re-pick is never overwritten.
-  const seeded = useRef(false);
+  // The deep link's own state, captured once at mount (MFX-41.4). The Studio writes its session
+  // back into the address bar, which re-renders the route with fresh props — reading these from a
+  // ref keeps the restore describing the link the user actually opened.
+  const link = useRef({ target: initialTarget, options: initialOptions, step: initialStep });
+  /** Notices derived once the registry has loaded: an unknown/unavailable target, foreign options. */
+  const [resolvedIssues, setResolvedIssues] = useState<ExportStudioLinkIssue[]>(EMPTY_LINK_ISSUES);
+  /** False until the deep link has been restored — the URL is not rewritten before then. */
+  const [restored, setRestored] = useState(false);
+
+  // Restore the deep link once the target registry has settled (MFX-41.1 escalation, MFX-41.3
+  // re-run overrides, MFX-41.4 resumable step). Runs at most once, so a later manual re-pick is
+  // never overwritten, and degrades every unverifiable part of the link into a notice: an
+  // unregistered or unavailable target lands the user on the Target step with an explanation
+  // instead of a silently empty selection.
+  const restoring = useRef(false);
   useEffect(() => {
-    if (seeded.current || !initialTarget || cards.length === 0) return;
-    const card = cards.find((c) => c.key === initialTarget);
-    if (!card) return;
-    seeded.current = true;
-    selectCard(card, initialOptions);
-  }, [initialTarget, initialOptions, cards, selectCard]);
+    if (restoring.current || loading) return;
+    // Wait for the registry to settle either way; a failed load is explained by its own notice.
+    if (!response && !targetsError) return;
+    restoring.current = true;
+    // A source that would not load is explained by its own notice; nothing about the link's target
+    // can be judged against a registry that never arrived, so do not pile a second notice on top.
+    if (!response) {
+      setRestored(true);
+      return;
+    }
+    const issues: ExportStudioLinkIssue[] = [];
+    const requestedTarget = link.current.target;
+    const card = requestedTarget ? cards.find((c) => c.key === requestedTarget) ?? null : null;
+    let hasTarget = false;
+    let optionsValid = false;
+    if (requestedTarget && !card) {
+      issues.push({
+        code: 'target-unknown',
+        message: `This link's target (“${requestedTarget}”) is not available for this source. Choose a target below to continue.`,
+      });
+    } else if (card && !card.available) {
+      issues.push({
+        code: 'target-unavailable',
+        message: `This link's target (${card.entry.descriptor.label}) cannot run for this source${
+          card.entry.descriptor.unavailable_reason
+            ? `: ${card.entry.descriptor.unavailable_reason}`
+            : '.'
+        } Choose another target below.`,
+      });
+    } else if (card) {
+      const { values, foreignKeys } = seedOptionValues(card, link.current.options);
+      hasTarget = true;
+      optionsValid = validateExportOptions(
+        optionFieldsFromSchema(card.entry.options_schema, card.entry.default_options),
+        values,
+      ).valid;
+      if (foreignKeys.length > 0) {
+        issues.push({
+          code: 'options-foreign',
+          message: `${foreignKeys.join(', ')} ${
+            foreignKeys.length === 1 ? 'is not an option' : 'are not options'
+          } of ${card.entry.descriptor.label} and ${
+            foreignKeys.length === 1 ? 'was' : 'were'
+          } ignored.`,
+        });
+      }
+      selectCard(card, link.current.options);
+    }
+    if (issues.length > 0) setResolvedIssues(issues);
+    const requestedStep = isExportStudioStep(link.current.step) ? link.current.step : null;
+    // A target the link could not honour is worth landing on even when no step was carried: the
+    // Target step is where the user resolves it.
+    const targetProblem = issues.some(
+      (issue) => issue.code === 'target-unknown' || issue.code === 'target-unavailable',
+    );
+    if (requestedStep || targetProblem) {
+      setStep(
+        resolveResumableStep(requestedStep ?? 'target', { hasTarget, optionsValid }),
+      );
+    }
+    setRestored(true);
+  }, [loading, response, targetsError, cards, selectCard]);
 
   const setOption = useCallback(
     (key: string, value: unknown) => {
@@ -335,6 +461,8 @@ export function ExportStudio({
     (card: ExportTargetCard) => {
       clearActiveJob();
       selectCard(card);
+      // Whatever the link could not honour about *its* target is now moot: the user just chose one.
+      setResolvedIssues(EMPTY_LINK_ISSUES);
     },
     [clearActiveJob, selectCard],
   );
@@ -644,6 +772,49 @@ export function ExportStudio({
     }
   }, [step, response, loading, selected, validation.valid, verifyVerdict, acknowledged, jobValidationOverride]);
 
+  // MFX-41.4: the session as a link. Source, target, non-default options (credential-shaped keys
+  // stripped by the builder), and the current step — everything a teammate needs to arrive where
+  // this user is. Verify verdicts and acknowledgements are deliberately absent: they are facts
+  // about a dry-run, so the recipient re-verifies rather than inheriting a stale go-ahead.
+  const shareScope = useMemo<ExportStudioScope>(
+    () => ({
+      artifact,
+      version,
+      label: artifactLabel,
+      target: selectedKey,
+      origin: origin === 'catalog' ? 'catalog' : 'versions',
+      sourceFormat,
+      options: changedOpts,
+      step,
+    }),
+    [artifact, version, artifactLabel, selectedKey, origin, sourceFormat, changedOpts, step],
+  );
+  const shareHref = useMemo(() => exportStudioHref(shareScope), [shareScope]);
+
+  // Mirror that link into the address bar, so a reload — or a copy of the URL straight from the
+  // browser — reproduces the session. `history.replaceState` (the convention used by the versions
+  // screen) keeps it out of the back-button history: stepping through the Studio should not turn
+  // Back into an undo stack. Nothing is written until the incoming link has been restored, so the
+  // rewrite can never erase the state it is still reading.
+  useEffect(() => {
+    if (!restored || typeof window === 'undefined') return;
+    if (window.location.pathname !== EXPORT_STUDIO_PATH) return;
+    if (`${window.location.pathname}${window.location.search}` === shareHref) return;
+    window.history.replaceState(null, '', shareHref);
+  }, [restored, shareHref]);
+
+  // Everything the link could not honour: the route's parse-time notices (unreadable options,
+  // redacted credentials) plus the registry-resolved ones (unknown/unavailable target).
+  const linkNotices = useMemo(
+    () => [...linkIssues, ...resolvedIssues],
+    [linkIssues, resolvedIssues],
+  );
+
+  // A failed source load is usually a stale link, not a broken service: say which.
+  const sourceError = targetsError
+    ? describeStudioSourceFailure(targetsStatus, targetsError)
+    : null;
+
   const stepIndex = STEP_ORDER.indexOf(step);
   const goBack = useCallback(() => {
     setStep(STEP_ORDER[Math.max(0, stepIndex - 1)]);
@@ -663,10 +834,14 @@ export function ExportStudio({
             <ArrowLeft className="h-4 w-4" aria-hidden />
             Back to {backTarget.label}
           </Link>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
-            <PanelsTopLeft className="h-6 w-6 text-indigo-500" aria-hidden />
-            Export Studio
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
+              <PanelsTopLeft className="h-6 w-6 text-indigo-500" aria-hidden />
+              Export Studio
+            </h1>
+            {/* MFX-41.4: "look at this export config" as a URL. */}
+            <CopyStudioLinkButton scope={shareScope} />
+          </div>
           <p className="mt-1 max-w-3xl text-sm text-gray-600 dark:text-gray-400">
             Verify a conversion before you generate it. Exporting{' '}
             <strong className="text-gray-900 dark:text-gray-100">{sourceLabel}</strong>
@@ -699,9 +874,22 @@ export function ExportStudio({
           })}
         </ol>
 
-        {(error || targetsError) && (
+        {(error || sourceError) && (
           <Alert variant="error" data-testid="export-studio-error">
-            {error || targetsError}
+            {error || sourceError}
+          </Alert>
+        )}
+
+        {/* MFX-41.4: every part of the deep link that could not be honoured, stated plainly. */}
+        {linkNotices.length > 0 && (
+          <Alert variant="warning" data-testid="export-studio-link-notice">
+            <ul className="space-y-1 text-sm">
+              {linkNotices.map((notice) => (
+                <li key={`${notice.code}-${notice.message}`} data-issue={notice.code}>
+                  {notice.message}
+                </li>
+              ))}
+            </ul>
           </Alert>
         )}
 
@@ -1039,6 +1227,54 @@ export function ExportStudio({
         </div>
       </div>
     </main>
+  );
+}
+
+/**
+ * "Copy link" — the Studio session as a shareable URL (MFX-41.4, #4351).
+ *
+ * The URL is built at click time from the live session scope, so it always matches what is on
+ * screen (and matches the address bar, which the Studio keeps in sync). Delivery credentials are
+ * never encoded — the link builder strips credential-shaped option keys — so a link is safe to
+ * paste into a ticket or a chat. The recipient needs access to the same tenant: the export API
+ * resolves the tenant from their session, not from the URL.
+ */
+function CopyStudioLinkButton({ scope }: { scope: ExportStudioScope }) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return undefined;
+    const timer = setTimeout(() => setCopied(false), 1500);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  const copy = useCallback(async () => {
+    const url = buildExportStudioShareUrl(scope);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+    } catch {
+      // Clipboard unavailable (insecure context / denied permission): the address bar already
+      // carries the same URL, so say so rather than failing silently.
+      toast.error('Could not copy the link — copy it from the address bar instead.');
+    }
+  }, [scope]);
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      data-testid="export-studio-copy-link"
+      onClick={() => void copy()}
+      title="Copy a link that reopens this export configuration. Credentials are never included."
+    >
+      {copied ? (
+        <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
+      ) : (
+        <Link2 className="h-4 w-4" aria-hidden />
+      )}
+      {copied ? 'Link copied' : 'Copy link'}
+    </Button>
   );
 }
 

@@ -10,29 +10,32 @@ import { Button } from '../../../../components/ui/Button';
 import { ExportStudio } from '../../../../components/ade/dashboard/export/ExportStudio';
 import type { ExportedArtifactSummary } from '../../../../components/ade/dashboard/export/ExportDialog';
 import { recordRecentExport } from '../../../../components/ade/dashboard/export/recentExports';
-import { parseExportStudioOptions } from '../../../../components/ade/dashboard/export/exportStudioLink';
+import { parseExportStudioUrlState } from '../../../../components/ade/dashboard/export/exportStudioUrlState';
 
 /**
  * Export Studio route — `…/ade/dashboard/export/studio` (MFX-41.1, #4348).
  *
  * A tenant-scoped, source-scoped workspace: the full-page twin of the ExportDialog. It reads its
- * scope from the query string (`artifact` [+ `version` / `label` / `target`], the deep-link
- * contract in `exportStudioLink.ts`) and is never a bare global screen — without a source it
- * shows how to open the Studio from a version or catalog item instead.
+ * scope from the query string (the deep-link contract in `exportStudioLink.ts`, validated by
+ * `exportStudioUrlState.ts`) and is never a bare global screen — without a source it shows how to
+ * open the Studio from a version or catalog item instead.
+ *
+ * The link carries the whole session (MFX-41.4): source, target, non-default options, and the step
+ * to resume on. Every param is validated before the Studio sees it, and whatever cannot be honoured
+ * (unreadable options, credential-shaped keys, an unknown target) arrives as a notice the Studio
+ * renders instead of failing.
  */
 function ExportStudioRouteContent() {
   const { data: session, status } = useAuthSession();
   const searchParams = useSearchParams();
 
-  const artifact = searchParams.get('artifact');
-  const version = searchParams.get('version');
-  const label = searchParams.get('label');
-  const target = searchParams.get('target');
-  const origin = searchParams.get('from');
-  const sourceFormat = searchParams.get('sourceFormat');
-  const optionsParam = searchParams.get('options');
-  // Decode the re-run overrides (MFX-41.3) once; a malformed value degrades to no pre-fill.
-  const initialOptions = useMemo(() => parseExportStudioOptions(optionsParam), [optionsParam]);
+  // Validate the whole link once per query string: scalars, the compact option overrides
+  // (MFX-41.3/41.4), and the resumable step, plus the notices for anything that had to degrade.
+  const { state, issues } = useMemo(
+    () => parseExportStudioUrlState(searchParams),
+    [searchParams],
+  );
+  const { artifact, version, label, target, origin, sourceFormat, options, step } = state;
 
   if (status === 'loading') {
     return (
@@ -80,7 +83,9 @@ function ExportStudioRouteContent() {
       artifactLabel={label}
       version={version}
       initialTarget={target}
-      initialOptions={initialOptions}
+      initialOptions={options}
+      initialStep={step}
+      linkIssues={issues}
       origin={origin}
       sourceFormat={sourceFormat}
       // Record every Studio generate in the MFX-6.5 recent-exports store, keyed by the scoped

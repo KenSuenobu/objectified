@@ -1,12 +1,14 @@
 /**
- * exportStudioHref — the Export Studio deep-link contract (MFX-41.1, #4348).
+ * exportStudioHref — the Export Studio deep-link contract (MFX-41.1, #4348; MFX-41.4, #4351).
  *
- * The ExportDialog escalation and the Studio route agree on the query string built here: a
- * required `artifact`, plus the optional `version`, `label`, and pre-selected `target`.
+ * The ExportDialog escalation, the Studio route, and the Studio's own "Copy link" agree on the
+ * query string built here: a required `artifact`, plus the optional `version`, `label`,
+ * pre-selected `target`, compact option overrides (`opts`), and resumable `step`.
  */
 
 import {
   EXPORT_STUDIO_PATH,
+  buildExportStudioShareUrl,
   exportStudioHref,
   parseExportStudioOptions,
   resolveStudioBack,
@@ -49,23 +51,68 @@ describe('exportStudioHref', () => {
     expect(href).toBe(`${EXPORT_STUDIO_PATH}?artifact=proj-1`);
   });
 
-  it('encodes non-empty option overrides as JSON and round-trips them (MFX-41.3)', () => {
+  it('encodes non-empty option overrides compactly and round-trips them (MFX-41.3/41.4)', () => {
     const options = { package: 'com.example', emit_services: false };
     const href = exportStudioHref({ artifact: 'proj-1', target: 'proto', options });
     const params = new URLSearchParams(href.split('?')[1]);
     expect(params.get('target')).toBe('proto');
-    expect(JSON.parse(params.get('options') ?? '{}')).toEqual(options);
-    expect(parseExportStudioOptions(params.get('options'))).toEqual(options);
+    // Compact: base64url, so the link carries no braces/quotes to escape.
+    expect(params.get('opts')).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(parseExportStudioOptions(params.get('opts'))).toEqual(options);
   });
 
   it('omits the options param for an empty override map', () => {
     const href = exportStudioHref({ artifact: 'proj-1', target: 'proto', options: {} });
-    expect(new URLSearchParams(href.split('?')[1]).has('options')).toBe(false);
+    expect(new URLSearchParams(href.split('?')[1]).has('opts')).toBe(false);
+  });
+
+  it('never carries a credential-shaped option (MFX-41.4)', () => {
+    const href = exportStudioHref({
+      artifact: 'proj-1',
+      target: 'proto',
+      options: { package: 'com.example', delivery_token: 'sk-live-1' },
+    });
+    const opts = new URLSearchParams(href.split('?')[1]).get('opts');
+    expect(href).not.toContain('sk-live-1');
+    expect(parseExportStudioOptions(opts)).toEqual({ package: 'com.example' });
+  });
+
+  it('carries the resumable step, omitting the default first step (MFX-41.4)', () => {
+    const verify = exportStudioHref({ artifact: 'proj-1', target: 'proto', step: 'verify' });
+    expect(new URLSearchParams(verify.split('?')[1]).get('step')).toBe('verify');
+    const source = exportStudioHref({ artifact: 'proj-1', step: 'source' });
+    expect(new URLSearchParams(source.split('?')[1]).has('step')).toBe(false);
+  });
+});
+
+describe('buildExportStudioShareUrl (MFX-41.4)', () => {
+  it('resolves the deep link against an explicit origin', () => {
+    const url = buildExportStudioShareUrl(
+      { artifact: 'proj-1', target: 'proto', step: 'verify' },
+      'https://apiome.example.com',
+    );
+    expect(url.startsWith(`https://apiome.example.com${EXPORT_STUDIO_PATH}?`)).toBe(true);
+    const params = new URLSearchParams(url.split('?')[1]);
+    expect(params.get('artifact')).toBe('proj-1');
+    expect(params.get('target')).toBe('proto');
+    expect(params.get('step')).toBe('verify');
+  });
+
+  it('defaults to the current browser origin', () => {
+    expect(buildExportStudioShareUrl({ artifact: 'proj-1' })).toBe(
+      `${window.location.origin}${EXPORT_STUDIO_PATH}?artifact=proj-1`,
+    );
+  });
+
+  it('falls back to the root-relative href for an unusable origin', () => {
+    expect(buildExportStudioShareUrl({ artifact: 'proj-1' }, 'not a url')).toBe(
+      `${EXPORT_STUDIO_PATH}?artifact=proj-1`,
+    );
   });
 });
 
 describe('parseExportStudioOptions', () => {
-  it('parses a JSON object of overrides', () => {
+  it('parses a legacy JSON object of overrides (links minted before MFX-41.4)', () => {
     expect(parseExportStudioOptions('{"package":"com.example"}')).toEqual({ package: 'com.example' });
   });
 
