@@ -30,9 +30,11 @@ export const CATALOG_FORMAT_DOCUMENTATION_URL: Readonly<Record<string, string>> 
   // REST (non-OpenAPI)
   raml: 'https://raml.org/specs/300',
   postman: 'https://schema.getpostman.com/json/collection/v2.1.0/docs/index.html',
+  'http-file': 'https://www.jetbrains.com/help/idea/exploring-http-syntax.html',
   odata: 'https://www.odata.org/documentation/',
   wsdl: 'https://www.w3.org/TR/wsdl',
   wadl: 'https://www.w3.org/Submission/wadl/',
+  discovery: 'https://developers.google.com/discovery/v1/reference',
   apiblueprint: 'https://apiblueprint.org/documentation/specification.html',
   smithy: 'https://smithy.io/2.0/spec/index.html',
   typespec: 'https://typespec.io/docs',
@@ -40,8 +42,13 @@ export const CATALOG_FORMAT_DOCUMENTATION_URL: Readonly<Record<string, string>> 
   // Workflows
   arazzo: 'https://spec.openapis.org/arazzo/latest.html',
 
+  // Agent
+  'llm-tools': 'https://platform.openai.com/docs/guides/function-calling',
+
   // Data schema
   jsonschema: 'https://json-schema.org/draft/2020-12/json-schema-core',
+  'k8s-crd':
+    'https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/',
   avro: 'https://avro.apache.org/docs/current/specification/',
   jtd: 'https://www.rfc-editor.org/rfc/rfc8927',
   xsd: 'https://www.w3.org/TR/xmlschema11-1/',

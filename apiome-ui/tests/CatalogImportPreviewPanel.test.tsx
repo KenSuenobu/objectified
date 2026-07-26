@@ -215,6 +215,7 @@ describe('CatalogImportPreviewPanel — summary header', () => {
     expect(badges.map((b) => b.getAttribute('data-coverage'))).toEqual([
       'mapped',
       'partially-mapped',
+      'inferred',
       'unsupported-by-canonical-model',
       'not-parsed-by-adapter',
     ]);

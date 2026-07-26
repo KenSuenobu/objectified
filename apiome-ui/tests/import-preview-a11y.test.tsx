@@ -360,11 +360,16 @@ describe('import preview step — keyboard contract', () => {
       reimport: buildDelta(4),
     });
 
-    const treeItems = screen.getAllByRole('treeitem');
-    expect(treeItems.filter((el) => el.tabIndex === 0)).toHaveLength(1);
-
+    // The findings listbox lives on the default tab; the entity tree and projection
+    // graph are on the "What this import adds" tab (hidden panels are out of the
+    // accessibility tree, so each widget is checked on its own tab).
     const options = screen.getAllByRole('option');
     expect(options.filter((el) => el.tabIndex === 0)).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'What this import adds' }));
+
+    const treeItems = screen.getAllByRole('treeitem');
+    expect(treeItems.filter((el) => el.tabIndex === 0)).toHaveLength(1);
 
     const graphNodes = screen
       .getAllByRole('button')
@@ -398,6 +403,7 @@ describe('import preview step — keyboard contract', () => {
 
   it('does not nest an interactive control inside the tree rows (source links are spans)', async () => {
     await renderStep({ report: buildReport() });
+    fireEvent.click(screen.getByRole('tab', { name: 'What this import adds' }));
     for (const item of screen.getAllByRole('treeitem')) {
       expect(item.querySelectorAll('a, button, [role="link"], [role="button"], [tabindex]')).toHaveLength(0);
     }
