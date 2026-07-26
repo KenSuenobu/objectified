@@ -1,0 +1,12 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "description": "Missing name on purpose",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "tools": [
+    {
+      "name": "now",
+      "description": "Return the current UTC timestamp as an ISO-8601 string.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "hash_text",
+        "description": "Return a SHA-256 hex digest of the provided text.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "Text to hash"
+            }
+          },
+          "required": ["text"]
+        }
+      }
+    }
+  ]
+}

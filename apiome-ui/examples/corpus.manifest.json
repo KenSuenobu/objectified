@@ -18,7 +18,7 @@
       "label": "ASN.1",
       "category": "data-schema",
       "paradigm": "data_schema",
-      "marker": "`DEFINITIONS ::= BEGIN … END`"
+      "marker": "`DEFINITIONS ::= BEGIN \u2026 END`"
     },
     "asyncapi": {
       "label": "AsyncAPI 2.x/3.0",
@@ -36,7 +36,7 @@
       "label": "Cap'n Proto",
       "category": "data-schema",
       "paradigm": "data_schema",
-      "marker": "`@0x…` file id + `struct`"
+      "marker": "`@0x\u2026` file id + `struct`"
     },
     "cloudevents": {
       "label": "CloudEvents 1.0",
@@ -229,6 +229,12 @@
       "category": "data-schema",
       "paradigm": "data_schema",
       "marker": "`apiVersion: apiextensions.k8s.io/*` + `kind: CustomResourceDefinition`"
+    },
+    "llm-tools": {
+      "label": "LLM Tools",
+      "category": "agent",
+      "paradigm": "agent",
+      "marker": "OpenAI / Anthropic / bare tool-array shape"
     }
   },
   "entries": [
@@ -1126,7 +1132,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.",
+      "notes": "Fileset member without an `asyncapi` marker \u2014 not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.",
       "rung": "multi-file",
       "fileset_role": "member"
     },
@@ -1147,7 +1153,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml.",
+      "notes": "Fileset member without an `asyncapi` marker \u2014 not independently detectable; imported only through the set root asyncapi.yaml.",
       "rung": "multi-file",
       "fileset_role": "member"
     },
@@ -1689,7 +1695,7 @@
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
-      "provenance": "Grammatically well-formed schema containing a file id and constants only — no struct, enum, or interface to import.",
+      "provenance": "Grammatically well-formed schema containing a file id and constants only \u2014 no struct, enum, or interface to import.",
       "failure_class": "semantic",
       "expected_error_code": "INPUT_MALFORMED"
     },
@@ -1813,7 +1819,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "CloudEvents batch arrays are documented in cloudevents_parser (and is_cloudevents_document accepts lists), but both detect and parse delegate to parse_document, which rejects top-level JSON arrays — the adapter's detect returns no match (only the standalone sniffer reports cloudevents 0.85) and import currently fails; expected_detection records the intended contract for the detection-hardening work.",
+      "notes": "CloudEvents batch arrays are documented in cloudevents_parser (and is_cloudevents_document accepts lists), but both detect and parse delegate to parse_document, which rejects top-level JSON arrays \u2014 the adapter's detect returns no match (only the standalone sniffer reports cloudevents 0.85) and import currently fails; expected_detection records the intended contract for the detection-hardening work.",
       "rung": "composition"
     },
     {
@@ -2658,7 +2664,7 @@
       "provenance": "Hand-written billing IDL that #includes common/money.idl, which is not provided, so Common::Money can never resolve.",
       "failure_class": "unresolvable-ref",
       "expected_error_code": "FORMAT_MISMATCH",
-      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 — the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
+      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 \u2014 the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
     },
     {
       "path": "corba-idl/negative/03-truncated-inventory.idl",
@@ -3464,7 +3470,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "FIX Orchestra XML is not yet recognized — currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract.",
+      "notes": "FIX Orchestra XML is not yet recognized \u2014 currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract.",
       "rung": "composition"
     },
     {
@@ -5837,6 +5843,234 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "The hand-authored k8s-crd/01-minimal-widget.yaml re-encoded as UTF-16 (BOM + NUL bytes).",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
+      "path": "llm-tools/01-minimal-openai.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "openai",
+        "single-tool",
+        "function-calling"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "minimal"
+    },
+    {
+      "path": "llm-tools/02-typical-anthropic.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "anthropic",
+        "multi-tool",
+        "enums"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "typical"
+    },
+    {
+      "path": "llm-tools/03-mixed-dialects.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "mixed-dialect",
+        "openai",
+        "anthropic",
+        "bare"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Documents the normalize-with-per-tool-dialect mixed-bundle policy.",
+      "rung": "composition"
+    },
+    {
+      "path": "llm-tools/04-enums-and-required.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "enums",
+        "required",
+        "oneOf-const",
+        "lint-triggers"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "stress"
+    },
+    {
+      "path": "llm-tools/05-assistant-tool-bundle.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "real-world",
+        "openai",
+        "anthropic",
+        "multi-tool"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored assistant-style tool bundle inspired by common GitHub agent tool sets.",
+      "rung": "real-world"
+    },
+    {
+      "path": "llm-tools/06-tools-wrapper-object.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "tools-wrapper",
+        "mixed-dialect"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "composition",
+      "notes": "Object wrapper with a tools array; multi-file ladder rung is waived because tool bundles do not resolve cross-file references."
+    },
+    {
+      "path": "llm-tools/negative/01-syntactic-unclosed-array.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-array"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Truncated JSON array with an unclosed object under parameters.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "llm-tools/negative/02-semantic-missing-name.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "missing-name"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Well-formed OpenAI-shaped entry missing function.name.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "llm-tools/negative/03-truncated-mid-doc.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-doc-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Byte-truncated copy of llm-tools/01-minimal-openai.json cut at 55%.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "llm-tools/negative/04-wrong-format-openapi.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "openapi"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal OpenAPI 3 document used as a wrong-format negative for the llm-tools adapter.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "llm-tools/negative/05-encoding-utf16.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "The hand-authored llm-tools/01-minimal-openai.json re-encoded as UTF-16 (BOM + NUL bytes).",
       "failure_class": "encoding",
       "expected_error_code": "INPUT_ENCODING_INVALID"
     },
@@ -8447,7 +8681,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96), `oncrpc` (0.95), and `smithy` (0.95) above `thrift` (0.95) — the Thrift `union` block also matches the FlatBuffers union marker; expected_detection records the intended winner for the detection-hardening work.",
+      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96), `oncrpc` (0.95), and `smithy` (0.95) above `thrift` (0.95) \u2014 the Thrift `union` block also matches the FlatBuffers union marker; expected_detection records the intended winner for the detection-hardening work.",
       "rung": "stress"
     },
     {
@@ -10260,6 +10494,9 @@
     },
     "k8s-crd": {
       "multi-file": "K8sCrdImportSource.parse_fileset only parses the root member and CRD structural schemas do not resolve cross-file references; multi-document YAML streams (k8s-crd/06-multi-crd-stream.yaml) cover multi-entity intake instead."
+    },
+    "llm-tools": {
+      "multi-file": "LlmToolsImportSource.parse_fileset only parses the root member and tool bundles do not resolve cross-file references, so a multi-file set demonstrates nothing beyond a single document."
     }
   }
 }

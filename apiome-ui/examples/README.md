@@ -4,7 +4,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Generated file — do not edit.** This README is the human index of [`corpus.manifest.json`](corpus.manifest.json) (schema: [`corpus.schema.json`](corpus.schema.json)). Edit the manifest, then run `python3 scripts/generate_examples_readme.py` from the repo root; CI fails on drift.
 
-The corpus holds **464 files** across **38 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **475 files** across **39 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -81,6 +81,12 @@ The corpus holds **464 files** across **38 format directories**. Every file has 
 | `hl7v2/` | HL7 v2.x | message | `MSH\|^~\&\|` message header | 11 |
 | `iso20022/` | ISO 20022 | message | `urn:iso:std:iso:20022` XML namespace | 12 |
 | `iso8583/` | ISO 8583 | message | `mti` + numbered `dataElements` | 11 |
+
+### Agent / LLM tools
+
+| Directory | Format | Paradigm | Marker / shape | Files |
+| --- | --- | --- | --- | --- |
+| `llm-tools/` | LLM Tools | agent | OpenAI / Anthropic / bare tool-array shape | 11 |
 
 ## File index
 
@@ -530,6 +536,24 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`06-multi-crd-stream.yaml`** — Multi-document YAML stream with two CRDs; imports as one CanonicalApi with two Services. The multi-file ladder rung is waived because CRDs do not resolve cross-file references.
 
+### `llm-tools/` — LLM Tools
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-openai.json` | minimal | `llm-tools` ≥ 0.95 | valid | `openai`, `single-tool`, `function-calling` |
+| `02-typical-anthropic.json` | typical | `llm-tools` ≥ 0.95 | valid | `anthropic`, `multi-tool`, `enums` |
+| `03-mixed-dialects.json` | composition | `llm-tools` ≥ 0.95 | valid | `mixed-dialect`, `openai`, `anthropic`, `bare` |
+| `04-enums-and-required.json` | stress | `llm-tools` ≥ 0.95 | valid | `enums`, `required`, `oneOf-const`, `lint-triggers` |
+| `05-assistant-tool-bundle.json` | real-world | `llm-tools` ≥ 0.95 | valid | `real-world`, `openai`, `anthropic`, `multi-tool` |
+| `06-tools-wrapper-object.json` ⚠ | composition | `llm-tools` ≥ 0.95 | valid | `tools-wrapper`, `mixed-dialect` |
+| `negative/01-syntactic-unclosed-array.json` | — | `llm-tools` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-array` |
+| `negative/02-semantic-missing-name.json` | — | `llm-tools` (no guarantee) | invalid | `negative`, `semantic`, `missing-name` |
+| `negative/03-truncated-mid-doc.json` | — | `llm-tools` (no guarantee) | invalid | `negative`, `truncated`, `mid-doc-cut` |
+| `negative/04-wrong-format-openapi.json` | — | `llm-tools` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi` |
+| `negative/05-encoding-utf16.json` | — | `llm-tools` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+
+> ⚠ **`06-tools-wrapper-object.json`** — Object wrapper with a tools array; multi-file ladder rung is waived because tool bundles do not resolve cross-file references.
+
 ### `odata/` — OData v4 (EDMX)
 
 | File | Rung | Expected detection | Class | Features |
@@ -895,6 +919,7 @@ Rungs that do not apply to an adapter's format, with the manifest-recorded justi
 | `json-schema` | multi-file | The json-schema adapter has no parse_fileset and does not resolve cross-file $ref targets, so schemas import as single self-contained documents. |
 | `jtd` | multi-file | The jtd adapter has no parse_fileset; JTD (RFC 8927) documents carry their definitions inline and import as single self-contained files. |
 | `k8s-crd` | multi-file | K8sCrdImportSource.parse_fileset only parses the root member and CRD structural schemas do not resolve cross-file references; multi-document YAML streams (k8s-crd/06-multi-crd-stream.yaml) cover multi-entity intake instead. |
+| `llm-tools` | multi-file | LlmToolsImportSource.parse_fileset only parses the root member and tool bundles do not resolve cross-file references, so a multi-file set demonstrates nothing beyond a single document. |
 | `odata` | multi-file | The odata adapter's parse_fileset only parses the root member and does not resolve edmx:Reference includes across other members, so a multi-file set exercises nothing. |
 | `oncrpc` | multi-file | The ONC RPC adapter's parse_fileset only parses the root document and does not resolve references across fileset members, so a multi-file set would exercise nothing. |
 | `openapi` | multi-file | The openapi adapter has no parse_fileset, so a multi-file set cannot be imported together. |

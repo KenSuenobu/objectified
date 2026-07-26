@@ -94,6 +94,10 @@ _FIXTURES = {
         "  versions:\n    - name: v1\n      served: true\n      storage: true\n"
         "      schema:\n        openAPIV3Schema:\n          type: object\n"
     ),
+    "llm-tools": (
+        '[{"type":"function","function":{"name":"get_weather",'
+        '"description":"Look up weather","parameters":{"type":"object","properties":{}}}}]'
+    ),
     "xmlrpc": (
         '<?xml version="1.0"?>\n'
         "<methodCall><methodName>ping</methodName><params></params></methodCall>"
@@ -313,6 +317,14 @@ def test_k8s_crd_is_now_importable() -> None:
     assert detection.detected.format == "k8s-crd"
     assert detection.detected.importable is True
     assert detection.detected.source_key == "k8s-crd"
+
+
+def test_llm_tools_is_now_importable() -> None:
+    detection = detect_format(DetectionInput(text=_FIXTURES["llm-tools"]))
+    assert detection.detected is not None
+    assert detection.detected.format == "llm-tools"
+    assert detection.detected.importable is True
+    assert detection.detected.source_key == "llm-tools"
 
 
 def test_xmlrpc_is_now_importable() -> None:

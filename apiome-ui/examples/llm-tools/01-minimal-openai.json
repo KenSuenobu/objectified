@@ -1,0 +1,19 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "get_weather",
+      "description": "Look up the current weather for a city by name.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "City name to look up"
+          }
+        },
+        "required": ["city"]
+      }
+    }
+  }
+]

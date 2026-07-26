@@ -66,6 +66,7 @@ class ApiParadigm(str, Enum):
     EVENT = "event"  # AsyncAPI, CloudEvents, Kafka/AMQP/MQTT topologies
     GRAPH = "graph"  # GraphQL
     DATA_SCHEMA = "data_schema"  # Avro, JSON Schema, Protobuf messages, XSD
+    AGENT = "agent"  # LLM tool / function-calling bundles, agent descriptors (IXH-7.3)
 
 
 class OperationKind(str, Enum):

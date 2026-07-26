@@ -282,6 +282,8 @@ def load_format_rule_packs() -> None:
 
     # Kubernetes CRD lint pack (IXH-7.2): registers under ``k8s-crd``.
     from . import k8s_crd_lint as _k8s_crd_lint  # noqa: F401
+    # LLM tool-bundle lint pack (IXH-7.3): registers under ``llm-tools``.
+    from . import llm_tools_lint as _llm_tools_lint  # noqa: F401
 
 
 # ===========================================================================

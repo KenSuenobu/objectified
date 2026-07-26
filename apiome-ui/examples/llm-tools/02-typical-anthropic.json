@@ -1,0 +1,45 @@
+[
+  {
+    "name": "search_docs",
+    "description": "Search the product documentation corpus and return matching passages.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Natural-language search query"
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Maximum number of hits to return",
+          "minimum": 1,
+          "maximum": 50
+        }
+      },
+      "required": ["query"]
+    }
+  },
+  {
+    "name": "create_ticket",
+    "description": "Open a support ticket with a subject and body.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "subject": {
+          "type": "string",
+          "description": "Short ticket subject line"
+        },
+        "body": {
+          "type": "string",
+          "description": "Full ticket body in markdown"
+        },
+        "priority": {
+          "type": "string",
+          "description": "Ticket priority",
+          "enum": ["low", "medium", "high"]
+        }
+      },
+      "required": ["subject", "body"]
+    }
+  }
+]

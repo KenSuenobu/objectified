@@ -133,6 +133,7 @@ FORMAT_CAPABILITIES: Dict[ApiParadigm, _FormatCapability] = {
     ApiParadigm.EVENT: _FormatCapability("native", True, True, True, False, False),
     ApiParadigm.GRAPH: _FormatCapability("native", True, True, True, False, False),
     ApiParadigm.DATA_SCHEMA: _FormatCapability("native", True, True, True, False, False),
+    ApiParadigm.AGENT: _FormatCapability("native", True, True, True, False, False),
 }
 
 # Fallback for any paradigm not in the matrix (defensive; keeps output well-formed).

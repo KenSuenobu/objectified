@@ -442,6 +442,26 @@ def _sniff_k8s_crd(payload: DetectionInput) -> DetectionResult:
     return NO_MATCH
 
 
+def _sniff_llm_tools(payload: DetectionInput) -> DetectionResult:
+    from .llm_tools_parser import is_llm_tools, is_llm_tools_document
+
+    document = payload.document
+    if document is not None and is_llm_tools_document(document):
+        return DetectionResult(
+            confidence=0.97,
+            format="llm-tools",
+            reason="OpenAI / Anthropic / bare tool-array shape",
+        )
+    text = _text_of(payload)
+    if text and is_llm_tools(text):
+        return DetectionResult(
+            confidence=0.97,
+            format="llm-tools",
+            reason="OpenAI / Anthropic / bare tool-array shape",
+        )
+    return NO_MATCH
+
+
 def _sniff_avro(payload: DetectionInput) -> DetectionResult:
     document = payload.document
     if not isinstance(document, dict):
@@ -566,6 +586,7 @@ _SNIFFERS: tuple[Callable[[DetectionInput], DetectionResult], ...] = (
     _sniff_openrpc,
     _sniff_discovery,
     _sniff_k8s_crd,
+    _sniff_llm_tools,
     _sniff_avro,
     _sniff_xmlrpc,
     _sniff_xsd,
@@ -600,6 +621,7 @@ SNIFFED_FORMATS = frozenset(
         "openrpc",
         "discovery",
         "k8s-crd",
+        "llm-tools",
         "avro",
         "xmlrpc",
         "xsd",

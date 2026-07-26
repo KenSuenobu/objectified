@@ -1,0 +1,376 @@
+{
+  "adapter": "llm-tools",
+  "canonical": {
+    "channels": [],
+    "description": "Imported LLM tool / function-calling schema bundle",
+    "extras": {
+      "dialects": [
+        "anthropic"
+      ],
+      "mixed_dialect_policy": "normalize_per_tool",
+      "tool_count": 2
+    },
+    "format": "llm-tools",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "02-typical-anthropic",
+      "namespace": null
+    },
+    "paradigm": "agent",
+    "protocol": "llm-tools",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "LLM tool / function-calling bundle",
+        "extras": {},
+        "key": "02-typical-anthropic",
+        "name": "02-typical-anthropic",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Open a support ticket with a subject and body.",
+            "extras": {
+              "dialect": "anthropic",
+              "input_schema": {
+                "properties": {
+                  "body": {
+                    "description": "Full ticket body in markdown",
+                    "type": "string"
+                  },
+                  "priority": {
+                    "description": "Ticket priority",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ],
+                    "type": "string"
+                  },
+                  "subject": {
+                    "description": "Short ticket subject line",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "subject",
+                  "body"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "02-typical-anthropic.create_ticket",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "anthropic",
+                  "llm_tools_parameters": {
+                    "properties": {
+                      "body": {
+                        "description": "Full ticket body in markdown",
+                        "type": "string"
+                      },
+                      "priority": {
+                        "description": "Ticket priority",
+                        "enum": [
+                          "low",
+                          "medium",
+                          "high"
+                        ],
+                        "type": "string"
+                      },
+                      "subject": {
+                        "description": "Short ticket subject line",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "subject",
+                      "body"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "02-typical-anthropic.create_ticket#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "create_ticketParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "create_ticket",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Search the product documentation corpus and return matching passages.",
+            "extras": {
+              "dialect": "anthropic",
+              "input_schema": {
+                "properties": {
+                  "limit": {
+                    "description": "Maximum number of hits to return",
+                    "maximum": 50,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "query": {
+                    "description": "Natural-language search query",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "query"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "02-typical-anthropic.search_docs",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "anthropic",
+                  "llm_tools_parameters": {
+                    "properties": {
+                      "limit": {
+                        "description": "Maximum number of hits to return",
+                        "maximum": 50,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "query": {
+                        "description": "Natural-language search query",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "query"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "02-typical-anthropic.search_docs#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "search_docsParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "search_docs",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "02-typical-anthropic",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Full ticket body in markdown",
+            "extras": {},
+            "field_number": null,
+            "key": "create_ticketParams.body",
+            "name": "body",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Ticket priority",
+            "extras": {},
+            "field_number": null,
+            "key": "create_ticketParams.priority",
+            "name": "priority",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Short ticket subject line",
+            "extras": {},
+            "field_number": null,
+            "key": "create_ticketParams.subject",
+            "name": "subject",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "create_ticketParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "create_ticketParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 50.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Maximum number of hits to return",
+            "extras": {},
+            "field_number": null,
+            "key": "search_docsParams.limit",
+            "name": "limit",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Natural-language search query",
+            "extras": {},
+            "field_number": null,
+            "key": "search_docsParams.query",
+            "name": "query",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "search_docsParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "search_docsParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "llm-tools/02-typical-anthropic.json",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "llm-tools"
+  },
+  "fingerprint": "sha256:449beecd21cd690e65fd498a5c2ff64b3ca02e507ad3573f5669c4cc34db5748",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "7708c8d64e9485445f5706dea2a930af0c47d451fb14e649b016622294f00528",
+    "score": 90,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

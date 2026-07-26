@@ -1,0 +1,33 @@
+[
+  {
+    "name": "set_mode",
+    "description": "Configure runtime mode with enums and required-field discipline examples.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "description": "Runtime mode",
+          "enum": ["dry_run", "live", "shadow"]
+        },
+        "region": {
+          "type": "string",
+          "description": "Must be one of: us-east, us-west, eu-central"
+        },
+        "verbosity": {
+          "type": "string",
+          "oneOf": [
+            {"const": "quiet"},
+            {"const": "normal"},
+            {"const": "debug"}
+          ]
+        },
+        "note": {
+          "type": "string",
+          "description": "Free-text operator note"
+        }
+      },
+      "required": ["mode", "region"]
+    }
+  }
+]
