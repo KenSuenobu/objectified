@@ -203,6 +203,51 @@ describe('CatalogImportDialog — quality step (IXH-2.2)', () => {
     expect(screen.queryByTestId('import-quality-override')).not.toBeInTheDocument();
   });
 
+  it('lets the skip preference be unchecked from the options step (it auto-skips the quality step)', async () => {
+    // With the preference on, a non-blocking pre-flight auto-commits the quality step the moment
+    // the report arrives — the step's own checkbox flashes past too fast to uncheck. The options
+    // step is where the preference must stay reachable (#regression: one-way switch).
+    window.localStorage.setItem('apiome.import-quality.v1', JSON.stringify({ skipQualityStep: true }));
+    const fetchMock = mockFetch(preflightReport());
+    global.fetch = fetchMock as unknown as typeof fetch;
+    render(<CatalogImportDialog open onClose={jest.fn()} />);
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith('/api/import/sources', expect.anything()),
+    );
+    await pasteAndDetect();
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
+
+    // The options step exposes the preference, reflecting the persisted value.
+    const checkbox = screen.getByTestId('catalog-import-options-skip-preference') as HTMLInputElement;
+    expect(checkbox.checked).toBe(true);
+    fireEvent.click(checkbox);
+    expect(checkbox.checked).toBe(false);
+    expect(JSON.parse(window.localStorage.getItem('apiome.import-quality.v1') ?? '{}')).toEqual({
+      skipQualityStep: false,
+    });
+
+    // With the preference off again, the quality step stops for review instead of auto-committing.
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
+    await waitFor(() => expect(screen.getByTestId('import-quality-grade')).toHaveTextContent('B'));
+    expect(recordedCalls(fetchMock).some((c) => c.url === '/api/catalog/import')).toBe(false);
+  });
+
+  it('still auto-commits a clean import from the quality step when the preference stays on', async () => {
+    window.localStorage.setItem('apiome.import-quality.v1', JSON.stringify({ skipQualityStep: true }));
+    const fetchMock = mockFetch(preflightReport());
+    global.fetch = fetchMock as unknown as typeof fetch;
+    const onSuccess = jest.fn();
+    render(<CatalogImportDialog open onClose={jest.fn()} onSuccess={onSuccess} />);
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith('/api/import/sources', expect.anything()),
+    );
+    await pasteAndDetect();
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled(), { timeout: 3000 });
+    expect(recordedCalls(fetchMock).some((c) => c.url === '/api/catalog/import')).toBe(true);
+  });
+
   it('keeps the JSON Schema → Types hand-off out of the quality step', async () => {
     const fetchMock = jest.fn((input: unknown) => {
       const url = typeof input === 'string' ? input : String(input);

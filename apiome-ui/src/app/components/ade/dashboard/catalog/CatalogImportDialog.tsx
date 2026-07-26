@@ -965,9 +965,29 @@ export function CatalogImportDialog({
             Import — sit on one row with the gate that governs them (IXH-2.2). */}
         {step !== 'quality' && (
           <div className="mt-4 flex shrink-0 justify-between gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
-            <Button variant="outline" onClick={handleClose} disabled={state === 'storing'}>
-              {state === 'done' ? 'Close' : 'Cancel'}
-            </Button>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" onClick={handleClose} disabled={state === 'storing'}>
+                {state === 'done' ? 'Close' : 'Cancel'}
+              </Button>
+              {/* The skip preference must stay reachable *outside* the quality step: with it on, a
+                  non-blocking pre-flight auto-commits, so the step's own checkbox flashes past too
+                  fast to uncheck — the preference would otherwise be a one-way switch. Options is
+                  the last stop before the quality step on every catalog route, so it is where the
+                  preference can always be turned back off. Hidden on the JSON Schema → Types
+                  hand-off, which never reaches the quality step at all. */}
+              {step === 'options' && commitSourceKind !== null && (
+                <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={skipQualityStep}
+                    onChange={(event) => handleSkipPreferenceChange(event.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 dark:border-gray-600"
+                    data-testid="catalog-import-options-skip-preference"
+                  />
+                  Skip the quality step for clean imports
+                </label>
+              )}
+            </div>
             <div className="flex gap-2">
               {step !== 'source' && step !== 'import' && (
                 <Button variant="outline" onClick={() => setStep(step === 'options' ? 'detect' : 'source')}>
