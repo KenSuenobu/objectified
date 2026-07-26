@@ -43,6 +43,9 @@ describe('PREVIEW_BUDGETS — registry ↔ constant consistency', () => {
         'PROJECTION_TABLE_VIRTUALIZE_ABOVE',
         'DELTA_LIST_VIRTUALIZE_ABOVE',
         'RAW_VIEWER_CONTEXT',
+        'TEST_BENCH_PAYLOAD_MAX_BYTES',
+        'TEST_BENCH_FINDINGS_VIRTUALIZE_ABOVE',
+        'TEST_BENCH_MAX_FINDINGS',
       ]),
     );
   });

@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.51.0",
+    "version": "1.52.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -40277,6 +40277,104 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for generatesamplepayloadsvalidinstancesandsresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/schemas/{schema_ref}/targets": {
+      "get": {
+        "tags": [
+          "schema-validation"
+        ],
+        "summary": "List the schemas a revision offers as validation targets",
+        "description": "Enumerate everything one revision offers the Schema Test Bench (IXH-5.3): its named types and the operation request/response bodies that resolve to a named type, each addressable by appending the type key to the same reference the validate (IXH-5.1) and synthesize (IXH-5.2) endpoints take.\n\n**Addressing.** ``schema_ref`` is the IXH-5.1 path-shaped reference *without* its trailing type segment \u2014 ``project/{project_slug}/{version}`` or ``catalog/{item}/{version}``; ``{version}`` is a version label, a revision id, or ``latest``. A ``registry/\u2026`` reference is rejected with 400: a registry type is a single stored schema, already enumerated by the type-registry API.\n\n**Determinism.** Types are sorted by key; operation bodies by operation key, role, then status code \u2014 two calls over the same revision are byte-identical.\n\n**Honesty.** A body defined inline (no named type) cannot be addressed by the reference grammar; such bodies are counted in a diagnostic, never silently dropped and never invented. Nothing is persisted.\n\nOnly addressing faults are HTTP errors \u2014 400 for a malformed, registry, or type-qualified reference, 404 for one that names nothing visible, 422 for one that resolves to material no canonical model can be rebuilt from.",
+        "operationId": "list_targets_for_schema_ref_v1_tenants__tenant_slug__schemas__schema_ref__targets_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "schema_ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Schema Ref",
+              "description": "Schema Ref schema."
+            },
+            "description": "Path parameter identifying the schema ref segment."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listtheschemasarevisionoffersasvalidatioauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listtheschemasarevisionoffersasvalidatioauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listtheschemasarevisionoffersasvalidatio Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listtheschemasarevisionoffersasvalidatio Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for list the schemas a revision offers as validation targets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchemaTargetsResponse",
+                  "description": "Response payload for listtheschemasarevisionoffersasvalidatioresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for listtheschemasarevisionoffersasvalidatioresponse422."
                 }
               }
             }
@@ -91976,6 +92074,100 @@
         "title": "SchemaInstanceValidationResponse",
         "description": "The verdict on one payload."
       },
+      "SchemaOperationBodyTarget": {
+        "properties": {
+          "operation_key": {
+            "type": "string",
+            "title": "Operation Key",
+            "description": "Stable operation key (``GET /pets/{id}``).",
+            "example": "GET"
+          },
+          "operation_name": {
+            "type": "string",
+            "title": "Operation Name",
+            "description": "Source operation name.",
+            "example": "GET"
+          },
+          "http_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Schema Operation Body Target schema."
+              },
+              {
+                "type": "null",
+                "description": "Schema Operation Body Target schema."
+              }
+            ],
+            "title": "Http Method",
+            "description": "HTTP verb, when the paradigm has one."
+          },
+          "http_path": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Schema Operation Body Target schema."
+              },
+              {
+                "type": "null",
+                "description": "Schema Operation Body Target schema."
+              }
+            ],
+            "title": "Http Path",
+            "description": "Route template, when the paradigm has one."
+          },
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "description": "``request`` or ``response``.",
+            "example": "example"
+          },
+          "status_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Schema Operation Body Target schema."
+              },
+              {
+                "type": "null",
+                "description": "Schema Operation Body Target schema."
+              }
+            ],
+            "title": "Status Code",
+            "description": "Response status code (``200``, ``4XX``), when declared."
+          },
+          "type_key": {
+            "type": "string",
+            "title": "Type Key",
+            "description": "Canonical key of the type the body resolves to.",
+            "example": "example"
+          },
+          "type_name": {
+            "type": "string",
+            "title": "Type Name",
+            "description": "Source name of the type the body resolves to.",
+            "example": "Example"
+          },
+          "list_wrapped": {
+            "type": "boolean",
+            "title": "List Wrapped",
+            "description": "Whether the body is a *list of* the named type. The addressable schema is the element type; a payload for the operation itself would be an array of it.",
+            "default": false,
+            "example": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "operation_key",
+          "operation_name",
+          "role",
+          "type_key",
+          "type_name"
+        ],
+        "title": "SchemaOperationBodyTarget",
+        "description": "One operation request/response body that resolves to a named, addressable type."
+      },
       "SchemaSourceInfo": {
         "properties": {
           "kind": {
@@ -92257,6 +92449,100 @@
         ],
         "title": "SchemaSynthesisResponse",
         "description": "The generated payloads for one schema."
+      },
+      "SchemaTargetType": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Stable canonical key (``acme.Pet``) \u2014 the preferred address.",
+            "example": "example"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Source type name (``Pet``).",
+            "example": "Pet"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "Structural family \u2014 ``object``, ``enum``, ``union`` \u2026",
+            "example": "example"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "kind"
+        ],
+        "title": "SchemaTargetType",
+        "description": "One named type a revision defines, addressable as a validation target."
+      },
+      "SchemaTargetsResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "Always ``true``: a resolvable revision always enumerates.",
+            "example": false
+          },
+          "schema_ref": {
+            "type": "string",
+            "title": "Schema Ref",
+            "description": "The reference exactly as it was requested.",
+            "example": "example"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SchemaSourceInfo",
+            "description": "What the reference resolved to."
+          },
+          "types": {
+            "items": {
+              "$ref": "#/components/schemas/SchemaTargetType"
+            },
+            "type": "array",
+            "title": "Types",
+            "description": "Named types, sorted by key.",
+            "maxItems": 1000
+          },
+          "operation_bodies": {
+            "items": {
+              "$ref": "#/components/schemas/SchemaOperationBodyTarget"
+            },
+            "type": "array",
+            "title": "Operation Bodies",
+            "description": "Request/response bodies that resolve to a named type, sorted by operation key, role, then status code.",
+            "maxItems": 1000
+          },
+          "xml_document": {
+            "type": "boolean",
+            "title": "Xml Document",
+            "description": "Whether the revision is backed by an XML grammar, so the bare (type-less) reference validates whole XML documents.",
+            "default": false,
+            "example": false
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationDiagnostic"
+            },
+            "type": "array",
+            "title": "Diagnostics",
+            "description": "Conditions that limited the listing \u2014 e.g. bodies defined inline rather than as named types, which the reference grammar cannot address. Never an error.",
+            "maxItems": 1000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ok",
+          "schema_ref",
+          "source"
+        ],
+        "title": "SchemaTargetsResponse",
+        "description": "Everything one revision offers the Test Bench to validate against."
       },
       "SchemasChangeSection": {
         "properties": {

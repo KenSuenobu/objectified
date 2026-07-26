@@ -85,6 +85,8 @@ import {
 } from '@/app/utils/catalog-lint-panel';
 import { CatalogSourceViewer } from '@/app/components/ade/dashboard/catalog/CatalogSourceViewer';
 import { CatalogLintPanel } from '@/app/components/ade/dashboard/catalog/CatalogLintPanel';
+import { SchemaTestBench } from '@/app/components/ade/dashboard/test-bench/SchemaTestBench';
+import { useAuthSession } from '@lib/auth/session-client';
 import { CatalogVersionsPanel } from '@/app/components/ade/dashboard/catalog/CatalogVersionsPanel';
 import { CatalogRelatedArtifactsPanel } from '@/app/components/ade/dashboard/catalog/CatalogRelatedArtifactsPanel';
 import type { RelatedArtifact } from '@/app/utils/catalog-related-artifacts';
@@ -142,12 +144,13 @@ const CATALOG_LIST_HREF = '/ade/dashboard/catalog';
 /** Element-id prefix shared by the tab bar and the panes so their ARIA wiring lines up. */
 const DETAIL_TABS_ID_PREFIX = 'catalog-detail';
 
-/** The five detail panes (mockup `multi-format-import/index.html`), in tab order. */
+/** The detail panes (mockup `multi-format-import/index.html` + IXH-5.3), in tab order. */
 const DETAIL_TABS = [
   { id: 'overview', label: 'Overview' },
   { id: 'source', label: 'Source & Code' },
   { id: 'provenance', label: 'Provenance' },
   { id: 'lint', label: 'Lint & Score' },
+  { id: 'test-bench', label: 'Test Bench' },
   { id: 'versions', label: 'Versions' },
 ] as const satisfies readonly DetailTab[];
 
@@ -244,6 +247,12 @@ function TabPanel({
 export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // The Test Bench scopes its saved payloads to the current tenant (IXH-5.3).
+  const { data: session } = useAuthSession();
+  const currentTenantId =
+    ((session?.user as { current_tenant_id?: string } | undefined)?.current_tenant_id as
+      | string
+      | undefined) ?? null;
   const sourceDeepLink = useMemo(
     () => parseCompatibilitySourceQuery(searchParams),
     [searchParams]
@@ -712,6 +721,18 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
             onNavigateToEntity={navigateToEntity}
             scoredAt={item.updated_at ?? item.created_at ?? null}
             sourceFormat={item.sourceFormat ?? null}
+          />
+        </TabPanel>
+
+        {/* TEST BENCH — validate/generate payloads against this item's schemas (IXH-5.3). The
+            reference addresses the item by slug (or id) at its latest revision. */}
+        <TabPanel tabId="test-bench" active={activeTab} testId="catalog-detail-pane-test-bench">
+          <SchemaTestBench
+            surface="catalog"
+            artifact={item.slug || item.id}
+            artifactName={item.name}
+            tenantId={currentTenantId}
+            active={activeTab === 'test-bench'}
           />
         </TabPanel>
 

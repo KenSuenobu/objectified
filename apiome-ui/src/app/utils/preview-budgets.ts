@@ -85,6 +85,23 @@ export const LOAD_ALL_PAGE_CAP = 20;
  */
 export const RAW_VIEWER_CONTEXT = 400;
 
+/**
+ * Schema Test Bench payload ceiling in UTF-8 bytes (IXH-5.3). Above it the bench refuses to
+ * validate in the browser and says so — the payload editor plus per-value pointer anchoring
+ * do not scale to megabyte payloads, and the REST endpoint (reachable via copy-as-curl)
+ * handles any size the import resource guards allow.
+ */
+export const TEST_BENCH_PAYLOAD_MAX_BYTES = 1_000_000;
+
+/** Test Bench validation findings beyond this count are windowed, not all mounted. */
+export const TEST_BENCH_FINDINGS_VIRTUALIZE_ABOVE = 50;
+
+/**
+ * Findings requested per Test Bench validation (the IXH-5.1 `max_findings` request bound).
+ * The response's `total_findings`/`truncated` state the real total whenever the cap trips.
+ */
+export const TEST_BENCH_MAX_FINDINGS = 200;
+
 /** One documented preview-surface budget. */
 export interface PreviewBudget {
   /** Stable id, also the key the registry test uses to match the exported constant. */
@@ -208,5 +225,32 @@ export const PREVIEW_BUDGETS: readonly PreviewBudget[] = [
     mechanism: 'truncated',
     aboveBudget: 'The viewer states "… N earlier lines" / "… N later lines" around the mounted window.',
     fullDataPath: 'Follow any source link — the window re-centers on the linked line, so every line is reachable.',
+  },
+  {
+    id: 'TEST_BENCH_PAYLOAD_MAX_BYTES',
+    surface: 'Schema Test Bench payload editor (IXH-5.3)',
+    budget: TEST_BENCH_PAYLOAD_MAX_BYTES,
+    unit: 'UTF-8 bytes',
+    mechanism: 'truncated',
+    aboveBudget: 'The bench refuses to validate and states the payload size against the bound.',
+    fullDataPath: 'Copy as curl — the REST validate endpoint handles any size the import guards allow.',
+  },
+  {
+    id: 'TEST_BENCH_FINDINGS_VIRTUALIZE_ABOVE',
+    surface: 'Schema Test Bench findings list (IXH-5.3)',
+    budget: TEST_BENCH_FINDINGS_VIRTUALIZE_ABOVE,
+    unit: 'finding rows',
+    mechanism: 'windowed',
+    aboveBudget: 'Rows are windowed ("windowed" note shown); every finding stays reachable by scrolling.',
+    fullDataPath: 'Scroll the list — every returned finding is reachable.',
+  },
+  {
+    id: 'TEST_BENCH_MAX_FINDINGS',
+    surface: 'Schema Test Bench validation request (IXH-5.3 → IXH-5.1 max_findings)',
+    budget: TEST_BENCH_MAX_FINDINGS,
+    unit: 'findings per validation',
+    mechanism: 'truncated',
+    aboveBudget: 'The findings list states "showing X of Y findings — the report was truncated."',
+    fullDataPath: 'Copy as curl and raise max_findings on the REST call.',
   },
 ] as const;
