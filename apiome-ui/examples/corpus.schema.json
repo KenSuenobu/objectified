@@ -65,7 +65,8 @@
             "event-messaging",
             "graph",
             "data-schema",
-            "industry-messaging"
+            "industry-messaging",
+            "agent"
           ]
         },
         "paradigm": {

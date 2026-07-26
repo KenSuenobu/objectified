@@ -86,6 +86,9 @@ describe('catalog-format-registry — formats', () => {
     expect(resolveCatalogFormat('k8s-crd')?.label).toBe('Kubernetes CRD');
     expect(resolveCatalogFormat('kubernetes-crd')?.id).toBe('k8s-crd');
     expect(resolveCatalogFormat('crd')?.id).toBe('k8s-crd');
+    expect(resolveCatalogFormat('llm-tools')?.label).toBe('LLM Tools');
+    expect(resolveCatalogFormat('function-calling')?.id).toBe('llm-tools');
+    expect(resolveCatalogFormat('openai-tools')?.id).toBe('llm-tools');
     expect(resolveCatalogFormat('zos-connect')?.id).toBe('zosconnect');
     expect(resolveCatalogFormat('xml-rpc')?.id).toBe('xmlrpc');
   });
@@ -131,7 +134,7 @@ describe('catalog-format-registry — importable vs recognized (MFI-23.12)', () 
   test('importable alternatives are exactly the adapter-backed (store-raw) formats', () => {
     // Only formats with a server-registered adapter can be stored raw in the catalog today.
     expect(IMPORTABLE_ALTERNATIVE_FORMATS.map((f) => f.id).sort()).toEqual(
-      ['apiblueprint', 'arazzo', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'edix12', 'fix', 'flatbuffers', 'fhir', 'graphql', 'grpc', 'hl7v2', 'iso20022', 'iso8583', 'jsonschema', 'jtd', 'k8s-crd', 'odata', 'oncrpc', 'openrpc', 'postman', 'protobuf', 'raml', 'smithy', 'thrift', 'typespec', 'wadl', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect'].sort(),
+      ['apiblueprint', 'arazzo', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'edix12', 'fix', 'flatbuffers', 'fhir', 'graphql', 'grpc', 'hl7v2', 'iso20022', 'iso8583', 'jsonschema', 'jtd', 'k8s-crd', 'llm-tools', 'odata', 'oncrpc', 'openrpc', 'postman', 'protobuf', 'raml', 'smithy', 'thrift', 'typespec', 'wadl', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect'].sort(),
     );
   });
 

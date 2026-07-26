@@ -82,7 +82,8 @@ export type CorpusCategory =
   | 'event-messaging'
   | 'graph'
   | 'data-schema'
-  | 'industry-messaging';
+  | 'industry-messaging'
+  | 'agent';
 
 /**
  * The detection contract for one corpus file: format detection must report

@@ -1,0 +1,50 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "openai_echo",
+      "description": "Echo a message back using the OpenAI function shape.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Text to echo"
+          }
+        },
+        "required": ["text"]
+      }
+    }
+  },
+  {
+    "name": "anthropic_sum",
+    "description": "Add two integers using the Anthropic tool-use shape.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "integer",
+          "description": "First addend"
+        },
+        "b": {
+          "type": "integer",
+          "description": "Second addend"
+        }
+      },
+      "required": ["a", "b"]
+    }
+  },
+  {
+    "name": "bare_ping",
+    "description": "Simple health ping using the bare name+parameters shape.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "description": "Optional ping token"
+        }
+      }
+    }
+  }
+]

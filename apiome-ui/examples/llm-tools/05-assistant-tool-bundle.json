@@ -1,0 +1,85 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "list_repos",
+      "description": "List GitHub repositories visible to the authenticated user for a given org.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "org": {
+            "type": "string",
+            "description": "GitHub organization login"
+          },
+          "visibility": {
+            "type": "string",
+            "description": "Repository visibility filter",
+            "enum": ["all", "public", "private"]
+          }
+        },
+        "required": ["org"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_issue",
+      "description": "Create a GitHub issue in a repository with title, body, and labels.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "type": "string",
+            "description": "Repository owner login"
+          },
+          "repo": {
+            "type": "string",
+            "description": "Repository name"
+          },
+          "title": {
+            "type": "string",
+            "description": "Issue title"
+          },
+          "body": {
+            "type": "string",
+            "description": "Issue body in markdown"
+          },
+          "labels": {
+            "type": "array",
+            "description": "Label names to apply",
+            "items": {"type": "string"}
+          }
+        },
+        "required": ["owner", "repo", "title"]
+      }
+    }
+  },
+  {
+    "name": "run_workflow",
+    "description": "Dispatch a GitHub Actions workflow_dispatch event.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string",
+          "description": "Repository owner login"
+        },
+        "repo": {
+          "type": "string",
+          "description": "Repository name"
+        },
+        "workflow_id": {
+          "type": "string",
+          "description": "Workflow file name or numeric id"
+        },
+        "ref": {
+          "type": "string",
+          "description": "Git ref to run against",
+          "default": "main"
+        }
+      },
+      "required": ["owner", "repo", "workflow_id"]
+    }
+  }
+]

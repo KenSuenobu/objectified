@@ -200,7 +200,13 @@ def test_catalog_manifest_withheld_when_not_indexable() -> None:
 
 def test_capabilities_are_rest_only_for_execution() -> None:
     assert capabilities_for_paradigm(ApiParadigm.REST)["tryIt"] is True
-    for paradigm in (ApiParadigm.RPC, ApiParadigm.EVENT, ApiParadigm.GRAPH, ApiParadigm.DATA_SCHEMA):
+    for paradigm in (
+        ApiParadigm.RPC,
+        ApiParadigm.EVENT,
+        ApiParadigm.GRAPH,
+        ApiParadigm.DATA_SCHEMA,
+        ApiParadigm.AGENT,
+    ):
         caps = capabilities_for_paradigm(paradigm)
         assert caps["tryIt"] is False
         assert caps["codeSamples"] is False

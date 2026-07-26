@@ -158,6 +158,7 @@ class CorpusCategory(str, Enum):
     GRAPH = "graph"
     DATA_SCHEMA = "data-schema"
     INDUSTRY_MESSAGING = "industry-messaging"
+    AGENT = "agent"
 
 
 class ExpectedDetection(BaseModel):

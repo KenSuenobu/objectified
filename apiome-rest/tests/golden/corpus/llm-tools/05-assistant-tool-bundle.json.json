@@ -1,0 +1,592 @@
+{
+  "adapter": "llm-tools",
+  "canonical": {
+    "channels": [],
+    "description": "Imported LLM tool / function-calling schema bundle",
+    "extras": {
+      "dialects": [
+        "anthropic",
+        "openai"
+      ],
+      "mixed_dialect_policy": "normalize_per_tool",
+      "tool_count": 3
+    },
+    "format": "llm-tools",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "05-assistant-tool-bundle",
+      "namespace": null
+    },
+    "paradigm": "agent",
+    "protocol": "llm-tools",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "LLM tool / function-calling bundle",
+        "extras": {},
+        "key": "05-assistant-tool-bundle",
+        "name": "05-assistant-tool-bundle",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Create a GitHub issue in a repository with title, body, and labels.",
+            "extras": {
+              "dialect": "openai",
+              "input_schema": {
+                "properties": {
+                  "body": {
+                    "description": "Issue body in markdown",
+                    "type": "string"
+                  },
+                  "labels": {
+                    "description": "Label names to apply",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "owner": {
+                    "description": "Repository owner login",
+                    "type": "string"
+                  },
+                  "repo": {
+                    "description": "Repository name",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "Issue title",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "owner",
+                  "repo",
+                  "title"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "05-assistant-tool-bundle.create_issue",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "openai",
+                  "llm_tools_parameters": {
+                    "properties": {
+                      "body": {
+                        "description": "Issue body in markdown",
+                        "type": "string"
+                      },
+                      "labels": {
+                        "description": "Label names to apply",
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "owner": {
+                        "description": "Repository owner login",
+                        "type": "string"
+                      },
+                      "repo": {
+                        "description": "Repository name",
+                        "type": "string"
+                      },
+                      "title": {
+                        "description": "Issue title",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "repo",
+                      "title"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "05-assistant-tool-bundle.create_issue#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "create_issueParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "create_issue",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List GitHub repositories visible to the authenticated user for a given org.",
+            "extras": {
+              "dialect": "openai",
+              "input_schema": {
+                "properties": {
+                  "org": {
+                    "description": "GitHub organization login",
+                    "type": "string"
+                  },
+                  "visibility": {
+                    "description": "Repository visibility filter",
+                    "enum": [
+                      "all",
+                      "public",
+                      "private"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "org"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "05-assistant-tool-bundle.list_repos",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "openai",
+                  "llm_tools_parameters": {
+                    "properties": {
+                      "org": {
+                        "description": "GitHub organization login",
+                        "type": "string"
+                      },
+                      "visibility": {
+                        "description": "Repository visibility filter",
+                        "enum": [
+                          "all",
+                          "public",
+                          "private"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "org"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "05-assistant-tool-bundle.list_repos#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "list_reposParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "list_repos",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Dispatch a GitHub Actions workflow_dispatch event.",
+            "extras": {
+              "dialect": "anthropic",
+              "input_schema": {
+                "properties": {
+                  "owner": {
+                    "description": "Repository owner login",
+                    "type": "string"
+                  },
+                  "ref": {
+                    "default": "main",
+                    "description": "Git ref to run against",
+                    "type": "string"
+                  },
+                  "repo": {
+                    "description": "Repository name",
+                    "type": "string"
+                  },
+                  "workflow_id": {
+                    "description": "Workflow file name or numeric id",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "owner",
+                  "repo",
+                  "workflow_id"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "05-assistant-tool-bundle.run_workflow",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "anthropic",
+                  "llm_tools_parameters": {
+                    "properties": {
+                      "owner": {
+                        "description": "Repository owner login",
+                        "type": "string"
+                      },
+                      "ref": {
+                        "default": "main",
+                        "description": "Git ref to run against",
+                        "type": "string"
+                      },
+                      "repo": {
+                        "description": "Repository name",
+                        "type": "string"
+                      },
+                      "workflow_id": {
+                        "description": "Workflow file name or numeric id",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "repo",
+                      "workflow_id"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "05-assistant-tool-bundle.run_workflow#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "run_workflowParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "run_workflow",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "05-assistant-tool-bundle",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Issue body in markdown",
+            "extras": {},
+            "field_number": null,
+            "key": "create_issueParams.body",
+            "name": "body",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Label names to apply",
+            "extras": {},
+            "field_number": null,
+            "key": "create_issueParams.labels",
+            "name": "labels",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Repository owner login",
+            "extras": {},
+            "field_number": null,
+            "key": "create_issueParams.owner",
+            "name": "owner",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Repository name",
+            "extras": {},
+            "field_number": null,
+            "key": "create_issueParams.repo",
+            "name": "repo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Issue title",
+            "extras": {},
+            "field_number": null,
+            "key": "create_issueParams.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "create_issueParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "create_issueParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "GitHub organization login",
+            "extras": {},
+            "field_number": null,
+            "key": "list_reposParams.org",
+            "name": "org",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "all",
+                "public",
+                "private"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Repository visibility filter",
+            "extras": {},
+            "field_number": null,
+            "key": "list_reposParams.visibility",
+            "name": "visibility",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "list_reposParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "list_reposParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Repository owner login",
+            "extras": {},
+            "field_number": null,
+            "key": "run_workflowParams.owner",
+            "name": "owner",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "main",
+            "deprecated": false,
+            "description": "Git ref to run against",
+            "extras": {},
+            "field_number": null,
+            "key": "run_workflowParams.ref",
+            "name": "ref",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Repository name",
+            "extras": {},
+            "field_number": null,
+            "key": "run_workflowParams.repo",
+            "name": "repo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Workflow file name or numeric id",
+            "extras": {},
+            "field_number": null,
+            "key": "run_workflowParams.workflow_id",
+            "name": "workflow_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "run_workflowParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "run_workflowParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "llm-tools/05-assistant-tool-bundle.json",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "llm-tools"
+  },
+  "fingerprint": "sha256:7d2844380441179624a0d6b75bd7e6768960cb8886efc1b9dc6c0e6eaef440cd",
+  "lint": {
+    "findings": 6,
+    "grade": "B",
+    "report_fingerprint": "6d6f5c003379fb043283297c6f4d0ef949a052199d583e1fe5fb58b43bdb59a9",
+    "score": 85,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

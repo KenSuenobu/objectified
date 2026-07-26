@@ -1,0 +1,282 @@
+{
+  "adapter": "llm-tools",
+  "canonical": {
+    "channels": [],
+    "description": "Imported LLM tool / function-calling schema bundle",
+    "extras": {
+      "dialects": [
+        "bare"
+      ],
+      "mixed_dialect_policy": "normalize_per_tool",
+      "tool_count": 1
+    },
+    "format": "llm-tools",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "04-enums-and-required",
+      "namespace": null
+    },
+    "paradigm": "agent",
+    "protocol": "llm-tools",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "LLM tool / function-calling bundle",
+        "extras": {},
+        "key": "04-enums-and-required",
+        "name": "04-enums-and-required",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Configure runtime mode with enums and required-field discipline examples.",
+            "extras": {
+              "dialect": "bare",
+              "input_schema": {
+                "properties": {
+                  "mode": {
+                    "description": "Runtime mode",
+                    "enum": [
+                      "dry_run",
+                      "live",
+                      "shadow"
+                    ],
+                    "type": "string"
+                  },
+                  "note": {
+                    "description": "Free-text operator note",
+                    "type": "string"
+                  },
+                  "region": {
+                    "description": "Must be one of: us-east, us-west, eu-central",
+                    "type": "string"
+                  },
+                  "verbosity": {
+                    "oneOf": [
+                      {
+                        "const": "quiet"
+                      },
+                      {
+                        "const": "normal"
+                      },
+                      {
+                        "const": "debug"
+                      }
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "mode",
+                  "region"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "04-enums-and-required.set_mode",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "bare",
+                  "llm_tools_parameters": {
+                    "properties": {
+                      "mode": {
+                        "description": "Runtime mode",
+                        "enum": [
+                          "dry_run",
+                          "live",
+                          "shadow"
+                        ],
+                        "type": "string"
+                      },
+                      "note": {
+                        "description": "Free-text operator note",
+                        "type": "string"
+                      },
+                      "region": {
+                        "description": "Must be one of: us-east, us-west, eu-central",
+                        "type": "string"
+                      },
+                      "verbosity": {
+                        "oneOf": [
+                          {
+                            "const": "quiet"
+                          },
+                          {
+                            "const": "normal"
+                          },
+                          {
+                            "const": "debug"
+                          }
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "mode",
+                      "region"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "04-enums-and-required.set_mode#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "set_modeParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "set_mode",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "04-enums-and-required",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": [
+                "dry_run",
+                "live",
+                "shadow"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Runtime mode",
+            "extras": {},
+            "field_number": null,
+            "key": "set_modeParams.mode",
+            "name": "mode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Free-text operator note",
+            "extras": {},
+            "field_number": null,
+            "key": "set_modeParams.note",
+            "name": "note",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Must be one of: us-east, us-west, eu-central",
+            "extras": {},
+            "field_number": null,
+            "key": "set_modeParams.region",
+            "name": "region",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "set_modeParams.verbosity",
+            "name": "verbosity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "set_modeParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "set_modeParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "llm-tools/04-enums-and-required.json",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "llm-tools"
+  },
+  "fingerprint": "sha256:d9f3eb46760021ed936374e90f6bc23e5886b52e6c4ab8bc68f1e36eee430a03",
+  "lint": {
+    "findings": 6,
+    "grade": "B",
+    "report_fingerprint": "2e48048c6b260ae556ba83403099ef5a01936dd600ac979812e6cdf23ae4a772",
+    "score": 88,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

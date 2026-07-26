@@ -5,6 +5,20 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.193.0] - 2026-07-26
+
+### Added
+- **LLM tool / function-calling schema bundle import adapter (#5128, IXH-7.3)** — new
+  `llm-tools` `ImportSource` detects OpenAI `{type:function, function:{name,parameters}}`,
+  Anthropic `{name, input_schema}`, and bare `{name, parameters}` arrays (or `{tools:[…]}`
+  wrappers), normalizes each tool to a canonical operation under `ApiParadigm.AGENT`, and
+  records per-tool dialect provenance. Mixed-dialect bundles are accepted (not rejected);
+  each tool keeps its dialect on `operation.extras.dialect`. Ships a native lint pack
+  (description presence/specificity, parameter descriptions, enum-over-freetext, required
+  hygiene, duplicate names), MCP↔llm-tools tool-surface fingerprint bridge, corpus ladder
+  with negatives, golden snapshots, format sniff, lint capability matrix row, and UI
+  catalog mapping. OpenAPI 1.59.0 → 1.60.0.
+
 ## [1.192.0] - 2026-07-26
 
 ### Added

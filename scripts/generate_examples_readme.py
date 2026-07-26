@@ -33,6 +33,7 @@ CATEGORY_ORDER: List[tuple[str, str]] = [
     ("graph", "Graph"),
     ("data-schema", "Data schema"),
     ("industry-messaging", "Industry / domain messaging"),
+    ("agent", "Agent / LLM tools"),
 ]
 
 

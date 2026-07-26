@@ -182,6 +182,9 @@ export const CATALOG_FORMATS: readonly CatalogFormat[] = [
   // ---- Workflows ----
   { id: 'arazzo', label: 'Arazzo', icon: Workflow, tone: 'violet', importable: true, aliases: ['workflows'], description: 'Arazzo API workflow description.' },
 
+  // ---- Agent ----
+  { id: 'llm-tools', label: 'LLM Tools', icon: Bot, tone: 'amber', importable: true, aliases: ['llmtools', 'function-calling', 'openai-tools', 'anthropic-tools'], description: 'OpenAI / Anthropic / bare LLM tool or function-calling schema bundle.' },
+
   // ---- Data schema ----
   { id: 'jsonschema', label: 'JSON Schema', icon: Braces, tone: 'indigo', importable: true, aliases: ['json'], description: 'JSON Schema type definitions.' },
   { id: 'k8s-crd', label: 'Kubernetes CRD', icon: Box, tone: 'blue', importable: true, aliases: ['kubernetes-crd', 'crd', 'k8scrd'], description: 'Kubernetes CustomResourceDefinition structural schema.' },
