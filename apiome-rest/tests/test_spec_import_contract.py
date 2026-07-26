@@ -246,9 +246,134 @@ def test_commit_returns_501_when_pending_approval(spec_import_pending_worker):
 
     r = client.post(f"/v1/tenants/acme/imports/{job_id}/commit")
     assert r.status_code == 501
+    assert "held_preview_transaction" in r.json()["detail"]
 
     r = client.post(f"/v1/tenants/acme/imports/{job_id}/rollback")
     assert r.status_code == 501
+    assert "held_preview_transaction" in r.json()["detail"]
+
+
+def test_commit_from_non_owning_instance_via_shared_store(spec_import_fake_worker):
+    """Clearing local _jobs (non-owner) still serves commit from the shared store (IXH-6.2)."""
+    from app import spec_import_engine as sie
+
+    body = {
+        "metadata": {
+            "source_kind": "openapi-3",
+            "project": {"name": "Payments", "slug": "payments-api"},
+            "version": {"version_id": "1.0.0"},
+            "options": {},
+        },
+        "document_base64": "e30=",
+    }
+    r = client.post("/v1/tenants/acme/imports", json=body)
+    job_id = r.json()["job_id"]
+    _wait_completed(job_id)
+
+    owner = client.post(f"/v1/tenants/acme/imports/{job_id}/commit")
+    assert owner.status_code == 200, owner.text
+    expected = owner.json()
+
+    sie._jobs.clear()
+    assert job_id not in sie._jobs
+
+    remote = client.post(f"/v1/tenants/acme/imports/{job_id}/commit")
+    assert remote.status_code == 200, remote.text
+    assert remote.json() == expected
+
+    again = client.post(f"/v1/tenants/acme/imports/{job_id}/commit")
+    assert again.status_code == 200
+    assert again.json() == expected
+
+
+@pytest.mark.asyncio
+async def test_rollback_idempotent_from_non_owning_instance_via_shared_store():
+    """A rolled-back job's prior result is served from the shared store after _jobs.clear()."""
+    import uuid
+
+    from app import spec_import_engine as sie
+    from app.models import SpecImportJobStatus, SpecImportRollbackResponse
+
+    job_id = str(uuid.uuid4())
+    status = SpecImportJobStatus(job_id=job_id, state="rolled-back", percent=100)
+    response = SpecImportRollbackResponse(
+        job_id=job_id,
+        state="rolled-back",
+        project_id="550e8400-e29b-41d4-a716-446655440099",
+        version_record_id="660e8400-e29b-41d4-a716-446655440088",
+    )
+    sie._jobs[job_id] = sie._JobRecord(
+        tenant_slug="acme",
+        job_id=job_id,
+        state="rolled-back",
+        status=status,
+        rollback_response=response,
+    )
+    await sie._mirror_job(job_id)
+    sie._jobs.clear()
+    assert job_id not in sie._jobs
+
+    remote = await sie.rollback_spec_import_job("acme", job_id)
+    assert remote.state == "rolled-back"
+    assert remote.project_id == response.project_id
+    assert remote.version_record_id == response.version_record_id
+
+    again = await sie.rollback_spec_import_job("acme", job_id)
+    assert again.model_dump() == remote.model_dump()
+
+
+def test_preview_constraint_from_non_owning_instance_is_501_not_404(
+    spec_import_pending_worker,
+):
+    """pending-approval on a non-owner returns the constraint-named 501, never a bare 404."""
+    from app import spec_import_engine as sie
+
+    body = {
+        "metadata": {
+            "source_kind": "openapi-3",
+            "project": {"name": "Payments", "slug": "payments-api"},
+            "version": {"version_id": "1.0.0"},
+            "options": {},
+        },
+        "document_base64": "e30=",
+    }
+    r = client.post("/v1/tenants/acme/imports", json=body)
+    job_id = r.json()["job_id"]
+    final = _wait_completed(job_id)
+    assert final["state"] == "pending-approval"
+
+    sie._jobs.clear()
+    assert job_id not in sie._jobs
+
+    commit = client.post(f"/v1/tenants/acme/imports/{job_id}/commit")
+    assert commit.status_code == 501, commit.text
+    assert "held_preview_transaction" in commit.json()["detail"]
+
+    rollback = client.post(f"/v1/tenants/acme/imports/{job_id}/rollback")
+    assert rollback.status_code == 501, rollback.text
+    assert "held_preview_transaction" in rollback.json()["detail"]
+
+
+def test_shared_store_commit_rollback_are_tenant_scoped(spec_import_fake_worker):
+    """Cross-tenant commit/rollback against a shared-store job is refused (404)."""
+    from app import spec_import_engine as sie
+
+    body = {
+        "metadata": {
+            "source_kind": "openapi-3",
+            "project": {"name": "Payments", "slug": "payments-api"},
+            "version": {"version_id": "1.0.0"},
+            "options": {},
+        },
+        "document_base64": "e30=",
+    }
+    r = client.post("/v1/tenants/acme/imports", json=body)
+    job_id = r.json()["job_id"]
+    _wait_completed(job_id)
+    sie._jobs.clear()
+
+    assert client.post(f"/v1/tenants/other/imports/{job_id}/commit").status_code == 404
+    assert client.post(f"/v1/tenants/other/imports/{job_id}/rollback").status_code == 404
 
 
 def test_format_adapter_runs_end_to_end_through_job_api():

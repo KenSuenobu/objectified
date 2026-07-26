@@ -20050,9 +20050,10 @@ class Database:
 
         The driving instance upserts on every state change. ``cancel_requested`` is
         deliberately not written here — it is owned by :meth:`request_async_job_cancel`
-        and read back by the driver. ``extra`` is a per-kind bag (import commit payload,
-        export list metadata) preserved with COALESCE so a later status update never nulls a
-        value already recorded (e.g. the import commit payload written at completion).
+        and read back by the driver. ``extra`` is a per-kind bag (import commit/rollback payloads
+        and owner-resource constraints, export list metadata) preserved with COALESCE so a later
+        status update never nulls a value already recorded (e.g. the import commit payload written
+        at completion).
         """
         query = """
             INSERT INTO apiome.async_job

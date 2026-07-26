@@ -318,6 +318,38 @@ _jobs_lock = asyncio.Lock()
 # Kind discriminator for the shared async-job store (apiome.async_job, migration V158).
 _SHARED_JOB_KIND = "spec_import"
 
+# Recorded in ``async_job.extra`` when commit/rollback needs an owner-held preview transaction
+# that this REST deployment does not expose (and has no sticky owner routing for).
+_OWNER_RESOURCE_CONSTRAINT = "held_preview_transaction"
+
+_PREVIEW_OWNER_CONSTRAINT_DETAIL = (
+    "Preview import commit/rollback requires an owner-held resource "
+    f"(constraint: {_OWNER_RESOURCE_CONSTRAINT}); this REST deployment runs incremental "
+    "imports without a held-open preview transaction and does not expose sticky owner routing."
+)
+
+
+def _build_shared_extra(rec: _JobRecord) -> Optional[Dict[str, Any]]:
+    """Assemble the per-kind ``extra`` bag for the shared store (full bag, or None).
+
+    Passing ``None`` preserves a previously mirrored bag via COALESCE. A non-empty dict
+    replaces the bag, so every field that must survive (commit/rollback payloads, owner
+    constraint) is included together whenever any of them is present.
+    """
+    extra: Dict[str, Any] = {}
+    if rec.commit_response is not None:
+        extra["commit_response"] = rec.commit_response.model_dump(mode="json")
+    if rec.rollback_response is not None:
+        extra["rollback_response"] = rec.rollback_response.model_dump(mode="json")
+    if rec.state == "pending-approval" or rec.status.state == "pending-approval":
+        extra["owner_resource_constraint"] = _OWNER_RESOURCE_CONSTRAINT
+    return extra or None
+
+
+def _raise_preview_owner_constraint() -> None:
+    """Raise the documented 501 for preview commit/rollback (never a bare 404)."""
+    raise HTTPException(status_code=501, detail=_PREVIEW_OWNER_CONSTRAINT_DETAIL)
+
 
 async def _mirror_job(job_id: str) -> None:
     """Best-effort mirror of a job's current poll payload into the shared store.
@@ -335,11 +367,7 @@ async def _mirror_job(job_id: str) -> None:
         tenant_slug = rec.tenant_slug
         state = rec.state
         status_json = rec.status.model_dump(mode="json")
-        extra = (
-            {"commit_response": rec.commit_response.model_dump(mode="json")}
-            if rec.commit_response
-            else None
-        )
+        extra = _build_shared_extra(rec)
     # The DB call is made inline (not via ``asyncio.to_thread``): ``_drive_job`` runs on the
     # request's loop, and a thread-pool await here would orphan the background task under a
     # harness that tears the loop down between requests, stalling the job before it finalizes.
@@ -814,13 +842,6 @@ async def _drive_job(job_id: str, payload: Dict[str, Any]) -> None:
             )
 
 
-def _get_record(tenant_slug: str, job_id: str) -> _JobRecord:
-    rec = _jobs.get(job_id)
-    if rec is None or rec.tenant_slug != tenant_slug:
-        raise HTTPException(status_code=404, detail="Import job not found")
-    return rec
-
-
 async def schedule_spec_import(
     tenant_slug: str,
     tenant_id: str,
@@ -940,49 +961,80 @@ async def cancel_spec_import_job(tenant_slug: str, job_id: str) -> None:
 
 
 async def commit_spec_import_job(tenant_slug: str, job_id: str) -> SpecImportCommitResponse:
+    """Return a prior commit payload (idempotent) from the owner or the shared store.
+
+    Incremental imports finalize without a separate commit; when a ``commit_response`` was
+    mirrored at completion, any instance can replay it. Preview (``pending-approval``) still
+    needs an owner-held transaction — that constraint is named in the 501 detail.
+    """
     rec = _jobs.get(job_id)
     if rec is not None and rec.tenant_slug == tenant_slug:
         if rec.commit_response is not None:
             return rec.commit_response
         state = rec.status.state
-    else:
-        row = await _fetch_shared_job(tenant_slug, job_id)
-        if row is None:
-            raise HTTPException(status_code=404, detail="Import job not found")
-        extra = row.get("extra") or {}
-        commit_raw = extra.get("commit_response")
-        if commit_raw:
-            return SpecImportCommitResponse.model_validate(commit_raw)
-        state = row["state"]
-    if state == "pending-approval":
+        if state == "pending-approval":
+            _raise_preview_owner_constraint()
         raise HTTPException(
-            status_code=501,
-            detail=(
-                "Two-phase commit for preview imports is not available through REST yet; "
-                "this server runs incremental imports that finalize without a separate commit."
-            ),
+            status_code=409,
+            detail=f"No commit available for import job in state {state}",
         )
+
+    row = await _fetch_shared_job(tenant_slug, job_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Import job not found")
+    extra = row.get("extra") or {}
+    commit_raw = extra.get("commit_response")
+    if commit_raw:
+        return SpecImportCommitResponse.model_validate(commit_raw)
+    state = row["state"]
+    if state == "pending-approval" or extra.get("owner_resource_constraint"):
+        _raise_preview_owner_constraint()
     raise HTTPException(
         status_code=409,
         detail=f"No commit available for import job in state {state}",
     )
 
 
-def rollback_spec_import_job(tenant_slug: str, job_id: str) -> SpecImportRollbackResponse:
-    rec = _get_record(tenant_slug, job_id)
-    if rec.rollback_response is not None:
-        return rec.rollback_response
-    if rec.status.state == "rolled-back":
-        return SpecImportRollbackResponse(job_id=job_id, state="rolled-back")
-    if rec.status.state == "pending-approval":
+async def rollback_spec_import_job(tenant_slug: str, job_id: str) -> SpecImportRollbackResponse:
+    """Return a prior rollback payload (idempotent) from the owner or the shared store.
+
+    Owner fast path uses the in-memory record. Non-owning instances read
+    ``extra.rollback_response`` / ``rolled-back`` state from the shared store so round-robin
+    never 404s a job that exists. Preview rollback that would need a held-open transaction
+    returns a constraint-named 501 instead of a bare 404.
+    """
+    rec = _jobs.get(job_id)
+    if rec is not None and rec.tenant_slug == tenant_slug:
+        if rec.rollback_response is not None:
+            return rec.rollback_response
+        if rec.status.state == "rolled-back":
+            response = SpecImportRollbackResponse(job_id=job_id, state="rolled-back")
+            async with _jobs_lock:
+                owned = _jobs.get(job_id)
+                if owned is not None and owned.tenant_slug == tenant_slug:
+                    owned.rollback_response = response
+            await _mirror_job(job_id)
+            return response
+        if rec.status.state == "pending-approval":
+            _raise_preview_owner_constraint()
         raise HTTPException(
-            status_code=501,
-            detail=(
-                "Rollback for preview imports is not wired through REST yet; "
-                "incremental imports do not use a held-open preview transaction."
-            ),
+            status_code=409,
+            detail=f"Cannot rollback import job in state {rec.status.state}",
         )
+
+    row = await _fetch_shared_job(tenant_slug, job_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Import job not found")
+    extra = row.get("extra") or {}
+    rollback_raw = extra.get("rollback_response")
+    if rollback_raw:
+        return SpecImportRollbackResponse.model_validate(rollback_raw)
+    state = row["state"]
+    if state == "rolled-back":
+        return SpecImportRollbackResponse(job_id=job_id, state="rolled-back")
+    if state == "pending-approval" or extra.get("owner_resource_constraint"):
+        _raise_preview_owner_constraint()
     raise HTTPException(
         status_code=409,
-        detail=f"Cannot rollback import job in state {rec.status.state}",
+        detail=f"Cannot rollback import job in state {state}",
     )

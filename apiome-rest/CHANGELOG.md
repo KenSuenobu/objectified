@@ -5,6 +5,18 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.187.0] - 2026-07-26
+
+### Fixed
+- **Shared-store import rollback and commit (#5121, IXH-6.2)** — `POST …/imports/{job_id}/rollback`
+  (and commit replay) no longer 404 on a non-owning instance under round-robin. Both endpoints
+  read the shared `async_job` record (in-memory owner record remains the fast path); the
+  per-kind `extra` bag now carries `commit_response`, `rollback_response`, and — for
+  `pending-approval` — `owner_resource_constraint: held_preview_transaction`. Preview
+  two-phase commit/rollback is still not wired through REST (no held preview transaction /
+  sticky owner routing); callers get a documented **501** naming that constraint instead of
+  a bare 404. State transitions stay idempotent.
+
 ## [1.186.0] - 2026-07-26
 
 ### Fixed
