@@ -682,7 +682,32 @@ describe('CatalogImportQualityStep — entity preview integration (IXH-3.2)', ()
     await renderStep(buildReport());
     expect(screen.getByTestId('import-preview-panel')).toBeInTheDocument();
     expect(screen.getByTestId('import-preview-summary')).toBeInTheDocument();
+    // The preview lives on its own tab, so its tree only enters the accessibility tree once the
+    // tab is selected.
+    fireEvent.click(screen.getByTestId('catalog-detail-tab-preview'));
     expect(screen.getByRole('treeitem', { name: /PetService/ })).toBeInTheDocument();
+  });
+
+  it('splits findings and the entity preview across tabs, findings first', async () => {
+    await renderStep(buildReport());
+
+    // The gate facts stay pinned above the tab bar — tabbing can never hide them.
+    expect(screen.getByTestId('import-quality-orb')).toBeVisible();
+    expect(screen.getByTestId('import-quality-verdict')).toBeVisible();
+
+    const findingsPanel = screen.getByTestId('import-quality-findings-panel');
+    const previewPanel = screen.getByTestId('import-quality-preview-panel');
+    expect(findingsPanel).toBeVisible();
+    expect(previewPanel).not.toBeVisible();
+    // The findings tab carries its count so the split never hides how much is behind it.
+    expect(screen.getByTestId('catalog-detail-tab-findings')).toHaveTextContent('Findings (2)');
+
+    fireEvent.click(screen.getByTestId('catalog-detail-tab-preview'));
+    expect(previewPanel).toBeVisible();
+    expect(findingsPanel).not.toBeVisible();
+
+    fireEvent.click(screen.getByTestId('catalog-detail-tab-findings'));
+    expect(findingsPanel).toBeVisible();
   });
 
   it('drives the raw viewer from a preview link beyond the old 400-line head window', async () => {

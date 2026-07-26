@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { CatalogLintPanel } from '../src/app/components/ade/dashboard/catalog/CatalogLintPanel';
 import type { VersionLintReport } from '../src/app/utils/version-lint-report';
@@ -47,10 +47,33 @@ const BASE_REPORT: VersionLintReport = {
   compatibilityOverall: null,
 };
 
-/** Mock catalog lint + rule-catalog fetches. */
-function mockLintFetch(report: unknown, ok = true) {
+/**
+ * A raw source the BASE_REPORT findings resolve into: `components.schemas.Payment` walks to line 6
+ * and `components.schemas.Order` to line 8 (via `locateFindingLine`'s segment walk).
+ */
+const SOURCE_TEXT = [
+  'openapi: 3.1.0',
+  'info:',
+  '  title: Demo',
+  'components:',
+  '  schemas:',
+  '    Payment:',
+  '      type: object',
+  '    Order:',
+  '      type: object',
+].join('\n');
+
+/** Mock catalog lint + rule-catalog + raw-source fetches. */
+function mockLintFetch(report: unknown, ok = true, sourceText: string = SOURCE_TEXT) {
   global.fetch = jest.fn((input: RequestInfo | URL) => {
     const url = typeof input === 'string' ? input : input.toString();
+    if (url.includes('/source')) {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: async () => sourceText,
+      });
+    }
     if (url.includes('/api/lint/rules')) {
       return Promise.resolve({
         ok: true,
@@ -322,5 +345,126 @@ describe('CatalogLintPanel (MFI-25.5)', () => {
     renderPanel({ qualityAvailable: false });
     await screen.findByTestId('catalog-lint-gauge');
     expect(screen.getByTestId('catalog-detail-quality-history')).toBeDisabled();
+  });
+
+  // ── Score card + finding→source linking (30/70 split) ────────────────────────────────────────
+
+  it('renders the lint score as the last card of the summary strip', async () => {
+    mockLintFetch(BASE_REPORT);
+    renderPanel();
+
+    const strip = await screen.findByTestId('catalog-lint-summary');
+    const card = screen.getByTestId('catalog-lint-gauge');
+    // The score card lives inside the strip, as its last card.
+    expect(strip).toContainElement(card);
+    expect(strip.lastElementChild).toBe(card);
+    expect(card).toHaveTextContent('Lint score');
+    expect(screen.getByTestId('catalog-lint-gauge-grade')).toHaveTextContent('B');
+    expect(card).toHaveTextContent('72/100');
+    // The strip leads with the tally cards.
+    expect(strip.firstElementChild).toHaveTextContent('MUST');
+  });
+
+  it('fetches the raw source lazily and highlights the most severe finding by default', async () => {
+    mockLintFetch(BASE_REPORT);
+    renderPanel({ sourceHref: `/api/catalog/${ITEM_ID}/source`, sourceAvailable: true });
+
+    // The most-severe finding (error → Payment, line 6) drives the pane once both fetches land.
+    const active = await screen.findByTestId('catalog-lint-source-line-active');
+    expect(active).toHaveTextContent('6');
+    expect(active).toHaveTextContent('Payment:');
+    expect(screen.getByTestId('catalog-lint-source-pane')).toHaveTextContent('Source · line 6');
+    expect(global.fetch).toHaveBeenCalledWith(`/api/catalog/${ITEM_ID}/source`);
+    // Each finding row carries its resolved line as a keyboard-reachable affordance.
+    const links = screen.getAllByTestId('catalog-lint-finding-source-link');
+    expect(links.map((l) => l.textContent)).toEqual(['line 6', 'line 8']);
+  });
+
+  it('moves the highlighted source line when another finding is clicked', async () => {
+    mockLintFetch(BASE_REPORT);
+    renderPanel({ sourceHref: `/api/catalog/${ITEM_ID}/source`, sourceAvailable: true });
+
+    await screen.findByTestId('catalog-lint-source-line-active');
+    // Click the SHOULD finding's row (Order → line 8).
+    const rows = screen.getAllByTestId('catalog-lint-finding-row');
+    fireEvent.click(rows[1]);
+
+    const active = screen.getByTestId('catalog-lint-source-line-active');
+    expect(active).toHaveTextContent('8');
+    expect(active).toHaveTextContent('Order:');
+    expect(screen.getByTestId('catalog-lint-source-pane')).toHaveTextContent('Source · line 8');
+    // The clicked row is marked selected.
+    expect(rows[1]).toHaveAttribute('data-selected', 'true');
+    expect(rows[0]).not.toHaveAttribute('data-selected');
+  });
+
+  it('notes an unresolvable finding path and shows the document head', async () => {
+    mockLintFetch(
+      {
+        ...BASE_REPORT,
+        findings: [
+          {
+            id: 'f-missing',
+            path: 'components.schemas.Ghost',
+            category: 'structure',
+            rule: 'structure.ghost',
+            severity: 'error',
+            message: 'Ghost entity.',
+          },
+        ],
+      },
+      true,
+      'openapi: 3.1.0\ninfo:\n  title: Demo',
+    );
+    renderPanel({ sourceHref: `/api/catalog/${ITEM_ID}/source`, sourceAvailable: true });
+
+    const note = await screen.findByTestId('catalog-lint-source-unresolved');
+    expect(note).toHaveTextContent('components.schemas.Ghost');
+    // No line is highlighted, but the source still renders from the top.
+    expect(screen.queryByTestId('catalog-lint-source-line-active')).not.toBeInTheDocument();
+    expect(screen.getByTestId('catalog-lint-source-viewer')).toHaveTextContent('openapi: 3.1.0');
+  });
+
+  it('pins the findings list and source pane to one fixed, equal-height frame', async () => {
+    mockLintFetch(BASE_REPORT);
+    renderPanel({ sourceHref: `/api/catalog/${ITEM_ID}/source`, sourceAvailable: true });
+
+    await screen.findByTestId('catalog-lint-source-line-active');
+    // The findings list scrolls inside its own region rather than growing the card…
+    const scroll = screen.getByTestId('catalog-lint-findings-scroll');
+    expect(scroll.className).toContain('overflow-y-auto');
+    // …and both columns are pinned to the same fixed height, so selection never shifts layout.
+    expect(scroll.closest('div[class*="h-[900px]"]')).not.toBeNull();
+    const paneColumn = screen.getByTestId('catalog-lint-source-pane').parentElement;
+    expect(paneColumn?.className).toContain('h-[900px]');
+    // The source viewer fills its frame instead of sizing to content.
+    expect(screen.getByTestId('catalog-lint-source-viewer').className).toContain('flex-1');
+  });
+
+  it('truncates overflowing finding text within the card', async () => {
+    mockLintFetch(BASE_REPORT);
+    renderPanel();
+
+    await screen.findByTestId('catalog-lint-gauge');
+    const row = screen.getAllByTestId('catalog-lint-finding-row')[0];
+    const message = within(row).getByText('Operation is missing an operationId.');
+    expect(message.className).toContain('truncate');
+    expect(message).toHaveAttribute('title', 'Operation is missing an operationId.');
+  });
+
+  it('degrades the source pane when the raw source was not captured', async () => {
+    mockLintFetch(BASE_REPORT);
+    renderPanel({ sourceHref: `/api/catalog/${ITEM_ID}/source`, sourceAvailable: false });
+
+    await screen.findByTestId('catalog-lint-gauge');
+    expect(screen.getByTestId('catalog-lint-source-unavailable')).toHaveTextContent(
+      /not captured/i,
+    );
+    // No per-row source affordances, and no source fetch was made.
+    expect(screen.queryByTestId('catalog-lint-finding-source-link')).not.toBeInTheDocument();
+    const sourceCalls = (global.fetch as jest.Mock).mock.calls.filter((call) =>
+      String(call[0]).includes('/source'),
+    );
+    expect(sourceCalls).toHaveLength(0);
   });
 });

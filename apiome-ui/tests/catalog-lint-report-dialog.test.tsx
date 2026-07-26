@@ -96,6 +96,24 @@ describe('CatalogLintReportDialog', () => {
     expect(screen.getByText("Schema 'order' is not PascalCase.")).toBeInTheDocument();
   });
 
+  it('opens expanded to 90vh with the findings list flex-filling the height', async () => {
+    global.fetch = catalogLintFetchMock(() =>
+      Promise.resolve({ ok: true, json: async () => REPORT }),
+    );
+    render(<CatalogLintReportDialog itemId="cat-1" itemName="Acme" open onOpenChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+    // The dialog is pinned to 90% of the viewport height (and widened) for reading room…
+    const content = screen.getByRole('dialog');
+    expect(content.className).toContain('h-[90vh]');
+    expect(content.className).toContain('max-w-6xl');
+    // …and the findings list flexes to consume the remaining height instead of a 50vh cap.
+    await waitFor(() =>
+      expect(screen.getByTestId('lint-report-findings-scroll').className).toContain('flex-1'),
+    );
+    expect(screen.getByTestId('lint-report-findings-scroll').className).not.toContain('max-h-[50vh]');
+  });
+
   it('shows an error with a retry that re-fetches successfully', async () => {
     let catalogLintCalls = 0;
     const fetchMock = catalogLintFetchMock(() => {

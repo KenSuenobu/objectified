@@ -7,6 +7,7 @@
  */
 
 import {
+  nextCatalogDashboardSort,
   sortCatalogDashboardRows,
   compareCatalogDashboardRows,
   type CatalogSortRow,
@@ -111,6 +112,93 @@ describe('format column', () => {
       row({ id: '2', name: 'B', sourceFormat: null, protocol: 'amqp' }),
     ];
     expect(names(sortCatalogDashboardRows(input, 'format', 'asc'))).toEqual(['B', 'A']);
+  });
+});
+
+describe('nextCatalogDashboardSort', () => {
+  it('reverses the direction when the active column is clicked again', () => {
+    expect(nextCatalogDashboardSort({ column: 'name', direction: 'asc' }, 'name')).toEqual({
+      column: 'name',
+      direction: 'desc',
+    });
+    expect(nextCatalogDashboardSort({ column: 'name', direction: 'desc' }, 'name')).toEqual({
+      column: 'name',
+      direction: 'asc',
+    });
+  });
+
+  it('keeps toggling on every further click, never sticking in one direction', () => {
+    let state = { column: 'quality', direction: 'asc' } as ReturnType<typeof nextCatalogDashboardSort>;
+    const seen: string[] = [];
+    for (let i = 0; i < 4; i++) {
+      state = nextCatalogDashboardSort(state, 'quality');
+      seen.push(state.direction);
+    }
+    expect(seen).toEqual(['desc', 'asc', 'desc', 'asc']);
+  });
+
+  it('starts a newly selected column ascending, whichever way the previous one ran', () => {
+    expect(nextCatalogDashboardSort({ column: 'name', direction: 'desc' }, 'updated')).toEqual({
+      column: 'updated',
+      direction: 'asc',
+    });
+  });
+
+  it('is pure — calling it twice with the same input gives the same result', () => {
+    // React invokes state updaters twice under StrictMode; the toggle must not depend on how many
+    // times it runs, which is exactly what the nested-setState version got wrong.
+    const current = { column: 'grade', direction: 'asc' } as const;
+    expect(nextCatalogDashboardSort(current, 'grade')).toEqual(
+      nextCatalogDashboardSort(current, 'grade'),
+    );
+  });
+});
+
+describe('protocol column', () => {
+  it('orders by protocol with unknown protocols last, tie-broken by name', () => {
+    const input = [
+      row({ id: '1', name: 'A', protocol: 'mqtt' }),
+      row({ id: '2', name: 'B', protocol: null }),
+      row({ id: '3', name: 'C', protocol: 'amqp' }),
+    ];
+    expect(names(sortCatalogDashboardRows(input, 'protocol', 'asc'))).toEqual(['C', 'A', 'B']);
+    expect(names(sortCatalogDashboardRows(input, 'protocol', 'desc'))).toEqual(['A', 'C', 'B']);
+  });
+
+  it('breaks protocol ties by name', () => {
+    const input = [
+      row({ id: '1', name: 'Zeta', protocol: 'grpc' }),
+      row({ id: '2', name: 'Alpha', protocol: 'grpc' }),
+    ];
+    expect(names(sortCatalogDashboardRows(input, 'protocol', 'asc'))).toEqual(['Alpha', 'Zeta']);
+  });
+});
+
+describe('source column', () => {
+  it('orders by the resolved source label, with unrecorded sources last', () => {
+    const input = [
+      row({ id: '1', name: 'A', formatMetadata: { sourceLabel: 'zeta.proto', inputKind: 'file' } }),
+      row({ id: '2', name: 'B' }), // no provenance recorded at all
+      row({ id: '3', name: 'C', formatMetadata: { sourceLabel: 'alpha.graphql', inputKind: 'file' } }),
+    ];
+    expect(names(sortCatalogDashboardRows(input, 'source', 'asc'))).toEqual(['C', 'A', 'B']);
+    expect(names(sortCatalogDashboardRows(input, 'source', 'desc'))).toEqual(['A', 'C', 'B']);
+  });
+
+  it('falls back to the generic metadata bag and sorts on the displayed URL label', () => {
+    const input = [
+      row({ id: '1', name: 'A', metadata: { sourceUri: 'https://zeta.example.com/schema.graphql' } }),
+      row({ id: '2', name: 'B', metadata: { sourceUri: 'https://alpha.example.com/schema.graphql' } }),
+    ];
+    expect(names(sortCatalogDashboardRows(input, 'source', 'asc'))).toEqual(['B', 'A']);
+  });
+
+  it('breaks source ties by name', () => {
+    const input = [
+      row({ id: '1', name: 'Zeta', formatMetadata: { sourceLabel: 'same.proto', inputKind: 'file' } }),
+      row({ id: '2', name: 'Alpha', formatMetadata: { sourceLabel: 'same.proto', inputKind: 'file' } }),
+    ];
+    expect(names(sortCatalogDashboardRows(input, 'source', 'asc'))).toEqual(['Alpha', 'Zeta']);
   });
 });
 

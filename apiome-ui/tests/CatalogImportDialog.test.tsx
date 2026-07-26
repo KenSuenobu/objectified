@@ -117,4 +117,30 @@ describe('CatalogImportDialog — source grid (MFI-26.1)', () => {
     fireEvent.click(screen.getByRole('button', { name: /^back$/i }));
     await waitFor(() => expect(screen.getByText(/Auto-detected:/i)).toBeInTheDocument());
   });
+
+  it('explains the empty Options step when the format has nothing to configure', async () => {
+    const fetchMock = mockFetch();
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<CatalogImportDialog open onClose={jest.fn()} />);
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/api/import/sources', expect.anything()),
+    );
+
+    fireEvent.click(screen.getByTestId('catalog-import-source-paste'));
+    fireEvent.change(screen.getByLabelText('Source content'), {
+      target: { value: 'type Query { hello: String }' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /detect pasted source/i }));
+    await waitFor(() => expect(screen.getByText(/Auto-detected:/i)).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
+
+    // GraphQL is stored verbatim — there is nothing to configure, so the card says so instead of
+    // leaving the panel blank.
+    const card = await screen.findByTestId('catalog-import-no-options');
+    expect(
+      await screen.findByRole('heading', { name: 'No additional options' }),
+    ).toBeInTheDocument();
+    expect(card).toHaveTextContent('No additional options are available for this data type');
+  });
 });

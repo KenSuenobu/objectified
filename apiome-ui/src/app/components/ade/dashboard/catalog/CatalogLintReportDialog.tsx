@@ -95,6 +95,7 @@ export function CatalogLintReportDialog({
       error={error}
       onRetry={retry}
       preferCapturedScore
+      expanded
     />
   );
 }

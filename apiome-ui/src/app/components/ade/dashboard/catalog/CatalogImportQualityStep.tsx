@@ -22,6 +22,13 @@
  *    explorer of what the import would create, whose source-location links drive the same raw
  *    viewer the findings link into.
  *
+ * Layout: the gate facts (grade, tally, style guide, threshold, verdict, waiver) are pinned, and the
+ * two tall exploration surfaces — ranked findings + linked source viewer, and the entity preview —
+ * sit behind a {@link CatalogDetailTabs} bar rather than stacking into one long scroll. This is the
+ * MCP endpoint Insight treatment, applied here for the same reason: a report worth reading beats a
+ * report that has to be scrolled past. Both panels stay mounted (inactive one `hidden`), so tabbing
+ * back never re-runs the preview's manifest fetch or loses the selected finding's source line.
+ *
  * Three exits: **Import** (commit), **Import anyway** (commit against a blocking policy, recording a
  * waiver), and **Cancel**. The blocking exit never appears when policy forbids an override, and the
  * step owns the footer for the whole gate so the exits are never split across two rows.
@@ -60,6 +67,7 @@ import {
   RAW_VIEWER_CONTEXT,
 } from '@/app/utils/preview-budgets';
 import { CatalogImportPreviewPanel } from './CatalogImportPreviewPanel';
+import { CatalogDetailTabs, panelElementId, tabElementId, type DetailTab } from './CatalogDetailTabs';
 
 /** SVG progress-ring geometry, matching `CatalogLintPanel`'s gauge (viewBox 0 0 40 40, r 16). */
 const GAUGE_R = 16;
@@ -78,6 +86,17 @@ const ROW_HEIGHT = 80;
 
 /** Height (px) of the findings viewport; matches the `h-[380px]` list class. */
 const LIST_HEIGHT = 380;
+
+/**
+ * The step's two heavy surfaces, split across a tab bar (the MCP endpoint Insight treatment):
+ * lint verdict detail on one side, the structural preview of what the import would create on the
+ * other. Everything the gate itself depends on — grade, tally, verdict, waiver — stays pinned above
+ * the bar, so tabbing can never hide the reason an import is blocked.
+ */
+type QualityTabId = 'findings' | 'preview';
+
+/** Element-id prefix wiring the tab buttons to their panels (`aria-controls`/`aria-labelledby`). */
+const QUALITY_TABS_ID_PREFIX = 'import-quality';
 
 export interface CatalogImportQualityStepProps {
   /** The candidate document's bytes, base64-encoded — exactly what the commit would send. */
@@ -269,6 +288,7 @@ export function CatalogImportQualityStep({
     error: string | null;
   }>({ runId: null, report: null, error: null });
   const [attempt, setAttempt] = useState(0);
+  const [activeTab, setActiveTab] = useState<QualityTabId>('findings');
   const [selectedIndex, setSelectedIndex] = useState(0);
   // A line the preview panel's entity explorer linked to; overrides the selected finding's line
   // until the user selects a finding again, so both surfaces drive the one raw viewer.
@@ -335,6 +355,15 @@ export function CatalogImportQualityStep({
   const findingLines = useMemo(
     () => findings.map((finding) => locateFindingLine(finding.path, rawSource)),
     [findings, rawSource],
+  );
+  // The findings tab carries its count in the label, so the split never hides *how much* is on the
+  // other side of a tab — the one thing a tabbed layout can otherwise cost you.
+  const qualityTabs = useMemo<readonly DetailTab[]>(
+    () => [
+      { id: 'findings', label: findings.length > 0 ? `Findings (${findings.length})` : 'Findings' },
+      { id: 'preview', label: 'What this import adds' },
+    ],
+    [findings.length],
   );
   // The preview panel's link wins until a finding is selected again (selecting one clears it).
   const selectedLine = previewLine ?? findingLines[selectedIndex] ?? null;
@@ -511,286 +540,324 @@ export function CatalogImportQualityStep({
           </div>
         </div>
       ) : (
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-          <div className="flex flex-wrap items-center gap-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-            <GradeOrb
-              score={typeof report?.lint?.score === 'number' ? report.lint.score : null}
-              grade={report?.lint?.grade ?? null}
-            />
-            <div className="min-w-[16rem] flex-1 space-y-2">
-              <div className="flex items-center gap-2">
-                <FileSearch className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
-                <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {label}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2" data-testid="import-quality-severity-tally">
-                {tally.map((row) => (
-                  <span
-                    key={row.severity}
-                    className={cn(
-                      'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium',
-                      severityBadgeClass(row.severity),
-                    )}
-                  >
-                    <span className="tabular-nums">{row.count}</span> {row.severity}
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          {/* Pinned gate facts. These are what the footer's exits are decided by, so they never
+              move behind a tab — only the two tall exploration surfaces below do. */}
+          <div className="shrink-0 space-y-3">
+            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+              <GradeOrb
+                score={typeof report?.lint?.score === 'number' ? report.lint.score : null}
+                grade={report?.lint?.grade ?? null}
+              />
+              <div className="min-w-[16rem] flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  <FileSearch className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
+                  <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {label}
                   </span>
-                ))}
+                </div>
+                <div className="flex flex-wrap gap-2" data-testid="import-quality-severity-tally">
+                  {tally.map((row) => (
+                    <span
+                      key={row.severity}
+                      className={cn(
+                        'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium',
+                        severityBadgeClass(row.severity),
+                      )}
+                    >
+                      <span className="tabular-nums">{row.count}</span> {row.severity}
+                    </span>
+                  ))}
+                </div>
+                {report?.style_guide && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400" data-testid="import-quality-style-guide">
+                    Style guide: <span className="font-medium">{report.style_guide.name}</span> (
+                    {report.style_guide.source})
+                  </div>
+                )}
+                {comparison ? (
+                  <div
+                    className={cn(
+                      'text-xs font-medium',
+                      comparison.meets
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : 'text-rose-700 dark:text-rose-400',
+                    )}
+                    data-testid="import-quality-threshold"
+                  >
+                    Policy threshold {comparison.threshold} · this source scores {comparison.score} (
+                    {comparison.delta >= 0 ? `+${comparison.delta}` : comparison.delta})
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-500 dark:text-gray-400" data-testid="import-quality-threshold">
+                    No policy score threshold applies to this import.
+                  </div>
+                )}
               </div>
-              {report?.style_guide && (
-                <div className="text-xs text-gray-500 dark:text-gray-400" data-testid="import-quality-style-guide">
-                  Style guide: <span className="font-medium">{report.style_guide.name}</span> (
-                  {report.style_guide.source})
-                </div>
-              )}
-              {comparison ? (
-                <div
-                  className={cn(
-                    'text-xs font-medium',
-                    comparison.meets
-                      ? 'text-emerald-700 dark:text-emerald-400'
-                      : 'text-rose-700 dark:text-rose-400',
-                  )}
-                  data-testid="import-quality-threshold"
-                >
-                  Policy threshold {comparison.threshold} · this source scores {comparison.score} (
-                  {comparison.delta >= 0 ? `+${comparison.delta}` : comparison.delta})
-                </div>
-              ) : (
-                <div className="text-xs text-gray-500 dark:text-gray-400" data-testid="import-quality-threshold">
-                  No policy score threshold applies to this import.
-                </div>
-              )}
             </div>
-          </div>
 
-          <Alert variant={toneAlertVariant} data-testid="import-quality-verdict">
-            <div className="font-medium">
-              {gate.tone === 'block'
-                ? 'Policy blocks this import'
-                : gate.tone === 'error'
-                  ? 'This source cannot be imported'
-                  : gate.tone === 'unscored'
-                    ? 'Quality could not be scored'
-                    : gate.tone === 'warn'
-                      ? 'Import allowed with warnings'
-                      : 'Import allowed'}
-            </div>
-            <div className="text-sm">{gate.reason}</div>
-            {report?.error?.remediation && (
-              <div className="mt-1 text-sm" data-testid="import-quality-remediation">
-                {report.error.remediation} (code {report.error.code})
+            <Alert variant={toneAlertVariant} data-testid="import-quality-verdict">
+              <div className="font-medium">
+                {gate.tone === 'block'
+                  ? 'Policy blocks this import'
+                  : gate.tone === 'error'
+                    ? 'This source cannot be imported'
+                    : gate.tone === 'unscored'
+                      ? 'Quality could not be scored'
+                      : gate.tone === 'warn'
+                        ? 'Import allowed with warnings'
+                        : 'Import allowed'}
+              </div>
+              <div className="text-sm">{gate.reason}</div>
+              {report?.error?.remediation && (
+                <div className="mt-1 text-sm" data-testid="import-quality-remediation">
+                  {report.error.remediation} (code {report.error.code})
+                </div>
+              )}
+            </Alert>
+
+            {gate.tone === 'block' && gate.canOverride && (
+              <div className="space-y-2 rounded-lg border border-amber-300 p-3 dark:border-amber-700">
+                <label
+                  className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                  htmlFor="import-quality-justification"
+                >
+                  <ShieldAlert className="h-4 w-4 text-amber-500" aria-hidden />
+                  Why is this import necessary?
+                </label>
+                <input
+                  id="import-quality-justification"
+                  value={justification}
+                  onChange={(event) => setJustification(event.target.value)}
+                  placeholder="Recorded with the waiver, e.g. vendor spec we do not control"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Importing anyway records a waiver against this report&apos;s fingerprint in your
+                  tenant&apos;s ledger
+                  {report?.policy?.override_roles?.length
+                    ? `, which only these roles may do: ${report.policy.override_roles.join(', ')}.`
+                    : '.'}
+                </p>
+                {waiverError && (
+                  <p
+                    className="text-xs font-medium text-rose-600 dark:text-rose-400"
+                    data-testid="import-quality-waiver-error"
+                    role="alert"
+                  >
+                    {waiverError}
+                  </p>
+                )}
               </div>
             )}
-          </Alert>
+          </div>
 
-          {gate.tone === 'block' && gate.canOverride && (
-            <div className="space-y-2 rounded-lg border border-amber-300 p-3 dark:border-amber-700">
-              <label
-                className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                htmlFor="import-quality-justification"
-              >
-                <ShieldAlert className="h-4 w-4 text-amber-500" aria-hidden />
-                Why is this import necessary?
-              </label>
-              <input
-                id="import-quality-justification"
-                value={justification}
-                onChange={(event) => setJustification(event.target.value)}
-                placeholder="Recorded with the waiver, e.g. vendor spec we do not control"
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Importing anyway records a waiver against this report&apos;s fingerprint in your
-                tenant&apos;s ledger
-                {report?.policy?.override_roles?.length
-                  ? `, which only these roles may do: ${report.policy.override_roles.join(', ')}.`
-                  : '.'}
-              </p>
-              {waiverError && (
-                <p
-                  className="text-xs font-medium text-rose-600 dark:text-rose-400"
-                  data-testid="import-quality-waiver-error"
-                  role="alert"
-                >
-                  {waiverError}
-                </p>
-              )}
-            </div>
-          )}
-
-          <CatalogImportPreviewPanel
-            request={request}
-            rawSourceAvailable={rawSource !== ''}
-            rawLineCount={rawAllLines.length}
-            onSelectSourceLine={setPreviewLine}
-            projectSlug={projectSlug}
-            onSkipCommit={onCancel}
+          <CatalogDetailTabs
+            tabs={qualityTabs}
+            active={activeTab}
+            onSelect={(id) => setActiveTab(id as QualityTabId)}
+            ariaLabel="Pre-flight sections"
+            idPrefix={QUALITY_TABS_ID_PREFIX}
+            className="shrink-0"
           />
 
-          {(findings.length > 0 || rawSource !== '') && (
-            <div className="grid gap-3 lg:grid-cols-2">
-              <div>
-                {findings.length > 0 ? (
-                  <>
-                    <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-                      <span>Ranked findings ({findings.length})</span>
-                      {virtualized && (
-                        <span className="font-normal normal-case text-gray-500 dark:text-gray-400">
-                          windowed
-                        </span>
-                      )}
+          {/* Both panels stay mounted (the inactive one `hidden`), matching the catalog detail
+              shell: the preview's manifest fetch is not re-run every time the user tabs back, and
+              a finding selected on one tab keeps its linked source line on return. */}
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            <section
+              role="tabpanel"
+              id={panelElementId(QUALITY_TABS_ID_PREFIX, 'findings')}
+              aria-labelledby={tabElementId(QUALITY_TABS_ID_PREFIX, 'findings')}
+              tabIndex={0}
+              hidden={activeTab !== 'findings'}
+              data-testid="import-quality-findings-panel"
+              className="space-y-4 focus:outline-none"
+            >
+              {(findings.length > 0 || rawSource !== '') && (
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <div>
+                    {findings.length > 0 ? (
+                      <>
+                        <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+                          <span>Ranked findings ({findings.length})</span>
+                          {virtualized && (
+                            <span className="font-normal normal-case text-gray-500 dark:text-gray-400">
+                              windowed
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          ref={listRef}
+                          onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+                          onKeyDown={handleListKeyDown}
+                          className="h-[380px] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
+                        >
+                          {/* No inter-row margins: the row pitch must equal ROW_HEIGHT exactly
+                              or the windowing spacer arithmetic drifts on every row. */}
+                          <ul role="listbox" aria-label="Ranked lint findings" className="relative">
+                            {rowWindow.paddingTop > 0 && (
+                              <li aria-hidden role="presentation" style={{ height: rowWindow.paddingTop }} />
+                            )}
+                            {findings.slice(rowWindow.startIndex, rowWindow.endIndex).map((finding, offset) => {
+                              const index = rowWindow.startIndex + offset;
+                              return (
+                                <FindingRow
+                                  key={finding.id || `${finding.rule}:${index}`}
+                                  finding={finding}
+                                  line={findingLines[index] ?? null}
+                                  selected={index === selectedIndex}
+                                  setSize={findings.length}
+                                  posInSet={index + 1}
+                                  onSelect={() => selectFinding(index)}
+                                  registerRef={(node) => {
+                                    if (node) rowRefs.current.set(index, node);
+                                    else rowRefs.current.delete(index);
+                                  }}
+                                />
+                              );
+                            })}
+                            {rowWindow.paddingBottom > 0 && (
+                              <li aria-hidden role="presentation" style={{ height: rowWindow.paddingBottom }} />
+                            )}
+                            {pinnedFindingIndex !== null && findings[pinnedFindingIndex] ? (
+                              <FindingRow
+                                key="pinned-finding"
+                                finding={findings[pinnedFindingIndex]}
+                                line={findingLines[pinnedFindingIndex] ?? null}
+                                selected
+                                setSize={findings.length}
+                                posInSet={pinnedFindingIndex + 1}
+                                onSelect={() => selectFinding(pinnedFindingIndex)}
+                                registerRef={(node) => {
+                                  if (node) rowRefs.current.set(pinnedFindingIndex, node);
+                                  else rowRefs.current.delete(pinnedFindingIndex);
+                                }}
+                                pinnedStyle={{
+                                  position: 'absolute',
+                                  top: pinnedFindingIndex * ROW_HEIGHT,
+                                  left: 0,
+                                  right: 0,
+                                }}
+                              />
+                            ) : null}
+                          </ul>
+                        </div>
+                        {findings[selectedIndex]?.remediation && (
+                          <p
+                            className="mt-2 text-xs text-gray-600 dark:text-gray-300"
+                            data-testid="import-quality-finding-remediation"
+                          >
+                            {findings[selectedIndex].remediation}
+                            {findings[selectedIndex].docs_url ? ` · ${findings[selectedIndex].docs_url}` : ''}
+                          </p>
+                        )}
+                      </>
+                    ) : report?.ok ? (
+                      <div
+                        className="flex items-center gap-2 rounded-lg border border-emerald-200 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:text-emerald-200"
+                        data-testid="import-quality-no-findings"
+                      >
+                        <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+                        No lint findings — this source is clean against the resolved style guide.
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div>
+                    <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+                      Source{selectedLine !== null ? ` · line ${selectedLine}` : ''}
                     </div>
                     <div
-                      ref={listRef}
-                      onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
-                      onKeyDown={handleListKeyDown}
-                      className="h-[380px] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
+                      className="h-[380px] overflow-auto rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
+                      data-testid="import-quality-raw-viewer"
                     >
-                      {/* No inter-row margins: the row pitch must equal ROW_HEIGHT exactly
-                          or the windowing spacer arithmetic drifts on every row. */}
-                      <ul role="listbox" aria-label="Ranked lint findings" className="relative">
-                        {rowWindow.paddingTop > 0 && (
-                          <li aria-hidden role="presentation" style={{ height: rowWindow.paddingTop }} />
-                        )}
-                        {findings.slice(rowWindow.startIndex, rowWindow.endIndex).map((finding, offset) => {
-                          const index = rowWindow.startIndex + offset;
-                          return (
-                            <FindingRow
-                              key={finding.id || `${finding.rule}:${index}`}
-                              finding={finding}
-                              line={findingLines[index] ?? null}
-                              selected={index === selectedIndex}
-                              setSize={findings.length}
-                              posInSet={index + 1}
-                              onSelect={() => selectFinding(index)}
-                              registerRef={(node) => {
-                                if (node) rowRefs.current.set(index, node);
-                                else rowRefs.current.delete(index);
-                              }}
-                            />
-                          );
-                        })}
-                        {rowWindow.paddingBottom > 0 && (
-                          <li aria-hidden role="presentation" style={{ height: rowWindow.paddingBottom }} />
-                        )}
-                        {pinnedFindingIndex !== null && findings[pinnedFindingIndex] ? (
-                          <FindingRow
-                            key="pinned-finding"
-                            finding={findings[pinnedFindingIndex]}
-                            line={findingLines[pinnedFindingIndex] ?? null}
-                            selected
-                            setSize={findings.length}
-                            posInSet={pinnedFindingIndex + 1}
-                            onSelect={() => selectFinding(pinnedFindingIndex)}
-                            registerRef={(node) => {
-                              if (node) rowRefs.current.set(pinnedFindingIndex, node);
-                              else rowRefs.current.delete(pinnedFindingIndex);
-                            }}
-                            pinnedStyle={{
-                              position: 'absolute',
-                              top: pinnedFindingIndex * ROW_HEIGHT,
-                              left: 0,
-                              right: 0,
-                            }}
-                          />
-                        ) : null}
-                      </ul>
-                    </div>
-                    {findings[selectedIndex]?.remediation && (
-                      <p
-                        className="mt-2 text-xs text-gray-600 dark:text-gray-300"
-                        data-testid="import-quality-finding-remediation"
-                      >
-                        {findings[selectedIndex].remediation}
-                        {findings[selectedIndex].docs_url ? ` · ${findings[selectedIndex].docs_url}` : ''}
-                      </p>
-                    )}
-                  </>
-                ) : report?.ok ? (
-                  <div
-                    className="flex items-center gap-2 rounded-lg border border-emerald-200 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:text-emerald-200"
-                    data-testid="import-quality-no-findings"
-                  >
-                    <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-                    No lint findings — this source is clean against the resolved style guide.
-                  </div>
-                ) : null}
-              </div>
-
-              <div>
-                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-                  Source{selectedLine !== null ? ` · line ${selectedLine}` : ''}
-                </div>
-                <div
-                  className="h-[380px] overflow-auto rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
-                  data-testid="import-quality-raw-viewer"
-                >
-                  {rawLines.length > 0 ? (
-                    <>
-                      {rawRange.start > 0 && (
-                        <p
-                          className="px-3 py-1 font-mono text-[10px] text-gray-400 dark:text-gray-500"
-                          data-testid="import-quality-raw-clipped-before"
-                        >
-                          … {rawRange.start.toLocaleString()} earlier{' '}
-                          {rawRange.start === 1 ? 'line' : 'lines'}
-                        </p>
-                      )}
-                      <ol className="py-1 font-mono text-[11px] leading-snug">
-                        {rawLines.map((text, index) => {
-                          const lineNumber = rawRange.start + index + 1;
-                          const isTarget = selectedLine === lineNumber;
-                          return (
-                            <li
-                              key={lineNumber}
-                              ref={isTarget ? lineRef : undefined}
-                              data-testid={isTarget ? 'import-quality-raw-line-active' : undefined}
-                              className={cn(
-                                'flex gap-3 px-3',
-                                isTarget
-                                  ? 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-100'
-                                  : 'text-gray-700 dark:text-gray-300',
-                              )}
+                      {rawLines.length > 0 ? (
+                        <>
+                          {rawRange.start > 0 && (
+                            <p
+                              className="px-3 py-1 font-mono text-[10px] text-gray-400 dark:text-gray-500"
+                              data-testid="import-quality-raw-clipped-before"
                             >
-                              <span className="w-8 shrink-0 select-none text-right text-gray-400 tabular-nums">
-                                {lineNumber}
-                              </span>
-                              <span className="whitespace-pre-wrap break-all">{text}</span>
-                            </li>
-                          );
-                        })}
-                      </ol>
-                      {rawRange.end < rawAllLines.length && (
-                        <p
-                          className="px-3 py-1 font-mono text-[10px] text-gray-400 dark:text-gray-500"
-                          data-testid="import-quality-raw-clipped-after"
-                        >
-                          … {(rawAllLines.length - rawRange.end).toLocaleString()} later{' '}
-                          {rawAllLines.length - rawRange.end === 1 ? 'line' : 'lines'}
+                              … {rawRange.start.toLocaleString()} earlier{' '}
+                              {rawRange.start === 1 ? 'line' : 'lines'}
+                            </p>
+                          )}
+                          <ol className="py-1 font-mono text-[11px] leading-snug">
+                            {rawLines.map((text, index) => {
+                              const lineNumber = rawRange.start + index + 1;
+                              const isTarget = selectedLine === lineNumber;
+                              return (
+                                <li
+                                  key={lineNumber}
+                                  ref={isTarget ? lineRef : undefined}
+                                  data-testid={isTarget ? 'import-quality-raw-line-active' : undefined}
+                                  className={cn(
+                                    'flex gap-3 px-3',
+                                    isTarget
+                                      ? 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-100'
+                                      : 'text-gray-700 dark:text-gray-300',
+                                  )}
+                                >
+                                  <span className="w-8 shrink-0 select-none text-right text-gray-400 tabular-nums">
+                                    {lineNumber}
+                                  </span>
+                                  <span className="whitespace-pre-wrap break-all">{text}</span>
+                                </li>
+                              );
+                            })}
+                          </ol>
+                          {rawRange.end < rawAllLines.length && (
+                            <p
+                              className="px-3 py-1 font-mono text-[10px] text-gray-400 dark:text-gray-500"
+                              data-testid="import-quality-raw-clipped-after"
+                            >
+                              … {(rawAllLines.length - rawRange.end).toLocaleString()} later{' '}
+                              {rawAllLines.length - rawRange.end === 1 ? 'line' : 'lines'}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="p-3 text-xs text-gray-500 dark:text-gray-400">
+                          The raw source is not available for this candidate (archives are read
+                          server-side), so findings link by path only.
                         </p>
                       )}
-                    </>
-                  ) : (
-                    <p className="p-3 text-xs text-gray-500 dark:text-gray-400">
-                      The raw source is not available for this candidate (archives are read
-                      server-side), so findings link by path only.
-                    </p>
-                  )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              )}
 
-          {report?.ok && findings.length === 0 && rawSource === '' && (
-            <div
-              className="flex items-center gap-2 rounded-lg border border-emerald-200 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:text-emerald-200"
-              data-testid="import-quality-no-findings"
+              {report?.ok && findings.length === 0 && rawSource === '' && (
+                <div
+                  className="flex items-center gap-2 rounded-lg border border-emerald-200 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:text-emerald-200"
+                  data-testid="import-quality-no-findings"
+                >
+                  <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+                  No lint findings — this source is clean against the resolved style guide.
+                </div>
+              )}
+            </section>
+
+            <section
+              role="tabpanel"
+              id={panelElementId(QUALITY_TABS_ID_PREFIX, 'preview')}
+              aria-labelledby={tabElementId(QUALITY_TABS_ID_PREFIX, 'preview')}
+              tabIndex={0}
+              hidden={activeTab !== 'preview'}
+              data-testid="import-quality-preview-panel"
+              className="focus:outline-none"
             >
-              <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-              No lint findings — this source is clean against the resolved style guide.
-            </div>
-          )}
+              <CatalogImportPreviewPanel
+                request={request}
+                rawSourceAvailable={rawSource !== ''}
+                rawLineCount={rawAllLines.length}
+                onSelectSourceLine={setPreviewLine}
+                projectSlug={projectSlug}
+                onSkipCommit={onCancel}
+              />
+            </section>
+          </div>
         </div>
       )}
 

@@ -27,9 +27,10 @@ export const CATALOG_VIEW_MODES = ['cards', 'table'] as const;
 export type CatalogViewMode = (typeof CATALOG_VIEW_MODES)[number];
 
 /**
- * The sort columns the Catalog toolbar actually exposes (MFI-23.3). The underlying sorter
- * ({@link CatalogDashboardSortColumn}) understands more columns, but only these six are selectable
- * here, so a persisted value outside this set is treated as invalid and reset to the default.
+ * The sort columns the Catalog screen can actually select: the toolbar's six (MFI-23.3) plus the
+ * ones reachable only by clicking a table column header — protocol, source, and status. The
+ * underlying sorter ({@link CatalogDashboardSortColumn}) understands more columns still, so a
+ * persisted value outside this set is treated as invalid and reset to the default.
  */
 export const CATALOG_SELECTABLE_SORT_COLUMNS = [
   'name',
@@ -38,6 +39,9 @@ export const CATALOG_SELECTABLE_SORT_COLUMNS = [
   'quality',
   'grade',
   'format',
+  'protocol',
+  'source',
+  'status',
 ] as const satisfies readonly CatalogDashboardSortColumn[];
 
 export const CATALOG_SORT_DIRECTIONS = ['asc', 'desc'] as const satisfies readonly CatalogDashboardSortDirection[];

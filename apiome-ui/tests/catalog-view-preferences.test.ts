@@ -53,7 +53,7 @@ describe('coerceCatalogViewPreferences', () => {
     const coerced = coerceCatalogViewPreferences({
       viewMode: 'holographic', // invalid → default 'cards'
       groupMode: 'none', // valid
-      sortColumn: 'status', // not a selectable column → default 'name'
+      sortColumn: 'creator', // sorter knows it, but the screen cannot select it → default 'name'
       sortDirection: 'sideways', // invalid → default 'asc'
       showDeleted: 'yes', // wrong type → default false
     });
@@ -64,6 +64,14 @@ describe('coerceCatalogViewPreferences', () => {
       sortDirection: 'asc',
       showDeleted: false,
     });
+  });
+
+  it('keeps the header-only sort columns, which the table headers can select', () => {
+    // Protocol / Source / Status have no toolbar chip but are clickable column headers, so a
+    // choice made there has to survive a reload like any other.
+    for (const sortColumn of ['protocol', 'source', 'status'] as const) {
+      expect(coerceCatalogViewPreferences({ ...NON_DEFAULT, sortColumn }).sortColumn).toBe(sortColumn);
+    }
   });
 
   it('preserves a false showDeleted rather than treating it as missing', () => {

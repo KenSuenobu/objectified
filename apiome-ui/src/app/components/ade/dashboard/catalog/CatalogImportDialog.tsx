@@ -10,6 +10,7 @@ import {
   GitBranch,
   Link2,
   Loader2,
+  SlidersHorizontal,
   Upload,
   X,
 } from 'lucide-react';
@@ -29,6 +30,8 @@ import {
   type CatalogImportRoutingDecision,
 } from '../../../../utils/catalog-import-formats';
 import { resolveCatalogProtocol, resolveCatalogFormat } from '../../../../utils/catalog-format-registry';
+import { monacoLanguageForCatalogFormat } from '../../../../utils/catalog-source-language';
+import { ReadOnlyCodeViewer } from '../export/ReadOnlyCodeViewer';
 import { useCatalogImportAvailability } from './useCatalogImportAvailability';
 import { CatalogImportQualityStep } from './CatalogImportQualityStep';
 import { RecentAsyncJobsPanel } from '../asyncJobs/RecentAsyncJobsPanel';
@@ -99,8 +102,6 @@ function bytesToBase64(bytes: Uint8Array): string {
   }
   return btoa(binary);
 }
-
-const PREVIEW_LIMIT = 4000;
 
 function toBase64(text: string): string {
   return btoa(unescape(encodeURIComponent(text)));
@@ -193,6 +194,13 @@ export function CatalogImportDialog({
     const id = paradigmForFormat(effectiveFormat);
     return id ? resolveCatalogProtocol(id)?.label ?? null : null;
   }, [effectiveFormat]);
+  // Monaco language for the detect step's source preview: derived from the format the routing will
+  // actually use (override included) and refined by the bytes for the JSON-or-YAML formats, so an
+  // override re-highlights the preview instead of leaving it on the auto-detected grammar.
+  const previewLanguage = useMemo(
+    () => monacoLanguageForCatalogFormat(effectiveFormat, content),
+    [effectiveFormat, content],
+  );
   const formatChoices = useMemo(() => {
     if (!detection?.ambiguous) return [] as DetectionCandidate[];
     const cluster = detection.ambiguous_candidates?.length
@@ -227,6 +235,10 @@ export function CatalogImportDialog({
   const canStoreCatalog = routing.destination === 'catalog' && adapter !== null && !adapterUnavailable;
   const canContinueFromDetect =
     routing.destination === 'catalog' || routing.destination === 'json-schema-choice';
+  // Whether the options step has anything for the user to decide. Only the JSON Schema fork does
+  // (Catalog vs Types/Projects); catalog imports are stored verbatim with no knobs, so the step
+  // renders the "no options" card instead of an empty panel.
+  const hasImportOptions = routing.destination === 'json-schema-choice';
   // The importer the commit would run, and therefore the one the pre-flight must score. Null when
   // the options step leads somewhere that never writes a catalog item (the JSON Schema → Types
   // hand-off), in which case there is nothing to pre-flight.
@@ -521,8 +533,10 @@ export function CatalogImportDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => (!o ? handleClose() : undefined)}>
-      <DialogContent className="flex max-h-[92vh] max-w-4xl flex-col">
-        <DialogHeader>
+      {/* Fixed 90vh shell: the header/rail/footer are pinned and each step body owns the space
+          between them, so the detect step's editor can fill it instead of the dialog growing. */}
+      <DialogContent className="flex h-[90vh] max-h-[90vh] max-w-5xl flex-col overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Import to catalog</DialogTitle>
           <DialogDescription>
             Start with File Upload, URL Import, or Clipboard paste. Catalog imports are stored in
@@ -530,7 +544,7 @@ export function CatalogImportDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-3 grid grid-cols-5 gap-2 text-xs">
+        <div className="mt-3 grid shrink-0 grid-cols-5 gap-2 text-xs">
           {STEP_LABELS.map((label, idx) => (
             <div
               key={label}
@@ -546,13 +560,13 @@ export function CatalogImportDialog({
         </div>
 
         {error && (
-          <Alert variant="error" className="mt-3">
+          <Alert variant="error" className="mt-3 shrink-0">
             {error}
           </Alert>
         )}
 
         {step === 'source' && (
-          <div className="mt-4 grid gap-4 lg:grid-cols-[1.35fr_.9fr]">
+          <div className="mt-4 grid min-h-0 flex-1 gap-4 overflow-y-auto lg:grid-cols-[1.35fr_.9fr]">
             <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
                 <Upload className="h-4 w-4 text-indigo-500" aria-hidden />
@@ -696,9 +710,12 @@ export function CatalogImportDialog({
           </div>
         )}
 
+        {/* Detect & route: a column of pinned detection facts above a flex-filling source editor.
+            `overflow-y-auto` is the safety valve for short viewports — the editor stops at its
+            240px floor and the column scrolls rather than spilling out of the 90vh dialog. */}
         {step === 'detect' && (
-          <div className="mt-4 space-y-4">
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+          <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+            <div className="flex shrink-0 items-center justify-between gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
               <div className="flex min-w-0 items-center gap-2">
                 <FileCode className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
                 <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{fileName}</span>
@@ -716,7 +733,7 @@ export function CatalogImportDialog({
               </div>
             </div>
 
-            <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+            <div className="shrink-0 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
               <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {formatOverride && formatOverride !== detectedFormat
                   ? `Import format: ${formatChoiceLabel(effectiveFormat ?? '')}`
@@ -737,7 +754,7 @@ export function CatalogImportDialog({
             </div>
 
             {formatChoices.length > 1 && (
-              <div className="space-y-2" data-testid="format-override-select">
+              <div className="shrink-0 space-y-2" data-testid="format-override-select">
                 <label
                   className="text-sm font-medium text-gray-900 dark:text-gray-100"
                   htmlFor="catalog-import-format-override"
@@ -764,7 +781,7 @@ export function CatalogImportDialog({
             )}
 
             {ambiguousCandidates.length > 0 && (
-              <Alert variant="warning" data-testid="detect-ambiguous">
+              <Alert variant="warning" className="shrink-0" data-testid="detect-ambiguous">
                 <div className="font-medium">
                   Ambiguous source — using {formatChoiceLabel(effectiveFormat ?? 'the selected format')}
                 </div>
@@ -778,7 +795,7 @@ export function CatalogImportDialog({
               </Alert>
             )}
 
-            <div className={`rounded-lg border p-4 ${routingTone(routing.destination)}`}>
+            <div className={`shrink-0 rounded-lg border p-4 ${routingTone(routing.destination)}`}>
               <div className="flex items-start gap-2">
                 {routing.destination === 'not-importable' ? (
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
@@ -797,19 +814,42 @@ export function CatalogImportDialog({
               </div>
             </div>
 
-            <div className="max-h-56 overflow-auto rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-              <pre className="whitespace-pre-wrap p-3 font-mono text-[11px] leading-snug text-gray-700 dark:text-gray-300">
-                {content.slice(0, PREVIEW_LIMIT)}
-                {content.length > PREVIEW_LIMIT ? '\n…' : ''}
-              </pre>
+            {/* The imported bytes, syntax-highlighted read-only in Monaco through the shared
+                {@link ReadOnlyCodeViewer} (MFX-43.1) — the same viewer the catalog detail's
+                Source & Code tab and the export surfaces use, so highlighting, theming and the
+                offline `<pre>` fallback are all inherited rather than re-derived. The language is
+                the detected/overridden format mapped through `monacoLanguageForCatalogFormat`, so
+                switching the format override re-highlights the preview. Archive uploads carry no
+                text (only base64 bytes), so they get a note instead of an empty editor. */}
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+              {content ? (
+                <ReadOnlyCodeViewer
+                  value={content}
+                  language={previewLanguage}
+                  height="100%"
+                  wordWrap="off"
+                  className="h-full"
+                  editorTestId="catalog-import-preview-editor"
+                  fallbackTestId="catalog-import-preview-fallback"
+                />
+              ) : (
+                <div
+                  data-testid="catalog-import-preview-empty"
+                  className="flex h-full items-center justify-center p-6 text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  {documentBase64
+                    ? 'Archive uploads have no single text document to preview. Detection ran over the archive contents.'
+                    : 'No source content to preview.'}
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {step === 'options' && (
-          <div className="mt-4 space-y-4">
+          <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
             {routing.destination === 'catalog' && (
-              <Alert variant="info">
+              <Alert variant="info" className="shrink-0">
                 <div className="font-medium">Store in catalog</div>
                 <div className="text-sm">
                   This source will be kept verbatim as {adapter?.label}. It will not create a
@@ -819,7 +859,7 @@ export function CatalogImportDialog({
               </Alert>
             )}
             {routing.destination === 'json-schema-choice' && (
-              <div className="space-y-3">
+              <div className="shrink-0 space-y-3">
                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   Choose where this JSON Schema should go.
                 </div>
@@ -852,6 +892,27 @@ export function CatalogImportDialog({
                     </span>
                   </span>
                 </label>
+              </div>
+            )}
+
+            {/* JSON Schema is the only format that asks the user anything here (Catalog vs
+                Types/Projects). Every other route reaches this step with nothing to configure, so
+                the otherwise-empty panel says so rather than reading as a rendering failure. */}
+            {!hasImportOptions && (
+              <div className="flex flex-1 items-center justify-center">
+                <div
+                  data-testid="catalog-import-no-options"
+                  className="max-w-lg rounded-xl border border-dashed border-gray-300 bg-gray-50 p-10 text-center dark:border-gray-700 dark:bg-gray-900"
+                >
+                  <SlidersHorizontal className="mx-auto h-8 w-8 text-gray-400" aria-hidden />
+                  <h3 className="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
+                    No additional options
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    No additional options are available for this data type. Continue to the quality
+                    pre-flight — nothing is written to the catalog until you confirm it there.
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -897,13 +958,13 @@ export function CatalogImportDialog({
 
         {/* IXH-6.3: paginated recent import jobs on the source step (bounded list). */}
         {step === 'source' && (
-          <RecentAsyncJobsPanel kind="import" limit={5} className="mt-4" />
+          <RecentAsyncJobsPanel kind="import" limit={5} className="mt-4 shrink-0" />
         )}
 
         {/* The quality step owns its own footer so all three of its exits — Cancel, Import anyway,
             Import — sit on one row with the gate that governs them (IXH-2.2). */}
         {step !== 'quality' && (
-          <div className="mt-4 flex justify-between gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
+          <div className="mt-4 flex shrink-0 justify-between gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
             <Button variant="outline" onClick={handleClose} disabled={state === 'storing'}>
               {state === 'done' ? 'Close' : 'Cancel'}
             </Button>

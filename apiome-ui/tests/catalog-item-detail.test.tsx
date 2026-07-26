@@ -585,6 +585,128 @@ describe('CatalogItemDetailClient', () => {
     expect(statusType).not.toHaveTextContent(/\*/);
   });
 
+  // ── Overview observability + provenance pipeline enrichments ────────────────────────────────
+
+  it('renders the API-surface tiles with their share of the captured counts and a composition bar', async () => {
+    mockFetchItem(RICH_ITEM);
+    render(<CatalogItemDetailClient itemId={RICH_ITEM.id} />);
+
+    const summary = await screen.findByTestId('catalog-detail-summary');
+    // 2 + 7 + 12 + 0 = 21 normalized entities, with per-kind shares on the tiles.
+    expect(summary).toHaveTextContent('21 normalized entities');
+    const tiles = screen.getAllByTestId('catalog-detail-surface-tile');
+    expect(tiles).toHaveLength(4);
+    expect(tiles[0]).toHaveTextContent('Services');
+    expect(tiles[0]).toHaveTextContent('10% of surface');
+    expect(tiles[1]).toHaveTextContent('33% of surface');
+    expect(tiles[2]).toHaveTextContent('57% of surface');
+    // Channels is captured but zero, so its share is 0%.
+    expect(tiles[3]).toHaveTextContent('0% of surface');
+    // The stacked composition bar renders one segment per non-zero count.
+    expect(screen.getByTestId('catalog-detail-surface-bar').querySelectorAll('[title]')).toHaveLength(3);
+  });
+
+  it('derives model observability (documentation coverage + entity-kind mix) from the parsed model', async () => {
+    mockFetchItem(PARSED_ITEM);
+    render(<CatalogItemDetailClient itemId={PARSED_ITEM.id} />);
+
+    const insights = await screen.findByTestId('catalog-detail-insights');
+    expect(insights).toHaveTextContent('3 entities');
+    expect(insights).toHaveTextContent('3 fields');
+    // 2 of 3 fields carry a description ('Lifecycle state', 'Order total') → 67%.
+    const docs = screen.getByTestId('catalog-detail-docs-coverage');
+    expect(docs).toHaveTextContent('2');
+    expect(docs).toHaveTextContent('67% carry a description');
+    // 2 of 3 fields are required (id, total) → 67%.
+    expect(screen.getByTestId('catalog-detail-required-coverage')).toHaveTextContent('67% are required');
+    // The kind mix chips tally the tags with their share.
+    const mix = screen.getByTestId('catalog-detail-kind-mix');
+    expect(mix).toHaveTextContent('QUERY');
+    expect(mix).toHaveTextContent('MUTATION');
+    expect(mix).toHaveTextContent('OBJECT');
+    expect(mix).toHaveTextContent('1 · 33%');
+  });
+
+  it('omits the model-observability panel when there is no parsed model', async () => {
+    mockFetchItem(RICH_ITEM);
+    render(<CatalogItemDetailClient itemId={RICH_ITEM.id} />);
+
+    await screen.findByTestId('catalog-detail-pane-overview');
+    expect(screen.queryByTestId('catalog-detail-insights')).not.toBeInTheDocument();
+  });
+
+  it('shows the quality snapshot with the captured score and jumps to the Lint tab', async () => {
+    mockFetchItem(RICH_ITEM);
+    render(<CatalogItemDetailClient itemId={RICH_ITEM.id} />);
+
+    const snapshot = await screen.findByTestId('catalog-detail-quality-snapshot');
+    expect(snapshot).toHaveTextContent('82');
+    expect(snapshot).toHaveTextContent('/100');
+    // The grade chip carries the captured letter grade.
+    expect(snapshot.querySelector('[data-testid="grade-chip"]')).toHaveTextContent('B');
+
+    fireEvent.click(screen.getByTestId('catalog-detail-open-lint'));
+    expect(screen.getByTestId('catalog-detail-tab-lint')).toHaveAttribute('aria-selected', 'true');
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('shows the source snapshot with intake facts and jumps to the Source tab', async () => {
+    mockFetchItem(RICH_ITEM);
+    render(<CatalogItemDetailClient itemId={RICH_ITEM.id} />);
+
+    const snapshot = await screen.findByTestId('catalog-detail-source-snapshot');
+    expect(snapshot).toHaveTextContent('acme.proto');
+    expect(snapshot).toHaveTextContent('File upload');
+    expect(snapshot).toHaveTextContent('Content captured');
+    expect(snapshot).toHaveTextContent('Downloadable');
+
+    fireEvent.click(screen.getByTestId('catalog-detail-open-source'));
+    expect(screen.getByTestId('catalog-detail-tab-source')).toHaveAttribute('aria-selected', 'true');
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('renders provenance as a four-stage pipeline carrying the import facts', async () => {
+    mockFetchItem(RICH_ITEM);
+    render(<CatalogItemDetailClient itemId={RICH_ITEM.id} />);
+
+    const provenance = await screen.findByTestId('catalog-detail-provenance');
+    // The four stages, in journey order.
+    expect(screen.getByTestId('catalog-detail-stage-intake')).toHaveTextContent('acme.proto');
+    expect(screen.getByTestId('catalog-detail-stage-intake')).toHaveTextContent('Content captured');
+    expect(screen.getByTestId('catalog-detail-stage-detection')).toHaveTextContent('Protobuf');
+    expect(screen.getByTestId('catalog-detail-stage-normalization')).toHaveTextContent('protoc');
+    expect(screen.getByTestId('catalog-detail-stage-normalization')).toHaveTextContent('25.1');
+    const record = screen.getByTestId('catalog-detail-stage-record');
+    expect(record).toHaveTextContent('job-abc-123');
+    expect(record).toHaveTextContent('Dana Import');
+    // Timestamps carry a coarse relative phrase alongside the absolute instant.
+    expect(record).toHaveTextContent(/ago/);
+    // Everything stays inside the provenance panel.
+    expect(provenance).toContainElement(record);
+  });
+
+  it('degrades each pipeline stage gracefully when nothing was recorded', async () => {
+    mockFetchItem({
+      ...RICH_ITEM,
+      sourceFormat: null,
+      protocol: null,
+      formatMetadata: null,
+      toolVersions: null,
+      source: { kind: null, label: null, uri: null, hasContent: false, downloadable: false },
+    });
+    render(<CatalogItemDetailClient itemId={RICH_ITEM.id} />);
+
+    await screen.findByTestId('catalog-detail-provenance');
+    expect(screen.getByTestId('catalog-detail-stage-intake')).toHaveTextContent('Not recorded');
+    expect(screen.getByTestId('catalog-detail-stage-detection')).toHaveTextContent(
+      /no detected format/i,
+    );
+    expect(screen.getByTestId('catalog-detail-stage-normalization')).toHaveTextContent(
+      /not recorded/i,
+    );
+    expect(screen.getByTestId('catalog-detail-stage-record')).toHaveTextContent('Not recorded');
+  });
+
   it('shows a graceful "no parsed model" note when the model is absent', async () => {
     // RICH_ITEM has no `parsed` field, so the model degrades to empty.
     mockFetchItem(RICH_ITEM);

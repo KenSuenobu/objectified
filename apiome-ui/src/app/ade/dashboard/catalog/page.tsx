@@ -26,6 +26,7 @@ import {
   useCallback,
   useRef,
   type Dispatch,
+  type ReactNode,
   type SetStateAction,
 } from 'react';
 import {
@@ -114,6 +115,7 @@ import {
   dashboardTrHoverClass,
 } from '@/app/components/ade/dashboard/dashboardScreenClasses';
 import {
+  nextCatalogDashboardSort,
   sortCatalogDashboardRows,
   type CatalogDashboardSortColumn,
   type CatalogDashboardSortDirection,
@@ -208,6 +210,83 @@ const CATALOG_SORT_OPTIONS: ReadonlyArray<{ column: CatalogDashboardSortColumn; 
   { column: 'grade', label: 'Grade' },
   { column: 'format', label: 'Format' },
 ];
+
+/**
+ * Display label per sortable column — the toolbar's six plus the ones only the table headers offer
+ * (Protocol / Source / Status). Keeps the "Sorted by …" summary honest whichever control was used.
+ */
+const CATALOG_SORT_COLUMN_LABELS: Readonly<Record<CatalogDashboardSortColumn, string>> = {
+  name: 'Artifact',
+  description: 'Description',
+  quality: 'Quality',
+  grade: 'Grade',
+  format: 'Format',
+  protocol: 'Protocol',
+  source: 'Source',
+  status: 'Status',
+  creator: 'Creator',
+  created: 'Created',
+  updated: 'Updated',
+};
+
+/**
+ * A clickable table column header (the Projects dashboard's `ProjectsSortTh`, cloned for the
+ * catalog's columns). Clicking sorts by the column; clicking the active column flips the direction.
+ * The `<th>` carries `aria-sort` so assistive tech reads the state, and the arrow glyph shows the
+ * direction — an idle column keeps a dimmed both-ways arrow so it reads as *sortable*, not sorted.
+ */
+function CatalogSortTh({
+  column,
+  sortColumn,
+  sortDirection,
+  onSortClick,
+  className,
+  testId,
+  ariaLabel,
+  align = 'left',
+  children,
+}: {
+  column: CatalogDashboardSortColumn;
+  sortColumn: CatalogDashboardSortColumn;
+  sortDirection: CatalogDashboardSortDirection;
+  onSortClick: (c: CatalogDashboardSortColumn) => void;
+  className: string;
+  testId: string;
+  ariaLabel: string;
+  align?: 'left' | 'right';
+  children: ReactNode;
+}) {
+  const active = sortColumn === column;
+  return (
+    <th
+      scope="col"
+      className={className}
+      aria-sort={active ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+    >
+      <button
+        type="button"
+        className={cn(
+          'inline-flex w-full max-w-full items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium uppercase tracking-wider text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white',
+          align === 'right' ? 'justify-end text-right' : 'text-left'
+        )}
+        onClick={() => onSortClick(column)}
+        data-testid={testId}
+        aria-label={ariaLabel}
+      >
+        <span className="inline-flex min-w-0 items-center gap-1.5 truncate">{children}</span>
+        {active ? (
+          sortDirection === 'asc' ? (
+            <ArrowUp className="h-3.5 w-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
+          ) : (
+            <ArrowDown className="h-3.5 w-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
+          )
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" aria-hidden />
+        )}
+      </button>
+    </th>
+  );
+}
 
 /** The two grouping modes the card view offers (MFI-24.2), mirroring the sort control. The
  * {@link CatalogGroupMode} type now lives with the persisted view preferences (MFI-28.4). */
@@ -626,20 +705,28 @@ const Catalog = () => {
 
   const sortSummaryLabel = useMemo(() => {
     const arrow = sortDirection === 'asc' ? '↑' : '↓';
-    const opt = CATALOG_SORT_OPTIONS.find((o) => o.column === sortColumn);
-    return `${opt ? opt.label.toLowerCase() : 'sorted'} ${arrow}`;
+    // Every sortable column has a label, including the header-only ones (protocol / source /
+    // status), so clicking a column header never degrades the summary to a bare "sorted".
+    return `${CATALOG_SORT_COLUMN_LABELS[sortColumn].toLowerCase()} ${arrow}`;
   }, [sortColumn, sortDirection]);
 
-  const handleSortClick = useCallback((column: CatalogDashboardSortColumn) => {
-    setSortColumn((prevCol) => {
-      if (prevCol === column) {
-        setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
-        return prevCol;
-      }
-      setSortDirection('asc');
-      return column;
-    });
-  }, []);
+  /**
+   * Sort by `column`; re-selecting the active column reverses the direction.
+   *
+   * The next state is computed by the pure {@link nextCatalogDashboardSort} and then written with
+   * two plain setters. It must never go back to calling `setSortDirection` from inside a
+   * `setSortColumn` updater: updaters have to be pure, React invokes them twice under StrictMode
+   * (and the React Compiler may re-run them), so the nested flip was queued twice — asc → desc →
+   * asc — and the direction never changed however often a header was clicked.
+   */
+  const handleSortClick = useCallback(
+    (column: CatalogDashboardSortColumn) => {
+      const next = nextCatalogDashboardSort({ column: sortColumn, direction: sortDirection }, column);
+      setSortColumn(next.column);
+      setSortDirection(next.direction);
+    },
+    [sortColumn, sortDirection],
+  );
 
   const loadCatalog = useCallback(async () => {
     if (!currentTenantId) {
@@ -1233,17 +1320,100 @@ const Catalog = () => {
                     <table className="min-w-full">
                       <thead className={dashboardTableTheadClass}>
                         {/* 8 mockup columns in order (MFI-24.4): Artifact / Format / Protocol /
-                            Source / Quality / Grade / Status / Updated, then the actions column. */}
+                            Source / Quality / Grade / Status / Updated, then the actions column.
+                            Every data column is a sort control: click to sort, click again to
+                            reverse — the same `handleSortClick` the toolbar chips drive, so the two
+                            controls stay in lockstep and the choice persists either way. */}
                         <tr>
-                          <th scope="col" className={`${dashboardThClass} w-72`}>Artifact</th>
-                          <th scope="col" className={`${dashboardThClass} w-44`}>Format</th>
-                          <th scope="col" className={`${dashboardThClass} w-40`}>Protocol</th>
-                          <th scope="col" className={`${dashboardThClass} w-44`}>Source</th>
-                          <th scope="col" className={`${dashboardThClass} w-28`}>Quality</th>
-                          <th scope="col" className={`${dashboardThClass} w-24`}>Grade</th>
-                          <th scope="col" className={`${dashboardThClass} w-40`}>Status</th>
-                          <th scope="col" className={`${dashboardThClass} w-40`}>Updated</th>
-                          <th scope="col" className={`${dashboardThRightClass} w-24`}>
+                          <CatalogSortTh
+                            column="name"
+                            sortColumn={sortColumn}
+                            sortDirection={sortDirection}
+                            onSortClick={handleSortClick}
+                            className={`${dashboardThClass} w-72`}
+                            testId="catalog-col-sort-name"
+                            ariaLabel="Sort by artifact name"
+                          >
+                            Artifact
+                          </CatalogSortTh>
+                          <CatalogSortTh
+                            column="format"
+                            sortColumn={sortColumn}
+                            sortDirection={sortDirection}
+                            onSortClick={handleSortClick}
+                            className={`${dashboardThClass} w-44`}
+                            testId="catalog-col-sort-format"
+                            ariaLabel="Sort by format"
+                          >
+                            Format
+                          </CatalogSortTh>
+                          <CatalogSortTh
+                            column="protocol"
+                            sortColumn={sortColumn}
+                            sortDirection={sortDirection}
+                            onSortClick={handleSortClick}
+                            className={`${dashboardThClass} w-40`}
+                            testId="catalog-col-sort-protocol"
+                            ariaLabel="Sort by protocol"
+                          >
+                            Protocol
+                          </CatalogSortTh>
+                          <CatalogSortTh
+                            column="source"
+                            sortColumn={sortColumn}
+                            sortDirection={sortDirection}
+                            onSortClick={handleSortClick}
+                            className={`${dashboardThClass} w-44`}
+                            testId="catalog-col-sort-source"
+                            ariaLabel="Sort by source material"
+                          >
+                            Source
+                          </CatalogSortTh>
+                          <CatalogSortTh
+                            column="quality"
+                            sortColumn={sortColumn}
+                            sortDirection={sortDirection}
+                            onSortClick={handleSortClick}
+                            className={`${dashboardThClass} w-28`}
+                            testId="catalog-col-sort-quality"
+                            ariaLabel="Sort by quality score"
+                          >
+                            Quality
+                          </CatalogSortTh>
+                          <CatalogSortTh
+                            column="grade"
+                            sortColumn={sortColumn}
+                            sortDirection={sortDirection}
+                            onSortClick={handleSortClick}
+                            className={`${dashboardThClass} w-24`}
+                            testId="catalog-col-sort-grade"
+                            ariaLabel="Sort by lint grade"
+                          >
+                            Grade
+                          </CatalogSortTh>
+                          <CatalogSortTh
+                            column="status"
+                            sortColumn={sortColumn}
+                            sortDirection={sortDirection}
+                            onSortClick={handleSortClick}
+                            className={`${dashboardThClass} w-40`}
+                            testId="catalog-col-sort-status"
+                            ariaLabel="Sort by status"
+                          >
+                            Status
+                          </CatalogSortTh>
+                          <CatalogSortTh
+                            column="updated"
+                            sortColumn={sortColumn}
+                            sortDirection={sortDirection}
+                            onSortClick={handleSortClick}
+                            className={`${dashboardThClass} w-40`}
+                            testId="catalog-col-sort-updated"
+                            ariaLabel="Sort by last updated date"
+                          >
+                            Updated
+                          </CatalogSortTh>
+                          <th scope="col" className={`${dashboardThRightClass} w-24`} aria-sort="none">
                             <span className="sr-only">Actions</span>
                           </th>
                         </tr>

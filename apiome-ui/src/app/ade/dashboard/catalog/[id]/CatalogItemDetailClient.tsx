@@ -31,11 +31,26 @@ import { parseCompatibilitySourceQuery } from '@lib/compatibility-source-link';
 import {
   ArrowLeft,
   ArrowLeftRight,
+  ArrowRight,
+  Braces,
+  CalendarClock,
   CheckCircle2,
+  ClipboardPaste,
   Code,
+  Database,
+  Download,
   FileOutput,
+  FileText,
+  Globe,
   Info,
+  Link2,
+  Radar,
+  Radio,
+  ScanSearch,
+  Server,
+  User,
   Wrench,
+  Zap,
 } from 'lucide-react';
 import { cn } from '@lib/utils';
 import { catalogOrbScores } from '@/app/utils/catalog-card-presentation';
@@ -77,8 +92,18 @@ import {
 import {
   CatalogParsedGroups,
   deriveParsedSummaryNote,
+  parsedTagToneClass,
   type CatalogParsedGroup,
 } from '@/app/components/ade/dashboard/catalog/CatalogParsedModel';
+import {
+  deriveParsedFieldStats,
+  deriveSurfaceComposition,
+  deriveTagDistribution,
+  formatRelativeTimestamp,
+  SURFACE_KEYS,
+  type SurfaceKey,
+} from '@/app/utils/catalog-detail-insights';
+import { GradeChip } from '@/app/components/ui/catalog/GradeChip';
 import {
   catalogEntityAnchorId,
   catalogQualityOpensServerLintReport,
@@ -186,28 +211,230 @@ function firstString(bag: Record<string, unknown> | null | undefined, keys: stri
   return null;
 }
 
-/** A labelled metric tile in the normalized-summary grid. */
-function SummaryCard({ label, value }: { label: string; value: number | null | undefined }) {
+/**
+ * Per-kind presentation for the normalized-summary tiles and composition bar. The tones mirror the
+ * parsed-tag palette (`CatalogParsedModel`): services emerald, operations indigo, types sky,
+ * channels violet — so the Overview's counts, bar, and entity chips all speak one color language.
+ */
+const SURFACE_META: Record<
+  SurfaceKey,
+  { label: string; Icon: typeof Server; iconClass: string; barClass: string }
+> = {
+  services: {
+    label: 'Services',
+    Icon: Server,
+    iconClass: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400',
+    barClass: 'bg-emerald-500',
+  },
+  operations: {
+    label: 'Operations',
+    Icon: Zap,
+    iconClass: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400',
+    barClass: 'bg-indigo-500',
+  },
+  types: {
+    label: 'Types',
+    Icon: Braces,
+    iconClass: 'bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400',
+    barClass: 'bg-sky-500',
+  },
+  channels: {
+    label: 'Channels',
+    Icon: Radio,
+    iconClass: 'bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400',
+    barClass: 'bg-violet-500',
+  },
+};
+
+/** An icon-badged metric tile in the API-surface grid, with its share of the captured counts. */
+function SurfaceTile({
+  surfaceKey,
+  value,
+  percent,
+}: {
+  surfaceKey: SurfaceKey;
+  value: number | null | undefined;
+  /** Whole-percent share of the summed captured counts; null when unknowable. */
+  percent: number | null;
+}) {
+  const meta = SURFACE_META[surfaceKey];
+  const captured = typeof value === 'number';
   return (
-    <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-      <span className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-        {label}
+    <div
+      data-testid="catalog-detail-surface-tile"
+      className="flex flex-col rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-indigo-800"
+    >
+      <div className="flex items-center gap-2">
+        <span
+          className={cn('inline-flex h-7 w-7 items-center justify-center rounded-lg', meta.iconClass)}
+          aria-hidden
+        >
+          <meta.Icon className="h-4 w-4" />
+        </span>
+        <span className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          {meta.label}
+        </span>
+      </div>
+      <span className="mt-2 font-mono text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
+        {captured ? value : '—'}
       </span>
-      <span className="mt-1 font-mono text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
-        {typeof value === 'number' ? value : '—'}
+      <span className="mt-0.5 text-[11px] text-gray-400 dark:text-gray-500">
+        {captured
+          ? percent !== null
+            ? `${percent}% of surface`
+            : 'None captured'
+          : 'Not captured'}
       </span>
     </div>
   );
 }
 
-/** A labelled key/value row used inside the provenance panel. */
-function ProvenanceRow({ label, children }: { label: string; children: React.ReactNode }) {
+/** A labelled coverage meter (count/total + tinted progress bar) in the observability panel. */
+function CoverageMeter({
+  label,
+  count,
+  total,
+  percent,
+  barClass,
+  caption,
+  testId,
+}: {
+  label: string;
+  count: number;
+  total: number;
+  percent: number | null;
+  barClass: string;
+  caption: string;
+  testId: string;
+}) {
   return (
-    <div className="flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:gap-4">
-      <span className="w-40 shrink-0 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-        {label}
+    <div
+      data-testid={testId}
+      className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+    >
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          {label}
+        </span>
+        <span className="font-mono text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
+          {count}
+          <span className="text-gray-400 dark:text-gray-500">/{total}</span>
+        </span>
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+        <div
+          className={cn('h-full rounded-full transition-all duration-500', barClass)}
+          style={{ width: `${percent ?? 0}%` }}
+        />
+      </div>
+      <p className="mt-1.5 text-[11px] text-gray-400 dark:text-gray-500">
+        {percent !== null ? `${percent}% ${caption}` : `No fields to measure`}
+      </p>
+    </div>
+  );
+}
+
+/** A small status chip used in the snapshot cards and the provenance timeline. */
+function StatusChip({
+  tone,
+  icon,
+  children,
+}: {
+  tone: 'positive' | 'neutral' | 'accent';
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium',
+        tone === 'positive' &&
+          'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+        tone === 'accent' &&
+          'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+        tone === 'neutral' && 'bg-gray-100 text-gray-600 dark:bg-gray-700/60 dark:text-gray-300',
+      )}
+    >
+      {icon}
+      {children}
+    </span>
+  );
+}
+
+/** Icon for a source-intake kind on the provenance timeline and the source snapshot card. */
+function sourceKindIcon(kind: CatalogSourceDescriptor['kind'], className: string) {
+  const Icon =
+    kind === 'url' ? Globe : kind === 'paste' ? ClipboardPaste : kind === 'discovery' ? Radar : FileText;
+  return <Icon className={className} aria-hidden />;
+}
+
+/** Human label for a source-intake kind. */
+function sourceKindLabel(kind: CatalogSourceDescriptor['kind']): string {
+  if (kind === 'file') return 'File upload';
+  if (kind === 'url') return 'Fetched from URL';
+  if (kind === 'paste') return 'Pasted content';
+  if (kind === 'discovery') return 'Discovered endpoint';
+  return 'Unknown intake';
+}
+
+/**
+ * One stage of the provenance pipeline: a numbered, icon-badged node on a vertical rail. The rail
+ * connects consecutive stages so the panel reads as the import's actual journey (intake → detection
+ * → normalization → record) instead of a flat key/value table.
+ */
+function PipelineStage({
+  step,
+  title,
+  caption,
+  icon,
+  last = false,
+  testId,
+  children,
+}: {
+  step: number;
+  title: string;
+  caption: string;
+  icon: React.ReactNode;
+  last?: boolean;
+  testId: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <li className="relative flex gap-4 pb-8 last:pb-0" data-testid={testId}>
+      {!last ? (
+        <span
+          className="absolute bottom-0 left-5 top-11 w-px bg-gray-200 dark:bg-gray-700"
+          aria-hidden
+        />
+      ) : null}
+      <span
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-indigo-200 bg-indigo-50 text-indigo-600 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-400"
+        aria-hidden
+      >
+        {icon}
       </span>
-      <span className="min-w-0 text-sm text-gray-800 dark:text-gray-200">{children}</span>
+      <div className="min-w-0 flex-1 pt-0.5">
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h3>
+          <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            Step {step}
+          </span>
+        </div>
+        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{caption}</p>
+        <div className="mt-2.5">{children}</div>
+      </div>
+    </li>
+  );
+}
+
+/** A labelled fact inside a pipeline stage (`<dt>`/`<dd>` pair). */
+function StageFact({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        {label}
+      </dt>
+      <dd className="mt-0.5 min-w-0 text-sm text-gray-800 dark:text-gray-200">{children}</dd>
     </div>
   );
 }
@@ -421,6 +648,13 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
   // The parsed entity groups (MFI-25.2) rendered in the Overview, plus the derived `summaryNote`.
   const parsed = item.parsed ?? [];
   const summaryNote = deriveParsedSummaryNote(parsed);
+  // Overview observability derivations: how the surface composes, how the entity kinds distribute,
+  // and how well the parsed model's fields are documented.
+  const composition = deriveSurfaceComposition(summary);
+  const tagDistribution = deriveTagDistribution(parsed);
+  const fieldStats = deriveParsedFieldStats(parsed);
+  const createdRelative = formatRelativeTimestamp(item.created_at);
+  const updatedRelative = formatRelativeTimestamp(item.updated_at);
   // The parsed-entity names the Lint tab's findings can deep-link to (MFI-28.2).
   const entityNames = parsed.flatMap((group) => group.entities.map((entity) => entity.name));
   const toolVersionEntries = Object.entries(item.toolVersions ?? {}).filter(
@@ -615,19 +849,53 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
           idPrefix={DETAIL_TABS_ID_PREFIX}
         />
 
-        {/* OVERVIEW — normalized summary */}
+        {/* OVERVIEW — the normalized surface, its composition, and the model's observability. */}
         <TabPanel tabId="overview" active={activeTab} testId="catalog-detail-pane-overview">
           <section className={`${dashboardPanelClass} p-6`} data-testid="catalog-detail-summary">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              Normalized summary
-            </h2>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                API surface
+              </h2>
+              {hasAnyCount && composition.total > 0 ? (
+                <span className="font-mono text-xs tabular-nums text-gray-400 dark:text-gray-500">
+                  {composition.total.toLocaleString()} normalized{' '}
+                  {composition.total === 1 ? 'entity' : 'entities'}
+                </span>
+              ) : null}
+            </div>
             {hasAnyCount ? (
-              <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <SummaryCard label="Services" value={summary.services} />
-                <SummaryCard label="Operations" value={summary.operations} />
-                <SummaryCard label="Types" value={summary.types} />
-                <SummaryCard label="Channels" value={summary.channels} />
-              </div>
+              <>
+                <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                  {SURFACE_KEYS.map((key) => {
+                    const captured = typeof summary[key] === 'number';
+                    const segment = composition.segments.find((s) => s.key === key);
+                    return (
+                      <SurfaceTile
+                        key={key}
+                        surfaceKey={key}
+                        value={summary[key]}
+                        percent={
+                          captured && composition.total > 0 ? segment?.percent ?? 0 : null
+                        }
+                      />
+                    );
+                  })}
+                </div>
+                {composition.segments.length > 0 ? (
+                  <div className="mt-4" data-testid="catalog-detail-surface-bar">
+                    <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                      {composition.segments.map((segment) => (
+                        <div
+                          key={segment.key}
+                          className={SURFACE_META[segment.key].barClass}
+                          style={{ width: `${(segment.count / composition.total) * 100}%` }}
+                          title={`${SURFACE_META[segment.key].label}: ${segment.count} (${segment.percent}%)`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </>
             ) : (
               <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
                 The normalized-content summary has not been captured for this item yet.
@@ -642,6 +910,182 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
               </p>
             ) : null}
           </section>
+
+          {/* Quality + source snapshots — the two facts a reader wants before drilling into a tab:
+              is this model any good, and where did it come from. Each links into its deep tab. */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <section
+              className={`${dashboardPanelClass} p-6`}
+              data-testid="catalog-detail-quality-snapshot"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Quality snapshot
+                </h2>
+                <GradeChip grade={item.qualityGrade} />
+              </div>
+              {qualityValue != null && scoreTier ? (
+                <>
+                  <div className="mt-3 flex items-baseline gap-1.5">
+                    <span
+                      className={cn(
+                        'font-mono text-3xl font-bold tabular-nums',
+                        scoreTier.textClass,
+                      )}
+                    >
+                      {qualityValue}
+                    </span>
+                    <span className="text-sm text-gray-400 dark:text-gray-500">/100</span>
+                    <span className={cn('ml-auto text-xs font-semibold', scoreTier.textClass)}>
+                      {scoreTier.shortLabel}
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                    <div
+                      className={cn('h-full rounded-full transition-all duration-500', scoreTier.barSolidClass)}
+                      style={{ width: `${qualityValue}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    {scoreTier.detailLabel}.
+                  </p>
+                </>
+              ) : (
+                <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                  No quality score has been captured for this item yet.
+                </p>
+              )}
+              <button
+                type="button"
+                data-testid="catalog-detail-open-lint"
+                onClick={() => setActiveTab('lint')}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              >
+                Open Lint &amp; Score <ArrowRight className="h-4 w-4 text-indigo-500" aria-hidden />
+              </button>
+            </section>
+
+            <section
+              className={`${dashboardPanelClass} p-6`}
+              data-testid="catalog-detail-source-snapshot"
+            >
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                Source snapshot
+              </h2>
+              <div className="mt-3 flex items-center gap-3">
+                <span
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
+                  aria-hidden
+                >
+                  {sourceKindIcon(source?.kind ?? null, 'h-5 w-5')}
+                </span>
+                <div className="min-w-0">
+                  <p
+                    className="truncate font-mono text-sm text-gray-900 dark:text-white"
+                    title={source?.label || source?.uri || undefined}
+                  >
+                    {source?.label || source?.uri || 'No source reference captured'}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {sourceKindLabel(source?.kind ?? null)}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                {source?.hasContent ? (
+                  <StatusChip tone="positive" icon={<CheckCircle2 className="h-3 w-3" aria-hidden />}>
+                    Content captured
+                  </StatusChip>
+                ) : (
+                  <StatusChip tone="neutral">Reference only</StatusChip>
+                )}
+                {source?.downloadable ? (
+                  <StatusChip tone="accent" icon={<Download className="h-3 w-3" aria-hidden />}>
+                    Downloadable
+                  </StatusChip>
+                ) : null}
+                {source?.uri ? (
+                  <StatusChip tone="neutral" icon={<Link2 className="h-3 w-3" aria-hidden />}>
+                    <span className="max-w-[14rem] truncate" title={source.uri}>
+                      {source.uri}
+                    </span>
+                  </StatusChip>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                data-testid="catalog-detail-open-source"
+                onClick={showSourceTab}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              >
+                View source <ArrowRight className="h-4 w-4 text-indigo-500" aria-hidden />
+              </button>
+            </section>
+          </div>
+
+          {/* Model observability — documentation coverage and the entity-kind mix, derived from
+              the parsed model the import captured (the detail-screen echo of the import preview). */}
+          {parsed.length > 0 ? (
+            <section className={`${dashboardPanelClass} p-6`} data-testid="catalog-detail-insights">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Model observability
+                </h2>
+                <span className="font-mono text-xs tabular-nums text-gray-400 dark:text-gray-500">
+                  {fieldStats.entityCount.toLocaleString()}{' '}
+                  {fieldStats.entityCount === 1 ? 'entity' : 'entities'} ·{' '}
+                  {fieldStats.fieldCount.toLocaleString()}{' '}
+                  {fieldStats.fieldCount === 1 ? 'field' : 'fields'}
+                </span>
+              </div>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                <CoverageMeter
+                  label="Documented fields"
+                  count={fieldStats.documentedFieldCount}
+                  total={fieldStats.fieldCount}
+                  percent={fieldStats.documentedPercent}
+                  barClass={getNumericScoreTier(fieldStats.documentedPercent ?? 0).barSolidClass}
+                  caption="carry a description"
+                  testId="catalog-detail-docs-coverage"
+                />
+                <CoverageMeter
+                  label="Required fields"
+                  count={fieldStats.requiredFieldCount}
+                  total={fieldStats.fieldCount}
+                  percent={fieldStats.requiredPercent}
+                  barClass="bg-indigo-500"
+                  caption="are required"
+                  testId="catalog-detail-required-coverage"
+                />
+              </div>
+              {tagDistribution.length > 0 ? (
+                <div className="mt-4">
+                  <h3 className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Entity kinds
+                  </h3>
+                  <div
+                    className="mt-2 flex flex-wrap items-center gap-1.5"
+                    data-testid="catalog-detail-kind-mix"
+                  >
+                    {tagDistribution.map((row) => (
+                      <span
+                        key={row.tag}
+                        className={cn(
+                          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider',
+                          parsedTagToneClass(row.tag),
+                        )}
+                      >
+                        {row.tag}
+                        <span className="font-mono font-semibold tabular-nums normal-case">
+                          {row.count} · {row.percent}%
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
 
           {/* Parsed entities (MFI-25.3) — the actual normalized model, human-readable. A lint
               finding deep-link (MFI-28.2) highlights its target entity here. */}
@@ -663,48 +1107,157 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
           />
         </TabPanel>
 
-        {/* PROVENANCE */}
+        {/* PROVENANCE — the import rendered as its actual journey: intake → detection →
+            normalization → catalog record, each stage carrying the facts it produced. */}
         <TabPanel tabId="provenance" active={activeTab} testId="catalog-detail-pane-provenance">
           <section className={`${dashboardPanelClass} p-6`} data-testid="catalog-detail-provenance">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              Provenance
-            </h2>
-            <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-700/60">
-              <ProvenanceRow label="Format">
-                {item.sourceFormat ? <FormatPill format={item.sourceFormat} /> : <span className="text-gray-400">—</span>}
-              </ProvenanceRow>
-              <ProvenanceRow label="Protocol">
-                {item.protocol ? <ProtocolPill protocol={item.protocol} /> : <span className="text-gray-400">—</span>}
-              </ProvenanceRow>
-              <ProvenanceRow label="Tool versions">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                Provenance
+              </h2>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                How this item reached the catalog
+              </p>
+            </div>
+            <ol className="mt-6">
+              <PipelineStage
+                step={1}
+                title="Source intake"
+                caption="Where the imported document came from."
+                icon={sourceKindIcon(source?.kind ?? null, 'h-5 w-5')}
+                testId="catalog-detail-stage-intake"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="min-w-0 truncate font-mono text-sm text-gray-800 dark:text-gray-200"
+                    title={source?.label || source?.uri || undefined}
+                  >
+                    {source?.label || source?.uri || 'Not recorded'}
+                  </span>
+                  {source?.kind ? (
+                    <StatusChip tone="neutral">{sourceKindLabel(source.kind)}</StatusChip>
+                  ) : null}
+                  {source?.hasContent ? (
+                    <StatusChip
+                      tone="positive"
+                      icon={<CheckCircle2 className="h-3 w-3" aria-hidden />}
+                    >
+                      Content captured
+                    </StatusChip>
+                  ) : null}
+                  {source?.downloadable ? (
+                    <StatusChip tone="accent" icon={<Download className="h-3 w-3" aria-hidden />}>
+                      Downloadable
+                    </StatusChip>
+                  ) : null}
+                  {resolvedSource ? <SourceBadge source={resolvedSource} /> : null}
+                </div>
+                {source?.uri && source?.label ? (
+                  <p
+                    className="mt-1.5 truncate font-mono text-xs text-gray-400 dark:text-gray-500"
+                    title={source.uri}
+                  >
+                    {source.uri}
+                  </p>
+                ) : null}
+              </PipelineStage>
+
+              <PipelineStage
+                step={2}
+                title="Format detection"
+                caption="The format and protocol the importer recognized this source as."
+                icon={<ScanSearch className="h-5 w-5" aria-hidden />}
+                testId="catalog-detail-stage-detection"
+              >
+                {item.sourceFormat || item.protocol ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <FormatPill format={item.sourceFormat} />
+                    <ProtocolPill protocol={item.protocol} />
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400 dark:text-gray-500">
+                    No detected format or protocol was recorded.
+                  </p>
+                )}
+              </PipelineStage>
+
+              <PipelineStage
+                step={3}
+                title="Normalization"
+                caption="The toolchain that parsed the source into the canonical model."
+                icon={<Wrench className="h-5 w-5" aria-hidden />}
+                testId="catalog-detail-stage-normalization"
+              >
                 {toolVersionEntries.length > 0 ? (
-                  <span className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1.5">
                     {toolVersionEntries.map(([tool, version]) => (
                       <span
                         key={tool}
-                        className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-700 dark:bg-gray-700/60 dark:text-gray-300"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300"
                       >
-                        <Wrench className="h-3 w-3" aria-hidden /> {tool} {String(version)}
+                        <Wrench className="h-3 w-3 text-indigo-500" aria-hidden /> {tool}{' '}
+                        <span className="font-semibold tabular-nums">{String(version)}</span>
                       </span>
                     ))}
-                  </span>
+                  </div>
                 ) : (
-                  <span className="text-gray-400">Not recorded</span>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">
+                    Tool versions were not recorded for this import.
+                  </p>
                 )}
-              </ProvenanceRow>
-              <ProvenanceRow label="Import job">
-                {importJobRef ? (
-                  <span className="font-mono text-xs">{importJobRef}</span>
-                ) : (
-                  <span className="text-gray-400">Not recorded</span>
-                )}
-              </ProvenanceRow>
-              <ProvenanceRow label="Created">{formatTimestamp(item.created_at)}</ProvenanceRow>
-              <ProvenanceRow label="Updated">{formatTimestamp(item.updated_at)}</ProvenanceRow>
-              <ProvenanceRow label="Created by">
-                {item.creator_name || item.creator_email || 'Unknown'}
-              </ProvenanceRow>
-            </div>
+              </PipelineStage>
+
+              <PipelineStage
+                step={4}
+                title="Catalog record"
+                caption="The import job that minted this item, and who ran it when."
+                icon={<Database className="h-5 w-5" aria-hidden />}
+                testId="catalog-detail-stage-record"
+                last
+              >
+                <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+                  <StageFact label="Import job">
+                    {importJobRef ? (
+                      <span className="inline-flex max-w-full items-center rounded-md bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-700 dark:bg-gray-700/60 dark:text-gray-300">
+                        <span className="truncate" title={importJobRef}>
+                          {importJobRef}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500">Not recorded</span>
+                    )}
+                  </StageFact>
+                  <StageFact label="Created by">
+                    <span className="inline-flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+                      {item.creator_name || item.creator_email || 'Unknown'}
+                    </span>
+                  </StageFact>
+                  <StageFact label="Created">
+                    <span className="inline-flex flex-wrap items-center gap-1.5">
+                      <CalendarClock className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+                      {formatTimestamp(item.created_at)}
+                      {createdRelative ? (
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
+                          · {createdRelative}
+                        </span>
+                      ) : null}
+                    </span>
+                  </StageFact>
+                  <StageFact label="Last updated">
+                    <span className="inline-flex flex-wrap items-center gap-1.5">
+                      <CalendarClock className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+                      {formatTimestamp(item.updated_at)}
+                      {updatedRelative ? (
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
+                          · {updatedRelative}
+                        </span>
+                      ) : null}
+                    </span>
+                  </StageFact>
+                </dl>
+              </PipelineStage>
+            </ol>
           </section>
         </TabPanel>
 
@@ -721,6 +1274,8 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
             onNavigateToEntity={navigateToEntity}
             scoredAt={item.updated_at ?? item.created_at ?? null}
             sourceFormat={item.sourceFormat ?? null}
+            sourceHref={sourceHref}
+            sourceAvailable={Boolean(source?.downloadable)}
           />
         </TabPanel>
 

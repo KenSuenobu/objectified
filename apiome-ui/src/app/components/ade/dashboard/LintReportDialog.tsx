@@ -53,6 +53,12 @@ interface LintReportDialogProps {
    * their native model at import, while the live OpenAPI recompute in the same payload can differ.
    */
   preferCapturedScore?: boolean;
+  /**
+   * Fill the screen: the dialog is pinned to 90vh (and widened) with the findings list flexing to
+   * consume all remaining height, instead of the compact `max-w-3xl` / 50vh-capped default. Used by
+   * the catalog "Open full report" surface, where reading room matters more than compactness.
+   */
+  expanded?: boolean;
 }
 
 /**
@@ -70,6 +76,7 @@ export function LintReportDialog({
   onRetry,
   preferenceView = 'catalog-lint',
   preferCapturedScore = false,
+  expanded = false,
 }: LintReportDialogProps) {
   const findings = report ? sortLintFindings(report.findings) : [];
   const severity = report?.severityCounts ?? {};
@@ -82,7 +89,15 @@ export function LintReportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      {/* Expanded: 90vh tall + widened, with the header row auto-sized and the body row taking all
+          remaining height (the DialogContent is a grid), so the findings list can flex-fill. */}
+      <DialogContent
+        className={
+          expanded
+            ? 'h-[90vh] max-w-6xl grid-rows-[auto_minmax(0,1fr)]'
+            : 'max-w-3xl'
+        }
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description ? <DialogDescription>{description}</DialogDescription> : null}
@@ -114,7 +129,9 @@ export function LintReportDialog({
             ) : null}
           </div>
         ) : (
-          <>
+          /* `contents` keeps the compact layout exactly as before (children stay direct grid
+             items); expanded turns this wrapper into the 1fr grid row as a flex column. */
+          <div className={expanded ? 'flex min-h-0 flex-col' : 'contents'}>
             <div className="flex flex-wrap items-center gap-3">
               <span
                 className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-lg font-bold ${gradeChipClass(
@@ -178,7 +195,14 @@ export function LintReportDialog({
               </p>
             )}
 
-            <div className="mt-3 max-h-[50vh] overflow-y-auto rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+            <div
+              className={
+                expanded
+                  ? 'mt-3 min-h-0 flex-1 overflow-y-auto rounded-lg border border-gray-200 p-4 dark:border-gray-700'
+                  : 'mt-3 max-h-[50vh] overflow-y-auto rounded-lg border border-gray-200 p-4 dark:border-gray-700'
+              }
+              data-testid="lint-report-findings-scroll"
+            >
               <LintViolationFindingsList
                 findings={findings}
                 guideName={guide.guideName}
@@ -186,7 +210,7 @@ export function LintReportDialog({
                 preferenceView={preferenceView}
               />
             </div>
-          </>
+          </div>
         )}
       </DialogContent>
     </Dialog>

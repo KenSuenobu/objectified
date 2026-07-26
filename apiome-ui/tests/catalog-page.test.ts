@@ -208,12 +208,45 @@ describe('paradigm grouping (MFI-24.2)', () => {
 describe('table column parity (MFI-24.4)', () => {
   it('renders the 8 mockup columns in order: Artifact / Format / Protocol / Source / Quality / Grade / Status / Updated', () => {
     const headers = ['Artifact', 'Format', 'Protocol', 'Source', 'Quality', 'Grade', 'Status', 'Updated'];
-    // Each header appears as a <th> label; assert they occur in the documented order.
-    const positions = headers.map((h) => src.indexOf(`>${h}</th>`));
+    // Each header is a sortable <CatalogSortTh>; assert the labels occur in the documented order.
+    const positions = headers.map((h) => src.indexOf(`\n                            ${h}\n`));
     for (const [i, pos] of positions.entries()) {
       expect(pos).toBeGreaterThan(-1);
       if (i > 0) expect(pos).toBeGreaterThan(positions[i - 1]);
     }
+  });
+
+  it('makes every data column header a sort control wired to the shared handler', () => {
+    const columns = [
+      'name',
+      'format',
+      'protocol',
+      'source',
+      'quality',
+      'grade',
+      'status',
+      'updated',
+    ];
+    for (const column of columns) {
+      expect(src).toContain(`column="${column}"`);
+      expect(src).toContain(`testId="catalog-col-sort-${column}"`);
+    }
+    // The headers drive the same handler (and therefore the same persisted state) as the toolbar
+    // chips, and each <th> reports its state through aria-sort.
+    expect(src).toMatch(/onSortClick=\{handleSortClick\}/);
+    expect(src).toMatch(/aria-sort=\{active \? \(sortDirection === 'asc' \? 'ascending' : 'descending'\) : 'none'\}/);
+  });
+
+  it('toggles the direction through the pure sort-state helper, not a nested setState', () => {
+    // The direction flip has to be computed from the current state and written with plain setters.
+    // Calling setSortDirection from inside a setSortColumn updater queues the toggle twice under
+    // StrictMode, which pins the column to one direction forever (the behaviour of this regex is
+    // the regression guard, not a style preference).
+    expect(src).toContain('nextCatalogDashboardSort');
+    expect(src).toMatch(
+      /const next = nextCatalogDashboardSort\(\{ column: sortColumn, direction: sortDirection \}, column\);\s*setSortColumn\(next\.column\);\s*setSortDirection\(next\.direction\);/,
+    );
+    expect(src).not.toMatch(/setSortColumn\(\(prevCol\)/);
   });
 
   it('drops the Description / Created By / Created columns to match the 8-column set', () => {

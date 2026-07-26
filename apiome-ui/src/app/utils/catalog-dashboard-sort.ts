@@ -6,7 +6,13 @@
  * imported source format directly (the REST `CatalogItemSchema` projection, MFI-23.2), so the
  * sorter reads them off the row instead of taking an external quality map. It also adds the
  * catalog-only `grade` and `format` sort columns the issue calls for.
+ *
+ * Every column the table view renders is sortable from its header, so `protocol` and `source` live
+ * here too — `source` resolving the same display label the Source badge shows, via the shared
+ * {@link resolveCatalogSource}, so the order always matches the column the user clicked.
  */
+
+import { resolveCatalogSource } from './catalog-format-registry';
 
 export type CatalogDashboardSortColumn =
   | 'name'
@@ -14,12 +20,44 @@ export type CatalogDashboardSortColumn =
   | 'quality'
   | 'grade'
   | 'format'
+  | 'protocol'
+  | 'source'
   | 'status'
   | 'creator'
   | 'created'
   | 'updated';
 
 export type CatalogDashboardSortDirection = 'asc' | 'desc';
+
+/** An active sort selection: which column, and which way. */
+export interface CatalogDashboardSortState {
+  column: CatalogDashboardSortColumn;
+  direction: CatalogDashboardSortDirection;
+}
+
+/**
+ * The sort state a click on `clicked` should produce: re-selecting the active column **reverses**
+ * the direction, and selecting a different column starts it ascending.
+ *
+ * Pure and total, so the toggle is unit-testable without standing up the dashboard — and so the
+ * screen's click handler stays a plain "compute next, set both", never a `setState` call nested
+ * inside another `setState` updater. That nesting is what previously pinned the direction: React
+ * invokes updaters twice under StrictMode (and the React Compiler may re-run them), so the flip
+ * was queued twice and cancelled itself out.
+ *
+ * @param current The active column + direction.
+ * @param clicked The column whose header (or sort chip) was clicked.
+ * @returns The next sort state.
+ */
+export function nextCatalogDashboardSort(
+  current: CatalogDashboardSortState,
+  clicked: CatalogDashboardSortColumn,
+): CatalogDashboardSortState {
+  if (current.column === clicked) {
+    return { column: clicked, direction: current.direction === 'asc' ? 'desc' : 'asc' };
+  }
+  return { column: clicked, direction: 'asc' };
+}
 
 /** Minimal catalog-item row shape used by the sorter. */
 export type CatalogSortRow = {
@@ -32,7 +70,9 @@ export type CatalogSortRow = {
   updated_at: string;
   creator_name?: string | null;
   creator_email?: string | null;
-  metadata?: { summary?: string } | null;
+  metadata?: (Record<string, unknown> & { summary?: string }) | null;
+  /** Loose provenance bag the source badge is resolved from (preferred over `metadata`). */
+  formatMetadata?: Record<string, unknown> | null;
   slug?: string | null;
   /** Captured lint score/grade of the catalog item's latest revision (camelCase from REST). */
   qualityScore?: number | null;
@@ -116,6 +156,28 @@ export function compareCatalogDashboardRows(
       const c = compareStringsCaseInsensitive(af, bf, dir);
       if (c !== 0) return c;
       return compareStringsCaseInsensitive(a.protocol ?? '', b.protocol ?? '', dir);
+    }
+    case 'protocol': {
+      const ap = (a.protocol ?? '').trim();
+      const bp = (b.protocol ?? '').trim();
+      if (ap === '' && bp === '') return 0;
+      if (ap === '') return 1;
+      if (bp === '') return -1;
+      const c = compareStringsCaseInsensitive(ap, bp, dir);
+      if (c !== 0) return c;
+      return compareStringsCaseInsensitive(a.name, b.name, dir);
+    }
+    case 'source': {
+      // Sorts on the badge's *displayed* label (file name / compacted URL / "Live discovery"), so
+      // the order matches the Source column the user is looking at rather than the raw bag keys.
+      const as = (resolveCatalogSource(a.formatMetadata, a.metadata)?.label ?? '').trim();
+      const bs = (resolveCatalogSource(b.formatMetadata, b.metadata)?.label ?? '').trim();
+      if (as === '' && bs === '') return 0;
+      if (as === '') return 1;
+      if (bs === '') return -1;
+      const c = compareStringsCaseInsensitive(as, bs, dir);
+      if (c !== 0) return c;
+      return compareStringsCaseInsensitive(a.name, b.name, dir);
     }
     case 'status': {
       const ta = statusTier(a);
