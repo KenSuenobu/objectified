@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.54.0
+  version: 1.55.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -28130,8 +28130,9 @@ paths:
       tags:
       - spec-import
       summary: List specification import jobs
-      description: Jobs tracked in this API process for the tenant (in-memory). After
-        restart the list is empty; use GET …/imports/{job_id} for full event history.
+      description: Paginated tenant import jobs from the shared store (IXH-6.3), newest
+        first. Supports state and created_after / created_before filters. Default page
+        size is 50 (max 200).
       operationId: list_spec_import_jobs_v1_tenants__tenant_slug__imports_get
       parameters:
       - name: tenant_slug
@@ -28142,6 +28143,59 @@ paths:
           title: Tenant Slug
           description: Tenant Slug schema.
         description: URL-safe tenant slug that scopes the request.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+          title: Limit
+          description: Page size (default 50, max 200).
+        description: Page size (default 50, max 200).
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+          description: Number of matching jobs to skip.
+        description: Number of matching jobs to skip.
+      - name: state
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: State
+          description: Exact job state filter.
+        description: Exact job state filter (e.g. completed, failed, running).
+      - name: created_after
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Created After
+          description: Inclusive lower bound on job created_at.
+        description: Inclusive lower bound on job created_at (ISO-8601).
+      - name: created_before
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Created Before
+          description: Inclusive upper bound on job created_at.
+        description: Inclusive upper bound on job created_at (ISO-8601).
       - name: authorization
         in: header
         required: false
@@ -29824,9 +29878,9 @@ paths:
       tags:
       - export-jobs
       summary: List export jobs
-      description: Jobs tracked in this API process for the tenant (in-memory). After
-        a restart the list is empty; use GET …/jobs/{job_id} for a job's full event
-        history.
+      description: Paginated tenant export jobs from the shared store (IXH-6.3), newest
+        first. Supports state and created_after / created_before filters. Default page
+        size is 50 (max 200).
       operationId: list_export_jobs_v1_export__tenant_slug__jobs_get
       parameters:
       - name: tenant_slug
@@ -29837,6 +29891,59 @@ paths:
           title: Tenant Slug
           description: Tenant Slug schema.
         description: URL-safe tenant slug that scopes the request.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+          title: Limit
+          description: Page size (default 50, max 200).
+        description: Page size (default 50, max 200).
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+          description: Number of matching jobs to skip.
+        description: Number of matching jobs to skip.
+      - name: state
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: State
+          description: Exact job state filter.
+        description: Exact job state filter (e.g. completed, failed, running).
+      - name: created_after
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Created After
+          description: Inclusive lower bound on job created_at.
+        description: Inclusive lower bound on job created_at (ISO-8601).
+      - name: created_before
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Created Before
+          description: Inclusive upper bound on job created_at.
+        description: Inclusive upper bound on job created_at (ISO-8601).
       - name: authorization
         in: header
         required: false
@@ -47292,12 +47399,31 @@ components:
           title: Jobs
           description: Jobs.
           maxItems: 1000
+        total:
+          type: integer
+          minimum: 0
+          title: Total
+          description: Total jobs matching the filter (not just this page).
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 200
+          title: Limit
+          description: Page size applied to this response.
+        offset:
+          type: integer
+          minimum: 0
+          title: Offset
+          description: Number of matching jobs skipped before this page.
       additionalProperties: false
       type: object
       required:
       - jobs
+      - total
+      - limit
+      - offset
       title: ExportJobListResponse
-      description: Tenant-scoped export jobs visible to this API process.
+      description: Paginated tenant-scoped export jobs (IXH-6.3).
     ExportJobProgress:
       properties:
         phase:
@@ -71524,12 +71650,31 @@ components:
           title: Jobs
           description: Jobs.
           maxItems: 1000
+        total:
+          type: integer
+          minimum: 0
+          title: Total
+          description: Total jobs matching the filter (not just this page).
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 200
+          title: Limit
+          description: Page size applied to this response.
+        offset:
+          type: integer
+          minimum: 0
+          title: Offset
+          description: Number of matching jobs skipped before this page.
       additionalProperties: false
       type: object
       required:
       - jobs
+      - total
+      - limit
+      - offset
       title: SpecImportJobListResponse
-      description: Tenant-scoped import jobs visible to this API process.
+      description: Paginated tenant-scoped import jobs (IXH-6.3).
     SpecImportJobResult:
       properties:
         project_id:

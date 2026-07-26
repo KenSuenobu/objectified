@@ -66,6 +66,7 @@ import time
 import uuid
 import zipfile
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, Iterator, List, Literal, Optional, Union
 
 from fastapi import HTTPException
@@ -358,11 +359,14 @@ class ExportJobListItem(BaseModel):
 
 
 class ExportJobListResponse(BaseModel):
-    """Tenant-scoped export jobs visible to this API process."""
+    """Paginated tenant-scoped export jobs (IXH-6.3)."""
 
     model_config = ConfigDict(extra="forbid")
 
     jobs: List[ExportJobListItem]
+    total: int = Field(0, ge=0, description="Total jobs matching the filter (not just this page).")
+    limit: int = Field(50, ge=1, le=200, description="Page size applied to this response.")
+    offset: int = Field(0, ge=0, description="Number of matching jobs skipped before this page.")
 
 
 class ExportJobAccepted(BaseModel):
@@ -1338,12 +1342,24 @@ async def get_export_job_status(tenant_slug: str, job_id: str) -> ExportJobStatu
     raise HTTPException(status_code=404, detail="Export job not found")
 
 
-async def list_export_jobs(tenant_slug: str) -> ExportJobListResponse:
+async def list_export_jobs(
+    tenant_slug: str,
+    *,
+    limit: int = 50,
+    offset: int = 0,
+    state: Optional[str] = None,
+    created_after: Optional[datetime] = None,
+    created_before: Optional[datetime] = None,
+) -> ExportJobListResponse:
     """List a tenant's export jobs from the shared store (summary rows, no event logs).
 
-    Falls back to this process's in-memory jobs if the shared store is unreachable.
+    Paginated with stable newest-first ordering (IXH-6.3). Falls back to this process's
+    in-memory jobs if the shared store is unreachable (same filters/pagination applied).
     """
     from .database import db
+
+    page_limit = max(1, min(int(limit), 200))
+    page_offset = max(0, int(offset))
 
     def _item(st: ExportJobStatus, artifact: Any, target: Any, dry_run: Any) -> ExportJobListItem:
         return ExportJobListItem(
@@ -1357,23 +1373,52 @@ async def list_export_jobs(tenant_slug: str) -> ExportJobListResponse:
             progress=st.progress,
         )
 
+    def _state_matches(job_state: str) -> bool:
+        return state is None or not str(state).strip() or job_state == str(state).strip()
+
+    def _created_ms(st: ExportJobStatus) -> int:
+        return int(getattr(st, "created_at_ms", None) or getattr(st, "updated_at_ms", None) or 0)
+
     try:
-        rows = await asyncio.to_thread(db.list_async_jobs, tenant_slug, _SHARED_JOB_KIND)
+        page = await asyncio.to_thread(
+            lambda: db.list_async_jobs(
+                tenant_slug,
+                _SHARED_JOB_KIND,
+                limit=page_limit,
+                offset=page_offset,
+                state=state,
+                created_after=created_after,
+                created_before=created_before,
+            )
+        )
     except Exception:  # noqa: BLE001 - shared store is best-effort; degrade to local view
         logger.warning("Falling back to in-memory export job list for %s", tenant_slug, exc_info=True)
         with _jobs_lock:
             local = [
                 (r.status, r.request.artifact, r.request.target, r.request.dry_run)
                 for r in _jobs.values()
-                if r.tenant_slug == tenant_slug
+                if r.tenant_slug == tenant_slug and _state_matches(r.status.state)
             ]
-        return ExportJobListResponse(jobs=[_item(st, a, t, d) for (st, a, t, d) in local])
+        local.sort(key=lambda t: (_created_ms(t[0]), t[0].job_id), reverse=True)
+        total = len(local)
+        slice_rows = local[page_offset : page_offset + page_limit]
+        return ExportJobListResponse(
+            jobs=[_item(st, a, t, d) for (st, a, t, d) in slice_rows],
+            total=total,
+            limit=page_limit,
+            offset=page_offset,
+        )
     items: List[ExportJobListItem] = []
-    for row in rows:
+    for row in page["jobs"]:
         st = ExportJobStatus.model_validate(row["status"])
         extra = row.get("extra") or {}
         items.append(_item(st, extra.get("artifact"), extra.get("target"), extra.get("dry_run")))
-    return ExportJobListResponse(jobs=items)
+    return ExportJobListResponse(
+        jobs=items,
+        total=int(page["total"]),
+        limit=int(page["limit"]),
+        offset=int(page["offset"]),
+    )
 
 
 async def cancel_export_job(tenant_slug: str, job_id: str) -> None:

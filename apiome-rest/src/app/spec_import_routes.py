@@ -24,9 +24,10 @@ from __future__ import annotations
 
 import base64
 import binascii
+from datetime import datetime
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile
 from pydantic import ValidationError
 
 from .auth import get_authenticated_user_id, validate_authentication
@@ -234,16 +235,35 @@ async def preview_import_manifest(
     response_model=SpecImportJobListResponse,
     summary="List specification import jobs",
     description=(
-        "Jobs tracked in this API process for the tenant (in-memory). "
-        "After restart the list is empty; use GET …/imports/{job_id} for full event history."
+        "Paginated tenant import jobs from the shared store (IXH-6.3), newest first. "
+        "Supports ``state`` and ``created_after`` / ``created_before`` filters. "
+        "Default page size is 50 (max 200)."
     ),
 )
 async def list_spec_import_jobs(
     tenant_slug: str,
     auth_data: Dict[str, Any] = Depends(validate_authentication),
+    limit: int = Query(50, ge=1, le=200, description="Page size (default 50, max 200)."),
+    offset: int = Query(0, ge=0, description="Number of matching jobs to skip."),
+    state: Optional[str] = Query(
+        None, description="Exact job state filter (e.g. completed, failed, running)."
+    ),
+    created_after: Optional[datetime] = Query(
+        None, description="Inclusive lower bound on job created_at (ISO-8601)."
+    ),
+    created_before: Optional[datetime] = Query(
+        None, description="Inclusive upper bound on job created_at (ISO-8601)."
+    ),
 ) -> SpecImportJobListResponse:
     _ = auth_data
-    return await engine_list_spec_import_jobs(tenant_slug)
+    return await engine_list_spec_import_jobs(
+        tenant_slug,
+        limit=limit,
+        offset=offset,
+        state=state,
+        created_after=created_after,
+        created_before=created_before,
+    )
 
 
 @router.post(

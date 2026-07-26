@@ -137,8 +137,33 @@ def _in_memory_async_job_store(monkeypatch):
         row = store.get(job_id)
         return dict(row) if _matches(row, tenant_slug, kind) else None
 
-    def _list(tenant_slug, kind):
-        return [dict(r) for r in store.values() if _matches(r, tenant_slug, kind)]
+    def _list(
+        tenant_slug,
+        kind,
+        *,
+        limit=50,
+        offset=0,
+        state=None,
+        created_after=None,
+        created_before=None,
+    ):
+        page_limit = max(1, min(int(limit), 200))
+        page_offset = max(0, int(offset))
+        rows = [dict(r) for r in store.values() if _matches(r, tenant_slug, kind)]
+        if state is not None and str(state).strip():
+            want = str(state).strip()
+            rows = [r for r in rows if r.get("state") == want]
+        # Fake store has no created_at; date filters are no-ops in unit tests.
+        _ = (created_after, created_before)
+        rows.sort(key=lambda r: r.get("job_id") or "", reverse=True)
+        total = len(rows)
+        page = rows[page_offset : page_offset + page_limit]
+        return {
+            "jobs": page,
+            "total": total,
+            "limit": page_limit,
+            "offset": page_offset,
+        }
 
     def _request_cancel(job_id, tenant_slug, kind):
         row = store.get(job_id)

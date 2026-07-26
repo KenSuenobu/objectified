@@ -31,6 +31,7 @@ import {
 import { resolveCatalogProtocol, resolveCatalogFormat } from '../../../../utils/catalog-format-registry';
 import { useCatalogImportAvailability } from './useCatalogImportAvailability';
 import { CatalogImportQualityStep } from './CatalogImportQualityStep';
+import { RecentAsyncJobsPanel } from '../asyncJobs/RecentAsyncJobsPanel';
 import {
   persistImportQualityPreferences,
   readImportQualityPreferences,
@@ -868,6 +869,11 @@ export function CatalogImportDialog({
               </>
             )}
           </div>
+        )}
+
+        {/* IXH-6.3: paginated recent import jobs on the source step (bounded list). */}
+        {step === 'source' && (
+          <RecentAsyncJobsPanel kind="import" limit={5} className="mt-4" />
         )}
 
         {/* The quality step owns its own footer so all three of its exits — Cancel, Import anyway,

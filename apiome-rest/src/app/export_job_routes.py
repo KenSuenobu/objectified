@@ -20,9 +20,10 @@ like the sibling export endpoints.
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from datetime import datetime
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import StreamingResponse
 
 from .auth import validate_authentication
@@ -96,25 +97,50 @@ async def start_export_job(
     response_model=ExportJobListResponse,
     summary="List export jobs",
     description=(
-        "Jobs tracked in this API process for the tenant (in-memory). After a restart "
-        "the list is empty; use GET …/jobs/{job_id} for a job's full event history."
+        "Paginated tenant export jobs from the shared store (IXH-6.3), newest first. "
+        "Supports ``state`` and ``created_after`` / ``created_before`` filters. "
+        "Default page size is 50 (max 200)."
     ),
 )
 async def list_export_jobs(
     tenant_slug: str,
     auth_data: Dict[str, Any] = Depends(validate_authentication),
+    limit: int = Query(50, ge=1, le=200, description="Page size (default 50, max 200)."),
+    offset: int = Query(0, ge=0, description="Number of matching jobs to skip."),
+    state: Optional[str] = Query(
+        None, description="Exact job state filter (e.g. completed, failed, running)."
+    ),
+    created_after: Optional[datetime] = Query(
+        None, description="Inclusive lower bound on job created_at (ISO-8601)."
+    ),
+    created_before: Optional[datetime] = Query(
+        None, description="Inclusive upper bound on job created_at (ISO-8601)."
+    ),
 ) -> ExportJobListResponse:
-    """List the tenant's export jobs known to this process.
+    """List the tenant's export jobs (paginated summary rows).
 
     Args:
         tenant_slug: The tenant slug the jobs were submitted under.
         auth_data: Authenticated tenant context (JWT or API key).
+        limit: Page size.
+        offset: Rows to skip.
+        state: Optional exact state filter.
+        created_after: Optional created_at lower bound.
+        created_before: Optional created_at upper bound.
 
     Returns:
-        Summary rows (state, percent, progress) without event logs or fidelity envelopes.
+        Summary rows (state, percent, progress) without event logs or fidelity envelopes,
+        plus ``total`` / ``limit`` / ``offset`` for pagination.
     """
     _ = auth_data
-    return await engine_list_export_jobs(tenant_slug)
+    return await engine_list_export_jobs(
+        tenant_slug,
+        limit=limit,
+        offset=offset,
+        state=state,
+        created_after=created_after,
+        created_before=created_before,
+    )
 
 
 @router.get(

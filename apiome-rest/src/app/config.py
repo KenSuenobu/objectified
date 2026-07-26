@@ -531,6 +531,67 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Async job row retention (IXH-6.3, #5122). Terminal jobs older than these windows
+    # (measured from updated_at) are claimed by the scheduled sweep, summarized into
+    # async_job_history, then deleted (export artifacts CASCADE). ``0`` disables reap for
+    # that (kind, state) pair. Defaults: completed/canceled 7d, failed 30d.
+    async_job_retention_export_completed_hours: int = Field(
+        default=168,
+        validation_alias=AliasChoices(
+            "APIOME_ASYNC_JOB_RETENTION_EXPORT_COMPLETED_HOURS",
+            "async_job_retention_export_completed_hours",
+        ),
+    )
+    async_job_retention_export_failed_hours: int = Field(
+        default=720,
+        validation_alias=AliasChoices(
+            "APIOME_ASYNC_JOB_RETENTION_EXPORT_FAILED_HOURS",
+            "async_job_retention_export_failed_hours",
+        ),
+    )
+    async_job_retention_export_canceled_hours: int = Field(
+        default=168,
+        validation_alias=AliasChoices(
+            "APIOME_ASYNC_JOB_RETENTION_EXPORT_CANCELED_HOURS",
+            "async_job_retention_export_canceled_hours",
+        ),
+    )
+    async_job_retention_spec_import_completed_hours: int = Field(
+        default=168,
+        validation_alias=AliasChoices(
+            "APIOME_ASYNC_JOB_RETENTION_SPEC_IMPORT_COMPLETED_HOURS",
+            "async_job_retention_spec_import_completed_hours",
+        ),
+    )
+    async_job_retention_spec_import_failed_hours: int = Field(
+        default=720,
+        validation_alias=AliasChoices(
+            "APIOME_ASYNC_JOB_RETENTION_SPEC_IMPORT_FAILED_HOURS",
+            "async_job_retention_spec_import_failed_hours",
+        ),
+    )
+    async_job_retention_spec_import_canceled_hours: int = Field(
+        default=168,
+        validation_alias=AliasChoices(
+            "APIOME_ASYNC_JOB_RETENTION_SPEC_IMPORT_CANCELED_HOURS",
+            "async_job_retention_spec_import_canceled_hours",
+        ),
+    )
+    async_job_history_retention_days: int = Field(
+        default=90,
+        validation_alias=AliasChoices(
+            "APIOME_ASYNC_JOB_HISTORY_RETENTION_DAYS",
+            "async_job_history_retention_days",
+        ),
+    )
+    async_job_retention_sweep_batch_size: int = Field(
+        default=100,
+        validation_alias=AliasChoices(
+            "APIOME_ASYNC_JOB_RETENTION_SWEEP_BATCH_SIZE",
+            "async_job_retention_sweep_batch_size",
+        ),
+    )
+
     # Global auto-refresh kill switch (RAR-3.3, #3524). When False, the refresh
     # sweep halts entirely (no repository is auto-refreshed) regardless of per-repo
     # auto_refresh_enabled. Intended for incident response. Manual "Refresh Now"

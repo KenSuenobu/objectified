@@ -3,7 +3,7 @@ import json
 import logging
 import secrets
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 import bcrypt
 import numpy as np
@@ -20090,15 +20090,70 @@ class Database:
         rows = self.execute_query(query, (job_id, tenant_slug, kind))
         return rows[0] if rows else None
 
-    def list_async_jobs(self, tenant_slug: str, kind: str) -> List[Dict[str, Any]]:
-        """List shared-store rows for a tenant's jobs of one kind, oldest first."""
-        query = """
-            SELECT job_id, state, status, extra
-            FROM apiome.async_job
-            WHERE tenant_slug = %s AND kind = %s
-            ORDER BY created_at ASC
+    def list_async_jobs(
+        self,
+        tenant_slug: str,
+        kind: str,
+        *,
+        limit: int = 50,
+        offset: int = 0,
+        state: Optional[str] = None,
+        created_after: Optional[Any] = None,
+        created_before: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        """List a tenant's jobs of one kind with stable pagination and filters (IXH-6.3).
+
+        Ordering is ``created_at DESC, job_id DESC`` so pages are stable under inserts.
+        ``limit`` is clamped to ``[1, 200]``; ``offset`` to ``>= 0``.
+
+        Args:
+            tenant_slug: Owning tenant.
+            kind: Job kind (``export`` or ``spec_import``).
+            limit: Page size (default 50, max 200).
+            offset: Rows to skip.
+            state: Optional exact state filter.
+            created_after: Inclusive lower bound on ``created_at``.
+            created_before: Inclusive upper bound on ``created_at``.
+
+        Returns:
+            ``{"jobs": [...], "total": int, "limit": int, "offset": int}``.
         """
-        return self.execute_query(query, (tenant_slug, kind))
+        page_limit = max(1, min(int(limit), 200))
+        page_offset = max(0, int(offset))
+        where = ["tenant_slug = %s", "kind = %s"]
+        params: List[Any] = [tenant_slug, kind]
+        if state is not None and str(state).strip():
+            where.append("state = %s")
+            params.append(str(state).strip())
+        if created_after is not None:
+            where.append("created_at >= %s")
+            params.append(created_after)
+        if created_before is not None:
+            where.append("created_at <= %s")
+            params.append(created_before)
+        where_sql = " AND ".join(where)
+        count_rows = self.execute_query(
+            f"SELECT COUNT(*)::int AS total FROM apiome.async_job WHERE {where_sql}",
+            tuple(params),
+        )
+        total = int(count_rows[0]["total"]) if count_rows else 0
+        list_params = list(params) + [page_limit, page_offset]
+        rows = self.execute_query(
+            f"""
+            SELECT job_id, state, status, extra, created_at, updated_at
+            FROM apiome.async_job
+            WHERE {where_sql}
+            ORDER BY created_at DESC, job_id DESC
+            LIMIT %s OFFSET %s
+            """,
+            tuple(list_params),
+        )
+        return {
+            "jobs": rows,
+            "total": total,
+            "limit": page_limit,
+            "offset": page_offset,
+        }
 
     def request_async_job_cancel(self, job_id: str, tenant_slug: str, kind: str) -> bool:
         """Set the cross-instance cancel flag; return False when no such job exists."""
@@ -20115,6 +20170,174 @@ class Database:
         query = "SELECT cancel_requested FROM apiome.async_job WHERE job_id = %s"
         rows = self.execute_query(query, (job_id,))
         return bool(rows and rows[0].get("cancel_requested"))
+
+    @staticmethod
+    def _async_job_history_summary(
+        status: Any, extra: Any
+    ) -> Dict[str, Any]:
+        """Build a bounded audit summary from a live job's status/extra bags."""
+        status_obj = status if isinstance(status, dict) else {}
+        extra_obj = extra if isinstance(extra, dict) else {}
+        summary: Dict[str, Any] = {}
+        if "percent" in status_obj:
+            summary["percent"] = status_obj.get("percent")
+        if status_obj.get("error") is not None:
+            err = status_obj["error"]
+            if isinstance(err, dict):
+                summary["error"] = {
+                    k: err.get(k)
+                    for k in ("code", "message", "type")
+                    if k in err
+                }
+            else:
+                summary["error"] = str(err)[:500]
+        result = status_obj.get("result")
+        if isinstance(result, dict):
+            slim_result = {
+                k: result.get(k)
+                for k in (
+                    "project_id",
+                    "project_slug",
+                    "version_id",
+                    "download_path",
+                )
+                if result.get(k) is not None
+            }
+            if slim_result:
+                summary["result"] = slim_result
+        for key in ("artifact", "target", "dry_run"):
+            if key in extra_obj:
+                summary[key] = extra_obj.get(key)
+        return summary
+
+    def reap_expired_async_jobs(
+        self,
+        *,
+        policies: Mapping[Tuple[str, str], Any],
+        limit: int = 100,
+        now: Optional[Any] = None,
+    ) -> List[Dict[str, Any]]:
+        """Claim, summarize, and delete terminal jobs past retention (IXH-6.3).
+
+        Selects up to ``limit`` matching rows under ``FOR UPDATE SKIP LOCKED``, inserts
+        slim ``async_job_history`` rows, then deletes the live jobs (CASCADE removes
+        export artifacts). Safe to run concurrently on multiple instances.
+
+        Args:
+            policies: Mapping of ``(kind, state)`` → cutoff datetime; a row matches when
+                ``updated_at <= cutoff`` for its pair. Empty mapping → no-op.
+            limit: Max jobs reaped this call.
+            now: Unused clock hook (kept for call-site symmetry / tests).
+
+        Returns:
+            Summaries of deleted jobs (``job_id``, ``kind``, ``tenant_slug``, ``state``).
+        """
+        _ = now
+        if not policies:
+            return []
+        batch = max(1, min(int(limit), 500))
+        clauses: List[str] = []
+        params: List[Any] = []
+        for (kind, state), cutoff in policies.items():
+            clauses.append("(kind = %s AND state = %s AND updated_at <= %s)")
+            params.extend([kind, state, cutoff])
+        where_policies = " OR ".join(clauses)
+        conn = self.connect()
+        prev_autocommit = self._begin_tx(conn)
+        deleted: List[Dict[str, Any]] = []
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    f"""
+                    SELECT job_id, kind, tenant_slug, state, status, extra,
+                           created_at, updated_at
+                    FROM apiome.async_job
+                    WHERE ({where_policies})
+                    ORDER BY updated_at ASC, job_id ASC
+                    LIMIT %s
+                    FOR UPDATE SKIP LOCKED
+                    """,
+                    tuple(params + [batch]),
+                )
+                claimed = list(cursor.fetchall() or [])
+                if not claimed:
+                    conn.commit()
+                    return []
+                for row in claimed:
+                    summary = self._async_job_history_summary(
+                        row.get("status"), row.get("extra")
+                    )
+                    cursor.execute(
+                        """
+                        INSERT INTO apiome.async_job_history
+                            (job_id, kind, tenant_slug, state, created_at, finished_at,
+                             summary, recorded_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, now())
+                        ON CONFLICT (job_id) DO UPDATE SET
+                            kind = EXCLUDED.kind,
+                            tenant_slug = EXCLUDED.tenant_slug,
+                            state = EXCLUDED.state,
+                            created_at = EXCLUDED.created_at,
+                            finished_at = EXCLUDED.finished_at,
+                            summary = EXCLUDED.summary,
+                            recorded_at = now()
+                        """,
+                        (
+                            row["job_id"],
+                            row["kind"],
+                            row["tenant_slug"],
+                            row["state"],
+                            row["created_at"],
+                            row["updated_at"],
+                            Json(summary),
+                        ),
+                    )
+                job_ids = [row["job_id"] for row in claimed]
+                cursor.execute(
+                    """
+                    DELETE FROM apiome.async_job
+                    WHERE job_id = ANY(%s)
+                    RETURNING job_id, kind, tenant_slug, state
+                    """,
+                    (job_ids,),
+                )
+                deleted = list(cursor.fetchall() or [])
+            conn.commit()
+            return deleted
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.autocommit = prev_autocommit
+
+    def prune_async_job_history(
+        self, *, older_than: Any, limit: int = 100
+    ) -> int:
+        """Delete up to ``limit`` history rows with ``finished_at < older_than``.
+
+        Uses ``FOR UPDATE SKIP LOCKED`` so concurrent sweepers do not contend.
+
+        Args:
+            older_than: Exclusive upper bound on ``finished_at``.
+            limit: Max rows deleted this call.
+
+        Returns:
+            Number of history rows removed.
+        """
+        batch = max(1, min(int(limit), 500))
+        query = """
+            DELETE FROM apiome.async_job_history
+            WHERE job_id IN (
+                SELECT job_id FROM apiome.async_job_history
+                WHERE finished_at < %s
+                ORDER BY finished_at ASC
+                LIMIT %s
+                FOR UPDATE SKIP LOCKED
+            )
+            RETURNING job_id
+        """
+        rows = self.execute_query(query, (older_than, batch))
+        return len(rows)
 
     # ───────────────────── export job artifact store (IXH-6.1, #5120) ─────────────────────
     # Delivery bytes for completed exports, shared across instances. Status lives in

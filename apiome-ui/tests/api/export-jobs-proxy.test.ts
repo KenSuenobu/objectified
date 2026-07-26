@@ -20,19 +20,29 @@ const submitRoute = fs.readFileSync(path.join(apiDir, 'route.ts'), 'utf8');
 const statusRoute = fs.readFileSync(path.join(apiDir, '[jobId]', 'route.ts'), 'utf8');
 const downloadRoute = fs.readFileSync(path.join(apiDir, '[jobId]', 'download', 'route.ts'), 'utf8');
 
-describe('export jobs submit proxy (POST /api/export/jobs)', () => {
-  it('exports only a POST handler', () => {
+describe('export jobs list/submit proxy (GET+POST /api/export/jobs)', () => {
+  it('exports GET (paginated list) and POST (submit) handlers', () => {
+    expect(submitRoute).toMatch(/export\s+async\s+function\s+GET/);
     expect(submitRoute).toMatch(/export\s+async\s+function\s+POST/);
-    expect(submitRoute).not.toMatch(/export\s+async\s+function\s+(GET|PUT|DELETE)/);
   });
 
   it('authenticates + tenant-scopes and targets the REST /export/{tenant}/jobs upstream', () => {
     expect(submitRoute).toContain('getAuthenticatedTenantContext');
     expect(submitRoute).toContain('proxyRestPost');
+    expect(submitRoute).toContain('proxyRestGet');
     expect(submitRoute).toMatch(/\/export\/\$\{ctx\.tenantSlug\}\/jobs/);
   });
 
-  it('returns the { success, ... } envelope and rejects a missing body', () => {
+  it('forwards pagination and filter query params on GET', () => {
+    expect(submitRoute).toContain('limit');
+    expect(submitRoute).toContain('offset');
+    expect(submitRoute).toContain('state');
+    expect(submitRoute).toContain('created_after');
+    expect(submitRoute).toContain('created_before');
+    expect(submitRoute).toContain('forwardListQuery');
+  });
+
+  it('returns the { success, ... } envelope and rejects a missing body on POST', () => {
     expect(submitRoute).toMatch(/success:\s*true/);
     expect(submitRoute).toMatch(/Missing request body/);
     expect(submitRoute).toMatch(/status:\s*400/);

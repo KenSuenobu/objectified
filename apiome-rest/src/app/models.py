@@ -1274,11 +1274,14 @@ class SpecImportJobListItem(BaseModel):
 
 
 class SpecImportJobListResponse(BaseModel):
-    """Tenant-scoped import jobs visible to this API process."""
+    """Paginated tenant-scoped import jobs (IXH-6.3)."""
 
     model_config = ConfigDict(extra="forbid")
 
     jobs: List[SpecImportJobListItem]
+    total: int = Field(0, ge=0, description="Total jobs matching the filter (not just this page).")
+    limit: int = Field(50, ge=1, le=200, description="Page size applied to this response.")
+    offset: int = Field(0, ge=0, description="Number of matching jobs skipped before this page.")
 
 
 class SpecImportJobAccepted(BaseModel):
