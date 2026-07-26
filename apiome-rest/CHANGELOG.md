@@ -5,6 +5,19 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.188.0] - 2026-07-26
+
+### Added
+- **Async job retention sweep and paginated job listing (#5122, IXH-6.3)** — terminal
+  `async_job` rows are reaped by a scheduled sweep (lint-waiver pattern: batched
+  `FOR UPDATE SKIP LOCKED`) with configurable per-(kind, state) retention hours
+  (defaults: completed/canceled 168h, failed 720h; `0` disables that pair). Each tick
+  also calls `reap_expired_export_job_artifacts`, writes slim `async_job_history` before
+  DELETE (CASCADE removes artifacts), and prunes history older than 90 days. List
+  endpoints `GET …/imports` and `GET …/export/…/jobs` are paginated (`limit`/`offset`/
+  `total`, newest-first) with `state` and date filters; unbounded full dumps are gone.
+  OpenAPI 1.54.0 → 1.55.0.
+
 ## [1.187.0] - 2026-07-26
 
 ### Fixed

@@ -25,6 +25,7 @@ import { useExportTargets } from './useExportTargets';
 import { useExportVerify } from './useExportVerify';
 import { useExportJob } from './useExportJob';
 import { GenerateProgress } from './GenerateProgress';
+import { RecentAsyncJobsPanel } from '../asyncJobs/RecentAsyncJobsPanel';
 import { useCatalogSourceContext } from './useCatalogSourceContext';
 import type { EmittedValidationReport } from './exportVerify';
 import { FormatPill } from '../../../ui/catalog/FormatPill';
@@ -974,6 +975,9 @@ export function ExportStudio({
             </div>
           )}
         </div>
+
+        {/* IXH-6.3: paginated recent jobs — never fetches the unbounded full history. */}
+        <RecentAsyncJobsPanel kind="export" limit={10} className="mt-2" />
 
         {/* Step navigation (MFX-41.1): Back / Continue, with Generate + downloads on the last step. */}
         <div className="flex flex-wrap items-center justify-between gap-2">

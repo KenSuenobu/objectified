@@ -485,11 +485,36 @@ async def test_list_is_tenant_scoped_and_summarized():
         listing = await list_export_jobs(TENANT_SLUG)
 
     assert [j.job_id for j in listing.jobs] == [accepted.job_id]
+    assert listing.total == 1
+    assert listing.limit == 50
+    assert listing.offset == 0
     row = listing.jobs[0]
     assert row.artifact == "artifact-1"
     assert row.target == "openapi"
     assert row.dry_run is True
     assert row.status_path == f"/v1/export/{TENANT_SLUG}/jobs/{accepted.job_id}"
+
+
+async def test_list_export_jobs_paginates_and_filters_state():
+    """List applies limit/offset and an exact state filter (IXH-6.3)."""
+    request = ExportJobStartRequest(artifact="artifact-1", target="openapi", dry_run=True)
+    with patch("app.export_job_engine.load_export_source", return_value=_source()):
+        first = await schedule_export_job(TENANT_SLUG, TENANT_ID, request)
+        second = await schedule_export_job(TENANT_SLUG, TENANT_ID, request)
+        await _wait_terminal(first.job_id)
+        await _wait_terminal(second.job_id)
+
+        page = await list_export_jobs(TENANT_SLUG, limit=1, offset=0)
+        filtered = await list_export_jobs(TENANT_SLUG, state="completed")
+        empty = await list_export_jobs(TENANT_SLUG, state="failed")
+
+    assert page.total == 2
+    assert page.limit == 1
+    assert len(page.jobs) == 1
+    assert all(j.state == "completed" for j in filtered.jobs)
+    assert filtered.total >= 2
+    assert empty.jobs == []
+    assert empty.total == 0
 
 
 async def test_status_and_emit_result_are_tenant_scoped():

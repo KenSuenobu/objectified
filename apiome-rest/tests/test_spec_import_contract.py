@@ -124,7 +124,11 @@ def test_openapi_lists_spec_import_paths_and_operations():
 def test_list_spec_import_jobs_empty():
     r = client.get("/v1/tenants/acme/imports")
     assert r.status_code == 200, r.text
-    assert r.json() == {"jobs": []}
+    body = r.json()
+    assert body["jobs"] == []
+    assert body["total"] == 0
+    assert body["limit"] == 50
+    assert body["offset"] == 0
 
 
 def test_list_spec_import_jobs_includes_started_job(spec_import_fake_worker):
@@ -142,15 +146,46 @@ def test_list_spec_import_jobs_includes_started_job(spec_import_fake_worker):
     assert started.status_code == 202, started.text
     job_id = started.json()["job_id"]
 
-    listed = client.get("/v1/tenants/acme/imports")
+    listed = client.get("/v1/tenants/acme/imports?limit=10&offset=0")
     assert listed.status_code == 200, listed.text
-    rows = listed.json()["jobs"]
+    payload = listed.json()
+    rows = payload["jobs"]
+    assert payload["total"] >= 1
+    assert payload["limit"] == 10
+    assert payload["offset"] == 0
     assert any(j["job_id"] == job_id for j in rows)
     match = next(j for j in rows if j["job_id"] == job_id)
     assert match["status_path"].endswith(f"/imports/{job_id}")
     assert "state" in match and "percent" in match
 
     _wait_completed(job_id)
+
+
+def test_list_spec_import_jobs_respects_state_filter(spec_import_fake_worker):
+    body = {
+        "metadata": {
+            "source_kind": "openapi-3",
+            "project": {"name": "Payments", "slug": "payments-api"},
+            "version": {"version_id": "1.0.0"},
+            "options": {},
+        },
+        "document_base64": "b3BlbmFwaTogMy4xLjA=",
+        "filename": "spec.yaml",
+    }
+    started = client.post("/v1/tenants/acme/imports", json=body)
+    assert started.status_code == 202, started.text
+    job_id = started.json()["job_id"]
+    _wait_completed(job_id)
+
+    filtered = client.get("/v1/tenants/acme/imports?state=completed&limit=50")
+    assert filtered.status_code == 200, filtered.text
+    rows = filtered.json()["jobs"]
+    assert any(j["job_id"] == job_id for j in rows)
+    assert all(j["state"] == "completed" for j in rows)
+
+    missing = client.get("/v1/tenants/acme/imports?state=failed")
+    assert missing.status_code == 200, missing.text
+    assert all(j["job_id"] != job_id for j in missing.json()["jobs"])
 
 
 def test_start_spec_import_json_returns_202(spec_import_fake_worker):

@@ -1,0 +1,115 @@
+"""Unit tests for the async job retention sweep (IXH-6.3, #5122)."""
+
+from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
+
+from app.async_job_retention_sweep import (
+    async_job_retention_policies,
+    process_async_job_retention_sweep,
+)
+
+
+class FakeDb:
+    def __init__(self):
+        self.reap_artifact_calls = []
+        self.reap_job_calls = []
+        self.prune_calls = []
+        self._job_batches = []
+        self._artifact_counts = []
+        self._prune_counts = []
+
+    def reap_expired_export_job_artifacts(self, *, now=None, limit=100):
+        self.reap_artifact_calls.append((now, limit))
+        if self._artifact_counts:
+            return self._artifact_counts.pop(0)
+        return 0
+
+    def reap_expired_async_jobs(self, *, policies, limit=100, now=None):
+        self.reap_job_calls.append((policies, limit, now))
+        if self._job_batches:
+            return self._job_batches.pop(0)
+        return []
+
+    def prune_async_job_history(self, *, older_than, limit=100):
+        self.prune_calls.append((older_than, limit))
+        if self._prune_counts:
+            return self._prune_counts.pop(0)
+        return 0
+
+
+def test_policies_omit_zero_hours():
+    with patch("app.async_job_retention_sweep.settings") as settings:
+        settings.async_job_retention_export_completed_hours = 168
+        settings.async_job_retention_export_failed_hours = 0
+        settings.async_job_retention_export_canceled_hours = 168
+        settings.async_job_retention_spec_import_completed_hours = 168
+        settings.async_job_retention_spec_import_failed_hours = 720
+        settings.async_job_retention_spec_import_canceled_hours = 168
+        now = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
+        policies = async_job_retention_policies(now=now)
+    assert ("export", "failed") not in policies
+    assert policies[("export", "completed")] == now - timedelta(hours=168)
+    assert policies[("spec_import", "failed")] == now - timedelta(hours=720)
+
+
+def test_sweep_reaps_artifacts_jobs_and_history():
+    db = FakeDb()
+    db._artifact_counts = [3]
+    db._job_batches = [
+        [
+            {"job_id": "a", "kind": "export", "tenant_slug": "t", "state": "completed"},
+            {"job_id": "b", "kind": "export", "tenant_slug": "t", "state": "failed"},
+        ]
+    ]
+    db._prune_counts = [1]
+    now = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
+    with patch("app.async_job_retention_sweep.settings") as settings:
+        settings.async_job_retention_export_completed_hours = 1
+        settings.async_job_retention_export_failed_hours = 1
+        settings.async_job_retention_export_canceled_hours = 1
+        settings.async_job_retention_spec_import_completed_hours = 1
+        settings.async_job_retention_spec_import_failed_hours = 1
+        settings.async_job_retention_spec_import_canceled_hours = 1
+        settings.async_job_history_retention_days = 90
+        settings.async_job_retention_sweep_batch_size = 50
+        result = process_async_job_retention_sweep(db, now=now, batch_size=50)
+    assert result == {"artifacts_reaped": 3, "jobs_deleted": 2, "history_pruned": 1}
+    assert db.reap_artifact_calls[0][1] == 50
+    assert len(db.reap_job_calls[0][0]) == 6
+    assert db.prune_calls[0][0] == now - timedelta(days=90)
+
+
+def test_sweep_second_tick_is_idempotent_when_empty():
+    db = FakeDb()
+    first = process_async_job_retention_sweep(db, batch_size=10, history_retention_days=30)
+    second = process_async_job_retention_sweep(db, batch_size=10, history_retention_days=30)
+    assert first == {"artifacts_reaped": 0, "jobs_deleted": 0, "history_pruned": 0}
+    assert second == first
+    assert len(db.reap_artifact_calls) == 2
+    assert len(db.reap_job_calls) == 2
+
+
+def test_sweep_survives_partial_failures():
+    class BrokenArtifacts(FakeDb):
+        def reap_expired_export_job_artifacts(self, **kwargs):
+            raise RuntimeError("artifacts down")
+
+    class BrokenJobs(FakeDb):
+        def reap_expired_async_jobs(self, **kwargs):
+            raise RuntimeError("jobs down")
+
+        def reap_expired_export_job_artifacts(self, **kwargs):
+            return 2
+
+    assert process_async_job_retention_sweep(BrokenArtifacts(), batch_size=5)[
+        "artifacts_reaped"
+    ] == 0
+    result = process_async_job_retention_sweep(BrokenJobs(), batch_size=5)
+    assert result["artifacts_reaped"] == 2
+    assert result["jobs_deleted"] == 0
+
+
+def test_history_prune_skipped_when_days_non_positive():
+    db = FakeDb()
+    process_async_job_retention_sweep(db, history_retention_days=0)
+    assert db.prune_calls == []

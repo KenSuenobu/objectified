@@ -15,6 +15,7 @@ import os
 import shutil
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Sequence
 
@@ -906,8 +907,19 @@ async def get_spec_import_status(tenant_slug: str, job_id: str) -> SpecImportJob
     raise HTTPException(status_code=404, detail="Import job not found")
 
 
-async def list_spec_import_jobs(tenant_slug: str) -> SpecImportJobListResponse:
+async def list_spec_import_jobs(
+    tenant_slug: str,
+    *,
+    limit: int = 50,
+    offset: int = 0,
+    state: Optional[str] = None,
+    created_after: Optional[datetime] = None,
+    created_before: Optional[datetime] = None,
+) -> SpecImportJobListResponse:
     from .database import db
+
+    page_limit = max(1, min(int(limit), 200))
+    page_offset = max(0, int(offset))
 
     def _from_status(st: SpecImportJobStatus) -> SpecImportJobListItem:
         return SpecImportJobListItem(
@@ -919,17 +931,56 @@ async def list_spec_import_jobs(tenant_slug: str) -> SpecImportJobListResponse:
             result=st.result,
         )
 
+    def _state_matches(job_state: str) -> bool:
+        return state is None or not str(state).strip() or job_state == str(state).strip()
+
     # Prefer the shared store so the list spans every instance's jobs for the tenant; fall back
     # to this process's in-memory jobs if the store is unreachable.
     try:
-        rows = await asyncio.to_thread(db.list_async_jobs, tenant_slug, _SHARED_JOB_KIND)
+        page = await asyncio.to_thread(
+            lambda: db.list_async_jobs(
+                tenant_slug,
+                _SHARED_JOB_KIND,
+                limit=page_limit,
+                offset=page_offset,
+                state=state,
+                created_after=created_after,
+                created_before=created_before,
+            )
+        )
     except Exception:  # noqa: BLE001 - shared store is best-effort; degrade to local view
         logger.warning("Falling back to in-memory import job list for %s", tenant_slug, exc_info=True)
         async with _jobs_lock:
-            local = [r.status for r in _jobs.values() if r.tenant_slug == tenant_slug]
-        return SpecImportJobListResponse(jobs=[_from_status(st) for st in local])
-    items = [_from_status(SpecImportJobStatus.model_validate(row["status"])) for row in rows]
-    return SpecImportJobListResponse(jobs=items)
+            local = [
+                r.status
+                for r in _jobs.values()
+                if r.tenant_slug == tenant_slug and _state_matches(r.status.state)
+            ]
+        local.sort(
+            key=lambda st: (
+                int(getattr(st, "created_at_ms", None) or getattr(st, "updated_at_ms", None) or 0),
+                st.job_id,
+            ),
+            reverse=True,
+        )
+        total = len(local)
+        slice_rows = local[page_offset : page_offset + page_limit]
+        return SpecImportJobListResponse(
+            jobs=[_from_status(st) for st in slice_rows],
+            total=total,
+            limit=page_limit,
+            offset=page_offset,
+        )
+    items = [
+        _from_status(SpecImportJobStatus.model_validate(row["status"]))
+        for row in page["jobs"]
+    ]
+    return SpecImportJobListResponse(
+        jobs=items,
+        total=int(page["total"]),
+        limit=int(page["limit"]),
+        offset=int(page["offset"]),
+    )
 
 
 async def cancel_spec_import_job(tenant_slug: str, job_id: str) -> None:

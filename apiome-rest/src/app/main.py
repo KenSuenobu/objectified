@@ -360,6 +360,7 @@ _repository_refresh_task: asyncio.Task | None = None
 _mcp_discovery_task: asyncio.Task | None = None
 _mcp_catalog_digest_task: asyncio.Task | None = None
 _lint_waiver_expiry_task: asyncio.Task | None = None
+_async_job_retention_task: asyncio.Task | None = None
 
 
 @app.on_event("startup")
@@ -573,6 +574,36 @@ async def startup_event():
             except Exception:
                 log.exception("lint waiver expiry sweep")
 
+    async def _async_job_retention_sweep() -> None:
+        """Periodically reap expired async jobs and export artifacts (IXH-6.3, #5122).
+
+        Each tick reaps expired artifact bytes, claims terminal ``async_job`` rows past the
+        configured per-(kind, state) retention window under ``FOR UPDATE SKIP LOCKED``,
+        writes slim history, deletes the live rows (CASCADE artifacts), and prunes old
+        history. Concurrent replicas are safe — the claim is the lock.
+        """
+        log = logging.getLogger(__name__)
+        while True:
+            await asyncio.sleep(300)
+            try:
+
+                def _run_retention() -> dict:
+                    thread_db = Database()
+                    try:
+                        from .async_job_retention_sweep import (
+                            process_async_job_retention_sweep,
+                        )
+
+                        return process_async_job_retention_sweep(thread_db)
+                    finally:
+                        thread_db.close()
+
+                await asyncio.to_thread(_run_retention)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                log.exception("async job retention sweep")
+
     global _webhook_delivery_task
     _webhook_delivery_task = asyncio.create_task(_webhook_delivery_sweep())
     global _repository_file_scan_task
@@ -585,6 +616,8 @@ async def startup_event():
     _mcp_catalog_digest_task = asyncio.create_task(_mcp_catalog_digest_sweep())
     global _lint_waiver_expiry_task
     _lint_waiver_expiry_task = asyncio.create_task(_lint_waiver_expiry_sweep())
+    global _async_job_retention_task
+    _async_job_retention_task = asyncio.create_task(_async_job_retention_sweep())
 
 
 @app.on_event("shutdown")
@@ -638,6 +671,14 @@ async def shutdown_event():
         except asyncio.CancelledError:
             pass
         _lint_waiver_expiry_task = None
+    global _async_job_retention_task
+    if _async_job_retention_task is not None:
+        _async_job_retention_task.cancel()
+        try:
+            await _async_job_retention_task
+        except asyncio.CancelledError:
+            pass
+        _async_job_retention_task = None
     db.close()
 
 
