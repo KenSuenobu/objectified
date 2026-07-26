@@ -42,6 +42,7 @@ import {
   Zap,
   TrendingUp,
   Boxes,
+  Box,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -183,6 +184,7 @@ export const CATALOG_FORMATS: readonly CatalogFormat[] = [
 
   // ---- Data schema ----
   { id: 'jsonschema', label: 'JSON Schema', icon: Braces, tone: 'indigo', importable: true, aliases: ['json'], description: 'JSON Schema type definitions.' },
+  { id: 'k8s-crd', label: 'Kubernetes CRD', icon: Box, tone: 'blue', importable: true, aliases: ['kubernetes-crd', 'crd', 'k8scrd'], description: 'Kubernetes CustomResourceDefinition structural schema.' },
   { id: 'avro', label: 'Avro', icon: Binary, tone: 'cyan', importable: true, aliases: ['avsc'], description: 'Apache Avro record schema (.avsc).' },
   { id: 'jtd', label: 'JSON Type Definition', icon: Braces, tone: 'indigo', importable: true, aliases: ['jsontypedefinition', 'rfc8927'], description: 'JSON Type Definition (RFC 8927).' },
   { id: 'xsd', label: 'XSD', icon: FileCode, tone: 'stone', importable: true, aliases: ['xmlschema'], description: 'XML Schema Definition (XSD).' },

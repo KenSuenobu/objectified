@@ -1,0 +1,211 @@
+{
+  "adapter": "k8s-crd",
+  "canonical": {
+    "channels": [],
+    "description": "CustomResourceDefinition databases.storage.example.io",
+    "extras": {
+      "k8s_crd_count": 1,
+      "k8s_crd_names": [
+        "databases.storage.example.io"
+      ]
+    },
+    "format": "k8s-crd",
+    "identity": {
+      "extras": {},
+      "id": "databases.storage.example.io",
+      "name": "Database",
+      "namespace": "storage.example.io"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Kubernetes CustomResourceDefinition databases.storage.example.io",
+        "extras": {
+          "k8s_crd_api_version": "apiextensions.k8s.io/v1",
+          "k8s_crd_group": "storage.example.io",
+          "k8s_crd_kind": "Database",
+          "k8s_crd_name": "databases.storage.example.io",
+          "k8s_crd_plural": "databases",
+          "k8s_crd_scope": "Cluster",
+          "k8s_crd_singular": "database"
+        },
+        "key": "databases.storage.example.io",
+        "name": "Database",
+        "operations": []
+      }
+    ],
+    "title": "Database",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "deprecated": false,
+          "k8s_crd_group": "storage.example.io",
+          "k8s_crd_kind": "Database",
+          "k8s_crd_version": "v1",
+          "served": true,
+          "storage": true,
+          "version_status": "served"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "storage.example.io/v1.Database.spec",
+            "name": "spec",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "storage.example.io/v1.Database.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "storage.example.io/v1.Database",
+        "key_type": null,
+        "kind": "record",
+        "name": "Database",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": true,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "deprecated": true,
+          "deprecation_warning": "v1alpha1 is no longer served.",
+          "k8s_crd_group": "storage.example.io",
+          "k8s_crd_kind": "Database",
+          "k8s_crd_version": "v1alpha1",
+          "served": false,
+          "storage": false,
+          "version_status": "not-served"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "storage.example.io/v1alpha1.Database.spec",
+            "name": "spec",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "storage.example.io/v1alpha1.Database",
+        "key_type": null,
+        "kind": "record",
+        "name": "Database",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": true,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "deprecated": true,
+          "deprecation_warning": "storage.example.io/v1beta1 Database is deprecated; use v1.",
+          "k8s_crd_group": "storage.example.io",
+          "k8s_crd_kind": "Database",
+          "k8s_crd_version": "v1beta1",
+          "served": true,
+          "storage": false,
+          "version_status": "deprecated"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "storage.example.io/v1beta1.Database.spec",
+            "name": "spec",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "storage.example.io/v1beta1.Database",
+        "key_type": null,
+        "kind": "record",
+        "name": "Database",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v1"
+  },
+  "corpus_path": "k8s-crd/03-multi-version.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "k8s-crd"
+  },
+  "fingerprint": "sha256:8feb447b44501f7c9472acbdb6811904ef38ebb262e9be9e46487a273088843a",
+  "lint": {
+    "findings": 7,
+    "grade": "B",
+    "report_fingerprint": "538297854260c96ee5154642244c45f699fd9bb9663eb4d02673e26f06c6bf01",
+    "score": 84,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

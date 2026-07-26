@@ -422,6 +422,26 @@ def _sniff_discovery(payload: DetectionInput) -> DetectionResult:
     return NO_MATCH
 
 
+def _sniff_k8s_crd(payload: DetectionInput) -> DetectionResult:
+    from .k8s_crd_parser import is_k8s_crd, is_k8s_crd_document
+
+    document = payload.document
+    if isinstance(document, dict) and is_k8s_crd_document(document):
+        return DetectionResult(
+            confidence=0.98,
+            format="k8s-crd",
+            reason="`apiVersion: apiextensions.k8s.io/*` + `kind: CustomResourceDefinition`",
+        )
+    text = _text_of(payload)
+    if text and is_k8s_crd(text):
+        return DetectionResult(
+            confidence=0.98,
+            format="k8s-crd",
+            reason="`apiVersion: apiextensions.k8s.io/*` + `kind: CustomResourceDefinition`",
+        )
+    return NO_MATCH
+
+
 def _sniff_avro(payload: DetectionInput) -> DetectionResult:
     document = payload.document
     if not isinstance(document, dict):
@@ -545,6 +565,7 @@ _SNIFFERS: tuple[Callable[[DetectionInput], DetectionResult], ...] = (
     _sniff_arazzo,
     _sniff_openrpc,
     _sniff_discovery,
+    _sniff_k8s_crd,
     _sniff_avro,
     _sniff_xmlrpc,
     _sniff_xsd,
@@ -578,6 +599,7 @@ SNIFFED_FORMATS = frozenset(
         "arazzo",
         "openrpc",
         "discovery",
+        "k8s-crd",
         "avro",
         "xmlrpc",
         "xsd",

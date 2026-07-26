@@ -4,7 +4,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Generated file — do not edit.** This README is the human index of [`corpus.manifest.json`](corpus.manifest.json) (schema: [`corpus.schema.json`](corpus.schema.json)). Edit the manifest, then run `python3 scripts/generate_examples_readme.py` from the repo root; CI fails on drift.
 
-The corpus holds **453 files** across **37 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **464 files** across **38 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -68,6 +68,7 @@ The corpus holds **453 files** across **37 format directories**. Every file has 
 | `flatbuffers/` | FlatBuffers | data_schema | `table`/`struct` + `root_type` | 11 |
 | `json-schema/` | JSON Schema | data_schema | `$schema` / `type` + `properties` | 17 |
 | `jtd/` | JSON Type Definition | data_schema | `properties`/`optionalProperties` | 11 |
+| `k8s-crd/` | Kubernetes CRD | data_schema | `apiVersion: apiextensions.k8s.io/*` + `kind: CustomResourceDefinition` | 11 |
 | `xsd/` | XML Schema (XSD) | data_schema | `xs:schema` root element | 13 |
 
 ### Industry / domain messaging
@@ -511,6 +512,24 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`negative/03-truncated-mid-token.jtd.json`** — Grounded FORMAT_MISMATCH rather than INPUT_MALFORMED: the greedy graphql sniffer claims the truncated JSON at 0.9 (`type` keyword match), while jtd's own detect cannot claim broken JSON.
 
+### `k8s-crd/` — Kubernetes CRD
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-minimal-widget.yaml` | minimal | `k8s-crd` ≥ 0.95 | valid | `crd`, `single-version`, `structural-schema` |
+| `02-typical-cronwidget.yaml` | typical | `k8s-crd` ≥ 0.95 | valid | `crd`, `required`, `spec-status` |
+| `03-multi-version.yaml` | composition | `k8s-crd` ≥ 0.95 | valid | `crd`, `multi-version`, `deprecated`, `not-served` |
+| `04-x-kubernetes-extensions.yaml` | stress | `k8s-crd` ≥ 0.95 | valid | `crd`, `x-kubernetes`, `int-or-string`, `list-type`, `map-type`, `preserve-unknown-fields` |
+| `05-cert-manager-like.yaml` | real-world | `k8s-crd` ≥ 0.95 | valid | `crd`, `real-world`, `nested-objects`, `enums` |
+| `06-multi-crd-stream.yaml` ⚠ | typical | `k8s-crd` ≥ 0.95 | valid | `crd`, `multi-document`, `multiple-services` |
+| `negative/01-syntactic-unclosed-mapping.yaml` | — | `k8s-crd` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-mapping` |
+| `negative/02-semantic-missing-group.yaml` | — | `k8s-crd` (no guarantee) | invalid | `negative`, `semantic`, `missing-group` |
+| `negative/03-truncated-mid-doc.yaml` | — | `k8s-crd` (no guarantee) | invalid | `negative`, `truncated`, `mid-doc-cut` |
+| `negative/04-wrong-format-openapi.yaml` | — | `k8s-crd` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi` |
+| `negative/05-encoding-utf16.yaml` | — | `k8s-crd` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+
+> ⚠ **`06-multi-crd-stream.yaml`** — Multi-document YAML stream with two CRDs; imports as one CanonicalApi with two Services. The multi-file ladder rung is waived because CRDs do not resolve cross-file references.
+
 ### `odata/` — OData v4 (EDMX)
 
 | File | Rung | Expected detection | Class | Features |
@@ -875,6 +894,7 @@ Rungs that do not apply to an adapter's format, with the manifest-recorded justi
 | `iso8583` | multi-file | Iso8583ImportSource.parse_fileset only parses the fileset root and resolves no references across members, so a multi-file set demonstrates nothing beyond a single document. |
 | `json-schema` | multi-file | The json-schema adapter has no parse_fileset and does not resolve cross-file $ref targets, so schemas import as single self-contained documents. |
 | `jtd` | multi-file | The jtd adapter has no parse_fileset; JTD (RFC 8927) documents carry their definitions inline and import as single self-contained files. |
+| `k8s-crd` | multi-file | K8sCrdImportSource.parse_fileset only parses the root member and CRD structural schemas do not resolve cross-file references; multi-document YAML streams (k8s-crd/06-multi-crd-stream.yaml) cover multi-entity intake instead. |
 | `odata` | multi-file | The odata adapter's parse_fileset only parses the root member and does not resolve edmx:Reference includes across other members, so a multi-file set exercises nothing. |
 | `oncrpc` | multi-file | The ONC RPC adapter's parse_fileset only parses the root document and does not resolve references across fileset members, so a multi-file set would exercise nothing. |
 | `openapi` | multi-file | The openapi adapter has no parse_fileset, so a multi-file set cannot be imported together. |

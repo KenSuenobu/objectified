@@ -85,6 +85,15 @@ _FIXTURES = {
         '"resources":{"probe":{"methods":{"get":{"id":"ping.probe.get","path":"v1/ping",'
         '"httpMethod":"GET","response":{"$ref":"Pong"}}}}}}'
     ),
+    "k8s-crd": (
+        "apiVersion: apiextensions.k8s.io/v1\n"
+        "kind: CustomResourceDefinition\n"
+        "metadata:\n  name: widgets.example.io\n"
+        "spec:\n  group: example.io\n  scope: Namespaced\n"
+        "  names:\n    plural: widgets\n    kind: Widget\n"
+        "  versions:\n    - name: v1\n      served: true\n      storage: true\n"
+        "      schema:\n        openAPIV3Schema:\n          type: object\n"
+    ),
     "xmlrpc": (
         '<?xml version="1.0"?>\n'
         "<methodCall><methodName>ping</methodName><params></params></methodCall>"
@@ -296,6 +305,14 @@ def test_discovery_is_now_importable() -> None:
     assert detection.detected.format == "discovery"
     assert detection.detected.importable is True
     assert detection.detected.source_key == "discovery"
+
+
+def test_k8s_crd_is_now_importable() -> None:
+    detection = detect_format(DetectionInput(text=_FIXTURES["k8s-crd"]))
+    assert detection.detected is not None
+    assert detection.detected.format == "k8s-crd"
+    assert detection.detected.importable is True
+    assert detection.detected.source_key == "k8s-crd"
 
 
 def test_xmlrpc_is_now_importable() -> None:
