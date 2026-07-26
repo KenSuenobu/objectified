@@ -12,8 +12,12 @@ Content negotiation
 Implementation note
 -------------------
 Jobs run a ``tsx`` worker in ``apiome-ui`` that shares the same ``DATABASE_URL`` as this API,
-using incremental import mode so results are persisted without a separate commit step. Two-phase
-preview commit/rollback (pending-approval) is not exposed yet for REST callers.
+using incremental import mode so results are persisted without a separate commit step. Commit and
+rollback are served from the owning instance's in-memory record or, on a non-owning instance, from
+the shared ``async_job`` store (IXH-6.2). Two-phase preview commit/rollback
+(``pending-approval``) still requires an owner-held preview transaction that REST does not hold;
+callers receive a documented 501 naming constraint ``held_preview_transaction`` rather than a bare
+404, and sticky owner routing is not available in this deployment.
 """
 
 from __future__ import annotations
@@ -35,7 +39,6 @@ from .import_preview_manifest import (
     run_import_preview_manifest,
 )
 from .intake_error_taxonomy import descriptor_for
-from .permissions import enforce_permission, Resource, Action
 from .models import (
     REPOSITORY_AUTO_IMPORT_SOURCE_KIND,
     ImportPreflightReport,
@@ -48,6 +51,7 @@ from .models import (
     SpecImportStartJsonRequest,
     SpecImportStartMetadata,
 )
+from .permissions import Action, Resource, enforce_permission
 from .spec_import_engine import (
     cancel_spec_import_job as engine_cancel_spec_import_job,
     commit_spec_import_job as engine_commit_spec_import_job,
@@ -385,4 +389,4 @@ async def rollback_spec_import_job(
 ) -> SpecImportRollbackResponse:
     enforce_permission(db, auth_data, Resource.IMPORTS, Action.CREATE)
     _ = auth_data
-    return engine_rollback_spec_import_job(tenant_slug, job_id)
+    return await engine_rollback_spec_import_job(tenant_slug, job_id)

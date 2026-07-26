@@ -166,3 +166,52 @@ def test_wrong_format_entry_is_unclaimed_or_rejected_as_mismatch(entry):
 def test_negative_corpus_is_nonempty():
     """Guard against the parametrized suites silently collecting nothing."""
     assert len(_negative_entries()) >= 5
+
+
+async def test_failed_negative_job_rollback_via_shared_store_is_409_not_404(
+    _blocked_persistence,
+):
+    """IXH-6.2: after a negative-corpus failure, shared-store rollback is 409, never 404.
+
+    Negative fixtures terminate as ``failed`` (nothing to roll back). Once the owning
+    instance drops its in-memory record, the shared ``async_job`` row must still drive a
+    precise 409 — the same gap commit/rollback closed for successful jobs.
+    """
+    from fastapi import HTTPException
+
+    from app.database import db
+    from app.spec_import_engine import _SHARED_JOB_KIND, _jobs, rollback_spec_import_job
+
+    entries = _negative_entries()
+    assert entries, "negative corpus must be non-empty"
+    entry = next(
+        (e for e in entries if not _missing_tools(e.adapter_key)),  # type: ignore[arg-type]
+        None,
+    )
+    if entry is None:
+        pytest.skip("no negative corpus entry with resolvable tools in this environment")
+
+    final = await import_source_pipeline.run_adapter_import_job(
+        _adapter_for(entry), _payload_for(entry)
+    )
+    assert final.state == "failed"
+    assert _blocked_persistence == []
+
+    job_id = f"negative-rollback-{entry.path.replace('/', '-')}"
+    status = final.model_dump(mode="json")
+    status["job_id"] = job_id
+    db.upsert_async_job(
+        job_id=job_id,
+        kind=_SHARED_JOB_KIND,
+        tenant_slug="acme",
+        state="failed",
+        status=status,
+        extra=None,
+    )
+    _jobs.clear()
+    assert job_id not in _jobs
+
+    with pytest.raises(HTTPException) as excinfo:
+        await rollback_spec_import_job("acme", job_id)
+    assert excinfo.value.status_code == 409
+    assert "failed" in str(excinfo.value.detail)
