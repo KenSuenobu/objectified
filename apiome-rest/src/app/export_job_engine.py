@@ -384,8 +384,9 @@ class ExportDownloadArtifact:
     """The materialized bytes of an export ready to serve (MFX-4.1 / MFX-4.2).
 
     Produced by :func:`resolve_export_download` from a completed job's retained
-    :class:`~app.emitter.EmitResult`; the delivery route wraps it in an HTTP download
-    response (content-type + ``Content-Disposition`` filename).
+    :class:`~app.emitter.EmitResult` (owner fast path) or the shared artifact store
+    (IXH-6.1, any instance); the delivery route wraps it in an HTTP download response
+    (content-type + ``Content-Disposition`` filename + integrity headers).
 
     Two shapes flow through the same dataclass:
 
@@ -402,11 +403,14 @@ class ExportDownloadArtifact:
             or a default).
         body: The response payload — serialized document ``str`` (single file) or zip
             ``bytes`` (multi-file bundle). FastAPI's ``Response`` accepts either.
+        content_sha256: ``sha256:<hex>`` over the exact download body bytes (IXH-6.1);
+            exposed on the download response for integrity checking.
     """
 
     filename: str
     media_type: str
     body: Union[str, bytes]
+    content_sha256: Optional[str] = None
 
     @property
     def content_length(self) -> int:
@@ -1141,6 +1145,58 @@ async def _drive_export_job(job_id: str) -> None:
         # so the record and the poller-facing result advertise the same deadline.
         artifact_expires_at = _artifact_expiry_from(_now_ms())
 
+        # Materialize delivery bytes and persist to the shared artifact store (IXH-6.1) so a
+        # non-owning instance can serve the download. Fail the job on size-cap / store errors
+        # rather than completing with an undeliverable artifact.
+        try:
+            download = _materialize_download_artifact(
+                emit_result,
+                target_format=target_format,
+                bundle_provenance=bundle_provenance,
+            )
+            from .export_artifact_store import (
+                ExportArtifactStoreNotConfigured,
+                ExportArtifactTooLarge,
+                body_as_bytes,
+                put_export_artifact,
+            )
+
+            stored = await asyncio.to_thread(
+                put_export_artifact,
+                job_id=job_id,
+                tenant_slug=tenant_slug,
+                body=body_as_bytes(download.body),
+                media_type=download.media_type,
+                filename=download.filename,
+                expires_at_ms=artifact_expires_at,
+            )
+            download.content_sha256 = stored.content_sha256
+        except ExportArtifactTooLarge as exc:
+            await _fail(
+                job_id,
+                "EXPORT_ARTIFACT_TOO_LARGE",
+                str(exc),
+                {"size_bytes": exc.size_bytes, "max_bytes": exc.max_bytes},
+            )
+            return
+        except ExportArtifactStoreNotConfigured as exc:
+            await _fail(
+                job_id,
+                "EXPORT_ARTIFACT_STORE_UNAVAILABLE",
+                str(exc),
+                {"size_bytes": exc.size_bytes, "db_max_bytes": exc.db_max_bytes},
+            )
+            return
+        except Exception as exc:  # noqa: BLE001 - persist failure must fail the job, not hang
+            logger.exception("Failed to persist export artifact job=%s", job_id)
+            await _fail(
+                job_id,
+                "EXPORT_ARTIFACT_PERSIST_FAILED",
+                f"Failed to persist the export artifact for download: {exc}",
+                None,
+            )
+            return
+
         result = ExportJobResult(
             artifact=source.artifact_id,
             version_record_id=source.version_record_id,
@@ -1369,73 +1425,17 @@ def _download_filename(path: str) -> str:
     return sanitized or "document"
 
 
-def resolve_export_download(tenant_slug: str, job_id: str) -> ExportDownloadArtifact:
-    """Materialize a completed export job's artifact for download (MFX-4.1 / MFX-4.2).
+def _materialize_download_artifact(
+    emit_result: "EmitResult",
+    *,
+    target_format: str,
+    bundle_provenance: Optional[Dict[str, Any]] = None,
+) -> ExportDownloadArtifact:
+    """Build the download filename/media_type/body from a retained EmitResult (no I/O).
 
-    Serves the artifact the poller was pointed at via ``result.download_path`` from the
-    retained :class:`~app.emitter.EmitResult` (no re-emit). The delivery shape follows the
-    emit result:
-
-    * a **single-file** export is served inline (MFX-4.1) — the document serialized by
-      :func:`serialize_file_content` so its bytes match the manifest's ``size_bytes``, with
-      the emitted file's content type and a ``Content-Disposition`` filename from its basename;
-    * a **multi-file** export (protobuf packages, WSDL+XSD, per-subject Avro) is served as a
-      zip bundle (MFX-4.2, :func:`build_export_zip`) — every emitted file plus a root
-      ``manifest.json`` — as ``application/zip`` with a ``<target>.zip`` filename.
-
-    Args:
-        tenant_slug: The tenant slug the job was submitted under (scopes the lookup).
-        job_id: The job id from the 202 acceptance payload.
-
-    Returns:
-        The artifact's filename, media type, and body (document ``str`` for a single file,
-        zip ``bytes`` for a multi-file bundle).
-
-    Raises:
-        HTTPException: 404 when the job is unknown for this tenant; 409 when the job has no
-            downloadable artifact (not completed, or a dry-run that emitted nothing); 410 when
-            the artifact was emitted but its retention window has since elapsed (MFX-4.3).
+    Same shape the delivery route streams: single-file serialized text, or a multi-file zip.
     """
-    with _jobs_lock:
-        # Sweep the store first so expired bytes are reclaimed even for jobs no one polls; the
-        # sweep also drops this job's artifact if it is past its own deadline, folding expiry
-        # into the read below (no artifact ⇒ the 410 branch fires).
-        now_ms = _now_ms()
-        _expire_stale_artifacts(now_ms)
-        rec = _get_record_locked(tenant_slug, job_id)
-        state = rec.state
-        request_dry_run = rec.request.dry_run
-        emit_result = rec.emit_result
-        artifact_expired = (
-            rec.artifact_expires_at_ms is not None and now_ms >= rec.artifact_expires_at_ms
-        )
-        result_target = rec.status.result.target if rec.status.result else None
-        bundle_provenance = rec.bundle_provenance
-
-    # A real export whose window has elapsed: honest 410 (the artifact existed but is gone),
-    # distinct from the 409 a dry-run / never-completed job gets (no artifact was ever emitted).
-    if state == "completed" and not request_dry_run and artifact_expired:
-        raise HTTPException(
-            status_code=410,
-            detail="This export artifact has expired and is no longer available for "
-            "download; resubmit the export job to regenerate it.",
-        )
-
-    if state != "completed":
-        raise HTTPException(
-            status_code=409,
-            detail=f"Export job is not downloadable in state {state!r}; "
-            "no artifact has been emitted.",
-        )
-    if request_dry_run or emit_result is None or not emit_result.files:
-        raise HTTPException(
-            status_code=409,
-            detail="This export job produced no artifact to download (dry-run).",
-        )
-
-    # Multi-file targets are delivered as a zip bundle with an embedded manifest (MFX-4.2).
     if len(emit_result.files) > 1:
-        target_format = result_target or "export"
         return ExportDownloadArtifact(
             filename=_bundle_filename(target_format),
             media_type=BUNDLE_MEDIA_TYPE,
@@ -1449,6 +1449,175 @@ def resolve_export_download(tenant_slug: str, job_id: str) -> ExportDownloadArti
         media_type=primary.media_type or emit_result.media_type or default_media,
         body=serialize_file_content(primary.content),
     )
+
+
+def _artifact_from_local_emit(
+    emit_result: "EmitResult",
+    *,
+    target_format: str,
+    bundle_provenance: Optional[Dict[str, Any]],
+) -> ExportDownloadArtifact:
+    """Materialize from the owner fast path and attach a content hash."""
+    from .export_artifact_store import body_as_bytes, content_sha256_hex
+
+    artifact = _materialize_download_artifact(
+        emit_result,
+        target_format=target_format,
+        bundle_provenance=bundle_provenance,
+    )
+    artifact.content_sha256 = content_sha256_hex(body_as_bytes(artifact.body))
+    return artifact
+
+
+def _resolve_download_from_shared_store(tenant_slug: str, job_id: str) -> ExportDownloadArtifact:
+    """Serve a download from the shared artifact store + async_job status (non-owner path)."""
+    from .database import db
+    from .export_artifact_store import (
+        ExportArtifactExpired,
+        ExportArtifactNotFound,
+        get_export_artifact,
+    )
+
+    try:
+        row = db.get_async_job(job_id, tenant_slug, _SHARED_JOB_KIND)
+    except Exception:  # noqa: BLE001 - shared store is best-effort
+        logger.warning(
+            "Failed to read export job %s from shared store for download", job_id, exc_info=True
+        )
+        row = None
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Export job not found")
+
+    status = ExportJobStatus.model_validate(row["status"])
+    state = status.state
+    extra = row.get("extra") or {}
+    dry_run = bool(extra.get("dry_run"))
+    if status.result is not None:
+        dry_run = bool(status.result.dry_run)
+
+    if state == "completed" and dry_run:
+        raise HTTPException(
+            status_code=409,
+            detail="This export job produced no artifact to download (dry-run).",
+        )
+    if state != "completed":
+        raise HTTPException(
+            status_code=409,
+            detail=f"Export job is not downloadable in state {state!r}; "
+            "no artifact has been emitted.",
+        )
+
+    try:
+        record = get_export_artifact(tenant_slug, job_id)
+    except ExportArtifactExpired:
+        raise HTTPException(
+            status_code=410,
+            detail="This export artifact has expired and is no longer available for "
+            "download; resubmit the export job to regenerate it.",
+        ) from None
+    except ExportArtifactNotFound:
+        # Completed non-dry-run but no shared bytes: treat as expired/gone (410), not a bare 404.
+        expires = status.result.download_expires_at if status.result else None
+        if expires is not None and _now_ms() >= expires:
+            raise HTTPException(
+                status_code=410,
+                detail="This export artifact has expired and is no longer available for "
+                "download; resubmit the export job to regenerate it.",
+            )
+        raise HTTPException(
+            status_code=409,
+            detail="This export job produced no artifact to download (dry-run).",
+        ) from None
+
+    # Shared store always holds delivery bytes; serve them as bytes (single-file or zip).
+    body: Union[str, bytes] = record.content or b""
+    if record.media_type != BUNDLE_MEDIA_TYPE and isinstance(body, (bytes, bytearray)):
+        try:
+            body = body.decode("utf-8")
+        except UnicodeDecodeError:
+            body = bytes(body)
+
+    return ExportDownloadArtifact(
+        filename=record.filename,
+        media_type=record.media_type,
+        body=body,
+        content_sha256=record.content_sha256,
+    )
+
+
+def resolve_export_download(tenant_slug: str, job_id: str) -> ExportDownloadArtifact:
+    """Materialize a completed export job's artifact for download (MFX-4.1 / MFX-4.2 / IXH-6.1).
+
+    Serves the artifact the poller was pointed at via ``result.download_path``:
+
+    * **Owner fast path** — retained :class:`~app.emitter.EmitResult` on this process's
+      ``_jobs`` record (no re-emit).
+    * **Shared store** — when this instance does not own the job (round-robin), load the
+      delivery payload from ``apiome.export_job_artifact`` (IXH-6.1).
+
+    Delivery shape:
+
+    * a **single-file** export is served inline (MFX-4.1);
+    * a **multi-file** export is served as a zip bundle (MFX-4.2).
+
+    Args:
+        tenant_slug: The tenant slug the job was submitted under (scopes the lookup).
+        job_id: The job id from the 202 acceptance payload.
+
+    Returns:
+        The artifact's filename, media type, body, and content hash.
+
+    Raises:
+        HTTPException: 404 when the job is unknown for this tenant; 409 when the job has no
+            downloadable artifact (not completed, or a dry-run that emitted nothing); 410 when
+            the artifact was emitted but its retention window has since elapsed (MFX-4.3).
+    """
+    with _jobs_lock:
+        # Sweep the local store first so expired bytes are reclaimed even for jobs no one polls.
+        now_ms = _now_ms()
+        _expire_stale_artifacts(now_ms)
+        rec = _jobs.get(job_id)
+        if rec is not None and rec.tenant_slug == tenant_slug:
+            state = rec.state
+            request_dry_run = rec.request.dry_run
+            emit_result = rec.emit_result
+            artifact_expired = (
+                rec.artifact_expires_at_ms is not None and now_ms >= rec.artifact_expires_at_ms
+            )
+            result_target = rec.status.result.target if rec.status.result else None
+            bundle_provenance = rec.bundle_provenance
+        else:
+            rec = None
+
+    if rec is not None:
+        if state == "completed" and not request_dry_run and artifact_expired:
+            raise HTTPException(
+                status_code=410,
+                detail="This export artifact has expired and is no longer available for "
+                "download; resubmit the export job to regenerate it.",
+            )
+
+        if state != "completed":
+            raise HTTPException(
+                status_code=409,
+                detail=f"Export job is not downloadable in state {state!r}; "
+                "no artifact has been emitted.",
+            )
+        if request_dry_run or emit_result is None or not emit_result.files:
+            raise HTTPException(
+                status_code=409,
+                detail="This export job produced no artifact to download (dry-run).",
+            )
+
+        return _artifact_from_local_emit(
+            emit_result,
+            target_format=result_target or "export",
+            bundle_provenance=bundle_provenance,
+        )
+
+    # Non-owning instance (or job already dropped from local memory): shared store.
+    return _resolve_download_from_shared_store(tenant_slug, job_id)
 
 
 # The chunk size the delivery route streams a download body in (MFX-4.3). 64 KiB keeps the

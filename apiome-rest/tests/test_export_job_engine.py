@@ -1023,3 +1023,138 @@ async def test_get_emit_result_returns_none_after_expiry():
     _jobs[accepted.job_id].artifact_expires_at_ms = int(time.time() * 1000) - 1
     assert get_export_job_emit_result(TENANT_SLUG, accepted.job_id) is None
     assert _jobs[accepted.job_id].emit_result is None
+
+
+async def test_non_owning_instance_serves_download_from_shared_store():
+    """Clearing local _jobs (non-owner) still serves the artifact from the shared store (IXH-6.1)."""
+    from app.export_artifact_store import body_as_bytes, content_sha256_hex
+    from app.export_job_engine import resolve_export_download
+
+    request = ExportJobStartRequest(artifact="artifact-1", target="openapi")
+    with patch("app.export_job_engine.load_export_source", return_value=_source()):
+        accepted = await schedule_export_job(TENANT_SLUG, TENANT_ID, request)
+        status = await _wait_terminal(accepted.job_id)
+
+    assert status["state"] == "completed"
+    owner_artifact = resolve_export_download(TENANT_SLUG, accepted.job_id)
+    expected_hash = content_sha256_hex(body_as_bytes(owner_artifact.body))
+    assert owner_artifact.content_sha256 == expected_hash
+
+    # Simulate a different REST instance: no in-memory job record.
+    _jobs.clear()
+    assert accepted.job_id not in _jobs
+
+    remote = resolve_export_download(TENANT_SLUG, accepted.job_id)
+    assert remote.filename == owner_artifact.filename
+    assert remote.media_type == owner_artifact.media_type
+    assert body_as_bytes(remote.body) == body_as_bytes(owner_artifact.body)
+    assert remote.content_sha256 == expected_hash
+
+
+async def test_shared_store_download_is_tenant_scoped():
+    """A cross-tenant read of a shared artifact is refused (404), never leaked."""
+    from fastapi import HTTPException
+
+    from app.export_job_engine import resolve_export_download
+
+    request = ExportJobStartRequest(artifact="artifact-1", target="openapi")
+    with patch("app.export_job_engine.load_export_source", return_value=_source()):
+        accepted = await schedule_export_job(TENANT_SLUG, TENANT_ID, request)
+        await _wait_terminal(accepted.job_id)
+
+    _jobs.clear()
+    with pytest.raises(HTTPException) as excinfo:
+        resolve_export_download("other-tenant", accepted.job_id)
+    assert excinfo.value.status_code == 404
+
+
+async def test_shared_store_expired_artifact_is_410():
+    """An expired shared-store artifact returns 410 (not a bare 404) on a non-owner."""
+    from datetime import datetime, timezone
+
+    from fastapi import HTTPException
+
+    from app.database import db
+    from app.export_job_engine import resolve_export_download
+
+    request = ExportJobStartRequest(artifact="artifact-1", target="openapi")
+    with patch("app.export_job_engine.load_export_source", return_value=_source()):
+        accepted = await schedule_export_job(TENANT_SLUG, TENANT_ID, request)
+        await _wait_terminal(accepted.job_id)
+
+    row = db.get_export_job_artifact(accepted.job_id, TENANT_SLUG)
+    assert row is not None
+    # Force expiry on the shared row and drop the local fast path.
+    past = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    db.upsert_export_job_artifact(
+        job_id=row["job_id"],
+        tenant_slug=row["tenant_slug"],
+        content_sha256=row["content_sha256"],
+        size_bytes=row["size_bytes"],
+        media_type=row["media_type"],
+        filename=row["filename"],
+        backend=row["backend"],
+        content=row["content"],
+        storage_uri=row["storage_uri"],
+        expires_at=past,
+    )
+    _jobs.clear()
+
+    with pytest.raises(HTTPException) as excinfo:
+        resolve_export_download(TENANT_SLUG, accepted.job_id)
+    assert excinfo.value.status_code == 410
+    assert "expired" in excinfo.value.detail
+
+
+async def test_export_artifact_size_cap_fails_the_job():
+    """An oversize delivery payload fails the job with EXPORT_ARTIFACT_TOO_LARGE (no truncated store)."""
+    from app.database import db
+
+    huge = "x" * 1000
+    def _huge(*args, **kwargs):
+        return EmitResult(
+            files=[EmittedFile(path="huge.json", content=huge, media_type="application/json")],
+            media_type="application/json",
+        )
+
+    request = ExportJobStartRequest(artifact="artifact-1", target="openapi")
+    with patch("app.export_job_engine.load_export_source", return_value=_source()), patch(
+        "app.export_job_engine.emit_canonical", side_effect=_huge
+    ), patch(
+        "app.export_job_engine.validate_emitted_artifact", _passing_validation
+    ), patch.object(settings, "export_artifact_max_bytes", 100), patch.object(
+        settings, "export_artifact_db_max_bytes", 100
+    ):
+        accepted = await schedule_export_job(TENANT_SLUG, TENANT_ID, request)
+        status = await _wait_terminal(accepted.job_id)
+
+    assert status["state"] == "failed"
+    assert status["error"]["code"] == "EXPORT_ARTIFACT_TOO_LARGE"
+    assert db.get_export_job_artifact(accepted.job_id, TENANT_SLUG) is None
+
+
+async def test_object_store_stub_fails_when_above_db_threshold():
+    """Sizes between db_max and hard max select the object-store stub and fail clearly."""
+    body = "y" * 200
+    def _mid(*args, **kwargs):
+        return EmitResult(
+            files=[EmittedFile(path="mid.json", content=body, media_type="application/json")],
+            media_type="application/json",
+        )
+
+    request = ExportJobStartRequest(artifact="artifact-1", target="openapi")
+    with patch("app.export_job_engine.load_export_source", return_value=_source()), patch(
+        "app.export_job_engine.emit_canonical", side_effect=_mid
+    ), patch(
+        "app.export_job_engine.validate_emitted_artifact", _passing_validation
+    ), patch.object(settings, "export_artifact_max_bytes", 10_000), patch.object(
+        settings, "export_artifact_db_max_bytes", 50
+    ):
+        accepted = await schedule_export_job(TENANT_SLUG, TENANT_ID, request)
+        status = await _wait_terminal(accepted.job_id)
+
+    assert status["state"] == "failed"
+    assert status["error"]["code"] == "EXPORT_ARTIFACT_STORE_UNAVAILABLE"
+    assert "object-store" in status["error"]["message"].lower() or "not configured" in status[
+        "error"
+    ]["message"].lower()

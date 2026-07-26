@@ -510,6 +510,27 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Shared export artifact size guards (IXH-6.1, #5120). At emit time the delivery payload
+    # (single-file UTF-8 or multi-file zip) must fit under ``export_artifact_max_bytes`` or the
+    # job fails with a clear error rather than storing a truncated body. Artifacts at or below
+    # ``export_artifact_db_max_bytes`` are stored as a DB BYTEA; larger ones (still under the
+    # hard cap) select the object-store driver. Defaults are equal so production always uses
+    # the DB backend until an object store is configured and the DB threshold is lowered.
+    export_artifact_max_bytes: int = Field(
+        default=33_554_432,  # 32 MiB
+        validation_alias=AliasChoices(
+            "APIOME_EXPORT_ARTIFACT_MAX_BYTES",
+            "export_artifact_max_bytes",
+        ),
+    )
+    export_artifact_db_max_bytes: int = Field(
+        default=33_554_432,  # 32 MiB — same as hard cap → DB-only until object store lands
+        validation_alias=AliasChoices(
+            "APIOME_EXPORT_ARTIFACT_DB_MAX_BYTES",
+            "export_artifact_db_max_bytes",
+        ),
+    )
+
     # Global auto-refresh kill switch (RAR-3.3, #3524). When False, the refresh
     # sweep halts entirely (no repository is auto-refreshed) regardless of per-repo
     # auto_refresh_enabled. Intended for incident response. Manual "Refresh Now"

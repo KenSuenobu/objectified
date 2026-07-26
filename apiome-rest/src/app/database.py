@@ -20115,6 +20115,113 @@ class Database:
         rows = self.execute_query(query, (job_id,))
         return bool(rows and rows[0].get("cancel_requested"))
 
+    # ───────────────────── export job artifact store (IXH-6.1, #5120) ─────────────────────
+    # Delivery bytes for completed exports, shared across instances. Status lives in
+    # async_job (V158); this table holds the download payload so a non-owning instance can
+    # serve GET …/download instead of 404-ing on a missing in-memory EmitResult.
+
+    def upsert_export_job_artifact(
+        self,
+        *,
+        job_id: str,
+        tenant_slug: str,
+        content_sha256: str,
+        size_bytes: int,
+        media_type: str,
+        filename: str,
+        backend: str,
+        content: Optional[bytes],
+        storage_uri: Optional[str],
+        expires_at: Optional[Any],
+    ) -> None:
+        """Insert or replace the shared download payload for an export job."""
+        query = """
+            INSERT INTO apiome.export_job_artifact
+                (job_id, tenant_slug, content_sha256, size_bytes, media_type, filename,
+                 backend, content, storage_uri, expires_at, reaped_at, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, now())
+            ON CONFLICT (job_id) DO UPDATE SET
+                tenant_slug = EXCLUDED.tenant_slug,
+                content_sha256 = EXCLUDED.content_sha256,
+                size_bytes = EXCLUDED.size_bytes,
+                media_type = EXCLUDED.media_type,
+                filename = EXCLUDED.filename,
+                backend = EXCLUDED.backend,
+                content = EXCLUDED.content,
+                storage_uri = EXCLUDED.storage_uri,
+                expires_at = EXCLUDED.expires_at,
+                reaped_at = NULL
+            RETURNING job_id
+        """
+        self.execute_query(
+            query,
+            (
+                job_id,
+                tenant_slug,
+                content_sha256,
+                size_bytes,
+                media_type,
+                filename,
+                backend,
+                psycopg2.Binary(content) if content is not None else None,
+                storage_uri,
+                expires_at,
+            ),
+        )
+
+    def get_export_job_artifact(
+        self, job_id: str, tenant_slug: str
+    ) -> Optional[Dict[str, Any]]:
+        """Return the shared artifact row scoped to tenant, or None (cross-tenant → None)."""
+        query = """
+            SELECT job_id, tenant_slug, content_sha256, size_bytes, media_type, filename,
+                   backend, content, storage_uri, expires_at, reaped_at, created_at
+            FROM apiome.export_job_artifact
+            WHERE job_id = %s AND tenant_slug = %s
+        """
+        rows = self.execute_query(query, (job_id, tenant_slug))
+        return rows[0] if rows else None
+
+    def delete_export_job_artifact(self, job_id: str, tenant_slug: str) -> bool:
+        """Delete a tenant-scoped artifact row; return True when a row was removed."""
+        query = """
+            DELETE FROM apiome.export_job_artifact
+            WHERE job_id = %s AND tenant_slug = %s
+            RETURNING job_id
+        """
+        return bool(self.execute_query(query, (job_id, tenant_slug)))
+
+    def reap_expired_export_job_artifacts(
+        self, *, now: Optional[Any] = None, limit: int = 100
+    ) -> int:
+        """Clear content for expired unreaped artifacts (IXH-6.3 sweep helper).
+
+        Sets ``reaped_at`` and nulls ``content`` / ``storage_uri`` so downloads become 410
+        without waiting for the job row to be deleted. Returns the number of rows reaped.
+        """
+        query = """
+            UPDATE apiome.export_job_artifact
+               SET reaped_at = COALESCE(%s, now()),
+                   content = NULL,
+                   storage_uri = NULL
+             WHERE reaped_at IS NULL
+               AND expires_at IS NOT NULL
+               AND expires_at <= COALESCE(%s, now())
+               AND job_id IN (
+                   SELECT job_id FROM apiome.export_job_artifact
+                    WHERE reaped_at IS NULL
+                      AND expires_at IS NOT NULL
+                      AND expires_at <= COALESCE(%s, now())
+                    ORDER BY expires_at ASC
+                    LIMIT %s
+                    FOR UPDATE SKIP LOCKED
+               )
+            RETURNING job_id
+        """
+        ts = now
+        rows = self.execute_query(query, (ts, ts, ts, limit))
+        return len(rows)
+
     # ------------------------------------------------------------------
     # Round-trip preservation envelope (DCW-2.1, private-suite#2352, V184)
     # ------------------------------------------------------------------

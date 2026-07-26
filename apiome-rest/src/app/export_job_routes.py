@@ -196,13 +196,19 @@ async def download_export_job_artifact(
     """
     _ = auth_data
     artifact = engine_resolve_export_download(tenant_slug, job_id)
+    headers = {
+        "Content-Disposition": f'attachment; filename="{artifact.filename}"',
+        "Content-Length": str(artifact.content_length),
+    }
+    if artifact.content_sha256:
+        from .export_artifact_store import content_sha256_hex_only, digest_header_value
+
+        headers["Digest"] = digest_header_value(artifact.content_sha256)
+        headers["X-Content-SHA256"] = content_sha256_hex_only(artifact.content_sha256)
     return StreamingResponse(
         iter_download_chunks(artifact),
         media_type=artifact.media_type,
-        headers={
-            "Content-Disposition": f'attachment; filename="{artifact.filename}"',
-            "Content-Length": str(artifact.content_length),
-        },
+        headers=headers,
     )
 
 
