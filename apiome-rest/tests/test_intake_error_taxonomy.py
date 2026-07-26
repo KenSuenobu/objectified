@@ -11,6 +11,7 @@ from app.intake_error_taxonomy import (
     INTAKE_ERROR_TAXONOMY,
     LEGACY_EVENT_CODE_MAP,
     IntakeErrorCategory,
+    JobErrorCategory,
     descriptor_for,
     resolve_intake_error_code,
 )
@@ -74,3 +75,17 @@ def test_descriptor_lookup():
     assert descriptor.category is IntakeErrorCategory.FORMAT
     assert descriptor_for("NO_SUCH_CODE") is None
     assert descriptor_for(None) is None
+
+
+def test_job_error_category_is_intake_alias():
+    """IXH-6.4: JobErrorCategory is the shared name; IntakeErrorCategory stays as alias."""
+    assert IntakeErrorCategory is JobErrorCategory
+    assert set(JobErrorCategory) == {
+        JobErrorCategory.INPUT,
+        JobErrorCategory.FORMAT,
+        JobErrorCategory.CAPABILITY,
+        JobErrorCategory.POLICY,
+        JobErrorCategory.RESOURCE,
+        JobErrorCategory.TRANSPORT,
+        JobErrorCategory.INTERNAL,
+    }

@@ -435,6 +435,30 @@ export function CatalogImportDialog({
             onSuccess?.();
             return;
           }
+          // IXH-6.4: prefer the structured taxonomy error over scraping event messages.
+          const taxonomyError = pollData?.error;
+          if (
+            taxonomyError &&
+            typeof taxonomyError === 'object' &&
+            (typeof taxonomyError.message === 'string' ||
+              typeof taxonomyError.remediation === 'string' ||
+              typeof taxonomyError.code === 'string')
+          ) {
+            const parts: string[] = [];
+            if (typeof taxonomyError.message === 'string' && taxonomyError.message.trim()) {
+              parts.push(taxonomyError.message.trim());
+            }
+            if (
+              typeof taxonomyError.remediation === 'string' &&
+              taxonomyError.remediation.trim()
+            ) {
+              parts.push(taxonomyError.remediation.trim());
+            }
+            if (typeof taxonomyError.code === 'string' && taxonomyError.code.trim()) {
+              parts.push(`(code ${taxonomyError.code.trim()})`);
+            }
+            throw new Error(parts.join(' ') || `Import ${jobState}.`);
+          }
           const failEvent = Array.isArray(pollData?.events)
             ? [...pollData.events].reverse().find((e: { level?: string }) => e?.level === 'error')
             : null;

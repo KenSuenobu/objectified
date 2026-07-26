@@ -216,8 +216,11 @@ def test_source_failure_surfaces_in_job_status_not_submit():
     assert body["result"] is None
     errors = [e for e in body["events"] if e["level"] == "error"]
     assert errors and errors[0]["code"] == "SOURCE_LOAD_FAILED"
-    # MFX-3.4: the terminal failure is also a structured error on the poll payload.
+    # MFX-3.4 / IXH-6.4: the terminal failure is a structured taxonomy error.
     assert body["error"]["code"] == "SOURCE_LOAD_FAILED"
+    assert body["error"]["category"] == "transport"
+    assert body["error"]["retriable"] is True
+    assert body["error"]["remediation"].strip()
     assert body["error"]["context"] == {"status_code": 404}
 
 

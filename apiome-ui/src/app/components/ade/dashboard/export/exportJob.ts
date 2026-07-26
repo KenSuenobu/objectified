@@ -113,14 +113,20 @@ export interface ExportJobResult {
 
 /**
  * The structured terminal error for a `failed` export job (mirrors Python `ExportJobError`,
- * MFX-3.4). A poller branches on {@link code} to pick the recovery action without scraping the
- * free-form event log.
+ * MFX-3.4 / IXH-6.4). A poller branches on {@link code} for recovery workflow and shows
+ * server-owned {@link remediation} / {@link retriable} rather than parsing messages.
  */
 export interface ExportJobError {
-  /** Stable error code (same code as the terminal error event). */
+  /** Stable delivery-taxonomy error code (additive-only; same as the terminal error event). */
   code: string;
+  /** Taxonomy category: input, format, capability, policy, resource, transport, or internal. */
+  category?: string;
   /** Human-readable failure description. */
   message: string;
+  /** Actionable, user-facing next step from the delivery taxonomy. */
+  remediation?: string;
+  /** Whether retrying the identical request may succeed without changing the input. */
+  retriable?: boolean;
   /** Structured detail (e.g. guard reasons, or the validation report for a gate failure). */
   context?: Record<string, unknown> | null;
 }
@@ -332,20 +338,44 @@ export interface ExportFailureInfo {
   stage: ExportJobStageKey | null;
   /** The failure surface heading. */
   title: string;
-  /** A one-line explanation of the failure class (the job's own message renders under it). */
+  /** Remediation / class explanation (prefers server taxonomy remediation when present). */
   description: string;
   /** The recovery action the primary button performs. */
   action: ExportRecoveryAction;
   /** The primary button's label. */
   actionLabel: string;
+  /**
+   * Whether a same-request retry is useful. Prefer the server `retriable` flag when present
+   * (IXH-6.4); otherwise inferred from whether the primary recovery is `retry`.
+   */
+  retriable: boolean;
+}
+
+/**
+ * Prefer server-owned remediation / retriability (IXH-6.4); keep local code→workflow mapping.
+ */
+function applyTaxonomyCopy(
+  base: Omit<ExportFailureInfo, 'retriable'> & { retriable?: boolean },
+  error: ExportJobError | null | undefined,
+): ExportFailureInfo {
+  const remediation = typeof error?.remediation === 'string' ? error.remediation.trim() : '';
+  const serverRetriable =
+    typeof error?.retriable === 'boolean' ? error.retriable : undefined;
+  return {
+    ...base,
+    description: remediation || base.description,
+    retriable:
+      serverRetriable !== undefined ? serverRetriable : (base.retriable ?? base.action === 'retry'),
+  };
 }
 
 /**
  * Classify a terminal job error into its failure class + recovery action (MFX-46.2, MFX-3.4).
  *
  * The mapping keys off the stable {@link ExportJobError.code} so a poller shows the right surface
- * and the right recovery without parsing the free-form message. An unrecognised code degrades to
- * a generic retryable failure rather than a dead end.
+ * and the right recovery without parsing the free-form message. Remediation copy and the
+ * retriable flag prefer the server taxonomy fields when present (IXH-6.4). An unrecognised
+ * code degrades to a generic retryable failure rather than a dead end.
  *
  * @param error The job's structured terminal error, or null.
  * @returns The failure presentation (class, stage, copy, recovery).
@@ -356,105 +386,135 @@ export function classifyExportFailure(
   const code = error?.code;
   switch (code) {
     case 'SOURCE_LOAD_FAILED':
-      return {
-        class: 'source',
-        stage: 'loading-source',
-        title: 'Could not load the source',
-        description:
-          'The source version could not be reconstructed for export. This is usually transient — retry the export.',
-        action: 'retry',
-        actionLabel: 'Retry export',
-      };
+      return applyTaxonomyCopy(
+        {
+          class: 'source',
+          stage: 'loading-source',
+          title: 'Could not load the source',
+          description:
+            'The source version could not be reconstructed for export. This is usually transient — retry the export.',
+          action: 'retry',
+          actionLabel: 'Retry export',
+        },
+        error,
+      );
     case 'UNSUPPORTED_TARGET':
-      return {
-        class: 'target',
-        stage: 'analyzing-fidelity',
-        title: 'Target not available',
-        description:
-          'This target is no longer available for this source. Choose a different target format and try again.',
-        action: 'reconfigure-target',
-        actionLabel: 'Choose a different target',
-      };
+      return applyTaxonomyCopy(
+        {
+          class: 'target',
+          stage: 'analyzing-fidelity',
+          title: 'Target not available',
+          description:
+            'This target is no longer available for this source. Choose a different target format and try again.',
+          action: 'reconfigure-target',
+          actionLabel: 'Choose a different target',
+        },
+        error,
+      );
     case 'TRANSCODE_CONFIRMATION_REQUIRED':
-      return {
-        class: 'confirmation',
-        stage: 'analyzing-fidelity',
-        title: 'Severe conversion needs confirmation',
-        description:
-          'The transcoding guard flagged this as a severe conversion. Acknowledge the loss to generate it anyway.',
-        action: 'acknowledge-and-retry',
-        actionLabel: 'Acknowledge & generate',
-      };
+      return applyTaxonomyCopy(
+        {
+          class: 'confirmation',
+          stage: 'analyzing-fidelity',
+          title: 'Severe conversion needs confirmation',
+          description:
+            'The transcoding guard flagged this as a severe conversion. Acknowledge the loss to generate it anyway.',
+          action: 'acknowledge-and-retry',
+          actionLabel: 'Acknowledge & generate',
+        },
+        error,
+      );
     case 'STALE_PREVIEW':
-      return {
-        class: 'stale-preview',
-        stage: 'analyzing-fidelity',
-        title: 'The preview snapshot is stale',
-        description:
-          'The source revision, options, emitter, or capability registry changed since you verified. Re-run verification and acknowledge the current snapshot before generating again.',
-        action: 'refresh-preview',
-        actionLabel: 'Refresh preview',
-      };
+      return applyTaxonomyCopy(
+        {
+          class: 'stale-preview',
+          stage: 'analyzing-fidelity',
+          title: 'The preview snapshot is stale',
+          description:
+            'The source revision, options, emitter, or capability registry changed since you verified. Re-run verification and acknowledge the current snapshot before generating again.',
+          action: 'refresh-preview',
+          actionLabel: 'Refresh preview',
+        },
+        error,
+      );
     case 'EMIT_FAILED':
-      return {
-        class: 'emitter',
-        stage: 'emitting',
-        title: 'The emitter failed',
-        description:
-          'The target emitter could not produce the document from this source. Retry, or adjust the options and re-verify.',
-        action: 'retry',
-        actionLabel: 'Retry export',
-      };
+      return applyTaxonomyCopy(
+        {
+          class: 'emitter',
+          stage: 'emitting',
+          title: 'The emitter failed',
+          description:
+            'The target emitter could not produce the document from this source. Retry, or adjust the options and re-verify.',
+          action: 'retry',
+          actionLabel: 'Retry export',
+        },
+        error,
+      );
     case 'EMPTY_EMIT':
-      return {
-        class: 'emitter',
-        stage: 'emitting',
-        title: 'The target produced no document',
-        description:
-          'The emitter ran but produced nothing to export for this source. Adjust the target options and re-verify.',
-        action: 'reconfigure-options',
-        actionLabel: 'Adjust options',
-      };
+      return applyTaxonomyCopy(
+        {
+          class: 'emitter',
+          stage: 'emitting',
+          title: 'The target produced no document',
+          description:
+            'The emitter ran but produced nothing to export for this source. Adjust the target options and re-verify.',
+          action: 'reconfigure-options',
+          actionLabel: 'Adjust options',
+        },
+        error,
+      );
     case 'EMITTED_ARTIFACT_INVALID':
-      return {
-        class: 'validation',
-        stage: 'validating',
-        title: 'The emitted artifact failed validation',
-        description:
-          'A validator re-parsed the generated artifact and rejected it. Review the validation findings in the Verify step.',
-        action: 'fix-in-verify',
-        actionLabel: 'Review in Verify',
-      };
+      return applyTaxonomyCopy(
+        {
+          class: 'validation',
+          stage: 'validating',
+          title: 'The emitted artifact failed validation',
+          description:
+            'A validator re-parsed the generated artifact and rejected it. Review the validation findings in the Verify step.',
+          action: 'fix-in-verify',
+          actionLabel: 'Review in Verify',
+        },
+        error,
+      );
     case 'PACKAGING_FAILED':
-      return {
-        class: 'packaging',
-        stage: 'packaging',
-        title: 'Packaging failed',
-        description:
-          'The emitted files could not be bundled for delivery. This is usually transient — retry the export.',
-        action: 'retry',
-        actionLabel: 'Retry export',
-      };
+      return applyTaxonomyCopy(
+        {
+          class: 'packaging',
+          stage: 'packaging',
+          title: 'Packaging failed',
+          description:
+            'The emitted files could not be bundled for delivery. This is usually transient — retry the export.',
+          action: 'retry',
+          actionLabel: 'Retry export',
+        },
+        error,
+      );
     case 'DELIVERY_FAILED':
-      return {
-        class: 'delivery',
-        stage: 'packaging',
-        title: 'Delivery failed',
-        description:
-          'The artifact was generated but could not be delivered. Retry — the export itself succeeded.',
-        action: 'retry',
-        actionLabel: 'Retry delivery',
-      };
+      return applyTaxonomyCopy(
+        {
+          class: 'delivery',
+          stage: 'packaging',
+          title: 'Delivery failed',
+          description:
+            'The artifact was generated but could not be delivered. Retry — the export itself succeeded.',
+          action: 'retry',
+          actionLabel: 'Retry delivery',
+        },
+        error,
+      );
     default:
-      return {
-        class: 'unknown',
-        stage: null,
-        title: 'The export failed',
-        description:
-          'The export did not complete. This is usually transient — retry, or adjust the configuration and re-verify.',
-        action: 'retry',
-        actionLabel: 'Retry export',
-      };
+      return applyTaxonomyCopy(
+        {
+          class: 'unknown',
+          stage: null,
+          title: 'The export failed',
+          description:
+            'The export did not complete. This is usually transient — retry, or adjust the configuration and re-verify.',
+          action: 'retry',
+          actionLabel: 'Retry export',
+        },
+        error,
+      );
   }
 }
 

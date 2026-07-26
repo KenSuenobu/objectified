@@ -229,4 +229,69 @@ describe('CatalogImportDialog — URL + paste intake (MFI-26.2)', () => {
     await waitFor(() => expect(screen.getByText('Adapter unavailable.')).toBeInTheDocument());
     expect(starts).toHaveLength(0);
   });
+
+  it('surfaces taxonomy remediation when the import job fails (IXH-6.4)', async () => {
+    const starts: StartCall[] = [];
+    global.fetch = jest.fn((input: unknown, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : String(input);
+      const method = (init?.method || 'GET').toUpperCase();
+      if (url.includes('/api/import/sources')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, sources: SOURCES }) });
+      }
+      if (url.includes('/api/import/detect')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(DETECTION) });
+      }
+      if (url.includes('/api/import/preflight')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, ...PREFLIGHT }) });
+      }
+      if (url.includes('/api/catalog/import/') && method === 'GET') {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              success: true,
+              state: 'failed',
+              events: [{ level: 'error', message: 'legacy event text' }],
+              error: {
+                code: 'INPUT_MALFORMED',
+                category: 'input',
+                message: 'Document is not valid GraphQL SDL.',
+                remediation: 'Fix the syntax fault and re-import.',
+                retriable: false,
+              },
+            }),
+        });
+      }
+      if (url.endsWith('/api/catalog/import') && method === 'POST') {
+        starts.push({ body: JSON.parse(String(init?.body || '{}')) as Record<string, unknown> });
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ success: true, job_id: 'job-fail-6-4' }),
+        });
+      }
+      return Promise.resolve({ ok: false, json: () => Promise.resolve({}) });
+    }) as unknown as typeof fetch;
+
+    render(<CatalogImportDialog open onClose={jest.fn()} onSuccess={jest.fn()} />);
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith('/api/import/sources', expect.anything()),
+    );
+
+    fireEvent.click(screen.getByTestId('catalog-import-source-paste'));
+    fireEvent.change(screen.getByLabelText('Source content'), { target: { value: SDL } });
+    fireEvent.click(screen.getByRole('button', { name: /detect pasted source/i }));
+    await waitFor(() => expect(screen.getByText(/Auto-detected:/i)).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
+    await waitFor(() => expect(screen.getByText(/kept verbatim/i)).toBeInTheDocument());
+    await confirmThroughQualityStep();
+
+    await waitFor(
+      () =>
+        expect(
+          screen.getByText(/Document is not valid GraphQL SDL\.\s*Fix the syntax fault and re-import\.\s*\(code INPUT_MALFORMED\)/),
+        ).toBeInTheDocument(),
+      { timeout: 3000 },
+    );
+    expect(screen.queryByText('legacy event text')).not.toBeInTheDocument();
+  });
 });

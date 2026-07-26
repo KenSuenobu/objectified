@@ -5,6 +5,16 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.189.0] - 2026-07-26
+
+### Added
+- **Unified intake/delivery error taxonomy (#5123, IXH-6.4)** — export job failures now
+  carry the same taxonomy fields as import (`code`, `category`, `message`, `remediation`,
+  `retriable`) from `delivery_error_taxonomy.py`, sharing `JobErrorCategory` with intake.
+  Internal faults never surface a bare stringified exception; the user-facing message
+  includes the job id as a correlation id. OpenAPI `ExportJobError` is extended
+  additively (1.55.0 → 1.56.0). UI remediation and CLI exit codes key off the taxonomy.
+
 ## [1.188.0] - 2026-07-26
 
 ### Added

@@ -21,6 +21,10 @@ from apiome_cli.client import api_paths
 from apiome_cli.client.http import RestClient
 from apiome_cli.exit_codes import EXIT_ERROR
 from apiome_cli.progress import import_progress
+from apiome_cli.taxonomy_exit import (
+    format_taxonomy_error,
+    taxonomy_failure_from_payload,
+)
 
 DEFAULT_EXPORT_POLL_INTERVAL = 1.0
 
@@ -34,27 +38,42 @@ def format_export_progress(state: str, *, elapsed_seconds: float) -> str:
 
 
 def _failure_detail(payload: Mapping[str, Any]) -> str | None:
-    """Best-effort human-readable reason for a non-completed terminal export."""
+    """Best-effort human-readable reason for a non-completed terminal export.
+
+    Prefers the structured delivery-taxonomy ``error`` (IXH-6.4). ``STALE_PREVIEW``
+    still appends abbreviated snapshot hashes from ``context`` when present.
+    """
     error = payload.get("error")
     if isinstance(error, Mapping):
         code = error.get("code")
-        message = error.get("message")
         if isinstance(code, str) and code.strip() == "STALE_PREVIEW":
             context = error.get("context")
+            message = error.get("message")
+            remediation = error.get("remediation")
             if isinstance(context, Mapping):
                 ack = context.get("acknowledged_snapshot")
                 current = context.get("current_snapshot")
                 if isinstance(ack, str) and isinstance(current, str):
-                    return (
-                        f"[STALE_PREVIEW] {message.strip() if isinstance(message, str) else 'Preview snapshot is stale.'} "
-                        f"(acknowledged {ack[:12]}…, current {current[:12]}…). "
-                        "Re-run export preview and acknowledge the current snapshot."
+                    rem = (
+                        remediation.strip()
+                        if isinstance(remediation, str) and remediation.strip()
+                        else "Re-run export preview and acknowledge the current snapshot."
                     )
-        if isinstance(message, str) and message.strip():
-            code = error.get("code")
-            if isinstance(code, str) and code.strip():
-                return f"[{code.strip()}] {message.strip()}"
-            return message.strip()
+                    msg = (
+                        message.strip()
+                        if isinstance(message, str) and message.strip()
+                        else "Preview snapshot is stale."
+                    )
+                    return (
+                        f"[STALE_PREVIEW] {msg} "
+                        f"(acknowledged {ack[:12]}…, current {current[:12]}…). "
+                        f"{rem}"
+                    )
+            return format_taxonomy_error(error)
+
+        taxonomy = format_taxonomy_error(error)
+        if taxonomy:
+            return taxonomy
 
     events = payload.get("events")
     if isinstance(events, list):
@@ -67,15 +86,27 @@ def _failure_detail(payload: Mapping[str, Any]) -> str | None:
             message = event.get("message")
             if not isinstance(message, str) or not message.strip():
                 continue
-            code = event.get("code")
-            if isinstance(code, str) and code.strip():
-                messages.append(f"[{code.strip()}] {message.strip()}")
+            ev_code = event.get("code")
+            if isinstance(ev_code, str) and ev_code.strip():
+                messages.append(f"[{ev_code.strip()}] {message.strip()}")
             else:
                 messages.append(message.strip())
         if messages:
             return "; ".join(messages)
 
     return None
+
+
+def _exit_code_for_failure(payload: Mapping[str, Any]) -> int:
+    """Derive the process exit code from the delivery taxonomy category when present."""
+    _, exit_code = taxonomy_failure_from_payload(payload)
+    error = payload.get("error")
+    if isinstance(error, Mapping) and (
+        (isinstance(error.get("code"), str) and str(error["code"]).strip())
+        or (isinstance(error.get("category"), str) and str(error["category"]).strip())
+    ):
+        return exit_code
+    return EXIT_ERROR
 
 
 def start_export_job(
@@ -121,23 +152,27 @@ def wait_for_export_job(
     path = api_paths.export_job(tenant_slug, job_id)
 
     error_message: str | None = None
+    failure_exit: int = EXIT_ERROR
     with import_progress(enabled=not no_progress, initial_message="Exporting…") as status:
         while True:
             if monotonic() >= deadline:
                 timeout_seconds = int(timeout)
                 unit = "second" if timeout_seconds == 1 else "seconds"
                 error_message = f"Export timed out after {timeout_seconds} {unit}."
+                failure_exit = EXIT_ERROR
                 break
 
             response = client.get(path)
             payload = response.json()
             if not isinstance(payload, dict):
                 error_message = "Export status response was not a JSON object."
+                failure_exit = EXIT_ERROR
                 break
 
             job_state = payload.get("state")
             if not isinstance(job_state, str) or not job_state:
                 error_message = "Export status response missing state field."
+                failure_exit = EXIT_ERROR
                 break
 
             elapsed = timeout - (deadline - monotonic())
@@ -149,6 +184,7 @@ def wait_for_export_job(
                     return payload
                 detail = _failure_detail(payload)
                 error_message = f"Export {job_state}: {detail}" if detail else f"Export {job_state}."
+                failure_exit = _exit_code_for_failure(payload)
                 break
 
             remaining = deadline - monotonic()
@@ -157,7 +193,7 @@ def wait_for_export_job(
             sleep(min(poll_interval, remaining))
 
     typer.echo(error_message, err=True)
-    raise typer.Exit(EXIT_ERROR)
+    raise typer.Exit(failure_exit)
 
 
 def download_export_job_artifact(

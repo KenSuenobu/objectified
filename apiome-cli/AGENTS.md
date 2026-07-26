@@ -47,7 +47,7 @@ Tier 2 commands require `X-API-Key` (see **Auth** below). Tier 1 `GET /health` d
 Follow [Command Line Interface Guidelines](https://clig.dev/):
 
 - **Help:** `-h` / `--help` on every command; concise default help when invoked with no subcommand (`main.py` → `echo_concise_help()`).
-- **Exit codes:** `exit_codes.py` — `0` success, `1` error, `2` usage (`EXIT_SUCCESS`, `EXIT_ERROR`, `EXIT_USAGE`). Map HTTP 4xx → usage, 5xx → error (`client/errors.py`). The pre-flight surface adds three gate codes used **only** by `import preflight` / `export preflight` and the `--min-grade` / `--fail-on` flags (IXH-2.6): `3` `EXIT_POLICY_BLOCKED` (tenant quality policy refuses the payload), `4` `EXIT_QUALITY_GATE` (a caller-supplied threshold was missed), `5` `EXIT_PREFLIGHT_UNUSABLE` (nothing gradable). They exist so CI can tell a bad spec apart from a bad network (`1`) or bad credentials (`2`).
+- **Exit codes:** `exit_codes.py` — `0` success, `1` error, `2` usage (`EXIT_SUCCESS`, `EXIT_ERROR`, `EXIT_USAGE`). Map HTTP 4xx → usage, 5xx → error (`client/errors.py`). The pre-flight surface adds three gate codes used **only** by `import preflight` / `export preflight` and the `--min-grade` / `--fail-on` flags (IXH-2.6): `3` `EXIT_POLICY_BLOCKED` (tenant quality policy refuses the payload), `4` `EXIT_QUALITY_GATE` (a caller-supplied threshold was missed), `5` `EXIT_PREFLIGHT_UNUSABLE` (nothing gradable). They exist so CI can tell a bad spec apart from a bad network (`1`) or bad credentials (`2`). Failed import/export **jobs** also map taxonomy categories via `taxonomy_exit.py` (IXH-6.4): `policy` → 3, `input`/`format`/`capability`/`resource` → 2, `transport`/`internal` → 1; stderr prints `[CODE] message — remediation`.
 - **Streams:** human tables and JSON on **stdout**; diagnostics, progress spinners, and tracebacks (with `--verbose`) on **stderr**.
 - **Machine output:** global `--json` emits raw API JSON on stdout.
 - **Configuration precedence** (highest first): CLI flags → `APIOME_*` env → dotenv files (default package + cwd `.env`, or `--env-file`) → `~/.config/apiome/config.toml` → defaults. Document new settings in `.env.example` and `README.md`.
@@ -63,6 +63,8 @@ Follow [Command Line Interface Guidelines](https://clig.dev/):
 | `src/apiome_cli/run_interactive.py` | Interactive prompt and stdin batch runner used by `run.sh` |
 | `src/apiome_cli/cli_context.py` | Resolve settings, timeout, `--json`, `--no-progress`, `--insecure` from context |
 | `src/apiome_cli/config.py` | `CliSettings`, TOML user config, env/flag overrides |
+| `src/apiome_cli/exit_codes.py` | Process exit codes (0–5) |
+| `src/apiome_cli/taxonomy_exit.py` | Map intake/delivery taxonomy categories → exit codes + stderr format (IXH-6.4) |
 | `src/apiome_cli/client/http.py` | `RestClient` (httpx sync), auth headers |
 | `src/apiome_cli/client/pagination.py` | Offset/limit pagination for list commands |
 | `src/apiome_cli/client/repos_add.py` | Linked-account and public-URL payload builders for `repos add` |

@@ -23,6 +23,7 @@ from enum import Enum
 from typing import Dict, Mapping, Optional
 
 __all__ = [
+    "JobErrorCategory",
     "IntakeErrorCategory",
     "IntakeErrorDescriptor",
     "INTAKE_ERROR_TAXONOMY",
@@ -32,16 +33,24 @@ __all__ = [
 ]
 
 
-class IntakeErrorCategory(str, Enum):
-    """Broad failure family (IXH-6.4). Fixed set; codes refine within a category."""
+class JobErrorCategory(str, Enum):
+    """Broad failure family shared by intake and delivery (IXH-6.4).
 
-    INPUT = "input"  # the user's document is at fault
-    FORMAT = "format"  # document/format routing is at fault (wrong or unsupported format)
-    CAPABILITY = "capability"  # this deployment cannot service the request (missing tool)
-    POLICY = "policy"  # rejected by tenant/instance policy (reserved for IXH-6.4)
-    RESOURCE = "resource"  # a limit was exceeded (IXH-1.4; IXH-6.5 extends)
-    TRANSPORT = "transport"  # upstream fetch/delivery fault (reserved for IXH-6.4)
+    Fixed set; codes refine within a category. Additive-only for codes — this enum
+    itself is closed.
+    """
+
+    INPUT = "input"  # the user's document / acknowledgement is at fault
+    FORMAT = "format"  # document/format routing or emitted artifact shape is at fault
+    CAPABILITY = "capability"  # this deployment cannot service the request
+    POLICY = "policy"  # rejected by tenant/instance policy or confirmation gate
+    RESOURCE = "resource"  # a size / depth / expansion limit was exceeded
+    TRANSPORT = "transport"  # upstream fetch or delivery fault
     INTERNAL = "internal"  # our fault: unexpected exception, worker fault, storage fault
+
+
+#: Backward-compatible alias — intake code predates the shared name (IXH-1.3).
+IntakeErrorCategory = JobErrorCategory
 
 
 @dataclass(frozen=True)
@@ -50,20 +59,20 @@ class IntakeErrorDescriptor:
 
     Attributes:
         code: Stable machine-readable identifier (additive-only, never repurposed).
-        category: The :class:`IntakeErrorCategory` the code belongs to.
+        category: The :class:`JobErrorCategory` the code belongs to.
         retriable: Whether retrying the same request may succeed without the user
             changing the input (transient faults) — drives UI retry affordances.
         remediation: Actionable, user-facing guidance (always non-empty).
     """
 
     code: str
-    category: IntakeErrorCategory
+    category: JobErrorCategory
     retriable: bool
     remediation: str
 
 
 def _d(
-    code: str, category: IntakeErrorCategory, retriable: bool, remediation: str
+    code: str, category: JobErrorCategory, retriable: bool, remediation: str
 ) -> IntakeErrorDescriptor:
     return IntakeErrorDescriptor(
         code=code, category=category, retriable=retriable, remediation=remediation

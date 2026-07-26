@@ -44,8 +44,9 @@ same 202-accepted + ``status_path`` submission response.
 Terminal jobs make the poll payload self-describing for UI/CLI pollers (MFX-3.4): a
 ``completed`` real export carries a ``result`` whose ``download_path`` points at the
 delivery route (MFX-4.x) that serves the retained bytes, alongside the fidelity report;
-a ``failed`` job carries a structured :class:`ExportJobError` (``code``/``message``/
-``context``) on ``status.error`` — the machine-readable twin of the terminal error event —
+a ``failed`` job carries a structured :class:`ExportJobError`
+(``code``/``category``/``message``/``remediation``/``retriable``/``context``) on
+``status.error`` — the machine-readable twin of the terminal error event (IXH-6.4) —
 so a poller renders the failure without scraping the event log.
 
 Unlike imports (which shell out to the ``apiome-ui`` ``tsx`` worker for OpenAPI), the whole
@@ -73,6 +74,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from .config import settings
+from .delivery_error_taxonomy import delivery_error_fields
 from .emitter import EmitResult
 from .export_fidelity import ExportFidelity, build_export_fidelity
 from .export_service import (
@@ -307,17 +309,33 @@ class ExportJobResult(BaseModel):
 
 
 class ExportJobError(BaseModel):
-    """Structured terminal error for a ``failed`` export job (MFX-3.4).
+    """Structured terminal error for a ``failed`` export job (MFX-3.4 / IXH-6.4).
 
     The machine-readable twin of a job's terminal error event: a poller shows ``message``
     and branches on ``code`` (e.g. distinguish ``TRANSCODE_CONFIRMATION_REQUIRED`` — resubmit
     with ``confirm`` — from ``SOURCE_LOAD_FAILED``) without scraping the free-form event log.
+
+    ``code`` / ``category`` / ``remediation`` / ``retriable`` come from the delivery error
+    taxonomy (:mod:`app.delivery_error_taxonomy`) and are additive-only, so UI remediation
+    copy and CLI exit codes can key off them safely.
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    code: str = Field(description="Stable error code (same code as the terminal error event).")
+    code: str = Field(
+        description="Stable delivery-taxonomy error code (additive-only; same as the "
+        "terminal error event).",
+    )
+    category: str = Field(
+        description="Taxonomy category: input, format, capability, policy, resource, "
+        "transport, or internal.",
+    )
     message: str = Field(description="Human-readable failure description.")
+    remediation: str = Field(description="Actionable, user-facing next step.")
+    retriable: bool = Field(
+        description="Whether retrying the identical request may succeed without "
+        "changing the input.",
+    )
     context: Optional[Dict[str, Any]] = Field(
         default=None,
         description="Structured detail (e.g. an upstream ``status_code`` or guard reasons).",
@@ -673,17 +691,27 @@ async def _publish(
 
 async def _fail(job_id: str, code: str, message: str,
                 context: Optional[Dict[str, Any]] = None) -> None:
-    """Move a job to ``failed`` with one terminal error event and structured error (MFX-3.4).
+    """Move a job to ``failed`` with one terminal error event and structured error (IXH-6.4).
 
-    The same ``(code, message, context)`` is recorded twice — as an ``error``-level event on
-    the log and as the structured :class:`ExportJobError` on ``status.error`` — so a poller
-    can render the failure from either surface.
+    The delivery taxonomy fills ``category`` / ``remediation`` / ``retriable``; internal
+    codes sanitize ``message`` to a generic sentence plus the job id as correlation id.
+    The same ``(code, message, context)`` is recorded as an ``error``-level event and as
+    :class:`ExportJobError` on ``status.error`` so a poller can render either surface.
     """
+    fields = delivery_error_fields(
+        code, message, context=context, correlation_id=job_id
+    )
+    error = ExportJobError(**fields)
+    # Event context may still carry diagnostic detail (status codes, etc.); never put a
+    # stringified internal exception into the user-facing structured message.
+    event_context = dict(context) if context else {}
+    if fields["category"] == "internal" and message and message.strip():
+        event_context.setdefault("detail", message.strip()[:500])
     await _publish(
         job_id,
         state="failed",
-        event=("error", code, message, context),
-        error=ExportJobError(code=code, message=message, context=context),
+        event=("error", error.code, error.message, event_context or None),
+        error=error,
     )
 
 
