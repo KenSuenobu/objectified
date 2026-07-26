@@ -74,10 +74,12 @@ __all__ = [
     "KIND_REGISTRY",
     "SCHEMA_REFERENCE_KINDS",
     "LATEST_VERSION_TOKEN",
+    "ResolvedRevisionModel",
     "ResolvedSchema",
     "SchemaReference",
     "SchemaReferenceError",
     "parse_schema_reference",
+    "resolve_revision_model",
     "resolve_schema_reference",
 ]
 
@@ -319,8 +321,54 @@ def _registry_retriever(tenant_id: str) -> SchemaRetriever:
     return retrieve
 
 
-def _resolve_artifact(reference: SchemaReference, *, tenant_id: str) -> ResolvedSchema:
-    """Resolve a ``project/…`` or ``catalog/…`` reference through the revision's captured source."""
+@dataclass
+class ResolvedRevisionModel:
+    """A ``project/…`` or ``catalog/…`` reference resolved to its revision's canonical model.
+
+    The revision-level counterpart of :class:`ResolvedSchema`: everything the reference
+    denotes *before* a single type is projected out of it. Used by consumers that need to
+    inspect the whole revision — the IXH-5.3 targets listing enumerates its types and
+    operation bodies — while :func:`_resolve_artifact` builds on it to project one type.
+
+    Attributes:
+        reference: The parsed reference.
+        api: The revision's rebuilt canonical model.
+        coordinates: Resolved coordinates (artifact id/slug, revision id, version label,
+            source format), the same bag :class:`ResolvedSchema` echoes back.
+        source_format: The import-source format key the revision derives from.
+        xml_schema_text: The XML-schema grammar backing the revision when its source format
+            is one (``xsd`` …), else ``None``.
+    """
+
+    reference: SchemaReference
+    api: CanonicalApi
+    coordinates: Dict[str, Any]
+    source_format: Optional[str]
+    xml_schema_text: Optional[str]
+
+
+def resolve_revision_model(
+    reference: SchemaReference, *, tenant_id: str
+) -> ResolvedRevisionModel:
+    """Resolve a ``project/…`` or ``catalog/…`` reference to its revision's canonical model.
+
+    Args:
+        reference: The parsed reference. Its kind must be ``project`` or ``catalog``; a
+            ``registry`` reference names a single stored schema, not a revision.
+        tenant_id: The caller's authenticated tenant; every lookup is scoped by it.
+
+    Returns:
+        The :class:`ResolvedRevisionModel`.
+
+    Raises:
+        SchemaReferenceError: ``400`` for a ``registry`` reference, ``404`` when the artifact
+            or version names nothing visible, ``422`` when no canonical model can be rebuilt.
+    """
+    if reference.kind == KIND_REGISTRY:
+        raise SchemaReferenceError(
+            "A registry reference names one stored schema, not a revision.", status_code=400
+        )
+
     publishable = reference.kind == KIND_PROJECT
     artifact = _load_artifact(reference.artifact, tenant_id=tenant_id, publishable=publishable)
     artifact_id = str(artifact["id"])
@@ -370,9 +418,24 @@ def _resolve_artifact(reference: SchemaReference, *, tenant_id: str) -> Resolved
         if (source_format or "").lower() in XML_SCHEMA_SOURCE_FORMATS
         else None
     )
+    return ResolvedRevisionModel(
+        reference=reference,
+        api=source.api,
+        coordinates=coordinates,
+        source_format=source_format,
+        xml_schema_text=xml_schema_text,
+    )
 
+
+def _resolve_artifact(reference: SchemaReference, *, tenant_id: str) -> ResolvedSchema:
+    """Resolve a ``project/…`` or ``catalog/…`` reference through the revision's captured source."""
+    revision = resolve_revision_model(reference, tenant_id=tenant_id)
+    coordinates = revision.coordinates
     document, dialect, diagnostics = _project_document(
-        source.api, reference, coordinates, has_xml_grammar=xml_schema_text is not None
+        revision.api,
+        reference,
+        coordinates,
+        has_xml_grammar=revision.xml_schema_text is not None,
     )
     return ResolvedSchema(
         reference=reference,
@@ -380,8 +443,8 @@ def _resolve_artifact(reference: SchemaReference, *, tenant_id: str) -> Resolved
         dialect=dialect,
         base_uri="",
         retrieve=None,
-        xml_schema_text=xml_schema_text,
-        source_format=source_format,
+        xml_schema_text=revision.xml_schema_text,
+        source_format=revision.source_format,
         coordinates=coordinates,
         diagnostics=diagnostics,
     )

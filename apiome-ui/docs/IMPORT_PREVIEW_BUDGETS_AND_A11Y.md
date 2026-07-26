@@ -32,6 +32,9 @@ Two mechanisms appear below, with different obligations:
 | Projection evidence table (IXH-3.3) | 60 display rows (`PROJECTION_TABLE_VIRTUALIZE_ABOVE`) | Windowed | Rows window with truthful `aria-rowcount`/`aria-rowindex`; the focused row is pinned | Scroll — every evidence row is reachable |
 | Re-import delta family lists (IXH-3.4) | 50 entries/family (`DELTA_LIST_VIRTUALIZE_ABOVE`) | Windowed | The family list windows ("windowed" note); the focused row is pinned | Scroll; the header chips always state full counts |
 | Raw source viewer (IXH-2.2/3.2) | 400 lines mounted (`RAW_VIEWER_CONTEXT`) | Truncated | "… N earlier lines" / "… N later lines" around the window | Follow any source link — the window re-centers, so every line is reachable |
+| Test Bench payload editor (IXH-5.3) | 1,000,000 UTF-8 bytes (`TEST_BENCH_PAYLOAD_MAX_BYTES`) | Truncated | Validation is refused with the payload size stated against the bound | **Copy as curl** — the REST endpoint handles any size the import guards allow |
+| Test Bench findings list (IXH-5.3) | 50 rows (`TEST_BENCH_FINDINGS_VIRTUALIZE_ABOVE`) | Windowed | Rows window ("windowed" note); the focused row is pinned | Scroll — every returned finding is reachable |
+| Test Bench validation request (IXH-5.3) | 200 findings/validation (`TEST_BENCH_MAX_FINDINGS`) | Truncated | "Showing X of Y findings — the report was truncated" | **Copy as curl** and raise `max_findings` on the REST call |
 
 Draw-budget selection is **worst-first** (`selectDrawnGraphEntries`, shared from
 `components/ade/dashboard/export/projectionGraph.ts`): aggregates always draw, then rows by

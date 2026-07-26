@@ -24,6 +24,17 @@ jest.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+// The Test Bench tab (IXH-5.3) reads the tenant id off the session for saved-payload scoping.
+jest.mock('@lib/auth/session-client', () => ({
+  useAuthSession: () => ({ data: { user: { current_tenant_id: 'tenant-1' } } }),
+}));
+
+// The Test Bench's Monaco payload editor is irrelevant here; stub it to a plain textarea.
+jest.mock('@monaco-editor/react', () => ({
+  __esModule: true,
+  default: (props: { value?: string }) => <textarea readOnly value={props.value ?? ''} />,
+}));
+
 import { CatalogItemDetailClient } from '../src/app/ade/dashboard/catalog/[id]/CatalogItemDetailClient';
 
 const RICH_ITEM = {

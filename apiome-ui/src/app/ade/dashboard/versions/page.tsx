@@ -34,6 +34,7 @@ import {
   ArrowDown,
   ArrowUpDown,
   FileOutput,
+  FlaskConical,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import {
@@ -119,6 +120,7 @@ import { CompatibilityReportPanel } from '../../../components/ade/dashboard/Comp
 import { ExternalCompatEvidencePanel } from '../../../components/ade/dashboard/ExternalCompatEvidencePanel';
 import { VersionChangeReportPanel } from './VersionChangeReportPanel';
 import { VersionChangesPanel } from './VersionChangesPanel';
+import { SchemaTestBench } from '@/app/components/ade/dashboard/test-bench/SchemaTestBench';
 import {
   breakingStableIds,
   changelogMatchesComparedPair,
@@ -450,8 +452,10 @@ const Versions = () => {
     toVersionLabel?: string;
   } | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
-  /** Timeline vs publication change report (CR-05, #2703; gated by `NEXT_PUBLIC_CHANGE_REPORT_UI`) vs stored changelog (CTG-3.2, #4476). */
-  const [versionsMainTab, setVersionsMainTab] = useState<'timeline' | 'change-report' | 'changes'>('timeline');
+  /** Timeline vs publication change report (CR-05, #2703; gated by `NEXT_PUBLIC_CHANGE_REPORT_UI`) vs stored changelog (CTG-3.2, #4476) vs the Schema Test Bench (IXH-5.3, #5115). */
+  const [versionsMainTab, setVersionsMainTab] = useState<
+    'timeline' | 'change-report' | 'changes' | 'test-bench'
+  >('timeline');
   /* Change reports are part of the git-like publication flow, so the UI gate
      is the union of the env opt-out and the master git-like feature flag.
      When git-like is off, all change-report panels, tabs, and publish-preview
@@ -2937,10 +2941,13 @@ const Versions = () => {
   const showChangeReportTab = changeReportUiEnabled && Boolean(selectedProjectId);
   /** Stored classified changelogs (CTG-3.2, #4476) — available for any selected project, no feature flag. */
   const showChangesTab = Boolean(selectedProjectId);
+  /** Schema Test Bench (IXH-5.3, #5115) — addresses schemas by project slug, so it needs one. */
+  const showTestBenchTab = Boolean(selectedProjectId && selectedProject?.slug);
   /** The tab actually rendered: falls back to the timeline when the selected tab's surface is unavailable. */
   const effectiveMainTab =
     (versionsMainTab === 'change-report' && !showChangeReportTab) ||
-    (versionsMainTab === 'changes' && !showChangesTab)
+    (versionsMainTab === 'changes' && !showChangesTab) ||
+    (versionsMainTab === 'test-bench' && !showTestBenchTab)
       ? 'timeline'
       : versionsMainTab;
 
@@ -3145,6 +3152,24 @@ const Versions = () => {
                 </span>
               </button>
             ) : null}
+            {showTestBenchTab ? (
+              <button
+                type="button"
+                aria-pressed={effectiveMainTab === 'test-bench'}
+                data-testid="versions-tab-test-bench"
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  effectiveMainTab === 'test-bench'
+                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
+                onClick={() => setVersionsMainTab('test-bench')}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <FlaskConical className="h-4 w-4 shrink-0" aria-hidden />
+                  Test Bench
+                </span>
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -3163,6 +3188,28 @@ const Versions = () => {
           projectId={selectedProjectId}
           versions={versions}
           onOpenDiff={handleOpenDiffFromChanges}
+        />
+      ) : null}
+
+      {showTestBenchTab && effectiveMainTab === 'test-bench' && selectedProject?.slug ? (
+        /* Schema Test Bench (IXH-5.3, #5115): validate/generate payloads against this
+           project's schemas, addressed as project/{slug}/{revision-id}/{type}. */
+        <SchemaTestBench
+          key={selectedProject.id}
+          surface="project"
+          artifact={selectedProject.slug}
+          artifactName={selectedProject.name}
+          versionOptions={[
+            { value: 'latest', label: 'Latest revision' },
+            ...versions
+              .filter((v) => !v.deleted_at)
+              .map((v) => ({
+                value: v.id,
+                label: `v${v.version_id} · ${v.id.slice(0, 8)}`,
+              })),
+          ]}
+          tenantId={currentTenantId ?? null}
+          active
         />
       ) : null}
 
