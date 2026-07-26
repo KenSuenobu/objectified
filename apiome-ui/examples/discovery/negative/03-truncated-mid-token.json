@@ -1,0 +1,17 @@
+{
+  "_comment": "Minimal Discovery rest description \u2014 one resource method and one schema.",
+  "kind": "discovery#restDescription",
+  "discoveryVersion": "v1",
+  "id": "ping:v1",
+  "name": "ping",
+  "version": "v1",
+  "title": "Ping API",
+  "description": "Liveness probe API.",
+  "protocol": "rest",
+  "baseUrl": "https://ping.example.com/",
+  "rootUrl": "https://ping.example.com/",
+  "servicePath": "",
+  "schemas": {
+    "Pong": {
+      "id": "Pong",
+      "type": "objec

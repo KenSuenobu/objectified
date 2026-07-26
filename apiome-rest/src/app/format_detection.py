@@ -398,6 +398,30 @@ def _sniff_openrpc(payload: DetectionInput) -> DetectionResult:
     return NO_MATCH
 
 
+def _sniff_discovery(payload: DetectionInput) -> DetectionResult:
+    document = payload.document
+    if not isinstance(document, dict):
+        return NO_MATCH
+    if any(marker in document for marker in ("openapi", "swagger", "asyncapi", "arazzo", "openrpc")):
+        return NO_MATCH
+    kind = document.get("kind")
+    if isinstance(kind, str) and kind.strip() == "discovery#restDescription":
+        return DetectionResult(
+            confidence=0.98,
+            format="discovery",
+            reason="`kind: discovery#restDescription` marker",
+        )
+    version = document.get("discoveryVersion")
+    if isinstance(version, str) and version.strip():
+        if "resources" in document or "schemas" in document:
+            return DetectionResult(
+                confidence=0.95,
+                format="discovery",
+                reason=f"`discoveryVersion: {version}` marker",
+            )
+    return NO_MATCH
+
+
 def _sniff_avro(payload: DetectionInput) -> DetectionResult:
     document = payload.document
     if not isinstance(document, dict):
@@ -520,6 +544,7 @@ _SNIFFERS: tuple[Callable[[DetectionInput], DetectionResult], ...] = (
     _sniff_asyncapi,
     _sniff_arazzo,
     _sniff_openrpc,
+    _sniff_discovery,
     _sniff_avro,
     _sniff_xmlrpc,
     _sniff_xsd,
@@ -552,6 +577,7 @@ SNIFFED_FORMATS = frozenset(
         "asyncapi-3",
         "arazzo",
         "openrpc",
+        "discovery",
         "avro",
         "xmlrpc",
         "xsd",

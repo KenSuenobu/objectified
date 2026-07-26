@@ -1,0 +1,230 @@
+{
+  "_comment": "Typical Discovery rest description \u2014 nested resources, enums, request/response $ref schemas.",
+  "kind": "discovery#restDescription",
+  "discoveryVersion": "v1",
+  "id": "bookstore:v1",
+  "name": "bookstore",
+  "version": "v1",
+  "title": "Bookstore API",
+  "description": "A hand-authored Discovery document modeling a small bookstore catalog.",
+  "protocol": "rest",
+  "baseUrl": "https://bookstore.example.com/",
+  "rootUrl": "https://bookstore.example.com/",
+  "servicePath": "bookstore/v1/",
+  "basePath": "/bookstore/v1/",
+  "documentationLink": "https://example.com/bookstore",
+  "parameters": {
+    "alt": {
+      "type": "string",
+      "description": "Data format for the response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media"
+      ],
+      "enumDescriptions": [
+        "Responses with Contained Media Type",
+        "Media download"
+      ],
+      "location": "query"
+    }
+  },
+  "schemas": {
+    "Book": {
+      "id": "Book",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Book id."
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "AVAILABLE",
+            "CHECKED_OUT",
+            "LOST"
+          ]
+        },
+        "authors": {
+          "type": "array",
+          "items": {
+            "$ref": "Author"
+          }
+        }
+      }
+    },
+    "Author": {
+      "id": "Author",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "bio": {
+          "type": "string"
+        }
+      }
+    },
+    "BookList": {
+      "id": "BookList",
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "Book"
+          }
+        },
+        "totalItems": {
+          "type": "integer"
+        }
+      }
+    },
+    "CheckoutRequest": {
+      "id": "CheckoutRequest",
+      "type": "object",
+      "properties": {
+        "patronId": {
+          "type": "string"
+        },
+        "dueDate": {
+          "type": "string"
+        }
+      }
+    },
+    "CheckoutReceipt": {
+      "id": "CheckoutReceipt",
+      "type": "object",
+      "properties": {
+        "bookId": {
+          "type": "string"
+        },
+        "dueDate": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "resources": {
+    "books": {
+      "methods": {
+        "list": {
+          "id": "bookstore.books.list",
+          "path": "books",
+          "httpMethod": "GET",
+          "description": "List books in the catalog.",
+          "parameters": {
+            "q": {
+              "type": "string",
+              "location": "query",
+              "description": "Search query."
+            },
+            "maxResults": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "BookList"
+          }
+        },
+        "get": {
+          "id": "bookstore.books.get",
+          "path": "books/{bookId}",
+          "httpMethod": "GET",
+          "description": "Get a single book.",
+          "parameters": {
+            "bookId": {
+              "type": "string",
+              "location": "path",
+              "required": true,
+              "description": "Book id."
+            },
+            "projection": {
+              "type": "string",
+              "location": "query",
+              "enum": [
+                "FULL",
+                "LITE"
+              ],
+              "description": "Response projection."
+            }
+          },
+          "response": {
+            "$ref": "Book"
+          }
+        },
+        "insert": {
+          "id": "bookstore.books.insert",
+          "path": "books",
+          "httpMethod": "POST",
+          "description": "Create a book.",
+          "request": {
+            "$ref": "Book"
+          },
+          "response": {
+            "$ref": "Book"
+          }
+        }
+      },
+      "resources": {
+        "reviews": {
+          "methods": {
+            "list": {
+              "id": "bookstore.books.reviews.list",
+              "path": "books/{bookId}/reviews",
+              "httpMethod": "GET",
+              "description": "List reviews for a book.",
+              "parameters": {
+                "bookId": {
+                  "type": "string",
+                  "location": "path",
+                  "required": true
+                }
+              },
+              "response": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "rating": {
+                          "type": "integer"
+                        },
+                        "text": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "checkouts": {
+      "methods": {
+        "create": {
+          "id": "bookstore.checkouts.create",
+          "path": "checkouts",
+          "httpMethod": "POST",
+          "description": "Check out a book.",
+          "request": {
+            "$ref": "CheckoutRequest"
+          },
+          "response": {
+            "$ref": "CheckoutReceipt"
+          }
+        }
+      }
+    }
+  }
+}

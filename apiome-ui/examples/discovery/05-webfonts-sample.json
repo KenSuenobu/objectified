@@ -1,0 +1,107 @@
+{
+  "_comment": "Real-world-shaped Discovery document inspired by the public Web Fonts API surface; hand-authored, no third-party text copied.",
+  "kind": "discovery#restDescription",
+  "discoveryVersion": "v1",
+  "id": "webfonts:v1",
+  "name": "webfonts",
+  "version": "v1",
+  "title": "Web Fonts Sample API",
+  "description": "List available web fonts for a sample catalog.",
+  "protocol": "rest",
+  "baseUrl": "https://webfonts.example.com/",
+  "rootUrl": "https://webfonts.example.com/",
+  "servicePath": "",
+  "documentationLink": "https://example.com/webfonts",
+  "schemas": {
+    "Webfont": {
+      "id": "Webfont",
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string"
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subsets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "category": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "menu": {
+          "type": "string"
+        }
+      }
+    },
+    "WebfontList": {
+      "id": "WebfontList",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "Webfont"
+          }
+        }
+      }
+    }
+  },
+  "resources": {
+    "webfonts": {
+      "methods": {
+        "list": {
+          "id": "webfonts.webfonts.list",
+          "path": "v1/webfonts",
+          "httpMethod": "GET",
+          "description": "Retrieves the list of fonts.",
+          "parameters": {
+            "sort": {
+              "type": "string",
+              "location": "query",
+              "enum": [
+                "ALPHA",
+                "DATE",
+                "POPULARITY",
+                "STYLE",
+                "TRENDING"
+              ],
+              "description": "Sort order."
+            },
+            "capability": {
+              "type": "string",
+              "location": "query",
+              "enum": [
+                "CAPABILITY_UNSPECIFIED",
+                "WOFF2",
+                "VF"
+              ],
+              "description": "Filter by capability."
+            },
+            "family": {
+              "type": "string",
+              "location": "query",
+              "repeated": true,
+              "description": "Family name filter."
+            }
+          },
+          "response": {
+            "$ref": "WebfontList"
+          }
+        }
+      }
+    }
+  }
+}

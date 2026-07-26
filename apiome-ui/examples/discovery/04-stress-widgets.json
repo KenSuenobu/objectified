@@ -1,0 +1,333 @@
+{
+  "_comment": "Stress Discovery document \u2014 many methods under one resource.",
+  "kind": "discovery#restDescription",
+  "discoveryVersion": "v1",
+  "id": "stress:v1",
+  "name": "stress",
+  "version": "v1",
+  "title": "Stress Widgets API",
+  "protocol": "rest",
+  "baseUrl": "https://stress.example.com/",
+  "rootUrl": "https://stress.example.com/",
+  "servicePath": "stress/v1/",
+  "schemas": {
+    "Widget": {
+      "id": "Widget",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "payload": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "resources": {
+    "widgets": {
+      "methods": {
+        "op1": {
+          "id": "stress.widgets.op1",
+          "path": "widgets/op1",
+          "httpMethod": "GET",
+          "description": "Stress operation 1.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op2": {
+          "id": "stress.widgets.op2",
+          "path": "widgets/op2",
+          "httpMethod": "POST",
+          "description": "Stress operation 2.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op3": {
+          "id": "stress.widgets.op3",
+          "path": "widgets/op3",
+          "httpMethod": "GET",
+          "description": "Stress operation 3.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op4": {
+          "id": "stress.widgets.op4",
+          "path": "widgets/op4",
+          "httpMethod": "POST",
+          "description": "Stress operation 4.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op5": {
+          "id": "stress.widgets.op5",
+          "path": "widgets/op5",
+          "httpMethod": "GET",
+          "description": "Stress operation 5.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op6": {
+          "id": "stress.widgets.op6",
+          "path": "widgets/op6",
+          "httpMethod": "POST",
+          "description": "Stress operation 6.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op7": {
+          "id": "stress.widgets.op7",
+          "path": "widgets/op7",
+          "httpMethod": "GET",
+          "description": "Stress operation 7.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op8": {
+          "id": "stress.widgets.op8",
+          "path": "widgets/op8",
+          "httpMethod": "POST",
+          "description": "Stress operation 8.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op9": {
+          "id": "stress.widgets.op9",
+          "path": "widgets/op9",
+          "httpMethod": "GET",
+          "description": "Stress operation 9.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op10": {
+          "id": "stress.widgets.op10",
+          "path": "widgets/op10",
+          "httpMethod": "POST",
+          "description": "Stress operation 10.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op11": {
+          "id": "stress.widgets.op11",
+          "path": "widgets/op11",
+          "httpMethod": "GET",
+          "description": "Stress operation 11.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op12": {
+          "id": "stress.widgets.op12",
+          "path": "widgets/op12",
+          "httpMethod": "POST",
+          "description": "Stress operation 12.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op13": {
+          "id": "stress.widgets.op13",
+          "path": "widgets/op13",
+          "httpMethod": "GET",
+          "description": "Stress operation 13.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op14": {
+          "id": "stress.widgets.op14",
+          "path": "widgets/op14",
+          "httpMethod": "POST",
+          "description": "Stress operation 14.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op15": {
+          "id": "stress.widgets.op15",
+          "path": "widgets/op15",
+          "httpMethod": "GET",
+          "description": "Stress operation 15.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op16": {
+          "id": "stress.widgets.op16",
+          "path": "widgets/op16",
+          "httpMethod": "POST",
+          "description": "Stress operation 16.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op17": {
+          "id": "stress.widgets.op17",
+          "path": "widgets/op17",
+          "httpMethod": "GET",
+          "description": "Stress operation 17.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op18": {
+          "id": "stress.widgets.op18",
+          "path": "widgets/op18",
+          "httpMethod": "POST",
+          "description": "Stress operation 18.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op19": {
+          "id": "stress.widgets.op19",
+          "path": "widgets/op19",
+          "httpMethod": "GET",
+          "description": "Stress operation 19.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        },
+        "op20": {
+          "id": "stress.widgets.op20",
+          "path": "widgets/op20",
+          "httpMethod": "POST",
+          "description": "Stress operation 20.",
+          "parameters": {
+            "n": {
+              "type": "integer",
+              "location": "query"
+            }
+          },
+          "response": {
+            "$ref": "Widget"
+          }
+        }
+      }
+    }
+  }
+}

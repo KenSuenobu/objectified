@@ -1,0 +1,1323 @@
+{
+  "adapter": "discovery",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "discovery_documentation_link": null,
+      "discovery_id": "stress:v1",
+      "discovery_kind": "discovery#restDescription",
+      "discovery_name": "stress",
+      "discovery_service_path": "stress/v1/",
+      "discovery_version": "v1"
+    },
+    "format": "discovery",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Stress Widgets API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From Discovery baseUrl/rootUrl",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://stress.example.com/",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Stress Widgets API",
+        "name": "Stress Widgets API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 1.",
+            "extras": {
+              "discovery_id": "stress.widgets.op1",
+              "discovery_method": "op1",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "GET",
+            "http_path": "/stress/v1/widgets/op1",
+            "key": "GET /stress/v1/widgets/op1",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /stress/v1/widgets/op1#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op1",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "GET /stress/v1/widgets/op1#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 11.",
+            "extras": {
+              "discovery_id": "stress.widgets.op11",
+              "discovery_method": "op11",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "GET",
+            "http_path": "/stress/v1/widgets/op11",
+            "key": "GET /stress/v1/widgets/op11",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /stress/v1/widgets/op11#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op11",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "GET /stress/v1/widgets/op11#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 13.",
+            "extras": {
+              "discovery_id": "stress.widgets.op13",
+              "discovery_method": "op13",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "GET",
+            "http_path": "/stress/v1/widgets/op13",
+            "key": "GET /stress/v1/widgets/op13",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /stress/v1/widgets/op13#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op13",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "GET /stress/v1/widgets/op13#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 15.",
+            "extras": {
+              "discovery_id": "stress.widgets.op15",
+              "discovery_method": "op15",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "GET",
+            "http_path": "/stress/v1/widgets/op15",
+            "key": "GET /stress/v1/widgets/op15",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /stress/v1/widgets/op15#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op15",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "GET /stress/v1/widgets/op15#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 17.",
+            "extras": {
+              "discovery_id": "stress.widgets.op17",
+              "discovery_method": "op17",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "GET",
+            "http_path": "/stress/v1/widgets/op17",
+            "key": "GET /stress/v1/widgets/op17",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /stress/v1/widgets/op17#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op17",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "GET /stress/v1/widgets/op17#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 19.",
+            "extras": {
+              "discovery_id": "stress.widgets.op19",
+              "discovery_method": "op19",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "GET",
+            "http_path": "/stress/v1/widgets/op19",
+            "key": "GET /stress/v1/widgets/op19",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /stress/v1/widgets/op19#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op19",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "GET /stress/v1/widgets/op19#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 3.",
+            "extras": {
+              "discovery_id": "stress.widgets.op3",
+              "discovery_method": "op3",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "GET",
+            "http_path": "/stress/v1/widgets/op3",
+            "key": "GET /stress/v1/widgets/op3",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /stress/v1/widgets/op3#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op3",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "GET /stress/v1/widgets/op3#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 5.",
+            "extras": {
+              "discovery_id": "stress.widgets.op5",
+              "discovery_method": "op5",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "GET",
+            "http_path": "/stress/v1/widgets/op5",
+            "key": "GET /stress/v1/widgets/op5",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /stress/v1/widgets/op5#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op5",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "GET /stress/v1/widgets/op5#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 7.",
+            "extras": {
+              "discovery_id": "stress.widgets.op7",
+              "discovery_method": "op7",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "GET",
+            "http_path": "/stress/v1/widgets/op7",
+            "key": "GET /stress/v1/widgets/op7",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /stress/v1/widgets/op7#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op7",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "GET /stress/v1/widgets/op7#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 9.",
+            "extras": {
+              "discovery_id": "stress.widgets.op9",
+              "discovery_method": "op9",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "GET",
+            "http_path": "/stress/v1/widgets/op9",
+            "key": "GET /stress/v1/widgets/op9",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /stress/v1/widgets/op9#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op9",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "GET /stress/v1/widgets/op9#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 10.",
+            "extras": {
+              "discovery_id": "stress.widgets.op10",
+              "discovery_method": "op10",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "POST",
+            "http_path": "/stress/v1/widgets/op10",
+            "key": "POST /stress/v1/widgets/op10",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /stress/v1/widgets/op10#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op10",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "POST /stress/v1/widgets/op10#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 12.",
+            "extras": {
+              "discovery_id": "stress.widgets.op12",
+              "discovery_method": "op12",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "POST",
+            "http_path": "/stress/v1/widgets/op12",
+            "key": "POST /stress/v1/widgets/op12",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /stress/v1/widgets/op12#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op12",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "POST /stress/v1/widgets/op12#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 14.",
+            "extras": {
+              "discovery_id": "stress.widgets.op14",
+              "discovery_method": "op14",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "POST",
+            "http_path": "/stress/v1/widgets/op14",
+            "key": "POST /stress/v1/widgets/op14",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /stress/v1/widgets/op14#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op14",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "POST /stress/v1/widgets/op14#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 16.",
+            "extras": {
+              "discovery_id": "stress.widgets.op16",
+              "discovery_method": "op16",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "POST",
+            "http_path": "/stress/v1/widgets/op16",
+            "key": "POST /stress/v1/widgets/op16",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /stress/v1/widgets/op16#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op16",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "POST /stress/v1/widgets/op16#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 18.",
+            "extras": {
+              "discovery_id": "stress.widgets.op18",
+              "discovery_method": "op18",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "POST",
+            "http_path": "/stress/v1/widgets/op18",
+            "key": "POST /stress/v1/widgets/op18",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /stress/v1/widgets/op18#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op18",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "POST /stress/v1/widgets/op18#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 2.",
+            "extras": {
+              "discovery_id": "stress.widgets.op2",
+              "discovery_method": "op2",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "POST",
+            "http_path": "/stress/v1/widgets/op2",
+            "key": "POST /stress/v1/widgets/op2",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /stress/v1/widgets/op2#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op2",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "POST /stress/v1/widgets/op2#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 20.",
+            "extras": {
+              "discovery_id": "stress.widgets.op20",
+              "discovery_method": "op20",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "POST",
+            "http_path": "/stress/v1/widgets/op20",
+            "key": "POST /stress/v1/widgets/op20",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /stress/v1/widgets/op20#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op20",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "POST /stress/v1/widgets/op20#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 4.",
+            "extras": {
+              "discovery_id": "stress.widgets.op4",
+              "discovery_method": "op4",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "POST",
+            "http_path": "/stress/v1/widgets/op4",
+            "key": "POST /stress/v1/widgets/op4",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /stress/v1/widgets/op4#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op4",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "POST /stress/v1/widgets/op4#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 6.",
+            "extras": {
+              "discovery_id": "stress.widgets.op6",
+              "discovery_method": "op6",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "POST",
+            "http_path": "/stress/v1/widgets/op6",
+            "key": "POST /stress/v1/widgets/op6",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /stress/v1/widgets/op6#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op6",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "POST /stress/v1/widgets/op6#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Stress operation 8.",
+            "extras": {
+              "discovery_id": "stress.widgets.op8",
+              "discovery_method": "op8",
+              "discovery_resource_path": "widgets"
+            },
+            "http_method": "POST",
+            "http_path": "/stress/v1/widgets/op8",
+            "key": "POST /stress/v1/widgets/op8",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /stress/v1/widgets/op8#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Widget",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "stress.widgets.op8",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "POST /stress/v1/widgets/op8#query.n",
+                "location": "query",
+                "name": "n",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Stress Widgets API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Widget.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Widget.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Widget",
+        "key_type": null,
+        "kind": "record",
+        "name": "Widget",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v1"
+  },
+  "corpus_path": "discovery/04-stress-widgets.json",
+  "counts": {
+    "channels": 0,
+    "operations": 20,
+    "servers": 1,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "discovery"
+  },
+  "fingerprint": "sha256:ad77602d3647788dcfa0f8d47a5748e75eb00b7e7e3eca1d7ab5a55c88441013",
+  "lint": {
+    "findings": 24,
+    "grade": "C",
+    "report_fingerprint": "df416f3396365dff21a60730e27c7547f69f086502e3e98f22012cf1a3bfc6a9",
+    "score": 73,
+    "severity_counts": {
+      "error": 0,
+      "info": 23,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

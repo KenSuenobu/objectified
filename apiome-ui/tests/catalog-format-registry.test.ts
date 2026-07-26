@@ -81,6 +81,8 @@ describe('catalog-format-registry — formats', () => {
     expect(resolveCatalogFormat('flatbuffers')?.label).toBe('FlatBuffers');
     expect(resolveCatalogFormat('typespec')?.label).toBe('TypeSpec');
     expect(resolveCatalogFormat('openrpc')?.label).toBe('OpenRPC');
+    expect(resolveCatalogFormat('discovery')?.label).toBe('Google Discovery');
+    expect(resolveCatalogFormat('google-discovery')?.id).toBe('discovery');
     expect(resolveCatalogFormat('zos-connect')?.id).toBe('zosconnect');
     expect(resolveCatalogFormat('xml-rpc')?.id).toBe('xmlrpc');
   });
@@ -126,7 +128,7 @@ describe('catalog-format-registry — importable vs recognized (MFI-23.12)', () 
   test('importable alternatives are exactly the adapter-backed (store-raw) formats', () => {
     // Only formats with a server-registered adapter can be stored raw in the catalog today.
     expect(IMPORTABLE_ALTERNATIVE_FORMATS.map((f) => f.id).sort()).toEqual(
-      ['apiblueprint', 'arazzo', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'edix12', 'fix', 'flatbuffers', 'fhir', 'graphql', 'grpc', 'hl7v2', 'iso20022', 'iso8583', 'jsonschema', 'jtd', 'odata', 'oncrpc', 'openrpc', 'postman', 'protobuf', 'raml', 'smithy', 'thrift', 'typespec', 'wadl', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect'].sort(),
+      ['apiblueprint', 'arazzo', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'edix12', 'fix', 'flatbuffers', 'fhir', 'graphql', 'grpc', 'hl7v2', 'iso20022', 'iso8583', 'jsonschema', 'jtd', 'odata', 'oncrpc', 'openrpc', 'postman', 'protobuf', 'raml', 'smithy', 'thrift', 'typespec', 'wadl', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect'].sort(),
     );
   });
 

@@ -1,0 +1,147 @@
+{
+  "adapter": "discovery",
+  "canonical": {
+    "channels": [],
+    "description": "Liveness probe API.",
+    "extras": {
+      "discovery_documentation_link": null,
+      "discovery_id": "ping:v1",
+      "discovery_kind": "discovery#restDescription",
+      "discovery_name": "ping",
+      "discovery_service_path": null,
+      "discovery_version": "v1"
+    },
+    "format": "discovery",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ping API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From Discovery baseUrl/rootUrl",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://ping.example.com/",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Ping API",
+        "name": "Ping API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Return ok.",
+            "extras": {
+              "discovery_id": "ping.probe.get",
+              "discovery_method": "get",
+              "discovery_resource_path": "probe"
+            },
+            "http_method": "GET",
+            "http_path": "/v1/ping",
+            "key": "GET /v1/ping",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /v1/ping#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Pong",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "ping.probe.get",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Ping API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Pong.ok",
+            "name": "ok",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "boolean",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Pong",
+        "key_type": null,
+        "kind": "record",
+        "name": "Pong",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v1"
+  },
+  "corpus_path": "discovery/02-minimal-ping.json",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 1,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "discovery"
+  },
+  "fingerprint": "sha256:cb080329653af515a52728baa7beb6b3334dcb0ac5fb4e841e81c399abf0bf4b",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "7eff87ff10365360074bfc3453db83da403d20135e85c8eba11b76ea3d894c2a",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

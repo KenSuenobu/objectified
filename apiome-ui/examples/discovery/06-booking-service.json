@@ -1,0 +1,80 @@
+{
+  "_comment": "Typical Discovery document with header parameters and document-level common parameters.",
+  "kind": "discovery#restDescription",
+  "discoveryVersion": "v1",
+  "id": "booking:v1",
+  "name": "booking",
+  "version": "v1",
+  "title": "Booking API",
+  "description": "Reserve rooms.",
+  "protocol": "rest",
+  "baseUrl": "https://booking.example.com/",
+  "rootUrl": "https://booking.example.com/",
+  "servicePath": "booking/v1/",
+  "parameters": {
+    "prettyPrint": {
+      "type": "boolean",
+      "default": true,
+      "location": "query",
+      "description": "Pretty-print response."
+    }
+  },
+  "schemas": {
+    "Reservation": {
+      "id": "Reservation",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "room": {
+          "type": "string"
+        },
+        "nights": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "resources": {
+    "reservations": {
+      "methods": {
+        "create": {
+          "id": "booking.reservations.create",
+          "path": "reservations",
+          "httpMethod": "POST",
+          "description": "Create a reservation.",
+          "parameters": {
+            "Authorization": {
+              "type": "string",
+              "location": "header",
+              "required": true,
+              "description": "Bearer token."
+            }
+          },
+          "request": {
+            "$ref": "Reservation"
+          },
+          "response": {
+            "$ref": "Reservation"
+          }
+        },
+        "get": {
+          "id": "booking.reservations.get",
+          "path": "reservations/{reservationId}",
+          "httpMethod": "GET",
+          "parameters": {
+            "reservationId": {
+              "type": "string",
+              "location": "path",
+              "required": true
+            }
+          },
+          "response": {
+            "$ref": "Reservation"
+          }
+        }
+      }
+    }
+  }
+}
