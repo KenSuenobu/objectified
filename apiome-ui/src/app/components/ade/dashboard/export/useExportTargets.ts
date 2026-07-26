@@ -9,6 +9,12 @@ export interface UseExportTargetsResult {
   loading: boolean;
   /** Load error; the dialog surfaces it and offers a retry by reopening. */
   error: string | null;
+  /**
+   * The HTTP status of a failed load (null while ok/loading). The Export Studio uses it to explain
+   * a stale deep link — a deleted version (404) or a source outside the viewer's tenant (403) —
+   * instead of repeating the generic loader message (MFX-41.4).
+   */
+  status: number | null;
 }
 
 /**
@@ -31,6 +37,7 @@ export function useExportTargets(
   const [response, setResponse] = useState<ExportTargetsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<number | null>(null);
 
   useEffect(() => {
     if (!enabled || !artifact) return;
@@ -42,6 +49,7 @@ export function useExportTargets(
     const load = async () => {
       setLoading(true);
       setError(null);
+      setStatus(null);
       try {
         const params = new URLSearchParams({ artifact });
         if (version) params.set('version', version);
@@ -50,6 +58,7 @@ export function useExportTargets(
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || data?.success === false) {
+          if (!cancelled) setStatus(typeof res.status === 'number' ? res.status : null);
           throw new Error(
             typeof data?.error === 'string' ? data.error : 'Could not load export targets.',
           );
@@ -72,5 +81,5 @@ export function useExportTargets(
     };
   }, [enabled, artifact, version]);
 
-  return { response, loading, error };
+  return { response, loading, error, status };
 }

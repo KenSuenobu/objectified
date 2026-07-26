@@ -12,9 +12,24 @@
  *  - `from` — where the export was launched from, so the Studio's back link returns there;
  *  - `sourceFormat` — the source's original import format (e.g. `graphql`), so the Studio can
  *    hide the redundant same-format target and offer the original source unchanged.
- *  - `options` — a JSON-encoded map of non-default option overrides, so a "re-run in Studio"
- *    (MFX-41.3) reopens the Studio with the prior run's option values pre-filled.
+ *  - `opts` — a compact (base64url-JSON) map of non-default option overrides, so a "re-run in
+ *    Studio" (MFX-41.3) or a shared link (MFX-41.4) reopens the Studio with those option values
+ *    pre-filled. Credential-shaped keys are never encoded; the legacy plain-JSON `options` param
+ *    still decodes, so links minted before MFX-41.4 keep working.
+ *  - `step` — the stepper stop to resume on (MFX-41.4), so a copied link reproduces the session
+ *    where its author left it. Omitted for the first (`source`) step.
+ *
+ * Reading a Studio URL back — validation, graceful degradation, and step clamping — lives in
+ * `exportStudioUrlState.ts`, which this module builds on.
  */
+
+import {
+  encodeStudioOptions,
+  decodeStudioOptions,
+  STUDIO_OPTIONS_PARAM,
+  STUDIO_STEP_PARAM,
+  type ExportStudioStep,
+} from './exportStudioUrlState';
 
 /** The base path of the Export Studio route (tenant-scoped by the dashboard layout). */
 export const EXPORT_STUDIO_PATH = '/ade/dashboard/export/studio';
@@ -65,9 +80,15 @@ export interface ExportStudioScope {
   /**
    * Non-default option overrides to pre-fill (the `changedOptions` payload of a prior run), so a
    * "re-run in Studio" (MFX-41.3) reproduces that run's configuration. Omitted/empty carries no
-   * `options` param, leaving the target at its defaults.
+   * `opts` param, leaving the target at its defaults. Credential-shaped keys are stripped before
+   * encoding — a delivery secret never rides in a URL (MFX-41.4).
    */
   options?: Record<string, unknown> | null;
+  /**
+   * The stepper stop to resume on (MFX-41.4). Omitted for `source`, which is where a link with no
+   * step opens anyway. The Studio clamps this to what the link can actually establish.
+   */
+  step?: ExportStudioStep | null;
 }
 
 /**
@@ -84,29 +105,44 @@ export function exportStudioHref(scope: ExportStudioScope): string {
   if (scope.target) params.set('target', scope.target);
   if (scope.origin) params.set('from', scope.origin);
   if (scope.sourceFormat) params.set('sourceFormat', scope.sourceFormat);
-  if (scope.options && Object.keys(scope.options).length > 0) {
-    params.set('options', JSON.stringify(scope.options));
-  }
+  const encodedOptions = encodeStudioOptions(scope.options);
+  if (encodedOptions) params.set(STUDIO_OPTIONS_PARAM, encodedOptions);
+  if (scope.step && scope.step !== 'source') params.set(STUDIO_STEP_PARAM, scope.step);
   return `${EXPORT_STUDIO_PATH}?${params.toString()}`;
 }
 
 /**
- * Parse the Studio's `options` deep-link param back into an option-override map. Tolerant by
- * design: a missing, malformed, or non-object value yields null, so a hand-edited URL can never
- * break the Studio — it simply opens the target at its defaults.
+ * Build the absolute, shareable URL for a Studio session — what the Studio's "Copy link" action
+ * puts on the clipboard (MFX-41.4).
  *
- * @param raw The raw `options` query-string value (e.g. from `searchParams.get('options')`).
- * @returns The decoded override map, or null when absent/unparseable/not a plain object.
+ * @param scope The session to reproduce (source, target, options, step).
+ * @param baseUrl The origin to resolve against; defaults to the current page's origin in the
+ *                browser. Without either (server-side rendering) the root-relative href is returned.
+ * @returns An absolute URL when an origin is known, else the root-relative href.
+ */
+export function buildExportStudioShareUrl(scope: ExportStudioScope, baseUrl?: string): string {
+  const href = exportStudioHref(scope);
+  const origin =
+    baseUrl ?? (typeof window !== 'undefined' ? window.location.origin : undefined);
+  if (!origin) return href;
+  try {
+    return new URL(href, origin).toString();
+  } catch {
+    return href;
+  }
+}
+
+/**
+ * Parse the Studio's option-overrides deep-link param back into an override map — the compact
+ * `opts` form or the legacy plain-JSON `options` one. Tolerant by design: a missing, malformed, or
+ * non-object value yields null, so a hand-edited URL can never break the Studio — it simply opens
+ * the target at its defaults.
+ *
+ * @param raw The raw query-string value (e.g. from `searchParams.get('opts')`).
+ * @returns The decoded, secret-free override map, or null when absent/unparseable.
  */
 export function parseExportStudioOptions(
   raw: string | null | undefined,
 ): Record<string, unknown> | null {
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
-    return parsed as Record<string, unknown>;
-  } catch {
-    return null;
-  }
+  return decodeStudioOptions(raw);
 }
