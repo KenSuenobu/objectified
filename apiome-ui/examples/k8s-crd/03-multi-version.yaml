@@ -1,0 +1,65 @@
+# Multi-version CRD — deprecated v1beta1 (still served) + storage v1.
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: databases.storage.example.io
+spec:
+  group: storage.example.io
+  scope: Cluster
+  names:
+    plural: databases
+    singular: database
+    kind: Database
+  versions:
+    - name: v1beta1
+      served: true
+      storage: false
+      deprecated: true
+      deprecationWarning: "storage.example.io/v1beta1 Database is deprecated; use v1."
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                engine:
+                  type: string
+    - name: v1alpha1
+      served: false
+      storage: false
+      deprecated: true
+      deprecationWarning: "v1alpha1 is no longer served."
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                engineName:
+                  type: string
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - engine
+              properties:
+                engine:
+                  type: string
+                  enum:
+                    - postgres
+                    - mysql
+                replicas:
+                  type: integer
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string

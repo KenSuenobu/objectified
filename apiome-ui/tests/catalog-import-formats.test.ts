@@ -97,7 +97,7 @@ describe('catalog-import-formats', () => {
 
   test('exposes the distinct storable sources (deduped by source_kind)', () => {
     const kinds = CATALOG_STORABLE_SOURCES.map((s) => s.sourceKind).sort();
-    expect(kinds).toEqual(['apiblueprint', 'arazzo', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'edix12', 'fhir', 'fix', 'flatbuffers', 'graphql', 'grpc', 'hl7v2', 'iso20022', 'iso8583', 'json-schema', 'jtd', 'odata', 'oncrpc', 'openrpc', 'postman', 'raml', 'smithy', 'thrift', 'typespec', 'wadl', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect']);
+    expect(kinds).toEqual(['apiblueprint', 'arazzo', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'edix12', 'fhir', 'fix', 'flatbuffers', 'graphql', 'grpc', 'hl7v2', 'iso20022', 'iso8583', 'json-schema', 'jtd', 'k8s-crd', 'odata', 'oncrpc', 'openrpc', 'postman', 'raml', 'smithy', 'thrift', 'typespec', 'wadl', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect']);
   });
 
   test('routes adapter-backed formats to catalog', () => {
@@ -125,6 +125,10 @@ describe('catalog-import-formats', () => {
     expect(decideCatalogImportRouting('discovery')).toMatchObject({
       destination: 'catalog',
       adapter: { sourceKind: 'discovery' },
+    });
+    expect(decideCatalogImportRouting('k8s-crd')).toMatchObject({
+      destination: 'catalog',
+      adapter: { sourceKind: 'k8s-crd' },
     });
     expect(decideCatalogImportRouting('avro')).toMatchObject({
       destination: 'catalog',
@@ -296,6 +300,8 @@ describe('catalog-import-formats', () => {
     expect(paradigmForFormat('wadl')).toBe('rest');
     expect(paradigmForFormat('restdescription')).toBe('rest');
     expect(paradigmForFormat('discovery')).toBe('rest');
+    expect(paradigmForFormat('k8s-crd')).toBe('dataschema');
+    expect(paradigmForFormat('crd')).toBe('dataschema');
     expect(paradigmForFormat('openrpc')).toBe('rpc');
     expect(paradigmForFormat('jsonrpc')).toBe('rpc');
     expect(paradigmForFormat('avro')).toBe('dataschema');

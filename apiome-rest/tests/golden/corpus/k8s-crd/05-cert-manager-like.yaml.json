@@ -1,0 +1,139 @@
+{
+  "adapter": "k8s-crd",
+  "canonical": {
+    "channels": [],
+    "description": "CustomResourceDefinition certificaterequests.cert-manager.example.io",
+    "extras": {
+      "k8s_crd_count": 1,
+      "k8s_crd_names": [
+        "certificaterequests.cert-manager.example.io"
+      ]
+    },
+    "format": "k8s-crd",
+    "identity": {
+      "extras": {},
+      "id": "certificaterequests.cert-manager.example.io",
+      "name": "CertificateRequest",
+      "namespace": "cert-manager.example.io"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Kubernetes CustomResourceDefinition certificaterequests.cert-manager.example.io",
+        "extras": {
+          "k8s_crd_api_version": "apiextensions.k8s.io/v1",
+          "k8s_crd_group": "cert-manager.example.io",
+          "k8s_crd_kind": "CertificateRequest",
+          "k8s_crd_name": "certificaterequests.cert-manager.example.io",
+          "k8s_crd_plural": "certificaterequests",
+          "k8s_crd_scope": "Namespaced",
+          "k8s_crd_short_names": [
+            "cr",
+            "crs"
+          ],
+          "k8s_crd_singular": "certificaterequest"
+        },
+        "key": "certificaterequests.cert-manager.example.io",
+        "name": "CertificateRequest",
+        "operations": []
+      }
+    ],
+    "title": "CertificateRequest",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A CertificateRequest requests a signed certificate from an issuer.",
+        "enum_values": [],
+        "extras": {
+          "deprecated": false,
+          "k8s_crd_group": "cert-manager.example.io",
+          "k8s_crd_kind": "CertificateRequest",
+          "k8s_crd_version": "v1",
+          "served": true,
+          "storage": true,
+          "version_status": "served",
+          "x_kubernetes_paths": {
+            "$.properties.status.properties.conditions": {
+              "x-kubernetes-list-map-keys": [
+                "type"
+              ],
+              "x-kubernetes-list-type": "map"
+            }
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "cert-manager.example.io/v1.CertificateRequest.spec",
+            "name": "spec",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "cert-manager.example.io/v1.CertificateRequest.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "cert-manager.example.io/v1.CertificateRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "CertificateRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v1"
+  },
+  "corpus_path": "k8s-crd/05-cert-manager-like.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "k8s-crd"
+  },
+  "fingerprint": "sha256:52e105d91d5d01e717786fddfdf8cac4bc0148d1c11756dcc29c5a4cf202ac16",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "cbbbdf3797a37e7d35bf17191d02e2f01465b14b23d37851953003bb39f101c2",
+    "score": 98,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

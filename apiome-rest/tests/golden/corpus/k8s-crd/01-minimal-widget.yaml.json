@@ -1,0 +1,114 @@
+{
+  "adapter": "k8s-crd",
+  "canonical": {
+    "channels": [],
+    "description": "CustomResourceDefinition widgets.example.io",
+    "extras": {
+      "k8s_crd_count": 1,
+      "k8s_crd_names": [
+        "widgets.example.io"
+      ]
+    },
+    "format": "k8s-crd",
+    "identity": {
+      "extras": {},
+      "id": "widgets.example.io",
+      "name": "Widget",
+      "namespace": "example.io"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Kubernetes CustomResourceDefinition widgets.example.io",
+        "extras": {
+          "k8s_crd_api_version": "apiextensions.k8s.io/v1",
+          "k8s_crd_group": "example.io",
+          "k8s_crd_kind": "Widget",
+          "k8s_crd_name": "widgets.example.io",
+          "k8s_crd_plural": "widgets",
+          "k8s_crd_scope": "Namespaced",
+          "k8s_crd_short_names": [
+            "wd"
+          ],
+          "k8s_crd_singular": "widget"
+        },
+        "key": "widgets.example.io",
+        "name": "Widget",
+        "operations": []
+      }
+    ],
+    "title": "Widget",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "deprecated": false,
+          "k8s_crd_group": "example.io",
+          "k8s_crd_kind": "Widget",
+          "k8s_crd_version": "v1",
+          "served": true,
+          "storage": true,
+          "version_status": "served"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "example.io/v1.Widget.spec",
+            "name": "spec",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.io/v1.Widget",
+        "key_type": null,
+        "kind": "record",
+        "name": "Widget",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v1"
+  },
+  "corpus_path": "k8s-crd/01-minimal-widget.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "k8s-crd"
+  },
+  "fingerprint": "sha256:4df3d4552556b4b773d6a3a0363d94401472be09777cb05526abf711c610ff7c",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "0117316967f9624984d8daeccdc5e0ef273e29569b1610d5c07e953c2495413e",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

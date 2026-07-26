@@ -1,0 +1,50 @@
+# Multi-document YAML stream — two distinct CRDs separated by ---.
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: frontends.web.example.io
+spec:
+  group: web.example.io
+  scope: Namespaced
+  names:
+    plural: frontends
+    singular: frontend
+    kind: Frontend
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                host:
+                  type: string
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: backends.web.example.io
+spec:
+  group: web.example.io
+  scope: Namespaced
+  names:
+    plural: backends
+    singular: backend
+    kind: Backend
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                port:
+                  type: integer

@@ -18,7 +18,7 @@
       "label": "ASN.1",
       "category": "data-schema",
       "paradigm": "data_schema",
-      "marker": "`DEFINITIONS ::= BEGIN \u2026 END`"
+      "marker": "`DEFINITIONS ::= BEGIN … END`"
     },
     "asyncapi": {
       "label": "AsyncAPI 2.x/3.0",
@@ -36,7 +36,7 @@
       "label": "Cap'n Proto",
       "category": "data-schema",
       "paradigm": "data_schema",
-      "marker": "`@0x\u2026` file id + `struct`"
+      "marker": "`@0x…` file id + `struct`"
     },
     "cloudevents": {
       "label": "CloudEvents 1.0",
@@ -223,6 +223,12 @@
       "category": "rest-http",
       "paradigm": "rest",
       "marker": "`apiRequester` / `apiProvider` descriptor"
+    },
+    "k8s-crd": {
+      "label": "Kubernetes CRD",
+      "category": "data-schema",
+      "paradigm": "data_schema",
+      "marker": "`apiVersion: apiextensions.k8s.io/*` + `kind: CustomResourceDefinition`"
     }
   },
   "entries": [
@@ -1120,7 +1126,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Fileset member without an `asyncapi` marker \u2014 not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.",
+      "notes": "Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.",
       "rung": "multi-file",
       "fileset_role": "member"
     },
@@ -1141,7 +1147,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Fileset member without an `asyncapi` marker \u2014 not independently detectable; imported only through the set root asyncapi.yaml.",
+      "notes": "Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml.",
       "rung": "multi-file",
       "fileset_role": "member"
     },
@@ -1683,7 +1689,7 @@
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
-      "provenance": "Grammatically well-formed schema containing a file id and constants only \u2014 no struct, enum, or interface to import.",
+      "provenance": "Grammatically well-formed schema containing a file id and constants only — no struct, enum, or interface to import.",
       "failure_class": "semantic",
       "expected_error_code": "INPUT_MALFORMED"
     },
@@ -1807,7 +1813,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "CloudEvents batch arrays are documented in cloudevents_parser (and is_cloudevents_document accepts lists), but both detect and parse delegate to parse_document, which rejects top-level JSON arrays \u2014 the adapter's detect returns no match (only the standalone sniffer reports cloudevents 0.85) and import currently fails; expected_detection records the intended contract for the detection-hardening work.",
+      "notes": "CloudEvents batch arrays are documented in cloudevents_parser (and is_cloudevents_document accepts lists), but both detect and parse delegate to parse_document, which rejects top-level JSON arrays — the adapter's detect returns no match (only the standalone sniffer reports cloudevents 0.85) and import currently fails; expected_detection records the intended contract for the detection-hardening work.",
       "rung": "composition"
     },
     {
@@ -2652,7 +2658,7 @@
       "provenance": "Hand-written billing IDL that #includes common/money.idl, which is not provided, so Common::Money can never resolve.",
       "failure_class": "unresolvable-ref",
       "expected_error_code": "FORMAT_MISMATCH",
-      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 \u2014 the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
+      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 — the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
     },
     {
       "path": "corba-idl/negative/03-truncated-inventory.idl",
@@ -3458,7 +3464,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "FIX Orchestra XML is not yet recognized \u2014 currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract.",
+      "notes": "FIX Orchestra XML is not yet recognized — currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract.",
       "rung": "composition"
     },
     {
@@ -5600,6 +5606,237 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "An otherwise-valid JTD User schema written as UTF-16 bytes (with BOM), so the UTF-8 decode yields NUL/replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
+      "path": "k8s-crd/01-minimal-widget.yaml",
+      "format": "k8s-crd",
+      "adapter_key": "k8s-crd",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "k8s-crd",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "crd",
+        "single-version",
+        "structural-schema"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "minimal"
+    },
+    {
+      "path": "k8s-crd/02-typical-cronwidget.yaml",
+      "format": "k8s-crd",
+      "adapter_key": "k8s-crd",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "k8s-crd",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "crd",
+        "required",
+        "spec-status"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "typical"
+    },
+    {
+      "path": "k8s-crd/03-multi-version.yaml",
+      "format": "k8s-crd",
+      "adapter_key": "k8s-crd",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "k8s-crd",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "crd",
+        "multi-version",
+        "deprecated",
+        "not-served"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "composition"
+    },
+    {
+      "path": "k8s-crd/04-x-kubernetes-extensions.yaml",
+      "format": "k8s-crd",
+      "adapter_key": "k8s-crd",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "k8s-crd",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "crd",
+        "x-kubernetes",
+        "int-or-string",
+        "list-type",
+        "map-type",
+        "preserve-unknown-fields"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "stress"
+    },
+    {
+      "path": "k8s-crd/05-cert-manager-like.yaml",
+      "format": "k8s-crd",
+      "adapter_key": "k8s-crd",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "k8s-crd",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "crd",
+        "real-world",
+        "nested-objects",
+        "enums"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored reconstruction inspired by cert-manager CertificateRequest CRD shape; not a verbatim upstream copy.",
+      "rung": "real-world"
+    },
+    {
+      "path": "k8s-crd/06-multi-crd-stream.yaml",
+      "format": "k8s-crd",
+      "adapter_key": "k8s-crd",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "k8s-crd",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "crd",
+        "multi-document",
+        "multiple-services"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "typical",
+      "notes": "Multi-document YAML stream with two CRDs; imports as one CanonicalApi with two Services. The multi-file ladder rung is waived because CRDs do not resolve cross-file references."
+    },
+    {
+      "path": "k8s-crd/negative/01-syntactic-unclosed-mapping.yaml",
+      "format": "k8s-crd",
+      "adapter_key": "k8s-crd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "k8s-crd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-mapping"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "CRD YAML with an unclosed flow mapping under openAPIV3Schema.properties.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "k8s-crd/negative/02-semantic-missing-group.yaml",
+      "format": "k8s-crd",
+      "adapter_key": "k8s-crd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "k8s-crd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "missing-group"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Well-formed CRD YAML missing required spec.group.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "k8s-crd/negative/03-truncated-mid-doc.yaml",
+      "format": "k8s-crd",
+      "adapter_key": "k8s-crd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "k8s-crd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-doc-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Byte-truncated copy of k8s-crd/01-minimal-widget.yaml cut at 55%.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "k8s-crd/negative/04-wrong-format-openapi.yaml",
+      "format": "k8s-crd",
+      "adapter_key": "k8s-crd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "k8s-crd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "openapi"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal OpenAPI 3 document used as a wrong-format negative for the CRD adapter.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "k8s-crd/negative/05-encoding-utf16.yaml",
+      "format": "k8s-crd",
+      "adapter_key": "k8s-crd",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "k8s-crd",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "The hand-authored k8s-crd/01-minimal-widget.yaml re-encoded as UTF-16 (BOM + NUL bytes).",
       "failure_class": "encoding",
       "expected_error_code": "INPUT_ENCODING_INVALID"
     },
@@ -8210,7 +8447,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96), `oncrpc` (0.95), and `smithy` (0.95) above `thrift` (0.95) \u2014 the Thrift `union` block also matches the FlatBuffers union marker; expected_detection records the intended winner for the detection-hardening work.",
+      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96), `oncrpc` (0.95), and `smithy` (0.95) above `thrift` (0.95) — the Thrift `union` block also matches the FlatBuffers union marker; expected_detection records the intended winner for the detection-hardening work.",
       "rung": "stress"
     },
     {
@@ -10020,6 +10257,9 @@
     },
     "zosconnect": {
       "multi-file": "The zosconnect adapter's parse_fileset only parses the root member and resolves no cross-file references (copybook structures are name references only), so a multi-file set exercises nothing."
+    },
+    "k8s-crd": {
+      "multi-file": "K8sCrdImportSource.parse_fileset only parses the root member and CRD structural schemas do not resolve cross-file references; multi-document YAML streams (k8s-crd/06-multi-crd-stream.yaml) cover multi-entity intake instead."
     }
   }
 }

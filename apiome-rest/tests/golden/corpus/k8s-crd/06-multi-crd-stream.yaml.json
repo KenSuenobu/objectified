@@ -1,0 +1,168 @@
+{
+  "adapter": "k8s-crd",
+  "canonical": {
+    "channels": [],
+    "description": "Multi-document CRD stream (2 resources)",
+    "extras": {
+      "k8s_crd_count": 2,
+      "k8s_crd_names": [
+        "frontends.web.example.io",
+        "backends.web.example.io"
+      ]
+    },
+    "format": "k8s-crd",
+    "identity": {
+      "extras": {},
+      "id": "frontends.web.example.io,backends.web.example.io",
+      "name": "kubernetes-crds",
+      "namespace": "web.example.io"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Kubernetes CustomResourceDefinition backends.web.example.io",
+        "extras": {
+          "k8s_crd_api_version": "apiextensions.k8s.io/v1",
+          "k8s_crd_group": "web.example.io",
+          "k8s_crd_kind": "Backend",
+          "k8s_crd_name": "backends.web.example.io",
+          "k8s_crd_plural": "backends",
+          "k8s_crd_scope": "Namespaced",
+          "k8s_crd_singular": "backend"
+        },
+        "key": "backends.web.example.io",
+        "name": "Backend",
+        "operations": []
+      },
+      {
+        "description": "Kubernetes CustomResourceDefinition frontends.web.example.io",
+        "extras": {
+          "k8s_crd_api_version": "apiextensions.k8s.io/v1",
+          "k8s_crd_group": "web.example.io",
+          "k8s_crd_kind": "Frontend",
+          "k8s_crd_name": "frontends.web.example.io",
+          "k8s_crd_plural": "frontends",
+          "k8s_crd_scope": "Namespaced",
+          "k8s_crd_singular": "frontend"
+        },
+        "key": "frontends.web.example.io",
+        "name": "Frontend",
+        "operations": []
+      }
+    ],
+    "title": "Kubernetes CRDs",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "deprecated": false,
+          "k8s_crd_group": "web.example.io",
+          "k8s_crd_kind": "Backend",
+          "k8s_crd_version": "v1",
+          "served": true,
+          "storage": true,
+          "version_status": "served"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "web.example.io/v1.Backend.spec",
+            "name": "spec",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "web.example.io/v1.Backend",
+        "key_type": null,
+        "kind": "record",
+        "name": "Backend",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "deprecated": false,
+          "k8s_crd_group": "web.example.io",
+          "k8s_crd_kind": "Frontend",
+          "k8s_crd_version": "v1",
+          "served": true,
+          "storage": true,
+          "version_status": "served"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "web.example.io/v1.Frontend.spec",
+            "name": "spec",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "web.example.io/v1.Frontend",
+        "key_type": null,
+        "kind": "record",
+        "name": "Frontend",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "k8s-crd/06-multi-crd-stream.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 2,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "k8s-crd"
+  },
+  "fingerprint": "sha256:9404e8f75ba8aba0fa3a5fed57f05984861bd5bfa59715abf3223363bc5a72d2",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "b52bf93e276a7ea40b9ed59ff5c6e03c85326b6fab235bbeef183581323d9044",
+    "score": 90,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

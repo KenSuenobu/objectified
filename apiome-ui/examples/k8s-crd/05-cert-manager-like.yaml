@@ -1,0 +1,90 @@
+# Real-world reconstruction inspired by cert-manager CertificateRequest shape
+# (hand-authored, not a verbatim copy of upstream CRD YAML).
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: certificaterequests.cert-manager.example.io
+spec:
+  group: cert-manager.example.io
+  scope: Namespaced
+  names:
+    plural: certificaterequests
+    singular: certificaterequest
+    kind: CertificateRequest
+    shortNames:
+      - cr
+      - crs
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: A CertificateRequest requests a signed certificate from an issuer.
+          properties:
+            spec:
+              type: object
+              required:
+                - issuerRef
+                - request
+              properties:
+                duration:
+                  type: string
+                  description: Requested certificate lifetime as a Go duration.
+                issuerRef:
+                  type: object
+                  description: Reference to the issuer that should sign the request.
+                  required:
+                    - name
+                  properties:
+                    group:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                request:
+                  type: string
+                  description: Base64-encoded PKCS#10 CSR.
+                  format: byte
+                isCA:
+                  type: boolean
+                usages:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - signing
+                      - digital signature
+                      - key encipherment
+                      - server auth
+                      - client auth
+            status:
+              type: object
+              properties:
+                conditions:
+                  type: array
+                  x-kubernetes-list-type: map
+                  x-kubernetes-list-map-keys:
+                    - type
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                certificate:
+                  type: string
+                  format: byte
+                failureTime:
+                  type: string
+                  format: date-time
