@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.50.0
+  version: 1.51.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -28688,6 +28688,123 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for validatea jsonor xmlpayloadagainstacatalogresponse422.
+  /v1/tenants/{tenant_slug}/schemas/{schema_ref}/synthesize:
+    post:
+      tags:
+      - schema-validation
+      summary: Generate sample payloads — valid instances and single-constraint mutants
+      description: 'Generate test payloads for any schema Apiome holds (IXH-5.2):
+        a minimal valid instance, a full valid instance, one instance per polymorphic
+        branch, and a set of mutants that each violate exactly one constraint. Nothing
+        is persisted.
+
+
+        **Addressing** is identical to the validate endpoint — ``schema_ref`` is a
+        path-shaped reference naming a Project revision (``project/{project_slug}/{version}[/{type}]``),
+        a Catalog revision (``catalog/{item}/{version}[/{type}]``), or a type-registry
+        type (``registry/{namespace}/{name}``) — so a payload can be generated and
+        then validated against the very same reference.
+
+
+        **Everything returned is synthetic.** The response, every instance, and every
+        value''s provenance carry an explicit label. These payloads were generated
+        from the schema; they are not real data and must never be presented as a captured
+        example.
+
+
+        **Generation is deterministic.** The same schema and ``seed`` produce byte-identical
+        payloads, so a generated fixture can be committed and re-derived. Values come
+        from the schema''s own ``const``, ``examples``, ``default``, or ``enum`` before
+        anything is invented, and each value''s ``provenance`` records which.
+
+
+        **Mutants are verified, not assumed.** Each one must provoke exactly one violation,
+        of exactly the constraint it targets; candidates that fail for the wrong reason
+        (or do not fail at all) are dropped and counted in ``rejected_mutants``. The
+        available kinds are `required-missing`, `type-wrong`, `enum-out-of-range`,
+        `pattern-violated`, `bound-exceeded`, `additional-properties-injected`, and
+        `discriminator-mismatched`.
+
+
+        **Recursion terminates.** Generation stops descending into optional structure
+        at ``depth_limit`` and at any reference cycle, and says so in ``diagnostics``
+        rather than truncating silently. External ``$ref``s resolve only against this
+        tenant''s registry; no network fetch is ever performed.
+
+
+        A schema that cannot be generated from is **not** an HTTP error: the response
+        is a 200 with ``ok: false`` and a stable intake-taxonomy ``error`` code plus
+        remediation. Only addressing faults are HTTP errors — 400 for a malformed
+        reference, 404 for one that names nothing visible, 422 for one that resolves
+        to material no schema can be derived from.'
+      operationId: synthesize_payloads_for_schema_v1_tenants__tenant_slug__schemas__schema_ref__synthesize_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: schema_ref
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Schema Ref
+          description: Schema Ref schema.
+        description: Path parameter identifying the schema ref segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Generatesamplepayloadsvalidinstancesandsauthorization schema.
+          - type: 'null'
+            description: Generatesamplepayloadsvalidinstancesandsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Generatesamplepayloadsvalidinstancesands Xapikey schema.
+          - type: 'null'
+            description: Generatesamplepayloadsvalidinstancesands Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaSynthesisRequest'
+              description: Request body for generatesamplepayloadsvalidinstancesandsrequest.
+        description: Request body for generate sample payloads — valid instances and
+          single-constraint mutants.
+      responses:
+        '200':
+          description: Successful response for generate sample payloads — valid instances
+            and single-constraint mutants.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaSynthesisResponse'
+                description: Response payload for generatesamplepayloadsvalidinstancesandsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for generatesamplepayloadsvalidinstancesandsresponse422.
   /v1/import/sources:
     get:
       tags:
@@ -41898,6 +42015,42 @@ components:
       - unsafeIf
       title: BotPresetBody
       description: A bot preset as data, naming what happens to each traffic class.
+    BranchDetail:
+      properties:
+        keyword:
+          type: string
+          title: Keyword
+          description: oneOf | anyOf | if.
+          example: example
+        schema_pointer:
+          type: string
+          title: Schema Pointer
+          description: Where the combinator is declared.
+          example: example
+        selector:
+          type: string
+          title: Selector
+          description: Branch index, or `then` / `else`.
+          example: example
+        label:
+          type: string
+          title: Label
+          description: Human-readable name of the alternative.
+          example: example
+      additionalProperties: false
+      type: object
+      required:
+      - keyword
+      - schema_pointer
+      - selector
+      - label
+      title: BranchDetail
+      description: "Which alternative of a polymorphic schema an instance was generated\
+        \ for.\n\nAttributes:\n    keyword: ``oneOf``, ``anyOf``, or ``if`` (for the\
+        \ ``if``/``then``/``else`` triple).\n    schema_pointer: Where the combinator\
+        \ is declared.\n    selector: ``\"0\"``, ``\"1\"``, … for ``oneOf``/``anyOf``;\
+        \ ``\"then\"`` or ``\"else\"`` for\n        an ``if``/``then``/``else`` arm.\n\
+        \    label: Human-readable name of the alternative (``oneOf[1]``, ``if/else``)."
     BrowseDirectoryStats:
       properties:
         tenant_count:
@@ -62776,6 +62929,82 @@ components:
       - dailyRollups
       title: MockUsageResponse
       description: Mock usage counters for a tenant (#4420, SIM-1.5).
+    MutationDetail:
+      properties:
+        kind:
+          type: string
+          title: Kind
+          description: Which mutation was applied.
+          example: example
+        keyword:
+          type: string
+          title: Keyword
+          description: The schema keyword the mutation targets.
+          example: example
+        pointer:
+          type: string
+          title: Pointer
+          description: JSON Pointer to the mutated value.
+          example: example
+        schema_pointer:
+          type: string
+          title: Schema Pointer
+          description: Where the broken constraint lives.
+          default: ''
+          example: example
+        reported_keyword:
+          type: string
+          title: Reported Keyword
+          description: The keyword the validator reported at the top level.
+          default: ''
+          example: example
+        reported_pointer:
+          type: string
+          title: Reported Pointer
+          description: The instance pointer the validator reported.
+          default: ''
+          example: example
+        description:
+          type: string
+          title: Description
+          description: One-sentence description of the mutation.
+          example: A pet available for adoption in the store.
+        original:
+          anyOf:
+          - description: Mutation schema.
+          - type: 'null'
+            description: Mutation schema.
+          title: Original
+          description: Value before the mutation.
+        mutated:
+          anyOf:
+          - description: Mutation schema.
+          - type: 'null'
+            description: Mutation schema.
+          title: Mutated
+          description: Value after the mutation.
+      additionalProperties: false
+      type: object
+      required:
+      - kind
+      - keyword
+      - pointer
+      - description
+      title: MutationDetail
+      description: "The single constraint a mutant breaks, and how it breaks it.\n\
+        \nAttributes:\n    kind: One of :data:`MUTATION_KINDS`.\n    keyword: The\
+        \ schema keyword the mutation targets (``required``, ``type``, ``enum``,\n\
+        \        ``pattern``, ``maximum``, ``additionalProperties``, ``oneOf`` …).\n\
+        \    pointer: JSON Pointer to the value the mutation removed, replaced, or\
+        \ added.\n    schema_pointer: Where the broken constraint is declared.\n \
+        \   reported_keyword: The keyword the validator actually reported at the top\
+        \ level. Equal\n        to :attr:`keyword` except when the constraint sits\
+        \ inside a combinator, where the\n        validator reports the combinator\
+        \ and the targeted keyword appears beneath it.\n    reported_pointer: The\
+        \ instance pointer the validator reported the failure at.\n    description:\
+        \ One sentence describing the mutation, for a test report or a UI row.\n \
+        \   original: The value before the mutation (``None`` for an injected property).\n\
+        \    mutated: The value after the mutation (``None`` for a removed property)."
     NativeEvidence:
       properties:
         native_id:
@@ -68468,6 +68697,210 @@ components:
       title: SchemaSourceInfo
       description: What the reference actually resolved to, echoed back so a caller
         can confirm it.
+    SchemaSynthesisRequest:
+      properties:
+        seed:
+          type: integer
+          maximum: 2147483647.0
+          minimum: 0.0
+          title: Seed
+          description: Seed for the value generator. The same schema and seed always
+            produce byte-identical payloads; change it to get a different sample of
+            the same shapes.
+          default: 0
+          example: 1
+        include_minimal:
+          type: boolean
+          title: Include Minimal
+          description: Generate the required-properties-only instance.
+          default: true
+          example: false
+        include_full:
+          type: boolean
+          title: Include Full
+          description: Generate the every-optional-property instance.
+          default: true
+          example: false
+        include_branches:
+          type: boolean
+          title: Include Branches
+          description: Generate one instance per `oneOf`/`anyOf` alternative and per
+            `if`/`then`/`else` arm. Alternatives that produce a payload already returned
+            are skipped.
+          default: true
+          example: false
+        include_mutants:
+          type: boolean
+          title: Include Mutants
+          description: Generate payloads that each violate exactly one constraint.
+            Only mutants that provoke a single violation of the constraint they target
+            are returned.
+          default: true
+          example: false
+        mutation_kinds:
+          anyOf:
+          - items:
+              type: string
+            type: array
+            description: Request body for schema synthesis.
+          - type: 'null'
+            description: Request body for schema synthesis.
+          title: Mutation Kinds
+          description: 'Restrict mutants to these kinds. Omit for all of them. Known
+            kinds: `required-missing`, `type-wrong`, `enum-out-of-range`, `pattern-violated`,
+            `bound-exceeded`, `additional-properties-injected`, `discriminator-mismatched`.'
+        max_mutants:
+          type: integer
+          maximum: 250.0
+          minimum: 1.0
+          title: Max Mutants
+          description: Cap on returned mutants. Selection is round-robin across the
+            mutation kinds, so a low cap still covers every kind the schema affords.
+          default: 40
+          example: 1
+        max_branch_instances:
+          type: integer
+          maximum: 100.0
+          minimum: 1.0
+          title: Max Branch Instances
+          description: Cap on returned branch instances.
+          default: 12
+          example: 1
+        verify:
+          type: boolean
+          title: Verify
+          description: Validate every generated payload back against the schema, and
+            drop any mutant that does not break exactly the constraint it targets.
+            Turning this off returns the payloads unchecked, with `valid` null on
+            every one of them.
+          default: true
+          example: false
+      additionalProperties: false
+      type: object
+      title: SchemaSynthesisRequest
+      description: 'What to generate for the schema named in the URL.
+
+
+        Every field has a usable default: an empty body generates the whole set —
+        minimal, full,
+
+        every branch, and the mutants — under seed 0.'
+    SchemaSynthesisResponse:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+          description: Whether the request was serviceable at all.
+          example: false
+        synthetic:
+          type: boolean
+          title: Synthetic
+          description: Always true. Every payload in this response was generated from
+            the schema and is not, and never was, real data.
+          default: true
+          example: false
+        notice:
+          type: string
+          title: Notice
+          description: Human-readable statement of the above, for display next to
+            the payloads.
+          default: Synthetic sample data generated from the schema. It is not real
+            data, has never been captured from a production system, and must not be
+            treated as an example of one.
+          example: example
+        schema_ref:
+          type: string
+          title: Schema Ref
+          description: The schema reference exactly as it was requested.
+          example: example
+        seed:
+          type: integer
+          title: Seed
+          description: The seed used, echoed so a run can be reproduced.
+          default: 0
+          example: 1
+        dialect:
+          anyOf:
+          - type: string
+            description: Response payload for schema synthesis.
+          - type: 'null'
+            description: Response payload for schema synthesis.
+          title: Dialect
+          description: The JSON Schema dialect the schema was read under.
+        depth_limit:
+          type: integer
+          title: Depth Limit
+          description: Nesting depth at which generation stops descending into optional
+            structure. A recursive schema terminates here; the omission is reported
+            as a diagnostic.
+          default: 6
+          example: 50
+        verified:
+          type: boolean
+          title: Verified
+          description: Whether generated payloads were validated back.
+          default: true
+          example: false
+        source:
+          anyOf:
+          - $ref: '#/components/schemas/SchemaSourceInfo'
+          - type: 'null'
+            description: Response payload for schema synthesis.
+          description: What the reference resolved to.
+        instances:
+          items:
+            $ref: '#/components/schemas/SynthesizedInstance'
+          type: array
+          title: Instances
+          description: The generated payloads, ordered minimal, full, branches, then
+            mutants. Each carries its own `synthetic` label, what it is for, whether
+            it is meant to be valid, and — for a mutant — the single constraint it
+            breaks.
+          maxItems: 1000
+        counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Counts
+          description: How many instances of each kind were returned (`minimal`, `full`,
+            …).
+        rejected_mutants:
+          type: integer
+          title: Rejected Mutants
+          description: Mutation candidates dropped because they did not fail the schema
+            with exactly the constraint they targeted — a negative test that fails
+            for the wrong reason is worse than no test.
+          default: 0
+          example: 1
+        truncated:
+          type: boolean
+          title: Truncated
+          description: Whether `max_mutants` or `max_branch_instances` cut the set
+            short.
+          default: false
+          example: false
+        diagnostics:
+          items:
+            $ref: '#/components/schemas/ValidationDiagnostic'
+          type: array
+          title: Diagnostics
+          description: Conditions that limited generation — a construct with no generatable
+            value, an unresolvable `$ref`, a recursion bound, an authored example
+            that does not satisfy its own schema. Never a fault of the request.
+          maxItems: 1000
+        error:
+          anyOf:
+          - $ref: '#/components/schemas/SpecImportJobError'
+          - type: 'null'
+            description: Response payload for schema synthesis.
+          description: 'Populated when `ok` is false: stable taxonomy code plus remediation.'
+      additionalProperties: false
+      type: object
+      required:
+      - ok
+      - schema_ref
+      title: SchemaSynthesisResponse
+      description: The generated payloads for one schema.
     SchemasChangeSection:
       properties:
         added:
@@ -72237,6 +72670,122 @@ components:
       title: SunsetTimelineResponse
       description: Aggregated sunset / deprecation timeline for accessible projects
         (#508).
+    SynthesizedInstance:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable, reproducible identifier for this instance.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        kind:
+          type: string
+          title: Kind
+          description: minimal | full | branch | mutant.
+          example: example
+        title:
+          type: string
+          title: Title
+          description: Short human-readable name.
+          example: example
+        description:
+          type: string
+          title: Description
+          description: What this instance is for.
+          example: A pet available for adoption in the store.
+        instance:
+          anyOf:
+          - description: Synthesized Instance schema.
+          - type: 'null'
+            description: Synthesized Instance schema.
+          title: Instance
+          description: The synthetic payload itself.
+        synthetic:
+          type: boolean
+          title: Synthetic
+          description: 'Always true: this payload was generated, never captured.'
+          default: true
+          example: false
+        expected_valid:
+          type: boolean
+          title: Expected Valid
+          description: Whether the payload should satisfy the schema.
+          example: false
+        valid:
+          anyOf:
+          - type: boolean
+            description: Synthesized Instance schema.
+          - type: 'null'
+            description: Synthesized Instance schema.
+          title: Valid
+          description: Whether it does, when verification ran; null when it did not
+            run.
+        findings:
+          items:
+            $ref: '#/components/schemas/InstanceFinding'
+          type: array
+          title: Findings
+          description: Violations the payload provoked.
+          maxItems: 1000
+        derived_from:
+          anyOf:
+          - type: string
+            description: Synthesized Instance schema.
+          - type: 'null'
+            description: Synthesized Instance schema.
+          title: Derived From
+          description: Id of the instance a mutant was derived from.
+        mutation:
+          anyOf:
+          - $ref: '#/components/schemas/MutationDetail'
+          - type: 'null'
+            description: Synthesized Instance schema.
+          description: The single constraint a mutant breaks.
+        branch:
+          anyOf:
+          - $ref: '#/components/schemas/BranchDetail'
+          - type: 'null'
+            description: Synthesized Instance schema.
+          description: The alternative a branch instance covers.
+        provenance:
+          items:
+            $ref: '#/components/schemas/ValueProvenance'
+          type: array
+          title: Provenance
+          description: Where each value came from.
+          maxItems: 1000
+        provenance_truncated:
+          type: boolean
+          title: Provenance Truncated
+          description: Whether provenance was truncated.
+          default: false
+          example: false
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - kind
+      - title
+      - description
+      - expected_valid
+      title: SynthesizedInstance
+      description: "One generated payload, with everything a caller needs to use it\
+        \ as a test case.\n\nAttributes:\n    id: Stable identifier, unique within\
+        \ one result and reproducible across runs with the\n        same schema and\
+        \ seed (``minimal``, ``mutant:type-wrong:type:/age`` …).\n    kind: One of\
+        \ :data:`INSTANCE_KINDS`.\n    title: Short human-readable name.\n    description:\
+        \ What the instance is for.\n    instance: The payload itself.\n    synthetic:\
+        \ Always ``True``. Present on every instance so the label survives being\n\
+        \        copied out of the response.\n    expected_valid: Whether the instance\
+        \ is *meant* to satisfy the schema.\n    valid: Whether it actually does,\
+        \ when ``verify`` ran; ``None`` when it did not.\n    findings: The violations\
+        \ the instance provoked — the point of a mutant, and a bug\n        report\
+        \ for a valid instance that did not come out valid.\n    derived_from: The\
+        \ id of the instance a mutant was derived from.\n    mutation: For a mutant,\
+        \ the single constraint it breaks.\n    branch: For a branch instance, the\
+        \ alternative it covers.\n    provenance: Where each value came from (valid\
+        \ instances only; a mutant's values are\n        its parent's, plus the one\
+        \ the mutation changed).\n    provenance_truncated: Whether ``provenance``\
+        \ was cut at\n        :data:`MAX_PROVENANCE_ENTRIES`."
     SyntheticCheckBody:
       properties:
         id:
@@ -75377,6 +75926,46 @@ components:
         ``invalid`` blocks delivery, ``skipped`` warns but does not block,
 
         ``not_applicable`` means there was nothing to validate.'
+    ValueProvenance:
+      properties:
+        pointer:
+          type: string
+          title: Pointer
+          description: JSON Pointer to the value in the instance.
+          example: example
+        origin:
+          type: string
+          title: Origin
+          description: const | example | default | enum | synthesized.
+          example: example
+        schema_pointer:
+          type: string
+          title: Schema Pointer
+          description: Where in the schema the value came from.
+          default: ''
+          example: example
+        synthetic:
+          type: boolean
+          title: Synthetic
+          description: False only when the value was copied verbatim from the schema.
+          example: false
+      additionalProperties: false
+      type: object
+      required:
+      - pointer
+      - origin
+      - synthetic
+      title: ValueProvenance
+      description: "Where one value in a synthesized instance came from.\n\nAttributes:\n\
+        \    pointer: RFC 6901 JSON Pointer to the value **in the instance** (``\"\
+        \"`` for the root).\n    origin: ``const``, ``example``, ``default``, or ``enum``\
+        \ when the value is the schema\n        author's own, ``synthesized`` when\
+        \ this module invented it.\n    schema_pointer: Where in the schema the value\
+        \ (or the constraint it was built from)\n        came from. Written ``<uri>#<pointer>``\
+        \ when the subschema lives in a referenced\n        document, and as a bare\
+        \ pointer when it lives in the schema itself.\n    synthetic: ``False`` only\
+        \ when the value was copied verbatim out of the schema.\n        ``True``\
+        \ for everything this module generated."
     VariantBody:
       properties:
         id:

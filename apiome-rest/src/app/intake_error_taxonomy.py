@@ -196,6 +196,14 @@ INTAKE_ERROR_TAXONOMY: Dict[str, IntakeErrorDescriptor] = {
             "server. Contact your administrator to enable it, or import the document "
             "in another supported format.",
         ),
+        _d(
+            "SYNTHESIS_UNSUPPORTED_CONSTRUCT",
+            IntakeErrorCategory.CAPABILITY,
+            False,
+            "The payload synthesizer could not generate a value — or a clean single-rule "
+            "violation — for a construct in this schema. Declare an `examples` or `default` "
+            "value on the affected subschema to control what is generated for it.",
+        ),
         # --- policy: rejected by tenant policy -----------------------------------
         _d(
             "QUALITY_POLICY_BLOCKED",
