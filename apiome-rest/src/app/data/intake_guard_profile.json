@@ -1,0 +1,63 @@
+{
+  "profileVersion": "1.0.0",
+  "description": "IXH-6.5 (#5124) intake GuardProfile defaults. Provisional until IXH-1.5 scale measurements refine them. Document bytes / alias / depth continue to come from oas_resource_limits.json (DCW-0.2 mirror); this artifact owns the dimensions that artifact does not.",
+  "onViolation": {
+    "behavior": "taxonomy-resource-code",
+    "mutation": "none",
+    "statement": "Exceeding any dimension fails the job with a resource-category taxonomy code naming the limit and its configured value; no partial parse result is returned."
+  },
+  "profiles": {
+    "default": {
+      "maxExpansionRatio": {
+        "value": 10,
+        "limitName": "max_expansion_ratio",
+        "diagnosticCode": "INPUT_EXPANSION_LIMIT",
+        "statement": "Ceiling on decoded/raw (or expanded/source) byte ratio. Provisional 10:1."
+      },
+      "maxEntityCount": {
+        "value": 50000,
+        "limitName": "max_entity_count",
+        "diagnosticCode": "INPUT_ENTITY_LIMIT",
+        "statement": "Maximum JSON/YAML collection nodes (dict/list leaves counted once). Provisional between the adversarial 1e5-node bomb and scale targets."
+      },
+      "maxRefDepth": {
+        "value": 32,
+        "limitName": "max_ref_depth",
+        "diagnosticCode": "INPUT_REF_LIMIT",
+        "statement": "Maximum $ref / include chase depth before refusal."
+      },
+      "maxRefFanout": {
+        "value": 64,
+        "limitName": "max_ref_fanout",
+        "diagnosticCode": "INPUT_REF_LIMIT",
+        "statement": "Maximum number of $ref / include edges leaving one node."
+      },
+      "stageWallClockSeconds": {
+        "value": 20,
+        "limitName": "stage_wall_clock_seconds",
+        "diagnosticCode": "INPUT_TIME_LIMIT",
+        "statement": "Per-pipeline-stage wall-clock ceiling. Matches the IXH-1.4 adversarial per-fixture budget."
+      },
+      "jobMemoryCeilingBytes": {
+        "value": 201326592,
+        "limitName": "job_memory_ceiling_bytes",
+        "diagnosticCode": "INPUT_MEMORY_LIMIT",
+        "statement": "Per-job peak additional heap ceiling (192 MiB). Matches the IXH-1.4 adversarial tracemalloc budget."
+      },
+      "archiveMaxCompressionRatio": {
+        "value": 100,
+        "limitName": "archive_max_compression_ratio",
+        "diagnosticCode": "INPUT_EXPANSION_LIMIT",
+        "statement": "Uncompressed-total / compressed-archive size ceiling (zip/tar bomb)."
+      }
+    },
+    "elevated": {
+      "statement": "License/paid tier: 2x the default ceilings for bytes (via OAS override), entities, wall-clock, and memory. Expansion ratio, ref depth/fan-out, and archive compression ratio stay at default.",
+      "scaleFactor": 2
+    }
+  },
+  "resolution": {
+    "order": ["APIOME_GUARD_PROFILE", "license-seat-hint", "default"],
+    "statement": "Explicit env override wins; else an elevated license seat plan maps to elevated; else default."
+  }
+}

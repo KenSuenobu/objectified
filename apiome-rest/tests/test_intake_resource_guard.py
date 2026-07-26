@@ -181,3 +181,127 @@ def test_detection_tolerates_a_limit_breaching_document():
     )
     detection = detect_format(DetectionInput(text=bomb, filename="bomb.yaml"))
     assert detection is not None
+
+
+# ---------------------------------------------------------------------------
+# IXH-6.5 GuardProfile + new dimensions
+# ---------------------------------------------------------------------------
+
+
+def test_guard_profile_composes_oas_and_ixh_defaults():
+    from app.intake_resource_guard import resolve_guard_profile
+
+    profile = resolve_guard_profile(profile_name="default")
+    assert profile.name == "default"
+    values = resource_limit_values()
+    assert profile.limits.max_bytes == values.max_document_bytes
+    assert profile.limits.max_raw_bytes == values.max_document_bytes
+    assert profile.limits.max_entity_count == 50_000
+    assert profile.limits.max_ref_depth == 32
+    assert profile.limits.max_ref_fanout == 64
+    assert profile.limits.stage_wall_clock_seconds == 20.0
+    assert profile.limits.job_memory_ceiling_bytes == 201_326_592
+    assert profile.limits.max_expansion_ratio == 10.0
+
+
+def test_elevated_profile_scales_selected_ceilings():
+    from app.intake_resource_guard import resolve_guard_profile
+
+    default = resolve_guard_profile(profile_name="default")
+    elevated = resolve_guard_profile(profile_name="elevated")
+    assert elevated.name == "elevated"
+    assert elevated.limits.max_bytes == default.limits.max_bytes * 2
+    assert elevated.limits.max_entity_count == default.limits.max_entity_count * 2
+    assert elevated.limits.stage_wall_clock_seconds == default.limits.stage_wall_clock_seconds * 2
+    assert elevated.limits.job_memory_ceiling_bytes == default.limits.job_memory_ceiling_bytes * 2
+    # Ratio / ref geometry stay at default.
+    assert elevated.limits.max_expansion_ratio == default.limits.max_expansion_ratio
+    assert elevated.limits.max_ref_depth == default.limits.max_ref_depth
+
+
+def test_limit_error_names_the_limit_and_value():
+    with pytest.raises(IntakeLimitError) as excinfo:
+        guard_payload_bytes(b"x" * 1000, source_label="big.bin", limits=TIGHT)
+    err = excinfo.value
+    assert err.code == "INPUT_TOO_LARGE"
+    assert err.limit_name == "max_raw_bytes"
+    assert err.limit_value == TIGHT.effective_raw_bytes()
+    assert "max_raw_bytes=" in str(err)
+
+
+def test_entity_count_limit_trips():
+    tight = IntakeLimits(max_bytes=10_000, max_alias_cost=100, max_depth=64, max_entity_count=3)
+    # Four dict/list nodes: root + a + b + c
+    parsed = {"a": {"x": 1}, "b": {"y": 2}, "c": {"z": 3}}
+    with pytest.raises(IntakeLimitError) as excinfo:
+        guard_parsed_document(parsed, limits=tight)
+    assert excinfo.value.code == "INPUT_ENTITY_LIMIT"
+    assert excinfo.value.limit_name == "max_entity_count"
+    assert "max_entity_count=" in str(excinfo.value)
+
+
+def test_ref_depth_limit_trips():
+    tight = IntakeLimits(max_bytes=10_000, max_alias_cost=100, max_depth=64, max_ref_depth=2)
+    parsed = {
+        "$ref": "#/a",
+        "a": {"$ref": "#/b", "b": {"$ref": "#/c", "c": {"type": "string"}}},
+    }
+    with pytest.raises(IntakeLimitError) as excinfo:
+        guard_parsed_document(parsed, limits=tight)
+    assert excinfo.value.code == "INPUT_REF_LIMIT"
+    assert excinfo.value.limit_name == "max_ref_depth"
+
+
+def test_ref_fanout_limit_trips():
+    tight = IntakeLimits(max_bytes=10_000, max_alias_cost=100, max_depth=64, max_ref_fanout=2)
+    parsed = {
+        "allOf": [
+            {"$ref": "#/components/schemas/A"},
+            {"$ref": "#/components/schemas/B"},
+            {"$ref": "#/components/schemas/C"},
+        ]
+    }
+    with pytest.raises(IntakeLimitError) as excinfo:
+        guard_parsed_document(parsed, limits=tight)
+    assert excinfo.value.code == "INPUT_REF_LIMIT"
+    assert excinfo.value.limit_name == "max_ref_fanout"
+    assert "max_ref_fanout=" in str(excinfo.value)
+
+
+def test_expansion_ratio_limit_trips():
+    from app.intake_resource_guard import guard_expansion_ratio
+
+    tight = IntakeLimits(
+        max_bytes=10_000, max_alias_cost=100, max_depth=64, max_expansion_ratio=2.0
+    )
+    with pytest.raises(IntakeLimitError) as excinfo:
+        guard_expansion_ratio(raw_bytes=100, expanded_bytes=500, limits=tight)
+    assert excinfo.value.code == "INPUT_EXPANSION_LIMIT"
+    assert excinfo.value.limit_name == "max_expansion_ratio"
+
+
+def test_wall_clock_limit_trips():
+    import time
+
+    from app.intake_resource_guard import stage_wall_clock
+
+    tight = IntakeLimits(
+        max_bytes=10_000, max_alias_cost=100, max_depth=64, stage_wall_clock_seconds=0.01
+    )
+    with pytest.raises(IntakeLimitError) as excinfo:
+        with stage_wall_clock("parse", limits=tight):
+            time.sleep(0.05)
+    assert excinfo.value.code == "INPUT_TIME_LIMIT"
+    assert excinfo.value.limit_name == "stage_wall_clock_seconds"
+
+
+def test_memory_limit_trips():
+    from app.intake_resource_guard import guard_stage_memory
+
+    tight = IntakeLimits(
+        max_bytes=10_000, max_alias_cost=100, max_depth=64, job_memory_ceiling_bytes=1024
+    )
+    with pytest.raises(IntakeLimitError) as excinfo:
+        guard_stage_memory(peak_bytes=4096, limits=tight)
+    assert excinfo.value.code == "INPUT_MEMORY_LIMIT"
+    assert excinfo.value.limit_name == "job_memory_ceiling_bytes"

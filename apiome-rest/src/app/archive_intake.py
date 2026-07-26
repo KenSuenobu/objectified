@@ -55,7 +55,18 @@ _ROOT_CANDIDATE_SUFFIXES: Tuple[str, ...] = (
 
 
 class ArchiveIntakeError(ValueError):
-    """An archive could not be unpacked or its root could not be resolved."""
+    """An archive could not be unpacked or its root could not be resolved.
+
+    Attributes:
+        code: Intake-taxonomy code for the failure. Budget breaches use resource
+            codes (``INPUT_TOO_LARGE`` / ``INPUT_EXPANSION_LIMIT``); path /
+            structure faults stay ``INPUT_ARCHIVE_INVALID`` or
+            ``INPUT_UNSAFE_CONSTRUCT``.
+    """
+
+    def __init__(self, message: str, *, code: str = "INPUT_ARCHIVE_INVALID") -> None:
+        super().__init__(message)
+        self.code = code
 
 
 @dataclass(frozen=True)
@@ -66,6 +77,7 @@ class ArchivePolicy:
     max_total_bytes: int
     max_file_bytes: int
     max_depth: int
+    max_compression_ratio: float = 100.0
 
 
 @dataclass(frozen=True)
@@ -85,6 +97,7 @@ def archive_policy_from_settings() -> ArchivePolicy:
         max_total_bytes=settings.archive_max_total_bytes,
         max_file_bytes=settings.archive_max_file_bytes,
         max_depth=settings.archive_max_depth,
+        max_compression_ratio=float(settings.archive_max_compression_ratio),
     )
 
 
@@ -137,7 +150,9 @@ def _validate_member_path(name: str, *, max_depth: int, label: str) -> str:
 def _decode_member_bytes(data: bytes, *, path: str, max_file_bytes: int, where: str) -> str:
     if len(data) > max_file_bytes:
         raise ArchiveIntakeError(
-            f"Archive member {path!r} exceeds the {max_file_bytes}-byte per-file limit{where}"
+            f"Archive member {path!r} exceeds the {max_file_bytes}-byte per-file limit{where} "
+            f"(limit archive_max_file_bytes={max_file_bytes})",
+            code="INPUT_TOO_LARGE",
         )
     return data.decode("utf-8", errors="replace")
 
@@ -184,7 +199,9 @@ def _read_zip_member(
     if len(data) >= ceiling:
         raise ArchiveIntakeError(
             f"Archive member {name!r} decompresses past the {policy.max_file_bytes}-byte "
-            f"per-file limit{where} (its declared size was {info.file_size} bytes)"
+            f"per-file limit{where} (its declared size was {info.file_size} bytes) "
+            f"(limit archive_max_file_bytes={policy.max_file_bytes})",
+            code="INPUT_TOO_LARGE",
         )
     return data
 
@@ -206,7 +223,9 @@ def _unpack_zip(
         infos = archive.infolist()
         if len(infos) > policy.max_entries:
             raise ArchiveIntakeError(
-                f"Archive exceeds the {policy.max_entries}-entry limit{where}"
+                f"Archive exceeds the {policy.max_entries}-entry limit{where} "
+                f"(limit archive_max_entries={policy.max_entries})",
+                code="INPUT_TOO_LARGE",
             )
         for info in infos:
             if info.is_dir():
@@ -217,7 +236,8 @@ def _unpack_zip(
             # Reject symlink / external attributes that indicate non-regular files.
             if info.external_attr & 0o170000 == 0o120000:
                 raise ArchiveIntakeError(
-                    f"Archive member {raw_name!r} is a symlink and is not allowed{where}"
+                    f"Archive member {raw_name!r} is a symlink and is not allowed{where}",
+                    code="INPUT_UNSAFE_CONSTRUCT",
                 )
             name = _validate_member_path(raw_name, max_depth=policy.max_depth, label="Archive member")
             if name in members:
@@ -227,12 +247,16 @@ def _unpack_zip(
             if info.file_size > policy.max_file_bytes:
                 raise ArchiveIntakeError(
                     f"Archive member {name!r} declares {info.file_size} bytes, over the "
-                    f"{policy.max_file_bytes}-byte per-file limit{where}"
+                    f"{policy.max_file_bytes}-byte per-file limit{where} "
+                    f"(limit archive_max_file_bytes={policy.max_file_bytes})",
+                    code="INPUT_TOO_LARGE",
                 )
             total += info.file_size
             if total > policy.max_total_bytes:
                 raise ArchiveIntakeError(
-                    f"Archive exceeds the {policy.max_total_bytes}-byte uncompressed limit{where}"
+                    f"Archive exceeds the {policy.max_total_bytes}-byte uncompressed limit{where} "
+                    f"(limit archive_max_total_bytes={policy.max_total_bytes})",
+                    code="INPUT_TOO_LARGE",
                 )
             # Then decompress with a hard read ceiling, so a member whose header
             # lies about its size (a zip bomb) cannot materialize past the limit.
@@ -240,7 +264,8 @@ def _unpack_zip(
             if len(data) > policy.max_file_bytes:
                 raise ArchiveIntakeError(
                     f"Archive member {name!r} exceeds the {policy.max_file_bytes}-byte "
-                    f"per-file limit{where}"
+                    f"per-file limit{where} (limit archive_max_file_bytes={policy.max_file_bytes})",
+                    code="INPUT_TOO_LARGE",
                 )
             members[name] = _decode_member_bytes(
                 data, path=name, max_file_bytes=policy.max_file_bytes, where=where
@@ -279,13 +304,22 @@ def _tar_extract_filter(tarinfo: tarfile.TarInfo, dest: str) -> tarfile.TarInfo:
     """
     name = tarinfo.name.replace("\\", "/")
     if tarinfo.issym() or tarinfo.islnk():
-        raise ArchiveIntakeError(f"Archive member {name!r} is a link and is not allowed")
+        raise ArchiveIntakeError(
+            f"Archive member {name!r} is a link and is not allowed",
+            code="INPUT_UNSAFE_CONSTRUCT",
+        )
     if tarinfo.isdev() or tarinfo.isfifo() or tarinfo.ischr() or tarinfo.isblk():
-        raise ArchiveIntakeError(f"Archive member {name!r} is not a regular file")
+        raise ArchiveIntakeError(
+            f"Archive member {name!r} is not a regular file",
+            code="INPUT_UNSAFE_CONSTRUCT",
+        )
     if not tarinfo.isfile():
         raise _SkipTarMemberError
     if name.startswith("/") or PurePosixPath(name).is_absolute():
-        raise ArchiveIntakeError(f"Archive member {name!r} must be relative")
+        raise ArchiveIntakeError(
+            f"Archive member {name!r} must be relative",
+            code="INPUT_UNSAFE_CONSTRUCT",
+        )
     return tarinfo
 
 
@@ -307,7 +341,9 @@ def _unpack_tar(
         tar_members = archive.getmembers()
         if len(tar_members) > policy.max_entries:
             raise ArchiveIntakeError(
-                f"Archive exceeds the {policy.max_entries}-entry limit{where}"
+                f"Archive exceeds the {policy.max_entries}-entry limit{where} "
+                f"(limit archive_max_entries={policy.max_entries})",
+                code="INPUT_TOO_LARGE",
             )
         for tarinfo in tar_members:
             try:
@@ -325,12 +361,16 @@ def _unpack_tar(
             if filtered.size > policy.max_file_bytes:
                 raise ArchiveIntakeError(
                     f"Archive member {name!r} declares {filtered.size} bytes, over the "
-                    f"{policy.max_file_bytes}-byte per-file limit{where}"
+                    f"{policy.max_file_bytes}-byte per-file limit{where} "
+                    f"(limit archive_max_file_bytes={policy.max_file_bytes})",
+                    code="INPUT_TOO_LARGE",
                 )
             total += filtered.size
             if total > policy.max_total_bytes:
                 raise ArchiveIntakeError(
-                    f"Archive exceeds the {policy.max_total_bytes}-byte uncompressed limit{where}"
+                    f"Archive exceeds the {policy.max_total_bytes}-byte uncompressed limit{where} "
+                    f"(limit archive_max_total_bytes={policy.max_total_bytes})",
+                    code="INPUT_TOO_LARGE",
                 )
             ceiling = policy.max_file_bytes + 1
             try:
@@ -345,7 +385,9 @@ def _unpack_tar(
             if len(data) >= ceiling:
                 raise ArchiveIntakeError(
                     f"Archive member {name!r} expands past the {policy.max_file_bytes}-byte "
-                    f"per-file limit{where} (its declared size was {filtered.size} bytes)"
+                    f"per-file limit{where} (its declared size was {filtered.size} bytes) "
+                    f"(limit archive_max_file_bytes={policy.max_file_bytes})",
+                    code="INPUT_TOO_LARGE",
                 )
             members[name] = _decode_member_bytes(
                 data, path=name, max_file_bytes=policy.max_file_bytes, where=where
@@ -384,13 +426,24 @@ def unpack_archive(
     active = policy or archive_policy_from_settings()
     if len(raw) > active.max_total_bytes:
         raise ArchiveIntakeError(
-            f"Archive exceeds the {active.max_total_bytes}-byte compressed limit{where}"
+            f"Archive exceeds the {active.max_total_bytes}-byte compressed limit{where} "
+            f"(limit archive_max_total_bytes={active.max_total_bytes})",
+            code="INPUT_TOO_LARGE",
         )
 
     if raw[:2] == b"PK":
         members = _unpack_zip(raw, policy=active, where=where)
     else:
         members = _unpack_tar(raw, policy=active, where=where)
+
+    # Compression ratio: uncompressed UTF-8 member bytes vs compressed archive size.
+    uncompressed = sum(len(text.encode("utf-8", errors="replace")) for text in members.values())
+    if len(raw) > 0 and uncompressed / len(raw) > active.max_compression_ratio:
+        raise ArchiveIntakeError(
+            f"Archive compression ratio {uncompressed / len(raw):.1f}:1 exceeds limit "
+            f"archive_max_compression_ratio={active.max_compression_ratio}{where}",
+            code="INPUT_EXPANSION_LIMIT",
+        )
 
     root, detection, ambiguous = _resolve_root(members, explicit_root=root_path, where=where)
     return UnpackedArchive(

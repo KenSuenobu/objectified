@@ -5,6 +5,21 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.190.0] - 2026-07-26
+
+### Added
+- **Resource guards and streaming intake limits (#5124, IXH-6.5)** — documented
+  `GuardProfile` (raw/decoded bytes, expansion ratio, nesting depth, entity count,
+  `$ref`/include depth and fan-out, per-stage wall-clock, per-job memory ceiling,
+  archive compression ratio) with provisional defaults until IXH-1.5 measurements.
+  Tier resolution (`default` / `elevated` via `APIOME_GUARD_PROFILE` or license hint).
+  New resource taxonomy codes: `INPUT_ENTITY_LIMIT`, `INPUT_REF_LIMIT`,
+  `INPUT_TIME_LIMIT`, `INPUT_MEMORY_LIMIT`. Limit-trip messages name the dimension and
+  configured value. Multipart uploads stream to a bounded tempfile (no base64 double).
+  Archive budget breaches map to resource codes; path/symlink faults to
+  `INPUT_UNSAFE_CONSTRUCT`. Guards apply on commit import, preflight, preview, and
+  schema validation. OpenAPI 1.56.0 → 1.57.0.
+
 ## [1.189.0] - 2026-07-26
 
 ### Added
