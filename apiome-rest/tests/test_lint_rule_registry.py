@@ -11,10 +11,10 @@ Covers the three acceptance criteria:
 from pathlib import Path
 
 from app.lint_engine import (
-    CommonRulePack,
     available_lint_formats,
     get_rule_pack,
     lint_canonical_model,
+    unconditional_rule_packs,
 )
 from app.lint_rule_registry import (
     LINT_RULE_DOCS_PAGE,
@@ -38,7 +38,10 @@ _VALID_SEVERITIES = {"error", "warning", "info"}
 def _all_engine_rule_ids() -> set:
     """The union of rule ids across every lint engine the registry aggregates."""
     ids = set(OPENAPI_RULES)
-    ids.update(rule.rule_id for rule in CommonRulePack().rules())
+    # Every pack the engine runs for all formats — the common pack and the IXH-5.4
+    # example-conformance pack — taken from the engine itself rather than listed here.
+    for pack in unconditional_rule_packs():
+        ids.update(rule.rule_id for rule in pack.rules())
     for format_key in available_lint_formats():
         pack_cls = get_rule_pack(format_key)
         assert pack_cls is not None
@@ -60,6 +63,7 @@ def test_registry_includes_known_rules_from_each_pack():
     assert "graphql.naming-type-pascal-case" in ids  # graphql
     assert "protobuf.field-no-required" in ids  # protobuf
     assert "arazzo.missing-success-criteria" in ids  # arazzo
+    assert "examples.non-conforming-example" in ids  # examples (IXH-5.4)
 
 
 def test_openapi_rule_catalogue_derives_from_enriched_specs():

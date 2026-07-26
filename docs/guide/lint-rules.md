@@ -154,6 +154,16 @@ Fetch this catalog programmatically with `GET /v1/lint/rules` (see
 - **Rationale:** Type names should be author-chosen, not generator output.
 
 
+## Pack: `examples`
+
+<a id="examples-non-conforming-example"></a>
+### `examples.non-conforming-example`
+
+- **Category:** validation
+- **Default severity:** warning
+- **Rationale:** An example that does not satisfy its own schema ships a payload consumers cannot use — docs render it, mocks replay it, and generated clients seed fixtures from it.
+
+
 ## Pack: `graphql`
 
 <a id="graphql-argument-missing-description"></a>

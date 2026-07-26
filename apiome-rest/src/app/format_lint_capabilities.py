@@ -13,6 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
+from .example_conformance import family_for_format
 from .external_linter_adapter import (
     adapters_for_format,
     available_adapters,
@@ -85,6 +86,14 @@ class FormatLintCapability:
             format-specific native pack).
         related_issues: Linked GitHub issues for planned pack work (never duplicate).
         notes: Short human rationale for the classification.
+        example_conformance: Per-format mode of the IXH-5.4 example-conformance rule —
+            ``native`` when this format's example locations are walked and every example is
+            validated against its schema, ``unsupported`` when the format has no example syntax
+            the walker covers. The rule itself always runs; this says whether it can see
+            anything in this format.
+        example_locations: The exact locations walked for this format, so coverage is visible
+            (and reviewable) per format rather than implied. Empty when
+            ``example_conformance`` is ``unsupported``.
     """
 
     format: str
@@ -95,6 +104,8 @@ class FormatLintCapability:
     common_pack_only: bool = False
     related_issues: Tuple[str, ...] = ()
     notes: str = ""
+    example_conformance: str = MODE_UNSUPPORTED
+    example_locations: Tuple[str, ...] = ()
 
 
 def normalize_format_key(format_key: Optional[str]) -> str:
@@ -234,6 +245,7 @@ def capability_for_format(
         if related:
             notes += "; see related issues for planned pack work"
 
+    example_family = family_for_format(display) or family_for_format(key)
     return FormatLintCapability(
         format=display if display in PUBLISHABLE_FORMATS else key,
         mode=mode,
@@ -243,6 +255,8 @@ def capability_for_format(
         common_pack_only=common_only and mode != MODE_NATIVE,
         related_issues=tuple(related),
         notes=notes,
+        example_conformance=MODE_NATIVE if example_family else MODE_UNSUPPORTED,
+        example_locations=example_family.locations if example_family else (),
     )
 
 
@@ -309,6 +323,8 @@ def capability_dicts() -> List[Dict[str, object]]:
                 "common_pack_only": row.common_pack_only,
                 "related_issues": list(row.related_issues),
                 "notes": row.notes,
+                "example_conformance": row.example_conformance,
+                "example_locations": list(row.example_locations),
             }
         )
     return out

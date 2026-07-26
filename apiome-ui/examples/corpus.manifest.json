@@ -18,7 +18,7 @@
       "label": "ASN.1",
       "category": "data-schema",
       "paradigm": "data_schema",
-      "marker": "`DEFINITIONS ::= BEGIN \u2026 END`"
+      "marker": "`DEFINITIONS ::= BEGIN … END`"
     },
     "asyncapi": {
       "label": "AsyncAPI 2.x/3.0",
@@ -36,7 +36,7 @@
       "label": "Cap'n Proto",
       "category": "data-schema",
       "paradigm": "data_schema",
-      "marker": "`@0x\u2026` file id + `struct`"
+      "marker": "`@0x…` file id + `struct`"
     },
     "cloudevents": {
       "label": "CloudEvents 1.0",
@@ -1114,7 +1114,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Fileset member without an `asyncapi` marker \u2014 not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.",
+      "notes": "Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.",
       "rung": "multi-file",
       "fileset_role": "member"
     },
@@ -1135,9 +1135,31 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Fileset member without an `asyncapi` marker \u2014 not independently detectable; imported only through the set root asyncapi.yaml.",
+      "notes": "Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml.",
       "rung": "multi-file",
       "fileset_role": "member"
+    },
+    {
+      "path": "asyncapi/07-nonconforming-examples-3.0.yaml",
+      "format": "asyncapi",
+      "adapter_key": "asyncapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "asyncapi-3",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "non-conforming-examples",
+        "message-examples",
+        "schema-examples",
+        "enum"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the IXH-5.4 example-conformance rule pack (#5116).",
+      "notes": "Every message example object and schema example deliberately violates its schema; the document itself is valid AsyncAPI 3 and must import cleanly. Drives tests/test_example_conformance_corpus.py.",
+      "rung": "typical"
     },
     {
       "path": "asyncapi/negative/01-syntactic-unclosed-flow-sequence.yaml",
@@ -1655,7 +1677,7 @@
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
-      "provenance": "Grammatically well-formed schema containing a file id and constants only \u2014 no struct, enum, or interface to import.",
+      "provenance": "Grammatically well-formed schema containing a file id and constants only — no struct, enum, or interface to import.",
       "failure_class": "semantic",
       "expected_error_code": "INPUT_MALFORMED"
     },
@@ -1779,7 +1801,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "CloudEvents batch arrays are documented in cloudevents_parser (and is_cloudevents_document accepts lists), but both detect and parse delegate to parse_document, which rejects top-level JSON arrays \u2014 the adapter's detect returns no match (only the standalone sniffer reports cloudevents 0.85) and import currently fails; expected_detection records the intended contract for the detection-hardening work.",
+      "notes": "CloudEvents batch arrays are documented in cloudevents_parser (and is_cloudevents_document accepts lists), but both detect and parse delegate to parse_document, which rejects top-level JSON arrays — the adapter's detect returns no match (only the standalone sniffer reports cloudevents 0.85) and import currently fails; expected_detection records the intended contract for the detection-hardening work.",
       "rung": "composition"
     },
     {
@@ -2624,7 +2646,7 @@
       "provenance": "Hand-written billing IDL that #includes common/money.idl, which is not provided, so Common::Money can never resolve.",
       "failure_class": "unresolvable-ref",
       "expected_error_code": "FORMAT_MISMATCH",
-      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 \u2014 the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
+      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 — the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
     },
     {
       "path": "corba-idl/negative/03-truncated-inventory.idl",
@@ -3196,7 +3218,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "FIX Orchestra XML is not yet recognized \u2014 currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract.",
+      "notes": "FIX Orchestra XML is not yet recognized — currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract.",
       "rung": "composition"
     },
     {
@@ -4976,6 +4998,28 @@
       "rung": "real-world"
     },
     {
+      "path": "json-schema/12-nonconforming-examples.json",
+      "format": "json-schema",
+      "adapter_key": "json-schema",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "json-schema-2020-12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "non-conforming-examples",
+        "schema-examples",
+        "enum",
+        "defs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the IXH-5.4 example-conformance rule pack (#5116).",
+      "notes": "Every `examples` entry deliberately violates the subschema it sits in (root required, minimum, minLength, enum, maxItems, and a $defs pattern); the document is a valid JSON Schema and must import cleanly. Drives tests/test_example_conformance_corpus.py.",
+      "rung": "typical"
+    },
+    {
       "path": "json-schema/negative/01-syntactic-unclosed-brace.json",
       "format": "json-schema",
       "adapter_key": "json-schema",
@@ -6489,6 +6533,28 @@
       "rung": "minimal"
     },
     {
+      "path": "openapi/33-nonconforming-examples.yaml",
+      "format": "openapi",
+      "adapter_key": "openapi",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "openapi-3.1",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "non-conforming-examples",
+        "multiple-examples",
+        "response-examples",
+        "enum"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the IXH-5.4 example-conformance rule pack (#5116).",
+      "notes": "Every example carrier (component schema, nested property, path- and operation-level parameter, request body, response media type with an examples map, and a response header) deliberately violates its schema; the document is valid OpenAPI 3.1 and must import cleanly. Drives tests/test_example_conformance_corpus.py.",
+      "rung": "typical"
+    },
+    {
       "path": "openapi/negative/01-syntactic-unclosed-flow-sequence.yaml",
       "format": "openapi",
       "adapter_key": "openapi",
@@ -7904,7 +7970,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96), `oncrpc` (0.95), and `smithy` (0.95) above `thrift` (0.95) \u2014 the Thrift `union` block also matches the FlatBuffers union marker; expected_detection records the intended winner for the detection-hardening work.",
+      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96), `oncrpc` (0.95), and `smithy` (0.95) above `thrift` (0.95) — the Thrift `union` block also matches the FlatBuffers union marker; expected_detection records the intended winner for the detection-hardening work.",
       "rung": "stress"
     },
     {

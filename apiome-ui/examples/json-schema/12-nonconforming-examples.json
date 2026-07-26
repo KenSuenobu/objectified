@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/nonconforming-examples.json",
+  "title": "NonConformingExamples",
+  "description": "Fixture for the IXH-5.4 example-conformance rule pack: every `examples` entry below deliberately contradicts the schema it sits in, one keyword at a time. The document is a valid JSON Schema and must import cleanly — a bad example is a lint finding, never an import failure. `x-expected-violation` records each site's intent and has no effect on validation.",
+  "type": "object",
+  "required": ["id", "email"],
+  "properties": {
+    "id": {
+      "type": "integer",
+      "description": "Server-assigned identifier.",
+      "minimum": 1,
+      "examples": [0],
+      "x-expected-violation": "minimum"
+    },
+    "email": {
+      "type": "string",
+      "description": "Contact address.",
+      "minLength": 3,
+      "examples": ["a"],
+      "x-expected-violation": "minLength"
+    },
+    "role": {
+      "type": "string",
+      "description": "Role the account holds.",
+      "enum": ["owner", "editor", "viewer"],
+      "examples": ["viewer", "superuser"],
+      "x-expected-violation": "enum"
+    },
+    "tags": {
+      "type": "array",
+      "description": "Free-form labels.",
+      "items": { "type": "string" },
+      "maxItems": 2,
+      "examples": [["a", "b", "c"]],
+      "x-expected-violation": "maxItems"
+    },
+    "address": { "$ref": "#/$defs/Address" }
+  },
+  "examples": [
+    { "id": 1, "email": "ada@example.com", "role": "owner" },
+    { "email": "ada@example.com" }
+  ],
+  "x-expected-violation": "required",
+  "$defs": {
+    "Address": {
+      "type": "object",
+      "description": "A postal address.",
+      "required": ["city", "postalCode"],
+      "properties": {
+        "city": { "type": "string", "description": "City name." },
+        "postalCode": {
+          "type": "string",
+          "description": "Five-digit postal code.",
+          "pattern": "^[0-9]{5}$"
+        }
+      },
+      "examples": [{ "city": "Springfield", "postalCode": "not-a-zip" }],
+      "x-expected-violation": "pattern"
+    }
+  }
+}

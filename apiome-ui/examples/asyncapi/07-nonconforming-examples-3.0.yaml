@@ -1,0 +1,107 @@
+# Deliberately non-conforming examples — IXH-5.4 (#5116) fixture.
+#
+# An AsyncAPI 3 document whose message example objects and schema examples contradict the
+# schemas they belong to, one keyword at a time. The document is otherwise valid and must
+# import cleanly: a bad example is a lint finding, not an import failure.
+#
+# `x-expected-violation` records each site's intent; it is a vendor extension with no effect
+# on validation.
+asyncapi: 3.0.0
+info:
+  title: Non-conforming Example Events
+  version: 1.0.0
+  description: >-
+    Fixture for the example-conformance rule pack. Every example contradicts its schema.
+channels:
+  userSignedUp:
+    address: user/signedup
+    description: Emitted when a user completes signup.
+    messages:
+      UserSignedUp:
+        $ref: '#/components/messages/UserSignedUp'
+operations:
+  receiveUserSignedUp:
+    action: receive
+    channel:
+      $ref: '#/channels/userSignedUp'
+    summary: Consume signup events.
+components:
+  messages:
+    UserSignedUp:
+      name: UserSignedUp
+      title: User signed up
+      summary: A user completed signup.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/UserSignedUpPayload'
+      headers:
+        type: object
+        description: Transport headers carried with the event.
+        required:
+          - correlationId
+        properties:
+          correlationId:
+            type: string
+            description: Correlates the event with the originating request.
+            format: uuid
+          retryCount:
+            type: integer
+            description: How many times delivery has been retried.
+            minimum: 0
+      examples:
+        - name: conforming
+          summary: Satisfies both the payload and header schemas.
+          headers:
+            correlationId: 4e9f9a52-6f0e-4f4a-9d0b-2f2b6a4b5f3e
+            retryCount: 0
+          payload:
+            userId: 7
+            email: ada@example.com
+            plan: pro
+        - name: bad-payload
+          summary: Payload breaks enum and type.
+          headers:
+            correlationId: 4e9f9a52-6f0e-4f4a-9d0b-2f2b6a4b5f3e
+            retryCount: 0
+          payload:
+            userId: seven
+            email: ada@example.com
+            plan: platinum
+          x-expected-violation: type-and-enum
+        - name: bad-headers
+          summary: Headers break required and minimum.
+          headers:
+            retryCount: -1
+          payload:
+            userId: 7
+            email: ada@example.com
+            plan: pro
+          x-expected-violation: required-and-minimum
+  schemas:
+    UserSignedUpPayload:
+      type: object
+      description: The body of a signup event.
+      required:
+        - userId
+        - email
+      properties:
+        userId:
+          type: integer
+          description: Identifier of the user that signed up.
+          minimum: 1
+        email:
+          type: string
+          description: The address the user signed up with.
+          minLength: 3
+        plan:
+          type: string
+          description: The plan the user selected.
+          enum:
+            - free
+            - pro
+            - enterprise
+      examples:
+        - userId: 0
+          email: ada@example.com
+          plan: free
+      x-expected-violation: minimum

@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.49.0",
+    "version": "1.50.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -58533,7 +58533,7 @@
             "title": "Basis",
             "description": "Always modelled. 'You have exceeded your budget' reads as a statement of fact.",
             "default": "modelled",
-            "example": "example"
+            "example": "modelled"
           },
           "dispatched": {
             "type": "boolean",
@@ -58568,7 +58568,7 @@
             "title": "Basis",
             "description": "Always modelled.",
             "default": "modelled",
-            "example": "example"
+            "example": "modelled"
           },
           "dispatched": {
             "type": "boolean",
@@ -59102,7 +59102,7 @@
             "title": "Severity",
             "description": "warn never blocks; block is returned only on a 409.",
             "default": "warn",
-            "example": "warning"
+            "example": "warn"
           }
         },
         "type": "object",
@@ -61235,7 +61235,7 @@
             ],
             "title": "Source",
             "description": "Provenance source for the record (for example human or imported).",
-            "example": "human"
+            "example": "stored"
           },
           "projectId": {
             "anyOf": [
@@ -62138,7 +62138,7 @@
             "title": "Provider",
             "description": "Git provider.",
             "default": "github",
-            "example": "example"
+            "example": "github"
           },
           "defaultBranch": {
             "type": "string",
@@ -62345,7 +62345,7 @@
             "title": "Status",
             "description": "Initial state of the built release.",
             "default": "ready",
-            "example": "active"
+            "example": "ready"
           },
           "impact": {
             "additionalProperties": true,
@@ -62560,7 +62560,7 @@
             "title": "Status",
             "description": "unavailable: nothing is able to report a status.",
             "default": "unavailable",
-            "example": "active"
+            "example": "unavailable"
           },
           "sentence": {
             "type": "string",
@@ -67300,7 +67300,7 @@
             "title": "Severity",
             "description": "warn never blocks; block is returned only on a 409.",
             "default": "warn",
-            "example": "warning"
+            "example": "warn"
           }
         },
         "type": "object",
@@ -69424,7 +69424,7 @@
             "title": "Severity",
             "description": "warn never blocks; block is returned only on a 409.",
             "default": "warn",
-            "example": "warning"
+            "example": "warn"
           }
         },
         "type": "object",
@@ -73124,7 +73124,7 @@
             "title": "Basis",
             "description": "Always modelled.",
             "default": "modelled",
-            "example": "example"
+            "example": "modelled"
           },
           "observed": {
             "type": "boolean",
@@ -83390,7 +83390,7 @@
             ],
             "title": "Status",
             "description": "``activated`` when a pending membership transitioned to active, ``already-active`` when there was nothing to do.",
-            "example": "active"
+            "example": "activated"
           },
           "tenant_id": {
             "type": "string",
@@ -83418,7 +83418,7 @@
             ],
             "title": "Status",
             "description": "Target status: resolving, applied, or aborted (from preview/resolving only).",
-            "example": "active"
+            "example": "resolving"
           }
         },
         "type": "object",
@@ -83590,7 +83590,7 @@
             "title": "Basis",
             "description": "Always modelled. When a collector lands, 'edge-observed' becomes a second value of this field rather than a change of meaning for the first.",
             "default": "modelled",
-            "example": "example"
+            "example": "modelled"
           },
           "observed": {
             "type": "boolean",
@@ -83654,7 +83654,7 @@
             "title": "Basis",
             "description": "This series is modelled from policy, not measured.",
             "default": "policy-modelled",
-            "example": "example"
+            "example": "policy-modelled"
           },
           "observed": {
             "type": "boolean",
@@ -84086,7 +84086,7 @@
             "minimum": 100.0,
             "title": "Status",
             "description": "HTTP status code the mock returns for this call.",
-            "example": 1
+            "example": 100
           },
           "headers": {
             "additionalProperties": {
@@ -88368,7 +88368,7 @@
             "minLength": 8,
             "title": "Signingsecret",
             "description": "Shared secret for signing deliveries; never returned after create.",
-            "example": "example"
+            "example": "examplee"
           },
           "active": {
             "type": "boolean",
@@ -92606,7 +92606,7 @@
             "title": "Severity",
             "description": "warn never blocks; block is returned only on a 409.",
             "default": "warn",
-            "example": "warning"
+            "example": "warn"
           }
         },
         "type": "object",
@@ -94218,7 +94218,7 @@
             "title": "Sourceformat",
             "description": "Serialization of source_text.",
             "default": "yaml",
-            "example": "openapi"
+            "example": "yaml"
           },
           "baseDigest": {
             "type": "string",
@@ -94548,7 +94548,7 @@
             "title": "Sourceformat",
             "description": "Serialization of source_text.",
             "default": "yaml",
-            "example": "openapi"
+            "example": "yaml"
           }
         },
         "type": "object",
@@ -94673,7 +94673,7 @@
             "title": "State",
             "default": "completed",
             "description": "State.",
-            "example": "example"
+            "example": "completed"
           },
           "project_id": {
             "type": "string",
@@ -95366,7 +95366,7 @@
             "title": "State",
             "default": "rolled-back",
             "description": "State.",
-            "example": "example"
+            "example": "rolled-back"
           },
           "project_id": {
             "anyOf": [
@@ -96885,7 +96885,7 @@
             "title": "Basis",
             "description": "Always modelled.",
             "default": "modelled",
-            "example": "example"
+            "example": "modelled"
           },
           "observed": {
             "type": "boolean",
@@ -97196,7 +97196,7 @@
             "title": "Eventsdelivered",
             "description": "Zero. Nothing is in the request path, so no session can have delivered an event.",
             "default": 0,
-            "example": 1
+            "example": 0
           },
           "openedBy": {
             "type": "string",
@@ -97916,7 +97916,7 @@
             ],
             "title": "Source",
             "description": "Provenance source for the record (for example human or imported).",
-            "example": "human"
+            "example": "public_url"
           },
           "cloneUrl": {
             "anyOf": [
@@ -98631,7 +98631,7 @@
             "title": "Basis",
             "description": "Always modelled.",
             "default": "modelled",
-            "example": "example"
+            "example": "modelled"
           },
           "observed": {
             "type": "boolean",
@@ -98964,7 +98964,7 @@
             "title": "Basis",
             "description": "This is an evaluation of recorded policy against a test request, not a replay of an observed edge hit. When a delivery tier lands, 'edge-observed' becomes the second value of this field rather than a change of meaning for the first.",
             "default": "policy-evaluation",
-            "example": "example"
+            "example": "policy-evaluation"
           },
           "observed": {
             "type": "boolean",
@@ -99239,7 +99239,7 @@
             "title": "Scope",
             "default": "tenant",
             "description": "Scope.",
-            "example": "system"
+            "example": "tenant"
           },
           "base_uri": {
             "anyOf": [
@@ -100337,7 +100337,7 @@
             "title": "Basis",
             "description": "Always modelled.",
             "default": "modelled",
-            "example": "example"
+            "example": "modelled"
           },
           "metered": {
             "type": "boolean",
@@ -100426,7 +100426,7 @@
             "title": "Basis",
             "description": "Always modelled.",
             "default": "modelled",
-            "example": "example"
+            "example": "modelled"
           },
           "metered": {
             "type": "boolean",
@@ -100565,7 +100565,7 @@
             "title": "Basis",
             "description": "Always modelled.",
             "default": "modelled",
-            "example": "example"
+            "example": "modelled"
           },
           "metered": {
             "type": "boolean",
@@ -104318,7 +104318,7 @@
             "title": "Intervalseconds",
             "description": "How often it would run.",
             "default": 300,
-            "example": 1
+            "example": 60
           },
           "expectedStatus": {
             "type": "integer",
@@ -106504,7 +106504,7 @@
             "title": "Basis",
             "description": "This is an evaluation of recorded policy against a test request, not a replay of an observed request. When a runtime tier lands, 'edge-observed' becomes the second value of this field rather than a change of meaning for the first.",
             "default": "policy-simulation",
-            "example": "example"
+            "example": "policy-simulation"
           },
           "observed": {
             "type": "boolean",
@@ -107481,7 +107481,7 @@
             "title": "Basis",
             "description": "This is an evaluation of recorded policy against a test request, not a replay of an observed request. When a delivery tier lands, 'edge-observed' becomes the second value of this field rather than a change of meaning for the first.",
             "default": "policy-simulation",
-            "example": "example"
+            "example": "policy-simulation"
           },
           "observed": {
             "type": "boolean",

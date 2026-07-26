@@ -1,0 +1,437 @@
+{
+  "adapter": "openapi",
+  "canonical": {
+    "channels": [],
+    "description": "Fixture for the example-conformance rule pack. Every example here contradicts the schema beside it, one keyword at a time.",
+    "extras": {},
+    "format": "openapi-3.1",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Non-conforming Examples",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "default",
+        "name": "default",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Returns the pets visible to the caller.",
+            "extras": {
+              "summary": "List pets"
+            },
+            "http_method": "GET",
+            "http_path": "/pets",
+            "key": "GET /pets",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "A page of pets.",
+                "extras": {},
+                "headers": [
+                  {
+                    "constraints": null,
+                    "default": null,
+                    "deprecated": false,
+                    "description": "Total pets matching the query.",
+                    "extras": {},
+                    "field_number": null,
+                    "key": "GET /pets#response.200.X-Total-Count",
+                    "name": "X-Total-Count",
+                    "type": {
+                      "extras": {},
+                      "item": null,
+                      "name": "integer",
+                      "nullable": true
+                    }
+                  }
+                ],
+                "key": "GET /pets#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Pet",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "GET /pets",
+            "parameters": [
+              {
+                "constraints": {
+                  "enum": null,
+                  "exclusive_maximum": null,
+                  "exclusive_minimum": null,
+                  "extras": {},
+                  "format": null,
+                  "max_items": null,
+                  "max_length": null,
+                  "maximum": null,
+                  "min_items": null,
+                  "min_length": null,
+                  "minimum": null,
+                  "multiple_of": null,
+                  "pattern": "^[a-z][a-z0-9-]*$",
+                  "unique_items": null
+                },
+                "default": null,
+                "deprecated": false,
+                "description": "Owning tenant slug.",
+                "extras": {},
+                "key": "GET /pets#header.tenant",
+                "location": "header",
+                "name": "tenant",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": {
+                  "enum": null,
+                  "exclusive_maximum": null,
+                  "exclusive_minimum": null,
+                  "extras": {},
+                  "format": null,
+                  "max_items": null,
+                  "max_length": null,
+                  "maximum": 50.0,
+                  "min_items": null,
+                  "min_length": null,
+                  "minimum": 1.0,
+                  "multiple_of": null,
+                  "pattern": null,
+                  "unique_items": null
+                },
+                "default": null,
+                "deprecated": false,
+                "description": "Maximum number of pets to return.",
+                "extras": {},
+                "key": "GET /pets#query.limit",
+                "location": "query",
+                "name": "limit",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Registers a new pet.",
+            "extras": {
+              "summary": "Create a pet"
+            },
+            "http_method": "POST",
+            "http_path": "/pets",
+            "key": "POST /pets",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "The pet to create.",
+                "extras": {},
+                "headers": [],
+                "key": "POST /pets#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Pet",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "The created pet.",
+                "extras": {},
+                "headers": [],
+                "key": "POST /pets#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Pet",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "POST /pets",
+            "parameters": [
+              {
+                "constraints": {
+                  "enum": null,
+                  "exclusive_maximum": null,
+                  "exclusive_minimum": null,
+                  "extras": {},
+                  "format": null,
+                  "max_items": null,
+                  "max_length": null,
+                  "maximum": null,
+                  "min_items": null,
+                  "min_length": null,
+                  "minimum": null,
+                  "multiple_of": null,
+                  "pattern": "^[a-z][a-z0-9-]*$",
+                  "unique_items": null
+                },
+                "default": null,
+                "deprecated": false,
+                "description": "Owning tenant slug.",
+                "extras": {},
+                "key": "POST /pets#header.tenant",
+                "location": "header",
+                "name": "tenant",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Non-conforming Examples",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A pet in the store.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Server-assigned identifier.",
+            "extras": {},
+            "field_number": null,
+            "key": "Pet.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 1,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "The pet's given name.",
+            "extras": {},
+            "field_number": null,
+            "key": "Pet.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "available",
+                "pending",
+                "sold"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Availability of the pet.",
+            "extras": {},
+            "field_number": null,
+            "key": "Pet.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Pet.tag",
+            "name": "tag",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Tag",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Pet",
+        "key_type": null,
+        "kind": "record",
+        "name": "Pet",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A label attached to a pet.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "The tag's display name.",
+            "extras": {},
+            "field_number": null,
+            "key": "Tag.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Tag",
+        "key_type": null,
+        "kind": "record",
+        "name": "Tag",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "openapi/33-nonconforming-examples.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "openapi-3.1"
+  },
+  "fingerprint": "sha256:6721476fe30592e1b71dd6838b793addc4cf4118a1c2bfb1a3a8ac6d57eb5422",
+  "lint": {
+    "findings": 11,
+    "grade": "C",
+    "report_fingerprint": "c04c8bd6f68d38bae728a3acc4727312099313e28f8a333a99465cbc405ce936",
+    "score": 77,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

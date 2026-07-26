@@ -25,7 +25,9 @@ are attributable to a registered rule with no mapping layer.
 Sources aggregated (all derived from the live engines, so the registry cannot drift):
 
 * the OpenAPI spec linter's :data:`app.schema_lint.OPENAPI_RULES` catalogue;
-* the cross-format :class:`app.lint_engine.CommonRulePack` (always runs);
+* every unconditional pack the engine runs for all formats
+  (:func:`app.lint_engine.unconditional_rule_packs` — the cross-format ``common`` pack and the
+  IXH-5.4 ``examples`` pack);
 * every registered per-format :class:`app.lint_engine.RulePack` (AsyncAPI, GraphQL,
   protobuf, Arazzo, …), loaded through the same lazy loader the lint engine uses.
 
@@ -40,10 +42,10 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
 from .lint_engine import (
-    CommonRulePack,
     available_lint_formats,
     get_rule_pack,
     load_format_rule_packs,
+    unconditional_rule_packs,
 )
 from .schema_lint import OPENAPI_RULES
 
@@ -149,11 +151,15 @@ def builtin_rule_descriptors() -> Tuple[LintRuleDescriptor, ...]:
     for rule_id, (category, severity, rationale) in OPENAPI_RULES.items():
         by_id[rule_id] = _descriptor(rule_id, _OPENAPI_PACK, category, severity, rationale)
 
-    # 2. The cross-format common pack (always runs for every canonical-model lint).
-    for rule in CommonRulePack().rules():
-        by_id[rule.rule_id] = _descriptor(
-            rule.rule_id, CommonRulePack.pack_id, rule.category, rule.severity, rule.description
-        )
+    # 2. Every unconditional pack (the cross-format common pack and the IXH-5.4
+    #    example-conformance pack) — taken from the engine itself, so the catalogue lists
+    #    exactly what runs on every canonical-model lint.
+    for pack in unconditional_rule_packs():
+        pack_label = pack.pack_id or type(pack).__name__
+        for rule in pack.rules():
+            by_id[rule.rule_id] = _descriptor(
+                rule.rule_id, pack_label, rule.category, rule.severity, rule.description
+            )
 
     # 3. Every registered per-format pack. Subclass registrations under extra format keys
     #    (same rules, different key) dedupe naturally through the by-id dict.

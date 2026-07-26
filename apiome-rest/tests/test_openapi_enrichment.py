@@ -100,3 +100,74 @@ def test_parameters_and_request_bodies_have_descriptions() -> None:
     spec = enrich_openapi_spec(_load_spec())
     missing = _missing_field_descriptions(spec)
     assert missing == [], missing[:20]
+
+
+# ---------------------------------------------------------------------------
+# Synthesized examples respect the schema they are attached to — IXH-5.4 (#5116)
+# ---------------------------------------------------------------------------
+
+
+def _enriched_property(schema: dict) -> object:
+    """Enrich a one-property spec and return the example the enricher chose."""
+    spec = {
+        "openapi": "3.1.0",
+        "info": {"title": "t", "version": "1"},
+        "paths": {},
+        "components": {"schemas": {"Widget": {"type": "object", "properties": {"p": schema}}}},
+    }
+    return enrich_openapi_spec(spec)["components"]["schemas"]["Widget"]["properties"]["p"]["example"]
+
+
+def test_const_properties_get_their_only_legal_example() -> None:
+    """A ``const`` property has exactly one valid example; guessing from its name cannot win."""
+    assert _enriched_property({"type": "string", "const": "modelled"}) == "modelled"
+
+
+def test_enum_properties_prefer_their_default_member() -> None:
+    """The default is what a client sees most often, and it is by definition a legal member."""
+    schema = {"type": "string", "enum": ["warn", "block"], "default": "warn"}
+
+    assert _enriched_property(schema) == "warn"
+
+
+def test_enum_properties_without_a_legal_default_take_the_first_member() -> None:
+    """A default outside the enum is not a usable example; the first member is, deterministically."""
+    schema = {"type": "string", "enum": ["ready", "review"], "default": "archived"}
+
+    assert _enriched_property(schema) == "ready"
+
+
+def test_numeric_examples_are_clamped_into_range() -> None:
+    """A name-guessed number is fitted to the bounds beside it rather than contradicting them."""
+    schema = {"type": "integer", "minimum": 100, "maximum": 599}
+
+    assert _enriched_property(schema) == 100
+
+
+def test_string_examples_are_padded_to_min_length() -> None:
+    """A secret bounded to 8 characters may not be given a 7-character example."""
+    schema = {"type": "string", "minLength": 12}
+    value = _enriched_property(schema)
+
+    assert isinstance(value, str)
+    assert len(value) == 12
+
+
+def test_patterned_strings_are_left_alone() -> None:
+    """Padding a patterned string would likely break the pattern; an honest miss beats a bad fix."""
+    schema = {"type": "string", "minLength": 40, "pattern": "^[a-z]+$"}
+
+    assert _enriched_property(schema) == "example"
+
+
+def test_the_generated_contract_has_no_non_conforming_examples() -> None:
+    """apiome's own published contract must pass the rule it ships (IXH-5.4).
+
+    The contract is the rule's first real subject: shipping a linter that fires 24 times on our
+    own ``openapi.yaml`` would be shipping a broken product.
+    """
+    from app.example_conformance_lint import example_conformance_findings
+
+    findings = example_conformance_findings(enrich_openapi_spec(_load_spec()))
+
+    assert findings == [], [f.path for f in findings]
