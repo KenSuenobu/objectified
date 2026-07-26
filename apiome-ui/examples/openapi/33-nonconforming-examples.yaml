@@ -1,0 +1,144 @@
+# Deliberately non-conforming examples — IXH-5.4 (#5116) fixture.
+#
+# Every `example` / `examples` block below sits next to a schema it VIOLATES, on purpose, and
+# each one violates a different keyword at a different kind of location. The document is
+# otherwise a perfectly valid OpenAPI 3.1 spec and must import cleanly — a bad example is a
+# quality defect the linter reports, never an import failure.
+#
+# The `x-expected-violation` extension on each site records what the example is meant to break,
+# so the fixture documents its own intent and a reviewer can check the fixture without running
+# the linter. It is a vendor extension and has no effect on validation.
+openapi: 3.1.0
+info:
+  title: Non-conforming Examples
+  version: 1.0.0
+  description: >-
+    Fixture for the example-conformance rule pack. Every example here contradicts the schema
+    beside it, one keyword at a time.
+paths:
+  /pets:
+    parameters:
+      - name: tenant
+        in: header
+        description: Owning tenant slug.
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]*$'
+        example: 'Not A Slug'
+        x-expected-violation: pattern
+    get:
+      summary: List pets
+      description: Returns the pets visible to the caller.
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of pets to return.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+          example: 500
+          x-expected-violation: maximum
+      responses:
+        '200':
+          description: A page of pets.
+          headers:
+            X-Total-Count:
+              description: Total pets matching the query.
+              schema:
+                type: integer
+              example: 'twelve'
+              x-expected-violation: type
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+                maxItems: 2
+              examples:
+                conforming:
+                  summary: A page that satisfies the schema.
+                  value:
+                    - id: 1
+                      name: Rex
+                      status: available
+                too-many:
+                  summary: Breaks maxItems.
+                  value:
+                    - id: 1
+                      name: Rex
+                      status: available
+                    - id: 2
+                      name: Bella
+                      status: pending
+                    - id: 3
+                      name: Milo
+                      status: sold
+              x-expected-violation: maxItems
+    post:
+      summary: Create a pet
+      description: Registers a new pet.
+      requestBody:
+        description: The pet to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+            example:
+              name: Rex
+              status: adopted
+            x-expected-violation: required-and-enum
+      responses:
+        '201':
+          description: The created pet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+components:
+  schemas:
+    Pet:
+      type: object
+      description: A pet in the store.
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          description: Server-assigned identifier.
+          minimum: 1
+          example: 0
+          x-expected-violation: minimum
+        name:
+          type: string
+          description: The pet's given name.
+          minLength: 1
+        status:
+          type: string
+          description: Availability of the pet.
+          enum:
+            - available
+            - pending
+            - sold
+        tag:
+          $ref: '#/components/schemas/Tag'
+      example:
+        id: not-a-number
+        name: Rex
+        status: available
+      x-expected-violation: type
+    Tag:
+      type: object
+      description: A label attached to a pet.
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: The tag's display name.
+      example:
+        label: legacy
+      x-expected-violation: required

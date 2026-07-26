@@ -4,7 +4,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Generated file — do not edit.** This README is the human index of [`corpus.manifest.json`](corpus.manifest.json) (schema: [`corpus.schema.json`](corpus.schema.json)). Edit the manifest, then run `python3 scripts/generate_examples_readme.py` from the repo root; CI fails on drift.
 
-The corpus holds **439 files** across **36 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **442 files** across **36 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -21,7 +21,7 @@ The corpus holds **439 files** across **36 format directories**. Every file has 
 | `api-blueprint/` | API Blueprint | rest | `FORMAT: 1A` metadata line | 11 |
 | `arazzo/` | Arazzo workflows | rest | top-level `arazzo:` version | 11 |
 | `odata/` | OData v4 (EDMX) | rest | `<edmx:Edmx>` root | 12 |
-| `openapi/` | OpenAPI 3.x | rest | top-level `openapi:` version | 37 |
+| `openapi/` | OpenAPI 3.x | rest | top-level `openapi:` version | 38 |
 | `postman/` | Postman v2.1 | rest | collection `info.schema` URL | 11 |
 | `raml/` | RAML 1.0 | rest | `#%RAML 1.0` header | 11 |
 | `swagger/` | Swagger 2.0 | rest | `swagger: "2.0"` | 1 |
@@ -47,7 +47,7 @@ The corpus holds **439 files** across **36 format directories**. Every file has 
 
 | Directory | Format | Paradigm | Marker / shape | Files |
 | --- | --- | --- | --- | --- |
-| `asyncapi/` | AsyncAPI 2.x/3.0 | event | top-level `asyncapi:` version | 13 |
+| `asyncapi/` | AsyncAPI 2.x/3.0 | event | top-level `asyncapi:` version | 14 |
 | `cloudevents/` | CloudEvents 1.0 | event | `specversion` + `type` + `source` envelope | 11 |
 
 ### Graph
@@ -65,7 +65,7 @@ The corpus holds **439 files** across **36 format directories**. Every file has 
 | `capnproto/` | Cap'n Proto | data_schema | `@0x…` file id + `struct` | 11 |
 | `cobol-copybook/` | COBOL copybook | data_schema | level numbers + `PIC` clauses | 11 |
 | `flatbuffers/` | FlatBuffers | data_schema | `table`/`struct` + `root_type` | 11 |
-| `json-schema/` | JSON Schema | data_schema | `$schema` / `type` + `properties` | 16 |
+| `json-schema/` | JSON Schema | data_schema | `$schema` / `type` + `properties` | 17 |
 | `jtd/` | JSON Type Definition | data_schema | `properties`/`optionalProperties` | 11 |
 | `xsd/` | XML Schema (XSD) | data_schema | `xs:schema` root element | 13 |
 
@@ -155,6 +155,7 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `06-payment-events-set/asyncapi.yaml` | multi-file (root) | `asyncapi-3` ≥ 0.95 | valid | `channels`, `operations`, `servers`, `cross-file-ref` |
 | `06-payment-events-set/messages.yaml` ⚠ | multi-file (member) | `asyncapi-3` (no guarantee) | valid | `messages`, `payload`, `cross-file-ref` |
 | `06-payment-events-set/schemas.yaml` ⚠ | multi-file (member) | `asyncapi-3` (no guarantee) | valid | `schemas`, `cross-file-ref` |
+| `07-nonconforming-examples-3.0.yaml` ⚠ | typical | `asyncapi-3` ≥ 0.95 | valid | `non-conforming-examples`, `message-examples`, `schema-examples`, `enum` |
 | `negative/01-syntactic-unclosed-flow-sequence.yaml` ⚠ | — | `asyncapi-2` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-flow-sequence` |
 | `negative/02-semantic-channels-not-a-mapping.yaml` ⚠ | — | `asyncapi-2` (no guarantee) | invalid | `negative`, `semantic`, `channels-not-a-mapping` |
 | `negative/03-truncated-mid-ref.yaml` ⚠ | — | `asyncapi-2` (no guarantee) | invalid | `negative`, `truncated`, `mid-ref` |
@@ -164,6 +165,8 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 > ⚠ **`06-payment-events-set/messages.yaml`** — Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.
 
 > ⚠ **`06-payment-events-set/schemas.yaml`** — Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml.
+
+> ⚠ **`07-nonconforming-examples-3.0.yaml`** — Every message example object and schema example deliberately violates its schema; the document itself is valid AsyncAPI 3 and must import cleanly. Drives tests/test_example_conformance_corpus.py.
 
 > ⚠ **`negative/01-syntactic-unclosed-flow-sequence.yaml`** — Verified without asyncapi-parser installed (parse raises tool-unavailable), but the flaw is broken YAML, so classification is text-grounded and tool-independent.
 
@@ -462,11 +465,14 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `09-advanced-features.json` | stress | `json-schema-2020-12` ≥ 0.9 | valid | `features`, `nullable`, `enum`, `const`, `contains`, `prefixItems`, `patternProperties`, `propertyNames`, `additionalProperties`, `dependentSchemas`, `dependentRequired`, `defs` |
 | `10-comprehensive-ecommerce.json` | stress | `json-schema-2020-12` ≥ 0.9 | valid | `comprehensive-ecommerce`, `allOf`, `enum`, `patternProperties`, `additionalProperties`, `defs`, `multipleOf` |
 | `11-geojson-feature.json` | real-world | `json-schema-2020-12` ≥ 0.9 | valid | `geojson-feature`, `oneOf`, `const`, `defs`, `nullable` |
+| `12-nonconforming-examples.json` ⚠ | typical | `json-schema-2020-12` ≥ 0.9 | valid | `non-conforming-examples`, `schema-examples`, `enum`, `defs` |
 | `negative/01-syntactic-unclosed-brace.json` | — | `json-schema-2020-12` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-brace` |
 | `negative/02-semantic-top-level-array.json` | — | `json-schema-2020-12` (no guarantee) | invalid | `negative`, `semantic`, `top-level-array` |
 | `negative/03-truncated-mid-token.json` ⚠ | — | `json-schema-2020-12` (no guarantee) | invalid | `negative`, `truncated`, `cut-mid-token` |
 | `negative/04-wrong-format-protobuf.proto` | — | `json-schema-2020-12` (no guarantee) | invalid | `negative`, `wrong-format`, `protobuf-idl` |
 | `negative/05-encoding-utf16.json` | — | `json-schema-2020-12` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
+
+> ⚠ **`12-nonconforming-examples.json`** — Every `examples` entry deliberately violates the subschema it sits in (root required, minimum, minLength, enum, maxItems, and a $defs pattern); the document is a valid JSON Schema and must import cleanly. Drives tests/test_example_conformance_corpus.py.
 
 > ⚠ **`negative/03-truncated-mid-token.json`** — Grounded FORMAT_MISMATCH rather than INPUT_MALFORMED: the greedy graphql sniffer claims the truncated JSON at 0.9 (`type` keyword match), while json-schema's own detect cannot claim broken JSON.
 
@@ -569,6 +575,7 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `30-openapi-3.0-petstore.yaml` | real-world | `openapi-3.0` ≥ 0.95 | valid | `openapi-3.0-petstore`, `nullable` |
 | `31-paths-comprehensive.yaml` | typical | `openapi-3.1` ≥ 0.95 | valid | `paths-comprehensive`, `enum` |
 | `32-openapi-3.2.0-minimal.yaml` | minimal | `openapi-3.2` ≥ 0.95 | valid | `openapi-3.2.0-minimal` |
+| `33-nonconforming-examples.yaml` ⚠ | typical | `openapi-3.1` ≥ 0.95 | valid | `non-conforming-examples`, `multiple-examples`, `response-examples`, `enum` |
 | `negative/01-syntactic-unclosed-flow-sequence.yaml` | — | `openapi-3.1` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-flow-sequence` |
 | `negative/02-truncated-mid-quoted-ref.yaml` | — | `openapi-3.1` (no guarantee) | invalid | `negative`, `truncated`, `cut-mid-token` |
 | `negative/03-wrong-format-graphql-sdl.graphql` | — | `openapi-3.1` (no guarantee) | invalid | `negative`, `wrong-format`, `graphql-sdl` |
@@ -596,6 +603,8 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 > ⚠ **`27-test-property-mixed.yaml`** — detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work.
 
 > ⚠ **`28-test-property-reuse-same.yaml`** — detect_format() currently raises FixParseError on this file (the FIX sniffer's is_fix() parses any `|`-containing text instead of returning no-match); expected_detection records the intended contract for the detection-hardening work.
+
+> ⚠ **`33-nonconforming-examples.yaml`** — Every example carrier (component schema, nested property, path- and operation-level parameter, request body, response media type with an examples map, and a response header) deliberately violates its schema; the document is valid OpenAPI 3.1 and must import cleanly. Drives tests/test_example_conformance_corpus.py.
 
 > ⚠ **`negative/05-version-out-of-range.yaml`** — Fails at the normalize phase (parse succeeds since the YAML is well-formed); the adapter's detect declines the 9.0.0 marker, so normalize raises and the pipeline grounds INPUT_SEMANTIC_INVALID.
 

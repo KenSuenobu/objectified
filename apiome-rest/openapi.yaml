@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.49.0
+  version: 1.50.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -42268,7 +42268,7 @@ components:
           description: Always modelled. 'You have exceeded your budget' reads as a
             statement of fact.
           default: modelled
-          example: example
+          example: modelled
         dispatched:
           type: boolean
           const: false
@@ -42296,7 +42296,7 @@ components:
           title: Basis
           description: Always modelled.
           default: modelled
-          example: example
+          example: modelled
         dispatched:
           type: boolean
           const: false
@@ -42704,7 +42704,7 @@ components:
           title: Severity
           description: warn never blocks; block is returned only on a 409.
           default: warn
-          example: warning
+          example: warn
       type: object
       required:
       - code
@@ -44365,7 +44365,7 @@ components:
           - inline
           title: Source
           description: Provenance source for the record (for example human or imported).
-          example: human
+          example: stored
         projectId:
           anyOf:
           - type: string
@@ -45093,7 +45093,7 @@ components:
           title: Provider
           description: Git provider.
           default: github
-          example: example
+          example: github
         defaultBranch:
           type: string
           title: Defaultbranch
@@ -45260,7 +45260,7 @@ components:
           title: Status
           description: Initial state of the built release.
           default: ready
-          example: active
+          example: ready
         impact:
           additionalProperties: true
           type: object
@@ -45436,7 +45436,7 @@ components:
           title: Status
           description: 'unavailable: nothing is able to report a status.'
           default: unavailable
-          example: active
+          example: unavailable
         sentence:
           type: string
           title: Sentence
@@ -49301,7 +49301,7 @@ components:
           title: Severity
           description: warn never blocks; block is returned only on a 409.
           default: warn
-          example: warning
+          example: warn
       type: object
       required:
       - code
@@ -51017,7 +51017,7 @@ components:
           title: Severity
           description: warn never blocks; block is returned only on a 409.
           default: warn
-          example: warning
+          example: warn
       type: object
       required:
       - code
@@ -53700,7 +53700,7 @@ components:
           title: Basis
           description: Always modelled.
           default: modelled
-          example: example
+          example: modelled
         observed:
           type: boolean
           const: false
@@ -62072,7 +62072,7 @@ components:
           title: Status
           description: '``activated`` when a pending membership transitioned to active,
             ``already-active`` when there was nothing to do.'
-          example: active
+          example: activated
         tenant_id:
           type: string
           title: Tenant Id
@@ -62095,7 +62095,7 @@ components:
           title: Status
           description: 'Target status: resolving, applied, or aborted (from preview/resolving
             only).'
-          example: active
+          example: resolving
       type: object
       required:
       - status
@@ -62223,7 +62223,7 @@ components:
           description: Always modelled. When a collector lands, 'edge-observed' becomes
             a second value of this field rather than a change of meaning for the first.
           default: modelled
-          example: example
+          example: modelled
         observed:
           type: boolean
           const: false
@@ -62278,7 +62278,7 @@ components:
           title: Basis
           description: This series is modelled from policy, not measured.
           default: policy-modelled
-          example: example
+          example: policy-modelled
         observed:
           type: boolean
           const: false
@@ -62603,7 +62603,7 @@ components:
           minimum: 100.0
           title: Status
           description: HTTP status code the mock returns for this call.
-          example: 1
+          example: 100
         headers:
           additionalProperties:
             type: string
@@ -65837,7 +65837,7 @@ components:
           title: Signingsecret
           description: Shared secret for signing deliveries; never returned after
             create.
-          example: example
+          example: examplee
         active:
           type: boolean
           title: Active
@@ -69070,7 +69070,7 @@ components:
           title: Severity
           description: warn never blocks; block is returned only on a 409.
           default: warn
-          example: warning
+          example: warn
       type: object
       required:
       - code
@@ -70279,7 +70279,7 @@ components:
           title: Sourceformat
           description: Serialization of source_text.
           default: yaml
-          example: openapi
+          example: yaml
         baseDigest:
           type: string
           title: Basedigest
@@ -70546,7 +70546,7 @@ components:
           title: Sourceformat
           description: Serialization of source_text.
           default: yaml
-          example: openapi
+          example: yaml
       type: object
       required:
       - sourceText
@@ -70643,7 +70643,7 @@ components:
           title: State
           default: completed
           description: State.
-          example: example
+          example: completed
         project_id:
           type: string
           title: Project Id
@@ -71174,7 +71174,7 @@ components:
           title: State
           default: rolled-back
           description: State.
-          example: example
+          example: rolled-back
         project_id:
           anyOf:
           - type: string
@@ -72385,7 +72385,7 @@ components:
           title: Basis
           description: Always modelled.
           default: modelled
-          example: example
+          example: modelled
         observed:
           type: boolean
           const: false
@@ -72604,7 +72604,7 @@ components:
           description: Zero. Nothing is in the request path, so no session can have
             delivered an event.
           default: 0
-          example: 1
+          example: 0
         openedBy:
           type: string
           title: Openedby
@@ -73182,7 +73182,7 @@ components:
           - linked_account
           title: Source
           description: Provenance source for the record (for example human or imported).
-          example: human
+          example: public_url
         cloneUrl:
           anyOf:
           - type: string
@@ -73697,7 +73697,7 @@ components:
           title: Basis
           description: Always modelled.
           default: modelled
-          example: example
+          example: modelled
         observed:
           type: boolean
           const: false
@@ -73956,7 +73956,7 @@ components:
             becomes the second value of this field rather than a change of meaning
             for the first.
           default: policy-evaluation
-          example: example
+          example: policy-evaluation
         observed:
           type: boolean
           title: Observed
@@ -74223,7 +74223,7 @@ components:
           title: Scope
           default: tenant
           description: Scope.
-          example: system
+          example: tenant
         base_uri:
           anyOf:
           - type: string
@@ -75027,7 +75027,7 @@ components:
           title: Basis
           description: Always modelled.
           default: modelled
-          example: example
+          example: modelled
         metered:
           type: boolean
           const: false
@@ -75103,7 +75103,7 @@ components:
           title: Basis
           description: Always modelled.
           default: modelled
-          example: example
+          example: modelled
         metered:
           type: boolean
           const: false
@@ -75218,7 +75218,7 @@ components:
           title: Basis
           description: Always modelled.
           default: modelled
-          example: example
+          example: modelled
         metered:
           type: boolean
           const: false
@@ -77807,7 +77807,7 @@ components:
           title: Intervalseconds
           description: How often it would run.
           default: 300
-          example: 1
+          example: 60
         expectedStatus:
           type: integer
           title: Expectedstatus
@@ -79514,7 +79514,7 @@ components:
             becomes the second value of this field rather than a change of meaning
             for the first.
           default: policy-simulation
-          example: example
+          example: policy-simulation
         observed:
           type: boolean
           title: Observed
@@ -80319,7 +80319,7 @@ components:
             becomes the second value of this field rather than a change of meaning
             for the first.
           default: policy-simulation
-          example: example
+          example: policy-simulation
         observed:
           type: boolean
           title: Observed

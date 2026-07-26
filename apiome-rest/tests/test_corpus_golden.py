@@ -105,6 +105,7 @@ KNOWN_ORDER_SENSITIVE_FINGERPRINTS: Dict[str, str] = {
     "json-schema/09-advanced-features.json": _JSON_SCHEMA_REASON,
     "json-schema/10-comprehensive-ecommerce.json": _JSON_SCHEMA_REASON,
     "json-schema/11-geojson-feature.json": _JSON_SCHEMA_REASON,
+    "json-schema/12-nonconforming-examples.json": _JSON_SCHEMA_REASON,
     "jtd/01-user.jtd.json": _JTD_REASON,
     "jtd/02-order.jtd.json": _JTD_REASON,
     "jtd/04-support-ticket.jtd.json": _JTD_REASON,

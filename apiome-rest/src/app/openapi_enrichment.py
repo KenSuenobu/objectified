@@ -551,7 +551,9 @@ def _enrich_property(
     schema_types = _schema_type_set(schema)
     non_null_types = schema_types - {"null"}
     if non_null_types and non_null_types <= _SCALAR_TYPES and not _has_example(schema):
-        schema["example"] = _property_example(schema_name, prop_name, schema)
+        schema["example"] = _fit_example_to_constraints(
+            _property_example(schema_name, prop_name, schema), schema
+        )
 
     if "array" in schema_types and "maxItems" not in schema:
         schema["maxItems"] = _array_max_items(prop_name)
@@ -648,6 +650,20 @@ def _humanize_property_description(prop_name: str) -> str:
 
 
 def _property_example(schema_name: str, prop_name: str, schema: Mapping[str, Any]) -> Any:
+    # A constrained value set is not a hint, it is the answer: a property with ``const`` has
+    # exactly one legal example, and one with ``enum`` has a closed list. Name-based guessing
+    # must never override them — doing so is what produced examples like ``"warning"`` on an
+    # ``enum: [warn, block]`` property, which the IXH-5.4 example-conformance rule (#5116)
+    # correctly reports as a defect in our own published contract.
+    if "const" in schema:
+        return schema["const"]
+    enum_values = schema.get("enum")
+    if isinstance(enum_values, list) and enum_values:
+        # The declared default when it is a legal member (the value a client sees most often),
+        # else the first member — deterministic either way.
+        default = schema.get("default")
+        return default if default in enum_values else enum_values[0]
+
     qualified = f"{schema_name}.{prop_name}"
     if qualified in PROPERTY_EXAMPLES:
         return PROPERTY_EXAMPLES[qualified]
@@ -719,11 +735,54 @@ def _property_example(schema_name: str, prop_name: str, schema: Mapping[str, Any
         return "Example validation message."
     if "hash" in lower or "fingerprint" in lower:
         return "a1b2c3d4e5f6789012345678901234ab"
-    enum = schema.get("enum")
-    if isinstance(enum, list) and enum:
-        first = enum[0]
-        return first
     return "example"
+
+
+def _fit_example_to_constraints(value: Any, schema: Mapping[str, Any]) -> Any:
+    """Adjust a name-guessed example so it satisfies the schema's own numeric/length bounds.
+
+    The guesses above are keyed on a property's *name*, which knows nothing about the bounds
+    beside it — that is how a ``status`` property bounded to ``100..599`` ended up with the
+    example ``1``, and a secret with ``minLength: 8`` with the 7-character ``"example"``. Both
+    are defects in our published contract, and the IXH-5.4 example-conformance rule (#5116)
+    reports them, so the guess is fitted to the constraints rather than left to contradict them.
+
+    Only bounds that can be satisfied without inventing meaning are applied: numbers are clamped
+    into range, and strings are padded or truncated to length. A string carrying a ``pattern`` is
+    left untouched — padding it would likely break the pattern, and a wrong "fix" is worse than
+    an honest finding.
+
+    Args:
+        value: The guessed example.
+        schema: The property schema it must satisfy.
+
+    Returns:
+        The value, adjusted where a bound applies.
+    """
+    if isinstance(value, bool):
+        return value
+
+    if isinstance(value, (int, float)):
+        minimum = schema.get("minimum")
+        maximum = schema.get("maximum")
+        if isinstance(minimum, (int, float)) and not isinstance(minimum, bool) and value < minimum:
+            value = type(value)(minimum)
+        if isinstance(maximum, (int, float)) and not isinstance(maximum, bool) and value > maximum:
+            value = type(value)(maximum)
+        return value
+
+    if isinstance(value, str) and not schema.get("pattern"):
+        min_length = schema.get("minLength")
+        max_length = schema.get("maxLength")
+        if isinstance(min_length, int) and len(value) < min_length:
+            # Repeat the guess rather than padding with filler, so the result still reads as
+            # an example of the thing rather than as noise.
+            value = (value * (min_length // max(len(value), 1) + 1))[:min_length]
+        if isinstance(max_length, int) and len(value) > max_length:
+            value = value[:max_length]
+        return value
+
+    return value
 
 
 def _array_max_items(prop_name: str) -> int:

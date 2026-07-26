@@ -24,10 +24,18 @@ fingerprint-hasher (:mod:`app.fingerprint`) and breaking-change-classifier
   channel) and unstable identifiers (auto-generated/positional names that will not survive a
   re-import and so wreck diff alignment). It always runs.
 
+* **The "examples" pack** (:class:`app.example_conformance_lint.ExampleConformanceRulePack`,
+  IXH-5.4) is the second **unconditional** pack. It checks that every ``example``/``examples``
+  in the artifact's *retained source document* satisfies the schema it sits next to — a
+  cross-format defect wearing different syntax in OpenAPI, AsyncAPI, and JSON Schema — and
+  self-gates to nothing when the artifact retained no walkable document. Both unconditional
+  packs are published by :func:`unconditional_rule_packs`, which is what the rule catalogue
+  enumerates, so "what always runs" has exactly one definition.
+
 * **Format packs** register under a format key via the same ``register=True`` SPI the sibling
   registries use, and add the specifics their ecosystem cares about (a GraphQL pack, an
-  AsyncAPI pack, …). :func:`lint_canonical_model` runs the common pack plus the format pack
-  registered for ``api.format``, if any.
+  AsyncAPI pack, …). :func:`lint_canonical_model` runs the unconditional packs plus the format
+  pack registered for ``api.format``, if any.
 
 The OpenAPI behavior is unchanged: :func:`app.schema_lint.lint_openapi_spec` remains the
 OpenAPI rule pack and reproduces its current findings exactly (its tests are untouched). Both
@@ -73,6 +81,7 @@ __all__ = [
     "available_lint_formats",
     "is_unstable_name",
     "load_format_rule_packs",
+    "unconditional_rule_packs",
 ]
 
 
@@ -261,6 +270,8 @@ def load_format_rule_packs() -> None:
         return
     _format_packs_loaded = True
     # AsyncAPI lint pack (MFI-8.3): registers under ``asyncapi-2`` / ``asyncapi-3``.
+    # Arazzo lint pack (MFI-30.2): registers under ``arazzo``.
+    from . import arazzo_lint as _arazzo_lint  # noqa: F401
     from . import asyncapi_lint as _asyncapi_lint  # noqa: F401
 
     # GraphQL lint pack (MFI-10.4): registers under ``graphql``.
@@ -268,9 +279,6 @@ def load_format_rule_packs() -> None:
 
     # Protobuf lint pack (MFI-9.4): registers under ``protobuf``.
     from . import proto_lint as _proto_lint  # noqa: F401
-
-    # Arazzo lint pack (MFI-30.2): registers under ``arazzo``.
-    from . import arazzo_lint as _arazzo_lint  # noqa: F401
 
 
 # ===========================================================================
@@ -526,6 +534,33 @@ class CommonRulePack(RulePack):
 # A single shared instance is safe: the common pack is stateless and pure.
 _COMMON = CommonRulePack()
 
+# The example-conformance pack (IXH-5.4) is the second unconditional pack. It lives in its own
+# module because it walks the artifact's *retained source document* rather than the canonical
+# model, and it is instantiated lazily through this accessor to keep the import one-directional
+# (the pack imports LintRule/RulePack from here).
+_EXAMPLES_PACK: Optional[RulePack] = None
+
+
+def _example_conformance_pack() -> RulePack:
+    """Return the shared, unconditional example-conformance pack (stateless and pure)."""
+    global _EXAMPLES_PACK
+    if _EXAMPLES_PACK is None:
+        from .example_conformance_lint import ExampleConformanceRulePack
+
+        _EXAMPLES_PACK = ExampleConformanceRulePack()
+    return _EXAMPLES_PACK
+
+
+def unconditional_rule_packs() -> List[RulePack]:
+    """Return every pack that runs for **all** formats, in execution order.
+
+    The two packs that carry no ``format`` key and are therefore never in the registry: the
+    cross-format hygiene pack and the example-conformance pack. Exposed so the rule catalogue
+    (:mod:`app.lint_rule_registry`) enumerates exactly what the engine runs, instead of keeping
+    its own list that could fall behind.
+    """
+    return [_COMMON, _example_conformance_pack()]
+
 
 # ===========================================================================
 # Top-level entry point
@@ -555,6 +590,7 @@ def lint_canonical_model(
     load_format_rule_packs()
     findings: List[LintFinding] = list(extra_findings or [])
     findings.extend(_COMMON.lint(api))
+    findings.extend(_example_conformance_pack().lint(api))
 
     pack_cls = get_rule_pack(api.format)
     if pack_cls is not None:

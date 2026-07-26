@@ -544,6 +544,29 @@ def assemble_lint_result(
     )
 
 
+def _example_conformance_findings(spec: Mapping[str, Any]) -> List[LintFinding]:
+    """Run the IXH-5.4 example-conformance rule over a native OpenAPI document.
+
+    The OpenAPI adapter overrides :meth:`app.import_source.ImportSource.lint` to lint the native
+    document here rather than through the canonical engine, so the pack that runs
+    unconditionally in :func:`app.lint_engine.lint_canonical_model` would otherwise never see an
+    OpenAPI revision. Calling it here gives both paths the same rule id and severity.
+
+    Imported inside the function because :mod:`app.example_conformance_lint` imports this module
+    for :class:`LintFinding` — the cycle is broken by deferring to call time, matching how the
+    other cross-module lint hooks here are wired.
+
+    Args:
+        spec: The OpenAPI (or Swagger 2) document being linted.
+
+    Returns:
+        One finding per non-conforming example; empty when the document carries none.
+    """
+    from .example_conformance_lint import example_conformance_findings
+
+    return example_conformance_findings(spec)
+
+
 def lint_openapi_spec(
     spec: Mapping[str, Any],
     extra_findings: Optional[List[LintFinding]] = None,
@@ -560,6 +583,7 @@ def lint_openapi_spec(
     _lint_info(spec, findings)
     _lint_schemas(spec, findings)
     _lint_operations(spec, findings)
+    findings.extend(_example_conformance_findings(spec))
 
     # Always surface the in-spec categories (naming/documentation/structure) so the UI's category
     # bars render even when a category is clean (100); compatibility joins only when it has findings.

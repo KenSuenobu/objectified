@@ -1,0 +1,200 @@
+{
+  "adapter": "json-schema",
+  "canonical": {
+    "channels": [],
+    "description": "Fixture for the IXH-5.4 example-conformance rule pack: every `examples` entry below deliberately contradicts the schema it sits in, one keyword at a time. The document is a valid JSON Schema and must import cleanly — a bad example is a lint finding, never an import failure. `x-expected-violation` records each site's intent and has no effect on validation.",
+    "extras": {},
+    "format": "json-schema",
+    "identity": {
+      "extras": {},
+      "id": "https://example.com/nonconforming-examples.json",
+      "name": "NonConformingExamples",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "NonConformingExamples",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A postal address.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "City name.",
+            "extras": {},
+            "field_number": null,
+            "key": "Address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Five-digit postal code.",
+            "extras": {},
+            "field_number": null,
+            "key": "Address.postalCode",
+            "name": "postalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "Address",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Fixture for the IXH-5.4 example-conformance rule pack: every `examples` entry below deliberately contradicts the schema it sits in, one keyword at a time. The document is a valid JSON Schema and must import cleanly — a bad example is a lint finding, never an import failure. `x-expected-violation` records each site's intent and has no effect on validation.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Server-assigned identifier.",
+            "extras": {},
+            "field_number": null,
+            "key": "NonConformingExamples.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Contact address.",
+            "extras": {},
+            "field_number": null,
+            "key": "NonConformingExamples.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Role the account holds.",
+            "extras": {},
+            "field_number": null,
+            "key": "NonConformingExamples.role",
+            "name": "role",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Free-form labels.",
+            "extras": {},
+            "field_number": null,
+            "key": "NonConformingExamples.tags",
+            "name": "tags",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "NonConformingExamples.address",
+            "name": "address",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Address",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "NonConformingExamples",
+        "key_type": null,
+        "kind": "record",
+        "name": "NonConformingExamples",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "json-schema/12-nonconforming-examples.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "json-schema-2020-12"
+  },
+  "fingerprint": "sha256:37276b9c4a62b604af7738966c94c6fbfe0b14eca7a995222103ad2d14cdefd9",
+  "lint": {
+    "findings": 7,
+    "grade": "C",
+    "report_fingerprint": "19ea9997189dbe6d94c2ad3d4a3b981673d7024d4ee60efc13bf0867fb63032e",
+    "score": 79,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}
