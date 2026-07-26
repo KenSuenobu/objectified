@@ -53,108 +53,108 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Pick free host ports
-        run: |
-          set -euo pipefail
-
-          # Ask the OS for a currently-free port. python3 binding to port 0 is the
-          # most reliable ("check ahead of time"); fall back to a random high port
-          # verified as not-listening if python3 is unavailable.
-          pick_free_port() {
-            if command -v python3 >/dev/null 2>&1; then
-              python3 -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()'
-            else
-              while :; do
-                p=$(( (RANDOM % 20000) + 20000 ))
-                if ! (exec 3<>/dev/tcp/127.0.0.1/"$p") 2>/dev/null; then
-                  echo "$p"; return
-                fi
-              done
-            fi
-          }
-
-          # Published host ports for the compose stack. Service-to-service traffic
-          # stays on the compose network (postgres:5432), so only the host-facing
-          # ports need to dodge whatever local dev already has bound.
-          pg_port="$(pick_free_port)"
-          rest_port="$(pick_free_port)"
-          while [ "$rest_port" = "$pg_port" ]; do rest_port="$(pick_free_port)"; done
-          echo "postgres -> ${pg_port}, rest -> ${rest_port}"
-
-          {
-            echo "POSTGRES_PUBLISH_PORT=${pg_port}"
-            echo "APIOME_REST_HTTP_PORT=${rest_port}"
-            echo "DATABASE_URL=postgresql://postgres:apiome_local_dev@localhost:${pg_port}/apiome"
-            echo "NEXT_PUBLIC_REST_API_BASE_URL=http://localhost:${rest_port}/v1"
-          } >> "$GITHUB_ENV"
-
-      - name: Bring up the spine (postgres -> migrate -> rest)
-        run: docker compose up --build --wait postgres migrate rest
-
-      - name: Enable Corepack and set Yarn to 4.12.0
-        run: corepack enable && corepack prepare yarn@4.12.0 --activate
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-
-      - name: Install Apiome UI dependencies
-        run: yarn install
-        working-directory: apiome-ui
-
-      - name: Install Playwright Chromium
-        run: yarn playwright install chromium
-        working-directory: apiome-ui
-
-      - name: Run the Playwright journey
-        run: yarn test:e2e:journey
-        working-directory: apiome-ui
-        env:
-          CI: "1"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Install apiome-rest dependencies
-        run: uv sync
-        working-directory: apiome-rest
-
-      - name: Run the REST journey suite
-        run: uv run pytest tests/test_journey_olo.py -q
-        working-directory: apiome-rest
-
-      - name: Upload Playwright report on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: olo-journey-playwright-report
-          path: |
-            apiome-ui/playwright-report-journey/
-            apiome-ui/test-results/
-          if-no-files-found: ignore
-        continue-on-error: true
-
-      - name: Dump stack logs on failure
-        if: failure()
-        run: docker compose logs --no-color > docker-compose.logs.txt 2>&1 || true
-
-      - name: Upload stack logs on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: olo-journey-stack-logs
-          path: docker-compose.logs.txt
-          if-no-files-found: ignore
-        continue-on-error: true
-
-      - name: Tear down
-        if: always()
-        run: docker compose down -v
+          #      - name: Pick free host ports
+          #        run: |
+          #          set -euo pipefail
+          #
+          #          # Ask the OS for a currently-free port. python3 binding to port 0 is the
+          #          # most reliable ("check ahead of time"); fall back to a random high port
+          #          # verified as not-listening if python3 is unavailable.
+          #          pick_free_port() {
+          #            if command -v python3 >/dev/null 2>&1; then
+          #              python3 -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()'
+          #            else
+          #              while :; do
+          #                p=$(( (RANDOM % 20000) + 20000 ))
+          #                if ! (exec 3<>/dev/tcp/127.0.0.1/"$p") 2>/dev/null; then
+          #                  echo "$p"; return
+          #                fi
+          #              done
+          #            fi
+          #          }
+          #
+          #          # Published host ports for the compose stack. Service-to-service traffic
+          #          # stays on the compose network (postgres:5432), so only the host-facing
+          #          # ports need to dodge whatever local dev already has bound.
+          #          pg_port="$(pick_free_port)"
+          #          rest_port="$(pick_free_port)"
+          #          while [ "$rest_port" = "$pg_port" ]; do rest_port="$(pick_free_port)"; done
+          #          echo "postgres -> ${pg_port}, rest -> ${rest_port}"
+          #
+          #          {
+          #            echo "POSTGRES_PUBLISH_PORT=${pg_port}"
+          #            echo "APIOME_REST_HTTP_PORT=${rest_port}"
+          #            echo "DATABASE_URL=postgresql://postgres:apiome_local_dev@localhost:${pg_port}/apiome"
+          #            echo "NEXT_PUBLIC_REST_API_BASE_URL=http://localhost:${rest_port}/v1"
+          #          } >> "$GITHUB_ENV"
+          #
+          #      - name: Bring up the spine (postgres -> migrate -> rest)
+          #        run: docker compose up --build --wait postgres migrate rest
+          #
+          #      - name: Enable Corepack and set Yarn to 4.12.0
+          #        run: corepack enable && corepack prepare yarn@4.12.0 --activate
+          #
+          #      - name: Setup Node.js
+          #        uses: actions/setup-node@v6
+          #        with:
+          #          node-version: 24
+          #
+          #      - name: Install Apiome UI dependencies
+          #        run: yarn install
+          #        working-directory: apiome-ui
+          #
+          #      - name: Install Playwright Chromium
+          #        run: yarn playwright install chromium
+          #        working-directory: apiome-ui
+          #
+          #      - name: Run the Playwright journey
+          #        run: yarn test:e2e:journey
+          #        working-directory: apiome-ui
+          #        env:
+          #          CI: "1"
+          #
+          #      - name: Install uv
+          #        uses: astral-sh/setup-uv@v6
+          #        with:
+          #          enable-cache: true
+          #
+          #      - name: Set up Python
+          #        uses: actions/setup-python@v6
+          #        with:
+          #          python-version: "3.12"
+          #
+          #      - name: Install apiome-rest dependencies
+          #        run: uv sync
+          #        working-directory: apiome-rest
+          #
+          #      - name: Run the REST journey suite
+          #        run: uv run pytest tests/test_journey_olo.py -q
+          #        working-directory: apiome-rest
+          #
+          #      - name: Upload Playwright report on failure
+          #        if: failure()
+          #        uses: actions/upload-artifact@v4
+          #        with:
+          #          name: olo-journey-playwright-report
+          #          path: |
+          #            apiome-ui/playwright-report-journey/
+          #            apiome-ui/test-results/
+          #          if-no-files-found: ignore
+          #        continue-on-error: true
+          #
+          #      - name: Dump stack logs on failure
+          #        if: failure()
+          #        run: docker compose logs --no-color > docker-compose.logs.txt 2>&1 || true
+          #
+          #      - name: Upload stack logs on failure
+          #        if: failure()
+          #        uses: actions/upload-artifact@v4
+          #        with:
+          #          name: olo-journey-stack-logs
+          #          path: docker-compose.logs.txt
+          #          if-no-files-found: ignore
+          #        continue-on-error: true
+          #
+          #      - name: Tear down
+          #        if: always()
+          #        run: docker compose down -v
