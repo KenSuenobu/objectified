@@ -102,6 +102,9 @@ def _in_memory_async_job_store(monkeypatch):
     Postgres dependency, no cross-test accumulation in the table — while still exercising the
     real mirror→read round-trip through the fake. Tests that replace the whole ``db`` singleton
     with their own mock are unaffected (this patches the real singleton's methods only).
+
+    Also backs the export artifact store (IXH-6.1 / V206) so completed exports persist download
+    bytes into the same in-memory dict and a simulated non-owning instance can serve them.
     """
     try:
         module = __import__("app.database", fromlist=["db"])
@@ -110,6 +113,7 @@ def _in_memory_async_job_store(monkeypatch):
         return
 
     store: dict = {}
+    artifacts: dict = {}
 
     def _upsert(*, job_id, kind, tenant_slug, state, status, extra=None):
         row = store.get(job_id) or {"cancel_requested": False, "extra": None}
@@ -147,13 +151,89 @@ def _in_memory_async_job_store(monkeypatch):
         row = store.get(job_id)
         return bool(row and row.get("cancel_requested"))
 
+    def _upsert_artifact(
+        *,
+        job_id,
+        tenant_slug,
+        content_sha256,
+        size_bytes,
+        media_type,
+        filename,
+        backend,
+        content,
+        storage_uri,
+        expires_at,
+    ):
+        raw = content
+        if raw is not None and hasattr(raw, "adapted"):
+            # psycopg2.Binary wrapper from database.upsert_export_job_artifact
+            raw = raw.adapted
+        if isinstance(raw, memoryview):
+            raw = raw.tobytes()
+        elif isinstance(raw, bytearray):
+            raw = bytes(raw)
+        artifacts[job_id] = {
+            "job_id": job_id,
+            "tenant_slug": tenant_slug,
+            "content_sha256": content_sha256,
+            "size_bytes": size_bytes,
+            "media_type": media_type,
+            "filename": filename,
+            "backend": backend,
+            "content": bytes(raw) if raw is not None else None,
+            "storage_uri": storage_uri,
+            "expires_at": expires_at,
+            "reaped_at": None,
+            "created_at": None,
+        }
+
+    def _get_artifact(job_id, tenant_slug):
+        row = artifacts.get(job_id)
+        if row is None or row["tenant_slug"] != tenant_slug:
+            return None
+        return dict(row)
+
+    def _delete_artifact(job_id, tenant_slug):
+        row = artifacts.get(job_id)
+        if row is None or row["tenant_slug"] != tenant_slug:
+            return False
+        del artifacts[job_id]
+        return True
+
+    def _reap_expired(*, now=None, limit=100):
+        from datetime import datetime, timezone
+
+        cutoff = now or datetime.now(timezone.utc)
+        if getattr(cutoff, "tzinfo", None) is None:
+            cutoff = cutoff.replace(tzinfo=timezone.utc)
+        reaped = 0
+        for row in list(artifacts.values()):
+            if reaped >= limit:
+                break
+            if row.get("reaped_at") is not None:
+                continue
+            exp = row.get("expires_at")
+            if exp is None:
+                continue
+            if getattr(exp, "tzinfo", None) is None:
+                exp = exp.replace(tzinfo=timezone.utc)
+            if exp <= cutoff:
+                row["reaped_at"] = cutoff
+                row["content"] = None
+                row["storage_uri"] = None
+                reaped += 1
+        return reaped
+
     monkeypatch.setattr(module.db, "upsert_async_job", _upsert)
     monkeypatch.setattr(module.db, "get_async_job", _get)
     monkeypatch.setattr(module.db, "list_async_jobs", _list)
     monkeypatch.setattr(module.db, "request_async_job_cancel", _request_cancel)
     monkeypatch.setattr(module.db, "async_job_cancel_requested", _cancel_requested)
+    monkeypatch.setattr(module.db, "upsert_export_job_artifact", _upsert_artifact)
+    monkeypatch.setattr(module.db, "get_export_job_artifact", _get_artifact)
+    monkeypatch.setattr(module.db, "delete_export_job_artifact", _delete_artifact)
+    monkeypatch.setattr(module.db, "reap_expired_export_job_artifacts", _reap_expired)
     yield
-
 
 @pytest.fixture(autouse=True)
 def _allow_permissions_by_default(monkeypatch):

@@ -354,6 +354,33 @@ def test_download_serves_the_completed_artifact_with_filename_and_type():
     assert len(dl.content) == body["result"]["files"][0]["size_bytes"]
     # It is the emitted document — parseable JSON with the OpenAPI marker.
     assert dl.json()["openapi"].startswith("3.")
+    # IXH-6.1 integrity headers: Digest + hex SHA-256 of the exact body bytes.
+    assert "digest" in {k.lower() for k in dl.headers.keys()}
+    assert len(dl.headers["x-content-sha256"]) == 64
+    import hashlib
+
+    assert dl.headers["x-content-sha256"] == hashlib.sha256(dl.content).hexdigest()
+
+
+def test_download_from_non_owning_instance_via_shared_store():
+    """After clearing the in-memory owner record, the route still serves via shared store."""
+    from app import export_job_engine as eje
+
+    with patch("app.export_job_engine.load_export_source", return_value=_source()):
+        r = client.post(
+            "/v1/export/acme/jobs",
+            json={"artifact": "artifact-1", "target": "openapi"},
+        )
+        assert r.status_code == 202, r.text
+        job_id = r.json()["job_id"]
+        body = _wait_terminal(job_id)
+
+    download_path = body["result"]["download_path"]
+    eje._jobs.clear()
+    dl = client.get(download_path)
+    assert dl.status_code == 200, dl.text
+    assert dl.json()["openapi"].startswith("3.")
+    assert len(dl.headers["x-content-sha256"]) == 64
 
 
 def test_download_serves_a_zip_bundle_for_a_multi_file_export():

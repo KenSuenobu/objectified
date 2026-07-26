@@ -5,6 +5,19 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.186.0] - 2026-07-26
+
+### Fixed
+- **Shared export artifact store (#5120, IXH-6.1)** — completed export downloads no longer
+  404 on a non-owning instance under round-robin. Delivery bytes are persisted to
+  `apiome.export_job_artifact` (DB BYTEA behind a driver interface; object-store stubbed
+  for larger payloads), keyed by tenant + job with a `sha256:` content hash. The owning
+  process keeps its in-memory `EmitResult` as a fast path only. Emit enforces
+  `APIOME_EXPORT_ARTIFACT_MAX_BYTES` (default 32 MiB) with a clear failure rather than a
+  truncated body; expired artifacts return **410**; download responses expose `Digest` and
+  `X-Content-SHA256`. Retention sweep of rows remains IXH-6.3 (`reap_expired_export_job_artifacts`
+  is ready for that sweep).
+
 ## [1.181.0] - 2026-07-25
 
 ### Added
