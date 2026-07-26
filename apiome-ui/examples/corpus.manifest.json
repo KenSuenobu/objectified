@@ -18,7 +18,7 @@
       "label": "ASN.1",
       "category": "data-schema",
       "paradigm": "data_schema",
-      "marker": "`DEFINITIONS ::= BEGIN … END`"
+      "marker": "`DEFINITIONS ::= BEGIN \u2026 END`"
     },
     "asyncapi": {
       "label": "AsyncAPI 2.x/3.0",
@@ -36,7 +36,7 @@
       "label": "Cap'n Proto",
       "category": "data-schema",
       "paradigm": "data_schema",
-      "marker": "`@0x…` file id + `struct`"
+      "marker": "`@0x\u2026` file id + `struct`"
     },
     "cloudevents": {
       "label": "CloudEvents 1.0",
@@ -61,6 +61,12 @@
       "category": "rpc",
       "paradigm": "rpc",
       "marker": "`module` + `interface`"
+    },
+    "discovery": {
+      "label": "Google API Discovery",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "`kind: discovery#restDescription` / `discoveryVersion`"
     },
     "edi-x12": {
       "label": "EDI ASC X12",
@@ -1114,7 +1120,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.",
+      "notes": "Fileset member without an `asyncapi` marker \u2014 not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.",
       "rung": "multi-file",
       "fileset_role": "member"
     },
@@ -1135,7 +1141,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml.",
+      "notes": "Fileset member without an `asyncapi` marker \u2014 not independently detectable; imported only through the set root asyncapi.yaml.",
       "rung": "multi-file",
       "fileset_role": "member"
     },
@@ -1677,7 +1683,7 @@
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
-      "provenance": "Grammatically well-formed schema containing a file id and constants only — no struct, enum, or interface to import.",
+      "provenance": "Grammatically well-formed schema containing a file id and constants only \u2014 no struct, enum, or interface to import.",
       "failure_class": "semantic",
       "expected_error_code": "INPUT_MALFORMED"
     },
@@ -1801,7 +1807,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "CloudEvents batch arrays are documented in cloudevents_parser (and is_cloudevents_document accepts lists), but both detect and parse delegate to parse_document, which rejects top-level JSON arrays — the adapter's detect returns no match (only the standalone sniffer reports cloudevents 0.85) and import currently fails; expected_detection records the intended contract for the detection-hardening work.",
+      "notes": "CloudEvents batch arrays are documented in cloudevents_parser (and is_cloudevents_document accepts lists), but both detect and parse delegate to parse_document, which rejects top-level JSON arrays \u2014 the adapter's detect returns no match (only the standalone sniffer reports cloudevents 0.85) and import currently fails; expected_detection records the intended contract for the detection-hardening work.",
       "rung": "composition"
     },
     {
@@ -2646,7 +2652,7 @@
       "provenance": "Hand-written billing IDL that #includes common/money.idl, which is not provided, so Common::Money can never resolve.",
       "failure_class": "unresolvable-ref",
       "expected_error_code": "FORMAT_MISMATCH",
-      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 — the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
+      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 \u2014 the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
     },
     {
       "path": "corba-idl/negative/03-truncated-inventory.idl",
@@ -2708,6 +2714,240 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "The hand-authored corba-idl/03-minimal-echo.idl re-encoded as UTF-16 (BOM + NUL bytes) with Python text.encode('utf-16').",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
+      "path": "discovery/01-bookstore-api.json",
+      "format": "discovery",
+      "adapter_key": "discovery",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "discovery",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "resources",
+        "nested-resources",
+        "methods",
+        "parameters",
+        "enums",
+        "schemas",
+        "refs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "typical"
+    },
+    {
+      "path": "discovery/02-minimal-ping.json",
+      "format": "discovery",
+      "adapter_key": "discovery",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "discovery",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "resources",
+        "methods",
+        "schemas"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "minimal"
+    },
+    {
+      "path": "discovery/03-components-refs.json",
+      "format": "discovery",
+      "adapter_key": "discovery",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "discovery",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "resources",
+        "nested-resources",
+        "schemas",
+        "refs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "composition"
+    },
+    {
+      "path": "discovery/04-stress-widgets.json",
+      "format": "discovery",
+      "adapter_key": "discovery",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "discovery",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "resources",
+        "methods",
+        "stress"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "stress"
+    },
+    {
+      "path": "discovery/05-webfonts-sample.json",
+      "format": "discovery",
+      "adapter_key": "discovery",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "discovery",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "resources",
+        "methods",
+        "enums",
+        "schemas",
+        "refs"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored faithful reconstruction of the shape of the Google Web Fonts Discovery document; no third-party text copied.",
+      "rung": "real-world"
+    },
+    {
+      "path": "discovery/06-booking-service.json",
+      "format": "discovery",
+      "adapter_key": "discovery",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "discovery",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "resources",
+        "methods",
+        "parameters",
+        "headers",
+        "schemas"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "typical"
+    },
+    {
+      "path": "discovery/negative/01-syntactic-unclosed-brace.json",
+      "format": "discovery",
+      "adapter_key": "discovery",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "discovery",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "unclosed-brace"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal Discovery ping document, hand-authored, with the top-level closing brace removed so the JSON never closes.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "discovery/negative/02-semantic-missing-name.json",
+      "format": "discovery",
+      "adapter_key": "discovery",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "discovery",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "missing-name"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Well-formed JSON Discovery ping document, hand-authored, whose required name and title members were deleted.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "discovery/negative/03-truncated-mid-token.json",
+      "format": "discovery",
+      "adapter_key": "discovery",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "discovery",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "mid-token-cut"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Byte-truncated copy of discovery/02-minimal-ping.json cut at 55%, mid-way through the document.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "discovery/negative/04-wrong-format-protobuf.proto",
+      "format": "discovery",
+      "adapter_key": "discovery",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "discovery",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "protobuf-idl"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Small valid proto3 ping service, hand-authored, offered to the discovery adapter; the grpc adapter claims it, so the pipeline grounds FORMAT_MISMATCH.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "discovery/negative/05-encoding-utf16.json",
+      "format": "discovery",
+      "adapter_key": "discovery",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "discovery",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf16"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal Discovery ping document encoded as UTF-16 LE rather than UTF-8.",
       "failure_class": "encoding",
       "expected_error_code": "INPUT_ENCODING_INVALID"
     },
@@ -3218,7 +3458,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "FIX Orchestra XML is not yet recognized — currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract.",
+      "notes": "FIX Orchestra XML is not yet recognized \u2014 currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract.",
       "rung": "composition"
     },
     {
@@ -7970,7 +8210,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96), `oncrpc` (0.95), and `smithy` (0.95) above `thrift` (0.95) — the Thrift `union` block also matches the FlatBuffers union marker; expected_detection records the intended winner for the detection-hardening work.",
+      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96), `oncrpc` (0.95), and `smithy` (0.95) above `thrift` (0.95) \u2014 the Thrift `union` block also matches the FlatBuffers union marker; expected_detection records the intended winner for the detection-hardening work.",
       "rung": "stress"
     },
     {
@@ -9706,6 +9946,9 @@
     },
     "corbaidl": {
       "multi-file": "CorbaIdlImportSource.parse_fileset only parses the fileset root and never resolves other members (and is_corbaidl rejects any text containing an include directive), so a multi-file set demonstrates nothing beyond a single file."
+    },
+    "discovery": {
+      "multi-file": "DiscoveryImportSource.parse_fileset only parses the root member and Discovery documents do not resolve cross-file $ref targets, so a multi-file set exercises nothing."
     },
     "edix12": {
       "multi-file": "EdiX12ImportSource.parse_fileset only parses the fileset root and resolves no references across members, so a multi-file set demonstrates nothing beyond a single interchange."

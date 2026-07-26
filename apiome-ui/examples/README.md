@@ -4,7 +4,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Generated file — do not edit.** This README is the human index of [`corpus.manifest.json`](corpus.manifest.json) (schema: [`corpus.schema.json`](corpus.schema.json)). Edit the manifest, then run `python3 scripts/generate_examples_readme.py` from the repo root; CI fails on drift.
 
-The corpus holds **442 files** across **36 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **453 files** across **37 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -20,6 +20,7 @@ The corpus holds **442 files** across **36 format directories**. Every file has 
 | --- | --- | --- | --- | --- |
 | `api-blueprint/` | API Blueprint | rest | `FORMAT: 1A` metadata line | 11 |
 | `arazzo/` | Arazzo workflows | rest | top-level `arazzo:` version | 11 |
+| `discovery/` | Google API Discovery | rest | `kind: discovery#restDescription` / `discoveryVersion` | 11 |
 | `odata/` | OData v4 (EDMX) | rest | `<edmx:Edmx>` root | 12 |
 | `openapi/` | OpenAPI 3.x | rest | top-level `openapi:` version | 38 |
 | `postman/` | Postman v2.1 | rest | collection `info.schema` URL | 11 |
@@ -282,6 +283,22 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/05-encoding-utf16-echo.idl` | — | `corbaidl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16-bytes` |
 
 > ⚠ **`negative/02-unresolvable-ref-missing-include.idl`** — is_corbaidl hard-rejects any text containing `include "` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 — the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code.
+
+### `discovery/` — Google API Discovery
+
+| File | Rung | Expected detection | Class | Features |
+| --- | --- | --- | --- | --- |
+| `01-bookstore-api.json` | typical | `discovery` ≥ 0.95 | valid | `resources`, `nested-resources`, `methods`, `parameters`, `enums`, `schemas`, `refs` |
+| `02-minimal-ping.json` | minimal | `discovery` ≥ 0.95 | valid | `resources`, `methods`, `schemas` |
+| `03-components-refs.json` | composition | `discovery` ≥ 0.95 | valid | `resources`, `nested-resources`, `schemas`, `refs` |
+| `04-stress-widgets.json` | stress | `discovery` ≥ 0.95 | valid | `resources`, `methods`, `stress` |
+| `05-webfonts-sample.json` | real-world | `discovery` ≥ 0.95 | valid | `resources`, `methods`, `enums`, `schemas`, `refs` |
+| `06-booking-service.json` | typical | `discovery` ≥ 0.95 | valid | `resources`, `methods`, `parameters`, `headers`, `schemas` |
+| `negative/01-syntactic-unclosed-brace.json` | — | `discovery` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-brace` |
+| `negative/02-semantic-missing-name.json` | — | `discovery` (no guarantee) | invalid | `negative`, `semantic`, `missing-name` |
+| `negative/03-truncated-mid-token.json` | — | `discovery` (no guarantee) | invalid | `negative`, `truncated`, `mid-token-cut` |
+| `negative/04-wrong-format-protobuf.proto` | — | `discovery` (no guarantee) | invalid | `negative`, `wrong-format`, `protobuf-idl` |
+| `negative/05-encoding-utf16.json` | — | `discovery` (no guarantee) | invalid | `negative`, `encoding`, `utf16` |
 
 ### `edi-x12/` — EDI ASC X12
 
@@ -846,6 +863,7 @@ Rungs that do not apply to an adapter's format, with the manifest-recorded justi
 | `cloudevents` | multi-file | CloudEventsImportSource.parse_fileset parses only the root member and resolves nothing across files, so a genuine multi-file set is not importable. |
 | `cobolcopybook` | multi-file | COBOL COPY statements are not resolved and the cobolcopybook adapter's parse_fileset parses only the root member, so a multi-file set demonstrates nothing. |
 | `corbaidl` | multi-file | CorbaIdlImportSource.parse_fileset only parses the fileset root and never resolves other members (and is_corbaidl rejects any text containing an include directive), so a multi-file set demonstrates nothing beyond a single file. |
+| `discovery` | multi-file | DiscoveryImportSource.parse_fileset only parses the root member and Discovery documents do not resolve cross-file $ref targets, so a multi-file set exercises nothing. |
 | `edix12` | multi-file | EdiX12ImportSource.parse_fileset only parses the fileset root and resolves no references across members, so a multi-file set demonstrates nothing beyond a single interchange. |
 | `fhir` | multi-file | The fhir adapter's parse_fileset only parses the root member and resolves nothing across members, so a genuine multi-file set does not apply. |
 | `fix` | multi-file | FIX tag=value messages have no cross-file reference mechanism and the fix adapter's parse_fileset parses only the root member, so a multi-file set demonstrates nothing. |

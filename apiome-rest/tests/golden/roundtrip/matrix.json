@@ -3768,7 +3768,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.status', added operation 'c38b4537-bbfd-494f-acb1-b1b84ce11b42', changed root '', added service 'com.example.status', removed type 'PersonModule.PhoneNumberType', removed type 'PersonModule.Status'; overclaim: OK 'PersonModule.Address', OK 'PersonModule.Person', OK 'PersonModule.PhoneNumber', OK 'PersonModule.PhoneNumberType', OK 'PersonModule.Status')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.status', added operation 'c6fd2185-bd74-4372-a8eb-07083a2da05f', changed root '', added service 'com.example.status', removed type 'PersonModule.PhoneNumberType', removed type 'PersonModule.Status'; overclaim: OK 'PersonModule.Address', OK 'PersonModule.Person', OK 'PersonModule.PhoneNumber', OK 'PersonModule.PhoneNumberType', OK 'PersonModule.Status')",
       "source_format": "asn1",
       "status": "xfail",
       "unexplained": [
@@ -3780,7 +3780,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "c38b4537-bbfd-494f-acb1-b1b84ce11b42"
+          "key": "c6fd2185-bd74-4372-a8eb-07083a2da05f"
         },
         {
           "change": "changed",
@@ -3831,7 +3831,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-kp12gvzd/PersonModule.proto:17:3:field PersonModule.Person.id: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-4ny5ssue/PersonModule.proto:17:3:field PersonModule.Person.id: unknown type .integer)",
       "source_format": "asn1",
       "status": "xfail",
       "unexplained": []
@@ -4699,7 +4699,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-dw0mn37x/PersonModule.proto:16:3:field PersonModule.Person.id: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-6c7vg6pz/PersonModule.proto:16:3:field PersonModule.Person.id: unknown type .integer)",
       "source_format": "asn1",
       "status": "xfail",
       "unexplained": []
@@ -6079,7 +6079,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.user', added operation 'a603351a-2e98-4ed1-a670-bdbabab5078d', changed root '', added service 'com.example.user', removed type 'com.example.user.Status'; overclaim: OK 'com.example.user.Status', OK 'com.example.user.User')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.user', added operation '15e4f02d-0167-4a71-a9e4-bfd65fcac4b0', changed root '', added service 'com.example.user', removed type 'com.example.user.Status'; overclaim: OK 'com.example.user.Status', OK 'com.example.user.User')",
       "source_format": "avro",
       "status": "xfail",
       "unexplained": [
@@ -6091,7 +6091,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "a603351a-2e98-4ed1-a670-bdbabab5078d"
+          "key": "15e4f02d-0167-4a71-a9e4-bfd65fcac4b0"
         },
         {
           "change": "changed",
@@ -7498,7 +7498,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-33u12lwj/api.proto:5:29:tag number 0 must be greater than zero\n/tmp/apiome-proto-33u12lwj/api.proto:11:15:tag number 0 must be greater than zero\n/tmp/apiome-proto-33u12lwj/api.proto:21:21:tag number 0 must be greater than zero\n/tmp/apiome-proto-33u12lwj/api.proto:26:15:tag number 0 must be greater than zero)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-wsag5kzy/api.proto:5:29:tag number 0 must be greater than zero\n/tmp/apiome-proto-wsag5kzy/api.proto:11:15:tag number 0 must be greater than zero\n/tmp/apiome-proto-wsag5kzy/api.proto:21:21:tag number 0 must be greater than zero\n/tmp/apiome-proto-wsag5kzy/api.proto:26:15:tag number 0 must be greater than zero)",
       "source_format": "capnproto",
       "status": "xfail",
       "unexplained": []
@@ -8863,7 +8863,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-irrpyah2/api.proto:4:29:tag number 0 must be greater than zero\n/tmp/apiome-proto-irrpyah2/api.proto:10:15:tag number 0 must be greater than zero\n/tmp/apiome-proto-irrpyah2/api.proto:20:21:tag number 0 must be greater than zero\n/tmp/apiome-proto-irrpyah2/api.proto:25:15:tag number 0 must be greater than zero)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-vnzingxs/api.proto:4:29:tag number 0 must be greater than zero\n/tmp/apiome-proto-vnzingxs/api.proto:10:15:tag number 0 must be greater than zero\n/tmp/apiome-proto-vnzingxs/api.proto:20:21:tag number 0 must be greater than zero\n/tmp/apiome-proto-vnzingxs/api.proto:25:15:tag number 0 must be greater than zero)",
       "source_format": "capnproto",
       "status": "xfail",
       "unexplained": []
@@ -9975,7 +9975,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-t9pcuynx/api.proto:10:3:field OrderCreated.total: unknown type .number\n/tmp/apiome-proto-t9pcuynx/com/example/order.proto:9:23:method com.example.order.com_example_order_created.A234_1234_1234: unknown request type .OrderCreated)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-alkbs3cc/api.proto:10:3:field OrderCreated.total: unknown type .number\n/tmp/apiome-proto-alkbs3cc/com/example/order.proto:9:23:method com.example.order.com_example_order_created.A234_1234_1234: unknown request type .OrderCreated)",
       "source_format": "cloudevents",
       "status": "xfail",
       "unexplained": []
@@ -10522,7 +10522,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ovq0paxu/api.proto:9:3:field OrderCreated.total: unknown type .number\n/tmp/apiome-proto-ovq0paxu/com/example/order.proto:8:23:method com.example.order.com_example_order_created.A234_1234_1234: unknown request type .OrderCreated)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-8g9vgpe8/api.proto:9:3:field OrderCreated.total: unknown type .number\n/tmp/apiome-proto-8g9vgpe8/com/example/order.proto:8:23:method com.example.order.com_example_order_created.A234_1234_1234: unknown request type .OrderCreated)",
       "source_format": "cloudevents",
       "status": "xfail",
       "unexplained": []
@@ -10949,7 +10949,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.customer.record', added operation '7611276f-b68b-4589-98e3-6af06f81f9ae', changed root '', added service 'com.example.customer.record'; overclaim: OK 'CUSTOMER-RECORD.CUSTOMER-RECORD')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.customer.record', added operation '4d5d5728-ce20-4f04-aa8a-b4cc8680cce1', changed root '', added service 'com.example.customer.record'; overclaim: OK 'CUSTOMER-RECORD.CUSTOMER-RECORD')",
       "source_format": "cobolcopybook",
       "status": "xfail",
       "unexplained": [
@@ -10961,7 +10961,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "7611276f-b68b-4589-98e3-6af06f81f9ae"
+          "key": "4d5d5728-ce20-4f04-aa8a-b4cc8680cce1"
         },
         {
           "change": "changed",
@@ -11002,7 +11002,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-4n7_08ft/CUSTOMER_RECORD.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-4n7_08ft/CUSTOMER_RECORD.proto:4:17:syntax error: unexpected '-'\n/tmp/apiome-proto-4n7_08ft/CUSTOMER_RECORD.proto:13:12:syntax error: unexpected '-'\n/tmp/apiome-proto-4n7_08ft/CUSTOMER_RECORD.proto:13:24:syntax error: unexpected '-'\n/tmp/apiome-proto-4n7_08ft/CUSTOMER_RECORD.proto:16:21:syntax error: unexpected '-'\n/tmp/apiome-proto-4n7_08ft/CUSTOMER_RECORD.proto:16:33:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-0qlt86cj/CUSTOMER_RECORD.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-0qlt86cj/CUSTOMER_RECORD.proto:4:17:syntax error: unexpected '-'\n/tmp/apiome-proto-0qlt86cj/CUSTOMER_RECORD.proto:13:12:syntax error: unexpected '-'\n/tmp/apiome-proto-0qlt86cj/CUSTOMER_RECORD.proto:13:24:syntax error: unexpected '-'\n/tmp/apiome-proto-0qlt86cj/CUSTOMER_RECORD.proto:16:21:syntax error: unexpected '-'\n/tmp/apiome-proto-0qlt86cj/CUSTOMER_RECORD.proto:16:33:syntax error: unexpected '-')",
       "source_format": "cobolcopybook",
       "status": "xfail",
       "unexplained": []
@@ -11433,7 +11433,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-mfuzo3rb/CUSTOMER_RECORD.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-mfuzo3rb/CUSTOMER_RECORD.proto:3:17:syntax error: unexpected '-'\n/tmp/apiome-proto-mfuzo3rb/CUSTOMER_RECORD.proto:12:12:syntax error: unexpected '-'\n/tmp/apiome-proto-mfuzo3rb/CUSTOMER_RECORD.proto:12:24:syntax error: unexpected '-'\n/tmp/apiome-proto-mfuzo3rb/CUSTOMER_RECORD.proto:15:21:syntax error: unexpected '-'\n/tmp/apiome-proto-mfuzo3rb/CUSTOMER_RECORD.proto:15:33:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-u9ggkx3s/CUSTOMER_RECORD.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-u9ggkx3s/CUSTOMER_RECORD.proto:3:17:syntax error: unexpected '-'\n/tmp/apiome-proto-u9ggkx3s/CUSTOMER_RECORD.proto:12:12:syntax error: unexpected '-'\n/tmp/apiome-proto-u9ggkx3s/CUSTOMER_RECORD.proto:12:24:syntax error: unexpected '-'\n/tmp/apiome-proto-u9ggkx3s/CUSTOMER_RECORD.proto:15:21:syntax error: unexpected '-'\n/tmp/apiome-proto-u9ggkx3s/CUSTOMER_RECORD.proto:15:33:syntax error: unexpected '-')",
       "source_format": "cobolcopybook",
       "status": "xfail",
       "unexplained": []
@@ -15752,7 +15752,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_q6g3ahc/Banking.proto:31:19:method Banking.Bank.getAccount: unknown request type .string)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-16mohxqq/Banking.proto:31:19:method Banking.Bank.getAccount: unknown request type .string)",
       "source_format": "corbaidl",
       "status": "xfail",
       "unexplained": []
@@ -17042,7 +17042,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-fovy72l9/Banking.proto:30:19:method Banking.Bank.getAccount: unknown request type .string)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-wl22q3pt/Banking.proto:30:19:method Banking.Bank.getAccount: unknown request type .string)",
       "source_format": "corbaidl",
       "status": "xfail",
       "unexplained": []
@@ -17955,6 +17955,2523 @@
       "unexplained": []
     },
     {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 11,
+      "emit_format": "apiblueprint",
+      "emit_key": "apiblueprint",
+      "loss_approx": 1,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 12,
+      "matched_count": 5,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}/reviews",
+          "kind": "ok",
+          "message": "operation carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/checkouts",
+          "kind": "ok",
+          "message": "operation carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /bookstore/v1/books', changed operation 'GET /bookstore/v1/books/{bookId}', changed operation 'GET /bookstore/v1/books/{b... (observed: unexplained: changed operation 'GET /bookstore/v1/books', changed operation 'GET /bookstore/v1/books/{bookId}', changed operation 'GET /bookstore/v1/books/{bookId}/reviews', changed operation 'POST /bookstore/v1/books', changed operation 'POST /bookstore/v1/checkouts', changed root ''; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest', OK 'GET /bookstore/v1/books', OK 'GET /bookstore/v1/books/{bookId}', OK 'GET /bookstore/v1/books/{bookId}/reviews', OK 'POST /bookstore/v1/books', OK 'POST /bookstore/v1/checkouts')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 17,
+      "emit_format": "arazzo",
+      "emit_key": "arazzo",
+      "loss_approx": 1,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}/reviews",
+          "kind": "ok",
+          "message": "operation carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/checkouts",
+          "kind": "ok",
+          "message": "operation carried to Arazzo",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: added operation 'Bookstore API#bookstore.books.get', added operation 'Bookstore API#bookstore.books.insert', added operation 'Bookstore API#book... (observed: unexplained: added operation 'Bookstore API#bookstore.books.get', added operation 'Bookstore API#bookstore.books.insert', added operation 'Bookstore API#bookstore.books.list', added operation 'Bookstore API#bookstore.books.reviews.list', added operation 'Bookstore API#bookstore.checkouts.create', removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{bookId}/reviews', removed operation 'POST /bookstore/v1/books', removed operation 'POST /bookstore/v1/checkouts', changed root '', changed service 'Bookstore API', removed type 'Author', removed type 'Book', removed type 'BookList', removed type 'CheckoutReceipt', removed type 'CheckoutRequest'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest', OK 'GET /bookstore/v1/books', OK 'GET /bookstore/v1/books/{bookId}', OK 'GET /bookstore/v1/books/{bookId}/reviews', OK 'POST /bookstore/v1/books', OK 'POST /bookstore/v1/checkouts')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Bookstore API#bookstore.books.get"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Bookstore API#bookstore.books.insert"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Bookstore API#bookstore.books.list"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Bookstore API#bookstore.books.reviews.list"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Bookstore API#bookstore.checkouts.create"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "changed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Author"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Book"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "BookList"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutReceipt"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutRequest"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 17,
+      "emit_format": "asn1",
+      "emit_key": "asn1",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 5,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to ASN.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to ASN.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to ASN.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to ASN.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to ASN.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed root '', removed service 'Bookstore API', removed type 'Author', removed type 'Book', removed type 'BookList', added type 'BookstoreAPI.... (observed: unexplained: changed root '', removed service 'Bookstore API', removed type 'Author', removed type 'Book', removed type 'BookList', added type 'BookstoreAPI.Author', added type 'BookstoreAPI.Book', added type 'BookstoreAPI.BookList', added type 'BookstoreAPI.CheckoutReceipt', added type 'BookstoreAPI.CheckoutRequest', removed type 'CheckoutReceipt', removed type 'CheckoutRequest'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Author"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Book"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "BookList"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "BookstoreAPI.Author"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "BookstoreAPI.Book"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "BookstoreAPI.BookList"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "BookstoreAPI.CheckoutReceipt"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "BookstoreAPI.CheckoutRequest"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutReceipt"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutRequest"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "asyncapi-3",
+      "emit_key": "asyncapi",
+      "loss_approx": 5,
+      "loss_drop": 0,
+      "loss_ok": 5,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Re-import failed: The AsyncAPI parser tool is not available in this runtime (discovery->asyncapi); AsyncAPI import is unavailable here (see the bundled toolc... (observed: Re-import failed: The AsyncAPI parser tool is not available in this runtime (discovery->asyncapi); AsyncAPI import is unavailable here (see the bundled toolchain packaging, MFI-5.2).)",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 12,
+      "emit_format": "avro",
+      "emit_key": "avro",
+      "loss_approx": 12,
+      "loss_drop": 6,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 7,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to Apache Avro",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to Apache Avro",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to Apache Avro",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to Apache Avro",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to Apache Avro",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed root '', removed service 'Bookstore API', removed type 'BookList', removed type 'CheckoutReceipt', removed type 'CheckoutRequest'; overc... (observed: unexplained: changed root '', removed service 'Bookstore API', removed type 'BookList', removed type 'CheckoutReceipt', removed type 'CheckoutRequest'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "BookList"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutReceipt"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutRequest"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 12,
+      "emit_format": "capnproto",
+      "emit_key": "capnproto",
+      "loss_approx": 1,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 12,
+      "matched_count": 5,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}/reviews",
+          "kind": "ok",
+          "message": "operation carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/checkouts",
+          "kind": "ok",
+          "message": "operation carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{b... (observed: unexplained: removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{bookId}/reviews', removed operation 'POST /bookstore/v1/books', removed operation 'POST /bookstore/v1/checkouts', changed root '', removed service 'Bookstore API'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest', OK 'GET /bookstore/v1/books', OK 'GET /bookstore/v1/books/{bookId}', OK 'GET /bookstore/v1/books/{bookId}/reviews', OK 'POST /bookstore/v1/books', OK 'POST /bookstore/v1/checkouts')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "cloudevents",
+      "emit_key": "cloudevents",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: type object 'LossKind' has no attribute 'DROP' (observed: Emit failed: type object 'LossKind' has no attribute 'DROP')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "cobolcopybook",
+      "emit_key": "cobolcopybook",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: COBOL copybook export requires `cobolcopybook_tree` extras from import (observed: Emit failed: COBOL copybook export requires `cobolcopybook_tree` extras from import)",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "connectrpc",
+      "emit_key": "connectrpc",
+      "loss_approx": 13,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-98byvquv/api.proto:21:3:field BookList.totalItems: unknown type .in... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-22t4909r/api.proto:21:3:field BookList.totalItems: unknown type .integer)",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 17,
+      "emit_format": "corbaidl",
+      "emit_key": "corbaidl",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{b... (observed: unexplained: removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{bookId}/reviews', removed operation 'POST /bookstore/v1/books', removed operation 'POST /bookstore/v1/checkouts', changed root '', removed service 'Bookstore API', removed type 'Author', removed type 'Book', removed type 'BookList', removed type 'CheckoutReceipt', removed type 'CheckoutRequest', added type 'Exported.Author', added type 'Exported.Book', added type 'Exported.BookList', added type 'Exported.CheckoutReceipt', added type 'Exported.CheckoutRequest'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Author"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Book"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "BookList"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutReceipt"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutRequest"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.Author"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.Book"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.BookList"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.CheckoutReceipt"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.CheckoutRequest"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "edix12",
+      "emit_key": "edix12",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: EDI X12 export requires `x12_transactions` extras from import (observed: Emit failed: EDI X12 export requires `x12_transactions` extras from import)",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 17,
+      "emit_format": "fhir",
+      "emit_key": "fhir",
+      "loss_approx": 1,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}/reviews",
+          "kind": "ok",
+          "message": "operation carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/checkouts",
+          "kind": "ok",
+          "message": "operation carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: added operation 'GET /Author', added operation 'GET /Author/{id}', removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstor... (observed: unexplained: added operation 'GET /Author', added operation 'GET /Author/{id}', removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{bookId}/reviews', added operation 'POST /Author', removed operation 'POST /bookstore/v1/books', removed operation 'POST /bookstore/v1/checkouts', changed root '', added service 'Author.Author', removed service 'Bookstore API', removed type 'Author', added type 'Author.Author', removed type 'Book', removed type 'BookList', removed type 'CheckoutReceipt', removed type 'CheckoutRequest'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest', OK 'GET /bookstore/v1/books', OK 'GET /bookstore/v1/books/{bookId}', OK 'GET /bookstore/v1/books/{bookId}/reviews', OK 'POST /bookstore/v1/books', OK 'POST /bookstore/v1/checkouts')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /Author"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /Author/{id}"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /Author"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Author.Author"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Author"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Author.Author"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Book"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "BookList"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutReceipt"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutRequest"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "fix",
+      "emit_key": "fix",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: FIX export requires `fix_fields` extras from import (observed: Emit failed: FIX export requires `fix_fields` extras from import)",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 12,
+      "emit_format": "flatbuffers",
+      "emit_key": "flatbuffers",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 10,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to FlatBuffers",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to FlatBuffers",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to FlatBuffers",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to FlatBuffers",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to FlatBuffers",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed root '', removed service 'Bookstore API'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest' (observed: unexplained: changed root '', removed service 'Bookstore API'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "graphql",
+      "emit_key": "graphql",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 5,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Query fields cannot be resolved. (observed: Emit failed: Query fields cannot be resolved. )",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "hl7v2",
+      "emit_key": "hl7v2",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: HL7 v2 export requires `hl7v2_segments` extras from import (observed: Emit failed: HL7 v2 export requires `hl7v2_segments` extras from import)",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "iso20022",
+      "emit_key": "iso20022",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: ISO 20022 export requires `iso20022_tree` extras from import (observed: Emit failed: ISO 20022 export requires `iso20022_tree` extras from import)",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "iso8583",
+      "emit_key": "iso8583",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: ISO 8583 export requires `iso8583_data_elements` extras from import (observed: Emit failed: ISO 8583 export requires `iso8583_data_elements` extras from import)",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 10,
+      "emit_format": "json-schema",
+      "emit_key": "json-schema",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 7,
+      "overclaims": [
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to JSON Schema",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to JSON Schema",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed root '', removed service 'Bookstore API', added type 'Bookstore API'; overclaim: OK 'Book', OK 'BookList' (observed: unexplained: changed root '', removed service 'Bookstore API', added type 'Bookstore API'; overclaim: OK 'Book', OK 'BookList')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Bookstore API"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 10,
+      "emit_format": "jtd",
+      "emit_key": "jtd",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 7,
+      "overclaims": [
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to JSON Type Definition",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to JSON Type Definition",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed root '', removed service 'Bookstore API', added type 'Bookstore API'; overclaim: OK 'Book', OK 'BookList' (observed: unexplained: changed root '', removed service 'Bookstore API', added type 'Bookstore API'; overclaim: OK 'Book', OK 'BookList')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Bookstore API"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 21,
+      "emit_format": "odata",
+      "emit_key": "odata",
+      "loss_approx": 1,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}/reviews",
+          "kind": "ok",
+          "message": "operation carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/checkouts",
+          "kind": "ok",
+          "message": "operation carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: added operation 'GET /Bookstore API', added operation 'GET /Bookstore API({key})', removed operation 'GET /bookstore/v1/books', removed operatio... (observed: unexplained: added operation 'GET /Bookstore API', added operation 'GET /Bookstore API({key})', removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{bookId}/reviews', added operation 'POST /Bookstore API', removed operation 'POST /bookstore/v1/books', removed operation 'POST /bookstore/v1/checkouts', changed root '', removed service 'Bookstore API', added service 'Bookstore API.Bookstore API', removed type 'Author', removed type 'Book', removed type 'BookList', added type 'Bookstore API.Author', added type 'Bookstore API.Book', added type 'Bookstore API.BookList', added type 'Bookstore API.CheckoutReceipt', added type 'Bookstore API.CheckoutRequest', removed type 'CheckoutReceipt', removed type 'CheckoutRequest'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest', OK 'GET /bookstore/v1/books', OK 'GET /bookstore/v1/books/{bookId}', OK 'GET /bookstore/v1/books/{bookId}/reviews', OK 'POST /bookstore/v1/books', OK 'POST /bookstore/v1/checkouts')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /Bookstore API"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /Bookstore API({key})"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /Bookstore API"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "Bookstore API.Bookstore API"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Author"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Book"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "BookList"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Bookstore API.Author"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Bookstore API.Book"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Bookstore API.BookList"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Bookstore API.CheckoutReceipt"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Bookstore API.CheckoutRequest"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutReceipt"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutRequest"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "oncrpc",
+      "emit_key": "oncrpc",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Re-import failed: Content does not appear to be ONC RPC / XDR RPCL (discovery->oncrpc) (observed: Re-import failed: Content does not appear to be ONC RPC / XDR RPCL (discovery->oncrpc))",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 8,
+      "emit_format": "openapi-3.1",
+      "emit_key": "openapi",
+      "loss_approx": 0,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "GET /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to OpenAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to OpenAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}/reviews",
+          "kind": "ok",
+          "message": "operation carried to OpenAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to OpenAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/checkouts",
+          "kind": "ok",
+          "message": "operation carried to OpenAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /bookstore/v1/books', changed operation 'GET /bookstore/v1/books/{bookId}', changed operation 'GET /bookstore/v1/books/{b... (observed: unexplained: changed operation 'GET /bookstore/v1/books', changed operation 'GET /bookstore/v1/books/{bookId}', changed operation 'GET /bookstore/v1/books/{bookId}/reviews', changed operation 'POST /bookstore/v1/books', changed operation 'POST /bookstore/v1/checkouts', changed root '', removed service 'Bookstore API', added service 'default'; overclaim: OK 'GET /bookstore/v1/books', OK 'GET /bookstore/v1/books/{bookId}', OK 'GET /bookstore/v1/books/{bookId}/reviews', OK 'POST /bookstore/v1/books', OK 'POST /bookstore/v1/checkouts')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "default"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 6,
+      "emit_format": "openrpc",
+      "emit_key": "openrpc",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 5,
+      "overclaims": [],
+      "reason": "unexplained: changed root '' (observed: unexplained: changed root '')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 12,
+      "emit_format": "postman",
+      "emit_key": "postman",
+      "loss_approx": 1,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 0,
+      "matched_count": 1,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to Postman",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to Postman",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to Postman",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to Postman",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to Postman",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to Postman",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to Postman",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}/reviews",
+          "kind": "ok",
+          "message": "operation carried to Postman",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to Postman",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/checkouts",
+          "kind": "ok",
+          "message": "operation carried to Postman",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /bookstore/v1/books', changed operation 'GET /bookstore/v1/books/{bookId}', changed operation 'GET /bookstore/v1/books/{b... (observed: unexplained: changed operation 'GET /bookstore/v1/books', changed operation 'GET /bookstore/v1/books/{bookId}', changed operation 'GET /bookstore/v1/books/{bookId}/reviews', changed operation 'POST /bookstore/v1/books', changed operation 'POST /bookstore/v1/checkouts', changed root '', removed type 'Author', removed type 'BookList', added type 'Checkout', removed type 'CheckoutReceipt', removed type 'CheckoutRequest'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest', OK 'GET /bookstore/v1/books', OK 'GET /bookstore/v1/books/{bookId}', OK 'GET /bookstore/v1/books/{bookId}/reviews', OK 'POST /bookstore/v1/books', OK 'POST /bookstore/v1/checkouts')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Author"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "BookList"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Checkout"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutReceipt"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutRequest"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "proto3",
+      "emit_key": "protobuf",
+      "loss_approx": 13,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-c_gd19la/api.proto:20:3:field BookList.totalItems: unknown type .in... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-kmeqlosq/api.proto:20:3:field BookList.totalItems: unknown type .integer)",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 11,
+      "emit_format": "raml",
+      "emit_key": "raml",
+      "loss_approx": 1,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 12,
+      "matched_count": 5,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}/reviews",
+          "kind": "ok",
+          "message": "operation carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/checkouts",
+          "kind": "ok",
+          "message": "operation carried to RAML",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /bookstore/v1/books', changed operation 'GET /bookstore/v1/books/{bookId}', changed operation 'GET /bookstore/v1/books/{b... (observed: unexplained: changed operation 'GET /bookstore/v1/books', changed operation 'GET /bookstore/v1/books/{bookId}', changed operation 'GET /bookstore/v1/books/{bookId}/reviews', changed operation 'POST /bookstore/v1/books', changed operation 'POST /bookstore/v1/checkouts', changed root ''; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest', OK 'GET /bookstore/v1/books', OK 'GET /bookstore/v1/books/{bookId}', OK 'GET /bookstore/v1/books/{bookId}/reviews', OK 'POST /bookstore/v1/books', OK 'POST /bookstore/v1/checkouts')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 12,
+      "emit_format": "smithy",
+      "emit_key": "smithy",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 5,
+      "loss_synth": 0,
+      "matched_count": 1,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{b... (observed: unexplained: removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{bookId}/reviews', removed operation 'POST /bookstore/v1/books', removed operation 'POST /bookstore/v1/checkouts', changed root '', removed service 'Bookstore API', changed type 'Author', changed type 'BookList', changed type 'CheckoutReceipt', changed type 'CheckoutRequest'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "changed",
+          "entity": "type",
+          "key": "Author"
+        },
+        {
+          "change": "changed",
+          "entity": "type",
+          "key": "BookList"
+        },
+        {
+          "change": "changed",
+          "entity": "type",
+          "key": "CheckoutReceipt"
+        },
+        {
+          "change": "changed",
+          "entity": "type",
+          "key": "CheckoutRequest"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 12,
+      "emit_format": "thrift",
+      "emit_key": "thrift",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 5,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{b... (observed: unexplained: removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{bookId}/reviews', removed operation 'POST /bookstore/v1/books', removed operation 'POST /bookstore/v1/checkouts', changed root '', removed service 'Bookstore API'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 17,
+      "emit_format": "typespec",
+      "emit_key": "typespec",
+      "loss_approx": 1,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}/reviews",
+          "kind": "ok",
+          "message": "operation carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/checkouts",
+          "kind": "ok",
+          "message": "operation carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{b... (observed: unexplained: removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{bookId}/reviews', removed operation 'POST /bookstore/v1/books', removed operation 'POST /bookstore/v1/checkouts', changed root '', removed service 'Bookstore API', removed type 'Author', removed type 'Book', removed type 'BookList', removed type 'CheckoutReceipt', removed type 'CheckoutRequest', added type 'Exported.Author', added type 'Exported.Book', added type 'Exported.BookList', added type 'Exported.CheckoutReceipt', added type 'Exported.CheckoutRequest'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest', OK 'GET /bookstore/v1/books', OK 'GET /bookstore/v1/books/{bookId}', OK 'GET /bookstore/v1/books/{bookId}/reviews', OK 'POST /bookstore/v1/books', OK 'POST /bookstore/v1/checkouts')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Author"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Book"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "BookList"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutReceipt"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutRequest"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.Author"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.Book"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.BookList"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.CheckoutReceipt"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "Exported.CheckoutRequest"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "wadl",
+      "emit_key": "wadl",
+      "loss_approx": 1,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Re-import failed: Content does not appear to be a WADL document (observed: Re-import failed: Content does not appear to be a WADL document)",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 23,
+      "emit_format": "wsdl",
+      "emit_key": "wsdl",
+      "loss_approx": 1,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}/reviews",
+          "kind": "ok",
+          "message": "operation carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/checkouts",
+          "kind": "ok",
+          "message": "operation carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{b... (observed: unexplained: removed operation 'GET /bookstore/v1/books', removed operation 'GET /bookstore/v1/books/{bookId}', removed operation 'GET /bookstore/v1/books/{bookId}/reviews', removed operation 'POST /bookstore/v1/books', removed operation 'POST /bookstore/v1/checkouts', added operation 'http://example.com/service.Bookstore API.bookstore.books.get', added operation 'http://example.com/service.Bookstore API.bookstore.books.insert', added operation 'http://example.com/service.Bookstore API.bookstore.books.list', added operation 'http://example.com/service.Bookstore API.bookstore.books.reviews.list', added operation 'http://example.com/service.Bookstore API.bookstore.checkouts.create', changed root '', removed service 'Bookstore API', added service 'http://example.com/service.Bookstore API', removed type 'Author', removed type 'Book', removed type 'BookList', removed type 'CheckoutReceipt', removed type 'CheckoutRequest', added type 'http://example.com/service.Author', added type 'http://example.com/service.Book', added type 'http://example.com/service.BookList', added type 'http://example.com/service.CheckoutReceipt', added type 'http://example.com/service.CheckoutRequest'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest', OK 'GET /bookstore/v1/books', OK 'GET /bookstore/v1/books/{bookId}', OK 'GET /bookstore/v1/books/{bookId}/reviews', OK 'POST /bookstore/v1/books', OK 'POST /bookstore/v1/checkouts')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.Bookstore API.bookstore.books.get"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.Bookstore API.bookstore.books.insert"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.Bookstore API.bookstore.books.list"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.Bookstore API.bookstore.books.reviews.list"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.Bookstore API.bookstore.checkouts.create"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "http://example.com/service.Bookstore API"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Author"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Book"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "BookList"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutReceipt"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutRequest"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "http://example.com/service.Author"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "http://example.com/service.Book"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "http://example.com/service.BookList"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "http://example.com/service.CheckoutReceipt"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "http://example.com/service.CheckoutRequest"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "xmlrpc",
+      "emit_key": "xmlrpc",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: XML-RPC export requires at least one RPC operation (observed: Emit failed: XML-RPC export requires at least one RPC operation)",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 12,
+      "emit_format": "xsd",
+      "emit_key": "xsd",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 5,
+      "loss_synth": 12,
+      "matched_count": 10,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to XSD",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to XSD",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to XSD",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to XSD",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to XSD",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed root '', removed service 'Bookstore API'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest' (observed: unexplained: changed root '', removed service 'Bookstore API'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 0,
+      "emit_format": "zosconnect",
+      "emit_key": "zosconnect",
+      "loss_approx": 1,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 12,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: z/OS Connect export requires `zosconnect_descriptor` extras from import (observed: Emit failed: z/OS Connect export requires `zosconnect_descriptor` extras from import)",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
       "corpus_path": "edi-x12/01-850-purchase-order.edi",
       "diff_count": 6,
       "emit_format": "apiblueprint",
@@ -18215,7 +20732,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.x12.850', added operation 'bc39e0cd-f2c0-4f3b-8b3a-e470573201fc', changed root '', added service 'com.example.x12.850'; overclaim: OK 'X12-850.PO1', OK 'X12-850.TransactionSet850')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.x12.850', added operation '5d04b605-dd78-42b4-bd3a-8e679f0d10bf', changed root '', added service 'com.example.x12.850'; overclaim: OK 'X12-850.PO1', OK 'X12-850.TransactionSet850')",
       "source_format": "edix12",
       "status": "xfail",
       "unexplained": [
@@ -18227,7 +20744,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "bc39e0cd-f2c0-4f3b-8b3a-e470573201fc"
+          "key": "5d04b605-dd78-42b4-bd3a-8e679f0d10bf"
         },
         {
           "change": "changed",
@@ -18268,7 +20785,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-lntv1zhu/X12_850.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-lntv1zhu/X12_850.proto:4:12:syntax error: unexpected '-'\n/tmp/apiome-proto-lntv1zhu/X12_850.proto:30:16:syntax error: unexpected '-'\n/tmp/apiome-proto-lntv1zhu/X12_850.proto:30:17:invalid syntax in float value: 850.PO1)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-yk5pl1fj/X12_850.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-yk5pl1fj/X12_850.proto:4:12:syntax error: unexpected '-'\n/tmp/apiome-proto-yk5pl1fj/X12_850.proto:30:16:syntax error: unexpected '-'\n/tmp/apiome-proto-yk5pl1fj/X12_850.proto:30:17:invalid syntax in float value: 850.PO1)",
       "source_format": "edix12",
       "status": "xfail",
       "unexplained": []
@@ -18866,7 +21383,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-b4r9gldy/X12_850.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-b4r9gldy/X12_850.proto:3:12:syntax error: unexpected '-'\n/tmp/apiome-proto-b4r9gldy/X12_850.proto:29:16:syntax error: unexpected '-'\n/tmp/apiome-proto-b4r9gldy/X12_850.proto:29:17:invalid syntax in float value: 850.PO1)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-8ucyoykh/X12_850.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-8ucyoykh/X12_850.proto:3:12:syntax error: unexpected '-'\n/tmp/apiome-proto-8ucyoykh/X12_850.proto:29:16:syntax error: unexpected '-'\n/tmp/apiome-proto-8ucyoykh/X12_850.proto:29:17:invalid syntax in float value: 850.PO1)",
       "source_format": "edix12",
       "status": "xfail",
       "unexplained": []
@@ -19667,7 +22184,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-a4wssib4/Patient.proto:23:9:symbol \"Patient.Patient\" already defined at Patient.proto:11:9)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-lchhke73/Patient.proto:23:9:symbol \"Patient.Patient\" already defined at Patient.proto:11:9)",
       "source_format": "fhir",
       "status": "xfail",
       "unexplained": []
@@ -20446,7 +22963,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-3jji53so/Patient.proto:22:9:symbol \"Patient.Patient\" already defined at Patient.proto:10:9)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-z63ukzwt/Patient.proto:22:9:symbol \"Patient.Patient\" already defined at Patient.proto:10:9)",
       "source_format": "fhir",
       "status": "xfail",
       "unexplained": []
@@ -21215,7 +23732,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.executionreport.fix.4.4', added operation '49e288a3-7022-407c-957f-331439ea9404', changed root '', added service 'com.example.executionreport.fix.4.4'; overclaim: OK 'FIX.4.4.Message8')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.executionreport.fix.4.4', added operation '10781e78-71ae-4076-a911-0c0eb088308d', changed root '', added service 'com.example.executionreport.fix.4.4'; overclaim: OK 'FIX.4.4.Message8')",
       "source_format": "fix",
       "status": "xfail",
       "unexplained": [
@@ -21227,7 +23744,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "49e288a3-7022-407c-957f-331439ea9404"
+          "key": "10781e78-71ae-4076-a911-0c0eb088308d"
         },
         {
           "change": "changed",
@@ -21268,7 +23785,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ivcejllv/FIX/_4/_4.proto:4:12:invalid syntax in float value: .4.4\n/tmp/apiome-proto-ivcejllv/FIX/_4/_4.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-ivcejllv/FIX/_4/_4.proto:4:12:syntax error: unexpected error)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-5yax6672/FIX/_4/_4.proto:4:12:invalid syntax in float value: .4.4\n/tmp/apiome-proto-5yax6672/FIX/_4/_4.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-5yax6672/FIX/_4/_4.proto:4:12:syntax error: unexpected error)",
       "source_format": "fix",
       "status": "xfail",
       "unexplained": []
@@ -21737,7 +24254,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-vvy5lfp1/FIX/_4/_4.proto:3:12:invalid syntax in float value: .4.4\n/tmp/apiome-proto-vvy5lfp1/FIX/_4/_4.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-vvy5lfp1/FIX/_4/_4.proto:3:12:syntax error: unexpected error)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-l5nle_ci/FIX/_4/_4.proto:3:12:invalid syntax in float value: .4.4\n/tmp/apiome-proto-l5nle_ci/FIX/_4/_4.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-l5nle_ci/FIX/_4/_4.proto:3:12:syntax error: unexpected error)",
       "source_format": "fix",
       "status": "xfail",
       "unexplained": []
@@ -22351,7 +24868,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.example.game', added operation 'c3c8229d-3c57-41d9-979b-d463670fb915', changed root '', added service 'com.example.example.game', removed type 'example.game.Color'; overclaim: OK 'example.game.Color', OK 'example.game.Monster', OK 'example.game.Vec3', OK 'example.game.Weapon')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.example.game', added operation '6a4268c0-e0d5-48ad-a710-af1f81d0d593', changed root '', added service 'com.example.example.game', removed type 'example.game.Color'; overclaim: OK 'example.game.Color', OK 'example.game.Monster', OK 'example.game.Vec3', OK 'example.game.Weapon')",
       "source_format": "flatbuffers",
       "status": "xfail",
       "unexplained": [
@@ -22363,7 +24880,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "c3c8229d-3c57-41d9-979b-d463670fb915"
+          "key": "6a4268c0-e0d5-48ad-a710-af1f81d0d593"
         },
         {
           "change": "changed",
@@ -22409,7 +24926,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-vh4901t1/example/game.proto:14:3:field example.game.Monster.hp: unknown type .i16\n/tmp/apiome-proto-vh4901t1/example/game.proto:15:12:field example.game.Monster.inventory: unknown type .uint8\n/tmp/apiome-proto-vh4901t1/example/game.proto:16:3:field example.game.Monster.mana: unknown type .i16\n/tmp/apiome-proto-vh4901t1/example/game.proto:29:3:field example.game.Weapon.damage: unknown type .i16)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-gfbcb1hv/example/game.proto:14:3:field example.game.Monster.hp: unknown type .i16\n/tmp/apiome-proto-gfbcb1hv/example/game.proto:15:12:field example.game.Monster.inventory: unknown type .uint8\n/tmp/apiome-proto-gfbcb1hv/example/game.proto:16:3:field example.game.Monster.mana: unknown type .i16\n/tmp/apiome-proto-gfbcb1hv/example/game.proto:29:3:field example.game.Weapon.damage: unknown type .i16)",
       "source_format": "flatbuffers",
       "status": "xfail",
       "unexplained": []
@@ -23141,7 +25658,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-gch7foij/example/game.proto:13:3:field example.game.Monster.hp: unknown type .i16\n/tmp/apiome-proto-gch7foij/example/game.proto:14:12:field example.game.Monster.inventory: unknown type .uint8\n/tmp/apiome-proto-gch7foij/example/game.proto:15:3:field example.game.Monster.mana: unknown type .i16\n/tmp/apiome-proto-gch7foij/example/game.proto:28:3:field example.game.Weapon.damage: unknown type .i16)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-drxqfmui/example/game.proto:13:3:field example.game.Monster.hp: unknown type .i16\n/tmp/apiome-proto-drxqfmui/example/game.proto:14:12:field example.game.Monster.inventory: unknown type .uint8\n/tmp/apiome-proto-drxqfmui/example/game.proto:15:3:field example.game.Monster.mana: unknown type .i16\n/tmp/apiome-proto-drxqfmui/example/game.proto:28:3:field example.game.Weapon.damage: unknown type .i16)",
       "source_format": "flatbuffers",
       "status": "xfail",
       "unexplained": []
@@ -24036,7 +26553,7 @@
       "loss_synth": 16,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-hf3d0eo0/api.proto:9:3:field Dimensions.height: unknown type .Float\n/tmp/apiome-proto-hf3d0eo0/api.proto:11:3:field Dimensions.length: unknown type .Float\n/tmp/apiome-proto-hf3d0eo0/api.proto:13:3:field Dimensions.weight: unknown type .Float\n/tmp/apiome-proto-hf3d0eo0/api.proto:15:3:field Dimensions.width: unknown type .Float\n/tmp/apiome-proto-hf3d0eo0/api.proto:21:3:field Product.createdAt: unknown type .DateTime\n/tmp/apiome-proto-hf3d0eo0/api.proto:23:3:field Product.description: unknown type .String\n/tmp/apiome-proto-hf3d0eo0/api.proto:25:3:field Product.id: unknown type .ID\n/tmp/apiome-proto-hf3d0eo0/api.proto:27:3:field Product.inStock: unknown type .Boolean\n/tmp/apiome-proto-hf3d0eo0/api.proto:29:3:field Product.metadata: unknown type .JSON\n/tmp/apiome-proto-hf3d0eo0/api.proto:31:3:field Product.name: unknown type .String\n/tmp/apiome-proto-hf3d0eo0/api.proto:33:3:field Product.price: unknown type .Int\n/tmp/apiome-proto-hf3d0eo0/api.proto:35:3:field Product.priceFloat: unknown type .Float\n/tmp/apiome-proto-hf3d0eo0/api.proto:37:3:field Product.rating: unknown type .Float\n/tmp/apiome-proto-hf3d0eo0/api.proto:39:3:field Product.stockCount: unknown type .Int\n/tmp/apiome-proto-hf3d0eo0/api.proto:41:12:field Product.tags: unknown type .String\n/tmp/apiome-proto-hf3d0eo0/api.proto:43:3:field Product.updatedAt: unknown type .DateTime)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-wp3g4gej/api.proto:9:3:field Dimensions.height: unknown type .Float\n/tmp/apiome-proto-wp3g4gej/api.proto:11:3:field Dimensions.length: unknown type .Float\n/tmp/apiome-proto-wp3g4gej/api.proto:13:3:field Dimensions.weight: unknown type .Float\n/tmp/apiome-proto-wp3g4gej/api.proto:15:3:field Dimensions.width: unknown type .Float\n/tmp/apiome-proto-wp3g4gej/api.proto:21:3:field Product.createdAt: unknown type .DateTime\n/tmp/apiome-proto-wp3g4gej/api.proto:23:3:field Product.description: unknown type .String\n/tmp/apiome-proto-wp3g4gej/api.proto:25:3:field Product.id: unknown type .ID\n/tmp/apiome-proto-wp3g4gej/api.proto:27:3:field Product.inStock: unknown type .Boolean\n/tmp/apiome-proto-wp3g4gej/api.proto:29:3:field Product.metadata: unknown type .JSON\n/tmp/apiome-proto-wp3g4gej/api.proto:31:3:field Product.name: unknown type .String\n/tmp/apiome-proto-wp3g4gej/api.proto:33:3:field Product.price: unknown type .Int\n/tmp/apiome-proto-wp3g4gej/api.proto:35:3:field Product.priceFloat: unknown type .Float\n/tmp/apiome-proto-wp3g4gej/api.proto:37:3:field Product.rating: unknown type .Float\n/tmp/apiome-proto-wp3g4gej/api.proto:39:3:field Product.stockCount: unknown type .Int\n/tmp/apiome-proto-wp3g4gej/api.proto:41:12:field Product.tags: unknown type .String\n/tmp/apiome-proto-wp3g4gej/api.proto:43:3:field Product.updatedAt: unknown type .DateTime)",
       "source_format": "graphql",
       "status": "xfail",
       "unexplained": []
@@ -25096,7 +27613,7 @@
       "loss_synth": 16,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-9ydlcoar/api.proto:8:3:field Dimensions.height: unknown type .Float\n/tmp/apiome-proto-9ydlcoar/api.proto:10:3:field Dimensions.length: unknown type .Float\n/tmp/apiome-proto-9ydlcoar/api.proto:12:3:field Dimensions.weight: unknown type .Float\n/tmp/apiome-proto-9ydlcoar/api.proto:14:3:field Dimensions.width: unknown type .Float\n/tmp/apiome-proto-9ydlcoar/api.proto:20:3:field Product.createdAt: unknown type .DateTime\n/tmp/apiome-proto-9ydlcoar/api.proto:22:3:field Product.description: unknown type .String\n/tmp/apiome-proto-9ydlcoar/api.proto:24:3:field Product.id: unknown type .ID\n/tmp/apiome-proto-9ydlcoar/api.proto:26:3:field Product.inStock: unknown type .Boolean\n/tmp/apiome-proto-9ydlcoar/api.proto:28:3:field Product.metadata: unknown type .JSON\n/tmp/apiome-proto-9ydlcoar/api.proto:30:3:field Product.name: unknown type .String\n/tmp/apiome-proto-9ydlcoar/api.proto:32:3:field Product.price: unknown type .Int\n/tmp/apiome-proto-9ydlcoar/api.proto:34:3:field Product.priceFloat: unknown type .Float\n/tmp/apiome-proto-9ydlcoar/api.proto:36:3:field Product.rating: unknown type .Float\n/tmp/apiome-proto-9ydlcoar/api.proto:38:3:field Product.stockCount: unknown type .Int\n/tmp/apiome-proto-9ydlcoar/api.proto:40:12:field Product.tags: unknown type .String\n/tmp/apiome-proto-9ydlcoar/api.proto:42:3:field Product.updatedAt: unknown type .DateTime)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ed5kdq_n/api.proto:8:3:field Dimensions.height: unknown type .Float\n/tmp/apiome-proto-ed5kdq_n/api.proto:10:3:field Dimensions.length: unknown type .Float\n/tmp/apiome-proto-ed5kdq_n/api.proto:12:3:field Dimensions.weight: unknown type .Float\n/tmp/apiome-proto-ed5kdq_n/api.proto:14:3:field Dimensions.width: unknown type .Float\n/tmp/apiome-proto-ed5kdq_n/api.proto:20:3:field Product.createdAt: unknown type .DateTime\n/tmp/apiome-proto-ed5kdq_n/api.proto:22:3:field Product.description: unknown type .String\n/tmp/apiome-proto-ed5kdq_n/api.proto:24:3:field Product.id: unknown type .ID\n/tmp/apiome-proto-ed5kdq_n/api.proto:26:3:field Product.inStock: unknown type .Boolean\n/tmp/apiome-proto-ed5kdq_n/api.proto:28:3:field Product.metadata: unknown type .JSON\n/tmp/apiome-proto-ed5kdq_n/api.proto:30:3:field Product.name: unknown type .String\n/tmp/apiome-proto-ed5kdq_n/api.proto:32:3:field Product.price: unknown type .Int\n/tmp/apiome-proto-ed5kdq_n/api.proto:34:3:field Product.priceFloat: unknown type .Float\n/tmp/apiome-proto-ed5kdq_n/api.proto:36:3:field Product.rating: unknown type .Float\n/tmp/apiome-proto-ed5kdq_n/api.proto:38:3:field Product.stockCount: unknown type .Int\n/tmp/apiome-proto-ed5kdq_n/api.proto:40:12:field Product.tags: unknown type .String\n/tmp/apiome-proto-ed5kdq_n/api.proto:42:3:field Product.updatedAt: unknown type .DateTime)",
       "source_format": "graphql",
       "status": "xfail",
       "unexplained": []
@@ -26100,7 +28617,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.adt.a01', added operation '378ebf31-42c3-47dc-916d-f53e6b891e86', changed root '', added service 'com.example.adt.a01'; overclaim: OK 'ADT-A01.MSH', OK 'ADT-A01.MessageADTA01')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.adt.a01', added operation 'b594a2c4-4c3f-42da-9305-4fb70a529dba', changed root '', added service 'com.example.adt.a01'; overclaim: OK 'ADT-A01.MSH', OK 'ADT-A01.MessageADTA01')",
       "source_format": "hl7v2",
       "status": "xfail",
       "unexplained": [
@@ -26112,7 +28629,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "378ebf31-42c3-47dc-916d-f53e6b891e86"
+          "key": "b594a2c4-4c3f-42da-9305-4fb70a529dba"
         },
         {
           "change": "changed",
@@ -26153,7 +28670,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-xlg8dr24/ADT_A01.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-xlg8dr24/ADT_A01.proto:4:12:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-uak1f9oa/ADT_A01.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-uak1f9oa/ADT_A01.proto:4:12:syntax error: unexpected '-')",
       "source_format": "hl7v2",
       "status": "xfail",
       "unexplained": []
@@ -26743,7 +29260,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-9ojjcukw/ADT_A01.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-9ojjcukw/ADT_A01.proto:3:12:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-hl38wve1/ADT_A01.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-hl38wve1/ADT_A01.proto:3:12:syntax error: unexpected '-')",
       "source_format": "hl7v2",
       "status": "xfail",
       "unexplained": []
@@ -28191,7 +30708,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.cstmrcdttrfinitn.pain.001.001.09', added operation '3adf3e72-2748-4812-b4b6-c499c25c8bf6', changed root '', added service 'com.example.cstmrcdttrfinitn.pain.001.001.09'; overclaim: OK 'pain.001.001.09.Amt', OK 'pain.001.001.09.CdtTrfTxInf', OK 'pain.001.001.09.Cdtr', OK 'pain.001.001.09.CdtrAcct', OK 'pain.001.001.09.CdtrAgt', OK 'pain.001.001.09.CstmrCdtTrfInitn', OK 'pain.001.001.09.Dbtr', OK 'pain.001.001.09.DbtrAcct', OK 'pain.001.001.09.DbtrAgt', OK 'pain.001.001.09.Document', OK 'pain.001.001.09.FinInstnId', OK 'pain.001.001.09.GrpHdr', OK 'pain.001.001.09.Id', OK 'pain.001.001.09.InitgPty', OK 'pain.001.001.09.PmtId', OK 'pain.001.001.09.PmtInf', OK 'pain.001.001.09.ReqdExctnDt', OK 'pain.001.001.09.RmtInf')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.cstmrcdttrfinitn.pain.001.001.09', added operation '502eaa5c-d64e-4130-9bbe-ffa533c270e4', changed root '', added service 'com.example.cstmrcdttrfinitn.pain.001.001.09'; overclaim: OK 'pain.001.001.09.Amt', OK 'pain.001.001.09.CdtTrfTxInf', OK 'pain.001.001.09.Cdtr', OK 'pain.001.001.09.CdtrAcct', OK 'pain.001.001.09.CdtrAgt', OK 'pain.001.001.09.CstmrCdtTrfInitn', OK 'pain.001.001.09.Dbtr', OK 'pain.001.001.09.DbtrAcct', OK 'pain.001.001.09.DbtrAgt', OK 'pain.001.001.09.Document', OK 'pain.001.001.09.FinInstnId', OK 'pain.001.001.09.GrpHdr', OK 'pain.001.001.09.Id', OK 'pain.001.001.09.InitgPty', OK 'pain.001.001.09.PmtId', OK 'pain.001.001.09.PmtInf', OK 'pain.001.001.09.ReqdExctnDt', OK 'pain.001.001.09.RmtInf')",
       "source_format": "iso20022",
       "status": "xfail",
       "unexplained": [
@@ -28203,7 +30720,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "3adf3e72-2748-4812-b4b6-c499c25c8bf6"
+          "key": "502eaa5c-d64e-4130-9bbe-ffa533c270e4"
         },
         {
           "change": "changed",
@@ -28244,7 +30761,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:4:13:invalid syntax in float value: .001.001.09\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:4:13:syntax error: unexpected error\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:11:8:invalid syntax in float value: .001.001.09.Amt\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:11:8:syntax error: unexpected error\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:12:8:invalid syntax in float value: .001.001.09.Cdtr\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:13:8:invalid syntax in float value: .001.001.09.CdtrAcct\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:14:8:invalid syntax in float value: .001.001.09.CdtrAgt\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:15:8:invalid syntax in float value: .001.001.09.PmtId\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:16:8:invalid syntax in float value: .001.001.09.RmtInf\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:24:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:24:8:syntax error: unexpected error\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:28:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:28:8:syntax error: unexpected error\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:32:8:invalid syntax in float value: .001.001.09.GrpHdr\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:32:8:syntax error: unexpected error\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:33:8:invalid syntax in float value: .001.001.09.PmtInf\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:41:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:41:8:syntax error: unexpected error\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:45:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:45:8:syntax error: unexpected error\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:49:8:invalid syntax in float value: .001.001.09.CstmrCdtTrfInitn\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:49:8:syntax error: unexpected error\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:59:8:invalid syntax in float value: .001.001.09.InitgPty\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:59:8:syntax error: unexpected error\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:77:8:invalid syntax in float value: .001.001.09.CdtTrfTxInf\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:77:8:syntax error: unexpected error\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:79:8:invalid syntax in float value: .001.001.09.Dbtr\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:79:8:syntax error: unexpected error\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:80:8:invalid syntax in float value: .001.001.09.DbtrAcct\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:81:8:invalid syntax in float value: .001.001.09.DbtrAgt\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:85:8:invalid syntax in float value: .001.001.09.ReqdExctnDt\n/tmp/apiome-proto-iwoywoet/pain/_001/_001/_09.proto:85:8:syntax error: unexpected error)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:4:13:invalid syntax in float value: .001.001.09\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:4:13:syntax error: unexpected error\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:11:8:invalid syntax in float value: .001.001.09.Amt\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:11:8:syntax error: unexpected error\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:12:8:invalid syntax in float value: .001.001.09.Cdtr\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:13:8:invalid syntax in float value: .001.001.09.CdtrAcct\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:14:8:invalid syntax in float value: .001.001.09.CdtrAgt\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:15:8:invalid syntax in float value: .001.001.09.PmtId\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:16:8:invalid syntax in float value: .001.001.09.RmtInf\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:24:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:24:8:syntax error: unexpected error\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:28:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:28:8:syntax error: unexpected error\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:32:8:invalid syntax in float value: .001.001.09.GrpHdr\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:32:8:syntax error: unexpected error\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:33:8:invalid syntax in float value: .001.001.09.PmtInf\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:41:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:41:8:syntax error: unexpected error\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:45:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:45:8:syntax error: unexpected error\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:49:8:invalid syntax in float value: .001.001.09.CstmrCdtTrfInitn\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:49:8:syntax error: unexpected error\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:59:8:invalid syntax in float value: .001.001.09.InitgPty\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:59:8:syntax error: unexpected error\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:77:8:invalid syntax in float value: .001.001.09.CdtTrfTxInf\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:77:8:syntax error: unexpected error\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:79:8:invalid syntax in float value: .001.001.09.Dbtr\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:79:8:syntax error: unexpected error\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:80:8:invalid syntax in float value: .001.001.09.DbtrAcct\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:81:8:invalid syntax in float value: .001.001.09.DbtrAgt\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:85:8:invalid syntax in float value: .001.001.09.ReqdExctnDt\n/tmp/apiome-proto-0awotf56/pain/_001/_001/_09.proto:85:8:syntax error: unexpected error)",
       "source_format": "iso20022",
       "status": "xfail",
       "unexplained": []
@@ -30350,7 +32867,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:3:13:invalid syntax in float value: .001.001.09\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:3:13:syntax error: unexpected error\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:10:8:invalid syntax in float value: .001.001.09.Amt\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:10:8:syntax error: unexpected error\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:11:8:invalid syntax in float value: .001.001.09.Cdtr\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:12:8:invalid syntax in float value: .001.001.09.CdtrAcct\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:13:8:invalid syntax in float value: .001.001.09.CdtrAgt\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:14:8:invalid syntax in float value: .001.001.09.PmtId\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:15:8:invalid syntax in float value: .001.001.09.RmtInf\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:23:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:23:8:syntax error: unexpected error\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:27:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:27:8:syntax error: unexpected error\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:31:8:invalid syntax in float value: .001.001.09.GrpHdr\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:31:8:syntax error: unexpected error\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:32:8:invalid syntax in float value: .001.001.09.PmtInf\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:40:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:40:8:syntax error: unexpected error\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:44:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:44:8:syntax error: unexpected error\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:48:8:invalid syntax in float value: .001.001.09.CstmrCdtTrfInitn\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:48:8:syntax error: unexpected error\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:58:8:invalid syntax in float value: .001.001.09.InitgPty\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:58:8:syntax error: unexpected error\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:76:8:invalid syntax in float value: .001.001.09.CdtTrfTxInf\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:76:8:syntax error: unexpected error\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:78:8:invalid syntax in float value: .001.001.09.Dbtr\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:78:8:syntax error: unexpected error\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:79:8:invalid syntax in float value: .001.001.09.DbtrAcct\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:80:8:invalid syntax in float value: .001.001.09.DbtrAgt\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:84:8:invalid syntax in float value: .001.001.09.ReqdExctnDt\n/tmp/apiome-proto-u7eza54c/pain/_001/_001/_09.proto:84:8:syntax error: unexpected error)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:3:13:invalid syntax in float value: .001.001.09\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:3:13:syntax error: unexpected error\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:10:8:invalid syntax in float value: .001.001.09.Amt\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:10:8:syntax error: unexpected error\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:11:8:invalid syntax in float value: .001.001.09.Cdtr\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:12:8:invalid syntax in float value: .001.001.09.CdtrAcct\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:13:8:invalid syntax in float value: .001.001.09.CdtrAgt\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:14:8:invalid syntax in float value: .001.001.09.PmtId\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:15:8:invalid syntax in float value: .001.001.09.RmtInf\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:23:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:23:8:syntax error: unexpected error\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:27:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:27:8:syntax error: unexpected error\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:31:8:invalid syntax in float value: .001.001.09.GrpHdr\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:31:8:syntax error: unexpected error\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:32:8:invalid syntax in float value: .001.001.09.PmtInf\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:40:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:40:8:syntax error: unexpected error\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:44:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:44:8:syntax error: unexpected error\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:48:8:invalid syntax in float value: .001.001.09.CstmrCdtTrfInitn\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:48:8:syntax error: unexpected error\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:58:8:invalid syntax in float value: .001.001.09.InitgPty\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:58:8:syntax error: unexpected error\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:76:8:invalid syntax in float value: .001.001.09.CdtTrfTxInf\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:76:8:syntax error: unexpected error\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:78:8:invalid syntax in float value: .001.001.09.Dbtr\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:78:8:syntax error: unexpected error\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:79:8:invalid syntax in float value: .001.001.09.DbtrAcct\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:80:8:invalid syntax in float value: .001.001.09.DbtrAgt\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:84:8:invalid syntax in float value: .001.001.09.ReqdExctnDt\n/tmp/apiome-proto-w50xbg01/pain/_001/_001/_09.proto:84:8:syntax error: unexpected error)",
       "source_format": "iso20022",
       "status": "xfail",
       "unexplained": []
@@ -32703,7 +35220,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.authorization.request', added operation '539095d4-a145-4a8e-94df-b90f5ac9764c', changed root '', added service 'com.example.authorization.request'; overclaim: OK '0100.DE11', OK '0100.DE12', OK '0100.DE13', OK '0100.DE18', OK '0100.DE2', OK '0100.DE3', OK '0100.DE32', OK '0100.DE4', OK '0100.DE41', OK '0100.DE49', OK '0100.DE7', OK '0100.Message0100')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.authorization.request', added operation 'b5137910-56e2-4497-ad26-2394f764927d', changed root '', added service 'com.example.authorization.request'; overclaim: OK '0100.DE11', OK '0100.DE12', OK '0100.DE13', OK '0100.DE18', OK '0100.DE2', OK '0100.DE3', OK '0100.DE32', OK '0100.DE4', OK '0100.DE41', OK '0100.DE49', OK '0100.DE7', OK '0100.Message0100')",
       "source_format": "iso8583",
       "status": "xfail",
       "unexplained": [
@@ -32715,7 +35232,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "539095d4-a145-4a8e-94df-b90f5ac9764c"
+          "key": "b5137910-56e2-4497-ad26-2394f764927d"
         },
         {
           "change": "changed",
@@ -32756,7 +35273,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-pcoodfeb/_0100.proto:4:9:syntax error: unexpected int literal)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-kbasuri3/_0100.proto:4:9:syntax error: unexpected int literal)",
       "source_format": "iso8583",
       "status": "xfail",
       "unexplained": []
@@ -34286,7 +36803,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-l3ngznol/_0100.proto:3:9:syntax error: unexpected int literal)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-dqk_wamk/_0100.proto:3:9:syntax error: unexpected int literal)",
       "source_format": "iso8583",
       "status": "xfail",
       "unexplained": []
@@ -35508,7 +38025,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.product', added operation '451518b4-a07e-428b-9e1f-5fefb1575fa2', changed root '', added service 'com.example.product', removed type 'Product'; overclaim: OK 'Product')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.product', added operation '7222bd70-8352-4e5e-a23f-720558d21d6c', changed root '', added service 'com.example.product', removed type 'Product'; overclaim: OK 'Product')",
       "source_format": "json-schema",
       "status": "xfail",
       "unexplained": [
@@ -35520,7 +38037,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "451518b4-a07e-428b-9e1f-5fefb1575fa2"
+          "key": "7222bd70-8352-4e5e-a23f-720558d21d6c"
         },
         {
           "change": "changed",
@@ -35566,7 +38083,7 @@
       "loss_synth": 7,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-qakjb56g/api.proto:7:3:field Product.id: unknown type .integer\n/tmp/apiome-proto-qakjb56g/api.proto:11:3:field Product.price: unknown type .number\n/tmp/apiome-proto-qakjb56g/api.proto:13:3:field Product.inStock: unknown type .boolean\n/tmp/apiome-proto-qakjb56g/api.proto:19:3:field Product.dimensions: unknown type .object)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-u52kpdpt/api.proto:7:3:field Product.id: unknown type .integer\n/tmp/apiome-proto-u52kpdpt/api.proto:11:3:field Product.price: unknown type .number\n/tmp/apiome-proto-u52kpdpt/api.proto:13:3:field Product.inStock: unknown type .boolean\n/tmp/apiome-proto-u52kpdpt/api.proto:19:3:field Product.dimensions: unknown type .object)",
       "source_format": "json-schema",
       "status": "xfail",
       "unexplained": []
@@ -36006,7 +38523,7 @@
       "loss_synth": 7,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-nf7d4fcc/api.proto:6:3:field Product.id: unknown type .integer\n/tmp/apiome-proto-nf7d4fcc/api.proto:10:3:field Product.price: unknown type .number\n/tmp/apiome-proto-nf7d4fcc/api.proto:12:3:field Product.inStock: unknown type .boolean\n/tmp/apiome-proto-nf7d4fcc/api.proto:18:3:field Product.dimensions: unknown type .object)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-sej_4t3q/api.proto:6:3:field Product.id: unknown type .integer\n/tmp/apiome-proto-sej_4t3q/api.proto:10:3:field Product.price: unknown type .number\n/tmp/apiome-proto-sej_4t3q/api.proto:12:3:field Product.inStock: unknown type .boolean\n/tmp/apiome-proto-sej_4t3q/api.proto:18:3:field Product.dimensions: unknown type .object)",
       "source_format": "json-schema",
       "status": "xfail",
       "unexplained": []
@@ -36502,7 +39019,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.user', added operation '843bff65-74ef-49fe-96a7-59af64b1de43', changed root '', added service 'com.example.user', removed type 'User', removed type 'UserAddress', removed type 'UserStatus'; overclaim: OK 'User', OK 'UserAddress', OK 'UserStatus')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.user', added operation '290eb543-551f-44c7-a104-38cd248d0375', changed root '', added service 'com.example.user', removed type 'User', removed type 'UserAddress', removed type 'UserStatus'; overclaim: OK 'User', OK 'UserAddress', OK 'UserStatus')",
       "source_format": "jtd",
       "status": "xfail",
       "unexplained": [
@@ -36514,7 +39031,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "843bff65-74ef-49fe-96a7-59af64b1de43"
+          "key": "290eb543-551f-44c7-a104-38cd248d0375"
         },
         {
           "change": "changed",
@@ -36570,7 +39087,7 @@
       "loss_synth": 11,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-h6u0zs_q/api.proto:21:3:field User.createdAt: unknown type .timestamp)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-yf2aqptr/api.proto:21:3:field User.createdAt: unknown type .timestamp)",
       "source_format": "jtd",
       "status": "xfail",
       "unexplained": []
@@ -37120,7 +39637,7 @@
       "loss_synth": 11,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-3bbp32yf/api.proto:20:3:field User.createdAt: unknown type .timestamp)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-7ozjiqbz/api.proto:20:3:field User.createdAt: unknown type .timestamp)",
       "source_format": "jtd",
       "status": "xfail",
       "unexplained": []
@@ -37983,7 +40500,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-kif91ks2/Example/Orders.proto:14:3:field Example.Orders.Order.Id: unknown type .i32)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-xpet5ch7/Example/Orders.proto:14:3:field Example.Orders.Order.Id: unknown type .i32)",
       "source_format": "odata",
       "status": "xfail",
       "unexplained": []
@@ -38960,7 +41477,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-g68v5jeb/Example/Orders.proto:13:3:field Example.Orders.Order.Id: unknown type .i32)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-a_5qivxn/Example/Orders.proto:13:3:field Example.Orders.Order.Id: unknown type .i32)",
       "source_format": "odata",
       "status": "xfail",
       "unexplained": []
@@ -40076,7 +42593,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-zds42e82/KV_PROG.proto:14:5:field KV_PROG.kv_get_res.void: unknown type .void\n/tmp/apiome-proto-zds42e82/KV_PROG.proto:30:18:method KV_PROG.KV_PROG.KV_DELETE: unknown request type .string\n/tmp/apiome-proto-zds42e82/KV_PROG.proto:30:36:method KV_PROG.KV_PROG.KV_DELETE: invalid response type: KV_PROG.kv_status is an enum, not a message\n/tmp/apiome-proto-zds42e82/KV_PROG.proto:31:15:method KV_PROG.KV_PROG.KV_GET: unknown request type .string\n/tmp/apiome-proto-zds42e82/KV_PROG.proto:32:46:method KV_PROG.KV_PROG.KV_PUT: invalid response type: KV_PROG.kv_status is an enum, not a message)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-1c74t4td/KV_PROG.proto:14:5:field KV_PROG.kv_get_res.void: unknown type .void\n/tmp/apiome-proto-1c74t4td/KV_PROG.proto:30:18:method KV_PROG.KV_PROG.KV_DELETE: unknown request type .string\n/tmp/apiome-proto-1c74t4td/KV_PROG.proto:30:36:method KV_PROG.KV_PROG.KV_DELETE: invalid response type: KV_PROG.kv_status is an enum, not a message\n/tmp/apiome-proto-1c74t4td/KV_PROG.proto:31:15:method KV_PROG.KV_PROG.KV_GET: unknown request type .string\n/tmp/apiome-proto-1c74t4td/KV_PROG.proto:32:46:method KV_PROG.KV_PROG.KV_PUT: invalid response type: KV_PROG.kv_status is an enum, not a message)",
       "source_format": "oncrpc",
       "status": "xfail",
       "unexplained": []
@@ -41072,7 +43589,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-g45sardp/KV_PROG.proto:13:5:field KV_PROG.kv_get_res.void: unknown type .void\n/tmp/apiome-proto-g45sardp/KV_PROG.proto:29:18:method KV_PROG.KV_PROG.KV_DELETE: unknown request type .string\n/tmp/apiome-proto-g45sardp/KV_PROG.proto:29:36:method KV_PROG.KV_PROG.KV_DELETE: invalid response type: KV_PROG.kv_status is an enum, not a message\n/tmp/apiome-proto-g45sardp/KV_PROG.proto:30:15:method KV_PROG.KV_PROG.KV_GET: unknown request type .string\n/tmp/apiome-proto-g45sardp/KV_PROG.proto:31:46:method KV_PROG.KV_PROG.KV_PUT: invalid response type: KV_PROG.kv_status is an enum, not a message)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-e4g0j3ug/KV_PROG.proto:13:5:field KV_PROG.kv_get_res.void: unknown type .void\n/tmp/apiome-proto-e4g0j3ug/KV_PROG.proto:29:18:method KV_PROG.KV_PROG.KV_DELETE: unknown request type .string\n/tmp/apiome-proto-e4g0j3ug/KV_PROG.proto:29:36:method KV_PROG.KV_PROG.KV_DELETE: invalid response type: KV_PROG.kv_status is an enum, not a message\n/tmp/apiome-proto-e4g0j3ug/KV_PROG.proto:30:15:method KV_PROG.KV_PROG.KV_GET: unknown request type .string\n/tmp/apiome-proto-e4g0j3ug/KV_PROG.proto:31:46:method KV_PROG.KV_PROG.KV_PUT: invalid response type: KV_PROG.kv_status is an enum, not a message)",
       "source_format": "oncrpc",
       "status": "xfail",
       "unexplained": []
@@ -42037,7 +44554,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.nullable.types.example', added operation '428f3bac-11fa-4bfd-98ea-e8bbc7e374a1', changed root '', added service 'com.example.nullable.types.example', removed type 'UserProfile'; overclaim: OK 'UserProfile')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.nullable.types.example', added operation 'c9f0f3c3-2686-44c3-8d03-5d3d4078593b', changed root '', added service 'com.example.nullable.types.example', removed type 'UserProfile'; overclaim: OK 'UserProfile')",
       "source_format": "openapi",
       "status": "xfail",
       "unexplained": [
@@ -42049,7 +44566,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "428f3bac-11fa-4bfd-98ea-e8bbc7e374a1"
+          "key": "c9f0f3c3-2686-44c3-8d03-5d3d4078593b"
         },
         {
           "change": "changed",
@@ -42095,7 +44612,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_gg6x63d/api.proto:7:3:field UserProfile.age: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-nuo94628/api.proto:7:3:field UserProfile.age: unknown type .integer)",
       "source_format": "openapi",
       "status": "xfail",
       "unexplained": []
@@ -42532,7 +45049,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-xe37myid/api.proto:6:3:field UserProfile.age: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-10ovl063/api.proto:6:3:field UserProfile.age: unknown type .integer)",
       "source_format": "openapi",
       "status": "xfail",
       "unexplained": []
@@ -43176,7 +45693,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-vizg9iob/api.proto:11:3:field Balance.amount: unknown type .integer\n/tmp/apiome-proto-vizg9iob/api.proto:26:19:method Wallet_API.getBalance: unknown request type .string)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-bn8ssm2g/api.proto:11:3:field Balance.amount: unknown type .integer\n/tmp/apiome-proto-bn8ssm2g/api.proto:26:19:method Wallet_API.getBalance: unknown request type .string)",
       "source_format": "openrpc",
       "status": "xfail",
       "unexplained": []
@@ -43905,7 +46422,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-8_e8gzf9/api.proto:10:3:field Balance.amount: unknown type .integer\n/tmp/apiome-proto-8_e8gzf9/api.proto:25:19:method Wallet_API.getBalance: unknown request type .string)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-74_4jha4/api.proto:10:3:field Balance.amount: unknown type .integer\n/tmp/apiome-proto-74_4jha4/api.proto:25:19:method Wallet_API.getBalance: unknown request type .string)",
       "source_format": "openrpc",
       "status": "xfail",
       "unexplained": []
@@ -44803,7 +47320,7 @@
       "loss_synth": 3,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-43pwih9m/api.proto:7:3:field Task.done: unknown type .boolean)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-oo0o0oyk/api.proto:7:3:field Task.done: unknown type .boolean)",
       "source_format": "postman",
       "status": "xfail",
       "unexplained": []
@@ -45481,7 +47998,7 @@
       "loss_synth": 3,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-7jwqwjby/api.proto:6:3:field Task.done: unknown type .boolean)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-wql5ep8e/api.proto:6:3:field Task.done: unknown type .boolean)",
       "source_format": "postman",
       "status": "xfail",
       "unexplained": []
@@ -51840,7 +54357,7 @@
       "loss_synth": 11,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-r6_l339w/example/weather.proto:28:3:field example.weather.Forecast.days: unknown type .example.weather.DayForecastList\n/tmp/apiome-proto-r6_l339w/example/weather.proto:33:3:field example.weather.GetForecastInput.days: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-k9gg1tts/example/weather.proto:28:3:field example.weather.Forecast.days: unknown type .example.weather.DayForecastList\n/tmp/apiome-proto-k9gg1tts/example/weather.proto:33:3:field example.weather.GetForecastInput.days: unknown type .integer)",
       "source_format": "smithy",
       "status": "xfail",
       "unexplained": []
@@ -53197,7 +55714,7 @@
       "loss_synth": 11,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-lx95y6ks/example/weather.proto:27:3:field example.weather.Forecast.days: unknown type .example.weather.DayForecastList\n/tmp/apiome-proto-lx95y6ks/example/weather.proto:32:3:field example.weather.GetForecastInput.days: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-i7g01phv/example/weather.proto:27:3:field example.weather.Forecast.days: unknown type .example.weather.DayForecastList\n/tmp/apiome-proto-i7g01phv/example/weather.proto:32:3:field example.weather.GetForecastInput.days: unknown type .integer)",
       "source_format": "smithy",
       "status": "xfail",
       "unexplained": []
@@ -54789,7 +57306,7 @@
       "loss_synth": 36,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-vuavnea3/api.proto:8:3:field Category.id: unknown type .integer\n/tmp/apiome-proto-vuavnea3/api.proto:15:3:field Error.code: unknown type .integer\n/tmp/apiome-proto-vuavnea3/api.proto:25:3:field NewPet.categoryId: unknown type .integer\n/tmp/apiome-proto-vuavnea3/api.proto:35:3:field Order.complete: unknown type .boolean\n/tmp/apiome-proto-vuavnea3/api.proto:36:3:field Order.id: unknown type .integer\n/tmp/apiome-proto-vuavnea3/api.proto:37:3:field Order.petId: unknown type .integer\n/tmp/apiome-proto-vuavnea3/api.proto:38:3:field Order.quantity: unknown type .integer\n/tmp/apiome-proto-vuavnea3/api.proto:49:3:field Pet.id: unknown type .integer\n/tmp/apiome-proto-vuavnea3/api.proto:74:3:field UploadResponse.size: unknown type .integer\n/tmp/apiome-proto-vuavnea3/api.proto:76:3:field UploadResponse.success: unknown type .boolean\n/tmp/apiome-proto-vuavnea3/api.proto:85:3:field User.id: unknown type .integer\n/tmp/apiome-proto-vuavnea3/api.proto:89:3:field User.userStatus: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-qm86_hft/api.proto:8:3:field Category.id: unknown type .integer\n/tmp/apiome-proto-qm86_hft/api.proto:15:3:field Error.code: unknown type .integer\n/tmp/apiome-proto-qm86_hft/api.proto:25:3:field NewPet.categoryId: unknown type .integer\n/tmp/apiome-proto-qm86_hft/api.proto:35:3:field Order.complete: unknown type .boolean\n/tmp/apiome-proto-qm86_hft/api.proto:36:3:field Order.id: unknown type .integer\n/tmp/apiome-proto-qm86_hft/api.proto:37:3:field Order.petId: unknown type .integer\n/tmp/apiome-proto-qm86_hft/api.proto:38:3:field Order.quantity: unknown type .integer\n/tmp/apiome-proto-qm86_hft/api.proto:49:3:field Pet.id: unknown type .integer\n/tmp/apiome-proto-qm86_hft/api.proto:74:3:field UploadResponse.size: unknown type .integer\n/tmp/apiome-proto-qm86_hft/api.proto:76:3:field UploadResponse.success: unknown type .boolean\n/tmp/apiome-proto-qm86_hft/api.proto:85:3:field User.id: unknown type .integer\n/tmp/apiome-proto-qm86_hft/api.proto:89:3:field User.userStatus: unknown type .integer)",
       "source_format": "swagger",
       "status": "xfail",
       "unexplained": []
@@ -56313,7 +58830,7 @@
       "loss_synth": 36,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-qav2yv2q/api.proto:7:3:field Category.id: unknown type .integer\n/tmp/apiome-proto-qav2yv2q/api.proto:14:3:field Error.code: unknown type .integer\n/tmp/apiome-proto-qav2yv2q/api.proto:24:3:field NewPet.categoryId: unknown type .integer\n/tmp/apiome-proto-qav2yv2q/api.proto:34:3:field Order.complete: unknown type .boolean\n/tmp/apiome-proto-qav2yv2q/api.proto:35:3:field Order.id: unknown type .integer\n/tmp/apiome-proto-qav2yv2q/api.proto:36:3:field Order.petId: unknown type .integer\n/tmp/apiome-proto-qav2yv2q/api.proto:37:3:field Order.quantity: unknown type .integer\n/tmp/apiome-proto-qav2yv2q/api.proto:48:3:field Pet.id: unknown type .integer\n/tmp/apiome-proto-qav2yv2q/api.proto:73:3:field UploadResponse.size: unknown type .integer\n/tmp/apiome-proto-qav2yv2q/api.proto:75:3:field UploadResponse.success: unknown type .boolean\n/tmp/apiome-proto-qav2yv2q/api.proto:84:3:field User.id: unknown type .integer\n/tmp/apiome-proto-qav2yv2q/api.proto:88:3:field User.userStatus: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ch3i5t94/api.proto:7:3:field Category.id: unknown type .integer\n/tmp/apiome-proto-ch3i5t94/api.proto:14:3:field Error.code: unknown type .integer\n/tmp/apiome-proto-ch3i5t94/api.proto:24:3:field NewPet.categoryId: unknown type .integer\n/tmp/apiome-proto-ch3i5t94/api.proto:34:3:field Order.complete: unknown type .boolean\n/tmp/apiome-proto-ch3i5t94/api.proto:35:3:field Order.id: unknown type .integer\n/tmp/apiome-proto-ch3i5t94/api.proto:36:3:field Order.petId: unknown type .integer\n/tmp/apiome-proto-ch3i5t94/api.proto:37:3:field Order.quantity: unknown type .integer\n/tmp/apiome-proto-ch3i5t94/api.proto:48:3:field Pet.id: unknown type .integer\n/tmp/apiome-proto-ch3i5t94/api.proto:73:3:field UploadResponse.size: unknown type .integer\n/tmp/apiome-proto-ch3i5t94/api.proto:75:3:field UploadResponse.success: unknown type .boolean\n/tmp/apiome-proto-ch3i5t94/api.proto:84:3:field User.id: unknown type .integer\n/tmp/apiome-proto-ch3i5t94/api.proto:88:3:field User.userStatus: unknown type .integer)",
       "source_format": "swagger",
       "status": "xfail",
       "unexplained": []
@@ -57953,7 +60470,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-oubfjcoa/com/example/user.proto:25:3:field com.example.user.User.createdAt: unknown type .i64)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-7p9ktem6/com/example/user.proto:25:3:field com.example.user.User.createdAt: unknown type .i64)",
       "source_format": "thrift",
       "status": "xfail",
       "unexplained": []
@@ -59282,7 +61799,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-jfj59onm/com/example/user.proto:24:3:field com.example.user.User.createdAt: unknown type .i64)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-x1igcchd/com/example/user.proto:24:3:field com.example.user.User.createdAt: unknown type .i64)",
       "source_format": "thrift",
       "status": "xfail",
       "unexplained": []
@@ -62819,7 +65336,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-m7g4egje/http___example/com_bookstore.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-m7g4egje/http___example/com_bookstore.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-m7g4egje/http___example/com_bookstore.proto:16:56:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-m7g4egje/http___example/com_bookstore.proto:17:54:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-m7g4egje/http___example/com_bookstore.proto:18:24:syntax error: unexpected ':', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-aplex1z0/http___example/com_bookstore.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-aplex1z0/http___example/com_bookstore.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-aplex1z0/http___example/com_bookstore.proto:16:56:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-aplex1z0/http___example/com_bookstore.proto:17:54:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-aplex1z0/http___example/com_bookstore.proto:18:24:syntax error: unexpected ':', expecting ')')",
       "source_format": "wadl",
       "status": "xfail",
       "unexplained": []
@@ -63497,7 +66014,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-xop3lrdk/http___example/com_bookstore.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-xop3lrdk/http___example/com_bookstore.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-xop3lrdk/http___example/com_bookstore.proto:15:56:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-xop3lrdk/http___example/com_bookstore.proto:16:54:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-xop3lrdk/http___example/com_bookstore.proto:17:24:syntax error: unexpected ':', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-jicxq690/http___example/com_bookstore.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-jicxq690/http___example/com_bookstore.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-jicxq690/http___example/com_bookstore.proto:15:56:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-jicxq690/http___example/com_bookstore.proto:16:54:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-jicxq690/http___example/com_bookstore.proto:17:24:syntax error: unexpected ':', expecting ')')",
       "source_format": "wadl",
       "status": "xfail",
       "unexplained": []
@@ -64700,7 +67217,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ogrotowi/http___example/com_orders.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-ogrotowi/http___example/com_orders.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-ogrotowi/http___example/com_orders.proto:17:8:syntax error: unexpected ':'\n/tmp/apiome-proto-ogrotowi/http___example/com_orders.proto:21:8:syntax error: unexpected ':'\n/tmp/apiome-proto-ogrotowi/http___example/com_orders.proto:29:8:syntax error: unexpected ':'\n/tmp/apiome-proto-ogrotowi/http___example/com_orders.proto:34:8:syntax error: unexpected ':'\n/tmp/apiome-proto-ogrotowi/http___example/com_orders.proto:52:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-ogrotowi/http___example/com_orders.proto:53:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-ogrotowi/http___example/com_orders.proto:54:22:syntax error: unexpected ':', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-z76lzrbw/http___example/com_orders.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-z76lzrbw/http___example/com_orders.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-z76lzrbw/http___example/com_orders.proto:17:8:syntax error: unexpected ':'\n/tmp/apiome-proto-z76lzrbw/http___example/com_orders.proto:21:8:syntax error: unexpected ':'\n/tmp/apiome-proto-z76lzrbw/http___example/com_orders.proto:29:8:syntax error: unexpected ':'\n/tmp/apiome-proto-z76lzrbw/http___example/com_orders.proto:34:8:syntax error: unexpected ':'\n/tmp/apiome-proto-z76lzrbw/http___example/com_orders.proto:52:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-z76lzrbw/http___example/com_orders.proto:53:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-z76lzrbw/http___example/com_orders.proto:54:22:syntax error: unexpected ':', expecting ')')",
       "source_format": "wsdl",
       "status": "xfail",
       "unexplained": []
@@ -66573,7 +69090,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-3m6nng9y/http___example/com_orders.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-3m6nng9y/http___example/com_orders.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-3m6nng9y/http___example/com_orders.proto:16:8:syntax error: unexpected ':'\n/tmp/apiome-proto-3m6nng9y/http___example/com_orders.proto:20:8:syntax error: unexpected ':'\n/tmp/apiome-proto-3m6nng9y/http___example/com_orders.proto:28:8:syntax error: unexpected ':'\n/tmp/apiome-proto-3m6nng9y/http___example/com_orders.proto:33:8:syntax error: unexpected ':'\n/tmp/apiome-proto-3m6nng9y/http___example/com_orders.proto:51:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-3m6nng9y/http___example/com_orders.proto:52:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-3m6nng9y/http___example/com_orders.proto:53:22:syntax error: unexpected ':', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-mp2jfmtb/http___example/com_orders.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-mp2jfmtb/http___example/com_orders.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-mp2jfmtb/http___example/com_orders.proto:16:8:syntax error: unexpected ':'\n/tmp/apiome-proto-mp2jfmtb/http___example/com_orders.proto:20:8:syntax error: unexpected ':'\n/tmp/apiome-proto-mp2jfmtb/http___example/com_orders.proto:28:8:syntax error: unexpected ':'\n/tmp/apiome-proto-mp2jfmtb/http___example/com_orders.proto:33:8:syntax error: unexpected ':'\n/tmp/apiome-proto-mp2jfmtb/http___example/com_orders.proto:51:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-mp2jfmtb/http___example/com_orders.proto:52:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-mp2jfmtb/http___example/com_orders.proto:53:22:syntax error: unexpected ':', expecting ')')",
       "source_format": "wsdl",
       "status": "xfail",
       "unexplained": []
@@ -69550,7 +72067,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.purchaseorder', added operation '8312ab96-49e0-433f-8a10-78d76f46a1b4', changed root '', added service 'com.example.purchaseorder', removed type 'http://example.com/po.Status'; overclaim: OK 'http://example.com/po.Address', OK 'http://example.com/po.Item', OK 'http://example.com/po.PurchaseOrder', OK 'http://example.com/po.Status')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.purchaseorder', added operation 'a1b42e68-3135-4204-aacc-c6613fcaecd9', changed root '', added service 'com.example.purchaseorder', removed type 'http://example.com/po.Status'; overclaim: OK 'http://example.com/po.Address', OK 'http://example.com/po.Item', OK 'http://example.com/po.PurchaseOrder', OK 'http://example.com/po.Status')",
       "source_format": "xsd",
       "status": "xfail",
       "unexplained": [
@@ -69562,7 +72079,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "8312ab96-49e0-433f-8a10-78d76f46a1b4"
+          "key": "a1b42e68-3135-4204-aacc-c6613fcaecd9"
         },
         {
           "change": "changed",
@@ -69608,7 +72125,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-fk1f2vc_/http___example/com_po.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-fk1f2vc_/http___example/com_po.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-fk1f2vc_/http___example/com_po.proto:21:8:syntax error: unexpected ':'\n/tmp/apiome-proto-fk1f2vc_/http___example/com_po.proto:22:17:syntax error: unexpected ':'\n/tmp/apiome-proto-fk1f2vc_/http___example/com_po.proto:25:8:syntax error: unexpected ':')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-p_ye27hc/http___example/com_po.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-p_ye27hc/http___example/com_po.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-p_ye27hc/http___example/com_po.proto:21:8:syntax error: unexpected ':'\n/tmp/apiome-proto-p_ye27hc/http___example/com_po.proto:22:17:syntax error: unexpected ':'\n/tmp/apiome-proto-p_ye27hc/http___example/com_po.proto:25:8:syntax error: unexpected ':')",
       "source_format": "xsd",
       "status": "xfail",
       "unexplained": []
@@ -70415,7 +72932,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_2tnhrvb/http___example/com_po.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-_2tnhrvb/http___example/com_po.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-_2tnhrvb/http___example/com_po.proto:20:8:syntax error: unexpected ':'\n/tmp/apiome-proto-_2tnhrvb/http___example/com_po.proto:21:17:syntax error: unexpected ':'\n/tmp/apiome-proto-_2tnhrvb/http___example/com_po.proto:24:8:syntax error: unexpected ':')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-j5yu1v7d/http___example/com_po.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-j5yu1v7d/http___example/com_po.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-j5yu1v7d/http___example/com_po.proto:20:8:syntax error: unexpected ':'\n/tmp/apiome-proto-j5yu1v7d/http___example/com_po.proto:21:17:syntax error: unexpected ':'\n/tmp/apiome-proto-j5yu1v7d/http___example/com_po.proto:24:8:syntax error: unexpected ':')",
       "source_format": "xsd",
       "status": "xfail",
       "unexplained": []
@@ -71370,7 +73887,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-g1xsv363/InventoryRequester.proto:23:45:syntax error: unexpected '-', expecting ')'\n/tmp/apiome-proto-g1xsv363/InventoryRequester.proto:24:48:syntax error: unexpected '-', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-2debjs6n/InventoryRequester.proto:23:45:syntax error: unexpected '-', expecting ')'\n/tmp/apiome-proto-2debjs6n/InventoryRequester.proto:24:48:syntax error: unexpected '-', expecting ')')",
       "source_format": "zosconnect",
       "status": "xfail",
       "unexplained": []
@@ -72408,7 +74925,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-hbtv6_1u/InventoryRequester.proto:22:45:syntax error: unexpected '-', expecting ')'\n/tmp/apiome-proto-hbtv6_1u/InventoryRequester.proto:23:48:syntax error: unexpected '-', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-2bjt_2mv/InventoryRequester.proto:22:45:syntax error: unexpected '-', expecting ')'\n/tmp/apiome-proto-2bjt_2mv/InventoryRequester.proto:23:48:syntax error: unexpected '-', expecting ')')",
       "source_format": "zosconnect",
       "status": "xfail",
       "unexplained": []
@@ -73114,6 +75631,7 @@
     "cobolcopybook",
     "connectrpc",
     "corbaidl",
+    "discovery",
     "edix12",
     "fhir",
     "fix",

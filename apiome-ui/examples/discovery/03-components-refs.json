@@ -1,0 +1,105 @@
+{
+  "_comment": "Composition Discovery document \u2014 chained $ref schemas and nested resources.",
+  "kind": "discovery#restDescription",
+  "discoveryVersion": "v1",
+  "id": "library:v1",
+  "name": "library",
+  "version": "v1",
+  "title": "Library API",
+  "protocol": "rest",
+  "baseUrl": "https://library.example.com/",
+  "rootUrl": "https://library.example.com/",
+  "servicePath": "library/v1/",
+  "schemas": {
+    "Shelf": {
+      "id": "Shelf",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "ShelfItem"
+          }
+        }
+      }
+    },
+    "ShelfItem": {
+      "id": "ShelfItem",
+      "type": "object",
+      "properties": {
+        "sku": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "ItemMeta"
+        }
+      }
+    },
+    "ItemMeta": {
+      "id": "ItemMeta",
+      "type": "object",
+      "properties": {
+        "addedAt": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "resources": {
+    "shelves": {
+      "methods": {
+        "get": {
+          "id": "library.shelves.get",
+          "path": "shelves/{shelfId}",
+          "httpMethod": "GET",
+          "parameters": {
+            "shelfId": {
+              "type": "string",
+              "location": "path",
+              "required": true
+            }
+          },
+          "response": {
+            "$ref": "Shelf"
+          }
+        }
+      },
+      "resources": {
+        "items": {
+          "methods": {
+            "insert": {
+              "id": "library.shelves.items.insert",
+              "path": "shelves/{shelfId}/items",
+              "httpMethod": "POST",
+              "parameters": {
+                "shelfId": {
+                  "type": "string",
+                  "location": "path",
+                  "required": true
+                }
+              },
+              "request": {
+                "$ref": "ShelfItem"
+              },
+              "response": {
+                "$ref": "ShelfItem"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

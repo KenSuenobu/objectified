@@ -173,6 +173,7 @@ export const CATALOG_FORMATS: readonly CatalogFormat[] = [
   { id: 'odata', label: 'OData', icon: Database, tone: 'orange', importable: true, aliases: ['edmx'], description: 'OData EDMX / CSDL service metadata.' },
   { id: 'wsdl', label: 'WSDL', icon: FileCode, tone: 'slate', importable: true, aliases: ['soap'], description: 'SOAP web service description (WSDL).' },
   { id: 'wadl', label: 'WADL', icon: FileCode, tone: 'slate', importable: true, aliases: ['restdescription'], description: 'WADL REST resource description.' },
+  { id: 'discovery', label: 'Google Discovery', icon: Radar, tone: 'blue', importable: true, aliases: ['google-discovery', 'googlediscovery'], description: 'Google API Discovery rest description.' },
   { id: 'apiblueprint', label: 'API Blueprint', icon: FileText, tone: 'blue', importable: true, aliases: ['blueprint', 'apib'], description: 'API Blueprint 1A markdown API description.' },
   { id: 'smithy', label: 'Smithy', icon: Hammer, tone: 'amber', importable: true, description: 'Smithy 2.x service / protocol model.' },
   { id: 'typespec', label: 'TypeSpec', icon: FileCode, tone: 'cyan', importable: true, aliases: ['tsp', 'cadl'], description: 'Microsoft TypeSpec API definition.' },

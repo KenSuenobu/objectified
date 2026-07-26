@@ -5,6 +5,19 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.191.0] - 2026-07-26
+
+### Added
+- **Google API Discovery import adapter (#5126, IXH-7.1)** — new `discovery`
+  `ImportSource` detects `kind: discovery#restDescription` / `discoveryVersion`,
+  parses nested resources/methods/parameters/schemas, and normalizes to the REST
+  paradigm with stable HTTP operation keys and SchemaCoercer `$ref` resolution.
+  Live directory listing and selected-API import run through the SSRF-guarded
+  fetcher against the public Discovery directory. Corpus ladder (valid + negative),
+  golden snapshots, format sniff, lint capability matrix row, UI catalog mapping,
+  and CLI registry dispatch (`apiome import discovery`) ship with the adapter.
+  OpenAPI 1.57.0 → 1.58.0.
+
 ## [1.190.0] - 2026-07-26
 
 ### Added

@@ -129,7 +129,15 @@ def is_raml(content: str) -> bool:
 def _is_raml_mapping(doc: Any) -> bool:
     if not isinstance(doc, Mapping):
         return False
-    if doc.get("openapi") or doc.get("swagger") or doc.get("asyncapi"):
+    if doc.get("openapi") or doc.get("swagger") or doc.get("asyncapi") or doc.get("openrpc"):
+        return False
+    # Google API Discovery rest descriptions also carry title + version/schemas.
+    kind = doc.get("kind")
+    if isinstance(kind, str) and kind.strip() == "discovery#restDescription":
+        return False
+    if isinstance(doc.get("discoveryVersion"), str) and (
+        "resources" in doc or "schemas" in doc
+    ):
         return False
     has_title = isinstance(doc.get("title"), str)
     has_indicator = any(

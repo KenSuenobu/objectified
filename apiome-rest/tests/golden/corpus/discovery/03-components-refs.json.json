@@ -1,0 +1,385 @@
+{
+  "adapter": "discovery",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "discovery_documentation_link": null,
+      "discovery_id": "library:v1",
+      "discovery_kind": "discovery#restDescription",
+      "discovery_name": "library",
+      "discovery_service_path": "library/v1/",
+      "discovery_version": "v1"
+    },
+    "format": "discovery",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Library API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From Discovery baseUrl/rootUrl",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://library.example.com/",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Library API",
+        "name": "Library API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "discovery_id": "library.shelves.get",
+              "discovery_method": "get",
+              "discovery_resource_path": "shelves"
+            },
+            "http_method": "GET",
+            "http_path": "/library/v1/shelves/{shelfId}",
+            "key": "GET /library/v1/shelves/{shelfId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /library/v1/shelves/{shelfId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Shelf",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "library.shelves.get",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "path"
+                },
+                "key": "GET /library/v1/shelves/{shelfId}#path.shelfId",
+                "location": "path",
+                "name": "shelfId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "discovery_id": "library.shelves.items.insert",
+              "discovery_method": "insert",
+              "discovery_resource_path": "shelves/items"
+            },
+            "http_method": "POST",
+            "http_path": "/library/v1/shelves/{shelfId}/items",
+            "key": "POST /library/v1/shelves/{shelfId}/items",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /library/v1/shelves/{shelfId}/items#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ShelfItem",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /library/v1/shelves/{shelfId}/items#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ShelfItem",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "library.shelves.items.insert",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "path"
+                },
+                "key": "POST /library/v1/shelves/{shelfId}/items#path.shelfId",
+                "location": "path",
+                "name": "shelfId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Library API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ItemMeta.addedAt",
+            "name": "addedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ItemMeta.tags",
+            "name": "tags",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "ItemMeta",
+        "key_type": null,
+        "kind": "record",
+        "name": "ItemMeta",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Shelf.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Shelf.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "ShelfItem",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Shelf.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Shelf",
+        "key_type": null,
+        "kind": "record",
+        "name": "Shelf",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ShelfItem.meta",
+            "name": "meta",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ItemMeta",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ShelfItem.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "ShelfItem",
+        "key_type": null,
+        "kind": "record",
+        "name": "ShelfItem",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v1"
+  },
+  "corpus_path": "discovery/03-components-refs.json",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "discovery"
+  },
+  "fingerprint": "sha256:551df6b9981654d58932ca2a9b2bc0656c7a1770e3ea825c2dd19fbf8824c343",
+  "lint": {
+    "findings": 16,
+    "grade": "D",
+    "report_fingerprint": "4d0b7ca5c54e6796981e9334e884e6b25f369d21cec86af27452873791eae6cd",
+    "score": 69,
+    "severity_counts": {
+      "error": 0,
+      "info": 11,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

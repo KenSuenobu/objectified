@@ -1,0 +1,835 @@
+{
+  "adapter": "discovery",
+  "canonical": {
+    "channels": [],
+    "description": "A hand-authored Discovery document modeling a small bookstore catalog.",
+    "extras": {
+      "discovery_documentation_link": "https://example.com/bookstore",
+      "discovery_id": "bookstore:v1",
+      "discovery_kind": "discovery#restDescription",
+      "discovery_name": "bookstore",
+      "discovery_service_path": "bookstore/v1/",
+      "discovery_version": "v1"
+    },
+    "format": "discovery",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Bookstore API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From Discovery baseUrl/rootUrl",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://bookstore.example.com/",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Bookstore API",
+        "name": "Bookstore API",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List books in the catalog.",
+            "extras": {
+              "discovery_id": "bookstore.books.list",
+              "discovery_method": "list",
+              "discovery_resource_path": "books"
+            },
+            "http_method": "GET",
+            "http_path": "/bookstore/v1/books",
+            "key": "GET /bookstore/v1/books",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /bookstore/v1/books#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "BookList",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "bookstore.books.list",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Data format for the response.",
+                "extras": {
+                  "discovery_enum": [
+                    "json",
+                    "media"
+                  ],
+                  "discovery_location": "query"
+                },
+                "key": "GET /bookstore/v1/books#query.alt",
+                "location": "query",
+                "name": "alt",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "GET /bookstore/v1/books#query.maxResults",
+                "location": "query",
+                "name": "maxResults",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Search query.",
+                "extras": {
+                  "discovery_location": "query"
+                },
+                "key": "GET /bookstore/v1/books#query.q",
+                "location": "query",
+                "name": "q",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Get a single book.",
+            "extras": {
+              "discovery_id": "bookstore.books.get",
+              "discovery_method": "get",
+              "discovery_resource_path": "books"
+            },
+            "http_method": "GET",
+            "http_path": "/bookstore/v1/books/{bookId}",
+            "key": "GET /bookstore/v1/books/{bookId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /bookstore/v1/books/{bookId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Book",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "bookstore.books.get",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Book id.",
+                "extras": {
+                  "discovery_location": "path"
+                },
+                "key": "GET /bookstore/v1/books/{bookId}#path.bookId",
+                "location": "path",
+                "name": "bookId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Data format for the response.",
+                "extras": {
+                  "discovery_enum": [
+                    "json",
+                    "media"
+                  ],
+                  "discovery_location": "query"
+                },
+                "key": "GET /bookstore/v1/books/{bookId}#query.alt",
+                "location": "query",
+                "name": "alt",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Response projection.",
+                "extras": {
+                  "discovery_enum": [
+                    "FULL",
+                    "LITE"
+                  ],
+                  "discovery_location": "query"
+                },
+                "key": "GET /bookstore/v1/books/{bookId}#query.projection",
+                "location": "query",
+                "name": "projection",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List reviews for a book.",
+            "extras": {
+              "discovery_id": "bookstore.books.reviews.list",
+              "discovery_method": "list",
+              "discovery_resource_path": "books/reviews"
+            },
+            "http_method": "GET",
+            "http_path": "/bookstore/v1/books/{bookId}/reviews",
+            "key": "GET /bookstore/v1/books/{bookId}/reviews",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /bookstore/v1/books/{bookId}/reviews#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "bookstore.books.reviews.list",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "discovery_location": "path"
+                },
+                "key": "GET /bookstore/v1/books/{bookId}/reviews#path.bookId",
+                "location": "path",
+                "name": "bookId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Data format for the response.",
+                "extras": {
+                  "discovery_enum": [
+                    "json",
+                    "media"
+                  ],
+                  "discovery_location": "query"
+                },
+                "key": "GET /bookstore/v1/books/{bookId}/reviews#query.alt",
+                "location": "query",
+                "name": "alt",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Create a book.",
+            "extras": {
+              "discovery_id": "bookstore.books.insert",
+              "discovery_method": "insert",
+              "discovery_resource_path": "books"
+            },
+            "http_method": "POST",
+            "http_path": "/bookstore/v1/books",
+            "key": "POST /bookstore/v1/books",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /bookstore/v1/books#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Book",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /bookstore/v1/books#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Book",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "bookstore.books.insert",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Data format for the response.",
+                "extras": {
+                  "discovery_enum": [
+                    "json",
+                    "media"
+                  ],
+                  "discovery_location": "query"
+                },
+                "key": "POST /bookstore/v1/books#query.alt",
+                "location": "query",
+                "name": "alt",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Check out a book.",
+            "extras": {
+              "discovery_id": "bookstore.checkouts.create",
+              "discovery_method": "create",
+              "discovery_resource_path": "checkouts"
+            },
+            "http_method": "POST",
+            "http_path": "/bookstore/v1/checkouts",
+            "key": "POST /bookstore/v1/checkouts",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /bookstore/v1/checkouts#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CheckoutRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "POST /bookstore/v1/checkouts#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CheckoutReceipt",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "bookstore.checkouts.create",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": "Data format for the response.",
+                "extras": {
+                  "discovery_enum": [
+                    "json",
+                    "media"
+                  ],
+                  "discovery_location": "query"
+                },
+                "key": "POST /bookstore/v1/checkouts#query.alt",
+                "location": "query",
+                "name": "alt",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Bookstore API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Author.bio",
+            "name": "bio",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Author.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Author",
+        "key_type": null,
+        "kind": "record",
+        "name": "Author",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Book.authors",
+            "name": "authors",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Author",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Book id.",
+            "extras": {},
+            "field_number": null,
+            "key": "Book.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "AVAILABLE",
+                "CHECKED_OUT",
+                "LOST"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Book.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Book.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Book",
+        "key_type": null,
+        "kind": "record",
+        "name": "Book",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "BookList.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "Book",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "BookList.totalItems",
+            "name": "totalItems",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "BookList",
+        "key_type": null,
+        "kind": "record",
+        "name": "BookList",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CheckoutReceipt.bookId",
+            "name": "bookId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CheckoutReceipt.dueDate",
+            "name": "dueDate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "CheckoutReceipt",
+        "key_type": null,
+        "kind": "record",
+        "name": "CheckoutReceipt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CheckoutRequest.dueDate",
+            "name": "dueDate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CheckoutRequest.patronId",
+            "name": "patronId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "CheckoutRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "CheckoutRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "v1"
+  },
+  "corpus_path": "discovery/01-bookstore-api.json",
+  "counts": {
+    "channels": 0,
+    "operations": 5,
+    "servers": 1,
+    "services": 1,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "discovery"
+  },
+  "fingerprint": "sha256:5048fc373cfc3809d368b9a0f259a380d57ae26c6c752f4232cd9d59b1c03601",
+  "lint": {
+    "findings": 23,
+    "grade": "D",
+    "report_fingerprint": "5496e13186f0582f0e8b565276340fd5e37b5a2db6d3f7b92e870e96f28b3db8",
+    "score": 62,
+    "severity_counts": {
+      "error": 0,
+      "info": 18,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

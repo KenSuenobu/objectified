@@ -1,0 +1,38 @@
+{
+  "_comment": "Minimal Discovery rest description \u2014 one resource method and one schema.",
+  "kind": "discovery#restDescription",
+  "discoveryVersion": "v1",
+  "id": "ping:v1",
+  "version": "v1",
+  "description": "Liveness probe API.",
+  "protocol": "rest",
+  "baseUrl": "https://ping.example.com/",
+  "rootUrl": "https://ping.example.com/",
+  "servicePath": "",
+  "schemas": {
+    "Pong": {
+      "id": "Pong",
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "resources": {
+    "probe": {
+      "methods": {
+        "get": {
+          "id": "ping.probe.get",
+          "path": "v1/ping",
+          "httpMethod": "GET",
+          "description": "Return ok.",
+          "response": {
+            "$ref": "Pong"
+          }
+        }
+      }
+    }
+  }
+}
