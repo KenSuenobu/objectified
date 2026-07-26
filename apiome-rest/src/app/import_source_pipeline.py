@@ -59,6 +59,7 @@ import json
 import logging
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
 from .archive_intake import ArchiveIntakeError, is_archive_payload, unpack_archive
@@ -73,7 +74,15 @@ from .import_source import (
     detect_import_source,
 )
 from .intake_error_taxonomy import descriptor_for, resolve_intake_error_code
-from .intake_resource_guard import IntakeLimitError, guard_payload_bytes
+from .intake_resource_guard import (
+    IntakeLimitError,
+    guard_expansion_ratio,
+    guard_payload_bytes,
+    resolve_guard_profile,
+    stage_memory_tracker,
+    stage_wall_clock,
+)
+from .intake_streaming import cleanup_intake_tempfile
 from .intake_secret_scrub import (
     ScrubFinding,
     ScrubOutcome,
@@ -354,11 +363,24 @@ def _classify_parse_failure(
 
 
 def _decode_document_bytes(payload: Dict[str, Any]) -> bytes:
-    """Decode the base64 worker payload into raw bytes.
+    """Decode the worker payload into raw bytes.
+
+    Prefers a streamed tempfile path (``document_path``, IXH-6.5) so large
+    multipart uploads are not base64-doubled in memory. Falls back to
+    ``document_base64`` for JSON intake and legacy workers.
 
     Raises:
-        ImportSourceError: If ``document_base64`` is missing or not valid base64.
+        ImportSourceError: If neither path nor base64 is usable.
     """
+    path = payload.get("document_path")
+    if isinstance(path, str) and path.strip():
+        try:
+            return Path(path).read_bytes()
+        except OSError as exc:
+            raise ImportSourceError(
+                f"document_path could not be read: {exc}", code="INPUT_EMPTY"
+            ) from exc
+
     b64 = payload.get("document_base64")
     if not isinstance(b64, str) or not b64:
         raise ImportSourceError(
@@ -398,6 +420,11 @@ def _resolve_intake(payload: Dict[str, Any], options: Dict[str, Any]) -> _Resolv
     """Classify the payload as a single file or an archive fileset."""
     raw_bytes = _decode_document_bytes(payload)
     source_label = payload.get("filename")
+    tenant_id = payload.get("tenant_id")
+    profile = resolve_guard_profile(
+        tenant_id=str(tenant_id) if isinstance(tenant_id, str) else None
+    )
+    limits = profile.limits
     archive_root = options.get("archive_root") if isinstance(options, dict) else None
     if isinstance(archive_root, str):
         archive_root = archive_root.strip() or None
@@ -405,17 +432,26 @@ def _resolve_intake(payload: Dict[str, Any], options: Dict[str, Any]) -> _Resolv
         archive_root = None
 
     if not is_archive_payload(raw_bytes, source_label if isinstance(source_label, str) else None):
-        # IXH-1.4: cap the single-document payload on its *bytes*, before decoding
-        # to text (which would double the footprint) and before any adapter sees
-        # it — text-only formats never reach the JSON/YAML guard in parse_document.
+        # IXH-1.4 / IXH-6.5: cap the single-document payload on its *bytes*, before
+        # decoding to text (which would double the footprint) and before any adapter
+        # sees it — text-only formats never reach the JSON/YAML guard in parse_document.
         # Archives keep their own, larger budget enforced inside unpack_archive.
         guard_payload_bytes(
             raw_bytes,
             source_label=source_label if isinstance(source_label, str) else None,
+            limits=limits,
+        )
+        text = raw_bytes.decode("utf-8", errors="replace")
+        decoded_len = len(text.encode("utf-8", errors="replace"))
+        guard_expansion_ratio(
+            raw_bytes=len(raw_bytes),
+            expanded_bytes=decoded_len,
+            source_label=source_label if isinstance(source_label, str) else None,
+            limits=limits,
         )
         return _ResolvedIntake(
             raw_bytes=raw_bytes,
-            text=raw_bytes.decode("utf-8", errors="replace"),
+            text=text,
             fileset=None,
             archive_root=None,
         )
@@ -427,7 +463,9 @@ def _resolve_intake(payload: Dict[str, Any], options: Dict[str, Any]) -> _Resolv
             root_path=archive_root,
         )
     except ArchiveIntakeError as exc:
-        raise ImportSourceError(str(exc), code="INPUT_ARCHIVE_INVALID") from exc
+        raise ImportSourceError(
+            str(exc), code=getattr(exc, "code", None) or "INPUT_ARCHIVE_INVALID"
+        ) from exc
 
     fileset = IntakeFileset.from_members(unpacked.members, root=unpacked.root_path)
     return _ResolvedIntake(
@@ -999,15 +1037,24 @@ async def run_adapter_import_job(
 
     # --- parse ----------------------------------------------------------------
     intake: Optional[_ResolvedIntake] = None
+    tenant_id = payload.get("tenant_id")
+    profile = resolve_guard_profile(
+        tenant_id=str(tenant_id) if isinstance(tenant_id, str) else None
+    )
     try:
-        intake = _resolve_intake(payload, options if isinstance(options, dict) else {})
-        if intake.fileset is not None:
-            native_ast = adapter.parse_fileset(intake.fileset, source_label=source_label)
-        else:
-            assert intake.text is not None
-            native_ast = adapter.parse(intake.text, source_label=source_label)
+        with stage_wall_clock("parse", limits=profile, source_label=source_label if isinstance(source_label, str) else None):
+            with stage_memory_tracker(
+                limits=profile,
+                source_label=source_label if isinstance(source_label, str) else None,
+            ):
+                intake = _resolve_intake(payload, options if isinstance(options, dict) else {})
+                if intake.fileset is not None:
+                    native_ast = adapter.parse_fileset(intake.fileset, source_label=source_label)
+                else:
+                    assert intake.text is not None
+                    native_ast = adapter.parse(intake.text, source_label=source_label)
     except (ImportSourceError, IntakeLimitError, SecureXmlError) as exc:
-        # A resource-limit or unsafe-construct rejection (IXH-1.4) already knows
+        # A resource-limit or unsafe-construct rejection (IXH-1.4 / IXH-6.5) already knows
         # its taxonomy code and must not be re-classified as a malformed document.
         error_code = (
             resolve_intake_error_code(getattr(exc, "code", None))
@@ -1017,6 +1064,7 @@ async def run_adapter_import_job(
             exc, adapter, intake.text if intake is not None else None, source_label
         )
         state.event("PARSE_ERROR", str(exc), level="error", context={"error_code": error_code})
+        cleanup_intake_tempfile(payload.get("document_path"))
         return state.snapshot(
             state="failed",
             percent=_PCT_INIT,
@@ -1025,11 +1073,21 @@ async def run_adapter_import_job(
     state.event("PARSE_OK", "Parsed source into the format's native representation.")
     await publish(state.snapshot(state="running", percent=_PCT_PARSED))
     if canceled():
+        cleanup_intake_tempfile(payload.get("document_path"))
         return state.snapshot(state="canceled", percent=_PCT_PARSED)
 
     # --- normalize ------------------------------------------------------------
     try:
-        model = adapter.normalize(native_ast, include_raw=True)
+        with stage_wall_clock(
+            "normalize",
+            limits=profile,
+            source_label=source_label if isinstance(source_label, str) else None,
+        ):
+            with stage_memory_tracker(
+                limits=profile,
+                source_label=source_label if isinstance(source_label, str) else None,
+            ):
+                model = adapter.normalize(native_ast, include_raw=True)
     except (ImportSourceError, IntakeLimitError, SecureXmlError) as exc:
         error_code = resolve_intake_error_code(getattr(exc, "code", None)) or (
             "INPUT_SEMANTIC_INVALID"
@@ -1037,6 +1095,7 @@ async def run_adapter_import_job(
         state.event(
             "NORMALIZE_ERROR", str(exc), level="error", context={"error_code": error_code}
         )
+        cleanup_intake_tempfile(payload.get("document_path"))
         return state.snapshot(
             state="failed",
             percent=_PCT_PARSED,
@@ -1240,4 +1299,5 @@ async def run_adapter_import_job(
             "IMPORT_COMPLETED",
             "Import-source pipeline completed; the source was stored in the catalog unconverted.",
         )
+    cleanup_intake_tempfile(payload.get("document_path"))
     return state.snapshot(state="completed", percent=_PCT_DONE, summary=summary, result=result)

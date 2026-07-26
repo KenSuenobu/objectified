@@ -172,6 +172,38 @@ INTAKE_ERROR_TAXONOMY: Dict[str, IntakeErrorDescriptor] = {
             "produce far more content than the import limit allows. Inline the "
             "repeated content directly instead of aliasing it, and try again.",
         ),
+        _d(
+            "INPUT_ENTITY_LIMIT",
+            IntakeErrorCategory.RESOURCE,
+            False,
+            "The document declares more entities than the import limit allows. "
+            "Split the document into smaller packages, or remove unused types and "
+            "examples, and try again.",
+        ),
+        _d(
+            "INPUT_REF_LIMIT",
+            IntakeErrorCategory.RESOURCE,
+            False,
+            "The document's $ref or include graph is deeper or wider than the "
+            "import limit allows. Flatten the reference chain — or reduce how many "
+            "references leave a single node — and try again.",
+        ),
+        _d(
+            "INPUT_TIME_LIMIT",
+            IntakeErrorCategory.RESOURCE,
+            False,
+            "Processing this document exceeded the per-stage time budget. Simplify "
+            "the document (fewer nested references, smaller archives) and try "
+            "again; contact your administrator if a larger budget is needed.",
+        ),
+        _d(
+            "INPUT_MEMORY_LIMIT",
+            IntakeErrorCategory.RESOURCE,
+            False,
+            "Processing this document exceeded the per-job memory ceiling. Split "
+            "the document, remove large embedded examples or binaries, and try "
+            "again; contact your administrator if a larger ceiling is needed.",
+        ),
         # --- format: routing between document and adapter is at fault -----------
         _d(
             "FORMAT_MISMATCH",

@@ -41,6 +41,7 @@ from .intake_resource_guard import (
     guard_document_size,
     guard_document_text,
     guard_parsed_document,
+    resolve_guard_profile,
 )
 from .models import SpecImportJobError
 from .schema_instance_validation import (
@@ -390,7 +391,9 @@ def _json_instance(request: SchemaInstanceValidationRequest) -> Any:
                 "INPUT_MALFORMED", f"The instance is not JSON-serializable: {exc}"
             ) from exc
         try:
-            guard_document_size(serialized, source_label="instance")
+            guard_document_size(
+                serialized, source_label="instance", limits=resolve_guard_profile()
+            )
         except IntakeLimitError as exc:
             raise _RequestFaultError(exc.code, str(exc)) from exc
         _guard_value(request.instance)
@@ -411,15 +414,15 @@ def _json_instance(request: SchemaInstanceValidationRequest) -> Any:
 def _guard_text(text: str) -> None:
     """Apply the pre-parse intake guards (size, alias expansion, depth) to raw payload text."""
     try:
-        guard_document_text(text, source_label="instance")
+        guard_document_text(text, source_label="instance", limits=resolve_guard_profile())
     except IntakeLimitError as exc:
         raise _RequestFaultError(exc.code, str(exc)) from exc
 
 
 def _guard_value(parsed: Any) -> None:
-    """Apply the exact post-parse depth and cycle guard to a parsed payload."""
+    """Apply the exact post-parse depth, entity, and $ref guards to a parsed payload."""
     try:
-        guard_parsed_document(parsed, source_label="instance")
+        guard_parsed_document(parsed, source_label="instance", limits=resolve_guard_profile())
     except IntakeLimitError as exc:
         raise _RequestFaultError(exc.code, str(exc)) from exc
 

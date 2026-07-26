@@ -806,6 +806,32 @@ class Settings(BaseSettings):
             "archive_max_depth",
         ),
     )
+    # IXH-6.5 (#5124): optional force of the intake GuardProfile tier. When unset,
+    # resolution falls through license-plan hint → default. Values: default | elevated.
+    intake_guard_profile: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "APIOME_GUARD_PROFILE",
+            "intake_guard_profile",
+        ),
+    )
+    # Soft hint for GuardProfile resolution (paid-looking plans → elevated). Not a
+    # license-enforcement control — only selects resource ceilings.
+    license_plan_hint: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "APIOME_LICENSE_PLAN_HINT",
+            "license_plan_hint",
+        ),
+    )
+    # Archive compression-ratio ceiling (uncompressed total / compressed size).
+    archive_max_compression_ratio: float = Field(
+        default=100.0,
+        validation_alias=AliasChoices(
+            "APIOME_ARCHIVE_MAX_COMPRESSION_RATIO",
+            "archive_max_compression_ratio",
+        ),
+    )
 
     # MCP discovery failure handling, backoff & quarantine (V2-MCP-19.3 / MCAT-5.3, #3675). A
     # flaky/dead endpoint must not wedge the sweep or spam failures: each failed discovery defers

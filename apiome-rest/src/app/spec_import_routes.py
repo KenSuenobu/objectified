@@ -60,7 +60,7 @@ from .spec_import_engine import (
     list_spec_import_jobs as engine_list_spec_import_jobs,
     rollback_spec_import_job as engine_rollback_spec_import_job,
     schedule_spec_import,
-    schedule_spec_import_multipart,
+    schedule_spec_import_from_path,
 )
 
 router = APIRouter(prefix="/v1/tenants", tags=["spec-import"])
@@ -328,25 +328,60 @@ async def start_spec_import_multipart(
         meta = SpecImportStartMetadata.model_validate_json(metadata)
     except (ValidationError, ValueError) as e:
         raise HTTPException(status_code=422, detail=str(e)) from e
-    raw = await file.read()
-    await _enforce_quality_gate(
-        tenant_id=tenant_id,
-        tenant_slug=tenant_slug,
-        user_id=user_id,
-        raw=raw,
-        metadata=meta,
-        filename=file.filename,
-        content_type=file.content_type,
+
+    # IXH-6.5: stream the upload into a bounded tempfile instead of buffering the
+    # whole body and then base64-doubling it into the job payload.
+    from pathlib import Path as _Path
+
+    from .intake_resource_guard import IntakeLimitError, resolve_guard_profile
+    from .intake_streaming import (
+        cleanup_intake_tempfile,
+        stream_upload_to_tempfile,
     )
-    return await schedule_spec_import_multipart(
-        tenant_slug,
-        tenant_id,
-        user_id,
-        meta,
-        raw,
-        file.filename,
-        file.content_type,
-    )
+
+    profile = resolve_guard_profile(tenant_id=tenant_id)
+    suffix = _Path(file.filename or "").suffix or ".upload"
+
+    async def _chunks():
+        while True:
+            chunk = await file.read(64 * 1024)
+            if not chunk:
+                break
+            yield chunk
+
+    try:
+        path, _size = await stream_upload_to_tempfile(
+            _chunks(),
+            limits=profile.limits,
+            suffix=suffix,
+            source_label=file.filename,
+        )
+    except IntakeLimitError as exc:
+        raise HTTPException(status_code=413, detail=str(exc)) from exc
+
+    try:
+        raw = _Path(path).read_bytes()
+        await _enforce_quality_gate(
+            tenant_id=tenant_id,
+            tenant_slug=tenant_slug,
+            user_id=user_id,
+            raw=raw,
+            metadata=meta,
+            filename=file.filename,
+            content_type=file.content_type,
+        )
+        return await schedule_spec_import_from_path(
+            tenant_slug,
+            tenant_id,
+            user_id,
+            meta,
+            document_path=path,
+            filename=file.filename,
+            content_type=file.content_type,
+        )
+    except Exception:
+        cleanup_intake_tempfile(path)
+        raise
 
 
 @router.get(

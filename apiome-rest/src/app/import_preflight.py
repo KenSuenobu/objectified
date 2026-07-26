@@ -69,7 +69,7 @@ from .import_export_quality_policy import (
 )
 from .import_source_pipeline import ImportRunArtifacts, build_job_error, run_adapter_import_job
 from .intake_error_taxonomy import resolve_intake_error_code
-from .intake_resource_guard import IntakeLimitError, guard_payload_bytes
+from .intake_resource_guard import IntakeLimitError, guard_payload_bytes, resolve_guard_profile
 from .intake_secret_scrub import scrub_message
 from .lint_rule_registry import LINT_RULE_DOCS_PAGE, builtin_rule_descriptors
 from .models import (
@@ -275,8 +275,8 @@ def rank_lint_findings(report: LintReport) -> List[ImportPreflightFinding]:
 _NO_DETECTION = FormatDetection(detected=None, candidates=[], ambiguous=False, ambiguous_candidates=[])
 
 
-def _guard_intake_size(raw: bytes, request: ImportPreflightRequest) -> None:
-    """Apply the IXH-1.4 byte ceiling before anything decodes the payload.
+def _guard_intake_size(raw: bytes, request: ImportPreflightRequest, *, tenant_id: str) -> None:
+    """Apply the IXH-1.4 / IXH-6.5 byte ceiling before anything decodes the payload.
 
     Pre-flight sniffs the document *before* handing it to the pipeline, and sniffing
     decodes the bytes to text — so the ceiling the pipeline applies inside
@@ -288,12 +288,14 @@ def _guard_intake_size(raw: bytes, request: ImportPreflightRequest) -> None:
     Args:
         raw: The decoded upload bytes.
         request: The pre-flight request (its filename labels the error).
+        tenant_id: Selects the tenant's GuardProfile tier.
 
     Raises:
         IntakeLimitError: When the payload exceeds the import size limit.
     """
     if not is_archive_payload(raw, request.filename):
-        guard_payload_bytes(raw, source_label=request.filename)
+        profile = resolve_guard_profile(tenant_id=tenant_id)
+        guard_payload_bytes(raw, source_label=request.filename, limits=profile)
 
 
 def _detect(raw: bytes, request: ImportPreflightRequest) -> Tuple[FormatDetection, Optional[str], List[str]]:
@@ -640,7 +642,7 @@ async def run_import_preflight(
     cache = ImportPreflightCache(hit=False, key=key, content_hash=content_hash)
 
     try:
-        _guard_intake_size(raw, request)
+        _guard_intake_size(raw, request, tenant_id=tenant_id)
     except IntakeLimitError as exc:
         report = _failed_report(
             detection=_requested_detection(request),

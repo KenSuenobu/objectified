@@ -884,14 +884,70 @@ async def schedule_spec_import_multipart(
     filename: Optional[str],
     content_type: Optional[str],
 ) -> SpecImportJobAccepted:
-    b64 = base64.standard_b64encode(file_bytes).decode("ascii")
-    body = SpecImportStartJsonRequest(
-        metadata=metadata,
-        document_base64=b64,
+    """Schedule a multipart import, streaming bytes to a tempfile (IXH-6.5).
+
+    Avoids base64-doubling the upload in the worker payload. The owning instance
+    reads ``document_path`` during the job and deletes the tempfile when the job
+    reaches a terminal state.
+    """
+    from .intake_resource_guard import resolve_guard_profile
+    from .intake_streaming import write_bytes_to_tempfile
+
+    profile = resolve_guard_profile(tenant_id=tenant_id)
+    suffix = Path(filename or "").suffix or ".upload"
+    path, _size = write_bytes_to_tempfile(
+        file_bytes,
+        limits=profile.limits,
+        suffix=suffix,
+        source_label=filename,
+    )
+    return await schedule_spec_import_from_path(
+        tenant_slug,
+        tenant_id,
+        user_id,
+        metadata,
+        document_path=path,
         filename=filename,
         content_type=content_type,
     )
-    return await schedule_spec_import(tenant_slug, tenant_id, user_id, body)
+
+
+async def schedule_spec_import_from_path(
+    tenant_slug: str,
+    tenant_id: str,
+    user_id: str,
+    metadata: SpecImportStartMetadata,
+    *,
+    document_path: str,
+    filename: Optional[str],
+    content_type: Optional[str],
+) -> SpecImportJobAccepted:
+    """Schedule an import whose document already lives on a bounded tempfile."""
+    job_id = str(uuid.uuid4())
+    payload: Dict[str, Any] = {
+        "rest_job_id": job_id,
+        "tenant_slug": tenant_slug,
+        "tenant_id": tenant_id,
+        "user_id": user_id,
+        "metadata": json.loads(metadata.model_dump_json()),
+        "document_path": document_path,
+        "filename": filename,
+        "content_type": content_type,
+    }
+    initial = SpecImportJobStatus(job_id=job_id, state="queued", percent=0)
+    async with _jobs_lock:
+        _jobs[job_id] = _JobRecord(
+            tenant_slug=tenant_slug,
+            job_id=job_id,
+            state="queued",
+            status=initial,
+        )
+    await _mirror_job(job_id)
+    asyncio.create_task(_drive_job(job_id, payload))
+    return SpecImportJobAccepted(
+        job_id=job_id,
+        status_path=f"/v1/tenants/{tenant_slug}/imports/{job_id}",
+    )
 
 
 async def get_spec_import_status(tenant_slug: str, job_id: str) -> SpecImportJobStatus:
