@@ -246,6 +246,7 @@ describe('buildImportEvidenceRows (native → canonical orientation)', () => {
     expect(coverageForOutcome('approximated', 'destination_unsupported')).toBe('partially-mapped');
     expect(coverageForOutcome('dropped', 'destination_unsupported')).toBe('unsupported-by-canonical-model');
     expect(coverageForOutcome('dropped', 'source_parse_limit')).toBe('not-parsed-by-adapter');
+    expect(coverageForOutcome('synthesized', 'source_incomplete')).toBe('inferred');
   });
 
   it('skips edges whose native node is missing rather than mis-attributing them', () => {

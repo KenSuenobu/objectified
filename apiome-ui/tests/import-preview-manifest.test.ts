@@ -112,11 +112,13 @@ describe('parseSourceLocation', () => {
 });
 
 describe('coverage presentation maps', () => {
-  it('gives each of the four classes a distinct label and a distinct tone', () => {
+  it('gives each of the five classes a distinct label and a distinct tone', () => {
     const labels = PREVIEW_COVERAGE_CLASSES.map((c) => PREVIEW_COVERAGE_LABEL[c]);
     const tones = PREVIEW_COVERAGE_CLASSES.map((c) => PREVIEW_COVERAGE_TONE[c]);
-    expect(new Set(labels).size).toBe(4);
-    expect(new Set(tones).size).toBe(4);
+    expect(PREVIEW_COVERAGE_CLASSES).toHaveLength(5);
+    expect(new Set(labels).size).toBe(5);
+    expect(new Set(tones).size).toBe(5);
+    expect(PREVIEW_COVERAGE_LABEL.inferred).toMatch(/inferred/i);
   });
 
   it('never conflates "unsupported by canonical model" with "not parsed by adapter"', () => {

@@ -18,7 +18,7 @@
       "label": "ASN.1",
       "category": "data-schema",
       "paradigm": "data_schema",
-      "marker": "`DEFINITIONS ::= BEGIN \u2026 END`"
+      "marker": "`DEFINITIONS ::= BEGIN … END`"
     },
     "asyncapi": {
       "label": "AsyncAPI 2.x/3.0",
@@ -36,7 +36,7 @@
       "label": "Cap'n Proto",
       "category": "data-schema",
       "paradigm": "data_schema",
-      "marker": "`@0x\u2026` file id + `struct`"
+      "marker": "`@0x…` file id + `struct`"
     },
     "cloudevents": {
       "label": "CloudEvents 1.0",
@@ -104,6 +104,12 @@
       "paradigm": "message",
       "marker": "`MSH|^~\\&|` message header"
     },
+    "http-file": {
+      "label": "HTTP Request File",
+      "category": "rest-http",
+      "paradigm": "rest",
+      "marker": "HTTP request line / `###` separators / `curl` / `.http` `.rest`"
+    },
     "iso20022": {
       "label": "ISO 20022",
       "category": "industry-messaging",
@@ -127,6 +133,18 @@
       "category": "data-schema",
       "paradigm": "data_schema",
       "marker": "`properties`/`optionalProperties`"
+    },
+    "k8s-crd": {
+      "label": "Kubernetes CRD",
+      "category": "data-schema",
+      "paradigm": "data_schema",
+      "marker": "`apiVersion: apiextensions.k8s.io/*` + `kind: CustomResourceDefinition`"
+    },
+    "llm-tools": {
+      "label": "LLM Tools",
+      "category": "agent",
+      "paradigm": "agent",
+      "marker": "OpenAI / Anthropic / bare tool-array shape"
     },
     "odata": {
       "label": "OData v4 (EDMX)",
@@ -223,18 +241,6 @@
       "category": "rest-http",
       "paradigm": "rest",
       "marker": "`apiRequester` / `apiProvider` descriptor"
-    },
-    "k8s-crd": {
-      "label": "Kubernetes CRD",
-      "category": "data-schema",
-      "paradigm": "data_schema",
-      "marker": "`apiVersion: apiextensions.k8s.io/*` + `kind: CustomResourceDefinition`"
-    },
-    "llm-tools": {
-      "label": "LLM Tools",
-      "category": "agent",
-      "paradigm": "agent",
-      "marker": "OpenAI / Anthropic / bare tool-array shape"
     }
   },
   "entries": [
@@ -1132,7 +1138,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Fileset member without an `asyncapi` marker \u2014 not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.",
+      "notes": "Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml, whose bundler chases this file's $refs into schemas.yaml.",
       "rung": "multi-file",
       "fileset_role": "member"
     },
@@ -1153,7 +1159,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Fileset member without an `asyncapi` marker \u2014 not independently detectable; imported only through the set root asyncapi.yaml.",
+      "notes": "Fileset member without an `asyncapi` marker — not independently detectable; imported only through the set root asyncapi.yaml.",
       "rung": "multi-file",
       "fileset_role": "member"
     },
@@ -1695,7 +1701,7 @@
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
-      "provenance": "Grammatically well-formed schema containing a file id and constants only \u2014 no struct, enum, or interface to import.",
+      "provenance": "Grammatically well-formed schema containing a file id and constants only — no struct, enum, or interface to import.",
       "failure_class": "semantic",
       "expected_error_code": "INPUT_MALFORMED"
     },
@@ -1819,7 +1825,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "CloudEvents batch arrays are documented in cloudevents_parser (and is_cloudevents_document accepts lists), but both detect and parse delegate to parse_document, which rejects top-level JSON arrays \u2014 the adapter's detect returns no match (only the standalone sniffer reports cloudevents 0.85) and import currently fails; expected_detection records the intended contract for the detection-hardening work.",
+      "notes": "CloudEvents batch arrays are documented in cloudevents_parser (and is_cloudevents_document accepts lists), but both detect and parse delegate to parse_document, which rejects top-level JSON arrays — the adapter's detect returns no match (only the standalone sniffer reports cloudevents 0.85) and import currently fails; expected_detection records the intended contract for the detection-hardening work.",
       "rung": "composition"
     },
     {
@@ -2664,7 +2670,7 @@
       "provenance": "Hand-written billing IDL that #includes common/money.idl, which is not provided, so Common::Money can never resolve.",
       "failure_class": "unresolvable-ref",
       "expected_error_code": "FORMAT_MISMATCH",
-      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 \u2014 the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
+      "notes": "is_corbaidl hard-rejects any text containing `include \"` (an anti-Thrift guard) so the corbaidl sniffer never claims the file, and the thrift sniffer claims the #include line at 0.95 — the pipeline therefore grounds FORMAT_MISMATCH rather than an unresolved-reference code."
     },
     {
       "path": "corba-idl/negative/03-truncated-inventory.idl",
@@ -3470,7 +3476,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "FIX Orchestra XML is not yet recognized \u2014 currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract.",
+      "notes": "FIX Orchestra XML is not yet recognized — currently misdetected as protobuf (weak 0.70 grpc-adapter keyword match) and the fix adapter has no Orchestra parser; expected_detection records the intended contract.",
       "rung": "composition"
     },
     {
@@ -4530,6 +4536,274 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Hand-authored valid ACK message encoded as UTF-16 with BOM so the UTF-8 decode yields replacement characters.",
+      "failure_class": "encoding",
+      "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
+      "path": "http-file/01-minimal-ping.http",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "minimal",
+        "get"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "minimal"
+    },
+    {
+      "path": "http-file/02-typical-vars-auth.http",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "variables",
+        "bearer",
+        "json-body",
+        "request-name"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "typical"
+    },
+    {
+      "path": "http-file/03-path-templating.http",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "path-templating",
+        "inferred",
+        "repeated-urls"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo to exercise path-template inference from repeated URLs.",
+      "rung": "composition"
+    },
+    {
+      "path": "http-file/04-stress-methods-curl.http",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "stress",
+        "methods",
+        "curl",
+        "query"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "stress"
+    },
+    {
+      "path": "http-file/05-vscode-style-orders.http",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "real-world",
+        "vscode",
+        "uuid-path",
+        "api-key"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Hand-authored VS Code REST Client style orders API request file.",
+      "rung": "real-world"
+    },
+    {
+      "path": "http-file/06-users-set/admin.http",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "multi-file",
+        "member"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "Fileset member imported through the set root api.http together with http-client.env.json.",
+      "rung": "multi-file",
+      "fileset_role": "member"
+    },
+    {
+      "path": "http-file/06-users-set/api.http",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "multi-file",
+        "env",
+        "provenance"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "rung": "multi-file",
+      "fileset_role": "root"
+    },
+    {
+      "path": "http-file/06-users-set/http-client.env.json",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "multi-file",
+        "env"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "notes": "JetBrains-style environment file; not independently importable as requests.",
+      "rung": "multi-file",
+      "fileset_role": "member"
+    },
+    {
+      "path": "http-file/negative/01-syntactic-no-request.http",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "http-file/negative/02-semantic-curl-missing-url.http",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "semantic",
+        "curl"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "failure_class": "semantic",
+      "expected_error_code": "INPUT_MALFORMED"
+    },
+    {
+      "path": "http-file/negative/03-truncated-mid-body.http",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_TRUNCATED"
+    },
+    {
+      "path": "http-file/negative/04-wrong-format-openapi.json",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "wrong-format",
+        "openapi"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Minimal OpenAPI 3 document used as a wrong-format negative for the http-file adapter.",
+      "failure_class": "wrong-format",
+      "expected_error_code": "FORMAT_MISMATCH"
+    },
+    {
+      "path": "http-file/negative/05-encoding-utf16.http",
+      "format": "http-file",
+      "adapter_key": "http-file",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "http-file",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "encoding",
+        "utf-16"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "The hand-authored http-file/01-minimal-ping.http re-encoded as UTF-16 (BOM + NUL bytes).",
       "failure_class": "encoding",
       "expected_error_code": "INPUT_ENCODING_INVALID"
     },
@@ -8681,7 +8955,7 @@
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96), `oncrpc` (0.95), and `smithy` (0.95) above `thrift` (0.95) \u2014 the Thrift `union` block also matches the FlatBuffers union marker; expected_detection records the intended winner for the detection-hardening work.",
+      "notes": "Currently outranked: detection ranks `flatbuffers` (0.96), `oncrpc` (0.95), and `smithy` (0.95) above `thrift` (0.95) — the Thrift `union` block also matches the FlatBuffers union marker; expected_detection records the intended winner for the detection-hardening work.",
       "rung": "stress"
     },
     {

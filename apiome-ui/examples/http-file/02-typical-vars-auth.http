@@ -1,0 +1,18 @@
+@host = https://api.example.com
+@token = demo-token
+
+### List users
+# @name listUsers
+GET {{host}}/users?limit=10
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Create user
+# @name createUser
+POST {{host}}/users
+Content-Type: application/json
+
+{
+  "name": "Ada",
+  "email": "ada@example.com"
+}

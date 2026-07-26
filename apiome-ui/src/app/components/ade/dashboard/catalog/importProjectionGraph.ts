@@ -88,6 +88,7 @@ export function coverageForOutcome(
   reason: string | null,
 ): PreviewCoverageClass {
   if (status === 'approximated') return 'partially-mapped';
+  if (status === 'synthesized') return 'inferred';
   if (status === 'dropped') {
     return reason === 'source_parse_limit' ? 'not-parsed-by-adapter' : 'unsupported-by-canonical-model';
   }

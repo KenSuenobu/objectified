@@ -1,0 +1,29 @@
+@base = https://api.example.com/v1
+
+###
+GET {{base}}/items?page=1&limit=50
+Accept: application/json
+
+###
+PUT {{base}}/items/1001
+Content-Type: application/json
+
+{"name":"widget","qty":3}
+
+###
+PATCH {{base}}/items/1002
+Content-Type: application/json
+
+{"qty":5}
+
+###
+DELETE {{base}}/items/1003
+
+###
+HEAD {{base}}/items
+
+###
+OPTIONS {{base}}/items
+
+###
+curl -X POST '{{base}}/items' -H 'Content-Type: application/json' -d '{"name":"gizmo"}'

@@ -1,0 +1,856 @@
+{
+  "adapter": "http-file",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "http_file_variables": [
+        {
+          "key": "base",
+          "value": "https://api.example.com/v1"
+        }
+      ],
+      "path_inferences": [
+        {
+          "generalized_segments": [
+            {
+              "index": 0,
+              "kind": "literal",
+              "value": "v1"
+            },
+            {
+              "index": 1,
+              "kind": "literal",
+              "value": "items"
+            },
+            {
+              "index": 2,
+              "kind": "param",
+              "value": "id"
+            }
+          ],
+          "method": "DELETE",
+          "sample_urls": [
+            "https://api.example.com/v1/items/1003"
+          ],
+          "template": "/v1/items/{id}"
+        },
+        {
+          "generalized_segments": [
+            {
+              "index": 0,
+              "kind": "literal",
+              "value": "v1"
+            },
+            {
+              "index": 1,
+              "kind": "literal",
+              "value": "items"
+            },
+            {
+              "index": 2,
+              "kind": "param",
+              "value": "id"
+            }
+          ],
+          "method": "PATCH",
+          "sample_urls": [
+            "https://api.example.com/v1/items/1002"
+          ],
+          "template": "/v1/items/{id}"
+        },
+        {
+          "generalized_segments": [
+            {
+              "index": 0,
+              "kind": "literal",
+              "value": "v1"
+            },
+            {
+              "index": 1,
+              "kind": "literal",
+              "value": "items"
+            },
+            {
+              "index": 2,
+              "kind": "param",
+              "value": "id"
+            }
+          ],
+          "method": "PUT",
+          "sample_urls": [
+            "https://api.example.com/v1/items/1001"
+          ],
+          "template": "/v1/items/{id}"
+        }
+      ],
+      "provenance": "inferred",
+      "sample_counts": {
+        "DELETE /v1/items/{id}": 1,
+        "GET /v1/items": 1,
+        "HEAD /v1/items": 1,
+        "OPTIONS /v1/items": 1,
+        "PATCH /v1/items/{id}": 1,
+        "POST /v1/items": 1,
+        "PUT /v1/items/{id}": 1
+      }
+    },
+    "format": "http-file",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "http-file/04-stress-methods-curl.http",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {
+          "provenance": "inferred",
+          "source_file": "http-file/04-stress-methods-curl.http"
+        },
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "provenance": "inferred"
+        },
+        "key": "http-file/04-stress-methods-curl.http",
+        "name": "http-file/04-stress-methods-curl.http",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "items"
+                  },
+                  {
+                    "index": 2,
+                    "kind": "param",
+                    "value": "id"
+                  }
+                ],
+                "method": "DELETE",
+                "sample_urls": [
+                  "https://api.example.com/v1/items/1003"
+                ],
+                "template": "/v1/items/{id}"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/04-stress-methods-curl.http"
+              ],
+              "source_label": "http-file/04-stress-methods-curl.http",
+              "source_location": "20:1"
+            },
+            "http_method": "DELETE",
+            "http_path": "/v1/items/{id}",
+            "key": "DELETE /v1/items/{id}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "DELETE /v1/items/{id}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "DELETE /v1/items/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "items"
+                  }
+                ],
+                "method": "GET",
+                "sample_urls": [
+                  "https://api.example.com/v1/items?page=1&limit=50"
+                ],
+                "template": "/v1/items"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/04-stress-methods-curl.http"
+              ],
+              "source_label": "http-file/04-stress-methods-curl.http",
+              "source_location": "4:1"
+            },
+            "http_method": "GET",
+            "http_path": "/v1/items",
+            "key": "GET /v1/items",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /v1/items",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "GET /v1/items#header.accept",
+                "location": "header",
+                "name": "accept",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1,
+                  "samples": [
+                    "50"
+                  ]
+                },
+                "key": "GET /v1/items#query.limit",
+                "location": "query",
+                "name": "limit",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1,
+                  "samples": [
+                    "1"
+                  ]
+                },
+                "key": "GET /v1/items#query.page",
+                "location": "query",
+                "name": "page",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "items"
+                  }
+                ],
+                "method": "HEAD",
+                "sample_urls": [
+                  "https://api.example.com/v1/items"
+                ],
+                "template": "/v1/items"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/04-stress-methods-curl.http"
+              ],
+              "source_label": "http-file/04-stress-methods-curl.http",
+              "source_location": "23:1"
+            },
+            "http_method": "HEAD",
+            "http_path": "/v1/items",
+            "key": "HEAD /v1/items",
+            "kind": "request_response",
+            "messages": [],
+            "name": "HEAD /v1/items",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "items"
+                  }
+                ],
+                "method": "OPTIONS",
+                "sample_urls": [
+                  "https://api.example.com/v1/items"
+                ],
+                "template": "/v1/items"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/04-stress-methods-curl.http"
+              ],
+              "source_label": "http-file/04-stress-methods-curl.http",
+              "source_location": "26:1"
+            },
+            "http_method": "OPTIONS",
+            "http_path": "/v1/items",
+            "key": "OPTIONS /v1/items",
+            "kind": "request_response",
+            "messages": [],
+            "name": "OPTIONS /v1/items",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "items"
+                  },
+                  {
+                    "index": 2,
+                    "kind": "param",
+                    "value": "id"
+                  }
+                ],
+                "method": "PATCH",
+                "sample_urls": [
+                  "https://api.example.com/v1/items/1002"
+                ],
+                "template": "/v1/items/{id}"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/04-stress-methods-curl.http"
+              ],
+              "source_label": "http-file/04-stress-methods-curl.http",
+              "source_location": "14:1"
+            },
+            "http_method": "PATCH",
+            "http_path": "/v1/items/{id}",
+            "key": "PATCH /v1/items/{id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "headers": [],
+                "key": "PATCH /v1/items/{id}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PatchItemRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "PATCH /v1/items/{id}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "PATCH /v1/items/{id}#header.content-type",
+                "location": "header",
+                "name": "content-type",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "PATCH /v1/items/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "items"
+                  }
+                ],
+                "method": "POST",
+                "sample_urls": [
+                  "https://api.example.com/v1/items"
+                ],
+                "template": "/v1/items"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/04-stress-methods-curl.http"
+              ],
+              "source_label": "http-file/04-stress-methods-curl.http",
+              "source_location": "29:1"
+            },
+            "http_method": "POST",
+            "http_path": "/v1/items",
+            "key": "POST /v1/items",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "headers": [],
+                "key": "POST /v1/items#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PostItemRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "POST /v1/items",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "POST /v1/items#header.content-type",
+                "location": "header",
+                "name": "content-type",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "v1"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "items"
+                  },
+                  {
+                    "index": 2,
+                    "kind": "param",
+                    "value": "id"
+                  }
+                ],
+                "method": "PUT",
+                "sample_urls": [
+                  "https://api.example.com/v1/items/1001"
+                ],
+                "template": "/v1/items/{id}"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/04-stress-methods-curl.http"
+              ],
+              "source_label": "http-file/04-stress-methods-curl.http",
+              "source_location": "8:1"
+            },
+            "http_method": "PUT",
+            "http_path": "/v1/items/{id}",
+            "key": "PUT /v1/items/{id}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "headers": [],
+                "key": "PUT /v1/items/{id}#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PutItemRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "PUT /v1/items/{id}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "PUT /v1/items/{id}#header.content-type",
+                "location": "header",
+                "name": "content-type",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "PUT /v1/items/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "http-file/04-stress-methods-curl.http",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "provenance": "inferred"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PatchItemRequest.qty",
+            "name": "qty",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PatchItemRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "PatchItemRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "provenance": "inferred"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PostItemRequest.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PostItemRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "PostItemRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "provenance": "inferred"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PutItemRequest.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PutItemRequest.qty",
+            "name": "qty",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PutItemRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "PutItemRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "http-file/04-stress-methods-curl.http",
+  "counts": {
+    "channels": 0,
+    "operations": 7,
+    "servers": 1,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "http-file"
+  },
+  "fingerprint": "sha256:c9ec7fc33ba8376be619cf2fba8ea80161ec746cd1bf90a707d539e369d598d6",
+  "lint": {
+    "findings": 18,
+    "grade": "D",
+    "report_fingerprint": "9f7b81717ab6a0bf88e089f20c9c3113bdc31715903c1b2584f0aaedecf19396",
+    "score": 60,
+    "severity_counts": {
+      "error": 0,
+      "info": 8,
+      "warning": 10
+    }
+  },
+  "snapshot_version": 1
+}

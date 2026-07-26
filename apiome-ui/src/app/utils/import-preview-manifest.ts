@@ -18,10 +18,11 @@
  *  2. **The manifest is cursor-paginated over the flat entity list.** Identity fields
  *     (`manifest_hash`, `counts`, `total_entities`) always describe the *full* manifest; the list
  *     fields carry one page. {@link mergeManifestPages} accumulates pages client-side.
- *  3. **The four coverage classes are never conflated.** In particular
+ *  3. **The five coverage classes are never conflated.** In particular
  *     `unsupported-by-canonical-model` (the canonical model cannot represent it) and
  *     `not-parsed-by-adapter` (the adapter never read it) are distinct verdicts server-side and keep
- *     distinct labels and tones here.
+ *     distinct labels and tones here; `inferred` marks observation-synthesized constructs and is
+ *     never presented as declared.
  */
 
 import type { PreflightCounts, PreflightReport, PreflightRequest } from './import-preflight';
@@ -34,6 +35,7 @@ import type {
 export type PreviewCoverageClass =
   | 'mapped'
   | 'partially-mapped'
+  | 'inferred'
   | 'unsupported-by-canonical-model'
   | 'not-parsed-by-adapter';
 
@@ -282,6 +284,7 @@ export function parseSourceLocation(
 export const PREVIEW_COVERAGE_CLASSES: readonly PreviewCoverageClass[] = [
   'mapped',
   'partially-mapped',
+  'inferred',
   'unsupported-by-canonical-model',
   'not-parsed-by-adapter',
 ] as const;
@@ -289,22 +292,24 @@ export const PREVIEW_COVERAGE_CLASSES: readonly PreviewCoverageClass[] = [
 /**
  * Badge label per coverage class. Each class keeps a distinct wording; in particular the two
  * "did not make it" classes are never conflated: one names the canonical model as the limit, the
- * other names the adapter.
+ * other names the adapter. ``inferred`` is never worded as declared.
  */
 export const PREVIEW_COVERAGE_LABEL: Record<PreviewCoverageClass, string> = {
   mapped: 'Mapped',
   'partially-mapped': 'Partially mapped',
+  inferred: 'Inferred',
   'unsupported-by-canonical-model': 'Not in canonical model',
   'not-parsed-by-adapter': 'Not parsed by adapter',
 };
 
 /**
  * Badge tone classes per coverage class. Full Tailwind literals (never concatenated) so the classes
- * survive purging; four distinct hues so the classes are told apart at a glance.
+ * survive purging; distinct hues so the classes are told apart at a glance.
  */
 export const PREVIEW_COVERAGE_TONE: Record<PreviewCoverageClass, string> = {
   mapped: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
   'partially-mapped': 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+  inferred: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300',
   'unsupported-by-canonical-model':
     'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
   'not-parsed-by-adapter': 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',

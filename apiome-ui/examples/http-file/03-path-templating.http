@@ -1,0 +1,8 @@
+### Get user 1
+GET https://api.example.com/users/1
+
+###
+GET https://api.example.com/users/2
+
+###
+GET https://api.example.com/users/42

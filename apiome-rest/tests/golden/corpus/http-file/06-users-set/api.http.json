@@ -1,0 +1,273 @@
+{
+  "adapter": "http-file",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "http_file_variables": [
+        {
+          "key": "host",
+          "value": "https://api.example.com"
+        },
+        {
+          "key": "token",
+          "value": "dev-token"
+        }
+      ],
+      "inferred_auth_schemes": [
+        "bearer"
+      ],
+      "path_inferences": [],
+      "provenance": "inferred",
+      "sample_counts": {
+        "GET /admin/me": 1,
+        "GET /ping": 1,
+        "GET /users": 1
+      }
+    },
+    "format": "http-file",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "http-file/06-users-set/api.http",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {
+          "provenance": "inferred",
+          "source_file": "admin.http"
+        },
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "provenance": "inferred"
+        },
+        "key": "http-file/06-users-set/api.http",
+        "name": "http-file/06-users-set/api.http",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "admin"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "literal",
+                    "value": "me"
+                  }
+                ],
+                "method": "GET",
+                "sample_urls": [
+                  "https://api.example.com/admin/me"
+                ],
+                "template": "/admin/me"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "admin.http"
+              ],
+              "source_label": "admin.http",
+              "source_location": "2:1"
+            },
+            "http_method": "GET",
+            "http_path": "/admin/me",
+            "key": "GET /admin/me",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /admin/me",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "GET /admin/me#header.authorization",
+                "location": "header",
+                "name": "authorization",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "ping"
+                  }
+                ],
+                "method": "GET",
+                "sample_urls": [
+                  "https://api.example.com/ping"
+                ],
+                "template": "/ping"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "api.http"
+              ],
+              "source_label": "api.http",
+              "source_location": "2:1"
+            },
+            "http_method": "GET",
+            "http_path": "/ping",
+            "key": "GET /ping",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /ping",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "users"
+                  }
+                ],
+                "method": "GET",
+                "sample_urls": [
+                  "https://api.example.com/users?limit=10"
+                ],
+                "template": "/users"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "api.http"
+              ],
+              "source_label": "api.http",
+              "source_location": "5:1"
+            },
+            "http_method": "GET",
+            "http_path": "/users",
+            "key": "GET /users",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /users",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "GET /users#header.authorization",
+                "location": "header",
+                "name": "authorization",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1,
+                  "samples": [
+                    "10"
+                  ]
+                },
+                "key": "GET /users#query.limit",
+                "location": "query",
+                "name": "limit",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "http-file/06-users-set/api.http",
+    "types": [],
+    "version": null
+  },
+  "corpus_path": "http-file/06-users-set/api.http",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "http-file"
+  },
+  "fingerprint": "sha256:155af15734ae1abe6a5c811a9a365382282d31d1d4687fe70529fc028fd9daa0",
+  "lint": {
+    "findings": 4,
+    "grade": "B",
+    "report_fingerprint": "87869ac02a88b837857a02a3fc5a2b07feeec976d3a95618a46a9a491bad39de",
+    "score": 87,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

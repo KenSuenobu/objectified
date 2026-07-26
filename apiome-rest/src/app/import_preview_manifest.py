@@ -15,11 +15,12 @@ This module extends the pre-flight into a full **import preview manifest**:
 * per-entity **provenance** back to the source construct (native name / native id /
   source location, read from the same extras keys the export manifest reads);
 * a **coverage ledger** classifying source constructs as ``mapped``,
-  ``partially-mapped``, ``unsupported-by-canonical-model``, or
-  ``not-parsed-by-adapter`` — the last two are *never* conflated: "the canonical model
-  cannot hold this" and "our parser does not yet read this" are different facts with
-  different owners, and each ``not-parsed-by-adapter`` entry names its CLX-2.4
-  capability-registry reference;
+  ``partially-mapped``, ``inferred``, ``unsupported-by-canonical-model``, or
+  ``not-parsed-by-adapter`` — unsupported vs not-parsed are *never* conflated: "the
+  canonical model cannot hold this" and "our parser does not yet read this" are
+  different facts with different owners, and each ``not-parsed-by-adapter`` entry
+  names its CLX-2.4 capability-registry reference; ``inferred`` marks constructs
+  synthesized from observations (request files / traffic), never presented as declared;
 * the **adapter capability reference** (descriptor + the CLX-2.4 per-format capability
   entry + the adapter's declared parser limits); and
 * the **routing decision**, carried on the embedded pre-flight report.
@@ -47,6 +48,7 @@ Coverage class                            Status         Reason
 ========================================  =============  ==========================
 ``mapped``                                ``retained``   —
 ``partially-mapped``                      ``approximated``  ``destination_unsupported``
+``inferred``                              ``synthesized`` ``source_incomplete``
 ``unsupported-by-canonical-model``        ``dropped``    ``destination_unsupported``
 ``not-parsed-by-adapter``                 ``dropped``    ``source_parse_limit``
 ========================================  =============  ==========================
@@ -179,10 +181,27 @@ MAX_ENTITY_PAGE_SIZE = 1000
 #: bound is tighter than the pre-flight report cache's).
 PREVIEW_MANIFEST_CACHE_MAX_ENTRIES = 32
 
-#: Extras keys that carry *provenance* (source location / native id) rather than source
-#: semantics. An entity whose extras hold only these keys is fully ``mapped`` — the
-#: provenance bag is our own bookkeeping, not an unmodeled source attribute.
-PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE_ID_EXTRA_KEYS)
+#: Extras keys that carry *provenance* (source location / native id / inference
+#: bookkeeping) rather than source semantics. An entity whose extras hold only these
+#: keys is fully ``mapped`` (or ``inferred`` when ``provenance == "inferred"``) — the
+#: bag is our own bookkeeping, not an unmodeled source attribute.
+PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE_ID_EXTRA_KEYS) | frozenset(
+    {
+        "provenance",
+        "sample_count",
+        "sample_counts",
+        "inference_evidence",
+        "source_label",
+        "source_file",
+        "source_files",
+        "path_inferences",
+        "inferred_auth_schemes",
+        "samples",
+        "http_status",
+        "body_schema",
+        "http_file_variables",
+    }
+)
 
 
 # ===========================================================================
@@ -201,6 +220,7 @@ class CoverageClass(str, Enum):
 
     MAPPED = "mapped"
     PARTIALLY_MAPPED = "partially-mapped"
+    INFERRED = "inferred"
     UNSUPPORTED_BY_CANONICAL_MODEL = "unsupported-by-canonical-model"
     NOT_PARSED_BY_ADAPTER = "not-parsed-by-adapter"
 
@@ -208,12 +228,17 @@ class CoverageClass(str, Enum):
 #: The bijection coverage class → (status, reason) in the shared taxonomy. In the import
 #: direction the "destination" is the canonical model, so ``destination_unsupported``
 #: means "canonical fields cannot hold this", while ``source_parse_limit`` means "our
-#: parser does not read this yet" — the two are never conflated.
+#: parser does not read this yet" — the two are never conflated. ``inferred`` means the
+#: construct was synthesized from observations (traffic / request files), not declared.
 STATUS_FOR_COVERAGE: Dict[CoverageClass, Tuple[ProjectionStatus, Optional[ProjectionReason]]] = {
     CoverageClass.MAPPED: (ProjectionStatus.RETAINED, None),
     CoverageClass.PARTIALLY_MAPPED: (
         ProjectionStatus.APPROXIMATED,
         ProjectionReason.DESTINATION_UNSUPPORTED,
+    ),
+    CoverageClass.INFERRED: (
+        ProjectionStatus.SYNTHESIZED,
+        ProjectionReason.SOURCE_INCOMPLETE,
     ),
     CoverageClass.UNSUPPORTED_BY_CANONICAL_MODEL: (
         ProjectionStatus.DROPPED,
@@ -754,12 +779,31 @@ def _entity_rows(
     destination lane.
     """
     unmodeled = _unmodeled_extras(extras)
-    coverage = CoverageClass.PARTIALLY_MAPPED if unmodeled else CoverageClass.MAPPED
+    if extras.get("provenance") == "inferred":
+        coverage = CoverageClass.INFERRED
+    elif unmodeled:
+        coverage = CoverageClass.PARTIALLY_MAPPED
+    else:
+        coverage = CoverageClass.MAPPED
     status, reason = STATUS_FOR_COVERAGE[coverage]
     evidence = _native_evidence_for(extras, name, key)
 
     if coverage is CoverageClass.MAPPED:
         detail = "Source construct fully represented by canonical fields."
+    elif coverage is CoverageClass.INFERRED:
+        sample_count = extras.get("sample_count")
+        sample_bit = f" from {sample_count} sample(s)" if sample_count is not None else ""
+        path_evidence = extras.get("inference_evidence")
+        if isinstance(path_evidence, dict) and path_evidence.get("template"):
+            detail = (
+                f"Inferred{sample_bit}: path template {path_evidence['template']!r} "
+                f"from samples {path_evidence.get('sample_urls', [])!r}."
+            )
+        else:
+            detail = (
+                f"Inferred{sample_bit} from observations; never presented as a "
+                "declared source construct."
+            )
     else:
         detail = (
             "Source attributes not modeled by canonical fields ride in the entity's "
@@ -904,6 +948,34 @@ def _document_scope_rows(
                 capability_reference=capability,
             )
         )
+
+    inferred_status, inferred_reason = STATUS_FOR_COVERAGE[CoverageClass.INFERRED]
+    path_inferences = api.extras.get("path_inferences") if isinstance(api.extras, dict) else None
+    if isinstance(path_inferences, list):
+        for index, evidence in enumerate(path_inferences):
+            if not isinstance(evidence, dict):
+                continue
+            method = evidence.get("method") or "?"
+            template = evidence.get("template") or "?"
+            samples = evidence.get("sample_urls") or []
+            construct = f"path-template#{method} {template}"
+            detail = (
+                f"Inferred path template {method} {template} from "
+                f"{len(samples)} sample URL(s): {samples!r}."
+            )
+            ledger.append(
+                CoverageEntry(
+                    source_construct=construct,
+                    coverage=CoverageClass.INFERRED,
+                    status=inferred_status,
+                    reason=inferred_reason,
+                    detail=detail,
+                    document_scoped=True,
+                )
+            )
+            # Keep index referenced so unused-variable linters stay quiet if enumerate changes.
+            _ = index
+
     return nodes, edges, ledger
 
 

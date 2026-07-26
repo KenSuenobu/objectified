@@ -171,6 +171,7 @@ export const CATALOG_FORMATS: readonly CatalogFormat[] = [
   // ---- REST (non-OpenAPI) ----
   { id: 'raml', label: 'RAML', icon: BookMarked, tone: 'red', importable: true, description: 'RAML 1.0 REST API definition.' },
   { id: 'postman', label: 'Postman', icon: FileJson, tone: 'orange', importable: true, aliases: ['postmancollection'], description: 'Postman v2.1 request collection.' },
+  { id: 'http-file', label: 'HTTP Request File', icon: FileCode, tone: 'orange', importable: true, aliases: ['httpfile', 'http', 'rest', 'curl'], description: 'VS Code / JetBrains .http/.rest request file or cURL paste (inferred surface).' },
   { id: 'odata', label: 'OData', icon: Database, tone: 'orange', importable: true, aliases: ['edmx'], description: 'OData EDMX / CSDL service metadata.' },
   { id: 'wsdl', label: 'WSDL', icon: FileCode, tone: 'slate', importable: true, aliases: ['soap'], description: 'SOAP web service description (WSDL).' },
   { id: 'wadl', label: 'WADL', icon: FileCode, tone: 'slate', importable: true, aliases: ['restdescription'], description: 'WADL REST resource description.' },

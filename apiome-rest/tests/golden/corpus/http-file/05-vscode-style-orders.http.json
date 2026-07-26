@@ -1,0 +1,637 @@
+{
+  "adapter": "http-file",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "http_file_variables": [
+        {
+          "key": "apiKey",
+          "value": "demo-key"
+        },
+        {
+          "key": "host",
+          "value": "https://orders.example.com"
+        }
+      ],
+      "inferred_auth_schemes": [
+        "apiKey"
+      ],
+      "path_inferences": [
+        {
+          "generalized_segments": [
+            {
+              "index": 0,
+              "kind": "literal",
+              "value": "orders"
+            },
+            {
+              "index": 1,
+              "kind": "param",
+              "value": "id"
+            }
+          ],
+          "method": "DELETE",
+          "sample_urls": [
+            "https://orders.example.com/orders/550e8400-e29b-41d4-a716-446655440000"
+          ],
+          "template": "/orders/{id}"
+        },
+        {
+          "generalized_segments": [
+            {
+              "index": 0,
+              "kind": "literal",
+              "value": "orders"
+            },
+            {
+              "index": 1,
+              "kind": "param",
+              "value": "id"
+            }
+          ],
+          "method": "GET",
+          "sample_urls": [
+            "https://orders.example.com/orders/550e8400-e29b-41d4-a716-446655440000",
+            "https://orders.example.com/orders/6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+          ],
+          "template": "/orders/{id}"
+        }
+      ],
+      "provenance": "inferred",
+      "sample_counts": {
+        "DELETE /orders/{id}": 1,
+        "GET /health": 1,
+        "GET /orders": 1,
+        "GET /orders/{id}": 2,
+        "POST /orders": 1
+      }
+    },
+    "format": "http-file",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "http-file/05-vscode-style-orders.http",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {
+          "provenance": "inferred",
+          "source_file": "http-file/05-vscode-style-orders.http"
+        },
+        "name": null,
+        "protocol": null,
+        "url": "https://orders.example.com",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {
+          "provenance": "inferred"
+        },
+        "key": "http-file/05-vscode-style-orders.http",
+        "name": "http-file/05-vscode-style-orders.http",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "orders"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "param",
+                    "value": "id"
+                  }
+                ],
+                "method": "DELETE",
+                "sample_urls": [
+                  "https://orders.example.com/orders/550e8400-e29b-41d4-a716-446655440000"
+                ],
+                "template": "/orders/{id}"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/05-vscode-style-orders.http"
+              ],
+              "source_label": "http-file/05-vscode-style-orders.http",
+              "source_location": "32:1"
+            },
+            "http_method": "DELETE",
+            "http_path": "/orders/{id}",
+            "key": "DELETE /orders/{id}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "DELETE /orders/{id}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "DELETE /orders/{id}#header.x-api-key",
+                "location": "header",
+                "name": "x-api-key",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "DELETE /orders/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "health"
+                  }
+                ],
+                "method": "GET",
+                "sample_urls": [
+                  "https://orders.example.com/health"
+                ],
+                "template": "/health"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/05-vscode-style-orders.http"
+              ],
+              "source_label": "http-file/05-vscode-style-orders.http",
+              "source_location": "5:1"
+            },
+            "http_method": "GET",
+            "http_path": "/health",
+            "key": "GET /health",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /health",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "orders"
+                  }
+                ],
+                "method": "GET",
+                "sample_urls": [
+                  "https://orders.example.com/orders?status=open&limit=25"
+                ],
+                "template": "/orders"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/05-vscode-style-orders.http"
+              ],
+              "source_label": "http-file/05-vscode-style-orders.http",
+              "source_location": "8:1"
+            },
+            "http_method": "GET",
+            "http_path": "/orders",
+            "key": "GET /orders",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /orders",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "GET /orders#header.accept",
+                "location": "header",
+                "name": "accept",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "GET /orders#header.x-api-key",
+                "location": "header",
+                "name": "x-api-key",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1,
+                  "samples": [
+                    "25"
+                  ]
+                },
+                "key": "GET /orders#query.limit",
+                "location": "query",
+                "name": "limit",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1,
+                  "samples": [
+                    "open"
+                  ]
+                },
+                "key": "GET /orders#query.status",
+                "location": "query",
+                "name": "status",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "orders"
+                  },
+                  {
+                    "index": 1,
+                    "kind": "param",
+                    "value": "id"
+                  }
+                ],
+                "method": "GET",
+                "sample_urls": [
+                  "https://orders.example.com/orders/550e8400-e29b-41d4-a716-446655440000",
+                  "https://orders.example.com/orders/6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+                ],
+                "template": "/orders/{id}"
+              },
+              "provenance": "inferred",
+              "sample_count": 2,
+              "source_files": [
+                "http-file/05-vscode-style-orders.http"
+              ],
+              "source_label": "http-file/05-vscode-style-orders.http",
+              "source_location": "13:1"
+            },
+            "http_method": "GET",
+            "http_path": "/orders/{id}",
+            "key": "GET /orders/{id}",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GET /orders/{id}",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 2
+                },
+                "key": "GET /orders/{id}#header.x-api-key",
+                "location": "header",
+                "name": "x-api-key",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 2
+                },
+                "key": "GET /orders/{id}#path.id",
+                "location": "path",
+                "name": "id",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "inference_evidence": {
+                "generalized_segments": [
+                  {
+                    "index": 0,
+                    "kind": "literal",
+                    "value": "orders"
+                  }
+                ],
+                "method": "POST",
+                "sample_urls": [
+                  "https://orders.example.com/orders"
+                ],
+                "template": "/orders"
+              },
+              "provenance": "inferred",
+              "sample_count": 1,
+              "source_files": [
+                "http-file/05-vscode-style-orders.http"
+              ],
+              "source_label": "http-file/05-vscode-style-orders.http",
+              "source_location": "21:1"
+            },
+            "http_method": "POST",
+            "http_path": "/orders",
+            "key": "POST /orders",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "headers": [],
+                "key": "POST /orders#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "PostOrderRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "POST /orders",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "POST /orders#header.content-type",
+                "location": "header",
+                "name": "content-type",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "provenance": "inferred",
+                  "sample_count": 1
+                },
+                "key": "POST /orders#header.x-api-key",
+                "location": "header",
+                "name": "x-api-key",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "http-file/05-vscode-style-orders.http",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "provenance": "inferred"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PostOrderRequest.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PostOrderRequest.customerId",
+            "name": "customerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "PostOrderRequest.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": null,
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "PostOrderRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "PostOrderRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "http-file/05-vscode-style-orders.http",
+  "counts": {
+    "channels": 0,
+    "operations": 5,
+    "servers": 1,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.96,
+    "format": "http-file"
+  },
+  "fingerprint": "sha256:ef52ef58c48ceee642ed01b99d0740ba3a850e5a14453318c622c42db33f0ee8",
+  "lint": {
+    "findings": 11,
+    "grade": "C",
+    "report_fingerprint": "25f4f1424636a2867062329a21669f3b830e0ca837550f4fe2de7d37d01bf998",
+    "score": 71,
+    "severity_counts": {
+      "error": 0,
+      "info": 5,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}
