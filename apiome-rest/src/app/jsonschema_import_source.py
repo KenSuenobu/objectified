@@ -297,6 +297,10 @@ class JsonSchemaImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE)
     supports_live_discovery = False
     formats = (JSON_SCHEMA_FORMAT, "jsonschema", "json-schema-2020-12")
+    # A JSON Schema bundle commonly ``$ref``\s sibling schemas by URL; this adapter parses a
+    # single mapping, so those definitions are missing from the model unless the import opts
+    # into the MFI-29.4 remote resolver (which inlines them before parse).
+    supports_remote_refs = True
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         """Recognize a JSON Schema document (dialect marker or structural keywords).

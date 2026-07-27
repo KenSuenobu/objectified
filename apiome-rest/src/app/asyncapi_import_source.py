@@ -135,6 +135,11 @@ class AsyncApiImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("asyncapi-2", "asyncapi-3")
+    # AsyncAPI documents routinely reference a shared message library by URL, and
+    # ``@asyncapi/parser`` dereferences in-document ``$ref``\s only — so an import may opt into
+    # the MFI-29.4 remote resolver, which inlines those references (SSRF-guarded and budgeted)
+    # before this adapter parses, and otherwise reports them as unresolved externals.
+    supports_remote_refs = True
     # parse() runs the authoritative Node `@asyncapi/parser` to validate + dereference; with no
     # bundled parser there is no fallback, so the source reports itself unavailable (MFI-5.2)
     # rather than failing every import at parse time. (Tool key: asyncapi_parser.ASYNCAPI_PARSER_TOOL_KEY.)

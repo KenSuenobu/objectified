@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.61.0",
+    "version": "1.62.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -70021,6 +70021,13 @@
             ],
             "title": "Unavailable Reason",
             "description": "Human-readable reason the source is unavailable, or ``null`` when available."
+          },
+          "supports_remote_refs": {
+            "type": "boolean",
+            "title": "Supports Remote Refs",
+            "description": "Whether this format's documents may reference other documents by URL, so an import can opt into SSRF-guarded remote ``$ref`` resolution (MFI-29.4) via the ``resolve_remote_refs`` option. ``false`` sources ignore the option entirely.",
+            "default": false,
+            "example": false
           }
         },
         "type": "object",
@@ -96630,6 +96637,13 @@
             ],
             "title": "Archive Root",
             "description": "When the uploaded document is a .zip/.tar.gz archive, the module-relative path of the root document inside the archive (MFI-29.1). Required when auto-detection is ambiguous; optional when a single root candidate is found."
+          },
+          "resolve_remote_refs": {
+            "type": "boolean",
+            "title": "Resolve Remote Refs",
+            "description": "Opt into SSRF-guarded remote `$ref` resolution for this import (MFI-29.4). When true, external `$ref` URLs in the source document are fetched through the SSRF guard under per-import budgets (max references, depth, bytes, timeout) and inlined before the model is built, so the imported revision covers them. When false (the default) nothing is fetched and every external reference is reported as a lint finding instead. Honored only by sources whose descriptor reports `supports_remote_refs` (AsyncAPI, JSON Schema).",
+            "default": false,
+            "example": false
           },
           "git_source": {
             "anyOf": [

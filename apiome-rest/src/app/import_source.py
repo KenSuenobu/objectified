@@ -47,7 +47,7 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Sequence, Tuple
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -184,6 +184,12 @@ class ImportSourceDescriptor(BaseModel):
     unavailable_reason: Optional[str] = Field(
         default=None,
         description="Human-readable reason the source is unavailable, or ``null`` when available.",
+    )
+    supports_remote_refs: bool = Field(
+        default=False,
+        description="Whether this format's documents may reference other documents by URL, so an "
+        "import can opt into SSRF-guarded remote ``$ref`` resolution (MFI-29.4) via the "
+        "``resolve_remote_refs`` option. ``false`` sources ignore the option entirely.",
     )
 
 
@@ -382,6 +388,50 @@ class LintReport(BaseModel):
             "categories": list(self.categories),
         }
 
+    def with_extra_findings(self, findings: Sequence[LintFinding]) -> "LintReport":
+        """Return a copy of this report with ``findings`` merged in and re-scored.
+
+        Some defects are found *outside* the rule engines — the MFI-29.4 remote ``$ref``
+        resolver reports references the imported model can no longer describe, because the
+        definitions behind them never made it into the model. Those findings still belong on
+        the same report, under the same score, so the quality signal a revision persists
+        reflects them.
+
+        Merging re-runs the shared roll-up (:func:`app.schema_lint.assemble_lint_result`) over
+        the union of the findings, so the score, grade, tallies and ``report_fingerprint``
+        stay exactly the values the formula would have produced had one engine emitted all of
+        them. A report that declined to score (no ``score``) keeps its findings appended but is
+        not given a synthetic score, since its adapter deliberately produced none.
+
+        Args:
+            findings: The extra findings to merge (any order; duplicates are kept as-is).
+
+        Returns:
+            A new :class:`LintReport`; ``self`` when ``findings`` is empty.
+        """
+        if not findings:
+            return self
+        merged = list(self.findings) + list(findings)
+        if self.score is None:
+            return self.model_copy(update={"findings": merged})
+
+        # Lazy import: the roll-up lives with the engine's finding model, which this SPI
+        # module deliberately does not depend on at import time.
+        from .schema_lint import LintFinding as EngineFinding
+        from .schema_lint import assemble_lint_result
+
+        engine_findings = [
+            EngineFinding(
+                path=finding.path,
+                category=finding.category or finding.rule.split(".", 1)[0],
+                rule=finding.rule,
+                severity=finding.severity,  # type: ignore[arg-type]
+                message=finding.message,
+            )
+            for finding in merged
+        ]
+        return LintReport.from_lint_result(assemble_lint_result(engine_findings))
+
     @classmethod
     def from_lint_result(cls, result: "LintResult") -> "LintReport":
         """Adapt an engine :class:`app.schema_lint.LintResult` into the SPI report shape.
@@ -473,6 +523,14 @@ class ImportSource(ABC):
     #: only for the internal ``sample`` no-op acceptance adapter; every real format adapter persists
     #: (MFI-23.7 canonical→catalog hook, :func:`app.import_source_pipeline.persist_adapter_import`).
     preview_only: ClassVar[bool] = False
+    #: Whether this format's documents may reference definitions in **other documents by URL**
+    #: (MFI-29.4). When ``True`` the pipeline runs the shared remote ``$ref`` resolver
+    #: (:mod:`app.remote_ref_resolver`) over the intake before :meth:`parse`: with the import's
+    #: ``resolve_remote_refs`` opt-in it inlines those references (SSRF-guarded, budgeted,
+    #: cached) so the model — and therefore the fingerprint — covers them, and without it the
+    #: unresolved externals are reported as lint findings. Adapters whose formats have no
+    #: URL-referencing construct leave this ``False`` and are never scanned.
+    supports_remote_refs: ClassVar[bool] = False
     #: Toolchain tool keys this adapter's parse **hard-requires** — its import cannot run without them
     #: (e.g. gRPC/Protobuf needs ``buf`` to compile ``.proto``). When any is unavailable in the
     #: runtime (MFI-5.2 packaging), the adapter's descriptor reports ``available = False`` so the UI
@@ -646,6 +704,7 @@ class ImportSource(ABC):
             formats=list(cls.formats),
             available=available,
             unavailable_reason=unavailable_reason,
+            supports_remote_refs=cls.supports_remote_refs,
         )
 
 

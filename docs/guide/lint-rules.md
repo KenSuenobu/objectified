@@ -216,6 +216,85 @@ Fetch this catalog programmatically with `GET /v1/lint/rules` (see
 - **Rationale:** A @deprecated entity should carry a deprecation reason.
 
 
+## Pack: `intake`
+
+<a id="intake-blocked-external-ref"></a>
+### `intake.blocked-external-ref`
+
+- **Category:** structure
+- **Default severity:** warning
+- **Rationale:** An external $ref pointing at a non-public address (loopback, RFC1918, link-local, or the cloud metadata endpoint) or at a non-HTTP scheme is refused by the SSRF guard and is never fetched. Publish the referenced document at a public HTTPS URL, or bundle it into the import instead of referencing it.
+
+<a id="intake-unresolved-external-ref"></a>
+### `intake.unresolved-external-ref`
+
+- **Category:** structure
+- **Default severity:** warning
+- **Rationale:** An external $ref that is never resolved leaves the imported model incomplete: the referenced messages, schemas, or types are missing from every downstream view (diff, lint, export) with no indication that anything was dropped. Enable remote $ref resolution for the import, bundle the referenced documents into the upload, or inline the definitions in the source document.
+
+
+## Pack: `k8s-crd`
+
+<a id="k8s-crd-required-field-hygiene"></a>
+### `k8s-crd.required-field-hygiene`
+
+- **Category:** structure
+- **Default severity:** warning
+- **Rationale:** Flag required lists with missing, duplicate, or undescribed fields.
+
+<a id="k8s-crd-structural-schema-pruning"></a>
+### `k8s-crd.structural-schema-pruning`
+
+- **Category:** structure
+- **Default severity:** warning
+- **Rationale:** Flag non-structural JSON Schema keywords and preserve-unknown-fields hygiene issues that affect Kubernetes pruning.
+
+
+## Pack: `llm-tools`
+
+<a id="llm-tools-duplicate-tool-name"></a>
+### `llm-tools.duplicate-tool-name`
+
+- **Category:** naming
+- **Default severity:** error
+- **Rationale:** Flag colliding tool names within a bundle.
+
+<a id="llm-tools-param-missing-description"></a>
+### `llm-tools.param-missing-description`
+
+- **Category:** quality
+- **Default severity:** warning
+- **Rationale:** Flag parameters without descriptions.
+
+<a id="llm-tools-prefer-enum-over-freetext"></a>
+### `llm-tools.prefer-enum-over-freetext`
+
+- **Category:** quality
+- **Default severity:** info
+- **Rationale:** Flag free-text parameters that look enumerable.
+
+<a id="llm-tools-required-field-hygiene"></a>
+### `llm-tools.required-field-hygiene`
+
+- **Category:** structure
+- **Default severity:** warning
+- **Rationale:** Flag required lists with missing or duplicate names.
+
+<a id="llm-tools-tool-missing-description"></a>
+### `llm-tools.tool-missing-description`
+
+- **Category:** quality
+- **Default severity:** warning
+- **Rationale:** Flag tools with no description.
+
+<a id="llm-tools-tool-weak-description"></a>
+### `llm-tools.tool-weak-description`
+
+- **Category:** quality
+- **Default severity:** info
+- **Rationale:** Flag tools whose description is too short or equals the name.
+
+
 ## Pack: `openapi`
 
 <a id="compatibility-breaking"></a>

@@ -29,7 +29,10 @@ Sources aggregated (all derived from the live engines, so the registry cannot dr
   (:func:`app.lint_engine.unconditional_rule_packs` — the cross-format ``common`` pack and the
   IXH-5.4 ``examples`` pack);
 * every registered per-format :class:`app.lint_engine.RulePack` (AsyncAPI, GraphQL,
-  protobuf, Arazzo, …), loaded through the same lazy loader the lint engine uses.
+  protobuf, Arazzo, …), loaded through the same lazy loader the lint engine uses;
+* the intake-stage catalogue (:data:`app.intake_lint_rules.INTAKE_RULES`) — rules that
+  describe the *source document as it arrived* rather than the model it produced (MFI-29.4's
+  unresolved external references), which no model-driven pack can emit.
 
 The MCP *surface* linter (:mod:`app.mcp_lint`, V2-MCP-21.x) is intentionally **not**
 included: it lints an MCP capability surface, not a schema revision, and is not part of the
@@ -41,6 +44,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
+from .intake_lint_rules import INTAKE_PACK, INTAKE_RULES
 from .lint_engine import (
     available_lint_formats,
     get_rule_pack,
@@ -161,7 +165,12 @@ def builtin_rule_descriptors() -> Tuple[LintRuleDescriptor, ...]:
                 rule.rule_id, pack_label, rule.category, rule.severity, rule.description
             )
 
-    # 3. Every registered per-format pack. Subclass registrations under extra format keys
+    # 3. The intake-stage catalogue: rules emitted while a source is being ingested
+    #    (MFI-29.4 remote $ref resolution), which never run through a model rule pack.
+    for rule_id, (category, severity, rationale) in INTAKE_RULES.items():
+        by_id[rule_id] = _descriptor(rule_id, INTAKE_PACK, category, severity, rationale)
+
+    # 4. Every registered per-format pack. Subclass registrations under extra format keys
     #    (same rules, different key) dedupe naturally through the by-id dict.
     load_format_rule_packs()
     for format_key in available_lint_formats():
