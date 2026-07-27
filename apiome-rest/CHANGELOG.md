@@ -5,6 +5,38 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.198.0] - 2026-07-26
+
+### Added
+- **Secret scrubbing on intake, completed (#4393, MFI-29.6)** — the IXH-1.4 scrubber gains the
+  two halves the ticket still owed it. **Entropy detection**: a credential no named pattern can
+  identify (an opaque token under a neutral key) is now caught by its Shannon entropy, with the
+  floor calibrated in the measured gap between identifier-shaped strings and generated
+  credential material, and maximal-run matching plus UUID/hex/numeric exemptions keeping
+  embedded payloads and operation ids untouched. **Per-tenant mode**: a new append-only
+  versioned policy (`intake_secret_scrub_policies`, apiome-db V208) selects `enforce` (redact
+  the persisted source — the shipped default, unchanged behaviour) or `warn_only` (report the
+  identical findings and persist content untouched, including keeping an archive whole).
+  Resolution is format override → format default → tenant → default, and the winning tier,
+  mode, and policy version are recorded on every `secret_scrub` job-summary block and
+  pre-flight report. The MFI-EPIC-32 collection/captured-traffic formats (`har`, `insomnia`,
+  `bruno`, `postman`, `http-file`) resolve to `enforce` regardless of the tenant mode unless
+  overridden per format — what MFI-32.5 gates on. New governance API
+  `GET`/`PUT /v1/tenants/{slug}/governance/secret-scrub-policy` (+ `/versions`), tenant-admin
+  only and audited with the full policy body. Detection now runs against the original text, so
+  a finding after a collapsed PEM block reports its true line number, and an archive's report
+  names the members that carried something (a line number alone is ambiguous across a fileset).
+  Overlap resolution checks neighbouring spans rather than scanning every claimed span, keeping
+  detection near-linear on the token-dense captures this protects (8k credentials ≈ 0.9s).
+  Message scrubbing stays mode-independent: `warn_only` governs persisted source material, not
+  what may reach a log aggregator. OpenAPI 1.63.0 → 1.64.0.
+
+### Fixed
+- `test_scrubbing_preserves_document_structure` asserted a document tree for every scrubbing
+  fixture and so failed on the line-oriented `.http` fixture; the structural contract is now
+  stated in each format's own terms (parsed shape for JSON/YAML, unchanged line count with
+  non-redacted lines byte-identical for request files).
+
 ## [1.193.0] - 2026-07-26
 
 ### Added

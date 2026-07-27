@@ -88,7 +88,7 @@ def _blocked_persistence(monkeypatch):
     """
     calls: List[str] = []
 
-    def _fake_persist(payload, model, intake, routing):
+    def _fake_persist(payload, model, intake, routing, scrub_resolution=None):
         calls.append("persist_adapter_import")
         return SpecImportJobResult(
             project_id="00000000-0000-0000-0000-000000000001",
@@ -446,23 +446,55 @@ async def test_secret_never_reaches_persisted_source_events_or_logs(
 def test_scrubbing_preserves_document_structure(generated_adversarial_dir):
     """Redaction replaces values only, leaving the document parseable and shaped.
 
-    The MFI-29.6 contract: scrubbing never alters fingerprint-relevant structure.
+    The MFI-29.6 contract: scrubbing never alters fingerprint-relevant structure. What
+    "structure" means depends on the fixture's format, so the assertion is stated in each
+    format's own terms — an identical parsed shape for the tree formats, and for the
+    line-oriented request file (which has no parse tree) an unchanged line count with every
+    line that was *not* redacted still byte-identical.
     """
-    import json
-
-    import yaml
-
     from app.intake_secret_scrub import REDACTION_MARKER, scrub_document_text
 
     for fixture in _secret_fixtures():
         text = (generated_adversarial_dir / fixture.name).read_text(encoding="utf-8")
         outcome = scrub_document_text(text)
         assert REDACTION_MARKER in outcome.text, f"{fixture.name}: nothing redacted"
-        loader = json.loads if fixture.name.endswith(".json") else yaml.safe_load
-        before, after = loader(text), loader(outcome.text)
-        assert _shape_of(before) == _shape_of(after), (
-            f"{fixture.name}: scrubbing changed the document's structure"
+
+        loader = _STRUCTURED_LOADERS.get(Path(fixture.name).suffix.lower())
+        if loader is not None:
+            before, after = loader(text), loader(outcome.text)
+            assert _shape_of(before) == _shape_of(after), (
+                f"{fixture.name}: scrubbing changed the document's structure"
+            )
+            continue
+
+        original_lines = text.splitlines()
+        scrubbed_lines = outcome.text.splitlines()
+        assert len(original_lines) == len(scrubbed_lines), (
+            f"{fixture.name}: scrubbing changed the line count"
         )
+        for number, (before_line, after_line) in enumerate(
+            zip(original_lines, scrubbed_lines), start=1
+        ):
+            if REDACTION_MARKER not in after_line:
+                assert before_line == after_line, (
+                    f"{fixture.name}: line {number} changed without being redacted"
+                )
+
+
+def _structured_loaders() -> Dict[str, Any]:
+    """Parsers for the fixture suffixes that have a document tree.
+
+    A suffix absent from this map has no parse tree (a ``.http`` request file is a line
+    protocol), and its structural contract is asserted line-wise instead.
+    """
+    import json
+
+    import yaml
+
+    return {".json": json.loads, ".yaml": yaml.safe_load, ".yml": yaml.safe_load}
+
+
+_STRUCTURED_LOADERS = _structured_loaders()
 
 
 def _shape_of(value: Any) -> Any:

@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.63.0",
+    "version": "1.64.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -11715,6 +11715,291 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for recordawaiveragainstablockingqualityverdresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/governance/secret-scrub-policy": {
+      "get": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "Get the tenant's intake secret-scrub policy",
+        "description": "The secret-scrub policy in force for this tenant (MFI-29.6). A tenant that has never saved one gets the documented default \u2014 enforce, with entropy detection on \u2014 with ``isDefault: true``, which is the behaviour every tenant already had, so an upgrade changes nothing.\n\nReadable by any tenant member: an import summary reports what was redacted, and a user who cannot see the policy cannot understand why.",
+        "operationId": "get_secret_scrub_policy_v1_tenants__tenant_slug__governance_secret_scrub_policy_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Getthetenantsintakesecretscrubpolicyauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Getthetenantsintakesecretscrubpolicyauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Getthetenantsintakesecretscrubpolicy Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Getthetenantsintakesecretscrubpolicy Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for get the tenant's intake secret-scrub policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecretScrubPolicyOut",
+                  "description": "Response payload for getthetenantsintakesecretscrubpolicyresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for getthetenantsintakesecretscrubpolicyresponse422."
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "Save a new version of the tenant's intake secret-scrub policy",
+        "description": "Append a new policy version (MFI-29.6). Policy rows are immutable so that an import summary recorded against a version stays reproducible; omitted fields carry forward from the current version.\n\nTenant administrators only, and audited with the full policy body: switching to ``warn_only`` means uploaded credentials persist unredacted, which must be attributable. Note that the collection and captured-traffic formats listed in ``alwaysEnforcedFormats`` stay enforced unless a per-format override says otherwise.",
+        "operationId": "put_secret_scrub_policy_v1_tenants__tenant_slug__governance_secret_scrub_policy_put",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Saveanewversionofthetenantsintakesecretsauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Saveanewversionofthetenantsintakesecretsauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Saveanewversionofthetenantsintakesecrets Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Saveanewversionofthetenantsintakesecrets Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecretScrubPolicyPutRequest",
+                "description": "Request body for saveanewversionofthetenantsintakesecretsrequest."
+              }
+            }
+          },
+          "description": "Request body for save a new version of the tenant's intake secret-scrub policy."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for save a new version of the tenant's intake secret-scrub policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecretScrubPolicyOut",
+                  "description": "Response payload for saveanewversionofthetenantsintakesecretsresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for saveanewversionofthetenantsintakesecretsresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/governance/secret-scrub-policy/versions": {
+      "get": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "List saved secret-scrub policy versions",
+        "description": "The tenant's saved scrub-policy versions, newest first. Policy rows are immutable, so this is the change history: every import summary names the ``policyVersionId`` that governed it.",
+        "operationId": "list_secret_scrub_policy_versions_v1_tenants__tenant_slug__governance_secret_scrub_policy_versions_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "Maximum versions to return.",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum versions to return."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listsavedsecretscrubpolicyversionsauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listsavedsecretscrubpolicyversionsauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listsavedsecretscrubpolicyversions Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listsavedsecretscrubpolicyversions Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for list saved secret-scrub policy versions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecretScrubPolicyVersionListResponse",
+                  "description": "Response payload for listsavedsecretscrubpolicyversionsresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for listsavedsecretscrubpolicyversionsresponse422."
                 }
               }
             }
@@ -70292,7 +70577,7 @@
               }
             ],
             "title": "Secret Scrub",
-            "description": "What intake would redact from the stored source (IXH-1.4) \u2014 types and line numbers only, never values."
+            "description": "What intake found in the source (IXH-1.4) \u2014 types and line numbers only, never values \u2014 plus the tenant scrub mode that governs it (MFI-29.6): 'mode' and 'applied' say whether a commit would redact the stored source or only report on it."
           },
           "error": {
             "anyOf": [
@@ -94408,6 +94693,187 @@
         ],
         "title": "SecretRefResponse",
         "description": "The outcome of declaring a secret reference."
+      },
+      "SecretScrubPolicyOut": {
+        "properties": {
+          "policyVersionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for secret scrub policy."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for secret scrub policy."
+              }
+            ],
+            "title": "Policyversionid",
+            "description": "Row id of the applied policy version; null when the tenant has none saved."
+          },
+          "versionNumber": {
+            "type": "integer",
+            "title": "Versionnumber",
+            "description": "Monotonic version number; 0 for the built-in default.",
+            "default": 0,
+            "example": 1
+          },
+          "contentFingerprint": {
+            "type": "string",
+            "title": "Contentfingerprint",
+            "description": "SHA-256 over the canonicalized policy body ('default' for the default).",
+            "default": "default",
+            "example": "a1b2c3d4e5f6789012345678901234ab"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "title": "Isdefault",
+            "description": "True when no tenant policy is saved and the enforce default applies.",
+            "default": true,
+            "example": false
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "enforce",
+              "warn_only"
+            ],
+            "title": "Mode",
+            "description": "'enforce' redacts credential values from the source intake persists; 'warn_only' reports the same findings and stores the content unmodified.",
+            "default": "enforce",
+            "example": "enforce"
+          },
+          "entropyDetection": {
+            "type": "boolean",
+            "title": "Entropydetection",
+            "description": "Whether the high-entropy heuristic runs alongside the named credential patterns. The named patterns always run and cannot be disabled.",
+            "default": true,
+            "example": false
+          },
+          "formatOverrides": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Formatoverrides",
+            "description": "Per-adapter-key mode overrides, e.g. {'openapi': {'mode': 'warn_only'}}. Resolution is format override \u2192 format default \u2192 tenant \u2192 default."
+          },
+          "alwaysEnforcedFormats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Alwaysenforcedformats",
+            "description": "Adapter keys that resolve to 'enforce' regardless of the tenant mode \u2014 the collection and captured-traffic formats. A per-format override still wins.",
+            "maxItems": 1000
+          },
+          "actorLabel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for secret scrub policy."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for secret scrub policy."
+              }
+            ],
+            "title": "Actorlabel",
+            "description": "Human-readable actor who saved this version."
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "description": "Response payload for secret scrub policy."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for secret scrub policy."
+              }
+            ],
+            "title": "Createdat",
+            "description": "When the version was saved; null for the built-in default."
+          }
+        },
+        "type": "object",
+        "title": "SecretScrubPolicyOut",
+        "description": "The tenant's intake secret-scrub policy in force (MFI-29.6, #4393)."
+      },
+      "SecretScrubPolicyPutRequest": {
+        "properties": {
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "enforce",
+                  "warn_only"
+                ],
+                "description": "Request body for secret scrub policy put."
+              },
+              {
+                "type": "null",
+                "description": "Request body for secret scrub policy put."
+              }
+            ],
+            "title": "Mode",
+            "description": "The tenant-tier scrub mode."
+          },
+          "entropyDetection": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Request body for secret scrub policy put."
+              },
+              {
+                "type": "null",
+                "description": "Request body for secret scrub policy put."
+              }
+            ],
+            "title": "Entropydetection",
+            "description": "Whether the high-entropy heuristic runs."
+          },
+          "formatOverrides": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object",
+                "description": "Request body for secret scrub policy put."
+              },
+              {
+                "type": "null",
+                "description": "Request body for secret scrub policy put."
+              }
+            ],
+            "title": "Formatoverrides",
+            "description": "Per-adapter-key mode overrides; replaces the map wholesale when given."
+          }
+        },
+        "type": "object",
+        "title": "SecretScrubPolicyPutRequest",
+        "description": "Replace the tenant's intake secret-scrub policy (MFI-29.6, #4393).\n\nA PUT always appends a **new version**: policy rows are immutable so a job summary\nrecorded against a version stays reproducible. Omitted fields keep the values the current\npolicy holds."
+      },
+      "SecretScrubPolicyVersionListResponse": {
+        "properties": {
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/SecretScrubPolicyOut"
+            },
+            "type": "array",
+            "title": "Versions",
+            "description": "Versions.",
+            "maxItems": 1000
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0,
+            "description": "Number of count.",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "title": "SecretScrubPolicyVersionListResponse",
+        "description": "The tenant's saved secret-scrub policy versions, newest first (MFI-29.6, #4393)."
       },
       "SecurityEventBody": {
         "properties": {

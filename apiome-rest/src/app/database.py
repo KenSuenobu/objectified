@@ -3727,6 +3727,126 @@ class Database:
         return sorted(rows, key=lambda r: str(r.get("expires_at") or ""))
 
     # ------------------------------------------------------------------
+    # Intake secret-scrub policy (MFI-29.6, #4393)
+    # ------------------------------------------------------------------
+
+    #: Columns every scrub-policy read returns, so a row always adapts cleanly into
+    #: :func:`app.intake_scrub_policy.scrub_policy_from_row`.
+    _SCRUB_POLICY_COLUMNS = """
+        id::text AS id, tenant_id::text AS tenant_id, version_number, content_fingerprint,
+        mode, entropy_detection, format_overrides,
+        actor_user_id::text AS actor_user_id, actor_label, created_at
+    """
+
+    def get_latest_intake_secret_scrub_policy(
+        self, tenant_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """The tenant's scrub policy in force — its highest version (MFI-29.6, #4393).
+
+        Args:
+            tenant_id: Tenant to read.
+
+        Returns:
+            The policy row, or ``None`` when the tenant has never saved one (callers then run
+            the enforce default).
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        rows = self.execute_query(
+            f"""
+            SELECT {self._SCRUB_POLICY_COLUMNS}
+            FROM apiome.intake_secret_scrub_policies
+            WHERE tenant_id = %s::uuid
+            ORDER BY version_number DESC
+            LIMIT 1
+            """,
+            (tenant_id,),
+        )
+        return rows[0] if rows else None
+
+    def list_intake_secret_scrub_policy_versions(
+        self, tenant_id: str, *, limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """The tenant's scrub-policy versions, newest first (MFI-29.6, #4393)."""
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        return self.execute_query(
+            f"""
+            SELECT {self._SCRUB_POLICY_COLUMNS}
+            FROM apiome.intake_secret_scrub_policies
+            WHERE tenant_id = %s::uuid
+            ORDER BY version_number DESC
+            LIMIT %s
+            """,
+            (tenant_id, max(1, min(int(limit), 200))),
+        )
+
+    def insert_intake_secret_scrub_policy(
+        self,
+        *,
+        tenant_id: str,
+        content_fingerprint: str,
+        mode: str,
+        entropy_detection: bool,
+        format_overrides: Dict[str, Any],
+        actor_user_id: Optional[str] = None,
+        actor_label: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Append a new scrub-policy version for a tenant (MFI-29.6, #4393).
+
+        Policy rows are append-only (a write-once trigger guards them), so a save is an insert
+        at ``max(version_number) + 1`` — the previous versions stay readable for the job
+        summaries that named them.
+
+        Args:
+            tenant_id: Tenant the policy governs.
+            content_fingerprint: SHA-256 over the canonicalized policy body.
+            mode: ``enforce`` | ``warn_only``.
+            entropy_detection: Whether the entropy heuristic runs alongside the patterns.
+            format_overrides: Per-adapter-key mode override map.
+            actor_user_id: Publishing user.
+            actor_label: Human-readable actor label.
+
+        Returns:
+            The inserted row, or ``None`` when the tenant id is not a UUID.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        query = f"""
+            INSERT INTO apiome.intake_secret_scrub_policies (
+                tenant_id, version_number, content_fingerprint,
+                mode, entropy_detection, format_overrides,
+                actor_user_id, actor_label
+            )
+            SELECT %s::uuid,
+                   COALESCE(MAX(version_number), 0) + 1,
+                   %s, %s, %s, %s::jsonb, %s::uuid, %s
+            FROM apiome.intake_secret_scrub_policies
+            WHERE tenant_id = %s::uuid
+            RETURNING {self._SCRUB_POLICY_COLUMNS}
+        """
+        params = (
+            tenant_id,
+            content_fingerprint,
+            mode,
+            entropy_detection,
+            json.dumps(format_overrides or {}, sort_keys=True),
+            actor_user_id,
+            actor_label,
+            tenant_id,
+        )
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, params)
+                row = cursor.fetchone()
+            conn.commit()
+            return row
+        except Exception:
+            conn.rollback()
+            raise
+
+    # ------------------------------------------------------------------
     # Import/export quality policy + waivers (IXH-2.3, #5098)
     # ------------------------------------------------------------------
 
