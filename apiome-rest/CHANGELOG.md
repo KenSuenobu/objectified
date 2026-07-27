@@ -5,6 +5,52 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.200.0] - 2026-07-27
+
+### Added
+- **Revision-scoped payload analysis contract (#4794, CPDO-1.1)** — the durable record the catalog
+  has never had. A catalog read reconstructs the imported source on every request and reduces it to
+  generic entity/field rows, so X12 envelopes and delimiters, copybook levels, PICTURE clauses,
+  OCCURS bounds and 88-conditions are derived, rendered, and discarded. A **payload analysis** is one
+  immutable record of what an analyzer observed in one source revision, naming the bytes it analysed
+  (`source_hash`), the contract it was written against (`schemaVersion`), and the analyzer that wrote
+  it — so a reader can tell whether it still describes the source in front of it.
+  - New `apiome.payload_analysis` (apiome-db V209), keyed by tenant, catalog project and source
+    revision. Rows are write-once (the shared V128 trigger); a re-import mints a new revision and
+    therefore a new analysis, and an analyzer upgrade *appends* a sequence rather than rewriting one,
+    so an evidence reference stays resolvable. Writes are idempotent by content fingerprint.
+  - **Absence is declared, never fabricated.** Statuses are `available` / `partial` / `unavailable` /
+    `failed`, each non-available one carrying a closed reason code (`not_analyzed`,
+    `no_source_captured`, `unsupported_format`, `bounds_exceeded`, `analyzer_failed`). Three
+    invariants are enforced *twice* — as V209 CHECK constraints and as
+    `PayloadAnalysisDocument.contract_violations()` at the API boundary: a record describing source
+    bytes must name them, a record describing nothing must contain nothing, and anything other than
+    `available` must say why. A legacy revision therefore reports `unavailable` with a reason, never
+    an empty tree that claims to be complete.
+  - **It is not a second copy of the payload.** A `ValueVisibility` policy (`none` / `structural`
+    default / `full`) governs observed values and is recorded on the record itself, so "no values
+    here" is always a stated policy. Redaction runs before the write (the store never holds more than
+    policy allows) *and* on read (a request can only narrow, never widen — values the store never
+    held cannot be re-materialised). A record carrying values its own declared visibility forbids is
+    itself a contract violation, which is what stops raw analyzer output from being stored as though
+    a policy had run.
+  - **Bounded.** `bound_tree` applies a 5000-node / 32-level budget by breadth-first admission, so
+    envelopes survive and deep leaves are what get dropped; `metrics.truncated` and
+    `droppedNodeCount` report it, and a bounded record cannot claim to be `available`.
+  - New `GET /v1/catalog/{tenant}/{item}/analysis` returns the record — native tree, source
+    locations, warnings, redaction metadata, and the identity a CPDO-1.3 manifest will cite. Gated on
+    `imports:view`; item existence is checked before the permission so a cross-tenant id 404s rather
+    than confirming itself with a 403. `?valueVisibility=` narrows; an unknown level is a 422.
+  - The catalog detail read gains an `analysis` **summary** — status and counts, no payload material,
+    readable by anyone who can read the item. It is built without reading the `tree` column, so the
+    detail endpoint's cost is independent of the analysed payload's size, and a store fault degrades
+    that one field to `failed` rather than failing the whole item.
+  - Retention: `apiome.purge_payload_analysis(retention_days DEFAULT 90)` drops superseded analyses
+    and those of soft-deleted revisions. Age alone is never sufficient — the current analysis of a
+    live revision is the catalog record.
+  - Documented in `docs/payload_analysis.md`, with `document_json_schema()` publishing the contract
+    generated from the model so it cannot drift. OpenAPI 1.64.1 → 1.65.0.
+
 ## [1.198.0] - 2026-07-26
 
 ### Added

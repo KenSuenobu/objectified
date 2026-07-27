@@ -36,7 +36,7 @@ wheels = [
 
 [[package]]
 name = "apiome-rest"
-version = "1.199.0"
+version = "1.200.0"
 source = { editable = "." }
 dependencies = [
     { name = "asn1tools" },

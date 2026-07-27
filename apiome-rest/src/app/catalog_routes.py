@@ -49,6 +49,9 @@ from .models import (
     ConvertDryRunResponse,
     LintReportResponse,
 )
+from .payload_analysis import PayloadAnalysisRecord, ValueVisibility
+from .payload_analysis_store import analysis_summary_for_item, load_analysis_for_item
+from .permissions import Action, Resource, enforce_permission
 
 router = APIRouter(prefix="/v1/catalog", tags=["catalog"])
 
@@ -181,7 +184,78 @@ async def get_catalog_item(
         summary=CatalogNormalizedSummary(**summary),
         source=CatalogSourceDescriptor(**source),
         parsed=parsed,
+        analysis=analysis_summary_for_item(tenant_id, item),
     )
+
+
+@router.get(
+    "/{tenant_slug}/{item_id}/analysis",
+    response_model=PayloadAnalysisRecord,
+)
+async def get_catalog_item_analysis(
+    tenant_slug: str,
+    item_id: str,
+    value_visibility: Optional[str] = Query(
+        None,
+        alias="valueVisibility",
+        description=(
+            "Optional read-time restriction on observed payload values: none | structural | full. "
+            "It can only narrow what the stored record carries, never widen it."
+        ),
+    ),
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> PayloadAnalysisRecord:
+    """Return the full native payload analysis of a catalog item's latest revision (CPDO-1.1).
+
+    The detail read (``GET …/{item_id}``) embeds only the analysis *summary* — status and counts,
+    no payload material — so it stays cheap regardless of how large the analysed source was. This
+    endpoint serves the record itself: the native tree in the analyzer's own vocabulary (X12
+    interchange → functional group → transaction set → segment → element; copybook level → PIC →
+    OCCURS → 88-condition), its source locations, analyzer warnings, and the redaction metadata
+    stating what was withheld.
+
+    **Authorization.** The summary is readable by anyone who can read the catalog item; the tree is
+    gated on ``imports:view``, the permission that governs imported source material, because a
+    native tree is a structural description of the payload itself. ``valueVisibility`` may further
+    restrict what is returned — it can never widen it, since values the store never held cannot be
+    re-materialised.
+
+    **Absence is declared.** A revision imported before this contract existed, or one whose source
+    was never captured, returns a record with ``status: "unavailable"``, an empty tree, and a reason
+    code saying which. It never returns a fabricated tree.
+
+    Like the other catalog reads this is restricted to the non-publishable slice — a Project's id, or
+    an unknown id, yields 404 — and authenticated via JWT token or API key.
+
+    Args:
+        tenant_slug: The tenant slug.
+        item_id: The catalog item ID (a project id).
+        value_visibility: Optional read-time value-visibility restriction.
+        auth_data: Authentication data (injected by dependency).
+
+    Returns:
+        The :class:`~app.payload_analysis.PayloadAnalysisRecord` for the item's latest revision.
+    """
+    tenant_id = auth_data["tenant_id"]
+
+    item = db.get_catalog_item_by_id(item_id, tenant_id)
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Catalog item not found: {item_id}")
+
+    enforce_permission(
+        db, auth_data, Resource.IMPORTS, Action.VIEW, target=f"catalog:{item_id}:analysis"
+    )
+
+    if value_visibility is not None and value_visibility not in ValueVisibility.ALL:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"Unsupported valueVisibility {value_visibility!r}; "
+                f"expected one of {', '.join(ValueVisibility.ALL)}."
+            ),
+        )
+
+    return load_analysis_for_item(tenant_id, item, value_visibility=value_visibility)
 
 
 @router.get(

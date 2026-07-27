@@ -20,6 +20,7 @@ from app.canonical_model import (
     TypeRef,
 )
 from app.emitter import (
+    _REGISTRY,
     CapabilityProfile,
     EmitResult,
     Emitter,
@@ -120,20 +121,26 @@ def test_register_is_idempotent_but_rejects_conflicts() -> None:
         def emit(self, api, *, opts=None):  # pragma: no cover - never called
             return EmitResult.from_document({})
 
-    assert register_emitter(DummyEmitter) is DummyEmitter
-    assert get_emitter("dummy-emit-test") is DummyEmitter
-    # Re-registering the same class is a no-op.
-    assert register_emitter(DummyEmitter) is DummyEmitter
+    # The registry is process-global, so the dummy must come back out again: the IXH-1.7 round-trip
+    # matrix (tests/test_roundtrip_matrix.py) enumerates the live registry and fails against its
+    # golden artifact if a test leaves a fixture emitter behind.
+    try:
+        assert register_emitter(DummyEmitter) is DummyEmitter
+        assert get_emitter("dummy-emit-test") is DummyEmitter
+        # Re-registering the same class is a no-op.
+        assert register_emitter(DummyEmitter) is DummyEmitter
 
-    class OtherEmitter(Emitter):
-        format = "dummy-emit-test"
-        paradigm = ApiParadigm.REST
+        class OtherEmitter(Emitter):
+            format = "dummy-emit-test"
+            paradigm = ApiParadigm.REST
 
-        def emit(self, api, *, opts=None):  # pragma: no cover - never called
-            return EmitResult.from_document({})
+            def emit(self, api, *, opts=None):  # pragma: no cover - never called
+                return EmitResult.from_document({})
 
-    with pytest.raises(ValueError, match="already registered"):
-        register_emitter(OtherEmitter)
+        with pytest.raises(ValueError, match="already registered"):
+            register_emitter(OtherEmitter)
+    finally:
+        _REGISTRY.pop("dummy-emit-test", None)
 
 
 def test_get_emitter_unknown_is_none() -> None:

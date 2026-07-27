@@ -23,6 +23,7 @@ from .mcp_facets import (
     UNKNOWN_VALUE,
 )
 from .mcp_lifecycle_signals import STAGE_UNSPECIFIED, assess_capability_lifecycle
+from .payload_analysis import PayloadAnalysisSummary
 from .repository_refresh_status import RefreshStatus, compute_refresh_status
 
 
@@ -1990,11 +1991,25 @@ class CatalogItemDetailSchema(CatalogItemSchema):
     and, from MFI-25.2, a ``parsed`` list of paradigm-tagged entity groups derived from the canonical
     model (see ``catalog_parsed_model.py``). ``parsed`` is ``[]`` when no model can be reconstructed
     from the item's captured source. Sparse until the import path records that provenance.
+
+    From CPDO-1.1 it also carries ``analysis``: the summary of the revision-scoped native payload
+    analysis (:mod:`app.payload_analysis`). The summary carries status and counts only — never
+    payload material — so it is readable by anyone who can read the item; the native tree itself is a
+    separate, permission-gated request to ``…/{item_id}/analysis``. A revision that has never been
+    analysed reports a declared ``unavailable`` status with a reason code, never a fabricated tree.
     """
 
     summary: CatalogNormalizedSummary = Field(default_factory=CatalogNormalizedSummary)
     source: CatalogSourceDescriptor = Field(default_factory=CatalogSourceDescriptor)
     parsed: List[CatalogParsedGroup] = Field(default_factory=list)
+    analysis: PayloadAnalysisSummary = Field(
+        default_factory=PayloadAnalysisSummary,
+        description=(
+            "Summary of the revision-scoped native payload analysis: status, reason code, analyzer "
+            "identity and node counts. Carries no payload material; fetch the native tree from "
+            "GET /v1/catalog/{tenant_slug}/{item_id}/analysis, which requires imports:view."
+        ),
+    )
 
     class Config:
         from_attributes = True
