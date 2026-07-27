@@ -1,10 +1,15 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, Copy, FileCode2 } from 'lucide-react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { FileCode2 } from 'lucide-react';
+import type { editor as MonacoEditorApi } from 'monaco-editor';
 import { monacoLanguageForArtifact } from '@/app/utils/export-target-language';
 import { cn } from '@lib/utils';
 import { ReadOnlyCodeViewer } from './ReadOnlyCodeViewer';
+import { ViewerActionsBar } from './ViewerActionsBar';
+import { DeferredFilePanel, TruncatedContentNotice } from './ViewerContentGuard';
+import { planViewerContent } from './exportViewerGuards';
+import { downloadBlob } from './exportDownload';
 import { ProblemsPanel } from './ProblemsPanel';
 import { useProblemMarkers } from './useProblemMarkers';
 import { useEntityMarkers } from './useEntityMarkers';
@@ -71,6 +76,10 @@ interface ArtifactPreviewCardProps {
  * When the caller passes the document's located Verify problems (MFX-43.3), they render exactly as
  * in the bundle explorer: squiggle markers + gutter bars in the viewer and a {@link ProblemsPanel}
  * underneath, with the same two-way problem ↔ line navigation.
+ *
+ * A document past the per-file cap (MFX-43.5) is not handed to Monaco at all until the user asks,
+ * and then only as an explicitly-labelled leading slice — copy and download still take the whole
+ * document, so the guard bounds what is *rendered*, never what the user can take away.
  */
 export function ArtifactPreviewCard({
   artifact,
@@ -84,11 +93,17 @@ export function ArtifactPreviewCard({
   onEntityLineClick,
   className,
 }: ArtifactPreviewCardProps) {
-  const [copied, setCopied] = useState(false);
   /** The highlighted problem (MFX-43.3), kept in sync between the editor and the problems list. */
   const [selectedProblemId, setSelectedProblemId] = useState<string | null>(null);
   /** The last external reveal request seen, so a re-render never replays it. */
   const [seenRevealNonce, setSeenRevealNonce] = useState<number | null>(null);
+  /** Viewer actions state (MFX-43.5): soft wrap and code folding are the user's to set. */
+  const [wordWrap, setWordWrap] = useState(false);
+  const [folding, setFolding] = useState(true);
+  /** Whether the user asked for an over-cap document to be shown (MFX-43.5). */
+  const [contentRequested, setContentRequested] = useState(false);
+  /** The mounted editor, so the Find action can open Monaco's own find widget. */
+  const editorRef = useRef<MonacoEditorApi.IStandaloneCodeEditor | null>(null);
 
   // An external reveal request (a Verify lens click): select the problem — the "adjust state
   // during render" pattern. The editor-side line reveal is applied by {@link useProblemMarkers}.
@@ -101,7 +116,19 @@ export function ArtifactPreviewCard({
     () => buildArtifactBadge(validateEmittedArtifact(artifact), report),
     [artifact, report],
   );
-  const size = useMemo(() => formatByteSize(utf8ByteLength(artifact.text)), [artifact.text]);
+  const sizeBytes = useMemo(() => utf8ByteLength(artifact.text), [artifact.text]);
+  const size = formatByteSize(sizeBytes);
+  // MFX-43.5: what may go into Monaco. An over-cap document renders only once the user asks, and
+  // then only as an explicitly-labelled head slice.
+  const plan = useMemo(
+    () =>
+      planViewerContent({
+        text: artifact.text,
+        sizeBytes,
+        requested: contentRequested,
+      }),
+    [artifact.text, sizeBytes, contentRequested],
+  );
   const language = useMemo(
     () =>
       monacoLanguageForArtifact({
@@ -113,9 +140,11 @@ export function ArtifactPreviewCard({
     [artifact.filename, artifact.mediaType, artifact.text, targetKey],
   );
 
+  // Markers are computed against the text that is actually in the editor: a finding past the end
+  // of a truncated slice has no line to sit on, and clamping it to one would be a fake position.
   const markers = useProblemMarkers({
     problems,
-    text: artifact.text,
+    text: plan.text,
     selectedProblemId,
     onMarkerSelect: (problem) => setSelectedProblemId(problem.id),
     reveal,
@@ -137,7 +166,7 @@ export function ArtifactPreviewCard({
   const entityMarkers = useEntityMarkers({
     entities: manifestEntities,
     activeFile: manifestFile,
-    text: artifact.text,
+    text: plan.text,
     selectedEntity,
     onEntityLineClick,
     reveal: entityReveal,
@@ -146,48 +175,29 @@ export function ArtifactPreviewCard({
   const openProblem = useCallback(
     (problem: LocatedProblem) => {
       setSelectedProblemId(problem.id);
+      // Clicking a finding in a document the guard is holding back loads it first — otherwise the
+      // click would reveal a line in an editor that is not on screen (MFX-43.5).
+      setContentRequested(true);
       markers.reveal(problem);
     },
     [markers],
   );
 
-  useEffect(() => {
-    if (!copied) return undefined;
-    const timer = setTimeout(() => setCopied(false), 1500);
-    return () => clearTimeout(timer);
-  }, [copied]);
+  /** Download the emitted document as its own file (MFX-43.5) — always the whole document. */
+  const downloadFile = useCallback(() => {
+    downloadBlob(
+      new Blob([artifact.text], { type: artifact.mediaType || 'text/plain' }),
+      artifact.filename,
+    );
+  }, [artifact.filename, artifact.mediaType, artifact.text]);
 
-  const copyToClipboard = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(artifact.text);
-      setCopied(true);
-    } catch {
-      // Clipboard unavailable — leave the button unchanged.
-    }
-  }, [artifact.text]);
-
-  const copyButton = (
-    <button
-      type="button"
-      data-testid="export-artifact-copy"
-      onClick={() => void copyToClipboard()}
-      title={copied ? 'Copied' : 'Copy to clipboard'}
-      aria-label={copied ? 'Copied' : 'Copy to clipboard'}
-      className={cn(
-        'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium shadow-sm transition-colors',
-        copied
-          ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
-          : 'border-gray-200 bg-white/95 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900/95 dark:text-gray-200 dark:hover:bg-gray-800',
-      )}
-    >
-      {copied ? (
-        <Check className="h-3.5 w-3.5" aria-hidden />
-      ) : (
-        <Copy className="h-3.5 w-3.5" aria-hidden />
-      )}
-      {copied ? 'Copied' : 'Copy'}
-    </button>
-  );
+  /** Open Monaco's find widget; null while no editor is mounted (offline fallback / deferred). */
+  const findInFile =
+    plan.mode === 'deferred'
+      ? null
+      : () => {
+          editorRef.current?.getAction?.('actions.find')?.run();
+        };
 
   return (
     <div
@@ -207,20 +217,52 @@ export function ArtifactPreviewCard({
         </span>
       </div>
 
-      <ReadOnlyCodeViewer
-        value={artifact.text}
-        language={language}
-        overlay={copyButton}
-        onMount={(editorInstance, monaco) => {
-          markers.onEditorMount(editorInstance, monaco);
-          entityMarkers.onEditorMount(editorInstance, monaco);
-        }}
-        height={360}
-        className="mt-2 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
-        editorTestId="export-artifact-editor"
-        fallbackTestId="export-artifact-content"
-        documentLabel={artifact.filename}
+      <ViewerActionsBar
+        file={{ name: artifact.filename, text: artifact.text, mediaType: artifact.mediaType }}
+        wordWrap={wordWrap}
+        onWordWrapChange={setWordWrap}
+        folding={folding}
+        onFoldingChange={setFolding}
+        onFind={findInFile}
+        testIdPrefix="export-artifact"
+        className="mt-2 shrink-0"
       />
+
+      {plan.mode === 'deferred' ? (
+        <DeferredFilePanel
+          fileName={artifact.filename}
+          plan={plan}
+          onLoad={() => setContentRequested(true)}
+          onDownload={downloadFile}
+          testIdPrefix="export-artifact"
+          className="mt-2"
+        />
+      ) : (
+        <>
+          <TruncatedContentNotice
+            plan={plan}
+            onDownload={downloadFile}
+            testIdPrefix="export-artifact"
+            className="mt-2"
+          />
+          <ReadOnlyCodeViewer
+            value={plan.text}
+            language={language}
+            wordWrap={wordWrap ? 'on' : 'off'}
+            folding={folding}
+            onMount={(editorInstance, monaco) => {
+              editorRef.current = editorInstance;
+              markers.onEditorMount(editorInstance, monaco);
+              entityMarkers.onEditorMount(editorInstance, monaco);
+            }}
+            height={360}
+            className="mt-2 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
+            editorTestId="export-artifact-editor"
+            fallbackTestId="export-artifact-content"
+            documentLabel={artifact.filename}
+          />
+        </>
+      )}
       <ProblemsPanel
         problems={problems}
         selectedId={selectedProblemId}
@@ -229,8 +271,15 @@ export function ArtifactPreviewCard({
       />
 
       <p className="mt-2 shrink-0 text-xs text-gray-500 dark:text-gray-400">{badge.hint}</p>
-      <p className="mt-0.5 shrink-0 text-[11px] text-gray-400 dark:text-gray-500">
+      <p
+        data-testid="export-artifact-meta"
+        data-truncated={plan.truncated ? 'true' : 'false'}
+        className="mt-0.5 shrink-0 text-[11px] text-gray-400 dark:text-gray-500"
+      >
         {size}
+        {/* When the viewer holds less than the document, the meta line says so too — the size on
+            screen and the size of the file are different facts (MFX-43.5). */}
+        {plan.mode === 'head' ? ` (${formatByteSize(plan.shownBytes)} shown)` : ''}
         {artifact.mediaType ? ` · ${artifact.mediaType}` : ''}
         {` · ${language}`}
       </p>

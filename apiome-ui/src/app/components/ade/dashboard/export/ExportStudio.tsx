@@ -1159,6 +1159,8 @@ export function ExportStudio({
                       selectedEntityKey={selectedEntityKey}
                       entityReveal={entityReveal}
                       onEntityLineClick={handleEntityLineClick}
+                      // MFX-43.5: the same .zip the footer builds, offered where the files are.
+                      onDownloadBundle={handleDownloadZip}
                     />
                   </div>
                   {/* IXH-4.2: what became of each canonical entity in this bundle. */}
@@ -1303,7 +1305,8 @@ export function ExportStudio({
                   <FileArchive className="h-4 w-4" aria-hidden />
                   Download .zip
                 </Button>
-                {/* A bundle downloads only as the .zip here; per-file download lands in MFX-43.5. */}
+                {/* A bundle downloads as the .zip here; single files download from the viewer's
+                    own actions bar, which knows which file is open (MFX-43.5). */}
                 {!(bundle && isMultiFileBundle(bundle)) && (
                   <Button variant="outline" onClick={handleDownloadFile}>
                     <Download className="h-4 w-4" aria-hidden />

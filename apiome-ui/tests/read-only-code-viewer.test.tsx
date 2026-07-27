@@ -21,7 +21,13 @@ jest.mock('@monaco-editor/react', () => ({
     language?: string;
     theme?: string;
     height?: string | number;
-    options?: { wordWrap?: string; readOnly?: boolean };
+    options?: {
+      wordWrap?: string;
+      readOnly?: boolean;
+      folding?: boolean;
+      occurrencesHighlight?: string;
+      bracketPairColorization?: { enabled?: boolean };
+    };
   }) => (
     <div
       data-testid="mock-monaco"
@@ -30,6 +36,9 @@ jest.mock('@monaco-editor/react', () => ({
       data-height={String(height)}
       data-wordwrap={options?.wordWrap}
       data-readonly={String(options?.readOnly)}
+      data-folding={String(options?.folding)}
+      data-occurrences={options?.occurrencesHighlight}
+      data-brackets={String(options?.bracketPairColorization?.enabled)}
     >
       {value}
     </div>
@@ -111,5 +120,30 @@ describe('ReadOnlyCodeViewer (MFX-43.1)', () => {
     expect(host).toHaveStyle({ height: '360px' });
     expect(editor).toHaveAttribute('data-height', '360');
     expect(editor).toHaveTextContent('syntax = "proto3"');
+  });
+
+  it('folds by default and honours the caller’s folding toggle (MFX-43.5)', async () => {
+    const { rerender } = render(<ReadOnlyCodeViewer value={PROTO} language="protobuf" />);
+    expect(await screen.findByTestId('mock-monaco')).toHaveAttribute('data-folding', 'true');
+
+    rerender(<ReadOnlyCodeViewer value={PROTO} language="protobuf" folding={false} />);
+    expect(screen.getByTestId('mock-monaco')).toHaveAttribute('data-folding', 'false');
+  });
+
+  it('keeps the rich editor features for an ordinary document (MFX-43.5)', async () => {
+    render(<ReadOnlyCodeViewer value={PROTO} language="protobuf" />);
+
+    const editor = await screen.findByTestId('mock-monaco');
+    expect(editor).toHaveAttribute('data-occurrences', 'singleFile');
+    expect(editor).toHaveAttribute('data-brackets', 'true');
+  });
+
+  it('drops the whole-model extras for a large document (MFX-43.5)', async () => {
+    // 200 KB — past the heavy-feature threshold, so the per-model extras come off.
+    render(<ReadOnlyCodeViewer value={'x'.repeat(200 * 1024)} language="json" />);
+
+    const editor = await screen.findByTestId('mock-monaco');
+    expect(editor).toHaveAttribute('data-occurrences', 'off');
+    expect(editor).toHaveAttribute('data-brackets', 'false');
   });
 });

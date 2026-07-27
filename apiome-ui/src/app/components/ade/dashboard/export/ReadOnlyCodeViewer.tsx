@@ -4,6 +4,7 @@ import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import dynamic from 'next/dynamic';
 import type { OnMount } from '@monaco-editor/react';
 import { cn } from '@lib/utils';
+import { guardedEditorOptions } from './exportViewerGuards';
 
 /**
  * ReadOnlyCodeViewer — the shared read-only `@monaco-editor/react` viewer (MFX-43.1, #4361).
@@ -100,6 +101,11 @@ export interface ReadOnlyCodeViewerProps {
   language: string;
   /** Soft-wrap long lines. Defaults to `'off'` (emitted specs are read horizontally). */
   wordWrap?: 'on' | 'off';
+  /**
+   * Code folding. Defaults to on; the viewer surfaces expose it as a user toggle (MFX-43.5) rather
+   * than deciding it by size, so the guard never silently overrides what the user asked for.
+   */
+  folding?: boolean;
   /** Optional control rendered pinned to the editor's top-right (e.g. a copy button). */
   overlay?: ReactNode;
   /**
@@ -140,6 +146,7 @@ export function ReadOnlyCodeViewer({
   value,
   language,
   wordWrap = 'off',
+  folding = true,
   overlay,
   height = 360,
   className,
@@ -182,7 +189,16 @@ export function ReadOnlyCodeViewer({
         theme={isDark ? 'vs-dark' : 'vs'}
         value={value}
         fallbackTestId={fallbackTestId}
-        options={{ ...READ_ONLY_OPTIONS, wordWrap, ariaLabel }}
+        // The size-guarded options (MFX-43.5) are computed from the text actually being rendered —
+        // the guard upstream has already bounded that — so a big-but-admitted document drops the
+        // whole-model extras rather than stalling the editor.
+        options={{
+          ...READ_ONLY_OPTIONS,
+          ...guardedEditorOptions(value.length),
+          folding,
+          wordWrap,
+          ariaLabel,
+        }}
         onMount={onMount}
       />
     </div>
