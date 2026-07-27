@@ -220,19 +220,32 @@ describe("pgDumpInvocation", () => {
   });
 
   it("builds discrete flags and passes the password via PGPASSWORD env", () => {
-    const { args, env } = pgDumpInvocation({
-      host: "db.example",
-      port: "5433",
-      user: "ops",
-      password: "secret",
-      database: "apiome",
-    });
-    expect(args).toContain("--host=db.example");
-    expect(args).toContain("--port=5433");
-    expect(args).toContain("--username=ops");
-    expect(args).toContain("--dbname=apiome");
-    expect(env.PGPASSWORD).toBe("secret");
-    // Password is never placed in the visible argv.
-    expect(args.join(" ")).not.toContain("secret");
+    // Discrete flags only apply when no connection URL is set (see apiome-db README).
+    // Self-hosted CI runners often export DATABASE_URL; isolate so this path is exercised.
+    const savedUrl = process.env.DATABASE_URL;
+    const savedApiomeUrl = process.env.APIOME_DB_URL;
+    delete process.env.DATABASE_URL;
+    delete process.env.APIOME_DB_URL;
+    try {
+      const { args, env } = pgDumpInvocation({
+        host: "db.example",
+        port: "5433",
+        user: "ops",
+        password: "secret",
+        database: "apiome",
+      });
+      expect(args).toContain("--host=db.example");
+      expect(args).toContain("--port=5433");
+      expect(args).toContain("--username=ops");
+      expect(args).toContain("--dbname=apiome");
+      expect(env.PGPASSWORD).toBe("secret");
+      // Password is never placed in the visible argv.
+      expect(args.join(" ")).not.toContain("secret");
+    } finally {
+      if (savedUrl === undefined) delete process.env.DATABASE_URL;
+      else process.env.DATABASE_URL = savedUrl;
+      if (savedApiomeUrl === undefined) delete process.env.APIOME_DB_URL;
+      else process.env.APIOME_DB_URL = savedApiomeUrl;
+    }
   });
 });
