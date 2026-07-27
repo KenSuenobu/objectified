@@ -47,6 +47,7 @@ import { useExportPreviewManifest } from './useExportPreviewManifest';
 import type { EntityRevealRequest, ExportManifestEntity } from './exportPreviewManifest';
 import { OriginalSourceOption } from './OriginalSourceOption';
 import { deriveVerifyVerdict, verifyGatePasses } from './exportVerify';
+import { describeVerifyConfig } from './exportVerifyCache';
 import { zipFilenameFor, type EmittedArtifact } from './exportArtifactPreview';
 import {
   collectLocatedProblems,
@@ -268,9 +269,21 @@ export function ExportStudio({
     [selected, optionValues],
   );
 
+  /**
+   * Whether verification re-runs itself (debounced) after every configuration change — the
+   * explicit "Verify automatically" opt-in (MFX-42.6). Off by default: a verify is a real emit,
+   * so the user asks for the convenience rather than paying for it silently.
+   */
+  const [autoVerify, setAutoVerify] = useState(false);
+
   // The one-call, pre-generation Verify (MFX-42.1): a manual "Run verification" dry-run that
   // returns all three lenses (fidelity + validation + lint) and a go/no-go verdict without
   // emitting an artifact. Its result lives here so the Review step shows the same verdict.
+  //
+  // The hook keys every result by its (source, target, options) configuration (MFX-42.6): a
+  // verdict is exposed only while it still describes what is configured, so changing a target or
+  // an option re-locks Generate on its own, and returning to a configuration verified earlier in
+  // the session re-displays its verdict instantly instead of re-running the dry-run.
   const {
     result: verifyResult,
     running: verifyRunning,
@@ -278,7 +291,13 @@ export function ExportStudio({
     error: verifyError,
     run: runVerify,
     reset: resetVerify,
-  } = useExportVerify(artifact, version, selectedKey, changedOpts);
+    fromCache: verifyFromCache,
+  } = useExportVerify(artifact, version, selectedKey, changedOpts, {
+    // Only while the Verify step is showing: a dry-run is a real emit, so browsing the target grid
+    // with the opt-in on must not fire one per card the user tries. A change made on an earlier
+    // step verifies itself the moment the user arrives at Verify, which is when it is needed.
+    auto: autoVerify && step === 'verify',
+  });
   const verifyVerdict = verifyResult ? deriveVerifyVerdict(verifyResult) : null;
 
   // The async export job (MFX-46.2): Generate submits a job that runs the emit → fidelity →
@@ -322,6 +341,19 @@ export function ExportStudio({
 
   const fidelity = selected?.entry.fidelity ?? null;
 
+  // The one-line "which configuration is this verdict for" caption under the verdict banner
+  // (MFX-42.6): the target plus the option overrides the verification was measured with.
+  const verifyConfigSummary = useMemo(
+    () =>
+      selected
+        ? describeVerifyConfig({
+            targetLabel: selected.entry.descriptor.label,
+            options: changedOpts,
+          })
+        : null,
+    [selected, changedOpts],
+  );
+
   // Guards the "fetch the completed artifact once" effect so a re-render never re-downloads.
   const downloadedJobRef = useRef<string | null>(null);
 
@@ -348,16 +380,17 @@ export function ExportStudio({
       if (!card.available) return;
       setSelectedKey(card.key);
       setError(null);
-      // A different target is a different conversion: its loss and verify must be re-established,
-      // and any artifact/bundle from the previous target no longer describes it.
+      // A different target is a different conversion: its loss and acknowledgement must be
+      // re-established, and any artifact/bundle from the previous target no longer describes it.
+      // The verdict needs no explicit reset — it is keyed by configuration (MFX-42.6), so it
+      // disappears with the target and reappears (from the session cache) if the user comes back.
       setAcknowledged(false);
       setEmitted(null);
       setBundle(null);
       setProblemReveal(null);
-      resetVerify();
       setOptionValues(seedOptionValues(card, seedOptions).values);
     },
-    [resetVerify],
+    [],
   );
 
   // The deep link's own state, captured once at mount (MFX-41.4). The Studio writes its session
@@ -442,18 +475,18 @@ export function ExportStudio({
   const setOption = useCallback(
     (key: string, value: unknown) => {
       setOptionValues((current) => ({ ...current, [key]: value }));
-      // The configuration changed: any prior verdict no longer describes what Generate would
-      // produce, so re-lock the gate until the user re-runs verification (auto re-verify is
-      // MFX-42.6). Acknowledgement is tied to that verdict, so it clears with it, and any
-      // already-generated artifact/bundle is stale.
+      // The configuration changed: the prior verdict no longer describes what Generate would
+      // produce, so the gate re-locks on its own — the verdict is keyed by configuration
+      // (MFX-42.6) and simply stops matching. Acknowledgement is a decision about *that* verdict,
+      // so it clears with it, and any already-generated artifact/bundle is stale. With "Verify
+      // automatically" on, the new configuration re-verifies itself after a short debounce.
       setAcknowledged(false);
       setEmitted(null);
       setBundle(null);
       setProblemReveal(null);
-      resetVerify();
       clearActiveJob();
     },
-    [resetVerify, clearActiveJob],
+    [clearActiveJob],
   );
 
   /** Pick a target from the grid — a manual re-pick forgets any job from the previous target. */
@@ -503,11 +536,19 @@ export function ExportStudio({
     });
   }, [selected, optionValues, acknowledged, displayVerifyResult, start]);
 
-  /** Re-run verification, dropping any validation-gate override so the fresh result shows. */
-  const handleRunVerify = useCallback(() => {
-    setJobValidationOverride(null);
-    void runVerify();
-  }, [runVerify]);
+  /**
+   * Run verification, dropping any validation-gate override so the fresh result shows.
+   *
+   * @param force True for the explicit re-run/retry actions, which re-measure the conversion
+   *   instead of re-displaying this session's cached verdict for the same configuration.
+   */
+  const handleRunVerify = useCallback(
+    (force?: boolean) => {
+      setJobValidationOverride(null);
+      void runVerify(force);
+    },
+    [runVerify],
+  );
 
   /** Route a validation-gate job failure back to the Verify lenses with its findings loaded. */
   const handleFixInVerify = useCallback(
@@ -1050,6 +1091,12 @@ export function ExportStudio({
                 acknowledged={acknowledged}
                 onAcknowledgedChange={setAcknowledged}
                 onRun={handleRunVerify}
+                autoVerify={autoVerify}
+                onAutoVerifyChange={setAutoVerify}
+                configSummary={verifyConfigSummary}
+                // A validation-gate override is a *job* failure standing in for the verdict, not
+                // a cached measurement — never label it as one.
+                fromCache={verifyFromCache && !jobValidationOverride}
                 sourceLintReport={sourceLintReport}
                 openableProblems={openableProblems}
                 onOpenProblem={openProblem}

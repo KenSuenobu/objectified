@@ -259,3 +259,97 @@ describe('VerifyWorkbench — projection map slot (EFP-2.2, #4814)', () => {
     expect(screen.queryByTestId('projection-panel-stub')).not.toBeInTheDocument();
   });
 });
+
+describe('VerifyWorkbench — auto re-verify + config attribution (MFX-42.6)', () => {
+  it('offers the "Verify automatically" opt-in in every state', () => {
+    const onAutoVerifyChange = jest.fn();
+    const states: Partial<React.ComponentProps<typeof VerifyWorkbench>>[] = [
+      {},
+      { running: true },
+      { hasRun: true, error: 'Verify service is down.' },
+      { hasRun: true, result: makeResult('clean'), verdict: 'clean' },
+    ];
+    for (const state of states) {
+      const { unmount } = renderWorkbench({ ...state, onAutoVerifyChange });
+      expect(screen.getByTestId('verify-auto-toggle')).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it('toggles automatic verification on and off', () => {
+    const onAutoVerifyChange = jest.fn();
+    renderWorkbench({ onAutoVerifyChange });
+    fireEvent.click(screen.getByTestId('verify-auto-toggle'));
+    expect(onAutoVerifyChange).toHaveBeenLastCalledWith(true);
+
+    // …and reflects the host's state back, so switching it off is possible.
+    renderWorkbench({ onAutoVerifyChange, autoVerify: true });
+    const toggles = screen.getAllByTestId('verify-auto-toggle');
+    expect(toggles[toggles.length - 1]).toBeChecked();
+    fireEvent.click(toggles[toggles.length - 1]);
+    expect(onAutoVerifyChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('hides the toggle entirely when the host supplies no handler', () => {
+    renderWorkbench();
+    expect(screen.queryByTestId('verify-auto-toggle')).not.toBeInTheDocument();
+  });
+
+  it('says the configuration will verify itself when the opt-in is on', () => {
+    renderWorkbench({ autoVerify: true, onAutoVerifyChange: jest.fn() });
+    expect(screen.getByTestId('verify-workbench')).toHaveTextContent(
+      /verifies itself in a moment/i,
+    );
+  });
+
+  it('names the configuration a settled verdict belongs to', () => {
+    renderWorkbench({
+      hasRun: true,
+      result: makeResult('clean'),
+      verdict: 'clean',
+      configSummary: 'gRPC / Protobuf · package = com.example',
+    });
+    const note = screen.getByTestId('verify-config-summary');
+    expect(note).toHaveTextContent('gRPC / Protobuf · package = com.example');
+    expect(note).toHaveAttribute('data-cached', 'false');
+    expect(screen.queryByTestId('verify-cached-chip')).not.toBeInTheDocument();
+  });
+
+  it('marks a verdict restored from the session cache', () => {
+    renderWorkbench({
+      hasRun: true,
+      result: makeResult('clean'),
+      verdict: 'clean',
+      configSummary: 'OpenAPI 3.1 · default options',
+      fromCache: true,
+    });
+    expect(screen.getByTestId('verify-config-summary')).toHaveAttribute('data-cached', 'true');
+    expect(screen.getByTestId('verify-cached-chip')).toHaveTextContent(/cached/i);
+  });
+
+  it('omits the caption when the host names no configuration', () => {
+    renderWorkbench({ hasRun: true, result: makeResult('clean'), verdict: 'clean' });
+    expect(screen.queryByTestId('verify-config-summary')).not.toBeInTheDocument();
+  });
+
+  it('re-runs and retries force a fresh measurement; the first run may use the cache', () => {
+    const { onRun, unmount } = renderWorkbench({
+      hasRun: true,
+      result: makeResult('clean'),
+      verdict: 'clean',
+    });
+    fireEvent.click(screen.getByTestId('verify-rerun'));
+    expect(onRun).toHaveBeenLastCalledWith(true);
+    unmount();
+
+    const failed = renderWorkbench({ hasRun: true, error: 'Verify service is down.' });
+    fireEvent.click(screen.getByTestId('verify-rerun'));
+    expect(failed.onRun).toHaveBeenLastCalledWith(true);
+    failed.unmount();
+
+    // The first run is not a re-measurement: a cached verdict for this configuration may answer it.
+    const first = renderWorkbench();
+    fireEvent.click(screen.getByTestId('verify-run'));
+    expect(first.onRun).toHaveBeenLastCalledWith();
+  });
+});

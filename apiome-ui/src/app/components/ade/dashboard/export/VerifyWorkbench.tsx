@@ -4,6 +4,7 @@ import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
+  DatabaseZap,
   Loader2,
   RefreshCw,
   ShieldAlert,
@@ -50,8 +51,27 @@ export interface VerifyWorkbenchProps {
   acknowledged: boolean;
   /** Toggle the lossy acknowledgement. */
   onAcknowledgedChange: (acknowledged: boolean) => void;
-  /** Trigger (or re-trigger) a verification run. */
-  onRun: () => void;
+  /**
+   * Trigger (or re-trigger) a verification run. `force` (the explicit re-run / retry actions)
+   * bypasses the session result cache so the conversion is measured again (MFX-42.6).
+   */
+  onRun: (force?: boolean) => void;
+  /**
+   * Whether automatic (debounced) re-verification is on — the explicit opt-in behind which
+   * configuration changes re-verify themselves (MFX-42.6). The toggle renders only when
+   * {@link onAutoVerifyChange} is supplied.
+   */
+  autoVerify?: boolean;
+  /** Toggle automatic re-verification; omit to hide the toggle entirely. */
+  onAutoVerifyChange?: (autoVerify: boolean) => void;
+  /**
+   * One-line description of the configuration the displayed verdict belongs to (MFX-42.6), e.g.
+   * `gRPC / Protobuf · package = com.example`. Rendered under the verdict banner so a verdict is
+   * never ambiguous about which target + options it measured.
+   */
+  configSummary?: string | null;
+  /** Whether the displayed verdict came from the session cache rather than a fresh run (MFX-42.6). */
+  fromCache?: boolean;
   /**
    * The source's own (catalog) lint report, linked from the lint lens's distinguishing note so the
    * emitted-artifact lint is never conflated with the source's catalog lint. Omitted when unknown.
@@ -125,6 +145,12 @@ function lensBadgeLabel(lens: VerifyLensKey, count: number): string {
  * **typed** acknowledgement in the fidelity lens; `lossy` requires the "Export anyway" checkbox;
  * `clean` is the green path. The verdict and its result live in Studio state so the Review step
  * shows the same banner.
+ *
+ * A verdict is always shown with the configuration it measured (MFX-42.6): the header carries the
+ * **Verify automatically** opt-in, and a settled verdict is captioned with its target + option
+ * overrides — marked *Cached* when it was served from the session cache rather than re-measured.
+ * Changing anything clears the verdict upstream (`useExportVerify` keys results by configuration),
+ * so the workbench never has to render a verdict that no longer describes what is configured.
  */
 export function VerifyWorkbench({
   targetLabel,
@@ -138,6 +164,10 @@ export function VerifyWorkbench({
   acknowledged,
   onAcknowledgedChange,
   onRun,
+  autoVerify = false,
+  onAutoVerifyChange,
+  configSummary = null,
+  fromCache = false,
   sourceLintReport = null,
   openableProblems,
   onOpenProblem,
@@ -190,17 +220,30 @@ export function VerifyWorkbench({
     tabRefs.current[key]?.focus();
   };
 
+  // The framing line + the automatic-verification opt-in, shown in every state so the toggle is
+  // reachable before a run, during one, after a failure, and beside a settled verdict (MFX-42.6).
+  const header = (
+    <VerifyIntro
+      targetLabel={targetLabel}
+      autoVerify={autoVerify}
+      onAutoVerifyChange={onAutoVerifyChange}
+    />
+  );
+
   // Before the first run (and not mid-run): the explicit call to action.
   if (!hasRun && !running) {
     return (
       <div className="space-y-4" data-testid="verify-workbench">
-        <VerifyIntro targetLabel={targetLabel} />
+        {header}
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-900 dark:bg-indigo-950/40">
           <p className="max-w-xl text-sm text-indigo-900 dark:text-indigo-100">
             Run all three checks — fidelity, validation, and lint — in one pass, before you
             generate anything. Nothing is emitted or stored until you choose to generate.
+            {autoVerify
+              ? ' Automatic verification is on, so this configuration verifies itself in a moment.'
+              : ''}
           </p>
-          <Button data-testid="verify-run" onClick={onRun}>
+          <Button data-testid="verify-run" onClick={() => onRun()}>
             <Sparkles className="h-4 w-4" aria-hidden />
             Run verification
           </Button>
@@ -214,7 +257,7 @@ export function VerifyWorkbench({
   if (running) {
     return (
       <div className="space-y-4" data-testid="verify-workbench">
-        <VerifyIntro targetLabel={targetLabel} />
+        {header}
         {/* Announced politely: a run started by keyboard leaves focus on the button, so the only
             signal that anything is happening would otherwise be a spinner (MFX-41.5). The live
             region wraps the list rather than replacing its role, so the rows stay list items. */}
@@ -240,10 +283,13 @@ export function VerifyWorkbench({
   if (error || !result || !verdict) {
     return (
       <div className="space-y-4" data-testid="verify-workbench">
+        {header}
         <Alert variant="error" data-testid="verify-error">
           {error || 'Verification did not return a result. Try again.'}
         </Alert>
-        <Button variant="outline" data-testid="verify-rerun" onClick={onRun}>
+        {/* A failure is never cached, and it also stops the automatic loop — so the retry forces a
+            fresh measurement rather than waiting for the debounce that will not come. */}
+        <Button variant="outline" data-testid="verify-rerun" onClick={() => onRun(true)}>
           <RefreshCw className="h-4 w-4" aria-hidden />
           Try again
         </Button>
@@ -253,7 +299,11 @@ export function VerifyWorkbench({
 
   return (
     <div className="space-y-4" data-testid="verify-workbench">
+      {header}
       <VerdictBanner verdict={verdict} />
+      {/* Which configuration this verdict belongs to (MFX-42.6) — a verdict without its target +
+          options is ambiguous the moment the user starts iterating. */}
+      <VerifyConfigNote summary={configSummary} fromCache={fromCache} />
 
       {/* Desktop: tabs-with-badges + the active lens panel. Full WAI-ARIA tabs (MFX-41.5): the
           strip is one Tab stop (roving `tabindex`), ←/→/Home/End move between lenses, each tab
@@ -358,7 +408,9 @@ export function VerifyWorkbench({
       {projectionPanel}
 
       <div className="flex justify-end">
-        <Button variant="outline" data-testid="verify-rerun" onClick={onRun}>
+        {/* An explicit re-run means "measure it again", so it bypasses the cached verdict for this
+            configuration (MFX-42.6) — otherwise the button would be a no-op on a cached result. */}
+        <Button variant="outline" data-testid="verify-rerun" onClick={() => onRun(true)}>
           <RefreshCw className="h-4 w-4" aria-hidden />
           Re-run verification
         </Button>
@@ -367,13 +419,84 @@ export function VerifyWorkbench({
   );
 }
 
-/** The Verify step's framing line — shown before, during, and (implicitly) after a run. */
-function VerifyIntro({ targetLabel }: { targetLabel: string }) {
+/**
+ * The Verify step's framing line, with the automatic re-verification opt-in beside it (MFX-42.6).
+ *
+ * Verification is real compute (a full dry-run emit), so it stays a deliberate action by default;
+ * a user who is iterating on options can switch it on and have each change re-verify itself after
+ * a short pause. The toggle is omitted entirely when the host supplies no handler.
+ */
+function VerifyIntro({
+  targetLabel,
+  autoVerify,
+  onAutoVerifyChange,
+}: {
+  targetLabel: string;
+  autoVerify: boolean;
+  onAutoVerifyChange?: (autoVerify: boolean) => void;
+}) {
   return (
-    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
-      <ShieldCheck className="h-4 w-4 text-indigo-500" aria-hidden />
-      Verify the {targetLabel} conversion
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+        <ShieldCheck className="h-4 w-4 text-indigo-500" aria-hidden />
+        Verify the {targetLabel} conversion
+      </div>
+      {onAutoVerifyChange && (
+        <label
+          className="flex cursor-pointer items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
+          title="Re-run verification automatically a moment after you change the target or an option."
+        >
+          <input
+            type="checkbox"
+            data-testid="verify-auto-toggle"
+            checked={autoVerify}
+            onChange={(event) => onAutoVerifyChange(event.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
+          />
+          Verify automatically
+        </label>
+      )}
     </div>
+  );
+}
+
+/**
+ * The caption naming the configuration a settled verdict was measured for (MFX-42.6).
+ *
+ * A verdict only ever renders for the configuration on screen (`useExportVerify` keys results by
+ * configuration and drops any that no longer match), so this states *what* was measured rather
+ * than warning that it might be stale. A cached verdict says so, because "instant" would otherwise
+ * be indistinguishable from "nothing happened".
+ */
+function VerifyConfigNote({
+  summary,
+  fromCache,
+}: {
+  summary: string | null;
+  fromCache: boolean;
+}) {
+  if (!summary) return null;
+  return (
+    <p
+      data-testid="verify-config-summary"
+      data-cached={fromCache ? 'true' : 'false'}
+      className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400"
+    >
+      <span>
+        This verdict describes{' '}
+        <strong className="font-medium text-gray-900 dark:text-gray-100">{summary}</strong>.
+      </span>
+      {fromCache && (
+        <span
+          data-testid="verify-cached-chip"
+          className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
+          title="Restored from this session — this configuration was already verified, so nothing was re-run."
+        >
+          <DatabaseZap className="h-3 w-3" aria-hidden />
+          Cached
+        </span>
+      )}
+    </p>
   );
 }
 

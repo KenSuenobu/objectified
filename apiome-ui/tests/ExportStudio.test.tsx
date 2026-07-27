@@ -44,6 +44,7 @@ import { ExportStudio } from '../src/app/components/ade/dashboard/export/ExportS
 import { EXPORT_STUDIO_PATH } from '../src/app/components/ade/dashboard/export/exportStudioLink';
 import { decodeStudioOptions } from '../src/app/components/ade/dashboard/export/exportStudioUrlState';
 import { __resetExportJobTrackerForTests } from '../src/app/components/ade/dashboard/export/exportJobTracker';
+import { __resetVerifyCacheForTests } from '../src/app/components/ade/dashboard/export/exportVerifyCache';
 import { buildZip } from '../src/app/components/ade/dashboard/export/zipBundle';
 import type { ExportTargetsResponse } from '../src/app/components/ade/dashboard/export/exportTargetCatalog';
 import type { ExportFidelityEnvelope } from '../src/app/components/ade/dashboard/export/exportFidelityPreview';
@@ -536,7 +537,10 @@ async function renderStudio(
 
 beforeEach(() => {
   // The job tracker is a module singleton with sessionStorage persistence — reset both so a job
-  // from a previous test never resumes into the next one.
+  // from a previous test never resumes into the next one. The verify result cache (MFX-42.6) is a
+  // session singleton for the same reason: without this, one test's verdict answers the next
+  // test's run and no request is made at all.
+  __resetVerifyCacheForTests();
   __resetExportJobTrackerForTests();
   window.sessionStorage.clear();
   (URL as unknown as { createObjectURL: unknown }).createObjectURL = jest.fn(() => 'blob:mock');
@@ -1064,6 +1068,144 @@ describe('ExportStudio — Verify workbench gate + generate (MFX-42.1)', () => {
       .find((row) => row.textContent?.includes('Timestamp'));
     expect(treeRow).toHaveAttribute('aria-selected', 'true');
     expect(within(graph).getByTestId('projection-detail')).toHaveTextContent('Timestamp');
+  });
+});
+
+describe('ExportStudio — re-verify on change + result caching (MFX-42.6)', () => {
+  /** Drive the proto target (which has options) to a settled verdict on the Verify step. */
+  async function verifyProto(fetchMock: jest.Mock, packageValue = 'com.example') {
+    await renderStudio(fetchMock, { initialTarget: 'proto' });
+    fireEvent.click(screen.getByRole('button', { name: /choose target/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i })); // → options
+    fireEvent.change(screen.getByLabelText(/Package/i), { target: { value: packageValue } });
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i })); // → verify
+    fireEvent.click(screen.getByTestId('verify-run'));
+    await waitFor(() => expect(screen.getByTestId('verify-verdict')).toBeInTheDocument());
+  }
+
+  /** How many one-call verify dry-runs a fetch mock has served. */
+  function verifyCalls(fetchMock: jest.Mock): number {
+    return fetchMock.mock.calls.filter(([url]) => String(url).includes('/api/export/verify')).length;
+  }
+
+  /** Step back to the Options form from the Verify step. */
+  function backToOptions() {
+    fireEvent.click(screen.getByRole('button', { name: /^back$/i }));
+  }
+
+  /** Step forward from the Options form to the Verify step. */
+  function forwardToVerify() {
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
+  }
+
+  it('re-locks Generate when an option changes, with no stale verdict left on screen', async () => {
+    const fetchMock = mockFetch();
+    await verifyProto(fetchMock);
+    // Acknowledge the lossy conversion so the gate is genuinely open before the change.
+    fireEvent.click(within(screen.getByTestId('verify-panel-fidelity')).getByRole('checkbox'));
+    expect(screen.getByRole('button', { name: /continue to review/i })).toBeEnabled();
+
+    backToOptions();
+    fireEvent.change(screen.getByLabelText(/Package/i), { target: { value: 'com.changed' } });
+    forwardToVerify();
+
+    // The verdict is gone (it described the old package) and Generate is locked again.
+    expect(screen.queryByTestId('verify-verdict')).not.toBeInTheDocument();
+    expect(screen.getByTestId('verify-run')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /continue to review/i })).toBeDisabled();
+  });
+
+  it('re-locks Generate when the target changes', async () => {
+    const fetchMock = mockFetch();
+    await verifyProto(fetchMock);
+    fireEvent.click(within(screen.getByTestId('verify-panel-fidelity')).getByRole('checkbox'));
+
+    // Back to Target and pick a different one: its conversion has not been verified.
+    backToOptions();
+    backToOptions();
+    fireEvent.click(screen.getByTestId('export-target-openapi'));
+    forwardToVerify(); // → options
+    forwardToVerify(); // → verify
+    expect(screen.queryByTestId('verify-verdict')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /continue to review/i })).toBeDisabled();
+  });
+
+  it('re-entering an already-verified configuration is instant and says it was cached', async () => {
+    const fetchMock = mockFetch();
+    await verifyProto(fetchMock);
+    expect(verifyCalls(fetchMock)).toBe(1);
+
+    // Change the package, then change it back: the original configuration is verified already.
+    backToOptions();
+    fireEvent.change(screen.getByLabelText(/Package/i), { target: { value: 'com.changed' } });
+    forwardToVerify();
+    expect(screen.queryByTestId('verify-verdict')).not.toBeInTheDocument();
+
+    backToOptions();
+    fireEvent.change(screen.getByLabelText(/Package/i), { target: { value: 'com.example' } });
+    forwardToVerify();
+
+    // The verdict is back with no click and no second dry-run, marked as restored.
+    expect(screen.getByTestId('verify-verdict')).toHaveAttribute('data-verdict', 'lossy');
+    expect(screen.getByTestId('verify-config-summary')).toHaveAttribute('data-cached', 'true');
+    expect(verifyCalls(fetchMock)).toBe(1);
+  });
+
+  it('names the configuration the displayed verdict belongs to', async () => {
+    await verifyProto(mockFetch());
+    const note = screen.getByTestId('verify-config-summary');
+    expect(note).toHaveTextContent('gRPC / Protobuf');
+    expect(note).toHaveTextContent('package = com.example');
+    expect(note).toHaveAttribute('data-cached', 'false');
+  });
+
+  it('an explicit re-run re-measures rather than re-showing the cached verdict', async () => {
+    const fetchMock = mockFetch();
+    await verifyProto(fetchMock);
+    expect(verifyCalls(fetchMock)).toBe(1);
+
+    fireEvent.click(screen.getByTestId('verify-rerun'));
+    await waitFor(() => expect(verifyCalls(fetchMock)).toBe(2));
+    expect(screen.getByTestId('verify-config-summary')).toHaveAttribute('data-cached', 'false');
+  });
+
+  it('verifies on its own once "Verify automatically" is switched on', async () => {
+    const fetchMock = mockFetch();
+    await renderStudio(fetchMock, { initialTarget: 'openapi' });
+    fireEvent.click(screen.getByRole('button', { name: /choose target/i }));
+    forwardToVerify(); // → options
+    forwardToVerify(); // → verify
+    expect(screen.getByTestId('verify-run')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('verify-auto-toggle'));
+    await waitFor(() => expect(screen.getByTestId('verify-verdict')).toBeInTheDocument(), {
+      timeout: 4000,
+    });
+    expect(screen.getByTestId('verify-verdict')).toHaveAttribute('data-verdict', 'clean');
+  });
+
+  it('does not auto-verify targets the user is only browsing', async () => {
+    const fetchMock = mockFetch();
+    await renderStudio(fetchMock, { initialTarget: 'openapi' });
+    fireEvent.click(screen.getByRole('button', { name: /choose target/i }));
+    forwardToVerify(); // → options
+    forwardToVerify(); // → verify
+    fireEvent.click(screen.getByTestId('verify-auto-toggle'));
+    await waitFor(() => expect(verifyCalls(fetchMock)).toBe(1), { timeout: 4000 });
+
+    // Back to the grid and try another card: a dry-run is a real emit, so browsing must not fire
+    // one per card even with the opt-in on.
+    backToOptions();
+    backToOptions();
+    fireEvent.click(screen.getByTestId('export-target-proto'));
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    expect(verifyCalls(fetchMock)).toBe(1);
+
+    // Arriving at Verify is when the verdict is needed — and when it runs itself.
+    forwardToVerify(); // → options
+    fireEvent.change(screen.getByLabelText(/Package/i), { target: { value: 'com.example' } });
+    forwardToVerify(); // → verify
+    await waitFor(() => expect(verifyCalls(fetchMock)).toBe(2), { timeout: 4000 });
   });
 });
 
