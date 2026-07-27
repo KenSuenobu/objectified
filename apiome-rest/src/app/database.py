@@ -3847,6 +3847,266 @@ class Database:
             raise
 
     # ------------------------------------------------------------------
+    # Revision-scoped payload analysis (CPDO-1.1, #4794)
+    # ------------------------------------------------------------------
+
+    #: Columns every payload-analysis read returns, so a row always adapts cleanly into
+    #: :func:`app.payload_analysis.record_from_row`.
+    _PAYLOAD_ANALYSIS_COLUMNS = """
+        id::text AS id, tenant_id::text AS tenant_id, project_id::text AS project_id,
+        version_id::text AS version_id, analysis_sequence, schema_version, content_fingerprint,
+        source_format, source_hash, analyzer_key, analyzer_version, tool_versions,
+        status, status_reason, tree, metrics, warnings, redaction,
+        created_by::text AS created_by, created_at
+    """
+
+    def get_payload_analysis_for_version(self, version_id: str) -> Optional[Dict[str, Any]]:
+        """The analysis in force for a source revision — its highest sequence (CPDO-1.1, #4794).
+
+        Args:
+            version_id: The source revision (``apiome.versions.id``).
+
+        Returns:
+            The analysis row, or ``None`` when the revision has never been analysed (callers then
+            return a declared ``unavailable`` record rather than fabricating one).
+        """
+        if not version_id or not is_uuid_string(str(version_id)):
+            return None
+        rows = self.execute_query(
+            f"""
+            SELECT {self._PAYLOAD_ANALYSIS_COLUMNS}
+            FROM apiome.payload_analysis
+            WHERE version_id = %s::uuid
+            ORDER BY analysis_sequence DESC
+            LIMIT 1
+            """,
+            (version_id,),
+        )
+        return rows[0] if rows else None
+
+    def get_payload_analysis_summary_row_for_version(
+        self, version_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """The analysis in force for a revision, **without its tree** (CPDO-1.1, #4794).
+
+        The catalog detail read needs status and counts, not structure, and a stored tree can be
+        thousands of nodes. Selecting every column except ``tree`` keeps that read's cost independent
+        of how large the analysed payload was.
+
+        Args:
+            version_id: The source revision.
+
+        Returns:
+            The row minus ``tree`` — ready for :func:`app.payload_analysis.summary_from_row` — or
+            ``None`` when the revision has never been analysed.
+        """
+        if not version_id or not is_uuid_string(str(version_id)):
+            return None
+        rows = self.execute_query(
+            """
+            SELECT id::text AS id, tenant_id::text AS tenant_id, project_id::text AS project_id,
+                   version_id::text AS version_id, analysis_sequence, schema_version,
+                   content_fingerprint, source_format, source_hash,
+                   analyzer_key, analyzer_version, tool_versions,
+                   status, status_reason, metrics, warnings, redaction,
+                   created_by::text AS created_by, created_at
+            FROM apiome.payload_analysis
+            WHERE version_id = %s::uuid
+            ORDER BY analysis_sequence DESC
+            LIMIT 1
+            """,
+            (version_id,),
+        )
+        return rows[0] if rows else None
+
+    def get_payload_analysis_by_id(
+        self, analysis_id: str, tenant_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Read one analysis record by id, scoped to a tenant (CPDO-1.1, #4794).
+
+        The by-id read is what makes an analysis *citable*: a projection manifest (CPDO-1.3)
+        references a specific record, and must still resolve it after a newer analysis of the same
+        revision has superseded it.
+
+        Args:
+            analysis_id: The analysis row id.
+            tenant_id: Tenant the caller is acting in; a record in another tenant reads as absent.
+
+        Returns:
+            The analysis row, or ``None`` when it does not exist in this tenant.
+        """
+        if not analysis_id or not is_uuid_string(str(analysis_id)):
+            return None
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        rows = self.execute_query(
+            f"""
+            SELECT {self._PAYLOAD_ANALYSIS_COLUMNS}
+            FROM apiome.payload_analysis
+            WHERE id = %s::uuid AND tenant_id = %s::uuid
+            """,
+            (analysis_id, tenant_id),
+        )
+        return rows[0] if rows else None
+
+    def list_payload_analyses_for_version(
+        self, version_id: str, *, limit: int = 20
+    ) -> List[Dict[str, Any]]:
+        """A revision's analyses, newest sequence first (CPDO-1.1, #4794).
+
+        Args:
+            version_id: The source revision.
+            limit: Maximum rows to return (clamped to 1..200).
+
+        Returns:
+            The analysis rows, newest first; empty when the revision has never been analysed.
+        """
+        if not version_id or not is_uuid_string(str(version_id)):
+            return []
+        return self.execute_query(
+            f"""
+            SELECT {self._PAYLOAD_ANALYSIS_COLUMNS}
+            FROM apiome.payload_analysis
+            WHERE version_id = %s::uuid
+            ORDER BY analysis_sequence DESC
+            LIMIT %s
+            """,
+            (version_id, max(1, min(int(limit), 200))),
+        )
+
+    def insert_payload_analysis(
+        self,
+        *,
+        tenant_id: str,
+        project_id: str,
+        version_id: str,
+        schema_version: str,
+        content_fingerprint: str,
+        analyzer_key: str,
+        analyzer_version: str,
+        status: str,
+        status_reason: Optional[str] = None,
+        source_format: Optional[str] = None,
+        source_hash: Optional[str] = None,
+        tool_versions: Optional[Dict[str, Any]] = None,
+        tree: Optional[List[Any]] = None,
+        metrics: Optional[Dict[str, Any]] = None,
+        warnings: Optional[List[Any]] = None,
+        redaction: Optional[Dict[str, Any]] = None,
+        created_by: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Append an analysis for a source revision (CPDO-1.1, #4794).
+
+        Analysis rows are write-once (a BEFORE UPDATE trigger guards them), so recording an analysis
+        is an insert at ``max(analysis_sequence) + 1`` for the revision. The previous rows stay
+        readable for the evidence references that named them.
+
+        The insert is **idempotent by content**: when the revision's current analysis already carries
+        the same ``content_fingerprint``, that row is returned unchanged instead of a duplicate being
+        appended. Re-running an unchanged analyzer over an unchanged revision therefore costs one
+        read and changes nothing, which is what keeps re-import and analyzer-sweep paths safe to
+        retry.
+
+        Args:
+            tenant_id: Tenant that owns the revision.
+            project_id: Catalog project the revision belongs to.
+            version_id: The analysed source revision.
+            schema_version: Version of the ``app.payload_analysis`` contract used.
+            content_fingerprint: SHA-256 over the canonicalized analysis document.
+            analyzer_key: Key of the analyzer that produced the record.
+            analyzer_version: That analyzer's version.
+            status: ``available`` | ``partial`` | ``unavailable`` | ``failed``.
+            status_reason: Reason code; required by the schema unless status is ``available``.
+            source_format: Adapter key of the analysed source.
+            source_hash: ``sha256:<hex>`` of the analysed bytes; required for available/partial.
+            tool_versions: Underlying parser/library versions.
+            tree: Root nodes of the native structure (JSON-ready).
+            metrics: Derived metrics over the tree.
+            warnings: Analyzer warnings.
+            redaction: Value-visibility policy metadata.
+            created_by: User whose action produced the analysis.
+
+        Returns:
+            The stored row (freshly inserted, or the identical existing one), or ``None`` when any
+            of the three scoping ids is not a UUID.
+        """
+        for scope_id in (tenant_id, project_id, version_id):
+            if not scope_id or not is_uuid_string(str(scope_id)):
+                return None
+
+        existing = self.get_payload_analysis_for_version(version_id)
+        if existing and existing.get("content_fingerprint") == content_fingerprint:
+            return existing
+
+        query = f"""
+            INSERT INTO apiome.payload_analysis (
+                tenant_id, project_id, version_id, analysis_sequence,
+                schema_version, content_fingerprint,
+                source_format, source_hash,
+                analyzer_key, analyzer_version, tool_versions,
+                status, status_reason,
+                tree, metrics, warnings, redaction, created_by
+            )
+            SELECT %s::uuid, %s::uuid, %s::uuid,
+                   COALESCE(MAX(analysis_sequence), 0) + 1,
+                   %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s,
+                   %s::jsonb, %s::jsonb, %s::jsonb, %s::jsonb, %s::uuid
+            FROM apiome.payload_analysis
+            WHERE version_id = %s::uuid
+            RETURNING {self._PAYLOAD_ANALYSIS_COLUMNS}
+        """
+        params = (
+            tenant_id,
+            project_id,
+            version_id,
+            schema_version,
+            content_fingerprint,
+            source_format,
+            source_hash,
+            analyzer_key,
+            analyzer_version,
+            json.dumps(tool_versions or {}, sort_keys=True),
+            status,
+            status_reason,
+            json.dumps(tree or [], sort_keys=True),
+            json.dumps(metrics or {}, sort_keys=True),
+            json.dumps(warnings or [], sort_keys=True),
+            json.dumps(redaction or {}, sort_keys=True),
+            created_by,
+            version_id,
+        )
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, params)
+                row = cursor.fetchone()
+            conn.commit()
+            return row
+        except Exception:
+            conn.rollback()
+            raise
+
+    def purge_payload_analysis(self, retention_days: int = 90) -> int:
+        """Run the payload-analysis retention sweep (CPDO-1.1, #4794).
+
+        Delegates to ``apiome.purge_payload_analysis`` (apiome-db V209), which hard-deletes analyses
+        older than the window that are either superseded by a newer analysis of the same revision or
+        attached to a revision soft-deleted beyond the window. The current analysis of a live
+        revision is never purged — it is the catalog record.
+
+        Args:
+            retention_days: Retention window in days; negative values are treated as ``0``.
+
+        Returns:
+            The number of purged rows.
+        """
+        rows = self.execute_query(
+            "SELECT apiome.purge_payload_analysis(%s) AS purged",
+            (max(0, int(retention_days)),),
+        )
+        return int(rows[0]["purged"]) if rows and rows[0].get("purged") is not None else 0
+
+    # ------------------------------------------------------------------
     # Import/export quality policy + waivers (IXH-2.3, #5098)
     # ------------------------------------------------------------------
 
@@ -21422,18 +21682,18 @@ class Database:
             SourceApplyConflictError: With a structured code/payload; the
                 transaction is always rolled back first.
         """
-        from .source_change_apply import (
-            build_canonical_writes,
-            compare_candidate_to_merged,
-            regenerate_document,
-        )
-        from .source_change_review import build_source_change_set, change_set_digest
         from .preservation_envelope import (
             apply_envelope,
             extract_envelope,
             semantic_fingerprint,
             validate_envelope,
         )
+        from .source_change_apply import (
+            build_canonical_writes,
+            compare_candidate_to_merged,
+            regenerate_document,
+        )
+        from .source_change_review import build_source_change_set, change_set_digest
 
         conn = self.connect()
         prev_autocommit = self._begin_tx(conn)

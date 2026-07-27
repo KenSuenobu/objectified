@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.64.1
+  version: 1.65.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -4148,6 +4148,109 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for get catalog itemresponse422.
+  /v1/catalog/{tenant_slug}/{item_id}/analysis:
+    get:
+      tags:
+      - catalog
+      summary: Get Catalog Item Analysis
+      description: "Return the full native payload analysis of a catalog item's latest\
+        \ revision (CPDO-1.1).\n\nThe detail read (``GET …/{item_id}``) embeds only\
+        \ the analysis *summary* — status and counts,\nno payload material — so it\
+        \ stays cheap regardless of how large the analysed source was. This\nendpoint\
+        \ serves the record itself: the native tree in the analyzer's own vocabulary\
+        \ (X12\ninterchange → functional group → transaction set → segment → element;\
+        \ copybook level → PIC →\nOCCURS → 88-condition), its source locations, analyzer\
+        \ warnings, and the redaction metadata\nstating what was withheld.\n\n**Authorization.**\
+        \ The summary is readable by anyone who can read the catalog item; the tree\
+        \ is\ngated on ``imports:view``, the permission that governs imported source\
+        \ material, because a\nnative tree is a structural description of the payload\
+        \ itself. ``valueVisibility`` may further\nrestrict what is returned — it\
+        \ can never widen it, since values the store never held cannot be\nre-materialised.\n\
+        \n**Absence is declared.** A revision imported before this contract existed,\
+        \ or one whose source\nwas never captured, returns a record with ``status:\
+        \ \"unavailable\"``, an empty tree, and a reason\ncode saying which. It never\
+        \ returns a fabricated tree.\n\nLike the other catalog reads this is restricted\
+        \ to the non-publishable slice — a Project's id, or\nan unknown id, yields\
+        \ 404 — and authenticated via JWT token or API key.\n\nArgs:\n    tenant_slug:\
+        \ The tenant slug.\n    item_id: The catalog item ID (a project id).\n   \
+        \ value_visibility: Optional read-time value-visibility restriction.\n   \
+        \ auth_data: Authentication data (injected by dependency).\n\nReturns:\n \
+        \   The :class:`~app.payload_analysis.PayloadAnalysisRecord` for the item's\
+        \ latest revision."
+      operationId: get_catalog_item_analysis_v1_catalog__tenant_slug___item_id__analysis_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Item Id
+          description: Item Id schema.
+        description: Catalog item identifier.
+      - name: valueVisibility
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Catalog Item Analysisvalue Visibility schema.
+          - type: 'null'
+            description: Get Catalog Item Analysisvalue Visibility schema.
+          description: 'Optional read-time restriction on observed payload values:
+            none | structural | full. It can only narrow what the stored record carries,
+            never widen it.'
+          title: Valuevisibility
+        description: 'Optional read-time restriction on observed payload values: none
+          | structural | full. It can only narrow what the stored record carries,
+          never widen it.'
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Catalog Item Analysisauthorization schema.
+          - type: 'null'
+            description: Get Catalog Item Analysisauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Catalog Item Analysis Xapikey schema.
+          - type: 'null'
+            description: Get Catalog Item Analysis Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get catalog item analysis.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayloadAnalysisRecord'
+                description: Response payload for get catalog item analysisresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get catalog item analysisresponse422.
   /v1/catalog/{tenant_slug}/{item_id}/lint:
     get:
       tags:
@@ -44905,6 +45008,12 @@ components:
           title: Parsed
           description: Parsed.
           maxItems: 1000
+        analysis:
+          $ref: '#/components/schemas/PayloadAnalysisSummary'
+          description: 'Summary of the revision-scoped native payload analysis: status,
+            reason code, analyzer identity and node counts. Carries no payload material;
+            fetch the native tree from GET /v1/catalog/{tenant_slug}/{item_id}/analysis,
+            which requires imports:view.'
       type: object
       required:
       - id
@@ -44932,7 +45041,23 @@ components:
         can be reconstructed
 
         from the item''s captured source. Sparse until the import path records that
-        provenance.'
+        provenance.
+
+
+        From CPDO-1.1 it also carries ``analysis``: the summary of the revision-scoped
+        native payload
+
+        analysis (:mod:`app.payload_analysis`). The summary carries status and counts
+        only — never
+
+        payload material — so it is readable by anyone who can read the item; the
+        native tree itself is a
+
+        separate, permission-gated request to ``…/{item_id}/analysis``. A revision
+        that has never been
+
+        analysed reports a declared ``unavailable`` status with a reason code, never
+        a fabricated tree.'
     CatalogItemSchema:
       properties:
         id:
@@ -83331,6 +83456,657 @@ components:
       type: object
       title: MockScenarioSpec
       description: Named mock scenario definition returned from a version.
+    AnalysisMetrics:
+      properties:
+        nodeCount:
+          type: integer
+          minimum: 0.0
+          title: Nodecount
+          default: 0
+          description: Number of node.
+          example: 1
+        maxDepth:
+          type: integer
+          minimum: 0.0
+          title: Maxdepth
+          default: 0
+          description: Max Depth.
+          example: 1
+        truncated:
+          type: boolean
+          title: Truncated
+          default: false
+          description: Truncated.
+          example: false
+        droppedNodeCount:
+          type: integer
+          minimum: 0.0
+          title: Droppednodecount
+          default: 0
+          description: Number of dropped node.
+          example: 1
+        kindCounts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Kindcounts
+          description: Kind Counts.
+        warningCount:
+          type: integer
+          minimum: 0.0
+          title: Warningcount
+          default: 0
+          description: Number of warning.
+          example: 1
+      additionalProperties: false
+      type: object
+      title: AnalysisMetrics
+      description: "Derived counts over the tree, so a reader can size it before fetching\
+        \ it.\n\nAttributes:\n    node_count: Total nodes in the stored tree (after\
+        \ bounding).\n    max_depth: Deepest nesting level in the stored tree (a root-only\
+        \ tree is depth 1).\n    truncated: True when bounding dropped nodes the source\
+        \ actually had.\n    dropped_node_count: How many nodes bounding dropped,\
+        \ when known.\n    kind_counts: Node count per ``kind``, the cheap summary\
+        \ a detail header renders.\n    warning_count: Number of warnings on the record."
+    AnalysisNode:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        kind:
+          type: string
+          title: Kind
+          description: Kind.
+          example: example
+        name:
+          anyOf:
+          - type: string
+            description: Analysis Node schema.
+          - type: 'null'
+            description: Analysis Node schema.
+          title: Name
+          description: Human-readable name.
+        label:
+          anyOf:
+          - type: string
+            description: Analysis Node schema.
+          - type: 'null'
+            description: Analysis Node schema.
+          title: Label
+          description: Label.
+        ordinal:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Analysis Node schema.
+          - type: 'null'
+            description: Analysis Node schema.
+          title: Ordinal
+          description: Ordinal.
+        attributes:
+          additionalProperties: true
+          type: object
+          title: Attributes
+          description: Attributes.
+        location:
+          anyOf:
+          - $ref: '#/components/schemas/SourceLocation'
+          - type: 'null'
+            description: Analysis Node schema.
+          description: Location.
+        valuePresent:
+          anyOf:
+          - type: boolean
+            description: Analysis Node schema.
+          - type: 'null'
+            description: Analysis Node schema.
+          title: Valuepresent
+          description: Value Present.
+        valueLength:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Analysis Node schema.
+          - type: 'null'
+            description: Analysis Node schema.
+          title: Valuelength
+          description: Value Length.
+        value:
+          anyOf:
+          - type: string
+            description: Analysis Node schema.
+          - type: 'null'
+            description: Analysis Node schema.
+          title: Value
+          description: Value.
+        redacted:
+          type: boolean
+          title: Redacted
+          default: false
+          description: Redacted.
+          example: false
+        children:
+          items:
+            $ref: '#/components/schemas/AnalysisNode'
+          type: array
+          title: Children
+          description: Children.
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - kind
+      title: AnalysisNode
+      description: "One node of the native tree, in the analyzer's own vocabulary.\n\
+        \nDeliberately format-neutral in *shape* and format-specific in *content*:\
+        \ ``kind`` is the\nanalyzer's own term (``interchange``, ``functional_group``,\
+        \ ``transaction_set``, ``segment``,\n``element`` for X12; ``group``, ``field``,\
+        \ ``condition`` for a copybook), and ``attributes``\ncarries the semantics\
+        \ that term implies (PIC, USAGE, OCCURS bounds, segment id, element\nposition).\
+        \ One renderer can therefore walk any analyzer's output while nothing is flattened\
+        \ into\na lowest common denominator on the way in.\n\n``value`` is governed\
+        \ by :class:`ValueVisibility` and is ``None`` under the default policy;\n\
+        ``value_present`` and ``value_length`` describe the observed value without\
+        \ disclosing it.\n\nAttributes:\n    id: Stable id within the record, so warnings\
+        \ and (later) projection evidence can cite it.\n    kind: The analyzer's term\
+        \ for what this node is.\n    name: The construct's name in the source (segment\
+        \ id, field name, element reference).\n    label: Optional human-facing label\
+        \ when ``name`` alone reads poorly.\n    ordinal: Position among its siblings,\
+        \ preserving source order.\n    attributes: Format-specific semantics; JSON\
+        \ scalars and small containers only.\n    location: Where the construct sits\
+        \ in the source.\n    value_present: Whether the source carried a value here\
+        \ (an X12 element can be present and\n        empty — that is not the same\
+        \ as absent).\n    value_length: Length of the observed value in characters,\
+        \ when known.\n    value: The observed value; only under :data:`ValueVisibility.FULL`,\
+        \ truncated to\n        :data:`MAX_VALUE_PREVIEW_CHARS`.\n    redacted: True\
+        \ when a value was observed and withheld by policy.\n    children: Child nodes,\
+        \ in source order."
+    AnalysisWarning:
+      properties:
+        code:
+          type: string
+          title: Code
+          description: Code.
+          example: example
+        severity:
+          type: string
+          title: Severity
+          default: warning
+          description: Severity.
+          example: warning
+        message:
+          type: string
+          title: Message
+          default: ''
+          description: Message.
+          example: Example validation message.
+        nodeId:
+          anyOf:
+          - type: string
+            description: Analysis Warning schema.
+          - type: 'null'
+            description: Analysis Warning schema.
+          title: Nodeid
+          description: Node ID.
+        location:
+          anyOf:
+          - $ref: '#/components/schemas/SourceLocation'
+          - type: 'null'
+            description: Analysis Warning schema.
+          description: Location.
+      additionalProperties: false
+      type: object
+      required:
+      - code
+      title: AnalysisWarning
+      description: "Something the analyzer could not do, stated rather than hidden.\n\
+        \nThe difference between \"this construct is not in the source\" and \"this\
+        \ parser does not\nunderstand this construct\" is the whole point of CPDO-2.4,\
+        \ and it is carried here. A warning is\nnever an error in the request — a\
+        \ record with warnings is still a usable record.\n\nAttributes:\n    code:\
+        \ Stable machine code (e.g. ``copybook.redefines_unsupported``).\n    severity:\
+        \ One of :data:`WARNING_SEVERITIES`.\n    message: Human-readable explanation,\
+        \ free of payload values.\n    node_id: Id of the node the warning is about,\
+        \ when it is about one.\n    location: Where in the source it applies, when\
+        \ known."
+    AnalyzerInfo:
+      properties:
+        key:
+          type: string
+          title: Key
+          default: generic
+          description: Key.
+          example: example
+        version:
+          type: string
+          title: Version
+          default: 0.0.0
+          description: Version.
+          example: 1.0.0
+        toolVersions:
+          additionalProperties:
+            type: string
+          type: object
+          title: Toolversions
+          description: Tool Versions.
+      additionalProperties: false
+      type: object
+      title: AnalyzerInfo
+      description: "Which analyzer produced the record, and what it was built on.\n\
+        \n``key`` plus ``version`` is what makes a stale record detectable: an analysis\
+        \ produced by\n``edix12@1.0.0`` is not interchangeable with one produced by\
+        \ ``edix12@2.0.0``, even for the same\nbytes.\n\nAttributes:\n    key: Analyzer\
+        \ key (usually the import adapter key, or ``generic``).\n    version: Analyzer\
+        \ version.\n    tool_versions: Underlying parser/library versions it leaned\
+        \ on."
+    PayloadAnalysisDocument:
+      properties:
+        schemaVersion:
+          type: string
+          title: Schemaversion
+          default: 1.0.0
+          description: Schema Version.
+          example: 1.0.0
+        status:
+          type: string
+          title: Status
+          default: unavailable
+          description: Status.
+          example: active
+        statusReason:
+          anyOf:
+          - type: string
+            description: Payload Analysis Document schema.
+          - type: 'null'
+            description: Payload Analysis Document schema.
+          title: Statusreason
+          description: Status Reason.
+        sourceFormat:
+          anyOf:
+          - type: string
+            description: Payload Analysis Document schema.
+          - type: 'null'
+            description: Payload Analysis Document schema.
+          title: Sourceformat
+          description: Source Format.
+        sourceHash:
+          anyOf:
+          - type: string
+            description: Payload Analysis Document schema.
+          - type: 'null'
+            description: Payload Analysis Document schema.
+          title: Sourcehash
+          description: Source Hash.
+        analyzer:
+          $ref: '#/components/schemas/AnalyzerInfo'
+          description: Analyzer.
+        tree:
+          items:
+            $ref: '#/components/schemas/AnalysisNode'
+          type: array
+          title: Tree
+          description: Tree.
+          maxItems: 1000
+        metrics:
+          $ref: '#/components/schemas/AnalysisMetrics'
+          description: Metrics.
+        warnings:
+          items:
+            $ref: '#/components/schemas/AnalysisWarning'
+          type: array
+          title: Warnings
+          description: Warnings.
+          maxItems: 1000
+        redaction:
+          $ref: '#/components/schemas/RedactionInfo'
+          description: Redaction.
+      additionalProperties: false
+      type: object
+      title: PayloadAnalysisDocument
+      description: "The full analysis of one source revision — the persisted contract.\n\
+        \nThis is what ``apiome.payload_analysis`` stores (column-per-field, not a\
+        \ blob) and what\n``GET /v1/catalog/{tenant_slug}/{item_id}/analysis`` returns.\
+        \ Its invariants mirror the V209\nCHECK constraints exactly, and :meth:`contract_violations`\
+        \ states them in one place so the API\ncan refuse to *write* a record the\
+        \ database would refuse to store.\n\nAttributes:\n    schema_version: Contract\
+        \ version the record was written under.\n    status: One of :data:`ANALYSIS_STATUSES`.\n\
+        \    status_reason: Reason code; required unless ``status`` is :data:`STATUS_AVAILABLE`.\n\
+        \    source_format: Adapter key of the analysed source.\n    source_hash:\
+        \ ``sha256:<hex>`` of the analysed bytes; required for available/partial.\n\
+        \    analyzer: Which analyzer produced the record.\n    tree: Root nodes of\
+        \ the native structure; empty for unavailable/failed.\n    metrics: Derived\
+        \ counts over ``tree``.\n    warnings: What the analyzer could not do.\n \
+        \   redaction: The value-visibility policy in force and what it withheld."
+    PayloadAnalysisRecord:
+      properties:
+        analysisId:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Analysisid
+          description: Analysis ID.
+        tenantId:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Tenantid
+          description: Tenant ID.
+        projectId:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Projectid
+          description: Project ID.
+        versionRecordId:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Versionrecordid
+          description: Version Record ID.
+        analysisSequence:
+          type: integer
+          minimum: 0.0
+          title: Analysissequence
+          default: 0
+          description: Analysis Sequence.
+          example: 1
+        contentFingerprint:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Contentfingerprint
+          description: Content Fingerprint.
+        analyzedAt:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Analyzedat
+          description: Analyzed At.
+        analysis:
+          $ref: '#/components/schemas/PayloadAnalysisDocument'
+          description: Analysis.
+      additionalProperties: false
+      type: object
+      title: PayloadAnalysisRecord
+      description: "A stored analysis: the document plus the identity of the row that\
+        \ holds it.\n\nReturned by the full-analysis endpoint. The identity half is\
+        \ what makes the record citable — a\nprojection manifest (CPDO-1.3) references\
+        \ ``analysis_id`` and ``content_fingerprint``, not \"the\nanalysis of this\
+        \ item\", which would drift.\n\nAttributes:\n    analysis_id: Row id.\n  \
+        \  tenant_id: Owning tenant.\n    project_id: Catalog project the analysed\
+        \ revision belongs to.\n    version_record_id: The analysed source revision.\n\
+        \    analysis_sequence: Monotonic sequence within the revision; highest is\
+        \ in force.\n    content_fingerprint: SHA-256 over the canonicalized document.\n\
+        \    analyzed_at: When the record was written.\n    analysis: The document\
+        \ itself."
+    PayloadAnalysisSummary:
+      properties:
+        available:
+          type: boolean
+          title: Available
+          default: false
+          description: Available.
+          example: false
+        status:
+          type: string
+          title: Status
+          default: unavailable
+          description: Status.
+          example: active
+        statusReason:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Statusreason
+          description: Status Reason.
+        schemaVersion:
+          type: string
+          title: Schemaversion
+          default: 1.0.0
+          description: Schema Version.
+          example: 1.0.0
+        sourceFormat:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Sourceformat
+          description: Source Format.
+        analyzerKey:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Analyzerkey
+          description: Analyzer Key.
+        analyzerVersion:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Analyzerversion
+          description: Analyzer Version.
+        nodeCount:
+          type: integer
+          minimum: 0.0
+          title: Nodecount
+          default: 0
+          description: Number of node.
+          example: 1
+        maxDepth:
+          type: integer
+          minimum: 0.0
+          title: Maxdepth
+          default: 0
+          description: Max Depth.
+          example: 1
+        truncated:
+          type: boolean
+          title: Truncated
+          default: false
+          description: Truncated.
+          example: false
+        warningCount:
+          type: integer
+          minimum: 0.0
+          title: Warningcount
+          default: 0
+          description: Number of warning.
+          example: 1
+        kindCounts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Kindcounts
+          description: Kind Counts.
+        valueVisibility:
+          type: string
+          title: Valuevisibility
+          default: structural
+          description: Value Visibility.
+          example: example
+        analysisId:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Analysisid
+          description: Analysis ID.
+        versionRecordId:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Versionrecordid
+          description: Version Record ID.
+        analyzedAt:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Analyzedat
+          description: Analyzed At.
+      additionalProperties: false
+      type: object
+      title: PayloadAnalysisSummary
+      description: "The small projection embedded in a catalog detail read.\n\nThe\
+        \ detail response carries this rather than the tree: the tree can be five\
+        \ thousand nodes, and\nthe detail screen needs only enough to decide whether\
+        \ to offer the *Format details* tab and what\nto say when it cannot. Fetching\
+        \ the tree is a separate, explicit request.\n\nAttributes:\n    available:\
+        \ True only when a real tree is fetchable (``available`` or ``partial``).\n\
+        \    status: One of :data:`ANALYSIS_STATUSES`.\n    status_reason: Reason\
+        \ code, when the status has one.\n    schema_version: Contract version of\
+        \ the underlying record.\n    source_format: Adapter key of the analysed source.\n\
+        \    analyzer_key: Which analyzer produced it.\n    analyzer_version: That\
+        \ analyzer's version.\n    node_count: Nodes in the stored tree.\n    max_depth:\
+        \ Depth of the stored tree.\n    truncated: Whether bounding dropped nodes.\n\
+        \    warning_count: Number of analyzer warnings.\n    kind_counts: Node count\
+        \ per kind — the detail header's summary metrics.\n    value_visibility: The\
+        \ value-visibility level the record was stored under.\n    analysis_id: Id\
+        \ of the underlying record, for a direct evidence reference.\n    version_record_id:\
+        \ The source revision the analysis describes.\n    analyzed_at: When the analysis\
+        \ was recorded."
+    RedactionInfo:
+      properties:
+        valueVisibility:
+          type: string
+          title: Valuevisibility
+          default: structural
+          description: Value Visibility.
+          example: example
+        redactedNodeCount:
+          type: integer
+          minimum: 0.0
+          title: Redactednodecount
+          default: 0
+          description: Number of redacted node.
+          example: 1
+        policySource:
+          type: string
+          title: Policysource
+          default: default
+          description: Policy Source.
+          example: example
+        valuePreviewLimit:
+          type: integer
+          minimum: 0.0
+          title: Valuepreviewlimit
+          default: 120
+          description: Value Preview Limit.
+          example: 50
+      additionalProperties: false
+      type: object
+      title: RedactionInfo
+      description: "What the record withheld, and under which policy.\n\nPresent on\
+        \ every record — including records that withheld nothing — so a reader never\
+        \ has to\ninfer whether an absent value was withheld or simply not there.\n\
+        \nAttributes:\n    value_visibility: The :class:`ValueVisibility` level in\
+        \ force.\n    redacted_node_count: How many nodes carried a value that was\
+        \ withheld.\n    policy_source: Where the level came from (``default``, ``tenant``,\
+        \ ``format``, ``request``).\n    value_preview_limit: Character limit applied\
+        \ to any retained value."
+    SourceLocation:
+      properties:
+        file:
+          anyOf:
+          - type: string
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: File
+          description: Raw specification file bytes for multipart import requests.
+        line:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: Line
+          description: Line.
+        column:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: Column
+          description: Column.
+        offset:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: Offset
+          description: Offset.
+        length:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: Length
+          description: Length.
+        ordinal:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: Ordinal
+          description: Ordinal.
+        path:
+          anyOf:
+          - type: string
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: Path
+          description: Path.
+      additionalProperties: false
+      type: object
+      title: SourceLocation
+      description: "Where in the original source a node came from.\n\nA pointer, never\
+        \ a copy: the fields address a range in the raw source the catalog already\n\
+        serves, so a UI can open the source viewer at the right place (CPDO-2.1) without\
+        \ the analysis\ncarrying the bytes. Every field is optional because source-location\
+        \ quality differs by format —\na copybook parser knows the line, an X12 parser\
+        \ knows the segment ordinal and byte offset, and a\nJSON-derived analyzer\
+        \ may know only a path.\n\nAttributes:\n    file: Path within a multi-file\
+        \ source layout, when the source was a fileset.\n    line: 1-based line number.\n\
+        \    column: 1-based column number.\n    offset: 0-based byte offset from\
+        \ the start of the source.\n    length: Length in bytes of the addressed range.\n\
+        \    ordinal: Position among sibling constructs (e.g. the segment index within\
+        \ an interchange).\n    path: Analyzer-specific path expression (e.g. ``ISA/GS[0]/ST[2]/NM1[4]``)."
   securitySchemes:
     Bearer:
       type: http
