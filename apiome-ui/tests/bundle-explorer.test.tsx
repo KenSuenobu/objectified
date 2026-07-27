@@ -17,8 +17,11 @@ jest.mock('@monaco-editor/react', () => {
   type MouseHandler = (event: { target?: { position?: { lineNumber?: number } } }) => void;
   const mouseHandlers: MouseHandler[] = [];
   const model = { getLineCount: () => 1000, isDisposed: () => false };
+  /** The MFX-43.5 find action, so "Find" can assert it opened Monaco's own widget. */
+  const findAction = { run: jest.fn() };
   const editor = {
     getModel: () => model,
+    getAction: jest.fn(() => findAction),
     revealLineInCenter: jest.fn(),
     setPosition: jest.fn(),
     focus: jest.fn(),
@@ -32,12 +35,14 @@ jest.mock('@monaco-editor/react', () => {
   const harness = {
     editor,
     monaco,
+    findAction,
     /** Simulate a click on an editor line (what Monaco reports via onMouseDown). */
     fireLineClick: (lineNumber: number) => {
       mouseHandlers.forEach((handler) => handler({ target: { position: { lineNumber } } }));
     },
     reset: () => {
       mouseHandlers.length = 0;
+      findAction.run.mockClear();
       editor.revealLineInCenter.mockClear();
       editor.setPosition.mockClear();
       editor.focus.mockClear();
@@ -48,6 +53,7 @@ jest.mock('@monaco-editor/react', () => {
   function MockMonaco(props: {
     value?: string;
     language?: string;
+    options?: { wordWrap?: string; folding?: boolean };
     onMount?: (ed: typeof editor, m: typeof monaco) => void;
   }) {
     // Mount-once like the real editor: hand the fake instances to onMount exactly one time.
@@ -56,7 +62,12 @@ jest.mock('@monaco-editor/react', () => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     return (
-      <div data-testid="mock-monaco" data-language={props.language}>
+      <div
+        data-testid="mock-monaco"
+        data-language={props.language}
+        data-wordwrap={props.options?.wordWrap}
+        data-folding={String(props.options?.folding)}
+      >
         {props.value}
       </div>
     );
@@ -76,6 +87,7 @@ import {
   buildBundleManifest,
   countFindingsByFile,
 } from '../src/app/components/ade/dashboard/export/exportBundle';
+import { VIEWER_INLINE_FILE_CAP_BYTES } from '../src/app/components/ade/dashboard/export/exportViewerGuards';
 import {
   ENTITY_LINE_CLASS,
   type ExportManifestEntity,
@@ -90,6 +102,7 @@ const { __harness: monacoHarness } = jest.requireMock('@monaco-editor/react') as
       createDecorationsCollection: jest.Mock;
     };
     monaco: { editor: { setModelMarkers: jest.Mock } };
+    findAction: { run: jest.Mock };
     fireLineClick: (lineNumber: number) => void;
     reset: () => void;
   };
@@ -381,5 +394,171 @@ describe('BundleExplorer — manifest entities (IXH-4.1)', () => {
       range: { startLineNumber: 3, endLineNumber: 3 },
       options: { isWholeLine: true },
     });
+  });
+});
+
+/** A file of `bytes` ASCII bytes, newline-delimited. */
+function textOfBytes(bytes: number): string {
+  const line = `${'x'.repeat(63)}\n`;
+  return line.repeat(Math.ceil(bytes / 64)).slice(0, bytes);
+}
+
+describe('BundleExplorer — large-output guards + viewer actions (MFX-43.5)', () => {
+  /** Capture what `downloadBlob` handed the browser. */
+  function captureDownload() {
+    const created: Blob[] = [];
+    const names: string[] = [];
+    (URL as unknown as { createObjectURL: unknown }).createObjectURL = jest.fn((blob: Blob) => {
+      created.push(blob);
+      return 'blob:mock';
+    });
+    (URL as unknown as { revokeObjectURL: unknown }).revokeObjectURL = jest.fn();
+    jest
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(function (this: HTMLAnchorElement) {
+        names.push(this.download);
+      });
+    return { created, names };
+  }
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it('mounts the standard viewer actions, including the bundle download', () => {
+    const onDownloadBundle = jest.fn();
+    render(
+      <BundleExplorer
+        manifest={multiManifest}
+        countsByPath={emptyCounts}
+        targetKey="protobuf"
+        onDownloadBundle={onDownloadBundle}
+      />,
+    );
+
+    for (const action of ['copy', 'download-file', 'download-bundle', 'wrap', 'folding', 'find']) {
+      expect(screen.getByTestId(`bundle-${action}`)).toBeInTheDocument();
+    }
+    fireEvent.click(screen.getByTestId('bundle-download-bundle'));
+    expect(onDownloadBundle).toHaveBeenCalledTimes(1);
+  });
+
+  it('omits the bundle download when the host offers none', () => {
+    render(<BundleExplorer manifest={multiManifest} countsByPath={emptyCounts} targetKey="protobuf" />);
+    expect(screen.queryByTestId('bundle-download-bundle')).not.toBeInTheDocument();
+  });
+
+  it('downloads the open file under its own basename', () => {
+    const { created, names } = captureDownload();
+    render(<BundleExplorer manifest={multiManifest} countsByPath={emptyCounts} targetKey="protobuf" />);
+
+    // Open the nested file, then download it: the name is the basename, not the bundle path.
+    fireEvent.click(screen.getByTestId('bundle-tree-file-com/example/User.avsc'));
+    fireEvent.click(screen.getByTestId('bundle-download-file'));
+    expect(names).toEqual(['User.avsc']);
+    expect(created[0].size).toBe('{"type":"record","name":"User"}'.length);
+  });
+
+  it('drives wrap and folding into the viewer and opens the find widget', () => {
+    render(<BundleExplorer manifest={multiManifest} countsByPath={emptyCounts} targetKey="protobuf" />);
+    expect(screen.getByTestId('mock-monaco')).toHaveAttribute('data-wordwrap', 'off');
+
+    fireEvent.click(screen.getByTestId('bundle-wrap'));
+    expect(screen.getByTestId('mock-monaco')).toHaveAttribute('data-wordwrap', 'on');
+    fireEvent.click(screen.getByTestId('bundle-folding'));
+    expect(screen.getByTestId('mock-monaco')).toHaveAttribute('data-folding', 'false');
+
+    fireEvent.click(screen.getByTestId('bundle-find'));
+    expect(monacoHarness.findAction.run).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a huge bundle responsive: the giant file is navigable but never rendered', () => {
+    const huge = buildBundleManifest([
+      { path: 'petstore.proto', text: 'syntax = "proto3";' },
+      { path: 'giant.json', text: textOfBytes(VIEWER_INLINE_FILE_CAP_BYTES + 4_096) },
+    ]);
+    render(<BundleExplorer manifest={huge} countsByPath={emptyCounts} targetKey="protobuf" />);
+
+    // The bundle says up front that something loads on demand.
+    expect(screen.getByTestId('bundle-budget-notice')).toHaveTextContent('1 of 2 files');
+    // The primary file is inline as always.
+    expect(screen.getByTestId('bundle-file-editor')).toHaveTextContent('syntax = "proto3"');
+
+    // Opening the giant shows the guard panel — nothing reached Monaco.
+    fireEvent.click(screen.getByTestId('bundle-tree-file-giant.json'));
+    expect(screen.queryByTestId('bundle-file-editor')).not.toBeInTheDocument();
+    expect(screen.getByTestId('bundle-deferred')).toHaveAttribute('data-reason', 'file-cap');
+    // …but it is still copyable and downloadable in full.
+    expect(screen.getByTestId('bundle-copy')).toBeEnabled();
+    expect(screen.getByTestId('bundle-download-file')).toBeEnabled();
+  });
+
+  it('loads a deferred file into the viewer as an explicit head slice', () => {
+    const text = textOfBytes(VIEWER_INLINE_FILE_CAP_BYTES + 4_096);
+    const huge = buildBundleManifest([
+      { path: 'petstore.proto', text: 'syntax = "proto3";' },
+      { path: 'giant.json', text },
+    ]);
+    render(<BundleExplorer manifest={huge} countsByPath={emptyCounts} targetKey="protobuf" />);
+
+    fireEvent.click(screen.getByTestId('bundle-tree-file-giant.json'));
+    fireEvent.click(screen.getByTestId('bundle-load'));
+
+    const editor = screen.getByTestId('bundle-file-editor');
+    expect(editor.textContent?.length ?? 0).toBeLessThan(text.length);
+    expect(screen.getByTestId('bundle-truncated')).toHaveTextContent(/Showing the first 128\.0 KB/);
+  });
+
+  it('holds back the files past the inline budget, then loads one when asked', () => {
+    // Five 500 KB files: each under the per-file cap, but together past the 2 MB bundle budget.
+    const big = textOfBytes(500 * 1024);
+    const bundle = buildBundleManifest(
+      ['a', 'b', 'c', 'd', 'e'].map((name) => ({ path: `${name}.json`, text: big })),
+    );
+    render(<BundleExplorer manifest={bundle} countsByPath={emptyCounts} targetKey="openapi" />);
+
+    expect(screen.getByTestId('bundle-budget-notice')).toHaveTextContent('1 of 5 files');
+    // The fifth file overflows the budget: it defers for the budget, not for its own size.
+    fireEvent.click(screen.getByTestId('bundle-tree-file-e.json'));
+    const panel = screen.getByTestId('bundle-deferred');
+    expect(panel).toHaveAttribute('data-reason', 'bundle-budget');
+
+    // Asking for it renders the whole file — a budget deferral is not a truncation.
+    fireEvent.click(screen.getByTestId('bundle-load'));
+    expect(screen.getByTestId('bundle-file-editor')).toBeInTheDocument();
+    expect(screen.queryByTestId('bundle-truncated')).not.toBeInTheDocument();
+  });
+
+  it('says nothing about budgets for an ordinary bundle', () => {
+    render(<BundleExplorer manifest={multiManifest} countsByPath={emptyCounts} targetKey="protobuf" />);
+    expect(screen.queryByTestId('bundle-budget-notice')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('bundle-deferred')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('bundle-truncated')).not.toBeInTheDocument();
+  });
+});
+
+describe('BundleExplorer — guarded files still answer a finding (MFX-43.5 × MFX-43.3)', () => {
+  it('loads a held-back file when a Verify lens asks to open a finding in it', () => {
+    const huge = buildBundleManifest([
+      { path: 'petstore.proto', text: 'syntax = "proto3";' },
+      { path: 'giant.json', text: textOfBytes(VIEWER_INLINE_FILE_CAP_BYTES + 4_096) },
+    ]);
+    const problems = collectLocatedProblems(
+      [{ message: 'Bad field.', file: 'giant.json', line: 3 }],
+      [],
+    );
+    render(
+      <BundleExplorer
+        manifest={huge}
+        countsByPath={emptyCounts}
+        targetKey="protobuf"
+        problems={problems}
+        reveal={{ problem: problems[0], nonce: 1 }}
+      />,
+    );
+
+    // The lens click opened the guarded file rather than answering with the "load this" panel.
+    expect(screen.queryByTestId('bundle-deferred')).not.toBeInTheDocument();
+    expect(screen.getByTestId('bundle-file-editor')).toBeInTheDocument();
+    // …as an explicit head slice, since the file is past the per-file cap.
+    expect(screen.getByTestId('bundle-truncated')).toBeInTheDocument();
   });
 });

@@ -1,15 +1,24 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, Copy, FolderTree } from 'lucide-react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { FolderTree } from 'lucide-react';
+import type { editor as MonacoEditorApi } from 'monaco-editor';
 import { monacoLanguageForArtifact } from '@/app/utils/export-target-language';
 import { cn } from '@lib/utils';
 import { ReadOnlyCodeViewer } from './ReadOnlyCodeViewer';
 import { BundleTree } from './BundleTree';
 import { BundleFileTabs } from './BundleFileTabs';
 import { ProblemsPanel } from './ProblemsPanel';
+import { ViewerActionsBar } from './ViewerActionsBar';
+import { DeferredFilePanel, TruncatedContentNotice } from './ViewerContentGuard';
 import { useProblemMarkers } from './useProblemMarkers';
 import { formatByteSize } from './exportArtifactPreview';
+import { downloadBlob } from './exportDownload';
+import {
+  describeInlineBudget,
+  planBundleInlineBudget,
+  planViewerContent,
+} from './exportViewerGuards';
 import {
   problemsForFile,
   type LocatedProblem,
@@ -17,6 +26,7 @@ import {
 } from './exportProblemMarkers';
 import {
   buildBundleTree,
+  bundleFileName,
   isMultiFileBundle,
   type BundleManifest,
   type FileFindingCounts,
@@ -63,6 +73,11 @@ export interface BundleExplorerProps {
   entityReveal?: EntityRevealRequest | null;
   /** A line click resolved to a located entity (code → entity direction). */
   onEntityLineClick?: (entity: ExportManifestEntity) => void;
+  /**
+   * Download the whole bundle as a `.zip` (MFX-43.5). The Studio owns the zip building, so the
+   * explorer just offers the action; omitted when the host has no bundle download to give.
+   */
+  onDownloadBundle?: (() => void) | null;
   className?: string;
 }
 
@@ -81,6 +96,11 @@ export interface BundleExplorerProps {
  * the active file and as a per-file {@link ProblemsPanel} under the viewer; clicking a problem row
  * reveals its line, clicking a marked line highlights its row, and an external
  * {@link ProblemRevealRequest} (a lens click) opens file + line from outside.
+ *
+ * Large bundles are guarded (MFX-43.5): the inline budget admits files to the viewer in emit order,
+ * and anything past it — or past the per-file cap — is navigable in the tree but loads only when
+ * the user opens it. Every file, loaded or not, still copies and downloads in full through the
+ * shared {@link ViewerActionsBar}.
  */
 export function BundleExplorer({
   manifest,
@@ -92,6 +112,7 @@ export function BundleExplorer({
   selectedEntityKey = null,
   entityReveal = null,
   onEntityLineClick,
+  onDownloadBundle = null,
   className,
 }: BundleExplorerProps) {
   const multi = isMultiFileBundle(manifest);
@@ -104,7 +125,13 @@ export function BundleExplorer({
   const [activePath, setActivePath] = useState<string | null>(manifest.primaryPath);
   // The recent-files strip; the primary opens first. Single-file bundles never show it.
   const [openPaths, setOpenPaths] = useState<string[]>(multi ? [manifest.primaryPath] : []);
-  const [copied, setCopied] = useState(false);
+  /** Viewer actions state (MFX-43.5): soft wrap and code folding are the user's to set. */
+  const [wordWrap, setWordWrap] = useState(false);
+  const [folding, setFolding] = useState(true);
+  /** Files the user explicitly asked the viewer to load, past the guards (MFX-43.5). */
+  const [requestedPaths, setRequestedPaths] = useState<ReadonlySet<string>>(() => new Set());
+  /** The mounted editor, so the Find action can open Monaco's own find widget. */
+  const editorRef = useRef<MonacoEditorApi.IStandaloneCodeEditor | null>(null);
   /** The highlighted problem (MFX-43.3), kept in sync between the editor and the problems list. */
   const [selectedProblemId, setSelectedProblemId] = useState<string | null>(null);
   /** The last external reveal request seen, so a re-render never replays it. */
@@ -119,6 +146,9 @@ export function BundleExplorer({
     setActivePath(manifest.primaryPath);
     setOpenPaths(multi ? [manifest.primaryPath] : []);
     setSelectedProblemId(null);
+    // A new bundle re-earns its guards: what the user chose to load in the previous one says
+    // nothing about this one's files (MFX-43.5).
+    setRequestedPaths(new Set());
   }
 
   // An external reveal request (a Verify lens click): make the problem's file active and select
@@ -132,6 +162,11 @@ export function BundleExplorer({
     const revealPath = reveal.problem.file ?? (multi ? null : manifest.primaryPath);
     if (revealPath && filesByPath.has(revealPath)) {
       setSelectedProblemId(reveal.problem.id);
+      // "Open this finding" is a request for a specific line, so a guarded file loads rather than
+      // answering with the "load this file" panel the user did not ask for (MFX-43.5).
+      setRequestedPaths((current) =>
+        current.has(revealPath) ? current : new Set(current).add(revealPath),
+      );
       if (activePath !== revealPath) {
         setActivePath(revealPath);
         setOpenPaths((current) =>
@@ -188,6 +223,39 @@ export function BundleExplorer({
 
   const activeFile = activePath ? filesByPath.get(activePath) ?? null : null;
 
+  // MFX-43.5: spend the bundle's inline budget over the files in emit order, then decide what the
+  // active file may put into Monaco — whole, an explicit head slice, or nothing until asked.
+  const budget = useMemo(() => planBundleInlineBudget(manifest.files), [manifest.files]);
+  const budgetNotice = useMemo(
+    () => describeInlineBudget(budget, manifest.files.length),
+    [budget, manifest.files.length],
+  );
+  const plan = useMemo(
+    () =>
+      planViewerContent({
+        text: activeFile?.text ?? '',
+        sizeBytes: activeFile?.sizeBytes ?? 0,
+        inlineAllowed: activePath ? budget.inline.has(activePath) : true,
+        requested: activePath ? requestedPaths.has(activePath) : false,
+      }),
+    [activeFile, activePath, budget, requestedPaths],
+  );
+
+  /** Load the active file into the viewer despite the guards (an explicit user action). */
+  const loadActiveFile = useCallback(() => {
+    if (!activePath) return;
+    setRequestedPaths((current) => new Set(current).add(activePath));
+  }, [activePath]);
+
+  /** Download the active file on its own (MFX-43.5) — always the whole file, never the slice. */
+  const downloadActiveFile = useCallback(() => {
+    if (!activeFile) return;
+    downloadBlob(
+      new Blob([activeFile.text], { type: activeFile.mediaType || 'text/plain' }),
+      bundleFileName(activeFile.path),
+    );
+  }, [activeFile]);
+
   const language = useMemo(
     () =>
       activeFile
@@ -209,9 +277,11 @@ export function BundleExplorer({
     [problems, activePath, multi],
   );
 
+  // Markers are computed against the text that is actually in the editor: a finding past the end
+  // of a truncated slice has no line to sit on, and clamping it to one would be a fake position.
   const markers = useProblemMarkers({
     problems: activeProblems,
-    text: activeFile?.text ?? '',
+    text: plan.text,
     selectedProblemId,
     onMarkerSelect: (problem) => setSelectedProblemId(problem.id),
     reveal,
@@ -235,7 +305,7 @@ export function BundleExplorer({
   const entityMarkers = useEntityMarkers({
     entities: activeEntities,
     activeFile: activePath,
-    text: activeFile?.text ?? '',
+    text: plan.text,
     selectedEntity,
     onEntityLineClick,
     reveal: entityReveal,
@@ -244,62 +314,81 @@ export function BundleExplorer({
   const openProblem = useCallback(
     (problem: LocatedProblem) => {
       setSelectedProblemId(problem.id);
+      // Clicking a finding in a file the guard is holding back loads it first — otherwise the
+      // click would reveal a line in an editor that is not on screen (MFX-43.5).
+      loadActiveFile();
       markers.reveal(problem);
     },
-    [markers],
+    [loadActiveFile, markers],
   );
 
-  useEffect(() => {
-    if (!copied) return undefined;
-    const timer = setTimeout(() => setCopied(false), 1500);
-    return () => clearTimeout(timer);
-  }, [copied]);
+  /** Open Monaco's find widget; null while no editor is mounted (offline fallback / deferred). */
+  const findInFile =
+    !activeFile || plan.mode === 'deferred'
+      ? null
+      : () => {
+          editorRef.current?.getAction?.('actions.find')?.run();
+        };
 
-  const copyActive = useCallback(async () => {
-    if (!activeFile) return;
-    try {
-      await navigator.clipboard.writeText(activeFile.text);
-      setCopied(true);
-    } catch {
-      // Clipboard unavailable — leave the button unchanged.
-    }
-  }, [activeFile]);
-
-  const copyButton = (
-    <button
-      type="button"
-      data-testid="bundle-copy"
-      onClick={() => void copyActive()}
-      title={copied ? 'Copied' : 'Copy file'}
-      aria-label={copied ? 'Copied' : 'Copy file'}
-      className={cn(
-        'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium shadow-sm transition-colors',
-        copied
-          ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
-          : 'border-gray-200 bg-white/95 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900/95 dark:text-gray-200 dark:hover:bg-gray-800',
-      )}
-    >
-      {copied ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
-      {copied ? 'Copied' : 'Copy'}
-    </button>
+  const actionsBar = (
+    <ViewerActionsBar
+      file={
+        activeFile
+          ? {
+              name: bundleFileName(activeFile.path),
+              text: activeFile.text,
+              mediaType: activeFile.mediaType,
+            }
+          : null
+      }
+      wordWrap={wordWrap}
+      onWordWrapChange={setWordWrap}
+      folding={folding}
+      onFoldingChange={setFolding}
+      onFind={findInFile}
+      onDownloadBundle={onDownloadBundle}
+      testIdPrefix="bundle"
+      className="mb-2 shrink-0"
+    />
   );
 
   const viewer = activeFile ? (
     <>
-      <ReadOnlyCodeViewer
-        value={activeFile.text}
-        language={language}
-        overlay={copyButton}
-        onMount={(editorInstance, monaco) => {
-          markers.onEditorMount(editorInstance, monaco);
-          entityMarkers.onEditorMount(editorInstance, monaco);
-        }}
-        height={360}
-        className="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
-        editorTestId="bundle-file-editor"
-        fallbackTestId="bundle-file-content"
-        documentLabel={activeFile.path}
-      />
+      {actionsBar}
+      {plan.mode === 'deferred' ? (
+        <DeferredFilePanel
+          fileName={bundleFileName(activeFile.path)}
+          plan={plan}
+          onLoad={loadActiveFile}
+          onDownload={downloadActiveFile}
+          testIdPrefix="bundle"
+        />
+      ) : (
+        <>
+          <TruncatedContentNotice
+            plan={plan}
+            onDownload={downloadActiveFile}
+            testIdPrefix="bundle"
+            className="mb-2"
+          />
+          <ReadOnlyCodeViewer
+            value={plan.text}
+            language={language}
+            wordWrap={wordWrap ? 'on' : 'off'}
+            folding={folding}
+            onMount={(editorInstance, monaco) => {
+              editorRef.current = editorInstance;
+              markers.onEditorMount(editorInstance, monaco);
+              entityMarkers.onEditorMount(editorInstance, monaco);
+            }}
+            height={360}
+            className="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
+            editorTestId="bundle-file-editor"
+            fallbackTestId="bundle-file-content"
+            documentLabel={activeFile.path}
+          />
+        </>
+      )}
       <ProblemsPanel
         problems={activeProblems}
         selectedId={selectedProblemId}
@@ -337,6 +426,16 @@ export function BundleExplorer({
       className={cn('flex min-h-0 flex-col rounded-xl border border-gray-200 p-3 dark:border-gray-700', className)}
     >
       <BundleHeader fileCount={manifest.files.length} activeFile={activeFile} language={language} />
+      {/* MFX-43.5: say up front that some of this bundle loads on demand — a tree row that opens
+          into a "load this file" panel should never be a surprise. */}
+      {budgetNotice && (
+        <p
+          data-testid="bundle-budget-notice"
+          className="mt-1 shrink-0 text-[11px] text-gray-500 dark:text-gray-400"
+        >
+          {budgetNotice}
+        </p>
+      )}
       <div className="mt-2 grid min-h-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-[minmax(11rem,15rem)_1fr]">
         <BundleTree
           nodes={tree}

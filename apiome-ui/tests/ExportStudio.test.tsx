@@ -937,9 +937,11 @@ describe('ExportStudio — Verify workbench gate + generate (MFX-42.1)', () => {
     fireEvent.click(screen.getByTestId('bundle-tree-file-google/protobuf/timestamp.proto'));
     expect(await screen.findByTestId('bundle-file-editor')).toHaveTextContent('message Timestamp');
 
-    // A bundle downloads only as the whole .zip here (per-file download is MFX-43.5).
-    expect(screen.queryByRole('button', { name: /download petstore\.proto/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /download \.zip/i })).toBeInTheDocument();
+    // MFX-43.5: the viewer's own actions bar downloads the open file, and the .zip is offered both
+    // there and in the step footer.
+    expect(screen.getByTestId('bundle-download-file')).toBeInTheDocument();
+    expect(screen.getByTestId('bundle-download-bundle')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /download \.zip/i }).length).toBeGreaterThan(0);
   });
 
   it('round-trips a located finding from the Verify lens to the Review editor (MFX-43.3)', async () => {
