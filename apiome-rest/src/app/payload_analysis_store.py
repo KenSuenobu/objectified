@@ -161,6 +161,7 @@ def store_analysis(
         source_format=redacted.source_format,
         source_hash=redacted.source_hash,
         tool_versions=payload.get("analyzer", {}).get("tool_versions") or {},
+        capabilities=payload.get("capabilities") or {},
         tree=payload.get("tree") or [],
         metrics=payload.get("metrics") or {},
         warnings=payload.get("warnings") or [],

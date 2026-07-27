@@ -3855,7 +3855,7 @@ class Database:
     _PAYLOAD_ANALYSIS_COLUMNS = """
         id::text AS id, tenant_id::text AS tenant_id, project_id::text AS project_id,
         version_id::text AS version_id, analysis_sequence, schema_version, content_fingerprint,
-        source_format, source_hash, analyzer_key, analyzer_version, tool_versions,
+        source_format, source_hash, analyzer_key, analyzer_version, tool_versions, capabilities,
         status, status_reason, tree, metrics, warnings, redaction,
         created_by::text AS created_by, created_at
     """
@@ -3907,7 +3907,7 @@ class Database:
             SELECT id::text AS id, tenant_id::text AS tenant_id, project_id::text AS project_id,
                    version_id::text AS version_id, analysis_sequence, schema_version,
                    content_fingerprint, source_format, source_hash,
-                   analyzer_key, analyzer_version, tool_versions,
+                   analyzer_key, analyzer_version, tool_versions, capabilities,
                    status, status_reason, metrics, warnings, redaction,
                    created_by::text AS created_by, created_at
             FROM apiome.payload_analysis
@@ -3989,6 +3989,7 @@ class Database:
         source_format: Optional[str] = None,
         source_hash: Optional[str] = None,
         tool_versions: Optional[Dict[str, Any]] = None,
+        capabilities: Optional[Dict[str, Any]] = None,
         tree: Optional[List[Any]] = None,
         metrics: Optional[Dict[str, Any]] = None,
         warnings: Optional[List[Any]] = None,
@@ -4020,6 +4021,7 @@ class Database:
             source_format: Adapter key of the analysed source.
             source_hash: ``sha256:<hex>`` of the analysed bytes; required for available/partial.
             tool_versions: Underlying parser/library versions.
+            capabilities: What the analyzer models and knowingly does not (CPDO-1.2, V210).
             tree: Root nodes of the native structure (JSON-ready).
             metrics: Derived metrics over the tree.
             warnings: Analyzer warnings.
@@ -4043,13 +4045,13 @@ class Database:
                 tenant_id, project_id, version_id, analysis_sequence,
                 schema_version, content_fingerprint,
                 source_format, source_hash,
-                analyzer_key, analyzer_version, tool_versions,
+                analyzer_key, analyzer_version, tool_versions, capabilities,
                 status, status_reason,
                 tree, metrics, warnings, redaction, created_by
             )
             SELECT %s::uuid, %s::uuid, %s::uuid,
                    COALESCE(MAX(analysis_sequence), 0) + 1,
-                   %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s,
+                   %s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s, %s,
                    %s::jsonb, %s::jsonb, %s::jsonb, %s::jsonb, %s::uuid
             FROM apiome.payload_analysis
             WHERE version_id = %s::uuid
@@ -4066,6 +4068,7 @@ class Database:
             analyzer_key,
             analyzer_version,
             json.dumps(tool_versions or {}, sort_keys=True),
+            json.dumps(capabilities or {}, sort_keys=True),
             status,
             status_reason,
             json.dumps(tree or [], sort_keys=True),

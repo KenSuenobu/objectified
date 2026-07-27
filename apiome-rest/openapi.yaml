@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.65.0
+  version: 1.66.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -17420,7 +17420,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/app__slate_cache_routes__WriteRuleRequest'
+              $ref: '#/components/schemas/SlateCacheWriteRuleRequest'
               description: Request body for create cache rulerequest.
         description: Request body for create cache rule.
       responses:
@@ -17429,7 +17429,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_cache_routes__WriteRuleResponse'
+                $ref: '#/components/schemas/SlateCacheWriteRuleResponse'
                 description: Response payload for create cache ruleresponse201.
         '422':
           description: Validation Error
@@ -17508,7 +17508,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/app__slate_cache_routes__WriteRuleRequest'
+              $ref: '#/components/schemas/SlateCacheWriteRuleRequest'
               description: Request body for replace cache rulerequest.
         description: Request body for replace cache rule.
       responses:
@@ -17517,7 +17517,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_cache_routes__WriteRuleResponse'
+                $ref: '#/components/schemas/SlateCacheWriteRuleResponse'
                 description: Response payload for replace cache ruleresponse200.
         '422':
           description: Validation Error
@@ -17613,7 +17613,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_security_routes__DeleteRuleResponse'
+                $ref: '#/components/schemas/SlateSecurityDeleteRuleResponse'
                 description: Response payload for remove cache ruleresponse200.
         '422':
           description: Validation Error
@@ -17984,7 +17984,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_cache_routes__AuditResponse'
+                $ref: '#/components/schemas/SlateCacheAuditResponse'
                 description: Response payload for get cache auditresponse200.
         '422':
           description: Validation Error
@@ -18463,7 +18463,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/app__slate_security_routes__WriteRuleRequest'
+              $ref: '#/components/schemas/SlateSecurityWriteRuleRequest'
               description: Request body for create security rulerequest.
         description: Request body for create security rule.
       responses:
@@ -18472,7 +18472,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_security_routes__WriteRuleResponse'
+                $ref: '#/components/schemas/SlateSecurityWriteRuleResponse'
                 description: Response payload for create security ruleresponse201.
         '422':
           description: Validation Error
@@ -18551,7 +18551,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/app__slate_security_routes__WriteRuleRequest'
+              $ref: '#/components/schemas/SlateSecurityWriteRuleRequest'
               description: Request body for replace security rulerequest.
         description: Request body for replace security rule.
       responses:
@@ -18560,7 +18560,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_security_routes__WriteRuleResponse'
+                $ref: '#/components/schemas/SlateSecurityWriteRuleResponse'
                 description: Response payload for replace security ruleresponse200.
         '422':
           description: Validation Error
@@ -18657,7 +18657,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_security_routes__DeleteRuleResponse'
+                $ref: '#/components/schemas/SlateSecurityDeleteRuleResponse'
                 description: Response payload for remove security ruleresponse200.
         '422':
           description: Validation Error
@@ -18751,7 +18751,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/app__slate_security_routes__RolloutRequest'
+              $ref: '#/components/schemas/SlateSecurityRolloutRequest'
               description: Request body for set security rule rolloutrequest.
         description: Request body for set security rule rollout.
       responses:
@@ -18760,7 +18760,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_security_routes__WriteRuleResponse'
+                $ref: '#/components/schemas/SlateSecurityWriteRuleResponse'
                 description: Response payload for set security rule rolloutresponse200.
         '422':
           description: Validation Error
@@ -18848,7 +18848,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/app__slate_security_routes__RevertRequest'
+              $ref: '#/components/schemas/SlateSecurityRevertRequest'
               description: Request body for revert security rulerequest.
         description: Request body for revert security rule.
       responses:
@@ -18857,7 +18857,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_security_routes__WriteRuleResponse'
+                $ref: '#/components/schemas/SlateSecurityWriteRuleResponse'
                 description: Response payload for revert security ruleresponse200.
         '422':
           description: Validation Error
@@ -18948,7 +18948,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_security_routes__RevisionsResponse'
+                $ref: '#/components/schemas/SlateSecurityRevisionsResponse'
                 description: Response payload for get security rule revisionsresponse200.
         '422':
           description: Validation Error
@@ -19217,7 +19217,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/app__slate_security_routes__ApprovalRequest'
+              $ref: '#/components/schemas/SlateSecurityApprovalRequest'
               description: Request body for record security approvalrequest.
         description: Request body for record security approval.
       responses:
@@ -19226,7 +19226,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_security_routes__ApprovalBody'
+                $ref: '#/components/schemas/SlateSecurityApprovalBody'
                 description: Response payload for record security approvalresponse201.
         '422':
           description: Validation Error
@@ -19307,7 +19307,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/app__slate_security_routes__SimulateCommandBody'
+              $ref: '#/components/schemas/SlateSecuritySimulateCommandBody'
               description: Request body for simulate security requestrequest.
         description: Request body for simulate security request.
       responses:
@@ -19316,7 +19316,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_security_routes__SimulateResponse'
+                $ref: '#/components/schemas/SlateSecuritySimulateResponse'
                 description: Request body for simulate security requestresponse200.
         '422':
           description: Validation Error
@@ -19640,7 +19640,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_security_routes__AuditResponse'
+                $ref: '#/components/schemas/SlateSecurityAuditResponse'
                 description: Response payload for get security auditresponse200.
         '422':
           description: Validation Error
@@ -20606,7 +20606,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/app__slate_functions_routes__RolloutRequest'
+              $ref: '#/components/schemas/SlateFunctionsRolloutRequest'
               description: Request body for set function rolloutrequest.
         description: Request body for set function rollout.
       responses:
@@ -20703,7 +20703,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/app__slate_functions_routes__RevertRequest'
+              $ref: '#/components/schemas/SlateFunctionsRevertRequest'
               description: Request body for revert function routerequest.
         description: Request body for revert function route.
       responses:
@@ -20804,7 +20804,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_functions_routes__RevisionsResponse'
+                $ref: '#/components/schemas/SlateFunctionsRevisionsResponse'
                 description: Response payload for get function revisionsresponse200.
         '422':
           description: Validation Error
@@ -21772,7 +21772,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/app__slate_functions_routes__ApprovalRequest'
+              $ref: '#/components/schemas/SlateFunctionsApprovalRequest'
               description: Request body for record function approvalrequest.
         description: Request body for record function approval.
       responses:
@@ -21781,7 +21781,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_functions_routes__ApprovalBody'
+                $ref: '#/components/schemas/SlateFunctionsApprovalBody'
                 description: Response payload for record function approvalresponse201.
         '422':
           description: Validation Error
@@ -21865,7 +21865,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/app__slate_functions_routes__SimulateCommandBody'
+              $ref: '#/components/schemas/SlateFunctionsSimulateCommandBody'
               description: Request body for simulate function invocationrequest.
         description: Request body for simulate function invocation.
       responses:
@@ -21874,7 +21874,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_functions_routes__SimulateResponse'
+                $ref: '#/components/schemas/SlateFunctionsSimulateResponse'
                 description: Response payload for simulate function invocationresponse200.
         '422':
           description: Validation Error
@@ -22213,7 +22213,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_functions_routes__AuditResponse'
+                $ref: '#/components/schemas/SlateFunctionsAuditResponse'
                 description: Response payload for get function auditresponse200.
         '422':
           description: Validation Error
@@ -25195,7 +25195,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/app__slate_insights_routes__AuditResponse'
+                $ref: '#/components/schemas/SlateInsightsAuditResponse'
                 description: Response payload for get insights auditresponse200.
         '422':
           description: Validation Error
@@ -42732,7 +42732,7 @@ components:
           description: The version after the write.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_functions_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateFunctionsEnforcementBody'
           description: Enforcement.
       type: object
       required:
@@ -42742,6 +42742,297 @@ components:
       - policyVersion
       title: AddVersionResponse
       description: The outcome of adding a version.
+    AnalysisMetrics:
+      properties:
+        nodeCount:
+          type: integer
+          minimum: 0.0
+          title: Nodecount
+          default: 0
+          description: Number of node.
+          example: 1
+        maxDepth:
+          type: integer
+          minimum: 0.0
+          title: Maxdepth
+          default: 0
+          description: Max Depth.
+          example: 1
+        truncated:
+          type: boolean
+          title: Truncated
+          default: false
+          description: Truncated.
+          example: false
+        droppedNodeCount:
+          type: integer
+          minimum: 0.0
+          title: Droppednodecount
+          default: 0
+          description: Number of dropped node.
+          example: 1
+        kindCounts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Kindcounts
+          description: Kind Counts.
+        warningCount:
+          type: integer
+          minimum: 0.0
+          title: Warningcount
+          default: 0
+          description: Number of warning.
+          example: 1
+      additionalProperties: false
+      type: object
+      title: AnalysisMetrics
+      description: "Derived counts over the tree, so a reader can size it before fetching\
+        \ it.\n\nAttributes:\n    node_count: Total nodes in the stored tree (after\
+        \ bounding).\n    max_depth: Deepest nesting level in the stored tree (a root-only\
+        \ tree is depth 1).\n    truncated: True when bounding dropped nodes the source\
+        \ actually had.\n    dropped_node_count: How many nodes bounding dropped,\
+        \ when known.\n    kind_counts: Node count per ``kind``, the cheap summary\
+        \ a detail header renders.\n    warning_count: Number of warnings on the record."
+    AnalysisNode:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        kind:
+          type: string
+          title: Kind
+          description: Kind.
+          example: example
+        name:
+          anyOf:
+          - type: string
+            description: Analysis Node schema.
+          - type: 'null'
+            description: Analysis Node schema.
+          title: Name
+          description: Human-readable name.
+        label:
+          anyOf:
+          - type: string
+            description: Analysis Node schema.
+          - type: 'null'
+            description: Analysis Node schema.
+          title: Label
+          description: Label.
+        ordinal:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Analysis Node schema.
+          - type: 'null'
+            description: Analysis Node schema.
+          title: Ordinal
+          description: Ordinal.
+        attributes:
+          additionalProperties: true
+          type: object
+          title: Attributes
+          description: Attributes.
+        location:
+          anyOf:
+          - $ref: '#/components/schemas/SourceLocation'
+          - type: 'null'
+            description: Analysis Node schema.
+          description: Location.
+        valuePresent:
+          anyOf:
+          - type: boolean
+            description: Analysis Node schema.
+          - type: 'null'
+            description: Analysis Node schema.
+          title: Valuepresent
+          description: Value Present.
+        valueLength:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Analysis Node schema.
+          - type: 'null'
+            description: Analysis Node schema.
+          title: Valuelength
+          description: Value Length.
+        value:
+          anyOf:
+          - type: string
+            description: Analysis Node schema.
+          - type: 'null'
+            description: Analysis Node schema.
+          title: Value
+          description: Value.
+        redacted:
+          type: boolean
+          title: Redacted
+          default: false
+          description: Redacted.
+          example: false
+        children:
+          items:
+            $ref: '#/components/schemas/AnalysisNode'
+          type: array
+          title: Children
+          description: Children.
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - kind
+      title: AnalysisNode
+      description: "One node of the native tree, in the analyzer's own vocabulary.\n\
+        \nDeliberately format-neutral in *shape* and format-specific in *content*:\
+        \ ``kind`` is the\nanalyzer's own term (``interchange``, ``functional_group``,\
+        \ ``transaction_set``, ``segment``,\n``element`` for X12; ``group``, ``field``,\
+        \ ``condition`` for a copybook), and ``attributes``\ncarries the semantics\
+        \ that term implies (PIC, USAGE, OCCURS bounds, segment id, element\nposition).\
+        \ One renderer can therefore walk any analyzer's output while nothing is flattened\
+        \ into\na lowest common denominator on the way in.\n\n``value`` is governed\
+        \ by :class:`ValueVisibility` and is ``None`` under the default policy;\n\
+        ``value_present`` and ``value_length`` describe the observed value without\
+        \ disclosing it.\n\nAttributes:\n    id: Stable id within the record, so warnings\
+        \ and (later) projection evidence can cite it.\n    kind: The analyzer's term\
+        \ for what this node is.\n    name: The construct's name in the source (segment\
+        \ id, field name, element reference).\n    label: Optional human-facing label\
+        \ when ``name`` alone reads poorly.\n    ordinal: Position among its siblings,\
+        \ preserving source order.\n    attributes: Format-specific semantics; JSON\
+        \ scalars and small containers only.\n    location: Where the construct sits\
+        \ in the source.\n    value_present: Whether the source carried a value here\
+        \ (an X12 element can be present and\n        empty — that is not the same\
+        \ as absent).\n    value_length: Length of the observed value in characters,\
+        \ when known.\n    value: The observed value; only under :data:`ValueVisibility.FULL`,\
+        \ truncated to\n        :data:`MAX_VALUE_PREVIEW_CHARS`.\n    redacted: True\
+        \ when a value was observed and withheld by policy.\n    children: Child nodes,\
+        \ in source order."
+    AnalysisWarning:
+      properties:
+        code:
+          type: string
+          title: Code
+          description: Code.
+          example: example
+        severity:
+          type: string
+          title: Severity
+          default: warning
+          description: Severity.
+          example: warning
+        message:
+          type: string
+          title: Message
+          default: ''
+          description: Message.
+          example: Example validation message.
+        nodeId:
+          anyOf:
+          - type: string
+            description: Analysis Warning schema.
+          - type: 'null'
+            description: Analysis Warning schema.
+          title: Nodeid
+          description: Node ID.
+        location:
+          anyOf:
+          - $ref: '#/components/schemas/SourceLocation'
+          - type: 'null'
+            description: Analysis Warning schema.
+          description: Location.
+      additionalProperties: false
+      type: object
+      required:
+      - code
+      title: AnalysisWarning
+      description: "Something the analyzer could not do, stated rather than hidden.\n\
+        \nThe difference between \"this construct is not in the source\" and \"this\
+        \ parser does not\nunderstand this construct\" is the whole point of CPDO-2.4,\
+        \ and it is carried here. A warning is\nnever an error in the request — a\
+        \ record with warnings is still a usable record.\n\nAttributes:\n    code:\
+        \ Stable machine code (e.g. ``copybook.redefines_unsupported``).\n    severity:\
+        \ One of :data:`WARNING_SEVERITIES`.\n    message: Human-readable explanation,\
+        \ free of payload values.\n    node_id: Id of the node the warning is about,\
+        \ when it is about one.\n    location: Where in the source it applies, when\
+        \ known."
+    AnalyzerCapabilities:
+      properties:
+        supported:
+          items:
+            type: string
+          type: array
+          title: Supported
+          description: Supported.
+          maxItems: 1000
+        unsupported:
+          items:
+            type: string
+          type: array
+          title: Unsupported
+          description: Unsupported.
+          maxItems: 1000
+        limits:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Limits
+          description: Limits.
+      additionalProperties: false
+      type: object
+      title: AnalyzerCapabilities
+      description: "What the analyzer that wrote this record can and cannot describe\
+        \ — CPDO-1.2 (#4795).\n\nA record's warnings say what went wrong *in this\
+        \ source*. Capabilities say what would have gone\nwrong in **any** source:\
+        \ the constructs this analyzer models, the ones it knowingly does not, and\n\
+        the numeric bounds it was working under. Both are needed to answer \"why is\
+        \ there no detail here?\"\n— a construct absent from the tree is either absent\
+        \ from the source or outside the analyzer, and\nonly ``unsupported`` distinguishes\
+        \ them.\n\nConstruct keys are the analyzer's own dotted vocabulary (``x12.functional_group``,\n\
+        ``copybook.redefines``), stable enough to cite from a UI. Both lists are sorted\
+        \ and de-duplicated\nby :func:`analyzer_capabilities` so a record's serialization\
+        \ — and therefore its\n``content_fingerprint`` — does not depend on the order\
+        \ an analyzer happened to declare them in.\n\nThis is the *per-record* statement,\
+        \ written by the analyzer that ran. The cross-format registry\nthat answers\
+        \ the same question before an import runs is CPDO-2.4's.\n\nAttributes:\n\
+        \    supported: Construct keys this analyzer models, sorted.\n    unsupported:\
+        \ Construct keys it knowingly does not model, sorted. An entry here is a\n\
+        \        capability boundary, not a defect in the source.\n    limits: Numeric\
+        \ bounds in force when the record was produced (node/depth budgets, value\n\
+        \        preview length), so a reader can tell a bounded record from a small\
+        \ one."
+    AnalyzerInfo:
+      properties:
+        key:
+          type: string
+          title: Key
+          default: generic
+          description: Key.
+          example: example
+        version:
+          type: string
+          title: Version
+          default: 0.0.0
+          description: Version.
+          example: 1.0.0
+        toolVersions:
+          additionalProperties:
+            type: string
+          type: object
+          title: Toolversions
+          description: Tool Versions.
+      additionalProperties: false
+      type: object
+      title: AnalyzerInfo
+      description: "Which analyzer produced the record, and what it was built on.\n\
+        \n``key`` plus ``version`` is what makes a stale record detectable: an analysis\
+        \ produced by\n``edix12@1.0.0`` is not interchangeable with one produced by\
+        \ ``edix12@2.0.0``, even for the same\nbytes.\n\nAttributes:\n    key: Analyzer\
+        \ key (usually the import adapter key, or ``generic``).\n    version: Analyzer\
+        \ version.\n    tool_versions: Underlying parser/library versions it leaned\
+        \ on."
     ApiParadigm:
       type: string
       enum:
@@ -44151,7 +44442,7 @@ components:
           title: Edgeprovider
           description: Edge Provider.
         enforcement:
-          $ref: '#/components/schemas/app__slate_cache_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateCacheEnforcementBody'
           description: Whether the policy shapes responses.
         rules:
           items:
@@ -44529,7 +44820,7 @@ components:
           description: The version after the write.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_functions_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateFunctionsEnforcementBody'
           description: Enforcement.
         warnings:
           items:
@@ -50879,7 +51170,7 @@ components:
           title: Residencywaiverreason
           description: Why residency was loosened, when it was.
         enforcement:
-          $ref: '#/components/schemas/app__slate_functions_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateFunctionsEnforcementBody'
           description: Whether the policy runs anything.
         functions:
           items:
@@ -50928,7 +51219,7 @@ components:
       properties:
         residencyClasses:
           items:
-            $ref: '#/components/schemas/app__slate_functions_routes__ResidencyClassBody'
+            $ref: '#/components/schemas/SlateFunctionsResidencyClassBody'
           type: array
           title: Residencyclasses
           description: The three residency postures.
@@ -52998,7 +53289,7 @@ components:
           description: Determinism receipt over the whole configuration.
           example: example
         enforcement:
-          $ref: '#/components/schemas/app__slate_insights_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateInsightsEnforcementBody'
           description: Whether the policy measures anything.
         warnings:
           items:
@@ -64195,7 +64486,7 @@ components:
           default: false
           example: false
         enforcement:
-          $ref: '#/components/schemas/app__slate_insights_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateInsightsEnforcementBody'
           description: Enforcement.
         sentence:
           type: string
@@ -64914,7 +65205,7 @@ components:
           description: The lane's policy version, unchanged by this call.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_insights_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateInsightsEnforcementBody'
           description: Enforcement.
         warnings:
           items:
@@ -65233,6 +65524,303 @@ components:
       type: object
       title: PathsCanvasViewport
       description: Viewport position and zoom for the Paths designer canvas.
+    PayloadAnalysisDocument:
+      properties:
+        schemaVersion:
+          type: string
+          title: Schemaversion
+          default: 1.1.0
+          description: Schema Version.
+          example: 1.0.0
+        status:
+          type: string
+          title: Status
+          default: unavailable
+          description: Status.
+          example: active
+        statusReason:
+          anyOf:
+          - type: string
+            description: Payload Analysis Document schema.
+          - type: 'null'
+            description: Payload Analysis Document schema.
+          title: Statusreason
+          description: Status Reason.
+        sourceFormat:
+          anyOf:
+          - type: string
+            description: Payload Analysis Document schema.
+          - type: 'null'
+            description: Payload Analysis Document schema.
+          title: Sourceformat
+          description: Source Format.
+        sourceHash:
+          anyOf:
+          - type: string
+            description: Payload Analysis Document schema.
+          - type: 'null'
+            description: Payload Analysis Document schema.
+          title: Sourcehash
+          description: Source Hash.
+        analyzer:
+          $ref: '#/components/schemas/AnalyzerInfo'
+          description: Analyzer.
+        capabilities:
+          $ref: '#/components/schemas/AnalyzerCapabilities'
+          description: Capabilities.
+        tree:
+          items:
+            $ref: '#/components/schemas/AnalysisNode'
+          type: array
+          title: Tree
+          description: Tree.
+          maxItems: 1000
+        metrics:
+          $ref: '#/components/schemas/AnalysisMetrics'
+          description: Metrics.
+        warnings:
+          items:
+            $ref: '#/components/schemas/AnalysisWarning'
+          type: array
+          title: Warnings
+          description: Warnings.
+          maxItems: 1000
+        redaction:
+          $ref: '#/components/schemas/RedactionInfo'
+          description: Redaction.
+      additionalProperties: false
+      type: object
+      title: PayloadAnalysisDocument
+      description: "The full analysis of one source revision — the persisted contract.\n\
+        \nThis is what ``apiome.payload_analysis`` stores (column-per-field, not a\
+        \ blob) and what\n``GET /v1/catalog/{tenant_slug}/{item_id}/analysis`` returns.\
+        \ Its invariants mirror the V209\nCHECK constraints exactly, and :meth:`contract_violations`\
+        \ states them in one place so the API\ncan refuse to *write* a record the\
+        \ database would refuse to store.\n\nAttributes:\n    schema_version: Contract\
+        \ version the record was written under.\n    status: One of :data:`ANALYSIS_STATUSES`.\n\
+        \    status_reason: Reason code; required unless ``status`` is :data:`STATUS_AVAILABLE`.\n\
+        \    source_format: Adapter key of the analysed source.\n    source_hash:\
+        \ ``sha256:<hex>`` of the analysed bytes; required for available/partial.\n\
+        \    analyzer: Which analyzer produced the record.\n    capabilities: What\
+        \ that analyzer models and does not model (CPDO-1.2).\n    tree: Root nodes\
+        \ of the native structure; empty for unavailable/failed.\n    metrics: Derived\
+        \ counts over ``tree``.\n    warnings: What the analyzer could not do.\n \
+        \   redaction: The value-visibility policy in force and what it withheld."
+    PayloadAnalysisRecord:
+      properties:
+        analysisId:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Analysisid
+          description: Analysis ID.
+        tenantId:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Tenantid
+          description: Tenant ID.
+        projectId:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Projectid
+          description: Project ID.
+        versionRecordId:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Versionrecordid
+          description: Version Record ID.
+        analysisSequence:
+          type: integer
+          minimum: 0.0
+          title: Analysissequence
+          default: 0
+          description: Analysis Sequence.
+          example: 1
+        contentFingerprint:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Contentfingerprint
+          description: Content Fingerprint.
+        analyzedAt:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Analyzedat
+          description: Analyzed At.
+        analysis:
+          $ref: '#/components/schemas/PayloadAnalysisDocument'
+          description: Analysis.
+      additionalProperties: false
+      type: object
+      title: PayloadAnalysisRecord
+      description: "A stored analysis: the document plus the identity of the row that\
+        \ holds it.\n\nReturned by the full-analysis endpoint. The identity half is\
+        \ what makes the record citable — a\nprojection manifest (CPDO-1.3) references\
+        \ ``analysis_id`` and ``content_fingerprint``, not \"the\nanalysis of this\
+        \ item\", which would drift.\n\nAttributes:\n    analysis_id: Row id.\n  \
+        \  tenant_id: Owning tenant.\n    project_id: Catalog project the analysed\
+        \ revision belongs to.\n    version_record_id: The analysed source revision.\n\
+        \    analysis_sequence: Monotonic sequence within the revision; highest is\
+        \ in force.\n    content_fingerprint: SHA-256 over the canonicalized document.\n\
+        \    analyzed_at: When the record was written.\n    analysis: The document\
+        \ itself."
+    PayloadAnalysisSummary:
+      properties:
+        available:
+          type: boolean
+          title: Available
+          default: false
+          description: Available.
+          example: false
+        status:
+          type: string
+          title: Status
+          default: unavailable
+          description: Status.
+          example: active
+        statusReason:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Statusreason
+          description: Status Reason.
+        schemaVersion:
+          type: string
+          title: Schemaversion
+          default: 1.1.0
+          description: Schema Version.
+          example: 1.0.0
+        sourceFormat:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Sourceformat
+          description: Source Format.
+        analyzerKey:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Analyzerkey
+          description: Analyzer Key.
+        analyzerVersion:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Analyzerversion
+          description: Analyzer Version.
+        nodeCount:
+          type: integer
+          minimum: 0.0
+          title: Nodecount
+          default: 0
+          description: Number of node.
+          example: 1
+        maxDepth:
+          type: integer
+          minimum: 0.0
+          title: Maxdepth
+          default: 0
+          description: Max Depth.
+          example: 1
+        truncated:
+          type: boolean
+          title: Truncated
+          default: false
+          description: Truncated.
+          example: false
+        warningCount:
+          type: integer
+          minimum: 0.0
+          title: Warningcount
+          default: 0
+          description: Number of warning.
+          example: 1
+        kindCounts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Kindcounts
+          description: Kind Counts.
+        capabilities:
+          $ref: '#/components/schemas/AnalyzerCapabilities'
+          description: Capabilities.
+        valueVisibility:
+          type: string
+          title: Valuevisibility
+          default: structural
+          description: Value Visibility.
+          example: example
+        analysisId:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Analysisid
+          description: Analysis ID.
+        versionRecordId:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Versionrecordid
+          description: Version Record ID.
+        analyzedAt:
+          anyOf:
+          - type: string
+            description: Payload Analysis schema.
+          - type: 'null'
+            description: Payload Analysis schema.
+          title: Analyzedat
+          description: Analyzed At.
+      additionalProperties: false
+      type: object
+      title: PayloadAnalysisSummary
+      description: "The small projection embedded in a catalog detail read.\n\nThe\
+        \ detail response carries this rather than the tree: the tree can be five\
+        \ thousand nodes, and\nthe detail screen needs only enough to decide whether\
+        \ to offer the *Format details* tab and what\nto say when it cannot. Fetching\
+        \ the tree is a separate, explicit request.\n\nAttributes:\n    available:\
+        \ True only when a real tree is fetchable (``available`` or ``partial``).\n\
+        \    status: One of :data:`ANALYSIS_STATUSES`.\n    status_reason: Reason\
+        \ code, when the status has one.\n    schema_version: Contract version of\
+        \ the underlying record.\n    source_format: Adapter key of the analysed source.\n\
+        \    analyzer_key: Which analyzer produced it.\n    analyzer_version: That\
+        \ analyzer's version.\n    node_count: Nodes in the stored tree.\n    max_depth:\
+        \ Depth of the stored tree.\n    truncated: Whether bounding dropped nodes.\n\
+        \    warning_count: Number of analyzer warnings.\n    kind_counts: Node count\
+        \ per kind — the detail header's summary metrics.\n    capabilities: What\
+        \ the analyzer models and does not model, so the detail screen can explain\n\
+        \        a missing construct without fetching the tree (CPDO-1.2).\n    value_visibility:\
+        \ The value-visibility level the record was stored under.\n    analysis_id:\
+        \ Id of the underlying record, for a direct evidence reference.\n    version_record_id:\
+        \ The source revision the analysis describes.\n    analyzed_at: When the analysis\
+        \ was recorded."
     PermissionCell:
       properties:
         resource:
@@ -68521,6 +69109,45 @@ components:
       title: RecordChecksRequest
       description: Record the outcome of the checks a preview must pass before its
         alias advances.
+    RedactionInfo:
+      properties:
+        valueVisibility:
+          type: string
+          title: Valuevisibility
+          default: structural
+          description: Value Visibility.
+          example: example
+        redactedNodeCount:
+          type: integer
+          minimum: 0.0
+          title: Redactednodecount
+          default: 0
+          description: Number of redacted node.
+          example: 1
+        policySource:
+          type: string
+          title: Policysource
+          default: default
+          description: Policy Source.
+          example: example
+        valuePreviewLimit:
+          type: integer
+          minimum: 0.0
+          title: Valuepreviewlimit
+          default: 120
+          description: Value Preview Limit.
+          example: 50
+      additionalProperties: false
+      type: object
+      title: RedactionInfo
+      description: "What the record withheld, and under which policy.\n\nPresent on\
+        \ every record — including records that withheld nothing — so a reader never\
+        \ has to\ninfer whether an absent value was withheld or simply not there.\n\
+        \nAttributes:\n    value_visibility: The :class:`ValueVisibility` level in\
+        \ force.\n    redacted_node_count: How many nodes carried a value that was\
+        \ withheld.\n    policy_source: Where the level came from (``default``, ``tenant``,\
+        \ ``format``, ``request``).\n    value_preview_limit: Character limit applied\
+        \ to any retained value."
     RefreshHistoryEntryOut:
       properties:
         id:
@@ -69772,7 +70399,7 @@ components:
           maxItems: 1000
         residencyClasses:
           items:
-            $ref: '#/components/schemas/app__slate_insights_routes__ResidencyClassBody'
+            $ref: '#/components/schemas/SlateInsightsResidencyClassBody'
           type: array
           title: Residencyclasses
           description: The three postures, most restrictive first.
@@ -71309,7 +71936,7 @@ components:
           title: Edgeprovider
           description: Edge Provider.
         enforcement:
-          $ref: '#/components/schemas/app__slate_security_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateSecurityEnforcementBody'
           description: Whether the policy stops anything.
         ddos:
           $ref: '#/components/schemas/DdosBody'
@@ -71831,7 +72458,7 @@ components:
           description: The version after the change.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_functions_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateFunctionsEnforcementBody'
           description: Enforcement.
         warnings:
           items:
@@ -71960,7 +72587,7 @@ components:
           description: The version after the change.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_insights_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateInsightsEnforcementBody'
           description: Enforcement.
         warnings:
           items:
@@ -72030,7 +72657,7 @@ components:
           description: The version after the change.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_security_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateSecurityEnforcementBody'
           description: Enforcement.
       type: object
       required:
@@ -72222,7 +72849,7 @@ components:
           description: The version after the change.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_security_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateSecurityEnforcementBody'
           description: Enforcement.
         warnings:
           items:
@@ -73016,6 +73643,84 @@ components:
       - blockers
       title: SourceChangeSetBody
       description: The classified diff in the review response.
+    SourceLocation:
+      properties:
+        file:
+          anyOf:
+          - type: string
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: File
+          description: Raw specification file bytes for multipart import requests.
+        line:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: Line
+          description: Line.
+        column:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: Column
+          description: Column.
+        offset:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: Offset
+          description: Offset.
+        length:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: Length
+          description: Length.
+        ordinal:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: Ordinal
+          description: Ordinal.
+        path:
+          anyOf:
+          - type: string
+            description: Source Location schema.
+          - type: 'null'
+            description: Source Location schema.
+          title: Path
+          description: Path.
+      additionalProperties: false
+      type: object
+      title: SourceLocation
+      description: "Where in the original source a node came from.\n\nA pointer, never\
+        \ a copy: the fields address a range in the raw source the catalog already\n\
+        serves, so a UI can open the source viewer at the right place (CPDO-2.1) without\
+        \ the analysis\ncarrying the bytes. Every field is optional because source-location\
+        \ quality differs by format —\na copybook parser knows the line, an X12 parser\
+        \ knows the segment ordinal and byte offset, and a\nJSON-derived analyzer\
+        \ may know only a path.\n\nAttributes:\n    file: Path within a multi-file\
+        \ source layout, when the source was a fileset.\n    line: 1-based line number.\n\
+        \    column: 1-based column number.\n    offset: 0-based byte offset from\
+        \ the start of the source.\n    length: Length in bytes of the addressed range.\n\
+        \    ordinal: Position among sibling constructs (e.g. the segment index within\
+        \ an interchange).\n    path: Analyzer-specific path expression (e.g. ``ISA/GS[0]/ST[2]/NM1[4]``)."
     SourceReviewRequest:
       properties:
         sourceText:
@@ -75362,7 +76067,7 @@ components:
           description: Newest first.
           maxItems: 1000
         enforcement:
-          $ref: '#/components/schemas/app__slate_insights_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateInsightsEnforcementBody'
           description: Enforcement.
       type: object
       required:
@@ -80516,7 +81221,7 @@ components:
           description: The version after the write.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_insights_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateInsightsEnforcementBody'
           description: Enforcement.
         warnings:
           items:
@@ -80631,7 +81336,7 @@ components:
           description: The version after the write.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_insights_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateInsightsEnforcementBody'
           description: Enforcement.
         warnings:
           items:
@@ -80751,7 +81456,7 @@ components:
           description: The version after the write.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_insights_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateInsightsEnforcementBody'
           description: Enforcement.
         warnings:
           items:
@@ -81001,7 +81706,7 @@ components:
           description: The version after the write.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_functions_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateFunctionsEnforcementBody'
           description: Enforcement.
         warnings:
           items:
@@ -81104,7 +81809,7 @@ components:
           description: The version after the write.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_insights_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateInsightsEnforcementBody'
           description: Enforcement.
         warnings:
           items:
@@ -81263,7 +81968,80 @@ components:
       - policyVersion
       title: WriteVariantResponse
       description: The outcome of a variant write.
-    app__slate_cache_routes__AuditEntryBody:
+    SpecImportMultipartUploadBody:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+          description: Raw specification file bytes.
+          example: "openapi: 3.1.0\ninfo:\n  title: Example\n  version: 1.0.0\n"
+        metadata:
+          type: string
+          title: Metadata
+          description: JSON string matching SpecImportStartMetadata (project, version,
+            source_kind, options).
+          example: example
+      type: object
+      required:
+      - file
+      - metadata
+      title: Body_start_spec_import_multipart_v1_tenants__tenant_slug__imports_upload_post
+      description: Multipart upload payload for starting a specification import (raw
+        file bytes plus JSON metadata).
+    MockScenarioSpecInput:
+      properties:
+        description:
+          type: string
+          maxLength: 500
+          title: Description
+          description: Human summary of the situation.
+          default: ''
+          example: A pet available for adoption in the store.
+        operations:
+          additionalProperties:
+            $ref: '#/components/schemas/MockScenarioOperationSpec'
+          type: object
+          title: Operations
+          description: Overrides keyed by "METHOD /path/{template}" operation identifiers.
+        chaos:
+          anyOf:
+          - $ref: '#/components/schemas/MockChaosSpec'
+          - type: 'null'
+            description: Named mock scenario definition submitted with a version.
+          description: Scenario-scoped chaos knobs; replaces the version-level chaos
+            while this scenario is selected (#4455 SIM-4.3).
+      additionalProperties: false
+      type: object
+      title: MockScenarioSpec
+      description: Named mock scenario definition submitted with a version.
+    MockScenarioSpecOutput:
+      properties:
+        description:
+          type: string
+          maxLength: 500
+          title: Description
+          description: Human summary of the situation.
+          default: ''
+          example: A pet available for adoption in the store.
+        operations:
+          additionalProperties:
+            $ref: '#/components/schemas/MockScenarioOperationSpec'
+          type: object
+          title: Operations
+          description: Overrides keyed by "METHOD /path/{template}" operation identifiers.
+        chaos:
+          anyOf:
+          - $ref: '#/components/schemas/MockChaosSpec'
+          - type: 'null'
+            description: Named mock scenario definition returned from a version.
+          description: Scenario-scoped chaos knobs; replaces the version-level chaos
+            while this scenario is selected (#4455 SIM-4.3).
+      additionalProperties: false
+      type: object
+      title: MockScenarioSpec
+      description: Named mock scenario definition returned from a version.
+    SlateCacheAuditEntryBody:
       properties:
         id:
           type: string
@@ -81273,9 +82051,9 @@ components:
         at:
           anyOf:
           - type: string
-            description: Request body for app slate cache routes audit entry.
+            description: Request body for slate cache audit entry.
           - type: 'null'
-            description: Request body for app slate cache routes audit entry.
+            description: Request body for slate cache audit entry.
           title: At
           description: At.
         actorName:
@@ -81299,9 +82077,9 @@ components:
         subjectId:
           anyOf:
           - type: string
-            description: Request body for app slate cache routes audit entry.
+            description: Request body for slate cache audit entry.
           - type: 'null'
-            description: Request body for app slate cache routes audit entry.
+            description: Request body for slate cache audit entry.
           title: Subjectid
           description: Subject ID.
         summary:
@@ -81313,9 +82091,9 @@ components:
         detail:
           anyOf:
           - type: string
-            description: Request body for app slate cache routes audit entry.
+            description: Request body for slate cache audit entry.
           - type: 'null'
-            description: Request body for app slate cache routes audit entry.
+            description: Request body for slate cache audit entry.
           title: Detail
           description: Detail.
       type: object
@@ -81323,11 +82101,11 @@ components:
       - id
       title: AuditEntryBody
       description: One append-only audit entry.
-    app__slate_cache_routes__AuditResponse:
+    SlateCacheAuditResponse:
       properties:
         entries:
           items:
-            $ref: '#/components/schemas/app__slate_cache_routes__AuditEntryBody'
+            $ref: '#/components/schemas/SlateCacheAuditEntryBody'
           type: array
           title: Entries
           description: Most recent first.
@@ -81337,7 +82115,7 @@ components:
       - entries
       title: AuditResponse
       description: A lane's cache audit trail.
-    app__slate_cache_routes__EnforcementBody:
+    SlateCacheEnforcementBody:
       properties:
         enforced:
           type: boolean
@@ -81355,14 +82133,14 @@ components:
       - sentence
       title: EnforcementBody
       description: Whether the recorded policy shapes anything on the wire.
-    app__slate_cache_routes__WriteRuleRequest:
+    SlateCacheWriteRuleRequest:
       properties:
         id:
           anyOf:
           - type: string
-            description: Request body for app slate cache routes write rule.
+            description: Request body for slate cache write rule.
           - type: 'null'
-            description: Request body for app slate cache routes write rule.
+            description: Request body for slate cache write rule.
           title: Id
           description: Rule id, absent for preset rules.
         ordinal:
@@ -81488,9 +82266,9 @@ components:
         expiresAt:
           anyOf:
           - type: string
-            description: Request body for app slate cache routes write rule.
+            description: Request body for slate cache write rule.
           - type: 'null'
-            description: Request body for app slate cache routes write rule.
+            description: Request body for slate cache write rule.
           title: Expiresat
           description: Expires At.
         acknowledgedWarnings:
@@ -81524,7 +82302,7 @@ components:
       - expectedPolicyVersion
       title: WriteRuleRequest
       description: Create or replace an expert rule.
-    app__slate_cache_routes__WriteRuleResponse:
+    SlateCacheWriteRuleResponse:
       properties:
         applied:
           type: boolean
@@ -81540,7 +82318,7 @@ components:
           anyOf:
           - $ref: '#/components/schemas/CacheRuleBody'
           - type: 'null'
-            description: Response payload for app slate cache routes write rule.
+            description: Response payload for slate cache write rule.
           description: Rule.
         policyVersion:
           type: integer
@@ -81561,7 +82339,7 @@ components:
       - policyVersion
       title: WriteRuleResponse
       description: The outcome of a rule write.
-    app__slate_functions_routes__ApprovalBody:
+    SlateFunctionsApprovalBody:
       properties:
         id:
           type: string
@@ -81601,17 +82379,17 @@ components:
         approvedAt:
           anyOf:
           - type: string
-            description: Request body for app slate functions routes approval.
+            description: Request body for slate functions approval.
           - type: 'null'
-            description: Request body for app slate functions routes approval.
+            description: Request body for slate functions approval.
           title: Approvedat
           description: When.
         note:
           anyOf:
           - type: string
-            description: Request body for app slate functions routes approval.
+            description: Request body for slate functions approval.
           - type: 'null'
-            description: Request body for app slate functions routes approval.
+            description: Request body for slate functions approval.
           title: Note
           description: Reviewer note, when there is one.
       type: object
@@ -81619,7 +82397,7 @@ components:
       - id
       title: ApprovalBody
       description: One recorded approval.
-    app__slate_functions_routes__ApprovalRequest:
+    SlateFunctionsApprovalRequest:
       properties:
         subjectKind:
           type: string
@@ -81657,9 +82435,9 @@ components:
         note:
           anyOf:
           - type: string
-            description: Request body for app slate functions routes approval.
+            description: Request body for slate functions approval.
           - type: 'null'
-            description: Request body for app slate functions routes approval.
+            description: Request body for slate functions approval.
           title: Note
           description: Optional reviewer note.
       type: object
@@ -81670,7 +82448,7 @@ components:
       - authorActorKey
       title: ApprovalRequest
       description: Record a second person's approval of one exact body.
-    app__slate_functions_routes__AuditEntryBody:
+    SlateFunctionsAuditEntryBody:
       properties:
         id:
           type: string
@@ -81680,9 +82458,9 @@ components:
         at:
           anyOf:
           - type: string
-            description: Request body for app slate functions routes audit entry.
+            description: Request body for slate functions audit entry.
           - type: 'null'
-            description: Request body for app slate functions routes audit entry.
+            description: Request body for slate functions audit entry.
           title: At
           description: When the event happened.
         actorName:
@@ -81706,9 +82484,9 @@ components:
         subjectId:
           anyOf:
           - type: string
-            description: Request body for app slate functions routes audit entry.
+            description: Request body for slate functions audit entry.
           - type: 'null'
-            description: Request body for app slate functions routes audit entry.
+            description: Request body for slate functions audit entry.
           title: Subjectid
           description: Id of the subject.
         summary:
@@ -81720,9 +82498,9 @@ components:
         detail:
           anyOf:
           - type: string
-            description: Request body for app slate functions routes audit entry.
+            description: Request body for slate functions audit entry.
           - type: 'null'
-            description: Request body for app slate functions routes audit entry.
+            description: Request body for slate functions audit entry.
           title: Detail
           description: Extra context.
       type: object
@@ -81730,11 +82508,11 @@ components:
       - id
       title: AuditEntryBody
       description: One append-only audit entry.
-    app__slate_functions_routes__AuditResponse:
+    SlateFunctionsAuditResponse:
       properties:
         entries:
           items:
-            $ref: '#/components/schemas/app__slate_functions_routes__AuditEntryBody'
+            $ref: '#/components/schemas/SlateFunctionsAuditEntryBody'
           type: array
           title: Entries
           description: Most recent first.
@@ -81744,7 +82522,7 @@ components:
       - entries
       title: AuditResponse
       description: A lane's function audit trail.
-    app__slate_functions_routes__EnforcementBody:
+    SlateFunctionsEnforcementBody:
       properties:
         enforced:
           type: boolean
@@ -81773,7 +82551,7 @@ components:
         CHECKs make the
 
         corresponding columns unable to hold one.'
-    app__slate_functions_routes__ResidencyClassBody:
+    SlateFunctionsResidencyClassBody:
       properties:
         key:
           type: string
@@ -81830,7 +82608,7 @@ components:
       title: ResidencyClassBody
       description: One residency posture, including what it explicitly does *not*
         cover.
-    app__slate_functions_routes__RevertRequest:
+    SlateFunctionsRevertRequest:
       properties:
         revision:
           type: integer
@@ -81861,7 +82639,7 @@ components:
       - expectedPolicyVersion
       title: RevertRequest
       description: Restore a function to a stored revision.
-    app__slate_functions_routes__RevisionBody:
+    SlateFunctionsRevisionBody:
       properties:
         id:
           type: string
@@ -81889,9 +82667,9 @@ components:
         at:
           anyOf:
           - type: string
-            description: Request body for app slate functions routes revision.
+            description: Request body for slate functions revision.
           - type: 'null'
-            description: Request body for app slate functions routes revision.
+            description: Request body for slate functions revision.
           title: At
           description: When the change happened.
         actorName:
@@ -81910,11 +82688,11 @@ components:
       - id
       title: RevisionBody
       description: One recorded function body.
-    app__slate_functions_routes__RevisionsResponse:
+    SlateFunctionsRevisionsResponse:
       properties:
         revisions:
           items:
-            $ref: '#/components/schemas/app__slate_functions_routes__RevisionBody'
+            $ref: '#/components/schemas/SlateFunctionsRevisionBody'
           type: array
           title: Revisions
           description: Newest first.
@@ -81931,7 +82709,7 @@ components:
       - revisions
       title: RevisionsResponse
       description: A function's revision history.
-    app__slate_functions_routes__RolloutRequest:
+    SlateFunctionsRolloutRequest:
       properties:
         rolloutMode:
           type: string
@@ -81969,19 +82747,19 @@ components:
       - expectedPolicyVersion
       title: RolloutRequest
       description: Advance or retreat a function's staged rollout.
-    app__slate_functions_routes__SimulateCommandBody:
+    SlateFunctionsSimulateCommandBody:
       properties:
         request:
-          $ref: '#/components/schemas/app__slate_functions_routes__SimulateRequestBody'
+          $ref: '#/components/schemas/SlateFunctionsSimulateRequestBody'
           description: The test request.
         functions:
           anyOf:
           - items:
               $ref: '#/components/schemas/FunctionBody'
             type: array
-            description: Request body for app slate functions routes simulate command.
+            description: Request body for slate functions simulate command.
           - type: 'null'
-            description: Request body for app slate functions routes simulate command.
+            description: Request body for slate functions simulate command.
           title: Functions
           description: What-if overlay. When absent, the lane's stored functions are
             used.
@@ -81996,7 +82774,7 @@ components:
       - request
       title: SimulateCommandBody
       description: A simulation, optionally over a what-if function set.
-    app__slate_functions_routes__SimulateRequestBody:
+    SlateFunctionsSimulateRequestBody:
       properties:
         method:
           type: string
@@ -82100,7 +82878,7 @@ components:
 
         That is a smaller claim than "this is what the function did", and it is the
         one that is true.'
-    app__slate_functions_routes__SimulateResponse:
+    SlateFunctionsSimulateResponse:
       properties:
         outcome:
           type: string
@@ -82115,9 +82893,9 @@ components:
         functionRef:
           anyOf:
           - type: string
-            description: Response payload for app slate functions routes simulate.
+            description: Response payload for slate functions simulate.
           - type: 'null'
-            description: Response payload for app slate functions routes simulate.
+            description: Response payload for slate functions simulate.
           title: Functionref
           description: The function that won.
         functionLabel:
@@ -82128,9 +82906,9 @@ components:
         versionRef:
           anyOf:
           - type: string
-            description: Response payload for app slate functions routes simulate.
+            description: Response payload for slate functions simulate.
           - type: 'null'
-            description: Response payload for app slate functions routes simulate.
+            description: Response payload for slate functions simulate.
           title: Versionref
           description: The version that would have run.
         runtime:
@@ -82167,9 +82945,9 @@ components:
         variantRef:
           anyOf:
           - type: string
-            description: Response payload for app slate functions routes simulate.
+            description: Response payload for slate functions simulate.
           - type: 'null'
-            description: Response payload for app slate functions routes simulate.
+            description: Response payload for slate functions simulate.
           title: Variantref
           description: The variant selected.
         variantLabel:
@@ -82233,14 +83011,14 @@ components:
         denialReason:
           anyOf:
           - type: string
-            description: Response payload for app slate functions routes simulate.
+            description: Response payload for slate functions simulate.
           - type: 'null'
-            description: Response payload for app slate functions routes simulate.
+            description: Response payload for slate functions simulate.
           title: Denialreason
           description: Why a denial happened.
         considered:
           items:
-            $ref: '#/components/schemas/app__slate_functions_routes__SimulationStepBody'
+            $ref: '#/components/schemas/SlateFunctionsSimulationStepBody'
           type: array
           title: Considered
           description: Every function and variant, and why it did not win.
@@ -82310,9 +83088,9 @@ components:
         invocationId:
           anyOf:
           - type: string
-            description: Response payload for app slate functions routes simulate.
+            description: Response payload for slate functions simulate.
           - type: 'null'
-            description: Response payload for app slate functions routes simulate.
+            description: Response payload for slate functions simulate.
           title: Invocationid
           description: Set when the outcome was recorded.
       type: object
@@ -82347,7 +83125,7 @@ components:
 
         that code ran, which is the structural form of the same guarantee V189 expresses
         as CHECKs.'
-    app__slate_functions_routes__SimulationStepBody:
+    SlateFunctionsSimulationStepBody:
       properties:
         kind:
           type: string
@@ -82357,9 +83135,9 @@ components:
         ref:
           anyOf:
           - type: string
-            description: Request body for app slate functions routes simulation step.
+            description: Request body for slate functions simulation step.
           - type: 'null'
-            description: Request body for app slate functions routes simulation step.
+            description: Request body for slate functions simulation step.
           title: Ref
           description: Its id, when it has one.
         label:
@@ -82370,9 +83148,9 @@ components:
         ordinal:
           anyOf:
           - type: integer
-            description: Request body for app slate functions routes simulation step.
+            description: Request body for slate functions simulation step.
           - type: 'null'
-            description: Request body for app slate functions routes simulation step.
+            description: Request body for slate functions simulation step.
           title: Ordinal
           description: Its precedence.
         outcome:
@@ -82394,7 +83172,7 @@ components:
       title: SimulationStepBody
       description: One function or variant the simulation considered, and what became
         of it.
-    app__slate_insights_routes__AuditEntryBody:
+    SlateInsightsAuditEntryBody:
       properties:
         id:
           type: string
@@ -82404,9 +83182,9 @@ components:
         at:
           anyOf:
           - type: string
-            description: Request body for app slate insights routes audit entry.
+            description: Request body for slate insights audit entry.
           - type: 'null'
-            description: Request body for app slate insights routes audit entry.
+            description: Request body for slate insights audit entry.
           title: At
           description: When the event happened.
         actorName:
@@ -82430,9 +83208,9 @@ components:
         subjectId:
           anyOf:
           - type: string
-            description: Request body for app slate insights routes audit entry.
+            description: Request body for slate insights audit entry.
           - type: 'null'
-            description: Request body for app slate insights routes audit entry.
+            description: Request body for slate insights audit entry.
           title: Subjectid
           description: Id of the subject.
         summary:
@@ -82451,11 +83229,11 @@ components:
       - id
       title: AuditEntryBody
       description: One append-only audit entry.
-    app__slate_insights_routes__AuditResponse:
+    SlateInsightsAuditResponse:
       properties:
         entries:
           items:
-            $ref: '#/components/schemas/app__slate_insights_routes__AuditEntryBody'
+            $ref: '#/components/schemas/SlateInsightsAuditEntryBody'
           type: array
           title: Entries
           description: Most recent first.
@@ -82472,7 +83250,7 @@ components:
 
         opened outlives the capture it took, which is the whole point of separating
         the two.'
-    app__slate_insights_routes__EnforcementBody:
+    SlateInsightsEnforcementBody:
       properties:
         enforced:
           type: boolean
@@ -82510,7 +83288,7 @@ components:
         the same way V190''s
 
         CHECKs make the corresponding columns unable to hold one.'
-    app__slate_insights_routes__ResidencyClassBody:
+    SlateInsightsResidencyClassBody:
       properties:
         key:
           type: string
@@ -82528,7 +83306,7 @@ components:
       - description
       title: ResidencyClassBody
       description: One residency posture, in the edge surface's vocabulary.
-    app__slate_security_routes__ApprovalBody:
+    SlateSecurityApprovalBody:
       properties:
         id:
           type: string
@@ -82568,17 +83346,17 @@ components:
         approvedAt:
           anyOf:
           - type: string
-            description: Request body for app slate security routes approval.
+            description: Request body for slate security approval.
           - type: 'null'
-            description: Request body for app slate security routes approval.
+            description: Request body for slate security approval.
           title: Approvedat
           description: Approved At.
         note:
           anyOf:
           - type: string
-            description: Request body for app slate security routes approval.
+            description: Request body for slate security approval.
           - type: 'null'
-            description: Request body for app slate security routes approval.
+            description: Request body for slate security approval.
           title: Note
           description: Note.
       type: object
@@ -82586,7 +83364,7 @@ components:
       - id
       title: ApprovalBody
       description: One recorded approval.
-    app__slate_security_routes__ApprovalRequest:
+    SlateSecurityApprovalRequest:
       properties:
         subjectKind:
           type: string
@@ -82622,9 +83400,9 @@ components:
         note:
           anyOf:
           - type: string
-            description: Request body for app slate security routes approval.
+            description: Request body for slate security approval.
           - type: 'null'
-            description: Request body for app slate security routes approval.
+            description: Request body for slate security approval.
           title: Note
           description: Note.
       type: object
@@ -82635,7 +83413,7 @@ components:
       - authorActorKey
       title: ApprovalRequest
       description: Record a second person's approval of one exact body.
-    app__slate_security_routes__AuditEntryBody:
+    SlateSecurityAuditEntryBody:
       properties:
         id:
           type: string
@@ -82645,9 +83423,9 @@ components:
         at:
           anyOf:
           - type: string
-            description: Request body for app slate security routes audit entry.
+            description: Request body for slate security audit entry.
           - type: 'null'
-            description: Request body for app slate security routes audit entry.
+            description: Request body for slate security audit entry.
           title: At
           description: At.
         actorName:
@@ -82671,9 +83449,9 @@ components:
         subjectId:
           anyOf:
           - type: string
-            description: Request body for app slate security routes audit entry.
+            description: Request body for slate security audit entry.
           - type: 'null'
-            description: Request body for app slate security routes audit entry.
+            description: Request body for slate security audit entry.
           title: Subjectid
           description: Subject ID.
         summary:
@@ -82685,9 +83463,9 @@ components:
         detail:
           anyOf:
           - type: string
-            description: Request body for app slate security routes audit entry.
+            description: Request body for slate security audit entry.
           - type: 'null'
-            description: Request body for app slate security routes audit entry.
+            description: Request body for slate security audit entry.
           title: Detail
           description: Detail.
       type: object
@@ -82695,11 +83473,11 @@ components:
       - id
       title: AuditEntryBody
       description: One append-only audit entry.
-    app__slate_security_routes__AuditResponse:
+    SlateSecurityAuditResponse:
       properties:
         entries:
           items:
-            $ref: '#/components/schemas/app__slate_security_routes__AuditEntryBody'
+            $ref: '#/components/schemas/SlateSecurityAuditEntryBody'
           type: array
           title: Entries
           description: Most recent first.
@@ -82709,7 +83487,7 @@ components:
       - entries
       title: AuditResponse
       description: A lane's security audit trail.
-    app__slate_security_routes__DeleteRuleResponse:
+    SlateSecurityDeleteRuleResponse:
       properties:
         deleted:
           type: boolean
@@ -82733,7 +83511,7 @@ components:
       - policyVersion
       title: DeleteRuleResponse
       description: The outcome of a rule deletion.
-    app__slate_security_routes__EnforcementBody:
+    SlateSecurityEnforcementBody:
       properties:
         enforced:
           type: boolean
@@ -82762,7 +83540,7 @@ components:
         CHECKs make
 
         the corresponding columns unable to hold one.'
-    app__slate_security_routes__RevertRequest:
+    SlateSecurityRevertRequest:
       properties:
         revision:
           type: integer
@@ -82793,7 +83571,7 @@ components:
       - expectedPolicyVersion
       title: RevertRequest
       description: Restore a rule to a stored revision.
-    app__slate_security_routes__RevisionBody:
+    SlateSecurityRevisionBody:
       properties:
         id:
           type: string
@@ -82820,9 +83598,9 @@ components:
         at:
           anyOf:
           - type: string
-            description: Request body for app slate security routes revision.
+            description: Request body for slate security revision.
           - type: 'null'
-            description: Request body for app slate security routes revision.
+            description: Request body for slate security revision.
           title: At
           description: At.
         actorName:
@@ -82842,11 +83620,11 @@ components:
       - revision
       title: RevisionBody
       description: One recorded rule body.
-    app__slate_security_routes__RevisionsResponse:
+    SlateSecurityRevisionsResponse:
       properties:
         revisions:
           items:
-            $ref: '#/components/schemas/app__slate_security_routes__RevisionBody'
+            $ref: '#/components/schemas/SlateSecurityRevisionBody'
           type: array
           title: Revisions
           description: Newest first.
@@ -82856,7 +83634,7 @@ components:
       - revisions
       title: RevisionsResponse
       description: A rule's revision history.
-    app__slate_security_routes__RolloutRequest:
+    SlateSecurityRolloutRequest:
       properties:
         rolloutMode:
           type: string
@@ -82894,19 +83672,19 @@ components:
       - expectedPolicyVersion
       title: RolloutRequest
       description: Advance or retreat a rule's staged rollout.
-    app__slate_security_routes__SimulateCommandBody:
+    SlateSecuritySimulateCommandBody:
       properties:
         request:
-          $ref: '#/components/schemas/app__slate_security_routes__SimulateRequestBody'
+          $ref: '#/components/schemas/SlateSecuritySimulateRequestBody'
           description: The test request.
         rules:
           anyOf:
           - items:
               $ref: '#/components/schemas/SecurityRuleBody'
             type: array
-            description: Request body for app slate security routes simulate command.
+            description: Request body for slate security simulate command.
           - type: 'null'
-            description: Request body for app slate security routes simulate command.
+            description: Request body for slate security simulate command.
           title: Rules
           description: What-if overlay. When absent, the lane's stored rules are used.
         persist:
@@ -82920,7 +83698,7 @@ components:
       - request
       title: SimulateCommandBody
       description: A simulation, optionally over a what-if ruleset.
-    app__slate_security_routes__SimulateRequestBody:
+    SlateSecuritySimulateRequestBody:
       properties:
         method:
           type: string
@@ -82998,7 +83776,7 @@ components:
         claim than "this
 
         request is malicious", and it is the one that is actually true.'
-    app__slate_security_routes__SimulateResponse:
+    SlateSecuritySimulateResponse:
       properties:
         action:
           type: string
@@ -83018,9 +83796,9 @@ components:
         winningRuleRef:
           anyOf:
           - type: string
-            description: Response payload for app slate security routes simulate.
+            description: Response payload for slate security simulate.
           - type: 'null'
-            description: Response payload for app slate security routes simulate.
+            description: Response payload for slate security simulate.
           title: Winningruleref
           description: Winning Rule Ref.
         winningRuleLabel:
@@ -83038,14 +83816,14 @@ components:
           - additionalProperties:
               type: string
             type: object
-            description: Response payload for app slate security routes simulate.
+            description: Response payload for slate security simulate.
           - type: 'null'
-            description: Response payload for app slate security routes simulate.
+            description: Response payload for slate security simulate.
           title: Exceptionapplied
           description: Exception Applied.
         considered:
           items:
-            $ref: '#/components/schemas/app__slate_security_routes__SimulationStepBody'
+            $ref: '#/components/schemas/SlateSecuritySimulationStepBody'
           type: array
           title: Considered
           description: Every rule, and why it did not win.
@@ -83107,9 +83885,9 @@ components:
         eventId:
           anyOf:
           - type: string
-            description: Response payload for app slate security routes simulate.
+            description: Response payload for slate security simulate.
           - type: 'null'
-            description: Response payload for app slate security routes simulate.
+            description: Response payload for slate security simulate.
           title: Eventid
           description: Set when the outcome was recorded.
       type: object
@@ -83135,7 +83913,7 @@ components:
 
         stopped, which is the structural form of the same guarantee V188 expresses
         as CHECKs.'
-    app__slate_security_routes__SimulationStepBody:
+    SlateSecuritySimulationStepBody:
       properties:
         kind:
           type: string
@@ -83145,9 +83923,9 @@ components:
         ref:
           anyOf:
           - type: string
-            description: Request body for app slate security routes simulation step.
+            description: Request body for slate security simulation step.
           - type: 'null'
-            description: Request body for app slate security routes simulation step.
+            description: Request body for slate security simulation step.
           title: Ref
           description: Ref.
         label:
@@ -83158,9 +83936,9 @@ components:
         ordinal:
           anyOf:
           - type: integer
-            description: Request body for app slate security routes simulation step.
+            description: Request body for slate security simulation step.
           - type: 'null'
-            description: Request body for app slate security routes simulation step.
+            description: Request body for slate security simulation step.
           title: Ordinal
           description: Ordinal.
         outcome:
@@ -83171,9 +83949,9 @@ components:
         action:
           anyOf:
           - type: string
-            description: Request body for app slate security routes simulation step.
+            description: Request body for slate security simulation step.
           - type: 'null'
-            description: Request body for app slate security routes simulation step.
+            description: Request body for slate security simulation step.
           title: Action
           description: Action.
         reason:
@@ -83190,14 +83968,14 @@ components:
       title: SimulationStepBody
       description: One rule, group or preset the simulation considered, and what became
         of it.
-    app__slate_security_routes__WriteRuleRequest:
+    SlateSecurityWriteRuleRequest:
       properties:
         id:
           anyOf:
           - type: string
-            description: Request body for app slate security routes write rule.
+            description: Request body for slate security write rule.
           - type: 'null'
-            description: Request body for app slate security routes write rule.
+            description: Request body for slate security write rule.
           title: Id
           description: Rule id, absent before it is written.
         ordinal:
@@ -83261,17 +84039,17 @@ components:
         rateRequests:
           anyOf:
           - type: integer
-            description: Request body for app slate security routes write rule.
+            description: Request body for slate security write rule.
           - type: 'null'
-            description: Request body for app slate security routes write rule.
+            description: Request body for slate security write rule.
           title: Raterequests
           description: Rate Requests.
         rateWindowSeconds:
           anyOf:
           - type: integer
-            description: Request body for app slate security routes write rule.
+            description: Request body for slate security write rule.
           - type: 'null'
-            description: Request body for app slate security routes write rule.
+            description: Request body for slate security write rule.
           title: Ratewindowseconds
           description: Rate Window Seconds.
         rolloutMode:
@@ -83291,9 +84069,9 @@ components:
         expiresAt:
           anyOf:
           - type: string
-            description: Request body for app slate security routes write rule.
+            description: Request body for slate security write rule.
           - type: 'null'
-            description: Request body for app slate security routes write rule.
+            description: Request body for slate security write rule.
           title: Expiresat
           description: Expires At.
         acknowledgedWarnings:
@@ -83337,7 +84115,7 @@ components:
       - expectedPolicyVersion
       title: WriteRuleRequest
       description: Create or replace a custom security rule.
-    app__slate_security_routes__WriteRuleResponse:
+    SlateSecurityWriteRuleResponse:
       properties:
         applied:
           type: boolean
@@ -83353,7 +84131,7 @@ components:
           anyOf:
           - $ref: '#/components/schemas/SecurityRuleBody'
           - type: 'null'
-            description: Response payload for app slate security routes write rule.
+            description: Response payload for slate security write rule.
           description: Rule.
         bodyDigest:
           type: string
@@ -83366,7 +84144,7 @@ components:
           description: The version after the write.
           example: 1
         enforcement:
-          $ref: '#/components/schemas/app__slate_security_routes__EnforcementBody'
+          $ref: '#/components/schemas/SlateSecurityEnforcementBody'
           description: Enforcement.
         warnings:
           items:
@@ -83383,730 +84161,6 @@ components:
       - policyVersion
       title: WriteRuleResponse
       description: The outcome of a rule write.
-    SpecImportMultipartUploadBody:
-      properties:
-        file:
-          type: string
-          format: binary
-          title: File
-          description: Raw specification file bytes.
-          example: "openapi: 3.1.0\ninfo:\n  title: Example\n  version: 1.0.0\n"
-        metadata:
-          type: string
-          title: Metadata
-          description: JSON string matching SpecImportStartMetadata (project, version,
-            source_kind, options).
-          example: example
-      type: object
-      required:
-      - file
-      - metadata
-      title: Body_start_spec_import_multipart_v1_tenants__tenant_slug__imports_upload_post
-      description: Multipart upload payload for starting a specification import (raw
-        file bytes plus JSON metadata).
-    MockScenarioSpecInput:
-      properties:
-        description:
-          type: string
-          maxLength: 500
-          title: Description
-          description: Human summary of the situation.
-          default: ''
-          example: A pet available for adoption in the store.
-        operations:
-          additionalProperties:
-            $ref: '#/components/schemas/MockScenarioOperationSpec'
-          type: object
-          title: Operations
-          description: Overrides keyed by "METHOD /path/{template}" operation identifiers.
-        chaos:
-          anyOf:
-          - $ref: '#/components/schemas/MockChaosSpec'
-          - type: 'null'
-            description: Named mock scenario definition submitted with a version.
-          description: Scenario-scoped chaos knobs; replaces the version-level chaos
-            while this scenario is selected (#4455 SIM-4.3).
-      additionalProperties: false
-      type: object
-      title: MockScenarioSpec
-      description: Named mock scenario definition submitted with a version.
-    MockScenarioSpecOutput:
-      properties:
-        description:
-          type: string
-          maxLength: 500
-          title: Description
-          description: Human summary of the situation.
-          default: ''
-          example: A pet available for adoption in the store.
-        operations:
-          additionalProperties:
-            $ref: '#/components/schemas/MockScenarioOperationSpec'
-          type: object
-          title: Operations
-          description: Overrides keyed by "METHOD /path/{template}" operation identifiers.
-        chaos:
-          anyOf:
-          - $ref: '#/components/schemas/MockChaosSpec'
-          - type: 'null'
-            description: Named mock scenario definition returned from a version.
-          description: Scenario-scoped chaos knobs; replaces the version-level chaos
-            while this scenario is selected (#4455 SIM-4.3).
-      additionalProperties: false
-      type: object
-      title: MockScenarioSpec
-      description: Named mock scenario definition returned from a version.
-    AnalysisMetrics:
-      properties:
-        nodeCount:
-          type: integer
-          minimum: 0.0
-          title: Nodecount
-          default: 0
-          description: Number of node.
-          example: 1
-        maxDepth:
-          type: integer
-          minimum: 0.0
-          title: Maxdepth
-          default: 0
-          description: Max Depth.
-          example: 1
-        truncated:
-          type: boolean
-          title: Truncated
-          default: false
-          description: Truncated.
-          example: false
-        droppedNodeCount:
-          type: integer
-          minimum: 0.0
-          title: Droppednodecount
-          default: 0
-          description: Number of dropped node.
-          example: 1
-        kindCounts:
-          additionalProperties:
-            type: integer
-          type: object
-          title: Kindcounts
-          description: Kind Counts.
-        warningCount:
-          type: integer
-          minimum: 0.0
-          title: Warningcount
-          default: 0
-          description: Number of warning.
-          example: 1
-      additionalProperties: false
-      type: object
-      title: AnalysisMetrics
-      description: "Derived counts over the tree, so a reader can size it before fetching\
-        \ it.\n\nAttributes:\n    node_count: Total nodes in the stored tree (after\
-        \ bounding).\n    max_depth: Deepest nesting level in the stored tree (a root-only\
-        \ tree is depth 1).\n    truncated: True when bounding dropped nodes the source\
-        \ actually had.\n    dropped_node_count: How many nodes bounding dropped,\
-        \ when known.\n    kind_counts: Node count per ``kind``, the cheap summary\
-        \ a detail header renders.\n    warning_count: Number of warnings on the record."
-    AnalysisNode:
-      properties:
-        id:
-          type: string
-          title: Id
-          description: Stable resource identifier.
-          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
-        kind:
-          type: string
-          title: Kind
-          description: Kind.
-          example: example
-        name:
-          anyOf:
-          - type: string
-            description: Analysis Node schema.
-          - type: 'null'
-            description: Analysis Node schema.
-          title: Name
-          description: Human-readable name.
-        label:
-          anyOf:
-          - type: string
-            description: Analysis Node schema.
-          - type: 'null'
-            description: Analysis Node schema.
-          title: Label
-          description: Label.
-        ordinal:
-          anyOf:
-          - type: integer
-            minimum: 0.0
-            description: Analysis Node schema.
-          - type: 'null'
-            description: Analysis Node schema.
-          title: Ordinal
-          description: Ordinal.
-        attributes:
-          additionalProperties: true
-          type: object
-          title: Attributes
-          description: Attributes.
-        location:
-          anyOf:
-          - $ref: '#/components/schemas/SourceLocation'
-          - type: 'null'
-            description: Analysis Node schema.
-          description: Location.
-        valuePresent:
-          anyOf:
-          - type: boolean
-            description: Analysis Node schema.
-          - type: 'null'
-            description: Analysis Node schema.
-          title: Valuepresent
-          description: Value Present.
-        valueLength:
-          anyOf:
-          - type: integer
-            minimum: 0.0
-            description: Analysis Node schema.
-          - type: 'null'
-            description: Analysis Node schema.
-          title: Valuelength
-          description: Value Length.
-        value:
-          anyOf:
-          - type: string
-            description: Analysis Node schema.
-          - type: 'null'
-            description: Analysis Node schema.
-          title: Value
-          description: Value.
-        redacted:
-          type: boolean
-          title: Redacted
-          default: false
-          description: Redacted.
-          example: false
-        children:
-          items:
-            $ref: '#/components/schemas/AnalysisNode'
-          type: array
-          title: Children
-          description: Children.
-          maxItems: 1000
-      additionalProperties: false
-      type: object
-      required:
-      - id
-      - kind
-      title: AnalysisNode
-      description: "One node of the native tree, in the analyzer's own vocabulary.\n\
-        \nDeliberately format-neutral in *shape* and format-specific in *content*:\
-        \ ``kind`` is the\nanalyzer's own term (``interchange``, ``functional_group``,\
-        \ ``transaction_set``, ``segment``,\n``element`` for X12; ``group``, ``field``,\
-        \ ``condition`` for a copybook), and ``attributes``\ncarries the semantics\
-        \ that term implies (PIC, USAGE, OCCURS bounds, segment id, element\nposition).\
-        \ One renderer can therefore walk any analyzer's output while nothing is flattened\
-        \ into\na lowest common denominator on the way in.\n\n``value`` is governed\
-        \ by :class:`ValueVisibility` and is ``None`` under the default policy;\n\
-        ``value_present`` and ``value_length`` describe the observed value without\
-        \ disclosing it.\n\nAttributes:\n    id: Stable id within the record, so warnings\
-        \ and (later) projection evidence can cite it.\n    kind: The analyzer's term\
-        \ for what this node is.\n    name: The construct's name in the source (segment\
-        \ id, field name, element reference).\n    label: Optional human-facing label\
-        \ when ``name`` alone reads poorly.\n    ordinal: Position among its siblings,\
-        \ preserving source order.\n    attributes: Format-specific semantics; JSON\
-        \ scalars and small containers only.\n    location: Where the construct sits\
-        \ in the source.\n    value_present: Whether the source carried a value here\
-        \ (an X12 element can be present and\n        empty — that is not the same\
-        \ as absent).\n    value_length: Length of the observed value in characters,\
-        \ when known.\n    value: The observed value; only under :data:`ValueVisibility.FULL`,\
-        \ truncated to\n        :data:`MAX_VALUE_PREVIEW_CHARS`.\n    redacted: True\
-        \ when a value was observed and withheld by policy.\n    children: Child nodes,\
-        \ in source order."
-    AnalysisWarning:
-      properties:
-        code:
-          type: string
-          title: Code
-          description: Code.
-          example: example
-        severity:
-          type: string
-          title: Severity
-          default: warning
-          description: Severity.
-          example: warning
-        message:
-          type: string
-          title: Message
-          default: ''
-          description: Message.
-          example: Example validation message.
-        nodeId:
-          anyOf:
-          - type: string
-            description: Analysis Warning schema.
-          - type: 'null'
-            description: Analysis Warning schema.
-          title: Nodeid
-          description: Node ID.
-        location:
-          anyOf:
-          - $ref: '#/components/schemas/SourceLocation'
-          - type: 'null'
-            description: Analysis Warning schema.
-          description: Location.
-      additionalProperties: false
-      type: object
-      required:
-      - code
-      title: AnalysisWarning
-      description: "Something the analyzer could not do, stated rather than hidden.\n\
-        \nThe difference between \"this construct is not in the source\" and \"this\
-        \ parser does not\nunderstand this construct\" is the whole point of CPDO-2.4,\
-        \ and it is carried here. A warning is\nnever an error in the request — a\
-        \ record with warnings is still a usable record.\n\nAttributes:\n    code:\
-        \ Stable machine code (e.g. ``copybook.redefines_unsupported``).\n    severity:\
-        \ One of :data:`WARNING_SEVERITIES`.\n    message: Human-readable explanation,\
-        \ free of payload values.\n    node_id: Id of the node the warning is about,\
-        \ when it is about one.\n    location: Where in the source it applies, when\
-        \ known."
-    AnalyzerInfo:
-      properties:
-        key:
-          type: string
-          title: Key
-          default: generic
-          description: Key.
-          example: example
-        version:
-          type: string
-          title: Version
-          default: 0.0.0
-          description: Version.
-          example: 1.0.0
-        toolVersions:
-          additionalProperties:
-            type: string
-          type: object
-          title: Toolversions
-          description: Tool Versions.
-      additionalProperties: false
-      type: object
-      title: AnalyzerInfo
-      description: "Which analyzer produced the record, and what it was built on.\n\
-        \n``key`` plus ``version`` is what makes a stale record detectable: an analysis\
-        \ produced by\n``edix12@1.0.0`` is not interchangeable with one produced by\
-        \ ``edix12@2.0.0``, even for the same\nbytes.\n\nAttributes:\n    key: Analyzer\
-        \ key (usually the import adapter key, or ``generic``).\n    version: Analyzer\
-        \ version.\n    tool_versions: Underlying parser/library versions it leaned\
-        \ on."
-    PayloadAnalysisDocument:
-      properties:
-        schemaVersion:
-          type: string
-          title: Schemaversion
-          default: 1.0.0
-          description: Schema Version.
-          example: 1.0.0
-        status:
-          type: string
-          title: Status
-          default: unavailable
-          description: Status.
-          example: active
-        statusReason:
-          anyOf:
-          - type: string
-            description: Payload Analysis Document schema.
-          - type: 'null'
-            description: Payload Analysis Document schema.
-          title: Statusreason
-          description: Status Reason.
-        sourceFormat:
-          anyOf:
-          - type: string
-            description: Payload Analysis Document schema.
-          - type: 'null'
-            description: Payload Analysis Document schema.
-          title: Sourceformat
-          description: Source Format.
-        sourceHash:
-          anyOf:
-          - type: string
-            description: Payload Analysis Document schema.
-          - type: 'null'
-            description: Payload Analysis Document schema.
-          title: Sourcehash
-          description: Source Hash.
-        analyzer:
-          $ref: '#/components/schemas/AnalyzerInfo'
-          description: Analyzer.
-        tree:
-          items:
-            $ref: '#/components/schemas/AnalysisNode'
-          type: array
-          title: Tree
-          description: Tree.
-          maxItems: 1000
-        metrics:
-          $ref: '#/components/schemas/AnalysisMetrics'
-          description: Metrics.
-        warnings:
-          items:
-            $ref: '#/components/schemas/AnalysisWarning'
-          type: array
-          title: Warnings
-          description: Warnings.
-          maxItems: 1000
-        redaction:
-          $ref: '#/components/schemas/RedactionInfo'
-          description: Redaction.
-      additionalProperties: false
-      type: object
-      title: PayloadAnalysisDocument
-      description: "The full analysis of one source revision — the persisted contract.\n\
-        \nThis is what ``apiome.payload_analysis`` stores (column-per-field, not a\
-        \ blob) and what\n``GET /v1/catalog/{tenant_slug}/{item_id}/analysis`` returns.\
-        \ Its invariants mirror the V209\nCHECK constraints exactly, and :meth:`contract_violations`\
-        \ states them in one place so the API\ncan refuse to *write* a record the\
-        \ database would refuse to store.\n\nAttributes:\n    schema_version: Contract\
-        \ version the record was written under.\n    status: One of :data:`ANALYSIS_STATUSES`.\n\
-        \    status_reason: Reason code; required unless ``status`` is :data:`STATUS_AVAILABLE`.\n\
-        \    source_format: Adapter key of the analysed source.\n    source_hash:\
-        \ ``sha256:<hex>`` of the analysed bytes; required for available/partial.\n\
-        \    analyzer: Which analyzer produced the record.\n    tree: Root nodes of\
-        \ the native structure; empty for unavailable/failed.\n    metrics: Derived\
-        \ counts over ``tree``.\n    warnings: What the analyzer could not do.\n \
-        \   redaction: The value-visibility policy in force and what it withheld."
-    PayloadAnalysisRecord:
-      properties:
-        analysisId:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Analysisid
-          description: Analysis ID.
-        tenantId:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Tenantid
-          description: Tenant ID.
-        projectId:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Projectid
-          description: Project ID.
-        versionRecordId:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Versionrecordid
-          description: Version Record ID.
-        analysisSequence:
-          type: integer
-          minimum: 0.0
-          title: Analysissequence
-          default: 0
-          description: Analysis Sequence.
-          example: 1
-        contentFingerprint:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Contentfingerprint
-          description: Content Fingerprint.
-        analyzedAt:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Analyzedat
-          description: Analyzed At.
-        analysis:
-          $ref: '#/components/schemas/PayloadAnalysisDocument'
-          description: Analysis.
-      additionalProperties: false
-      type: object
-      title: PayloadAnalysisRecord
-      description: "A stored analysis: the document plus the identity of the row that\
-        \ holds it.\n\nReturned by the full-analysis endpoint. The identity half is\
-        \ what makes the record citable — a\nprojection manifest (CPDO-1.3) references\
-        \ ``analysis_id`` and ``content_fingerprint``, not \"the\nanalysis of this\
-        \ item\", which would drift.\n\nAttributes:\n    analysis_id: Row id.\n  \
-        \  tenant_id: Owning tenant.\n    project_id: Catalog project the analysed\
-        \ revision belongs to.\n    version_record_id: The analysed source revision.\n\
-        \    analysis_sequence: Monotonic sequence within the revision; highest is\
-        \ in force.\n    content_fingerprint: SHA-256 over the canonicalized document.\n\
-        \    analyzed_at: When the record was written.\n    analysis: The document\
-        \ itself."
-    PayloadAnalysisSummary:
-      properties:
-        available:
-          type: boolean
-          title: Available
-          default: false
-          description: Available.
-          example: false
-        status:
-          type: string
-          title: Status
-          default: unavailable
-          description: Status.
-          example: active
-        statusReason:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Statusreason
-          description: Status Reason.
-        schemaVersion:
-          type: string
-          title: Schemaversion
-          default: 1.0.0
-          description: Schema Version.
-          example: 1.0.0
-        sourceFormat:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Sourceformat
-          description: Source Format.
-        analyzerKey:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Analyzerkey
-          description: Analyzer Key.
-        analyzerVersion:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Analyzerversion
-          description: Analyzer Version.
-        nodeCount:
-          type: integer
-          minimum: 0.0
-          title: Nodecount
-          default: 0
-          description: Number of node.
-          example: 1
-        maxDepth:
-          type: integer
-          minimum: 0.0
-          title: Maxdepth
-          default: 0
-          description: Max Depth.
-          example: 1
-        truncated:
-          type: boolean
-          title: Truncated
-          default: false
-          description: Truncated.
-          example: false
-        warningCount:
-          type: integer
-          minimum: 0.0
-          title: Warningcount
-          default: 0
-          description: Number of warning.
-          example: 1
-        kindCounts:
-          additionalProperties:
-            type: integer
-          type: object
-          title: Kindcounts
-          description: Kind Counts.
-        valueVisibility:
-          type: string
-          title: Valuevisibility
-          default: structural
-          description: Value Visibility.
-          example: example
-        analysisId:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Analysisid
-          description: Analysis ID.
-        versionRecordId:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Versionrecordid
-          description: Version Record ID.
-        analyzedAt:
-          anyOf:
-          - type: string
-            description: Payload Analysis schema.
-          - type: 'null'
-            description: Payload Analysis schema.
-          title: Analyzedat
-          description: Analyzed At.
-      additionalProperties: false
-      type: object
-      title: PayloadAnalysisSummary
-      description: "The small projection embedded in a catalog detail read.\n\nThe\
-        \ detail response carries this rather than the tree: the tree can be five\
-        \ thousand nodes, and\nthe detail screen needs only enough to decide whether\
-        \ to offer the *Format details* tab and what\nto say when it cannot. Fetching\
-        \ the tree is a separate, explicit request.\n\nAttributes:\n    available:\
-        \ True only when a real tree is fetchable (``available`` or ``partial``).\n\
-        \    status: One of :data:`ANALYSIS_STATUSES`.\n    status_reason: Reason\
-        \ code, when the status has one.\n    schema_version: Contract version of\
-        \ the underlying record.\n    source_format: Adapter key of the analysed source.\n\
-        \    analyzer_key: Which analyzer produced it.\n    analyzer_version: That\
-        \ analyzer's version.\n    node_count: Nodes in the stored tree.\n    max_depth:\
-        \ Depth of the stored tree.\n    truncated: Whether bounding dropped nodes.\n\
-        \    warning_count: Number of analyzer warnings.\n    kind_counts: Node count\
-        \ per kind — the detail header's summary metrics.\n    value_visibility: The\
-        \ value-visibility level the record was stored under.\n    analysis_id: Id\
-        \ of the underlying record, for a direct evidence reference.\n    version_record_id:\
-        \ The source revision the analysis describes.\n    analyzed_at: When the analysis\
-        \ was recorded."
-    RedactionInfo:
-      properties:
-        valueVisibility:
-          type: string
-          title: Valuevisibility
-          default: structural
-          description: Value Visibility.
-          example: example
-        redactedNodeCount:
-          type: integer
-          minimum: 0.0
-          title: Redactednodecount
-          default: 0
-          description: Number of redacted node.
-          example: 1
-        policySource:
-          type: string
-          title: Policysource
-          default: default
-          description: Policy Source.
-          example: example
-        valuePreviewLimit:
-          type: integer
-          minimum: 0.0
-          title: Valuepreviewlimit
-          default: 120
-          description: Value Preview Limit.
-          example: 50
-      additionalProperties: false
-      type: object
-      title: RedactionInfo
-      description: "What the record withheld, and under which policy.\n\nPresent on\
-        \ every record — including records that withheld nothing — so a reader never\
-        \ has to\ninfer whether an absent value was withheld or simply not there.\n\
-        \nAttributes:\n    value_visibility: The :class:`ValueVisibility` level in\
-        \ force.\n    redacted_node_count: How many nodes carried a value that was\
-        \ withheld.\n    policy_source: Where the level came from (``default``, ``tenant``,\
-        \ ``format``, ``request``).\n    value_preview_limit: Character limit applied\
-        \ to any retained value."
-    SourceLocation:
-      properties:
-        file:
-          anyOf:
-          - type: string
-            description: Source Location schema.
-          - type: 'null'
-            description: Source Location schema.
-          title: File
-          description: Raw specification file bytes for multipart import requests.
-        line:
-          anyOf:
-          - type: integer
-            minimum: 1.0
-            description: Source Location schema.
-          - type: 'null'
-            description: Source Location schema.
-          title: Line
-          description: Line.
-        column:
-          anyOf:
-          - type: integer
-            minimum: 1.0
-            description: Source Location schema.
-          - type: 'null'
-            description: Source Location schema.
-          title: Column
-          description: Column.
-        offset:
-          anyOf:
-          - type: integer
-            minimum: 0.0
-            description: Source Location schema.
-          - type: 'null'
-            description: Source Location schema.
-          title: Offset
-          description: Offset.
-        length:
-          anyOf:
-          - type: integer
-            minimum: 0.0
-            description: Source Location schema.
-          - type: 'null'
-            description: Source Location schema.
-          title: Length
-          description: Length.
-        ordinal:
-          anyOf:
-          - type: integer
-            minimum: 0.0
-            description: Source Location schema.
-          - type: 'null'
-            description: Source Location schema.
-          title: Ordinal
-          description: Ordinal.
-        path:
-          anyOf:
-          - type: string
-            description: Source Location schema.
-          - type: 'null'
-            description: Source Location schema.
-          title: Path
-          description: Path.
-      additionalProperties: false
-      type: object
-      title: SourceLocation
-      description: "Where in the original source a node came from.\n\nA pointer, never\
-        \ a copy: the fields address a range in the raw source the catalog already\n\
-        serves, so a UI can open the source viewer at the right place (CPDO-2.1) without\
-        \ the analysis\ncarrying the bytes. Every field is optional because source-location\
-        \ quality differs by format —\na copybook parser knows the line, an X12 parser\
-        \ knows the segment ordinal and byte offset, and a\nJSON-derived analyzer\
-        \ may know only a path.\n\nAttributes:\n    file: Path within a multi-file\
-        \ source layout, when the source was a fileset.\n    line: 1-based line number.\n\
-        \    column: 1-based column number.\n    offset: 0-based byte offset from\
-        \ the start of the source.\n    length: Length in bytes of the addressed range.\n\
-        \    ordinal: Position among sibling constructs (e.g. the segment index within\
-        \ an interchange).\n    path: Analyzer-specific path expression (e.g. ``ISA/GS[0]/ST[2]/NM1[4]``)."
   securitySchemes:
     Bearer:
       type: http

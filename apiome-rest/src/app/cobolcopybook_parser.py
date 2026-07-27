@@ -16,7 +16,9 @@ __all__ = [
     "Cobol88Condition",
     "CobolField",
     "CobolCopybookDocument",
+    "CopybookSourceLine",
     "is_cobolcopybook",
+    "iter_definition_lines",
     "parse_cobolcopybook",
 ]
 
@@ -62,6 +64,28 @@ class CobolField:
 class CobolCopybookDocument:
     root: CobolField
     raw: str
+
+
+@dataclass(frozen=True)
+class CopybookSourceLine:
+    """One data-definition line, with the source line it came from — CPDO-1.2 (#4795).
+
+    The parsed :class:`CobolField` tree deliberately carries no positions: a normalizer has no use
+    for them. A *payload analysis* does — pointing a reader at the line a PICTURE clause came from is
+    most of what makes a copybook record navigable — so this is the one place the line numbers are
+    recovered, by classifying source lines exactly the way :func:`_parse_flat_fields` does.
+
+    Attributes:
+        line: 1-based line number in the copybook source.
+        level: COBOL level number (``88`` for a condition-name line).
+        name: The data name declared on the line.
+        is_condition: True for an ``88`` condition-name line, which belongs to the entry above it.
+    """
+
+    line: int
+    level: int
+    name: str
+    is_condition: bool
 
 
 def _effective_line(line: str) -> Optional[str]:
@@ -122,6 +146,47 @@ def _parse_occurs(remainder: str) -> tuple[Optional[int], Optional[int], Optiona
     if not match:
         return None, None, None
     return int(match.group(1)), int(match.group(2)), match.group(3)
+
+
+def iter_definition_lines(content: str) -> List[CopybookSourceLine]:
+    """Return every data-definition line in ``content``, in source order.
+
+    Classifies lines with the same helpers :func:`_parse_flat_fields` uses — the fixed-format column
+    handling, the condition-name pattern, then the field pattern — so the entries line up one-for-one
+    with the fields the parser produced. Lines that are comments, blank, or not definitions are
+    skipped, exactly as the parser skips them.
+
+    Args:
+        content: The copybook source text.
+
+    Returns:
+        The definition lines in source order.
+    """
+    lines: List[CopybookSourceLine] = []
+    for number, line in enumerate(content.splitlines(), start=1):
+        effective = _effective_line(line)
+        if not effective:
+            continue
+        condition = _CONDITION_RE.match(effective)
+        if condition:
+            lines.append(
+                CopybookSourceLine(
+                    line=number, level=88, name=condition.group(1), is_condition=True
+                )
+            )
+            continue
+        match = _FIELD_RE.match(effective)
+        if not match:
+            continue
+        lines.append(
+            CopybookSourceLine(
+                line=number,
+                level=int(match.group(1)),
+                name=match.group(2),
+                is_condition=False,
+            )
+        )
+    return lines
 
 
 def _parse_flat_fields(content: str) -> List[CobolField]:

@@ -5,6 +5,61 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.201.0] - 2026-07-27
+
+### Added
+- **Native-analysis extractors and import integration (#4795, CPDO-1.2)** — CPDO-1.1 defined what a
+  payload analysis is and left every revision reading back as a declared `unavailable` record,
+  because nothing produced one. This produces them. An import parses its source into the format's
+  own AST, normalizes that AST into the canonical model, and drops it; everything the canonical
+  model has no word for existed only for the duration of one function call. The AST is now analysed
+  **while it is still in hand** — after parse, before persistence.
+  - **New analyzer SPI on `ImportSource`** — `analyzer_key` / `analyzer_version`,
+    `analyzer_tool_versions()`, `analysis_capabilities()`, and `analyze()`. Every one has a working
+    default, so a format with no native extractor still records a real (format-blind) analysis rather
+    than nothing.
+  - **`app/payload_analyzer.py`** — the shared machinery. Analyzers emit cheap `NativeNode`
+    descriptions whose children may be a *callable*, and the budgeted breadth-first walk realises
+    only the subtrees it will admit: the budget bounds what is built, not just what is stored.
+    Counting what was dropped means visiting it, so visiting is capped too — past the cap the record
+    says its `droppedNodeCount` is a floor instead of reporting a comfortable number.
+  - **EDI X12 (`app/edix12_analysis.py`)** — interchange → functional group → transaction set →
+    segment → element, with composites regrouped under their element position rather than flattened
+    into siblings. **Every observed group and transaction set is retained**: the node budget is
+    raised, if needed, to fit the whole envelope, so a bounded X12 analysis drops elements and never
+    envelopes. This is the gap the ticket names — the canonical normalizer reads only
+    `functional_groups[0].transaction_sets[0]`, so a two-group interchange lost its second group at
+    import.
+  - **COBOL copybook (`app/cobolcopybook_analysis.py`)** — record → group → field → 88-condition
+    with level numbers, PICTURE, USAGE and OCCURS bounds, plus the **source line** each was declared
+    on (recovered by `iter_definition_lines`, matched by name in traversal order so a repeated
+    `FILLER` resolves to its own line). Clauses the parser does not read — `REDEFINES`, level-66
+    `RENAMES`, `COPY … REPLACING` — are found by scanning the source, because an ignored `REDEFINES`
+    leaves no trace in the parsed tree; each one found makes the record `partial` with a stated
+    reason instead of presenting a partial tree as a complete one.
+  - **Capability data on every record** (`capabilities`, apiome-db V210; contract `1.0.0` → `1.1.0`).
+    Warnings say what went wrong in *this* source; capabilities say what would go wrong in any
+    source — what the analyzer models, what it knowingly does not, and the bounds it ran under. A
+    construct missing from a tree is otherwise ambiguous: the source had none, or the analyzer has no
+    word for one. Additive and defaulted, so every V209 row stays readable as "declared none", which
+    is what was true of it.
+  - **Failures are non-fatal but explicit.** An analyzer that raises, one that overruns the intake
+    stage wall clock, and a store that refuses the write each leave the import completed and say so —
+    a declared `failed` record naming the analyzer, a `PAYLOAD_ANALYZED` / 
+    `PAYLOAD_ANALYSIS_STORE_FAILED` job event, and an `analysis` block on the job summary. Failure
+    messages name the exception *type* only: a parser error quotes the source span that broke it, and
+    that span may be a credential (IXH-1.4).
+  - **Deterministic and redaction-safe.** The same AST and bytes fingerprint identically, so a
+    re-import of unchanged source is recognised by content rather than appending a redundant
+    sequence; changed source appends the next one and the superseded record stays citable. Observed
+    values live only in a node's `value`, never in `attributes`, so
+    `store_analysis`'s value-visibility pass governs all of them — under the default `structural`
+    policy nothing observed reaches the store.
+
+### Changed
+- `PAYLOAD_ANALYSIS_SCHEMA_VERSION` is `1.1.0`; `PayloadAnalysisDocument` and the detail-read
+  `analysis` summary both carry `capabilities`.
+
 ## [1.200.0] - 2026-07-27
 
 ### Added

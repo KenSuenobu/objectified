@@ -8,10 +8,17 @@ step that **drives any such adapter through the existing job lifecycle** —
 parse → normalize → version → lint — emitting the same
 :class:`~app.models.SpecImportJobStatus` contract the worker already produces.
 
-The four phases map onto the SPI:
+The phases map onto the SPI:
 
 * **parse** — :meth:`ImportSource.parse` turns the raw document text into the
   format's native AST;
+* **analyze** — :meth:`ImportSource.analyze` describes that AST as a bounded native
+  payload analysis (CPDO-1.2) *before* normalization reduces it. This is the last
+  moment the whole native structure exists: an X12 interchange normalizes from one
+  functional group's first transaction set, so anything else it carried survives
+  only because it was analysed here. The record is written after persistence, since
+  it is scoped to the revision persistence creates, and a failure at either point is
+  reported without failing the import;
 * **normalize** — :meth:`ImportSource.normalize` maps that AST onto the canonical
   model (:class:`~app.canonical_model.CanonicalApi`);
 * **version** — :meth:`ImportSource.fingerprint` computes the stable content
@@ -103,6 +110,13 @@ from .models import (
     SpecImportJobResult,
     SpecImportJobStatus,
 )
+from .payload_analysis import (
+    REASON_ANALYZER_FAILED,
+    STATUS_FAILED,
+    PayloadAnalysisDocument,
+    unavailable_document,
+)
+from .payload_analyzer import analyze_import
 from .secure_xml import SecureXmlError
 from .style_guide_engine import (
     FALLBACK_GUIDE_SOURCE,
@@ -115,9 +129,13 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "ADAPTER_PHASE_EVENT_CODES",
     "ImportRunArtifacts",
+    "analysed_source",
+    "analysis_summary_block",
     "build_job_error",
     "capture_canonical_quality_score",
     "run_adapter_import_job",
+    "run_import_analysis",
+    "store_import_analysis",
 ]
 
 
@@ -128,6 +146,9 @@ ADAPTER_PHASE_EVENT_CODES = frozenset(
     {
         "ADAPTER_INIT",
         "PARSE_OK",
+        "PAYLOAD_ANALYZED",
+        "PAYLOAD_ANALYSIS_STORED",
+        "PAYLOAD_ANALYSIS_STORE_FAILED",
         "NORMALIZE_OK",
         "ROUTING_DECIDED",
         "VERSION_FINGERPRINT",
@@ -183,6 +204,10 @@ class ImportRunArtifacts:
         remote_refs: The MFI-29.4 remote ``$ref`` resolution outcome, when the adapter's
             format can carry external references and the intake had any. Typed loosely to
             keep the resolver module off this module's import path.
+        analysis: The CPDO-1.2 native payload analysis produced after parse. Carries observed
+            values as the analyzer saw them — the redaction policy is applied by the store on
+            the way in, so a caller reading this out-parameter is reading pre-policy material
+            and must not surface it.
     """
 
     adapter_key: Optional[str] = None
@@ -193,6 +218,7 @@ class ImportRunArtifacts:
     style_guide: Optional[Any] = None
     scrub_report: Optional[Dict[str, Any]] = None
     remote_refs: Optional[Any] = None
+    analysis: Optional[PayloadAnalysisDocument] = None
 
 
 def _scrub_event_context(context: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
@@ -794,6 +820,170 @@ def capture_canonical_quality_score(
         )
 
 
+def analysed_source(
+    intake: _ResolvedIntake,
+    remote_refs: Optional[_RemoteRefResolution],
+) -> Optional[Any]:
+    """Return the exact material the adapter parsed, for the analysis to name (CPDO-1.2).
+
+    The analysis record's ``source_hash`` has to identify *what was analysed*, which is what was
+    parsed — so for a single document that is the remote-``$ref``-resolved text when resolution
+    rewrote it, and the intake text otherwise; for an archive it is the uploaded bytes, since the
+    fileset as a whole is what the adapter read.
+
+    Note this is the intake **as submitted**, which is not always byte-identical to the copy the
+    catalog stores: under an enforcing secret-scrub policy (IXH-1.4 / MFI-29.6) the stored source has
+    its credential values replaced. The hash names the bytes the analyzer actually read, because that
+    is the only claim it can honestly make.
+
+    Args:
+        intake: The resolved intake.
+        remote_refs: The remote-``$ref`` resolution outcome, when one ran.
+
+    Returns:
+        The analysed text or bytes, or ``None`` when the intake carried neither (which yields a
+        declared ``no_source_captured`` record rather than an invented one).
+    """
+    if intake.fileset is not None:
+        return intake.raw_bytes
+    return (remote_refs.text if remote_refs is not None else None) or intake.text
+
+
+def run_import_analysis(
+    adapter: ImportSource,
+    native_ast: Any,
+    intake: _ResolvedIntake,
+    remote_refs: Optional[_RemoteRefResolution],
+    *,
+    profile: Any = None,
+    source_label: Optional[str] = None,
+) -> PayloadAnalysisDocument:
+    """Analyse the freshly parsed AST, under the intake stage budget, without failing the import.
+
+    Runs between parse and normalize, while the native AST is still in hand — the point of the whole
+    exercise being that an X12 envelope or a copybook level survives the import instead of being
+    re-derived by whatever parser is installed at read time.
+
+    Two things can go wrong, and neither is allowed to fail an import that otherwise succeeded:
+    the analyzer can raise (:func:`app.payload_analyzer.analyze_import` catches that and returns a
+    declared ``failed`` record), or it can overrun the per-stage wall clock on a pathological source.
+    The second is caught here and degraded the same way, because an analysis is *evidence about* an
+    import rather than part of it. Both outcomes are explicit: a record naming the analyzer and the
+    reason, surfaced as a job event and in the summary.
+
+    Args:
+        adapter: The adapter that parsed the source.
+        native_ast: The AST it produced.
+        intake: The resolved intake.
+        remote_refs: The remote-``$ref`` resolution outcome, when one ran.
+        profile: The tenant's resolved intake guard profile.
+        source_label: Filename/URL label, used in guard messages.
+
+    Returns:
+        The analysis document; never ``None``.
+    """
+    try:
+        with stage_wall_clock("analyze", limits=profile, source_label=source_label):
+            return analyze_import(
+                adapter, native_ast, source=analysed_source(intake, remote_refs)
+            )
+    except Exception as exc:  # noqa: BLE001 - an analysis must never fail an import
+        logger.warning(
+            "payload analysis aborted for adapter %r: %s",
+            adapter.key,
+            type(exc).__name__,
+            exc_info=True,
+        )
+        return unavailable_document(
+            REASON_ANALYZER_FAILED,
+            source_format=adapter.key,
+            message=(
+                f"The {adapter.analyzer_key!r} payload analyzer did not complete "
+                f"({type(exc).__name__})."
+            ),
+            analyzer=adapter.analyzer_info(),
+            capabilities=adapter.analysis_capabilities(),
+            failed=True,
+        )
+
+
+def store_import_analysis(
+    payload: Dict[str, Any],
+    result: SpecImportJobResult,
+    document: PayloadAnalysisDocument,
+) -> Optional[str]:
+    """Record an import's analysis against the revision it describes (CPDO-1.2).
+
+    Called after persistence, because the analysis is scoped to a *revision* and the revision is
+    what persistence creates. The write goes through
+    :func:`app.payload_analysis_store.store_analysis`, so the value-visibility policy is applied and
+    the contract validated on the way in — observed values reach the store only as far as policy
+    allows, and never at all under the default.
+
+    It is idempotent by content: a re-import that produced an identical analysis for the same
+    revision (a catalog re-import reuses its revision when the version label is unchanged) returns
+    the existing row rather than appending a redundant sequence.
+
+    Blocking DB work (the psycopg driver is synchronous) — call via ``asyncio.to_thread``.
+
+    Args:
+        payload: The worker payload (``tenant_id`` / ``user_id``).
+        result: The persistence result naming the created project and revision.
+        document: The analysis to record.
+
+    Returns:
+        The stored record's id, or ``None`` when there was no tenant/revision to store against.
+    """
+    from .payload_analysis_store import store_analysis
+
+    tenant_id = str(payload.get("tenant_id") or "")
+    version_record_id = result.version_record_id
+    project_id = result.project_id
+    if not tenant_id or not version_record_id or not project_id:
+        return None
+
+    record = store_analysis(
+        tenant_id=tenant_id,
+        project_id=str(project_id),
+        version_id=str(version_record_id),
+        document=document,
+        created_by=str(payload.get("user_id") or "") or None,
+    )
+    return record.analysis_id if record is not None else None
+
+
+def analysis_summary_block(
+    document: PayloadAnalysisDocument, *, stored: bool
+) -> Dict[str, Any]:
+    """Project an analysis onto the block the completed job's summary carries.
+
+    Counts and status only — never a node, never a value — so the summary of an import stays safe to
+    show to anyone who may see the import at all. ``unsupported`` is included because it is the
+    difference between "this source had no functional groups" and "this analyzer does not model
+    them", and a summary that omitted it would leave a reader guessing.
+
+    Args:
+        document: The analysis produced for the import.
+        stored: Whether it was written against a revision (a dry run has none).
+
+    Returns:
+        The ``analysis`` block for the job summary.
+    """
+    return {
+        "status": document.status,
+        "status_reason": document.status_reason,
+        "analyzer": document.analyzer.key,
+        "analyzer_version": document.analyzer.version,
+        "node_count": document.metrics.node_count,
+        "max_depth": document.metrics.max_depth,
+        "truncated": document.metrics.truncated,
+        "dropped_nodes": document.metrics.dropped_node_count,
+        "warnings": len(document.warnings),
+        "unsupported": list(document.capabilities.unsupported),
+        "stored": stored,
+    }
+
+
 def persist_adapter_import(
     payload: Dict[str, Any],
     model: CanonicalApi,
@@ -1129,6 +1319,7 @@ def _build_summary(
     types_outcome: Optional[Dict[str, Any]] = None,
     scrub_report: Optional[Dict[str, Any]] = None,
     remote_ref_report: Optional[Dict[str, Any]] = None,
+    analysis_report: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Assemble the completed-job summary for an adapter import.
 
@@ -1146,7 +1337,9 @@ def _build_summary(
     stored source was actually redacted or merely reported on, and ``policy_tier`` names the
     resolution tier that decided it. When the source
     carried external ``$ref``\\s (MFI-29.4), a ``remote_refs`` block reports what was inlined
-    and what was not, with the reason for each.
+    and what was not, with the reason for each. An ``analysis`` block (CPDO-1.2) reports the native
+    payload analysis: its status, the analyzer that produced it, how much of the source it covered,
+    and whether it was stored against the revision.
     """
     summary: Dict[str, Any] = {
         "source": adapter.key,
@@ -1187,6 +1380,8 @@ def _build_summary(
         summary["secret_scrub"] = scrub_report
     if remote_ref_report is not None:
         summary["remote_refs"] = remote_ref_report
+    if analysis_report is not None:
+        summary["analysis"] = analysis_report
     return summary
 
 
@@ -1315,6 +1510,38 @@ async def run_adapter_import_job(
         if artifacts is not None:
             artifacts.remote_refs = remote_refs.outcome
     state.event("PARSE_OK", "Parsed source into the format's native representation.")
+
+    # --- analyze (CPDO-1.2) ----------------------------------------------------
+    # After parse, before persistence, while the native AST is still in hand. Normalization is
+    # about to reduce it to the canonical model — for X12 that means one functional group's first
+    # transaction set — so this is the last moment the whole native structure exists. The record is
+    # stored after persistence (below), because it is scoped to the revision persistence creates.
+    analysis = run_import_analysis(
+        adapter,
+        native_ast,
+        intake,
+        remote_refs,
+        profile=profile,
+        source_label=stage_label,
+    )
+    if artifacts is not None:
+        artifacts.analysis = analysis
+    state.event(
+        "PAYLOAD_ANALYZED",
+        f"Native payload analysis is {analysis.status}"
+        + (f" ({analysis.status_reason})" if analysis.status_reason else "")
+        + f"; {analysis.metrics.node_count} node(s) from the {analysis.analyzer.key!r} analyzer.",
+        level="warn" if analysis.status == STATUS_FAILED else "info",
+        context={
+            "status": analysis.status,
+            "status_reason": analysis.status_reason,
+            "analyzer": analysis.analyzer.key,
+            "analyzer_version": analysis.analyzer.version,
+            "node_count": analysis.metrics.node_count,
+            "truncated": analysis.metrics.truncated,
+        },
+    )
+
     await publish(state.snapshot(state="running", percent=_PCT_PARSED))
     if canceled():
         cleanup_intake_tempfile(payload.get("document_path"))
@@ -1439,6 +1666,7 @@ async def run_adapter_import_job(
     # (unlike the best-effort quality capture) since without it the import produced nothing.
     result: Optional[SpecImportJobResult] = None
     types_outcome: Optional[Dict[str, Any]] = None
+    analysis_stored = False
     tenant_id = str(payload.get("tenant_id") or "")
     imports_as_types = routing.target is ImportTarget.TYPES
     if not options.get("dry_run") and not adapter.preview_only:
@@ -1508,6 +1736,40 @@ async def run_adapter_import_job(
                 f"Captured quality score onto revision {result.version_record_id}.",
             )
 
+        # Record the native analysis against the revision it describes (CPDO-1.2). Best-effort by
+        # design: the revision is already committed and the source is already in the catalog, so a
+        # store fault costs an analysis, not an import. It is reported rather than swallowed — an
+        # analysis that silently failed to persist would read back as "this revision was never
+        # analysed", which is a different and untrue fact.
+        try:
+            analysis_id = await asyncio.to_thread(
+                store_import_analysis, payload, result, analysis
+            )
+            analysis_stored = analysis_id is not None
+            if analysis_stored:
+                state.event(
+                    "PAYLOAD_ANALYSIS_STORED",
+                    f"Stored the native payload analysis for revision {result.version_record_id}.",
+                    context={
+                        "analysis_id": analysis_id,
+                        "status": analysis.status,
+                        "analyzer": analysis.analyzer.key,
+                    },
+                )
+        except Exception as exc:  # noqa: BLE001 - never fail a committed import over its analysis
+            logger.warning(
+                "failed to store payload analysis for revision %s job=%s",
+                result.version_record_id,
+                job_id,
+                exc_info=True,
+            )
+            state.event(
+                "PAYLOAD_ANALYSIS_STORE_FAILED",
+                f"The native payload analysis could not be stored: {exc}",
+                level="warn",
+                context={"version_record_id": result.version_record_id},
+            )
+
     # --- finalize -------------------------------------------------------------
     # Report what intake found (IXH-1.4, MFI-29.6). The scrub itself happens inside the
     # persistence hook — this recomputes the report so a dry run surfaces the same
@@ -1557,6 +1819,7 @@ async def run_adapter_import_job(
         types_outcome=types_outcome,
         scrub_report=scrub_report,
         remote_ref_report=remote_refs.outcome.report() if remote_refs is not None else None,
+        analysis_report=analysis_summary_block(analysis, stored=analysis_stored),
     )
     if options.get("dry_run"):
         state.event("DRY_RUN", "Dry run: the normalized model was not persisted.")

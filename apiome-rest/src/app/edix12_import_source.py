@@ -6,10 +6,17 @@ interchanges importable into the catalog (store-raw, MFI-23.7).
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from . import edix12_normalizer  # noqa: F401 — self-registers the normalizer
 from .canonical_model import ApiParadigm, CanonicalApi
+from .edix12_analysis import (
+    EDIX12_ANALYZER_KEY,
+    EDIX12_ANALYZER_VERSION,
+    analyze_edix12,
+    edix12_capabilities,
+    edix12_tool_versions,
+)
 from .edix12_parser import EdiX12Document, EdiX12ParseError, is_edix12, parse_edix12
 from .fileset import IntakeFileset
 from .import_source import (
@@ -20,6 +27,7 @@ from .import_source import (
     ImportSourceError,
     InputKind,
 )
+from .payload_analysis import AnalyzerCapabilities, PayloadAnalysisDocument
 
 __all__ = ["EdiX12ImportSource"]
 
@@ -35,6 +43,8 @@ class EdiX12ImportSource(ImportSource, register=True):
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
     formats = ("edix12", "x12", "edi")
+    analyzer_key = EDIX12_ANALYZER_KEY
+    analyzer_version = EDIX12_ANALYZER_VERSION
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
         text = payload.text
@@ -74,3 +84,36 @@ class EdiX12ImportSource(ImportSource, register=True):
                 "EDI X12 source must be an EdiX12Document (see app.edix12_parser.parse_edix12)"
             )
         return self._normalize_via_registry("edix12", native_ast, include_raw=include_raw)
+
+    def analyzer_tool_versions(self) -> Dict[str, str]:
+        """Return the ``pyx12`` release that read the interchange."""
+        return edix12_tool_versions()
+
+    def analysis_capabilities(self) -> AnalyzerCapabilities:
+        """Return the X12 extractor's capability declaration (CPDO-1.2)."""
+        return edix12_capabilities()
+
+    def analyze(
+        self, native_ast: Any, *, source: Optional[str] = None
+    ) -> PayloadAnalysisDocument:
+        """Describe the interchange natively — every group and transaction set (CPDO-1.2).
+
+        The canonical model normalizes only the *first* functional group's *first* transaction set,
+        so a two-group interchange loses its second group at normalize time. The analysis is what
+        keeps it: :func:`app.edix12_analysis.analyze_edix12` walks the whole envelope.
+
+        Args:
+            native_ast: The parsed :class:`~app.edix12_parser.EdiX12Document`.
+            source: The exact interchange text analysed; defaults to the document's retained raw.
+
+        Returns:
+            The analysis document.
+
+        Raises:
+            ImportSourceError: If ``native_ast`` is not an X12 document.
+        """
+        if not isinstance(native_ast, EdiX12Document):
+            raise ImportSourceError(
+                "EDI X12 analysis needs an EdiX12Document (see app.edix12_parser.parse_edix12)"
+            )
+        return analyze_edix12(native_ast, source=source, source_format=self.key)
