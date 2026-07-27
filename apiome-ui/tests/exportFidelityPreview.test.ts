@@ -9,6 +9,8 @@ import {
   acknowledgementPhraseMatches,
   EXPORT_TYPES_ONLY_ACK_PHRASE,
   kindBadgeClass,
+  kindDescription,
+  kindGlyph,
   kindLabel,
   requiresExportAcknowledgement,
   ringGeometry,
@@ -37,6 +39,23 @@ describe('kindBadgeClass', () => {
   it('styles every kind distinctly', () => {
     const classes = (['drop', 'approx', 'synth', 'ok'] as const).map(kindBadgeClass);
     expect(new Set(classes).size).toBe(4);
+  });
+});
+
+describe('kindGlyph / kindDescription (MFX-41.5)', () => {
+  it('gives every kind its own glyph, so a chip is never colour-only', () => {
+    expect(kindGlyph('drop')).toBe('✕');
+    expect(kindGlyph('approx')).toBe('≈');
+    expect(kindGlyph('synth')).toBe('✚');
+    expect(kindGlyph('ok')).toBe('✓');
+    expect(new Set((['drop', 'approx', 'synth', 'ok'] as const).map(kindGlyph)).size).toBe(4);
+  });
+
+  it('expands the three-letter jargon for screen readers', () => {
+    expect(kindDescription('drop')).toMatch(/dropped/);
+    expect(kindDescription('approx')).toMatch(/approximated/);
+    expect(kindDescription('synth')).toMatch(/synthesized/);
+    expect(kindDescription('ok')).toMatch(/clean/);
   });
 });
 

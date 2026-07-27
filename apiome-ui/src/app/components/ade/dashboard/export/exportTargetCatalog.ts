@@ -14,6 +14,7 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { resolveLucideIcon } from '../importSourceCatalog';
+import { kindGlyph } from './exportFidelityPreview';
 
 /** One-word fidelity badge for a (source, target) pairing (mirrors Python `ExportFidelityTier`). */
 export type ExportFidelityTier = 'lossless' | 'lossy' | 'types-only';
@@ -251,6 +252,11 @@ export interface FidelityChip {
   count: number;
   /** CSS utility classes for the chip (mockup palette: red / amber / violet / green). */
   className: string;
+  /**
+   * The bucket's glyph (`✕ ≈ ✚ ✓`, from {@link kindGlyph}), rendered before the count so the chip
+   * distinguishes itself by shape as well as colour (MFX-41.5 — no colour-only status).
+   */
+  glyph: string;
 }
 
 /**
@@ -265,18 +271,21 @@ export function fidelityChips(fidelity: TargetFidelitySummary): FidelityChip[] {
       label: 'dropped',
       count: fidelity.dropped,
       className: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
+      glyph: kindGlyph('drop'),
     },
     {
       key: 'approximated',
       label: 'approximated',
       count: fidelity.approximated,
       className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+      glyph: kindGlyph('approx'),
     },
     {
       key: 'synthesized',
       label: 'synthesized',
       count: fidelity.synthesized,
       className: 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',
+      glyph: kindGlyph('synth'),
     },
   ];
   const chips = lossChips.filter((chip) => chip.count > 0);
@@ -285,6 +294,7 @@ export function fidelityChips(fidelity: TargetFidelitySummary): FidelityChip[] {
     label: 'clean',
     count: fidelity.preserved,
     className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
+    glyph: kindGlyph('ok'),
   });
   return chips;
 }

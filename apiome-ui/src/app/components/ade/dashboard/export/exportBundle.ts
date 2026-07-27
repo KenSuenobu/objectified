@@ -256,3 +256,62 @@ export function aggregateFolderCounts(
     { errors: 0, warnings: 0 },
   );
 }
+
+/** One rendered row of the bundle tree: a node plus everything ARIA needs to place it. */
+export interface BundleTreeRow {
+  /** The node this row draws. */
+  node: BundleTreeNode;
+  /** Nesting depth, 1-based — the row's `aria-level`. */
+  depth: number;
+  /** Whether the node has children (folders only). */
+  hasChildren: boolean;
+  /** Whether a folder row is expanded; `false` for files (which never expand). */
+  expanded: boolean;
+  /** How many siblings share this row's parent — the row's `aria-setsize`. */
+  setSize: number;
+  /** This row's 1-based position among its siblings — the row's `aria-posinset`. */
+  posInSet: number;
+  /** The parent folder's path, or null at the root — how ArrowLeft finds the parent row. */
+  parentPath: string | null;
+}
+
+/**
+ * Flatten the bundle tree into the visible rows a `role="tree"` renders (MFX-41.5).
+ *
+ * A tree widget needs one flat, ordered row list to run a roving tabindex over: keyboard movement
+ * is "the previous/next *visible* row", which a recursive component cannot express. Collapsed
+ * folders contribute their own row but none of their descendants'. Pure — no React, no DOM — so
+ * the traversal (and the ARIA level/setsize/posinset each row reports) is unit-testable on its own.
+ *
+ * @param nodes The tree's root-level nodes (from {@link buildBundleTree}).
+ * @param collapsed The paths of folders the user has collapsed; everything else reads expanded.
+ * @returns The visible rows, in render order.
+ */
+export function flattenBundleTree(
+  nodes: BundleTreeNode[],
+  collapsed: ReadonlySet<string>,
+): BundleTreeRow[] {
+  const rows: BundleTreeRow[] = [];
+
+  const walk = (siblings: BundleTreeNode[], depth: number, parentPath: string | null) => {
+    siblings.forEach((node, index) => {
+      const hasChildren = node.kind === 'folder' && node.children.length > 0;
+      const expanded = hasChildren && !collapsed.has(node.path);
+      rows.push({
+        node,
+        depth,
+        hasChildren,
+        expanded,
+        setSize: siblings.length,
+        posInSet: index + 1,
+        parentPath,
+      });
+      if (node.kind === 'folder' && expanded) {
+        walk(node.children, depth + 1, node.path);
+      }
+    });
+  };
+
+  walk(nodes, 1, null);
+  return rows;
+}

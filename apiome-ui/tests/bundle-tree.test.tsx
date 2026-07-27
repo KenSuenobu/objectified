@@ -71,8 +71,9 @@ describe('BundleTree (MFX-43.2)', () => {
   it('collapses a folder to hide its files', () => {
     renderTree();
     expect(screen.getByTestId('bundle-tree-file-com/example/User.avsc')).toBeInTheDocument();
-    // Collapse the inner folder.
-    fireEvent.click(screen.getByTestId('bundle-tree-folder-com/example').querySelector('button')!);
+    // Collapse the inner folder. The folder row *is* the tree item (MFX-41.5 — no control nested
+    // inside a `treeitem`), so the row itself is what toggles.
+    fireEvent.click(screen.getByTestId('bundle-tree-folder-com/example'));
     expect(screen.queryByTestId('bundle-tree-file-com/example/User.avsc')).not.toBeInTheDocument();
   });
 });

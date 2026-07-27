@@ -219,6 +219,7 @@ export function ArtifactPreviewCard({
         className="mt-2 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
         editorTestId="export-artifact-editor"
         fallbackTestId="export-artifact-content"
+        documentLabel={artifact.filename}
       />
       <ProblemsPanel
         problems={problems}

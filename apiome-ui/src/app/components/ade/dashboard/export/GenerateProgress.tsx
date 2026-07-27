@@ -82,7 +82,9 @@ export function GenerateProgress({
 
   return (
     <div className="space-y-4" data-testid="generate-progress" data-state={state}>
-      <div className="flex items-center justify-between gap-3">
+      {/* The job runs while focus sits on the Generate button, so its headline state is announced
+          politely rather than only redrawn (MFX-41.5). */}
+      <div role="status" className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
           <FileOutput className="h-4 w-4 text-indigo-500" aria-hidden />
           Generating {targetLabel}
@@ -94,6 +96,7 @@ export function GenerateProgress({
       {inFlight && (
         <div className="flex items-center gap-3" data-testid="generate-progress-bar">
           <Progress.Root
+            aria-label={`Export generation progress for ${targetLabel}`}
             className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
             value={percent}
           >
@@ -123,6 +126,8 @@ export function GenerateProgress({
               <div className="min-w-0">
                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {stage.label}
+                  {/* The icon + tint say "done" / "failed" visually; the word says it to everyone. */}
+                  <span className="sr-only"> — {stageState}</span>
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">{stage.description}</div>
               </div>

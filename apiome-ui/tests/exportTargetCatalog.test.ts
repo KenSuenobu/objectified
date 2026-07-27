@@ -138,6 +138,8 @@ describe('fidelityChips', () => {
       approximated: 2,
       synthesized: 2,
     });
+    // Each chip leads with its kind glyph (MFX-41.5): shape as well as colour.
+    expect(chips.map((chip) => chip.glyph)).toEqual(['✕', '≈', '✚', '✓']);
     expect(chips.map((chip) => `${chip.count} ${chip.label}`)).toEqual([
       '3 dropped',
       '2 approximated',

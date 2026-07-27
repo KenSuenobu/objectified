@@ -18,6 +18,12 @@ import { cn } from '@lib/utils';
  * next/dynamic} with `ssr: false` (Monaco touches `window`), matching the `ExportWizard.tsx`
  * precedent. If the editor chunk cannot load (offline, blocked CDN) the raw text still renders in a
  * `<pre>` fallback, so the artifact is never hidden behind a failed import.
+ *
+ * Accessibility (MFX-41.5): the container is a labelled region and Monaco's own textarea gets the
+ * same name (`<document> — read-only <language> viewer`), so a screen-reader user is told which
+ * document they landed in. Every viewer here is **read-only**, which is also what keeps it out of
+ * keyboard-trap territory: Monaco only binds Tab to indentation on an editable model, so Tab moves
+ * focus out of these editors normally.
  */
 
 /** Offline fallback when the Monaco chunk cannot load — keeps the raw text visible and selectable. */
@@ -109,6 +115,13 @@ export interface ReadOnlyCodeViewerProps {
   /** `data-testid` for the offline `<pre>` fallback. */
   fallbackTestId?: string;
   /**
+   * What this editor holds, e.g. `petstore.proto`. Names both the container region and Monaco's
+   * own textarea ("… — read-only <language> viewer"), so a screen-reader user landing in the
+   * editor is told which document they are in instead of hearing an unlabelled edit box
+   * (MFX-41.5). Defaults to the language when the caller has no filename to give.
+   */
+  documentLabel?: string;
+  /**
    * Monaco's mount callback `(editor, monaco) => void`, for callers that decorate the document —
    * the MFX-43.3 problem markers set squiggles/gutter bars and reveal lines through these handles.
    * Never called when the editor chunk fails and the `<pre>` fallback renders instead.
@@ -132,9 +145,12 @@ export function ReadOnlyCodeViewer({
   className,
   editorTestId = 'read-only-code-editor',
   fallbackTestId,
+  documentLabel,
   onMount,
 }: ReadOnlyCodeViewerProps) {
   const [isDark, setIsDark] = useState(false);
+  // One name for the container region and for Monaco's textarea, so the two never disagree.
+  const ariaLabel = `${documentLabel ?? language} — read-only ${language} viewer`;
 
   useEffect(() => {
     const sync = () => setIsDark(document.documentElement.classList.contains('dark'));
@@ -154,6 +170,8 @@ export function ReadOnlyCodeViewer({
     <div
       data-testid={editorTestId}
       data-language={language}
+      role="group"
+      aria-label={ariaLabel}
       className={cn('relative overflow-hidden', fillsParent && 'h-full min-h-[240px]', className)}
       style={fillsParent ? undefined : { height }}
     >
@@ -164,7 +182,7 @@ export function ReadOnlyCodeViewer({
         theme={isDark ? 'vs-dark' : 'vs'}
         value={value}
         fallbackTestId={fallbackTestId}
-        options={{ ...READ_ONLY_OPTIONS, wordWrap }}
+        options={{ ...READ_ONLY_OPTIONS, wordWrap, ariaLabel }}
         onMount={onMount}
       />
     </div>
