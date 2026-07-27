@@ -85,6 +85,12 @@ from .intake_resource_guard import (
     stage_wall_clock,
 )
 from .intake_streaming import cleanup_intake_tempfile
+from .intake_scrub_policy import (
+    DEFAULT_POLICY as DEFAULT_SCRUB_POLICY,
+    ScrubResolution,
+    load_tenant_scrub_policy,
+    resolve_scrub_mode,
+)
 from .intake_secret_scrub import (
     ScrubFinding,
     ScrubOutcome,
@@ -632,12 +638,19 @@ def _emit_remote_ref_events(state: "_AdapterRunState", outcome: Any) -> None:
         )
 
 
-def scrub_intake_source(intake: _ResolvedIntake) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """Build the persisted source fields with credentials removed (IXH-1.4).
+def scrub_intake_source(
+    intake: _ResolvedIntake,
+    resolution: Optional[ScrubResolution] = None,
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """Build the persisted source fields with credentials removed (IXH-1.4, MFI-29.6).
 
     Intake stores the upload verbatim so it can be converted later (MFI-23.9), which
     means a document carrying a live token would persist that token. Every source
-    is therefore scrubbed first (:mod:`app.intake_secret_scrub`):
+    is therefore scanned first (:mod:`app.intake_secret_scrub`), and what happens to
+    what it finds is the tenant's ``enforce`` / ``warn_only`` decision
+    (:mod:`app.intake_scrub_policy`).
+
+    Under **enforce** (the default):
 
     * **single document** — secret *values* are replaced in place, so the stored
       source stays parseable and structurally identical (values only);
@@ -646,49 +659,77 @@ def scrub_intake_source(intake: _ResolvedIntake) -> Tuple[Dict[str, Any], Dict[s
       rather than persisted. The member list and root still persist, so the catalog
       item is complete; only the re-downloadable source is dropped.
 
+    Under **warn_only** the detection is identical and the report is identical, but the
+    content is persisted exactly as uploaded — no redaction, and no withheld archive.
+    That is the whole point of the mode: it shows a tenant what enforcement would do
+    before it does it. The report says so (``mode``/``applied``), so a reader can never
+    mistake a warn-only summary for a redacted source.
+
     Args:
         intake: The resolved intake (single text document or unpacked fileset).
+        resolution: The resolved tenant scrub mode. Defaults to enforce with entropy
+            detection on, so a caller that has no tenant context still scrubs.
 
     Returns:
         ``(source_fields, scrub_report)`` — the ``format_metadata`` source fields to
         persist, and the report (types and line numbers, never values) recorded on
         the job summary.
     """
+    effective = resolution or resolve_scrub_mode(DEFAULT_SCRUB_POLICY)
+    entropy = effective.entropy_detection
+
     if intake.fileset is not None:
         findings: List[ScrubFinding] = []
+        # A line number alone is ambiguous across an archive, so the report also names the
+        # members that carried something — enough for an operator to find and rotate the
+        # credential, still without quoting it.
+        affected_members: List[str] = []
         for member_path in sorted(intake.fileset.members):
-            outcome = scrub_document_text(intake.fileset.members[member_path])
+            outcome = scrub_document_text(
+                intake.fileset.members[member_path], entropy_detection=entropy
+            )
+            if outcome.scrubbed:
+                affected_members.append(member_path)
             findings.extend(outcome.findings)
         combined = ScrubOutcome(text="", findings=findings)
+        # An archive's blob is only withheld when the policy is actually enforcing;
+        # warn-only keeps the upload whole so the tenant can still re-download it.
+        withhold = combined.scrubbed and effective.enforced
         fields: Dict[str, Any] = {
             "intakeKind": "archive",
             "filesetRoot": intake.fileset.root,
             "filesetMembers": sorted(intake.fileset.members.keys()),
         }
-        if combined.scrubbed:
+        if withhold:
             fields["sourceContent"] = None
             fields["sourceWithheld"] = "secrets-detected"
         else:
             fields["sourceContent"] = base64.standard_b64encode(intake.raw_bytes).decode("ascii")
             fields["sourceEncoding"] = "base64"
         report = combined.report()
-        report["source_withheld"] = combined.scrubbed
+        report["source_withheld"] = withhold
+        report["members"] = affected_members
+        report.update(effective.as_report_fields())
         return fields, report
 
     assert intake.text is not None
-    outcome = scrub_document_text(intake.text)
+    outcome = scrub_document_text(intake.text, entropy_detection=entropy)
     report = outcome.report()
     report["source_withheld"] = False
-    return {"sourceContent": outcome.text, "intakeKind": "file"}, report
+    report.update(effective.as_report_fields())
+    stored_text = outcome.text if effective.enforced else intake.text
+    return {"sourceContent": stored_text, "intakeKind": "file"}, report
 
 
-def _source_content_for_persist(intake: _ResolvedIntake) -> Dict[str, Any]:
+def _source_content_for_persist(
+    intake: _ResolvedIntake, resolution: Optional[ScrubResolution] = None
+) -> Dict[str, Any]:
     """Build format_metadata source fields, credentials scrubbed.
 
     Thin wrapper over :func:`scrub_intake_source` for callers that do not need the
     scrub report.
     """
-    fields, _report = scrub_intake_source(intake)
+    fields, _report = scrub_intake_source(intake, resolution)
     return fields
 
 
@@ -758,6 +799,7 @@ def persist_adapter_import(
     model: CanonicalApi,
     intake: _ResolvedIntake,
     routing: ImportRoutingDecision,
+    scrub_resolution: Optional[ScrubResolution] = None,
 ) -> Optional[SpecImportJobResult]:
     """Persist a non-dry-run adapter import as its routed artifact (canonical→catalog hook, MFI-23.7).
 
@@ -779,6 +821,8 @@ def persist_adapter_import(
         model: The normalized canonical model (its ``format`` / ``paradigm`` label the revision).
         intake: The resolved upload (single file or archive fileset), stored verbatim.
         routing: The Project-vs-Catalog decision; ``routing.publishable`` sets the created row.
+        scrub_resolution: The tenant's resolved secret-scrub mode (MFI-29.6). ``None`` means
+            enforce, so a caller with no tenant policy context still redacts.
 
     Returns:
         The produced identifiers, or ``None`` when there is no tenant to write under.
@@ -836,7 +880,7 @@ def persist_adapter_import(
         "sourceLabel": source_label,
         "inputKind": input_kind or "file",
     }
-    format_metadata.update(_source_content_for_persist(intake))
+    format_metadata.update(_source_content_for_persist(intake, scrub_resolution))
     if input_kind == "url" and source_label:
         format_metadata["sourceUri"] = source_label
     # MFI-29.3: a git-sourced fileset arrives as the same packed archive an upload
@@ -1096,8 +1140,11 @@ def _build_summary(
     non-OpenAPI formats, keeping the original source verbatim). When the JSON Schema
     "as current" branch (MFI-26.8) ran, a ``types_import`` block reports the per-outcome
     registry counts (imported / overwritten / renamed / identical / skipped / errors).
-    When intake redacted credentials (IXH-1.4), a ``secret_scrub`` block reports what
-    was redacted and where — types and line numbers only, never the values. When the source
+    When intake found credentials (IXH-1.4), a ``secret_scrub`` block reports what was
+    found and where — types and line numbers only, never the values — together with the
+    tenant scrub mode that governed it (MFI-29.6): ``mode``/``applied`` say whether the
+    stored source was actually redacted or merely reported on, and ``policy_tier`` names the
+    resolution tier that decided it. When the source
     carried external ``$ref``\\s (MFI-29.4), a ``remote_refs`` block reports what was inlined
     and what was not, with the reason for each.
     """
@@ -1185,6 +1232,16 @@ async def run_adapter_import_job(
     state = _AdapterRunState(job_id)
     if artifacts is not None:
         artifacts.adapter_key = adapter.key
+
+    # Resolve the tenant's secret-scrub mode once, up front (MFI-29.6): the persistence hook
+    # and the finalize report must agree on it, and a mode that changed mid-run would make the
+    # summary describe something other than what was stored. The lookup is a synchronous, quick
+    # DB read that degrades to enforce — this coroutine must not gain a real suspension point
+    # (the engine schedules it fire-and-forget; see the module docstring).
+    scrub_resolution = resolve_scrub_mode(
+        load_tenant_scrub_policy(str(payload.get("tenant_id") or "") or None),
+        format_key=adapter.key,
+    )
 
     async def publish(status: SpecImportJobStatus) -> None:
         if on_snapshot is not None:
@@ -1392,7 +1449,7 @@ async def run_adapter_import_job(
                 )
             else:
                 result = await asyncio.to_thread(
-                    persist_adapter_import, payload, model, intake, routing
+                    persist_adapter_import, payload, model, intake, routing, scrub_resolution
                 )
         except Exception as exc:  # noqa: BLE001 - surface a persistence fault as a failed job
             logger.exception("adapter import persistence failed job=%s", job_id)
@@ -1452,21 +1509,43 @@ async def run_adapter_import_job(
             )
 
     # --- finalize -------------------------------------------------------------
-    # Report what intake redacted (IXH-1.4). The scrub itself happens inside the
+    # Report what intake found (IXH-1.4, MFI-29.6). The scrub itself happens inside the
     # persistence hook — this recomputes the report so a dry run surfaces the same
-    # findings without writing, and so the summary records them either way.
-    _fields, scrub_report = scrub_intake_source(intake)
+    # findings without writing, and so the summary records them either way. The same
+    # resolution drove both, so the report always describes what was actually stored.
+    _fields, scrub_report = scrub_intake_source(intake, scrub_resolution)
     if artifacts is not None:
         artifacts.scrub_report = scrub_report
     if scrub_report.get("scrubbed"):
-        state.event(
-            "SECRETS_REDACTED",
-            f"Redacted {scrub_report['redactions']} credential value(s) from the stored "
-            f"source ({', '.join(scrub_report['secret_types'])})"
-            + ("; the verbatim archive was withheld." if scrub_report.get("source_withheld") else "."),
-            level="warn",
-            context={"secret_types": scrub_report["secret_types"]},
-        )
+        types = ", ".join(scrub_report["secret_types"])
+        if scrub_resolution.enforced:
+            state.event(
+                "SECRETS_REDACTED",
+                f"Redacted {scrub_report['redactions']} credential value(s) from the stored "
+                f"source ({types})"
+                + (
+                    "; the verbatim archive was withheld."
+                    if scrub_report.get("source_withheld")
+                    else "."
+                ),
+                level="warn",
+                context={
+                    "secret_types": scrub_report["secret_types"],
+                    "mode": scrub_resolution.mode,
+                },
+            )
+        else:
+            state.event(
+                "SECRETS_DETECTED",
+                f"Found {scrub_report['redactions']} credential value(s) in the source "
+                f"({types}); the tenant's scrub policy is warn-only, so the content was "
+                "stored unmodified.",
+                level="warn",
+                context={
+                    "secret_types": scrub_report["secret_types"],
+                    "mode": scrub_resolution.mode,
+                },
+            )
     summary = _build_summary(
         adapter=adapter,
         model=model,

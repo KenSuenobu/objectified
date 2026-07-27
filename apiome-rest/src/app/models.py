@@ -1681,8 +1681,9 @@ class ImportPreflightReport(BaseModel):
     policy: ImportPreflightPolicy = Field(description="Policy verdict (advisory until IXH-2.3).")
     secret_scrub: Optional[Dict[str, Any]] = Field(
         None,
-        description="What intake would redact from the stored source (IXH-1.4) — types and line "
-        "numbers only, never values.",
+        description="What intake found in the source (IXH-1.4) — types and line numbers only, "
+        "never values — plus the tenant scrub mode that governs it (MFI-29.6): 'mode' and "
+        "'applied' say whether a commit would redact the stored source or only report on it.",
     )
     error: Optional[SpecImportJobError] = Field(
         None, description="Populated when ok is false: the stable taxonomy code and remediation."
@@ -4282,6 +4283,127 @@ class QualityPolicyVersionListResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     versions: List[QualityPolicyOut] = Field(default_factory=list)
+    count: int = 0
+
+
+class SecretScrubPolicyOut(BaseModel):
+    """The tenant's intake secret-scrub policy in force (MFI-29.6, #4393)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    policy_version_id: Optional[str] = Field(
+        None,
+        serialization_alias="policyVersionId",
+        description="Row id of the applied policy version; null when the tenant has none saved.",
+    )
+    version_number: int = Field(
+        0,
+        serialization_alias="versionNumber",
+        description="Monotonic version number; 0 for the built-in default.",
+    )
+    content_fingerprint: str = Field(
+        "default",
+        serialization_alias="contentFingerprint",
+        description="SHA-256 over the canonicalized policy body ('default' for the default).",
+    )
+    is_default: bool = Field(
+        True,
+        serialization_alias="isDefault",
+        description="True when no tenant policy is saved and the enforce default applies.",
+    )
+    mode: Literal["enforce", "warn_only"] = Field(
+        "enforce",
+        description=(
+            "'enforce' redacts credential values from the source intake persists; 'warn_only' "
+            "reports the same findings and stores the content unmodified."
+        ),
+    )
+    entropy_detection: bool = Field(
+        True,
+        validation_alias=AliasChoices("entropyDetection", "entropy_detection"),
+        serialization_alias="entropyDetection",
+        description=(
+            "Whether the high-entropy heuristic runs alongside the named credential patterns. "
+            "The named patterns always run and cannot be disabled."
+        ),
+    )
+    format_overrides: Dict[str, Any] = Field(
+        default_factory=dict,
+        validation_alias=AliasChoices("formatOverrides", "format_overrides"),
+        serialization_alias="formatOverrides",
+        description=(
+            "Per-adapter-key mode overrides, e.g. {'openapi': {'mode': 'warn_only'}}. "
+            "Resolution is format override → format default → tenant → default."
+        ),
+    )
+    always_enforced_formats: List[str] = Field(
+        default_factory=list,
+        serialization_alias="alwaysEnforcedFormats",
+        description=(
+            "Adapter keys that resolve to 'enforce' regardless of the tenant mode — the "
+            "collection and captured-traffic formats. A per-format override still wins."
+        ),
+    )
+    actor_label: Optional[str] = Field(
+        None,
+        serialization_alias="actorLabel",
+        description="Human-readable actor who saved this version.",
+    )
+    created_at: Optional[datetime] = Field(
+        None,
+        serialization_alias="createdAt",
+        description="When the version was saved; null for the built-in default.",
+    )
+
+
+class SecretScrubPolicyPutRequest(BaseModel):
+    """Replace the tenant's intake secret-scrub policy (MFI-29.6, #4393).
+
+    A PUT always appends a **new version**: policy rows are immutable so a job summary
+    recorded against a version stays reproducible. Omitted fields keep the values the current
+    policy holds.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    mode: Optional[Literal["enforce", "warn_only"]] = Field(
+        None, description="The tenant-tier scrub mode."
+    )
+    entropy_detection: Optional[bool] = Field(
+        None,
+        validation_alias=AliasChoices("entropyDetection", "entropy_detection"),
+        serialization_alias="entropyDetection",
+        description="Whether the high-entropy heuristic runs.",
+    )
+    format_overrides: Optional[Dict[str, Any]] = Field(
+        None,
+        validation_alias=AliasChoices("formatOverrides", "format_overrides"),
+        serialization_alias="formatOverrides",
+        description="Per-adapter-key mode overrides; replaces the map wholesale when given.",
+    )
+
+
+class SecretScrubPolicyFormatOverride(BaseModel):
+    """One per-format entry in a secret-scrub policy's override map (MFI-29.6, #4393).
+
+    Validated on write so a malformed override cannot be stored and then silently ignored at
+    resolution time — a tenant who believes a format is warn-only must not be running enforce,
+    and a tenant who believes a format is enforced must not be running warn-only.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    mode: Literal["enforce", "warn_only"] = Field(
+        description="The mode this format runs under, overriding every other tier."
+    )
+
+
+class SecretScrubPolicyVersionListResponse(BaseModel):
+    """The tenant's saved secret-scrub policy versions, newest first (MFI-29.6, #4393)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    versions: List[SecretScrubPolicyOut] = Field(default_factory=list)
     count: int = 0
 
 
