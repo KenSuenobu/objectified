@@ -15,7 +15,8 @@ client = TestClient(app)
 
 _JWT = {"tenant_id": "t1", "user_id": "u1", "email": "a@b.c"}
 
-NOW = datetime(2026, 7, 14, 12, 0, tzinfo=timezone.utc)
+# Relative to wall clock so the trends window (``days``) always includes these rows.
+NOW = datetime.now(timezone.utc).replace(microsecond=0)
 
 
 @pytest.fixture(autouse=True)

@@ -140,6 +140,9 @@ def classify_conversion(
             return ConversionMode.PASSTHROUGH
         if key in TYPESPEC_NATIVE_FORMATS:
             return ConversionMode.TYPESPEC_NATIVE
+        # First classifiable non-OpenAPI/TypeSpec key wins — do not fall through to a
+        # reconstructed api_format that may look like OpenAPI (e.g. GraphQL → openapi-3.1).
+        return ConversionMode.LOSSY
     return ConversionMode.LOSSY
 
 

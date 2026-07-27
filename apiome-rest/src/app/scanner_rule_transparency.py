@@ -181,6 +181,18 @@ BLOCKING_RULES: Dict[str, BlockingRuleMeta] = {
         fixture_id="catalog/compatibility-breaking",
         docs_page="docs/guide/lint-rules.md",
     ),
+    "llm-tools.duplicate-tool-name": _meta(
+        "llm-tools.duplicate-tool-name",
+        ENGINE_SCHEMA,
+        rationale="Colliding tool names in a function-calling bundle make agent routing ambiguous.",
+        reference=_SCHEMA_REF + "#llm-tools-duplicate-tool-name",
+        remediation="Give each tool a unique `name` within the bundle (rename or drop duplicates).",
+        false_positive_guidance="Cross-dialect wrappers that intentionally alias the same tool "
+        "should still expose a single canonical name to agents.",
+        scan_modes=("lint",),
+        fixture_id="catalog/llm-tools-duplicate-tool-name",
+        docs_page="docs/guide/lint-rules.md",
+    ),
     # --- MCP surface lint ----------------------------------------------------------------------
     "naming.item-name-missing": _meta(
         "naming.item-name-missing",

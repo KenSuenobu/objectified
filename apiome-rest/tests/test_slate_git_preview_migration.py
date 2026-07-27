@@ -1,4 +1,4 @@
-"""Structural guarantees of V191 — the git-triggered preview control plane (APX-3.3, #2458).
+"""Structural guarantees of V197 — the git-triggered preview control plane (APX-3.3, #2458).
 
 The database is where the four acceptance criteria are ultimately enforced, so these tests read
 the migration and pin the constraints and triggers that carry them, the same way the other Slate
@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-MIGRATION = "apiome-db/scripts/V191__slate_git_preview_2458.sql"
+MIGRATION = "apiome-db/scripts/V197__slate_git_preview_2458.sql"
 
 
 @pytest.fixture

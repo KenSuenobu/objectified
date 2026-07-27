@@ -23,6 +23,10 @@ jobs:
   test:
     name: pytest + coverage
     runs-on: self-hosted
+    # Self-hosted runners may export a host DATABASE_URL (e.g. …/objectified) that is not
+    # the apiome CI database. Clear it so live-DB integration tests skip as documented above.
+    env:
+      DATABASE_URL: ""
     defaults:
       run:
         working-directory: apiome-rest

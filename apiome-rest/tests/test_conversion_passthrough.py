@@ -159,6 +159,12 @@ def test_classify_prefers_source_format_over_api_format() -> None:
         classify_conversion(source_format="openapi-3.1", api_format="graphql")
         is ConversionMode.PASSTHROUGH
     )
+    # Provenance wins the other way too: GraphQL intake must not fall through to a
+    # reconstructed openapi-3.1 api.format and incorrectly take the passthrough path.
+    assert (
+        classify_conversion(source_format="graphql", api_format="openapi-3.1")
+        is ConversionMode.LOSSY
+    )
 
 
 def test_classify_falls_back_to_api_format() -> None:

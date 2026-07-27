@@ -9,6 +9,7 @@ fills the documentation gaps the in-spec linter (:mod:`app.schema_lint`) checks:
 * scalar leaf ``example`` values
 * ``maxItems`` on array properties
 * PascalCase renames for a few auto-generated component schema names
+  (curated map plus FastAPI ``app__module__Leaf`` nested-model ids)
 
 Curated overrides cover domain models (primitives, classes, paths, operations); everything
 else gets deterministic, human-readable defaults derived from schema/property names.
@@ -307,12 +308,44 @@ def enrich_openapi_spec(spec: Mapping[str, Any]) -> Dict[str, Any]:
     return enriched
 
 
+def _fastapi_module_schema_rename(name: str) -> Optional[str]:
+    """Turn FastAPI nested-model ids (`app__slate_cache_routes__Foo`) into PascalCase.
+
+    Generated component names use double-underscore module paths that fail
+    ``naming.schema-pascal-case``. Prefer the leaf model name prefixed by a
+    shortened module path so collisions across route modules stay unique.
+    """
+    if not name.startswith("app__"):
+        return None
+    parts = [part for part in name.split("__") if part]
+    if len(parts) < 3:
+        return None
+    module_tokens = parts[1].removesuffix("_routes").split("_")
+    prefix = "".join(
+        token[:1].upper() + token[1:] for token in module_tokens if token
+    )
+    leaf = parts[-1]
+    if not prefix or not leaf:
+        return None
+    candidate = f"{prefix}{leaf}"
+    return candidate if candidate != name else None
+
+
 def _rename_component_schemas(spec: MutableMapping[str, Any]) -> None:
     components = spec.setdefault("components", {})
     schemas = components.get("schemas")
     if not isinstance(schemas, dict):
         return
-    for old_name, new_name in SCHEMA_RENAMES.items():
+    renames = dict(SCHEMA_RENAMES)
+    reserved = set(schemas) | set(renames.values())
+    for name in list(schemas):
+        if name in renames:
+            continue
+        auto = _fastapi_module_schema_rename(name)
+        if auto and auto not in reserved:
+            renames[name] = auto
+            reserved.add(auto)
+    for old_name, new_name in renames.items():
         if old_name not in schemas or old_name == new_name:
             continue
         if new_name not in schemas:

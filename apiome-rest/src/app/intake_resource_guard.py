@@ -527,6 +527,18 @@ def guard_document_text(
     bounds = _bounds(limits)
     guard_document_size(text, source_label=source_label, limits=bounds)
 
+    # Depth is a cheap byte scan; run it before the YAML alias walk so pathological
+    # deep-nesting fixtures fail fast instead of burning the alias-expansion budget.
+    bound = pre_scan_depth_bound(text)
+    if bound > bounds.max_depth * PRE_SCAN_DEPTH_SLACK:
+        raise IntakeLimitError(
+            f"Source document nests too deeply{_where(source_label)}: at least "
+            f"{bound} levels far exceeds limit max_nesting_depth={bounds.max_depth}",
+            code="INPUT_DEPTH_LIMIT",
+            limit_name="max_nesting_depth",
+            limit_value=bounds.max_depth,
+        )
+
     _documents, alias_cost, scan_failed = yaml_alias_expansion_cost(
         text, bounds.max_alias_cost
     )
@@ -537,16 +549,6 @@ def guard_document_text(
             code="INPUT_EXPANSION_LIMIT",
             limit_name="max_alias_cost",
             limit_value=bounds.max_alias_cost,
-        )
-
-    bound = pre_scan_depth_bound(text)
-    if bound > bounds.max_depth * PRE_SCAN_DEPTH_SLACK:
-        raise IntakeLimitError(
-            f"Source document nests too deeply{_where(source_label)}: at least "
-            f"{bound} levels far exceeds limit max_nesting_depth={bounds.max_depth}",
-            code="INPUT_DEPTH_LIMIT",
-            limit_name="max_nesting_depth",
-            limit_value=bounds.max_depth,
         )
 
 
