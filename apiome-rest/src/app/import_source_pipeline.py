@@ -683,6 +683,14 @@ def persist_adapter_import(
     format_metadata.update(_source_content_for_persist(intake))
     if input_kind == "url" and source_label:
         format_metadata["sourceUri"] = source_label
+    # MFI-29.3: a git-sourced fileset arrives as the same packed archive an upload
+    # would, so the intake fields above describe it correctly — provenance only adds
+    # where those bytes came from, and re-labels the intake kind 'git'.
+    git_source = options.get("git_source") if isinstance(options, dict) else None
+    if isinstance(git_source, dict) and git_source.get("repo_url"):
+        from .git_intake import git_provenance_metadata
+
+        format_metadata.update(git_provenance_metadata(git_source))
     db.set_version_source_format(
         version_record_id,
         tenant_id,

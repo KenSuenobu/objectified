@@ -31,6 +31,7 @@ __all__ = [
     "detect_archive_format",
     "is_archive_filename",
     "is_archive_payload",
+    "resolve_fileset_root",
     "unpack_archive",
 ]
 
@@ -445,7 +446,9 @@ def unpack_archive(
             code="INPUT_EXPANSION_LIMIT",
         )
 
-    root, detection, ambiguous = _resolve_root(members, explicit_root=root_path, where=where)
+    root, detection, ambiguous = resolve_fileset_root(
+        members, explicit_root=root_path, where=where
+    )
     return UnpackedArchive(
         members=members,
         root_path=root,
@@ -489,33 +492,57 @@ def _root_candidates(members: Mapping[str, str]) -> List[str]:
     return [path for _, path in scored]
 
 
-def _resolve_root(
+def resolve_fileset_root(
     members: Mapping[str, str],
     *,
     explicit_root: Optional[str],
     where: str,
+    label: str = "Archive",
 ) -> Tuple[str, FormatDetection, Tuple[str, ...]]:
+    """Choose the root document of a fileset and detect its format.
+
+    Shared by archive intake (MFI-29.1) and git intake (MFI-29.3) so a proto tree
+    resolves to the same root whether it arrives as an upload or from a repository.
+    An explicit root is validated and used as-is; otherwise the members are ranked
+    by detection confidence (with a boost for proto entrypoints that define services
+    and import siblings) and the leader wins — unless the top two are different
+    formats within the ambiguity margin, which is reported instead of guessed.
+
+    Args:
+        members: Member text keyed by module-relative path.
+        explicit_root: Caller-chosen root (CLI ``--root`` / UI picker), or ``None``.
+        where: Source-label suffix appended to error messages (already parenthesised).
+        label: Noun naming the input in error messages ("Archive", "Repository
+            selection"), so a git failure does not talk about archives.
+
+    Returns:
+        ``(root_path, detection, ambiguous_runner_ups)``.
+
+    Raises:
+        ArchiveIntakeError: When the explicit root is missing or undetectable, no
+            member has a recognisable format, or the root is genuinely ambiguous.
+    """
     if explicit_root:
         normalised = _validate_member_path(
             explicit_root, max_depth=archive_policy_from_settings().max_depth, label="Root"
         )
         if normalised not in members:
             raise ArchiveIntakeError(
-                f"Archive root {normalised!r} was not found among the unpacked members{where}"
+                f"{label} root {normalised!r} was not found among the resolved members{where}"
             )
         detection = detect_format(
             DetectionInput(text=members[normalised], filename=normalised),
         )
         if not detection.matched:
             raise ArchiveIntakeError(
-                f"Could not detect a supported format for archive root {normalised!r}{where}"
+                f"Could not detect a supported format for {label.lower()} root {normalised!r}{where}"
             )
         return normalised, detection, ()
 
     candidates = _root_candidates(members)
     if not candidates:
         raise ArchiveIntakeError(
-            f"Archive contains no document with a recognisable import format{where}"
+            f"{label} contains no document with a recognisable import format{where}"
         )
     if len(candidates) == 1:
         root = candidates[0]
@@ -533,7 +560,7 @@ def _resolve_root(
         and det_first.detected.format != det_second.detected.format
     ):
         raise ArchiveIntakeError(
-            "Archive root is ambiguous — choose a root document explicitly "
+            f"{label} root is ambiguous — choose a root document explicitly "
             f"(candidates: {', '.join(candidates[:5])}){where}"
         )
     root = candidates[0]

@@ -53,7 +53,30 @@ export interface JsonSchemaHandoffPayload {
   document: Record<string, unknown> | null;
 }
 
-type SourceMethod = 'file' | 'url' | 'paste';
+type SourceMethod = 'file' | 'url' | 'paste' | 'git';
+
+/**
+ * Repository provenance returned by `POST /api/catalog/import/git` (MFI-29.3) and echoed back
+ * verbatim in `options.git_source`, so the created catalog revision records which repository,
+ * ref, and commit it came from.
+ */
+interface GitSourceProvenance {
+  provider: string;
+  repo_url: string;
+  owner?: string | null;
+  repo?: string | null;
+  ref: string;
+  commit_sha: string;
+  path: string;
+  browse_url?: string | null;
+}
+
+/** One repository file the selection matched but did not ingest, with the reason. */
+interface GitSkippedMember {
+  path: string;
+  reason: string;
+}
+
 /**
  * The wizard rail (IXH-2.2). `quality` sits between `options` and `import`: the commit fires from
  * the quality step's confirmation, never from `options`, so nothing reaches the catalog before the
@@ -66,7 +89,7 @@ const STEP_ORDER: readonly Step[] = ['source', 'detect', 'options', 'quality', '
 
 /** Rail labels, index-aligned with {@link STEP_ORDER}. */
 const STEP_LABELS = ['Source', 'Detect & route', 'Options', 'Quality', 'Import'] as const;
-type ImportState = 'idle' | 'detecting' | 'fetching-url' | 'storing' | 'done';
+type ImportState = 'idle' | 'detecting' | 'fetching-url' | 'fetching-git' | 'storing' | 'done';
 type JsonSchemaChoice = 'catalog' | 'types';
 
 interface DetectionCandidate {
@@ -160,6 +183,14 @@ export function CatalogImportDialog({
   const [pasteText, setPasteText] = useState('');
   const [documentBase64, setDocumentBase64] = useState<string | null>(null);
   const [archiveRoot, setArchiveRoot] = useState<string | null>(null);
+  // Git source (MFI-29.3): the repository selection the user typed, and what the server
+  // resolved it to — the packed members and the commit provenance to record on the revision.
+  const [gitRepoUrl, setGitRepoUrl] = useState('');
+  const [gitRef, setGitRef] = useState('');
+  const [gitPath, setGitPath] = useState('');
+  const [gitSource, setGitSource] = useState<GitSourceProvenance | null>(null);
+  const [gitMembers, setGitMembers] = useState<string[]>([]);
+  const [gitSkipped, setGitSkipped] = useState<GitSkippedMember[]>([]);
   const [metadata, setMetadata] = useState<FileMetadataPreview | null>(null);
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [formatOverride, setFormatOverride] = useState<string | null>(null);
@@ -183,8 +214,16 @@ export function CatalogImportDialog({
   // The catalog identity the commit will use, hoisted from `storeCatalog` so the quality
   // step's re-import delta (IXH-3.4) resolves the exact item the commit would reuse.
   const importName = useMemo(
-    () => (metadata?.title || baseName(fileName) || 'Imported source').trim(),
-    [metadata, fileName],
+    () =>
+      (
+        metadata?.title ||
+        // A git selection's filename carries repo/ref/commit for provenance; the catalog item is
+        // named after the repository instead, so re-imports of later commits keep one identity.
+        gitSource?.repo ||
+        baseName(fileName) ||
+        'Imported source'
+      ).trim(),
+    [metadata, gitSource, fileName],
   );
   const importSlug = useMemo(() => generateSlug(importName) || 'imported-source', [importName]);
   const routing = useMemo(() => decideCatalogImportRouting(effectiveFormat), [effectiveFormat]);
@@ -265,12 +304,25 @@ export function CatalogImportDialog({
     setPasteText('');
     setDocumentBase64(null);
     setArchiveRoot(null);
+    setGitRepoUrl('');
+    setGitRef('');
+    setGitPath('');
+    setGitSource(null);
+    setGitMembers([]);
+    setGitSkipped([]);
     setMetadata(null);
     setDetection(null);
     setFormatOverride(null);
     setJsonSchemaChoice('catalog');
     setError(null);
     setIsDragging(false);
+  }, []);
+
+  /** Drop any resolved repository selection — another intake method is taking over. */
+  const clearGitSelection = useCallback(() => {
+    setGitSource(null);
+    setGitMembers([]);
+    setGitSkipped([]);
   }, []);
 
   const handleClose = useCallback(() => {
@@ -283,6 +335,7 @@ export function CatalogImportDialog({
     setError(null);
     setDocumentBase64(null);
     setArchiveRoot(null);
+    clearGitSelection();
     const preview = extractFileMetadata(text);
     setMetadata(preview);
     setContent(text);
@@ -307,7 +360,7 @@ export function CatalogImportDialog({
       setState('idle');
       setStep('detect');
     }
-  }, []);
+  }, [clearGitSelection]);
 
   const detectArchive = useCallback(async (base64: string, label: string) => {
     setState('detecting');
@@ -317,6 +370,7 @@ export function CatalogImportDialog({
     setFileName(label);
     setSourceMethod('file');
     setDocumentBase64(base64);
+    clearGitSelection();
     try {
       const res = await fetch('/api/import/detect', {
         method: 'POST',
@@ -339,7 +393,7 @@ export function CatalogImportDialog({
       setState('idle');
       setStep('detect');
     }
-  }, []);
+  }, [clearGitSelection]);
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -384,6 +438,56 @@ export function CatalogImportDialog({
     }
   }, [detectContent, urlInput]);
 
+  /**
+   * Fetch a repository selection and enter the detect step with it (MFI-29.3).
+   *
+   * The server resolves the ref to a commit, selects the files, and returns them packed as the
+   * same archive payload a `.zip` upload produces — so from here on the wizard treats a git
+   * selection exactly like an archive, with the commit provenance carried alongside.
+   */
+  const handleGitFetch = useCallback(async () => {
+    const repoUrl = gitRepoUrl.trim();
+    if (!repoUrl) {
+      setError('Enter a repository URL to import.');
+      return;
+    }
+    setState('fetching-git');
+    setError(null);
+    try {
+      const res = await fetch('/api/catalog/import/git', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          repo_url: repoUrl,
+          ref: gitRef.trim() || undefined,
+          path: gitPath.trim(),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.success === false) {
+        throw new Error(data?.error || 'Could not read that repository.');
+      }
+      setContent('');
+      setMetadata(null);
+      setSourceMethod('git');
+      setFileName(String(data.filename || 'repository.zip'));
+      setDocumentBase64(String(data.document_base64 || ''));
+      setArchiveRoot(data.archive_root ?? null);
+      setGitSource((data.git_source as GitSourceProvenance) ?? null);
+      setGitMembers(Array.isArray(data.members) ? (data.members as string[]) : []);
+      setGitSkipped(Array.isArray(data.skipped) ? (data.skipped as GitSkippedMember[]) : []);
+      setDetection(data.detection as DetectionResult);
+      setFormatOverride(null);
+      setStep('detect');
+    } catch (e) {
+      setDetection(null);
+      setGitSource(null);
+      setError(e instanceof Error ? e.message : 'Could not read that repository.');
+    } finally {
+      setState('idle');
+    }
+  }, [gitPath, gitRef, gitRepoUrl]);
+
   const handlePasteDetect = useCallback(async () => {
     const text = pasteText.trim();
     if (!text) {
@@ -407,9 +511,16 @@ export function CatalogImportDialog({
       // for the quality step's re-import delta, so the two can never diverge.
       const name = importName;
       const slug = importSlug;
-      const options: Record<string, string> = { input_kind: sourceMethod };
+      // 'git' is a wizard source, not a REST input kind: a repository selection arrives as the
+      // same multi-file payload an archive does, so it commits as `fileset` with provenance.
+      const options: Record<string, unknown> = {
+        input_kind: sourceMethod === 'git' ? 'fileset' : sourceMethod,
+      };
       if (archiveRoot) {
         options.archive_root = archiveRoot;
+      }
+      if (gitSource) {
+        options.git_source = gitSource;
       }
       const startRes = await fetch('/api/catalog/import', {
         method: 'POST',
@@ -483,7 +594,7 @@ export function CatalogImportDialog({
       setState('idle');
       setStep('options');
     }
-  }, [archiveRoot, content, documentBase64, fileName, importName, importSlug, metadata, onSuccess, sourceMethod]);
+  }, [archiveRoot, content, documentBase64, fileName, gitSource, importName, importSlug, metadata, onSuccess, sourceMethod]);
 
   /**
    * Leave the options step (IXH-2.2).
@@ -539,8 +650,9 @@ export function CatalogImportDialog({
         <DialogHeader className="shrink-0">
           <DialogTitle>Import to catalog</DialogTitle>
           <DialogDescription>
-            Start with File Upload, URL Import, or Clipboard paste. Catalog imports are stored in
-            their original format and converted only when explicitly requested.
+            Start with File Upload, URL Import, Clipboard paste, or a Git repository. Catalog
+            imports are stored in their original format and converted only when explicitly
+            requested.
           </DialogDescription>
         </DialogHeader>
 
@@ -677,6 +789,72 @@ export function CatalogImportDialog({
                     </Button>
                   </div>
                 )}
+
+                {/* Git selection (MFI-29.3): a repository path or glob at a ref, read server-side
+                    at an immutable commit and imported as a multi-file selection. */}
+                {sourceMethod === 'git' && (
+                  <div className="space-y-3" data-testid="catalog-import-git-panel">
+                    <div className="space-y-1">
+                      <label
+                        className="text-sm font-medium text-gray-700 dark:text-gray-200"
+                        htmlFor="catalog-import-git-repo"
+                      >
+                        Repository URL
+                      </label>
+                      <input
+                        id="catalog-import-git-repo"
+                        value={gitRepoUrl}
+                        onChange={(e) => setGitRepoUrl(e.target.value)}
+                        placeholder="https://github.com/owner/repo"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
+                      />
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <label
+                          className="text-sm font-medium text-gray-700 dark:text-gray-200"
+                          htmlFor="catalog-import-git-ref"
+                        >
+                          Branch, tag, or commit
+                        </label>
+                        <input
+                          id="catalog-import-git-ref"
+                          value={gitRef}
+                          onChange={(e) => setGitRef(e.target.value)}
+                          placeholder="default branch"
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label
+                          className="text-sm font-medium text-gray-700 dark:text-gray-200"
+                          htmlFor="catalog-import-git-path"
+                        >
+                          Path or glob
+                        </label>
+                        <input
+                          id="catalog-import-git-path"
+                          value={gitPath}
+                          onChange={(e) => setGitPath(e.target.value)}
+                          placeholder="protos/**"
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Private repositories are read with your linked account credentials. Leave the
+                      path empty to consider the whole repository.
+                    </p>
+                    <Button onClick={handleGitFetch} disabled={state === 'fetching-git'}>
+                      {state === 'fetching-git' ? (
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                      ) : (
+                        <GitBranch className="h-4 w-4" aria-hidden />
+                      )}
+                      Fetch and detect
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -752,6 +930,41 @@ export function CatalogImportDialog({
                 {detected?.reason && !formatOverride ? ` · ${detected.reason}` : ''}
               </div>
             </div>
+
+            {/* Git provenance (MFI-29.3): what the selection actually resolved to — the commit
+                the files were read at, the root document, and anything deliberately skipped. */}
+            {gitSource && (
+              <div
+                className="shrink-0 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+                data-testid="catalog-import-git-provenance"
+              >
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <GitBranch className="h-4 w-4 text-indigo-500" aria-hidden />
+                  {gitSource.repo_url}
+                </div>
+                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {gitSource.ref} · commit {gitSource.commit_sha.slice(0, 7)}
+                  {gitSource.path ? ` · ${gitSource.path}` : ''}
+                </div>
+                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {gitMembers.length} file{gitMembers.length === 1 ? '' : 's'} selected · root{' '}
+                  {archiveRoot ?? '—'}
+                  {gitSkipped.length > 0 ? ` · ${gitSkipped.length} skipped` : ''}
+                </div>
+                {gitSkipped.length > 0 && (
+                  <details className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    <summary className="cursor-pointer">Show skipped files</summary>
+                    <ul className="mt-1 space-y-0.5">
+                      {gitSkipped.map((item) => (
+                        <li key={item.path}>
+                          {item.path} — {item.reason}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            )}
 
             {formatChoices.length > 1 && (
               <div className="shrink-0 space-y-2" data-testid="format-override-select">
@@ -837,9 +1050,11 @@ export function CatalogImportDialog({
                   data-testid="catalog-import-preview-empty"
                   className="flex h-full items-center justify-center p-6 text-center text-sm text-gray-500 dark:text-gray-400"
                 >
-                  {documentBase64
-                    ? 'Archive uploads have no single text document to preview. Detection ran over the archive contents.'
-                    : 'No source content to preview.'}
+                  {gitSource
+                    ? 'Repository selections have no single text document to preview. Detection ran over the selected files.'
+                    : documentBase64
+                      ? 'Archive uploads have no single text document to preview. Detection ran over the archive contents.'
+                      : 'No source content to preview.'}
                 </div>
               )}
             </div>
@@ -923,7 +1138,8 @@ export function CatalogImportDialog({
             documentBase64={documentBase64 ?? toBase64(content)}
             label={fileName || 'Imported source'}
             sourceKind={commitSourceKind}
-            inputKind={sourceMethod}
+            inputKind={sourceMethod === 'git' ? 'fileset' : sourceMethod}
+            archiveRoot={archiveRoot}
             url={sourceMethod === 'url' ? fileName : null}
             rawSource={content}
             autoAdvance={skipQualityStep}

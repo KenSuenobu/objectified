@@ -147,6 +147,45 @@ INTAKE_ERROR_TAXONOMY: Dict[str, IntakeErrorDescriptor] = {
             "reference, or an archive entry pointing outside its root). Remove the "
             "construct — inline what it referenced — and try again.",
         ),
+        # --- transport: the upstream source could not be read (MFI-29.3) ---------
+        _d(
+            "SOURCE_NOT_FOUND",
+            IntakeErrorCategory.TRANSPORT,
+            False,
+            "The source repository, ref, or path does not exist (or your account "
+            "cannot see it). Check the repository URL and the branch/tag/commit, "
+            "then try again.",
+        ),
+        _d(
+            "SOURCE_AUTH_REQUIRED",
+            IntakeErrorCategory.TRANSPORT,
+            False,
+            "The source repository is private and no stored credential authorized "
+            "the read. Link an account with access to it (Settings → Linked "
+            "accounts) and import again.",
+        ),
+        _d(
+            "SOURCE_UNREACHABLE",
+            IntakeErrorCategory.TRANSPORT,
+            True,
+            "The source repository could not be reached — the provider may be "
+            "rate-limiting or temporarily unavailable. Wait a moment and retry.",
+        ),
+        _d(
+            "SOURCE_PROVIDER_UNSUPPORTED",
+            IntakeErrorCategory.CAPABILITY,
+            False,
+            "Importing from this hosting provider is not supported yet. Use a "
+            "github.com repository, or upload the files as a .zip/.tar.gz archive.",
+        ),
+        _d(
+            "SOURCE_SELECTION_EMPTY",
+            IntakeErrorCategory.INPUT,
+            False,
+            "No importable files matched the path or glob in the selected repository "
+            "and ref. Widen the pattern (for example 'protos/**') or check that the "
+            "files exist on that ref.",
+        ),
         # --- resource: a limit was exceeded (IXH-1.4; IXH-6.5 extends this set) --
         _d(
             "INPUT_TOO_LARGE",

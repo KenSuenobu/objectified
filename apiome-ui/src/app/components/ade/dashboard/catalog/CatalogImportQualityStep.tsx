@@ -106,9 +106,14 @@ export interface CatalogImportQualityStepProps {
   /** Importer discriminator the commit would use (`graphql`, `json-schema`, …), when known. */
   sourceKind: string | null;
   /** How the document reached the wizard, for parity with the import job's option. */
-  inputKind: 'file' | 'url' | 'paste';
+  inputKind: 'file' | 'url' | 'paste' | 'fileset';
   /** Source URL when the intake kind is `url`. */
   url?: string | null;
+  /**
+   * Root document inside a multi-file payload (an uploaded archive, or a git selection —
+   * MFI-29.1 / MFI-29.3). Forwarded so the pre-flight scores the same root the commit imports.
+   */
+  archiveRoot?: string | null;
   /** Raw source text for the viewer and the finding→line resolution; empty for archives. */
   rawSource: string;
   /**
@@ -270,6 +275,7 @@ export function CatalogImportQualityStep({
   sourceKind,
   inputKind,
   url,
+  archiveRoot,
   rawSource,
   autoAdvance,
   skipPreference,
@@ -312,9 +318,10 @@ export function CatalogImportQualityStep({
       filename: label || undefined,
       url: inputKind === 'url' ? url ?? undefined : undefined,
       input_kind: inputKind,
+      archive_root: archiveRoot ?? undefined,
       import_target: 'catalog',
     }),
-    [documentBase64, inputKind, label, sourceKind, url],
+    [archiveRoot, documentBase64, inputKind, label, sourceKind, url],
   );
 
   /** The current pre-flight run — a fresh identity per candidate and per retry. */

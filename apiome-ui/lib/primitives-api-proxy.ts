@@ -5,6 +5,10 @@
 import { getAuthSession } from '@lib/auth/server-session';
 import { getTenantById } from '@lib/db/helper';
 import { createRestAuthHeaders, REST_API_BASE_URL } from '@lib/rest-auth';
+import { restErrorMessage } from './rest-error-message';
+
+// Re-exported so proxy callers keep one import site for the error-rendering contract.
+export { restErrorMessage };
 
 export interface SessionUser {
   user_id?: string;
@@ -53,12 +57,12 @@ export async function proxyRestGet(
 
   const data = await response.json();
   if (!response.ok) {
-    const detail = typeof data?.detail === 'string' ? data.detail : 'Request failed';
-    return { data: null, error: detail, status: response.status };
+    return { data: null, error: restErrorMessage(data), status: response.status };
   }
 
   return { data, error: null, status: response.status };
 }
+
 
 /**
  * Issue a body-carrying request (POST/PUT) to the REST API and normalize the result.

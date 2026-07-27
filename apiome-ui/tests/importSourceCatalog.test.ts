@@ -288,28 +288,33 @@ describe('filterCardsForVariant (MFI-23.12)', () => {
   });
 });
 
-describe('baseIntakeTiles (MFI-26.1)', () => {
-  it('returns the three base intake tiles in fixed order from the catalog cards', () => {
+describe('baseIntakeTiles (MFI-26.1, MFI-29.3)', () => {
+  it('returns the base intake tiles in fixed order from the catalog cards', () => {
     const cards = filterCardsForVariant(mergeImportSourceCards([ASYNCAPI_DESCRIPTOR]), 'catalog');
     const tiles = baseIntakeTiles(cards);
 
-    // File / URL / Clipboard(paste) only, in fixed order — never a per-format or discovery tile.
-    expect(tiles.map((t) => t.method)).toEqual(['file', 'url', 'paste']);
-    expect(tiles.map((t) => t.card.key)).toEqual(['file', 'url', 'clipboard']);
-    expect(tiles.map((t) => t.card.label)).toEqual(['File Upload', 'URL Import', 'Clipboard Paste']);
+    // File / URL / Clipboard(paste) / Git only, in fixed order — never a per-format or
+    // discovery tile. Git joined the base methods with MFI-29.3 (repo path/glob → fileset).
+    expect(tiles.map((t) => t.method)).toEqual(['file', 'url', 'paste', 'git']);
+    expect(tiles.map((t) => t.card.key)).toEqual(['file', 'url', 'clipboard', 'git']);
+    expect(tiles.map((t) => t.card.label)).toEqual([
+      'File Upload',
+      'URL Import',
+      'Clipboard Paste',
+      'Git Repository',
+    ]);
   });
 
-  it('excludes built-in non-base cards (e.g. Git) and registry-contributed cards', () => {
+  it('excludes registry-contributed cards', () => {
     const cards = mergeImportSourceCards([ASYNCAPI_DESCRIPTOR, GRAPHQL_DESCRIPTOR]);
     const keys = baseIntakeTiles(cards).map((t) => t.card.key);
-    expect(keys).not.toContain('git');
     expect(keys).not.toContain('asyncapi');
     expect(keys).not.toContain('graphql');
   });
 
   it('omits a base tile whose backing card is absent', () => {
     const withoutUrl = baseImportSourceCards().filter((c) => c.key !== 'url');
-    expect(baseIntakeTiles(withoutUrl).map((t) => t.method)).toEqual(['file', 'paste']);
+    expect(baseIntakeTiles(withoutUrl).map((t) => t.method)).toEqual(['file', 'paste', 'git']);
   });
 });
 

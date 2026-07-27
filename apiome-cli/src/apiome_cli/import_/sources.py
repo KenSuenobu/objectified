@@ -85,6 +85,8 @@ def build_adapter_import_body(
     dry_run: bool,
     content_type: str | None = None,
     archive_root: str | None = None,
+    input_kind: str | None = None,
+    git_source: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build the ``SpecImportStartJsonRequest`` body for a generic adapter import.
 
@@ -102,6 +104,11 @@ def build_adapter_import_body(
         source_label: Filename hint for the project name and sniffing (``None`` for stdin).
         dry_run: Validate/preview without persisting.
         content_type: Optional MIME hint forwarded to the importer.
+        archive_root: Root document inside an archive payload (MFI-29.1).
+        input_kind: How the source reached the importer (``file`` / ``url`` /
+            ``paste`` / ``fileset``); recorded on the created revision.
+        git_source: Repository provenance for a git-sourced import (MFI-29.3),
+            echoed verbatim from the git fileset response.
 
     Returns:
         A JSON body for ``POST /v1/tenants/{tenant_slug}/imports``.
@@ -110,6 +117,10 @@ def build_adapter_import_body(
     options: dict[str, Any] = {"dry_run": dry_run}
     if archive_root:
         options["archive_root"] = archive_root
+    if input_kind:
+        options["input_kind"] = input_kind
+    if git_source:
+        options["git_source"] = git_source
     body: dict[str, Any] = {
         "metadata": {
             "source_kind": source_format,

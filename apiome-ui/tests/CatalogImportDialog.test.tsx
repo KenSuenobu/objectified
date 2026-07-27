@@ -62,7 +62,7 @@ describe('CatalogImportDialog — source grid (MFI-26.1)', () => {
     jest.restoreAllMocks();
   });
 
-  it('renders exactly the three base intake tiles from the sources response', async () => {
+  it('renders exactly the base intake tiles from the sources response', async () => {
     const fetchMock = mockFetch();
     global.fetch = fetchMock as unknown as typeof fetch;
 
@@ -73,16 +73,16 @@ describe('CatalogImportDialog — source grid (MFI-26.1)', () => {
       expect(fetchMock).toHaveBeenCalledWith('/api/import/sources', expect.anything()),
     );
 
-    // The three base intake methods render with the labels advertised by the registry cards.
+    // The base intake methods render with the labels advertised by the registry cards. Git
+    // joined them with MFI-29.3 (a repository path/glob is imported as a multi-file selection).
     expect(screen.getByTestId('catalog-import-source-file')).toBeInTheDocument();
     expect(screen.getByTestId('catalog-import-source-url')).toBeInTheDocument();
     expect(screen.getByTestId('catalog-import-source-paste')).toBeInTheDocument();
+    expect(screen.getByTestId('catalog-import-source-git')).toBeInTheDocument();
     expect(screen.getByText('File Upload')).toBeInTheDocument();
     expect(screen.getByText('URL Import')).toBeInTheDocument();
     expect(screen.getByText('Clipboard Paste')).toBeInTheDocument();
-
-    // A built-in non-base source (Git) is present in the merged cards but must NOT get a tile.
-    expect(screen.queryByTestId('catalog-import-source-git')).not.toBeInTheDocument();
+    expect(screen.getByText('Git Repository')).toBeInTheDocument();
 
     // No live-discovery / registry tile leaks in from the response.
     expect(screen.queryByText(/introspection tile/i)).not.toBeInTheDocument();

@@ -377,3 +377,86 @@ def test_non_asyncapi_skips_canonical_persist(monkeypatch) -> None:
 
     assert fake.persisted_canonical is None
     assert fake.created_classes == []
+
+
+# ---------------------------------------------------------------------------
+# Git-sourced provenance (MFI-29.3, #4390)
+# ---------------------------------------------------------------------------
+
+
+def _git_source() -> Dict[str, Any]:
+    return {
+        "provider": "github",
+        "repo_url": "https://github.com/acme/specs",
+        "owner": "acme",
+        "repo": "specs",
+        "ref": "main",
+        "commit_sha": "9f1c0de5b4a37821cc0d4f3a6a5b0e2d1c8a7b60",
+        "path": "protos/**",
+        "browse_url": "https://github.com/acme/specs/tree/9f1c0de5b4a37821cc0d4f3a6a5b0e2d1c8a7b60/protos",
+    }
+
+
+def _fileset_intake(members: Dict[str, str], root: str) -> _ResolvedIntake:
+    """A resolved fileset intake, as a packed git selection produces."""
+    from app.fileset import IntakeFileset
+    from app.git_intake import pack_fileset_zip
+
+    return _ResolvedIntake(
+        raw_bytes=pack_fileset_zip(members),
+        text=None,
+        fileset=IntakeFileset.from_members(members, root=root),
+        archive_root=root,
+    )
+
+
+def test_git_import_records_repo_ref_and_commit_provenance(monkeypatch) -> None:
+    """A git-sourced import is labelled 'git' and carries its commit (MFI-29.3)."""
+    fake = _FakeDb()
+    monkeypatch.setattr("app.database.db", fake)
+    payload = _payload()
+    payload["filename"] = "specs-main-9f1c0de.zip"
+    payload["metadata"]["options"] = {
+        "input_kind": "fileset",
+        "archive_root": "user/user_service.proto",
+        "git_source": _git_source(),
+    }
+    intake = _fileset_intake(
+        {
+            "user/user_service.proto": 'syntax = "proto3";\nservice Users {}\n',
+            "common/types.proto": 'syntax = "proto3";\n',
+        },
+        "user/user_service.proto",
+    )
+
+    result = persist_adapter_import(payload, _model(), intake, _catalog_routing())
+
+    assert result is not None
+    fmd = fake.source_format_call["format_metadata"]
+    # 'git' rather than 'archive': the bytes are a packed selection, not an upload.
+    assert fmd["intakeKind"] == "git"
+    assert fmd["inputKind"] == "fileset"
+    assert fmd["gitRepoUrl"] == "https://github.com/acme/specs"
+    assert fmd["gitRef"] == "main"
+    assert fmd["gitCommit"] == "9f1c0de5b4a37821cc0d4f3a6a5b0e2d1c8a7b60"
+    assert fmd["gitPath"] == "protos/**"
+    assert fmd["sourceUri"].endswith("/protos")
+    # The fileset bookkeeping the archive path records is preserved.
+    assert fmd["filesetRoot"] == "user/user_service.proto"
+    assert fmd["filesetMembers"] == ["common/types.proto", "user/user_service.proto"]
+    assert fmd["sourceEncoding"] == "base64"
+
+
+def test_archive_import_without_git_source_stays_an_archive(monkeypatch) -> None:
+    """No git_source option leaves the MFI-29.1 archive labelling untouched."""
+    fake = _FakeDb()
+    monkeypatch.setattr("app.database.db", fake)
+    payload = _payload()
+    payload["metadata"]["options"] = {"input_kind": "fileset"}
+    intake = _fileset_intake({"a.proto": 'syntax = "proto3";\n'}, "a.proto")
+
+    persist_adapter_import(payload, _model(), intake, _catalog_routing())
+
+    fmd = fake.source_format_call["format_metadata"]
+    assert fmd["intakeKind"] == "archive"
+    assert "gitCommit" not in fmd

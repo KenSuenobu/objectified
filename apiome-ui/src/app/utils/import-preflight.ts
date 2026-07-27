@@ -165,6 +165,8 @@ export interface PreflightRequest {
   url?: string | null;
   input_kind?: 'file' | 'url' | 'paste' | 'discovery' | 'fileset' | null;
   import_target?: 'catalog' | 'types' | 'project' | null;
+  /** Root document inside an archive / git selection payload (MFI-29.1 / MFI-29.3). */
+  archive_root?: string | null;
 }
 
 /** Severities in the order the tally and the ranked list present them. */

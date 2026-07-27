@@ -92,6 +92,17 @@ def tenant_imports_upload(tenant_slug: str) -> str:
     return f"{V1}/tenants/{tenant_slug}/imports/upload"
 
 
+def import_git_fileset(tenant_slug: str) -> str:
+    """Fetch a git repository path/glob at a ref as an importable fileset (MFI-29.3).
+
+    Drives ``apiome import git``: ``POST`` the repository selection and receive the
+    selected files packed as an archive (``document_base64``), the resolved root
+    document, the detected format, and the commit the files were read at — the payload
+    the normal import flow (pre-flight, then ``POST …/imports``) already accepts.
+    """
+    return f"{V1}/tenants/{tenant_slug}/import/git/fileset"
+
+
 def import_preflight(tenant_slug: str) -> str:
     """Score a candidate document before importing it (IXH-2.1).
 
