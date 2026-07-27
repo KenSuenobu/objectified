@@ -573,6 +573,7 @@ def fetch_git_fileset(
     access_token: Optional[str] = None,
     policy: Optional[ArchivePolicy] = None,
     client: Optional[GitRepositoryClient] = None,
+    require_root: bool = True,
 ) -> GitFilesetResult:
     """Fetch a repository selection as a fileset, anchored to an immutable commit.
 
@@ -583,14 +584,19 @@ def fetch_git_fileset(
         policy: Sandbox budget; defaults to the archive policy from settings so a
             repository selection can never cost more than an archive upload.
         client: Repository client to use; defaults to :class:`GitHubApiClient`.
+        require_root: Whether the selection must resolve to one root document.
+            ``False`` returns the members with an empty ``root_path`` and no
+            detection instead of failing — what bulk intake (MFI-29.5) needs, since
+            a selection holding several *independent* specs has no single root by
+            definition and partitions itself downstream.
 
     Returns:
         The selected members, resolved root, detection, and commit provenance.
 
     Raises:
         GitIntakeError: For an unsupported provider, an unreachable/missing
-            repository or ref, an empty selection, a budget breach, or a selection
-            whose root document has no recognisable format.
+            repository or ref, an empty selection, a budget breach, or (when
+            ``require_root``) a selection whose root has no recognisable format.
     """
     owner_repo = parse_github_owner_repo_from_url(selector.repo_url)
     if not owner_repo:
@@ -666,15 +672,23 @@ def fetch_git_fileset(
         members[key] = text
 
     where = f" ({owner}/{repo}@{commit.ref})"
-    try:
-        root, detection, ambiguous = resolve_fileset_root(
-            members,
-            explicit_root=selector.root,
-            where=where,
-            label="Repository selection",
-        )
-    except ArchiveIntakeError as exc:
-        raise GitIntakeError(str(exc), code=getattr(exc, "code", "INPUT_ARCHIVE_INVALID")) from exc
+    root = ""
+    detection = FormatDetection(
+        detected=None, candidates=[], ambiguous=False, ambiguous_candidates=[]
+    )
+    ambiguous: Tuple[str, ...] = ()
+    if require_root:
+        try:
+            root, detection, ambiguous = resolve_fileset_root(
+                members,
+                explicit_root=selector.root,
+                where=where,
+                label="Repository selection",
+            )
+        except ArchiveIntakeError as exc:
+            raise GitIntakeError(
+                str(exc), code=getattr(exc, "code", "INPUT_ARCHIVE_INVALID")
+            ) from exc
 
     provenance = GitProvenance(
         provider=GITHUB_PROVIDER,

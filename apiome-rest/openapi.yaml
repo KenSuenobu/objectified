@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.62.0
+  version: 1.63.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -28705,6 +28705,249 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for fetchagitrepositoryselectionasanimportabresponse422.
+  /v1/tenants/{tenant_slug}/import/bulk/plan:
+    post:
+      tags:
+      - spec-import
+      summary: 'Plan a bulk import: partition an archive or repository into independent
+        items'
+      description: 'Partition one archive upload or repository selection into the
+        **independent** specs it holds (MFI-29.5) and describe each as a candidate
+        import job: root document, the sibling files it compiles, the detected format
+        and adapter, the predicted destination under the §0.2 routing policy, and
+        a suggested catalog name and slug.
+
+
+        Grouping follows references between files — protobuf `import`, JSON/YAML `$ref`,
+        XSD/WSDL `schemaLocation` — so a proto tree with cross-directory imports stays
+        **one** item while two unrelated AsyncAPI documents are two. Files that belong
+        to no importable item are reported in `skipped` with a reason, never dropped
+        silently, and a payload holding more items than the batch ceiling reports
+        `truncated` rather than importing a silent prefix.
+
+
+        Nothing is persisted and no job is created. Item bytes are returned only when
+        `include_documents` is set; the submit endpoint re-plans the same payload
+        itself, so a client that just renders the list does not need them.'
+      operationId: plan_bulk_import_payload_v1_tenants__tenant_slug__import_bulk_plan_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Planabulkimportpartitionanarchiveorreposauthorization schema.
+          - type: 'null'
+            description: Planabulkimportpartitionanarchiveorreposauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Planabulkimportpartitionanarchiveorrepos Xapikey schema.
+          - type: 'null'
+            description: Planabulkimportpartitionanarchiveorrepos Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkImportPlanRequest'
+              description: Request body for planabulkimportpartitionanarchiveorreposrequest.
+        description: 'Request body for plan a bulk import: partition an archive or
+          repository into independent items.'
+      responses:
+        '200':
+          description: 'Successful response for plan a bulk import: partition an archive
+            or repository into independent items.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkImportPlanResponse'
+                description: Response payload for planabulkimportpartitionanarchiveorreposresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for planabulkimportpartitionanarchiveorreposresponse422.
+  /v1/tenants/{tenant_slug}/import/bulk:
+    post:
+      tags:
+      - spec-import
+      summary: Start one import job per independent spec in a bulk payload
+      description: 'Re-plan the payload server-side (identical bytes always yield
+        an identical plan) and start **one ordinary import job per item** (MFI-29.5).
+        Pass `keys` to import a subset of the planned items; omit it to attempt every
+        planned item.
+
+
+        Each item is gated and scheduled independently: an item whose format has no
+        adapter, whose key is not in the plan, or which the tenant''s import quality
+        policy refuses (IXH-2.3) is reported as a **failed row with a taxonomy code**
+        while every other item still starts — a partial failure never aborts the batch.
+        Items that do start run the unchanged import chain, including the §0.2 routing
+        that decides Catalog vs Projects, so nothing about a bulk import differs from
+        importing the same document on its own.
+
+
+        The response is the batch''s per-item start result. The batch itself holds
+        no server state: poll the returned job ids individually or roll them up with
+        `POST …/import/bulk/status`.'
+      operationId: start_bulk_import_v1_tenants__tenant_slug__import_bulk_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Startoneimportjobperindependentspecinabuauthorization schema.
+          - type: 'null'
+            description: Startoneimportjobperindependentspecinabuauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Startoneimportjobperindependentspecinabu Xapikey schema.
+          - type: 'null'
+            description: Startoneimportjobperindependentspecinabu Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkImportStartRequest'
+              description: Request body for startoneimportjobperindependentspecinaburequest.
+        description: Request body for start one import job per independent spec in
+          a bulk payload.
+      responses:
+        '200':
+          description: Successful response for start one import job per independent
+            spec in a bulk payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkImportStartResponse'
+                description: Response payload for startoneimportjobperindependentspecinaburesponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for startoneimportjobperindependentspecinaburesponse422.
+  /v1/tenants/{tenant_slug}/import/bulk/status:
+    post:
+      tags:
+      - spec-import
+      summary: Roll up the jobs of one bulk batch into a per-item result list
+      description: 'Fan out over the `(key, job_id)` pairs a bulk submit returned
+        and report each item''s state, its authoritative routing destination and created
+        item once it completes, and its taxonomy-coded error when it fails — plus
+        the counts a summary line needs and a `done` flag that is true once every
+        item is terminal.
+
+
+        This is a convenience roll-up, not a second source of truth: each row is the
+        same payload `GET …/imports/{job_id}` returns. A job id this tenant does not
+        own is reported as state `not-found` rather than failing the whole call, so
+        one stale id cannot blind a client to the rest of its batch.'
+      operationId: bulk_import_status_v1_tenants__tenant_slug__import_bulk_status_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Rollupthejobsofonebulkbatchintoaperitemrauthorization schema.
+          - type: 'null'
+            description: Rollupthejobsofonebulkbatchintoaperitemrauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Rollupthejobsofonebulkbatchintoaperitemr Xapikey schema.
+          - type: 'null'
+            description: Rollupthejobsofonebulkbatchintoaperitemr Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkImportStatusRequest'
+              description: Request body for rollupthejobsofonebulkbatchintoaperitemrrequest.
+        description: Request body for roll up the jobs of one bulk batch into a per-item
+          result list.
+      responses:
+        '200':
+          description: Successful response for roll up the jobs of one bulk batch
+            into a per-item result list.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkImportStatusResponse'
+                description: Response payload for rollupthejobsofonebulkbatchintoaperitemrresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for rollupthejobsofonebulkbatchintoaperitemrresponse422.
   /v1/tenants/{tenant_slug}/schemas/{schema_ref}/validate:
     post:
       tags:
@@ -42835,6 +43078,675 @@ components:
       type: object
       title: BudgetBody
       description: One spend budget and its alert thresholds.
+    BulkImportGitSelector:
+      properties:
+        repo_url:
+          type: string
+          title: Repo Url
+          description: Repository URL, for example https://github.com/owner/repo.
+          example: https://example.com/resource
+        ref:
+          anyOf:
+          - type: string
+            description: Bulk Import Git Selector schema.
+          - type: 'null'
+            description: Bulk Import Git Selector schema.
+          title: Ref
+          description: Branch, tag, or commit sha. Defaults to the repository's default
+            branch.
+        path:
+          type: string
+          title: Path
+          description: Path or glob selecting the files to consider — a directory
+            ('specs/'), an exact file, or a glob ('**/*.yaml'). Empty selects the
+            whole tree.
+          default: ''
+          example: /resources/{id}
+        repository_id:
+          anyOf:
+          - type: string
+            description: Bulk Import Git Selector schema.
+          - type: 'null'
+            description: Bulk Import Git Selector schema.
+          title: Repository Id
+          description: Registered tenant repository whose stored linked-account credential
+            authorizes the read (private repositories).
+        linked_account_id:
+          anyOf:
+          - type: string
+            description: Bulk Import Git Selector schema.
+          - type: 'null'
+            description: Bulk Import Git Selector schema.
+          title: Linked Account Id
+          description: The acting user's linked account whose stored token authorizes
+            the read, when no registered repository is used.
+      additionalProperties: false
+      type: object
+      required:
+      - repo_url
+      title: BulkImportGitSelector
+      description: A repository selection to plan or import in bulk (MFI-29.3 selection
+        rules).
+    BulkImportPlanItem:
+      properties:
+        key:
+          type: string
+          title: Key
+          description: Stable item identifier (the root document path). Pass it in
+            the submit request's 'keys' to import a subset.
+          example: example
+        root_path:
+          type: string
+          title: Root Path
+          description: Root document of the item, relative to the payload.
+          example: example
+        members:
+          items:
+            type: string
+          type: array
+          title: Members
+          description: Every file the item compiles — the root plus its referenced
+            siblings.
+          maxItems: 1000
+        total_bytes:
+          type: integer
+          title: Total Bytes
+          description: Decoded size of the item's members, in bytes.
+          example: 1
+        source_kind:
+          anyOf:
+          - type: string
+            description: Bulk Import Plan schema.
+          - type: 'null'
+            description: Bulk Import Plan schema.
+          title: Source Kind
+          description: Adapter registry key detected for the root, or null when unimportable.
+        format:
+          anyOf:
+          - type: string
+            description: Bulk Import Plan schema.
+          - type: 'null'
+            description: Bulk Import Plan schema.
+          title: Format
+          description: Detected format key of the root document.
+        confidence:
+          anyOf:
+          - type: number
+            description: Bulk Import Plan schema.
+          - type: 'null'
+            description: Bulk Import Plan schema.
+          title: Confidence
+          description: Detection confidence for the root document (0..1).
+        importable:
+          type: boolean
+          title: Importable
+          description: Whether a registered adapter can import this item today.
+          example: false
+        predicted_target:
+          type: string
+          enum:
+          - project
+          - catalog
+          title: Predicted Target
+          description: Where the item is expected to land per the §0.2 routing policy
+            — predicted from the detected format. The authoritative decision is recorded
+            on the job.
+          example: project
+        input_kind:
+          type: string
+          enum:
+          - file
+          - fileset
+          title: Input Kind
+          description: 'How the item is submitted: verbatim single file, or packed
+            fileset.'
+          example: file
+        suggested_name:
+          type: string
+          title: Suggested Name
+          description: Catalog item name derived from the item.
+          example: Example
+        suggested_slug:
+          type: string
+          title: Suggested Slug
+          description: Catalog slug derived from the suggested name.
+          example: example-resource
+        reason:
+          type: string
+          title: Reason
+          description: Why these files are one item.
+          example: example
+        document_base64:
+          anyOf:
+          - type: string
+            description: Bulk Import Plan schema.
+          - type: 'null'
+            description: Bulk Import Plan schema.
+          title: Document Base64
+          description: The item's import payload, when include_documents was requested.
+      additionalProperties: false
+      type: object
+      required:
+      - key
+      - root_path
+      - total_bytes
+      - importable
+      - predicted_target
+      - input_kind
+      - suggested_name
+      - suggested_slug
+      - reason
+      title: BulkImportPlanItem
+      description: One independent spec found in the payload — a candidate import
+        job.
+    BulkImportPlanRequest:
+      properties:
+        document_base64:
+          anyOf:
+          - type: string
+            description: Request body for bulk import plan.
+          - type: 'null'
+            description: Request body for bulk import plan.
+          title: Document Base64
+          description: Standard base64 of a .zip / .tar.gz / .tgz archive holding
+            the documents to import. Mutually exclusive with 'git'.
+        filename:
+          anyOf:
+          - type: string
+            description: Request body for bulk import plan.
+          - type: 'null'
+            description: Request body for bulk import plan.
+          title: Filename
+          description: Archive filename, used as the source label in messages.
+        git:
+          anyOf:
+          - $ref: '#/components/schemas/BulkImportGitSelector'
+          - type: 'null'
+            description: Request body for bulk import plan.
+          description: Repository selection to read instead of an uploaded archive
+            (MFI-29.3). Mutually exclusive with 'document_base64'.
+        include_documents:
+          type: boolean
+          title: Include Documents
+          description: 'Include each item''s ready-to-import bytes in the response.
+            Off by default: the submit endpoint re-plans the same payload server-side,
+            so a client that only renders the plan never needs them.'
+          default: false
+          example: false
+      additionalProperties: false
+      type: object
+      title: BulkImportPlanRequest
+      description: 'Plan a bulk import: partition the payload and describe each item.'
+    BulkImportPlanResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/BulkImportPlanItem'
+          type: array
+          title: Items
+          description: Items.
+          maxItems: 100
+        skipped:
+          items:
+            $ref: '#/components/schemas/BulkImportSkippedMember'
+          type: array
+          title: Skipped
+          description: Skipped.
+          maxItems: 1000
+        truncated:
+          type: boolean
+          title: Truncated
+          description: True when the payload holds more items than one batch may carry;
+            the extra items are listed in 'skipped' with reason 'over-item-limit'.
+          default: false
+          example: false
+        total_items:
+          type: integer
+          title: Total Items
+          description: Items found before the batch ceiling was applied.
+          example: 1
+        max_items:
+          type: integer
+          title: Max Items
+          description: The batch ceiling in force for this deployment.
+          example: 1
+        source_label:
+          type: string
+          title: Source Label
+          description: Label used for the payload in messages.
+          example: example
+        git_source:
+          anyOf:
+          - $ref: '#/components/schemas/SpecImportGitSource'
+          - type: 'null'
+            description: Response payload for bulk import plan.
+          description: Repository provenance when the payload came from a git selection.
+        summary:
+          $ref: '#/components/schemas/BulkImportPlanSummary'
+          description: Short summary suitable for navigation and reference docs.
+      additionalProperties: false
+      type: object
+      required:
+      - total_items
+      - max_items
+      - source_label
+      - summary
+      title: BulkImportPlanResponse
+      description: The partition of one payload into independent items.
+    BulkImportPlanSummary:
+      properties:
+        items:
+          type: integer
+          title: Items
+          description: Items in this plan.
+          example: 1
+        importable:
+          type: integer
+          title: Importable
+          description: Items a registered adapter can import today.
+          example: 1
+        unimportable:
+          type: integer
+          title: Unimportable
+          description: Items whose format has no adapter.
+          example: 1
+        skipped_files:
+          type: integer
+          title: Skipped Files
+          description: Files that are part of no item.
+          example: 1
+        by_target:
+          additionalProperties:
+            type: integer
+          type: object
+          title: By Target
+          description: Item counts by predicted destination.
+        by_format:
+          additionalProperties:
+            type: integer
+          type: object
+          title: By Format
+          description: Item counts by detected format key.
+      additionalProperties: false
+      type: object
+      required:
+      - items
+      - importable
+      - unimportable
+      - skipped_files
+      title: BulkImportPlanSummary
+      description: Counted roll-up of a plan, for the wizard's and CLI's summary line.
+    BulkImportSkippedMember:
+      properties:
+        path:
+          type: string
+          title: Path
+          description: Module-relative path of the skipped file.
+          example: /resources/{id}
+        reason:
+          type: string
+          title: Reason
+          description: 'Why it is not part of any item: ''no-recognisable-format''
+            (nothing in its group detected as an importable format) or ''over-item-limit''.'
+          example: example
+      additionalProperties: false
+      type: object
+      required:
+      - path
+      - reason
+      title: BulkImportSkippedMember
+      description: A file in the payload that is part of no item, and why.
+    BulkImportStartItem:
+      properties:
+        key:
+          type: string
+          title: Key
+          description: Key.
+          example: example
+        root_path:
+          type: string
+          title: Root Path
+          description: Root Path.
+          example: example
+        source_kind:
+          anyOf:
+          - type: string
+            description: Bulk Import Start schema.
+          - type: 'null'
+            description: Bulk Import Start schema.
+          title: Source Kind
+          description: Source Kind.
+        format:
+          anyOf:
+          - type: string
+            description: Bulk Import Start schema.
+          - type: 'null'
+            description: Bulk Import Start schema.
+          title: Format
+          description: Format.
+        predicted_target:
+          type: string
+          enum:
+          - project
+          - catalog
+          title: Predicted Target
+          default: catalog
+          description: Predicted Target.
+          example: catalog
+        name:
+          type: string
+          title: Name
+          description: Catalog item name the job was started with.
+          example: Pet
+        slug:
+          type: string
+          title: Slug
+          description: Catalog slug the job was started with.
+          example: pet-store
+        state:
+          type: string
+          enum:
+          - accepted
+          - failed
+          title: State
+          description: '''accepted'' when a job was created; ''failed'' when this
+            item never started.'
+          example: accepted
+        job_id:
+          anyOf:
+          - type: string
+            description: Bulk Import Start schema.
+          - type: 'null'
+            description: Bulk Import Start schema.
+          title: Job Id
+          description: The started job's id.
+        status_path:
+          anyOf:
+          - type: string
+            description: Bulk Import Start schema.
+          - type: 'null'
+            description: Bulk Import Start schema.
+          title: Status Path
+          description: Relative URL for GET …/imports/{job_id}.
+        error:
+          anyOf:
+          - $ref: '#/components/schemas/SpecImportJobError'
+          - type: 'null'
+            description: Bulk Import Start schema.
+          description: Why this item did not start (taxonomy-coded).
+      additionalProperties: false
+      type: object
+      required:
+      - key
+      - root_path
+      - name
+      - slug
+      - state
+      title: BulkImportStartItem
+      description: The outcome of *starting* one item — accepted with a job, or failed
+        before one.
+    BulkImportStartRequest:
+      properties:
+        document_base64:
+          anyOf:
+          - type: string
+            description: Request body for bulk import start.
+          - type: 'null'
+            description: Request body for bulk import start.
+          title: Document Base64
+          description: Standard base64 of a .zip / .tar.gz / .tgz archive holding
+            the documents to import. Mutually exclusive with 'git'.
+        filename:
+          anyOf:
+          - type: string
+            description: Request body for bulk import start.
+          - type: 'null'
+            description: Request body for bulk import start.
+          title: Filename
+          description: Archive filename, used as the source label in messages.
+        git:
+          anyOf:
+          - $ref: '#/components/schemas/BulkImportGitSelector'
+          - type: 'null'
+            description: Request body for bulk import start.
+          description: Repository selection to read instead of an uploaded archive
+            (MFI-29.3). Mutually exclusive with 'document_base64'.
+        keys:
+          items:
+            type: string
+          type: array
+          title: Keys
+          description: Item keys to import (from the plan). Empty imports every importable
+            item. A key that is not in the plan is reported as a failed item, not
+            an error.
+          maxItems: 1000
+        dry_run:
+          type: boolean
+          title: Dry Run
+          description: 'Run every item as a dry run: validate and plan without persisting.'
+          default: false
+          example: true
+      additionalProperties: false
+      type: object
+      title: BulkImportStartRequest
+      description: Start one import job per selected item of a bulk payload.
+    BulkImportStartResponse:
+      properties:
+        batch_id:
+          type: string
+          title: Batch Id
+          description: Correlation id for this submission. The batch itself is stateless
+            — poll the per-item job ids (or the bulk status endpoint) for progress.
+          example: batch_01h2xcejqtf3fz5y5j0v8k9m2p
+        items:
+          items:
+            $ref: '#/components/schemas/BulkImportStartItem'
+          type: array
+          title: Items
+          description: Items.
+          maxItems: 100
+        skipped:
+          items:
+            $ref: '#/components/schemas/BulkImportSkippedMember'
+          type: array
+          title: Skipped
+          description: Skipped.
+          maxItems: 1000
+        summary:
+          $ref: '#/components/schemas/BulkImportStartSummary'
+          description: Short summary suitable for navigation and reference docs.
+      additionalProperties: false
+      type: object
+      required:
+      - batch_id
+      - summary
+      title: BulkImportStartResponse
+      description: Per-item start results for one batch. Partial failure is normal,
+        not fatal.
+    BulkImportStartSummary:
+      properties:
+        requested:
+          type: integer
+          title: Requested
+          description: Items the request selected.
+          example: 1
+        accepted:
+          type: integer
+          title: Accepted
+          description: Items that started a job.
+          example: 1
+        failed:
+          type: integer
+          title: Failed
+          description: Items that failed before a job existed.
+          example: 1
+      additionalProperties: false
+      type: object
+      required:
+      - requested
+      - accepted
+      - failed
+      title: BulkImportStartSummary
+      description: Counted roll-up of a submit call.
+    BulkImportStatusItem:
+      properties:
+        key:
+          type: string
+          title: Key
+          description: Key.
+          example: example
+        job_id:
+          type: string
+          title: Job Id
+          description: Job ID.
+          example: job_01h2xcejqtf3fz5y5j0v8k9m2p
+        state:
+          type: string
+          title: State
+          description: Job state, or 'not-found' when the job id is unknown to this
+            tenant.
+          example: example
+        percent:
+          type: integer
+          maximum: 100.0
+          minimum: 0.0
+          title: Percent
+          default: 0
+          description: Percent.
+          example: 100
+        target:
+          anyOf:
+          - type: string
+            description: Bulk Import Status schema.
+          - type: 'null'
+            description: Bulk Import Status schema.
+          title: Target
+          description: Authoritative routing destination recorded by the job (project/catalog/types).
+        project_slug:
+          anyOf:
+          - type: string
+            description: Bulk Import Status schema.
+          - type: 'null'
+            description: Bulk Import Status schema.
+          title: Project Slug
+          description: Slug of the catalog item or project the import created.
+        project_id:
+          anyOf:
+          - type: string
+            description: Bulk Import Status schema.
+          - type: 'null'
+            description: Bulk Import Status schema.
+          title: Project Id
+          description: Id of the created item.
+        error:
+          anyOf:
+          - $ref: '#/components/schemas/SpecImportJobError'
+          - type: 'null'
+            description: Bulk Import Status schema.
+          description: Taxonomy-coded failure, when the job failed.
+      additionalProperties: false
+      type: object
+      required:
+      - key
+      - job_id
+      - state
+      title: BulkImportStatusItem
+      description: The current state of one item's job, flattened for a result list.
+    BulkImportStatusRef:
+      properties:
+        key:
+          type: string
+          title: Key
+          description: The plan item key, echoed back on the result row.
+          example: example
+        job_id:
+          type: string
+          title: Job Id
+          description: Job id returned by the submit call.
+          example: job_01h2xcejqtf3fz5y5j0v8k9m2p
+      additionalProperties: false
+      type: object
+      required:
+      - key
+      - job_id
+      title: BulkImportStatusRef
+      description: 'One item to look up: the key it was planned under and the job
+        it started.'
+    BulkImportStatusRequest:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/BulkImportStatusRef'
+          type: array
+          title: Items
+          description: The (key, job_id) pairs the submit call returned.
+          maxItems: 100
+      additionalProperties: false
+      type: object
+      title: BulkImportStatusRequest
+      description: Roll up the jobs of one batch into a per-item result list.
+    BulkImportStatusResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/BulkImportStatusItem'
+          type: array
+          title: Items
+          description: Items.
+          maxItems: 100
+        summary:
+          $ref: '#/components/schemas/BulkImportStatusSummary'
+          description: Short summary suitable for navigation and reference docs.
+        done:
+          type: boolean
+          title: Done
+          description: True when every item reached a terminal state (or is unknown).
+          example: false
+      additionalProperties: false
+      type: object
+      required:
+      - summary
+      - done
+      title: BulkImportStatusResponse
+      description: 'Batch progress: one row per item plus the counts a summary line
+        needs.'
+    BulkImportStatusSummary:
+      properties:
+        total:
+          type: integer
+          title: Total
+          description: Total.
+          example: 1
+        completed:
+          type: integer
+          title: Completed
+          description: Completed.
+          example: 1
+        failed:
+          type: integer
+          title: Failed
+          description: Failed.
+          example: 1
+        running:
+          type: integer
+          title: Running
+          description: Running.
+          example: 1
+        not_found:
+          type: integer
+          title: Not Found
+          description: Not Found.
+          example: 1
+      additionalProperties: false
+      type: object
+      required:
+      - total
+      - completed
+      - failed
+      - running
+      - not_found
+      title: BulkImportStatusSummary
+      description: Counted roll-up of a batch's jobs.
     CacheKeyEffectBody:
       properties:
         key:

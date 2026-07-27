@@ -323,6 +323,34 @@ last resort applied only when no header matches (mirrors the REST repository
 scanner). Stdin (``-``) has no filename, so pipe Arazzo documents that omit the
 ``arazzo:`` line through ``import arazzo`` explicitly.
 
+### Bulk import a folder of specs
+
+A `specs/` folder usually holds several **unrelated** documents. `--bulk` imports all of
+them in one command: the server auto-detects each one, groups the files that compile
+together (a proto tree with cross-directory imports stays one spec), and starts one
+import per spec.
+
+```bash
+# A directory of independent specs — packed and sent as one payload
+apiome import auto --bulk ./specs
+
+# Or an archive of the same
+apiome import auto --bulk ./specs.zip
+
+# Validate everything without persisting
+apiome import auto --bulk ./specs --dry-run
+
+# Start the imports and return immediately
+apiome import auto --bulk ./specs --no-wait
+```
+
+Each spec is reported as its own row — where it landed (Catalog or Projects), what it
+created, or why it failed. **A failure never aborts the batch:** the specs that can
+import still do, and the exit code reflects the failures (`3` when the tenant's quality
+policy blocked one, `2` for a caller-fault failure such as an unparseable document, `1`
+for transport errors or items still running when the wait gave up). Files that are part
+of no importable spec — READMEs, binaries, dotfiles — are listed, never silently dropped.
+
 ### Import OpenAPI
 
 ```bash

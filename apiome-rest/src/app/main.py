@@ -19,6 +19,7 @@ from .auth_provider_resolved_routes import router as auth_provider_resolved_rout
 from .auth_provider_secret_crypto import validate_auth_config_encryption_keys
 from .browse_export_routes import router as browse_export_router
 from .browse_public_routes import router as browse_public_router
+from .bulk_import_routes import router as bulk_import_router
 from .catalog_routes import router as catalog_router
 from .change_report_routes import router as change_report_router
 from .change_report_template_routes import router as change_report_template_router
@@ -109,7 +110,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.62.0",
+    version="1.63.0",
 )
 
 
@@ -313,6 +314,9 @@ app.include_router(spec_import_router)
 # Git-repository intake (MFI-29.3, #4390): POST /v1/tenants/{tenant}/import/git/fileset —
 # fetches a repo path/glob at a ref as the archive payload the import flow already accepts.
 app.include_router(git_import_router)
+# Bulk import of independent specs (MFI-29.5, #4392): POST /v1/tenants/{tenant}/import/bulk[/plan]
+# — partitions one archive/repository into N independent specs and starts one ordinary job each.
+app.include_router(bulk_import_router)
 # Schema instance validation (IXH-5.1, #5113): POST /v1/tenants/{tenant}/schemas/{ref}/validate
 # — does this payload satisfy this schema? Mounted next to the import surface because the
 # reference grammar addresses the same project/catalog revisions imports create.

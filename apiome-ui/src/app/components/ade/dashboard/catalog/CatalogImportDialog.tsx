@@ -34,6 +34,11 @@ import { monacoLanguageForCatalogFormat } from '../../../../utils/catalog-source
 import { ReadOnlyCodeViewer } from '../export/ReadOnlyCodeViewer';
 import { useCatalogImportAvailability } from './useCatalogImportAvailability';
 import { CatalogImportQualityStep } from './CatalogImportQualityStep';
+import {
+  CatalogBulkImportBanner,
+  CatalogBulkImportPanel,
+  type BulkPlan,
+} from './CatalogBulkImportPanel';
 import { RecentAsyncJobsPanel } from '../asyncJobs/RecentAsyncJobsPanel';
 import {
   persistImportQualityPreferences,
@@ -191,6 +196,12 @@ export function CatalogImportDialog({
   const [gitSource, setGitSource] = useState<GitSourceProvenance | null>(null);
   const [gitMembers, setGitMembers] = useState<string[]>([]);
   const [gitSkipped, setGitSkipped] = useState<GitSkippedMember[]>([]);
+  // Bulk mode (MFI-29.5): the partition of a multi-spec payload, and the request body that
+  // identifies it. Both are null for a payload holding a single spec, which keeps the
+  // single-document wizard exactly as it was.
+  const [bulkPlan, setBulkPlan] = useState<BulkPlan | null>(null);
+  const [bulkSource, setBulkSource] = useState<Record<string, unknown> | null>(null);
+  const [bulkMode, setBulkMode] = useState(false);
   const [metadata, setMetadata] = useState<FileMetadataPreview | null>(null);
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [formatOverride, setFormatOverride] = useState<string | null>(null);
@@ -310,6 +321,9 @@ export function CatalogImportDialog({
     setGitSource(null);
     setGitMembers([]);
     setGitSkipped([]);
+    setBulkPlan(null);
+    setBulkSource(null);
+    setBulkMode(false);
     setMetadata(null);
     setDetection(null);
     setFormatOverride(null);
@@ -325,6 +339,41 @@ export function CatalogImportDialog({
     setGitSkipped([]);
   }, []);
 
+  /** Drop any bulk partition — the payload it described is no longer the one in hand. */
+  const clearBulkPlan = useCallback(() => {
+    setBulkPlan(null);
+    setBulkSource(null);
+    setBulkMode(false);
+  }, []);
+
+  /**
+   * Ask whether a multi-file payload holds several *independent* specs (MFI-29.5).
+   *
+   * Only archives and repository selections can: a single pasted or uploaded document is one
+   * spec by construction. A plan with two or more items unlocks the bulk banner on the detect
+   * step; anything else — one item, or a planning failure — leaves the single-document wizard
+   * untouched, so this can never make a working import worse.
+   */
+  const loadBulkPlan = useCallback(async (source: Record<string, unknown>): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/catalog/import/bulk/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(source),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.success === false) return false;
+      const plan = data as BulkPlan;
+      if (!Array.isArray(plan.items) || plan.items.length < 2) return false;
+      setBulkPlan(plan);
+      setBulkSource(source);
+      return true;
+    } catch {
+      // Bulk mode is an offer, not a requirement: a failed plan simply is not offered.
+      return false;
+    }
+  }, []);
+
   const handleClose = useCallback(() => {
     reset();
     onClose();
@@ -336,6 +385,7 @@ export function CatalogImportDialog({
     setDocumentBase64(null);
     setArchiveRoot(null);
     clearGitSelection();
+    clearBulkPlan();
     const preview = extractFileMetadata(text);
     setMetadata(preview);
     setContent(text);
@@ -360,7 +410,7 @@ export function CatalogImportDialog({
       setState('idle');
       setStep('detect');
     }
-  }, [clearGitSelection]);
+  }, [clearBulkPlan, clearGitSelection]);
 
   const detectArchive = useCallback(async (base64: string, label: string) => {
     setState('detecting');
@@ -371,6 +421,8 @@ export function CatalogImportDialog({
     setSourceMethod('file');
     setDocumentBase64(base64);
     clearGitSelection();
+    clearBulkPlan();
+    let failure: string | null = null;
     try {
       const res = await fetch('/api/import/detect', {
         method: 'POST',
@@ -387,13 +439,19 @@ export function CatalogImportDialog({
       setArchiveRoot(result.archive_root ?? null);
     } catch (e) {
       setDetection(null);
-      setDocumentBase64(null);
-      setError(e instanceof Error ? e.message : 'Could not detect that archive.');
-    } finally {
-      setState('idle');
-      setStep('detect');
+      failure = e instanceof Error ? e.message : 'Could not detect that archive.';
     }
-  }, [clearGitSelection]);
+    // An archive is the one upload that can hold several independent specs (MFI-29.5) — and
+    // that is also why whole-archive detection may have just failed with an ambiguous root.
+    // Planning runs either way, so the answer to "which spec is this?" can be "all of them".
+    const offersBulk = await loadBulkPlan({ document_base64: base64, filename: label });
+    if (failure && !offersBulk) {
+      setDocumentBase64(null);
+      setError(failure);
+    }
+    setState('idle');
+    setStep('detect');
+  }, [clearBulkPlan, clearGitSelection, loadBulkPlan]);
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -453,15 +511,18 @@ export function CatalogImportDialog({
     }
     setState('fetching-git');
     setError(null);
+    clearBulkPlan();
+    const selection = {
+      repo_url: repoUrl,
+      ref: gitRef.trim() || undefined,
+      path: gitPath.trim(),
+    };
+    let failure: string | null = null;
     try {
       const res = await fetch('/api/catalog/import/git', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          repo_url: repoUrl,
-          ref: gitRef.trim() || undefined,
-          path: gitPath.trim(),
-        }),
+        body: JSON.stringify(selection),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data?.success === false) {
@@ -478,15 +539,23 @@ export function CatalogImportDialog({
       setGitSkipped(Array.isArray(data.skipped) ? (data.skipped as GitSkippedMember[]) : []);
       setDetection(data.detection as DetectionResult);
       setFormatOverride(null);
-      setStep('detect');
     } catch (e) {
       setDetection(null);
       setGitSource(null);
-      setError(e instanceof Error ? e.message : 'Could not read that repository.');
-    } finally {
-      setState('idle');
+      failure = e instanceof Error ? e.message : 'Could not read that repository.';
     }
-  }, [gitPath, gitRef, gitRepoUrl]);
+    // A repository path is the most likely place to find several independent specs — and a
+    // selection that holds them has no single root, which is exactly why the fetch above may
+    // have just failed. Plan it either way so bulk mode can answer "import all of them".
+    const offersBulk = await loadBulkPlan({ git: selection });
+    if (failure && !offersBulk) {
+      setError(failure);
+      setState('idle');
+      return;
+    }
+    setState('idle');
+    setStep('detect');
+  }, [clearBulkPlan, gitPath, gitRef, gitRepoUrl, loadBulkPlan]);
 
   const handlePasteDetect = useCallback(async () => {
     const text = pasteText.trim();
@@ -931,6 +1000,20 @@ export function CatalogImportDialog({
               </div>
             </div>
 
+            {/* Bulk mode (MFI-29.5): the payload holds several independent specs, so the single
+                routing decision below does not describe it. Importing them all runs one ordinary
+                import per spec and reports each one separately. */}
+            {bulkPlan && bulkSource && (
+              <CatalogBulkImportBanner
+                plan={bulkPlan}
+                onStart={() => {
+                  setError(null);
+                  setBulkMode(true);
+                  setStep('import');
+                }}
+              />
+            )}
+
             {/* Git provenance (MFI-29.3): what the selection actually resolved to — the commit
                 the files were read at, the root document, and anything deliberately skipped. */}
             {gitSource && (
@@ -1152,7 +1235,18 @@ export function CatalogImportDialog({
           />
         )}
 
-        {step === 'import' && (
+        {step === 'import' && bulkMode && bulkPlan && bulkSource && (
+          <CatalogBulkImportPanel
+            plan={bulkPlan}
+            source={bulkSource}
+            onSuccess={() => {
+              setState('done');
+              onSuccess?.();
+            }}
+          />
+        )}
+
+        {step === 'import' && !bulkMode && (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
             {state === 'done' ? (
               <>

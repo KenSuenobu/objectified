@@ -15,7 +15,7 @@ import tarfile
 import zipfile
 from dataclasses import dataclass
 from pathlib import PurePosixPath
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 
 from .config import settings
 from .format_detection import FormatDetection, detect_format
@@ -33,6 +33,7 @@ __all__ = [
     "is_archive_payload",
     "resolve_fileset_root",
     "unpack_archive",
+    "unpack_archive_members",
 ]
 
 ARCHIVE_SUFFIXES: Tuple[str, ...] = (".zip", ".tar.gz", ".tgz", ".tar")
@@ -401,27 +402,30 @@ def _unpack_tar(
     return members
 
 
-def unpack_archive(
+def unpack_archive_members(
     raw: bytes,
     *,
     source_label: Optional[str] = None,
-    root_path: Optional[str] = None,
     policy: Optional[ArchivePolicy] = None,
-) -> UnpackedArchive:
-    """Unpack a zip/tar archive into validated text members and resolve the root document.
+) -> Dict[str, str]:
+    """Unpack a zip/tar archive into validated text members, without choosing a root.
+
+    Every sandbox rule of :func:`unpack_archive` applies — size, entry count, depth,
+    path safety, compression ratio — but root resolution is left to the caller. Bulk
+    intake (MFI-29.5) needs exactly this: an archive holding several *independent*
+    specs has no single root by definition, and resolving one would fail the payload
+    the feature exists to accept.
 
     Args:
         raw: Raw archive bytes.
         source_label: Optional archive filename for clearer errors.
-        root_path: Explicit module-relative root path (CLI ``--root`` / UI picker).
         policy: Sandbox limits; defaults to :func:`archive_policy_from_settings`.
 
     Returns:
-        :class:`UnpackedArchive` with every member, the chosen root, and format detection.
+        Member text keyed by module-relative path.
 
     Raises:
-        ArchiveIntakeError: Invalid archive, policy violation, ambiguous root without
-            an explicit ``root_path``, or no detectable root candidate.
+        ArchiveIntakeError: Invalid archive or policy violation.
     """
     where = f" ({source_label})" if source_label else ""
     active = policy or archive_policy_from_settings()
@@ -445,6 +449,33 @@ def unpack_archive(
             f"archive_max_compression_ratio={active.max_compression_ratio}{where}",
             code="INPUT_EXPANSION_LIMIT",
         )
+    return members
+
+
+def unpack_archive(
+    raw: bytes,
+    *,
+    source_label: Optional[str] = None,
+    root_path: Optional[str] = None,
+    policy: Optional[ArchivePolicy] = None,
+) -> UnpackedArchive:
+    """Unpack a zip/tar archive into validated text members and resolve the root document.
+
+    Args:
+        raw: Raw archive bytes.
+        source_label: Optional archive filename for clearer errors.
+        root_path: Explicit module-relative root path (CLI ``--root`` / UI picker).
+        policy: Sandbox limits; defaults to :func:`archive_policy_from_settings`.
+
+    Returns:
+        :class:`UnpackedArchive` with every member, the chosen root, and format detection.
+
+    Raises:
+        ArchiveIntakeError: Invalid archive, policy violation, ambiguous root without
+            an explicit ``root_path``, or no detectable root candidate.
+    """
+    where = f" ({source_label})" if source_label else ""
+    members = unpack_archive_members(raw, source_label=source_label, policy=policy)
 
     root, detection, ambiguous = resolve_fileset_root(
         members, explicit_root=root_path, where=where
