@@ -897,6 +897,16 @@ class Settings(BaseSettings):
             "license_plan_hint",
         ),
     )
+    # Bulk import of independent specs (MFI-29.5, #4392). Ceiling on how many separate
+    # import jobs one archive/repository payload may start. A payload holding more
+    # reports the overflow (truncated + skipped rows) instead of importing a prefix.
+    bulk_import_max_items: int = Field(
+        default=50,
+        validation_alias=AliasChoices(
+            "APIOME_BULK_IMPORT_MAX_ITEMS",
+            "bulk_import_max_items",
+        ),
+    )
     # Archive compression-ratio ceiling (uncompressed total / compressed size).
     archive_max_compression_ratio: float = Field(
         default=100.0,

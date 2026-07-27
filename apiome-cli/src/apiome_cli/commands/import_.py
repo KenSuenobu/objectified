@@ -21,6 +21,12 @@ from apiome_cli.cli_context import (
 )
 from apiome_cli.client import api_paths
 from apiome_cli.client.errors import exit_on_api_error
+from apiome_cli.client.bulk_import import (
+    build_bulk_source_body,
+    fetch_bulk_plan,
+    fetch_bulk_status,
+    start_bulk_import,
+)
 from apiome_cli.client.git_import import (
     build_git_fileset_body,
     decode_git_document,
@@ -40,7 +46,15 @@ from apiome_cli.import_.spec_import import (
 from apiome_cli.config import require_api_key
 from apiome_cli.extract.openapi_info import extract_info_metadata
 from apiome_cli.extract.slug import slugify_project_name, slugify_version
-from apiome_cli.exit_codes import EXIT_ERROR, EXIT_USAGE
+from apiome_cli.exit_codes import EXIT_ERROR, EXIT_SUCCESS, EXIT_USAGE
+from apiome_cli.import_.bulk import (
+    bulk_exit_code,
+    emit_bulk_plan,
+    emit_bulk_results,
+    emit_skipped_files,
+    load_bulk_payload,
+    merge_bulk_results,
+)
 from apiome_cli.import_.detect import (
     DocumentKind,
     describe_document_format,
@@ -1377,11 +1391,32 @@ def import_auto(
     ),
     min_grade: str | None = typer.Option(None, "--min-grade", help=MIN_GRADE_HELP),
     fail_on: str | None = typer.Option(None, "--fail-on", help=FAIL_ON_HELP),
+    bulk: bool = typer.Option(
+        False,
+        "--bulk",
+        help=(
+            "Import every independent spec in an archive or directory (MFI-29.5): "
+            "auto-detect each one, group the files that compile together, and start "
+            "one import per spec. PATH must be a .zip/.tar.gz archive or a directory."
+        ),
+    ),
 ) -> None:
     """Detect document format from headers and run the matching import."""
     import_timeout_override = import_timeout
     import_timeout = _resolve_import_timeout(ctx, import_timeout_override)
     no_progress = no_progress_from_context(ctx)
+
+    if bulk:
+        _run_bulk_import(
+            ctx,
+            source=path,
+            dry_run=dry_run,
+            import_timeout=import_timeout,
+            wait=wait,
+            poll_interval=poll_interval,
+            no_progress=no_progress,
+        )
+        return
 
     try:
         document = load_import_document(
@@ -1475,6 +1510,134 @@ def import_auto(
         publish=publish,
         visibility=visibility,
     )
+
+
+# ---------------------------------------------------------------------------
+# Bulk import: ``apiome import auto --bulk <archive|directory>`` (MFI-29.5)
+# ---------------------------------------------------------------------------
+
+
+def _wait_for_bulk_batch(
+    client: RestClient,
+    tenant_slug: str,
+    refs: list[dict[str, str]],
+    *,
+    poll_interval: float,
+    timeout: float,
+) -> dict[str, Any] | None:
+    """Poll a batch until every item is terminal, or the timeout expires.
+
+    Args:
+        client: Authenticated REST client.
+        tenant_slug: The tenant URL slug.
+        refs: ``[{"key": …, "job_id": …}]`` for the started items.
+        poll_interval: Seconds between polls.
+        timeout: Wall-clock budget for the whole batch.
+
+    Returns:
+        The last status payload, or ``None`` when nothing was started.
+    """
+    if not refs:
+        return None
+    deadline = time.monotonic() + timeout
+    status = fetch_bulk_status(client, tenant_slug, refs)
+    while not status.get("done") and time.monotonic() < deadline:
+        time.sleep(poll_interval)
+        status = fetch_bulk_status(client, tenant_slug, refs)
+    return status
+
+
+def _run_bulk_import(
+    ctx: click.Context,
+    *,
+    source: str,
+    dry_run: bool,
+    import_timeout: float,
+    wait: bool,
+    poll_interval: float,
+    no_progress: bool,
+) -> None:
+    """Import every independent spec in an archive or directory (MFI-29.5).
+
+    Three calls, mirroring what the wizard does: plan the payload so the user is told
+    what will be created, start one job per spec, then roll the jobs up into a per-item
+    result list. A spec that cannot start — no adapter, or refused by the tenant's
+    quality policy — is one failed row; the rest of the batch still imports, and the
+    exit code reports the failure rather than hiding it.
+
+    Args:
+        ctx: The Click/Typer context (settings, output mode).
+        source: Path to a ``.zip`` / ``.tar.gz`` archive or a directory of specs.
+        dry_run: Validate and plan each spec without persisting.
+        import_timeout: HTTP timeout, and the wall-clock budget for the wait loop.
+        wait: Poll the started jobs until they finish.
+        poll_interval: Seconds between status polls.
+        no_progress: Suppress progress lines on stderr.
+    """
+    settings = settings_from_context(ctx)
+    require_api_key(settings)
+    json_mode = json_mode_from_context(ctx)
+
+    try:
+        payload = load_bulk_payload(source)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(EXIT_USAGE) from exc
+    except OSError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(EXIT_USAGE) from exc
+
+    emit_skipped_files(payload.skipped, json_mode=json_mode)
+
+    client = RestClient(settings, timeout=import_timeout, verify=not insecure_from_context(ctx))
+    tenant_slug = require_tenant_slug(settings, client)
+    body = build_bulk_source_body(
+        document_bytes=payload.document, filename=payload.filename
+    )
+
+    plan = fetch_bulk_plan(client, tenant_slug, body)
+    if not (plan.get("items") or []):
+        typer.echo(
+            f"No importable specs were found in {source!r}. "
+            "Check the archive contents, or import a single document with "
+            "'apiome import auto <path>'.",
+            err=True,
+        )
+        raise typer.Exit(EXIT_USAGE)
+    if not no_progress and not json_mode:
+        emit_bulk_plan(plan, json_mode=False)
+
+    started = start_bulk_import(client, tenant_slug, {**body, "dry_run": dry_run})
+    refs = [
+        {"key": str(item.get("key", "")), "job_id": str(item.get("job_id"))}
+        for item in started.get("items") or []
+        if isinstance(item, dict) and item.get("state") == "accepted" and item.get("job_id")
+    ]
+
+    status = (
+        _wait_for_bulk_batch(
+            client,
+            tenant_slug,
+            refs,
+            poll_interval=poll_interval,
+            timeout=import_timeout,
+        )
+        if wait
+        else None
+    )
+
+    results = merge_bulk_results(started, status)
+    emit_bulk_results(
+        results,
+        json_mode=json_mode,
+        dry_run=dry_run,
+        skipped=started.get("skipped") or [],
+    )
+    if not wait:
+        return
+    code = bulk_exit_code(results)
+    if code != EXIT_SUCCESS:
+        raise typer.Exit(code)
 
 
 # ---------------------------------------------------------------------------

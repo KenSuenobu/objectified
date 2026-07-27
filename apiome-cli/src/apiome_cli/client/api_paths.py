@@ -103,6 +103,30 @@ def import_git_fileset(tenant_slug: str) -> str:
     return f"{V1}/tenants/{tenant_slug}/import/git/fileset"
 
 
+def import_bulk_plan(tenant_slug: str) -> str:
+    """Partition one archive/repository into the independent specs it holds (MFI-29.5).
+
+    Drives ``apiome import auto --bulk``: ``POST`` the payload and receive one row per
+    independent spec — root document, members, detected adapter, predicted destination,
+    and a suggested catalog identity. Nothing is persisted.
+    """
+    return f"{V1}/tenants/{tenant_slug}/import/bulk/plan"
+
+
+def import_bulk(tenant_slug: str) -> str:
+    """Start one ordinary import job per independent spec in a bulk payload (MFI-29.5).
+
+    The server re-plans the payload and schedules a job per selected item; an item that
+    cannot start is a failed row, never a failed batch.
+    """
+    return f"{V1}/tenants/{tenant_slug}/import/bulk"
+
+
+def import_bulk_status(tenant_slug: str) -> str:
+    """Roll up one batch's jobs into a per-item result list (MFI-29.5)."""
+    return f"{V1}/tenants/{tenant_slug}/import/bulk/status"
+
+
 def import_preflight(tenant_slug: str) -> str:
     """Score a candidate document before importing it (IXH-2.1).
 
