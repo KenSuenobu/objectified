@@ -298,6 +298,7 @@ export function BundleExplorer({
         className="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
         editorTestId="bundle-file-editor"
         fallbackTestId="bundle-file-content"
+        documentLabel={activeFile.path}
       />
       <ProblemsPanel
         problems={activeProblems}

@@ -823,6 +823,22 @@ export function ExportStudio({
     setStep(STEP_ORDER[Math.min(STEP_ORDER.length - 1, stepIndex + 1)]);
   }, [stepIndex]);
 
+  // Stepping is a content swap in place, so a keyboard/screen-reader user gets no signal that the
+  // page changed under a Continue button that never moves (MFX-41.5). Move focus to the step panel
+  // — which is named "Step N of 5: <label>" — whenever the step actually changes, the WAI wizard
+  // pattern. The first render (including a deep link resuming mid-flow) is deliberately skipped:
+  // landing focus should stay at the top of the route.
+  const stepPanelRef = useRef<HTMLDivElement | null>(null);
+  const focusedStepRef = useRef<StudioStep>(step);
+  useEffect(() => {
+    if (focusedStepRef.current === step) return;
+    focusedStepRef.current = step;
+    stepPanelRef.current?.focus();
+  }, [step]);
+  const stepPanelLabel = `Step ${stepIndex + 1} of ${STUDIO_STEPS.length}: ${
+    STUDIO_STEPS[stepIndex]?.label ?? ''
+  }`;
+
   return (
     <main className={dashboardMainClass} data-testid="export-studio">
       <div className={dashboardContentStackClass}>
@@ -849,9 +865,14 @@ export function ExportStudio({
           </p>
         </div>
 
-        {/* The numbered stepper (MFX-41.1) — the ImportDialog/ExportDialog pill pattern, full width. */}
+        {/* The numbered stepper (MFX-41.1) — the ImportDialog/ExportDialog pill pattern, full width.
+            The three states are distinguished by glyph and weight as well as palette (MFX-41.5): a
+            completed step leads with a check and says so to a screen reader, the current step carries
+            `aria-current="step"`, and an upcoming step keeps its number outlined. The steps are
+            status, not controls — navigation is the Back / Continue pair below. */}
         <ol
           data-testid="export-studio-stepper"
+          aria-label="Export steps"
           className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-5"
         >
           {STUDIO_STEPS.map((s, idx) => {
@@ -862,13 +883,27 @@ export function ExportStudio({
                 data-testid={`export-studio-step-${s.key}`}
                 data-state={state}
                 aria-current={state === 'current' ? 'step' : undefined}
-                className={`rounded-full border px-3 py-1.5 text-center ${
+                className={`flex items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-center ${
                   state === 'upcoming'
                     ? 'border-gray-200 text-gray-500 dark:border-gray-700 dark:text-gray-400'
-                    : 'border-indigo-200 bg-indigo-50 font-medium text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-200'
+                    : state === 'done'
+                      ? 'border-emerald-200 bg-emerald-50 font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
+                      : 'border-indigo-500 bg-indigo-50 font-semibold text-indigo-800 ring-2 ring-indigo-200 dark:border-indigo-400 dark:bg-indigo-950/40 dark:text-indigo-100 dark:ring-indigo-900'
                 }`}
               >
-                {idx + 1}. {s.label}
+                {state === 'done' ? (
+                  <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                ) : (
+                  <span aria-hidden>{idx + 1}.</span>
+                )}
+                {s.label}
+                <span className="sr-only">
+                  {state === 'done'
+                    ? ' — completed'
+                    : state === 'current'
+                      ? ` — current step, ${idx + 1} of ${STUDIO_STEPS.length}`
+                      : ' — not started'}
+                </span>
               </li>
             );
           })}
@@ -893,7 +928,14 @@ export function ExportStudio({
           </Alert>
         )}
 
-        <div className={dashboardPanelPaddedClass} data-testid="export-studio-body">
+        <div
+          ref={stepPanelRef}
+          role="group"
+          aria-label={stepPanelLabel}
+          tabIndex={-1}
+          className={`${dashboardPanelPaddedClass} focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400`}
+          data-testid="export-studio-body"
+        >
           {step === 'source' && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">

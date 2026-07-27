@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -81,6 +81,35 @@ const LENSES: { key: VerifyLensKey; label: string }[] = [
   { key: 'lint', label: 'Lint' },
 ];
 
+/** DOM id of a lens tab — the panel points back at it with `aria-labelledby`. */
+function lensTabId(lens: VerifyLensKey): string {
+  return `verify-tab-${lens}`;
+}
+
+/** DOM id of a lens panel — the tab points at it with `aria-controls`. */
+function lensPanelId(lens: VerifyLensKey): string {
+  return `verify-panel-${lens}`;
+}
+
+/**
+ * What a lens badge's number means, spoken (MFX-41.5). A bare digit in a coloured pill is not a
+ * label: "3" beside "Lint" could be anything, so the badge carries this sentence for screen
+ * readers while the pill shows the number.
+ *
+ * @param lens The lens the badge belongs to.
+ * @param count The badge's count.
+ * @returns A phrase naming what was counted.
+ */
+function lensBadgeLabel(lens: VerifyLensKey, count: number): string {
+  const noun =
+    lens === 'fidelity'
+      ? `construct${count === 1 ? '' : 's'} affected`
+      : lens === 'validation'
+        ? `validation problem${count === 1 ? '' : 's'}`
+        : `lint finding${count === 1 ? '' : 's'}`;
+  return `${count} ${noun}`;
+}
+
 /**
  * VerifyWorkbench — the Studio's Verify step orchestration UI (MFX-42.1, #4354).
  *
@@ -129,6 +158,38 @@ export function VerifyWorkbench({
     setActiveLens(defaultLensFor(verdict));
   }
 
+  // Roving tabindex: the strip holds one Tab stop and the arrow keys move the selection, so a
+  // keyboard user reaches the lenses in one Tab and cycles them without tabbing through each
+  // (MFX-41.5 / WAI-ARIA tabs). Selecting also moves DOM focus, which is what makes the pattern
+  // announce the newly selected lens.
+  const tabRefs = useRef<Partial<Record<VerifyLensKey, HTMLButtonElement | null>>>({});
+  const handleTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const current = LENSES.findIndex((lens) => lens.key === activeLens);
+    let next: number;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        next = (current + 1) % LENSES.length;
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        next = (current - 1 + LENSES.length) % LENSES.length;
+        break;
+      case 'Home':
+        next = 0;
+        break;
+      case 'End':
+        next = LENSES.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    const key = LENSES[next].key;
+    setActiveLens(key);
+    tabRefs.current[key]?.focus();
+  };
+
   // Before the first run (and not mid-run): the explicit call to action.
   if (!hasRun && !running) {
     return (
@@ -154,18 +215,23 @@ export function VerifyWorkbench({
     return (
       <div className="space-y-4" data-testid="verify-workbench">
         <VerifyIntro targetLabel={targetLabel} />
-        <ul className="space-y-2" data-testid="verify-progress">
-          {LENSES.map((lens) => (
-            <li
-              key={lens.key}
-              data-testid={`verify-progress-${lens.key}`}
-              className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300"
-            >
-              <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
-              Checking {lens.label.toLowerCase()}…
-            </li>
-          ))}
-        </ul>
+        {/* Announced politely: a run started by keyboard leaves focus on the button, so the only
+            signal that anything is happening would otherwise be a spinner (MFX-41.5). The live
+            region wraps the list rather than replacing its role, so the rows stay list items. */}
+        <div role="status" data-testid="verify-progress-region">
+          <ul className="space-y-2" data-testid="verify-progress">
+            {LENSES.map((lens) => (
+              <li
+                key={lens.key}
+                data-testid={`verify-progress-${lens.key}`}
+                className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300"
+              >
+                <Loader2 className="h-4 w-4 animate-spin text-indigo-500" aria-hidden />
+                Checking {lens.label.toLowerCase()}…
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     );
   }
@@ -189,11 +255,15 @@ export function VerifyWorkbench({
     <div className="space-y-4" data-testid="verify-workbench">
       <VerdictBanner verdict={verdict} />
 
-      {/* Desktop: tabs-with-badges + the active lens panel. */}
+      {/* Desktop: tabs-with-badges + the active lens panel. Full WAI-ARIA tabs (MFX-41.5): the
+          strip is one Tab stop (roving `tabindex`), ←/→/Home/End move between lenses, each tab
+          owns its panel by id, and the panel is focusable so Tab from the strip lands in the
+          content rather than skipping past it. */}
       <div className="hidden sm:block" data-testid="verify-lens-tabs">
         <div
           role="tablist"
           aria-label="Verification lenses"
+          onKeyDown={handleTabKeyDown}
           className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700"
         >
           {LENSES.map((lens) => {
@@ -201,9 +271,15 @@ export function VerifyWorkbench({
             return (
               <button
                 key={lens.key}
+                id={lensTabId(lens.key)}
+                ref={(node) => {
+                  tabRefs.current[lens.key] = node;
+                }}
                 role="tab"
                 type="button"
                 aria-selected={selected}
+                aria-controls={lensPanelId(lens.key)}
+                tabIndex={selected ? 0 : -1}
                 data-testid={`verify-tab-${lens.key}`}
                 onClick={() => setActiveLens(lens.key)}
                 className={`-mb-px flex items-center gap-2 border-b-2 px-3 py-2 text-sm font-medium ${
@@ -218,7 +294,14 @@ export function VerifyWorkbench({
             );
           })}
         </div>
-        <div role="tabpanel" data-testid={`verify-panel-${activeLens}`} className="pt-4">
+        <div
+          role="tabpanel"
+          id={lensPanelId(activeLens)}
+          aria-labelledby={lensTabId(activeLens)}
+          tabIndex={0}
+          data-testid={`verify-panel-${activeLens}`}
+          className="pt-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+        >
           <LensBody
             lens={activeLens}
             result={result}
@@ -307,6 +390,9 @@ export function VerdictBanner({ verdict }: { verdict: ExportVerifyVerdict }) {
           : CheckCircle2;
   return (
     <div
+      // The go/no-go is the whole point of the step and it appears without the user moving focus,
+      // so it announces politely when a run settles (MFX-41.5). Tone is icon + words + palette.
+      role="status"
       data-testid="verify-verdict"
       data-verdict={verdict}
       className={`flex items-start gap-3 rounded-lg border p-4 ${verifyVerdictBannerClass(banner.tone)}`}
@@ -329,7 +415,8 @@ function LensBadge({ lens, result }: { lens: VerifyLensKey; result: ExportVerify
       data-testid={`verify-badge-${lens}`}
       className={`inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 py-0.5 text-[0.65rem] font-semibold tabular-nums ${tone}`}
     >
-      {count}
+      <span aria-hidden>{count}</span>
+      <span className="sr-only">{lensBadgeLabel(lens, count)}</span>
     </span>
   );
 }

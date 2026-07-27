@@ -13,6 +13,8 @@ import {
   acknowledgementPhraseMatches,
   EXPORT_TYPES_ONLY_ACK_PHRASE,
   kindBadgeClass,
+  kindDescription,
+  kindGlyph,
   kindLabel,
   requiresExportAcknowledgement,
   ringGeometry,
@@ -199,8 +201,11 @@ export function FidelityWarningPanel({
             {fidelityChips(fidelity).map((chip) => (
               <span
                 key={chip.key}
-                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${chip.className}`}
+                data-testid={`export-fidelity-chip-${chip.key}`}
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${chip.className}`}
               >
+                {/* Glyph first, count and word after: shape + text + colour, never colour alone. */}
+                <span aria-hidden>{chip.glyph}</span>
                 {chip.count} {chip.label}
               </span>
             ))}
@@ -351,14 +356,22 @@ function TypedAcknowledgement({
  * One row of the per-construct report: the kind badge (DROP/APPROX/SYNTH/OK), the source
  * construct path, the explanation of what happens to it, and — when the construct is not
  * dropped — how it lands in the target. Warn/critical rows carry a severity pill.
+ *
+ * The kind badge carries three channels (MFX-41.5): a glyph (`✕ ≈ ✚ ✓`), the kind word, and the
+ * palette — so it stays readable in greyscale and to a user who cannot separate red from amber.
+ * The badge's screen-reader text expands the three-letter jargon ("dropped — not representable in
+ * the target") so the meaning does not depend on having read a legend.
  */
 function FidelityReportRow({ item }: { item: LossItem }) {
   return (
     <li className="flex items-start gap-3 p-2.5 text-sm">
       <span
-        className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${kindBadgeClass(item.kind)}`}
+        data-testid={`export-fidelity-kind-${item.kind}`}
+        className={`mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${kindBadgeClass(item.kind)}`}
       >
-        {kindLabel(item.kind)}
+        <span aria-hidden>{kindGlyph(item.kind)}</span>
+        <span aria-hidden>{kindLabel(item.kind)}</span>
+        <span className="sr-only">{kindDescription(item.kind)}</span>
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-2">

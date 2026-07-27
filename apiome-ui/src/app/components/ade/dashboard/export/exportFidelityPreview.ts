@@ -132,6 +132,55 @@ export function kindLabel(kind: LossinessKind): string {
 }
 
 /**
+ * The glyph that rides in front of a loss-kind chip's label (MFX-41.5).
+ *
+ * The kind palette (drop → red, approx → amber, synth → violet, ok → green) is the *third* channel
+ * a chip uses, never the only one: the chip states its kind in words and leads with this glyph, so
+ * the four kinds stay distinguishable in greyscale, at small sizes, and to a user who cannot
+ * separate red from amber. The glyphs are plain text (`✕ ≈ ✚ ✓`) rather than icon components so
+ * the same mapping serves chips, count pills, and any plain-text rendering of the report.
+ *
+ * @param kind The loss kind.
+ * @returns A single-character glyph for that kind.
+ */
+export function kindGlyph(kind: LossinessKind): string {
+  switch (kind) {
+    case 'drop':
+      return '✕';
+    case 'approx':
+      return '≈';
+    case 'synth':
+      return '✚';
+    case 'ok':
+    default:
+      return '✓';
+  }
+}
+
+/**
+ * A screen-reader sentence for a loss kind — what the chip's three-letter label means (MFX-41.5).
+ *
+ * `DROP` alone is jargon that reads as an unexplained shout in a screen reader; the report row
+ * names the kind with this phrase so the meaning does not depend on having read the legend.
+ *
+ * @param kind The loss kind.
+ * @returns A short phrase describing what happened to the construct.
+ */
+export function kindDescription(kind: LossinessKind): string {
+  switch (kind) {
+    case 'drop':
+      return 'dropped — not representable in the target';
+    case 'approx':
+      return 'approximated — represented imperfectly';
+    case 'synth':
+      return 'synthesized — invented to satisfy the target';
+    case 'ok':
+    default:
+      return 'clean — carried over unchanged';
+  }
+}
+
+/**
  * CSS utility classes for a report row's kind badge. The palette matches the count chips
  * (`fidelityChips`): drop → red, approx → amber, synth → violet, ok → green.
  */

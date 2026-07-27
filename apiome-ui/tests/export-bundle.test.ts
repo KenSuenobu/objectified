@@ -12,6 +12,7 @@ import {
   buildBundleTree,
   bundleFileName,
   countFindingsByFile,
+  flattenBundleTree,
   isMultiFileBundle,
   normalizeBundlePath,
   type BundleTreeFolderNode,
@@ -152,5 +153,39 @@ describe('readZip (round-trips buildZip)', () => {
 
   it('rejects a body that is not a zip', async () => {
     await expect(readZip(new Uint8Array([0x7b, 0x7d]))).rejects.toThrow(/ZIP/i);
+  });
+});
+
+describe('flattenBundleTree (MFX-41.5)', () => {
+  const nodes = buildBundleTree(
+    buildBundleManifest([
+      { path: 'petstore.proto', text: 'syntax = "proto3";' },
+      { path: 'com/example/User.avsc', text: '{}' },
+      { path: 'com/example/Order.avsc', text: '{}' },
+    ]).files,
+  );
+
+  it('lists every visible row in render order with its ARIA coordinates', () => {
+    const rows = flattenBundleTree(nodes, new Set());
+    expect(rows.map((row) => row.node.path)).toEqual([
+      'com',
+      'com/example',
+      'com/example/Order.avsc',
+      'com/example/User.avsc',
+      'petstore.proto',
+    ]);
+    // Folders sort first, so the root set is [com, petstore.proto].
+    expect(rows[0]).toMatchObject({ depth: 1, setSize: 2, posInSet: 1, hasChildren: true, expanded: true, parentPath: null });
+    expect(rows[2]).toMatchObject({ depth: 3, setSize: 2, posInSet: 1, hasChildren: false, parentPath: 'com/example' });
+  });
+
+  it('omits the descendants of a collapsed folder but keeps the folder itself', () => {
+    const rows = flattenBundleTree(nodes, new Set(['com/example']));
+    expect(rows.map((row) => row.node.path)).toEqual(['com', 'com/example', 'petstore.proto']);
+    expect(rows[1]).toMatchObject({ hasChildren: true, expanded: false });
+  });
+
+  it('reports a childless tree as no rows', () => {
+    expect(flattenBundleTree([], new Set())).toEqual([]);
   });
 });

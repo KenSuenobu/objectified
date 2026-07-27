@@ -108,7 +108,11 @@ export function ExportTargetGrid({
         </div>
       )}
 
-      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
+      <div
+        role="group"
+        aria-label="Export target formats"
+        className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4"
+      >
         {ordered.map((card) => {
           const Icon = card.icon;
           const isSelected = card.key === selectedKey;
@@ -120,6 +124,9 @@ export function ExportTargetGrid({
               type="button"
               data-testid={`export-target-${card.key}`}
               data-band={target?.band}
+              // Selection is a toggle state, not just an indigo fill (MFX-41.5): a screen reader
+              // must be able to tell which target is chosen without seeing the highlight.
+              aria-pressed={isSelected}
               onClick={() => onSelect(card)}
               disabled={!selectable}
               title={cardTitle(card, target)}
