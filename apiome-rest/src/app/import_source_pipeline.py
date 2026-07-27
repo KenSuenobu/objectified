@@ -64,7 +64,9 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
 from .archive_intake import ArchiveIntakeError, is_archive_payload, unpack_archive
 from .canonical_model import CanonicalApi
+from .config import settings
 from .fileset import IntakeFileset
+from .import_ingestion import IngestionError, parse_document
 from .import_routing import ImportRoutingDecision, ImportTarget, decide_import_routing
 from .import_source import (
     DetectionInput,
@@ -128,6 +130,9 @@ ADAPTER_PHASE_EVENT_CODES = frozenset(
         "LINT_COMPLETED",
         "QUALITY_CAPTURED",
         "SECRETS_REDACTED",
+        "REMOTE_REFS_RESOLVED",
+        "REMOTE_REFS_UNRESOLVED",
+        "REMOTE_REFS_BLOCKED",
         "IMPORT_COMPLETED",
     }
 )
@@ -169,6 +174,9 @@ class ImportRunArtifacts:
             the lint (the in-code fallback guide when the tenant has none). Typed loosely
             to keep the style-guide module off this module's import path.
         scrub_report: The IXH-1.4 secret-scrub report for the intake.
+        remote_refs: The MFI-29.4 remote ``$ref`` resolution outcome, when the adapter's
+            format can carry external references and the intake had any. Typed loosely to
+            keep the resolver module off this module's import path.
     """
 
     adapter_key: Optional[str] = None
@@ -178,6 +186,7 @@ class ImportRunArtifacts:
     routing: Optional[ImportRoutingDecision] = None
     style_guide: Optional[Any] = None
     scrub_report: Optional[Dict[str, Any]] = None
+    remote_refs: Optional[Any] = None
 
 
 def _scrub_event_context(context: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
@@ -474,6 +483,153 @@ def _resolve_intake(payload: Dict[str, Any], options: Dict[str, Any]) -> _Resolv
         fileset=fileset,
         archive_root=unpacked.root_path,
     )
+
+
+@dataclass(frozen=True)
+class _RemoteRefResolution:
+    """What the MFI-29.4 resolver produced for one intake.
+
+    Attributes:
+        text: The rewritten single-document text to parse, or ``None`` when the document was
+            not changed (nothing inlined) and the original text should be parsed.
+        fileset: The rewritten fileset to parse, or ``None`` when no member changed.
+        outcome: The resolver's :class:`~app.remote_ref_resolver.RemoteRefOutcome`.
+    """
+
+    text: Optional[str]
+    fileset: Optional[IntakeFileset]
+    outcome: Any
+
+
+def _parse_intake_documents(intake: _ResolvedIntake) -> Dict[str, Any]:
+    """Parse the intake into ``label → document`` for reference scanning.
+
+    A single document is labelled ``""``; a fileset's members are labelled by member path.
+    Members that are not JSON/YAML (a ``.proto`` in a mixed archive, a README) are skipped —
+    they cannot carry a ``$ref`` — and so is a document that does not parse at all, since the
+    adapter's own ``parse`` is what must report that error.
+    """
+    documents: Dict[str, Any] = {}
+    if intake.fileset is not None:
+        for path, text in intake.fileset.members.items():
+            try:
+                documents[path] = parse_document(text, source_label=path)
+            except (IngestionError, IntakeLimitError):
+                continue
+        return documents
+    if intake.text is None:  # pragma: no cover - one of text/fileset is always set
+        return documents
+    try:
+        documents[""] = parse_document(intake.text)
+    except (IngestionError, IntakeLimitError):
+        return {}
+    return documents
+
+
+def resolve_intake_remote_refs(
+    adapter: ImportSource,
+    intake: _ResolvedIntake,
+    options: Dict[str, Any],
+) -> Optional[_RemoteRefResolution]:
+    """Run the shared remote ``$ref`` resolver over an intake before parse (MFI-29.4).
+
+    Only formats that can reference other documents by URL are scanned
+    (:attr:`ImportSource.supports_remote_refs`). Whether references are actually *fetched*
+    is the import's explicit opt-in (``options['resolve_remote_refs']``), further gated by
+    the ``remote_ref_resolution_allowed`` deployment kill switch; with fetching off the
+    documents are only scanned, so the run reports what the model is missing without
+    touching the network.
+
+    Resolution rewrites what the **adapter parses** — inlined before normalization and
+    therefore before the fingerprint — while the intake itself is left untouched, so the
+    verbatim source the catalog persists is still exactly what the user submitted.
+
+    Args:
+        adapter: The resolved adapter for this import.
+        intake: The classified intake (single document or fileset).
+        options: The request's importer options.
+
+    Returns:
+        The :class:`_RemoteRefResolution` for the run, or ``None`` when the format cannot
+        carry external references, the intake did not parse, or it contains none — in which
+        case the import behaves exactly as it did before this feature existed.
+    """
+    if not adapter.supports_remote_refs:
+        return None
+
+    from .remote_ref_resolver import resolve_remote_refs
+
+    documents = _parse_intake_documents(intake)
+    if not documents:
+        return None
+
+    enabled = bool(options.get("resolve_remote_refs")) and bool(
+        settings.remote_ref_resolution_allowed
+    )
+    outcome = resolve_remote_refs(documents, enabled=enabled)
+    if not outcome.resolved and not outcome.unresolved:
+        return None
+
+    text: Optional[str] = None
+    fileset: Optional[IntakeFileset] = None
+    if outcome.changed_documents:
+        if intake.fileset is not None:
+            members = dict(intake.fileset.members)
+            for label in outcome.changed_documents:
+                members[label] = json.dumps(
+                    outcome.documents[label], separators=(",", ":")
+                )
+            fileset = IntakeFileset.from_members(members, root=intake.fileset.root)
+        else:
+            # Key order is preserved (never sorted): a JSON Schema's ``properties`` order
+            # carries into the canonical model's field order, so re-serializing sorted would
+            # give a resolved import a different fingerprint than the same document inlined
+            # by hand.
+            text = json.dumps(outcome.documents[""], separators=(",", ":"))
+    return _RemoteRefResolution(text=text, fileset=fileset, outcome=outcome)
+
+
+def _emit_remote_ref_events(state: "_AdapterRunState", outcome: Any) -> None:
+    """Record what remote ``$ref`` resolution did, as poll-visible job events (MFI-29.4).
+
+    Emits at most three events: what was inlined (only when resolution ran), what was left
+    unresolved, and — separately, because it is a security-relevant signal rather than a
+    completeness one — what the SSRF guard refused.
+
+    Args:
+        state: The run's event accumulator.
+        outcome: The resolver's ``RemoteRefOutcome``.
+    """
+    if outcome.enabled and outcome.resolved:
+        state.event(
+            "REMOTE_REFS_RESOLVED",
+            f"Inlined {len(outcome.resolved)} external $ref(s) "
+            f"({outcome.cache_hits} from cache, {outcome.fetched_bytes} bytes fetched).",
+            context={
+                "resolved": len(outcome.resolved),
+                "cache_hits": outcome.cache_hits,
+                "fetched_bytes": outcome.fetched_bytes,
+            },
+        )
+    unresolved = [ref for ref in outcome.unresolved if not ref.blocked]
+    if unresolved:
+        reasons = sorted({ref.reason for ref in unresolved})
+        state.event(
+            "REMOTE_REFS_UNRESOLVED",
+            f"{len(unresolved)} external $ref(s) were not resolved ({', '.join(reasons)}); "
+            "the definitions they name are missing from the imported model.",
+            level="warn",
+            context={"unresolved": len(unresolved), "reasons": reasons},
+        )
+    blocked = list(outcome.blocked)
+    if blocked:
+        state.event(
+            "REMOTE_REFS_BLOCKED",
+            f"The SSRF guard refused {len(blocked)} external $ref URL(s); nothing was fetched "
+            "from them.",
+            level="warn",
+            context={"blocked": len(blocked), "urls": sorted({ref.url for ref in blocked})[:10]},
+        )
 
 
 def scrub_intake_source(intake: _ResolvedIntake) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -928,6 +1084,7 @@ def _build_summary(
     persisted: bool = False,
     types_outcome: Optional[Dict[str, Any]] = None,
     scrub_report: Optional[Dict[str, Any]] = None,
+    remote_ref_report: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Assemble the completed-job summary for an adapter import.
 
@@ -940,7 +1097,9 @@ def _build_summary(
     "as current" branch (MFI-26.8) ran, a ``types_import`` block reports the per-outcome
     registry counts (imported / overwritten / renamed / identical / skipped / errors).
     When intake redacted credentials (IXH-1.4), a ``secret_scrub`` block reports what
-    was redacted and where — types and line numbers only, never the values.
+    was redacted and where — types and line numbers only, never the values. When the source
+    carried external ``$ref``\\s (MFI-29.4), a ``remote_refs`` block reports what was inlined
+    and what was not, with the reason for each.
     """
     summary: Dict[str, Any] = {
         "source": adapter.key,
@@ -979,6 +1138,8 @@ def _build_summary(
         }
     if scrub_report is not None:
         summary["secret_scrub"] = scrub_report
+    if remote_ref_report is not None:
+        summary["remote_refs"] = remote_ref_report
     return summary
 
 
@@ -1045,22 +1206,36 @@ async def run_adapter_import_job(
 
     # --- parse ----------------------------------------------------------------
     intake: Optional[_ResolvedIntake] = None
+    remote_refs: Optional[_RemoteRefResolution] = None
     tenant_id = payload.get("tenant_id")
     profile = resolve_guard_profile(
         tenant_id=str(tenant_id) if isinstance(tenant_id, str) else None
     )
+    stage_label = source_label if isinstance(source_label, str) else None
     try:
-        with stage_wall_clock("parse", limits=profile, source_label=source_label if isinstance(source_label, str) else None):
-            with stage_memory_tracker(
-                limits=profile,
-                source_label=source_label if isinstance(source_label, str) else None,
-            ):
+        with stage_wall_clock("parse", limits=profile, source_label=stage_label):
+            with stage_memory_tracker(limits=profile, source_label=stage_label):
                 intake = _resolve_intake(payload, options if isinstance(options, dict) else {})
+        # Remote `$ref` resolution (MFI-29.4) runs between intake and parse, under its own
+        # stage budget: it is the only intake step that touches the network, so it must not
+        # eat into the parse stage's wall clock (its own deadline is the tighter bound).
+        with stage_wall_clock("remote-refs", limits=profile, source_label=stage_label):
+            remote_refs = resolve_intake_remote_refs(
+                adapter, intake, options if isinstance(options, dict) else {}
+            )
+        with stage_wall_clock("parse", limits=profile, source_label=stage_label):
+            with stage_memory_tracker(limits=profile, source_label=stage_label):
                 if intake.fileset is not None:
-                    native_ast = adapter.parse_fileset(intake.fileset, source_label=source_label)
+                    native_ast = adapter.parse_fileset(
+                        (remote_refs.fileset if remote_refs else None) or intake.fileset,
+                        source_label=source_label,
+                    )
                 else:
                     assert intake.text is not None
-                    native_ast = adapter.parse(intake.text, source_label=source_label)
+                    native_ast = adapter.parse(
+                        (remote_refs.text if remote_refs else None) or intake.text,
+                        source_label=source_label,
+                    )
     except (ImportSourceError, IntakeLimitError, SecureXmlError) as exc:
         # A resource-limit or unsafe-construct rejection (IXH-1.4 / IXH-6.5) already knows
         # its taxonomy code and must not be re-classified as a malformed document.
@@ -1078,6 +1253,10 @@ async def run_adapter_import_job(
             percent=_PCT_INIT,
             error=build_job_error(error_code, str(exc), correlation_id=job_id),
         )
+    if remote_refs is not None:
+        _emit_remote_ref_events(state, remote_refs.outcome)
+        if artifacts is not None:
+            artifacts.remote_refs = remote_refs.outcome
     state.event("PARSE_OK", "Parsed source into the format's native representation.")
     await publish(state.snapshot(state="running", percent=_PCT_PARSED))
     if canceled():
@@ -1152,6 +1331,11 @@ async def run_adapter_import_job(
 
     # --- lint -----------------------------------------------------------------
     lint = adapter.lint(model)
+    # MFI-29.4: fold in what remote `$ref` resolution could not resolve. These findings are
+    # merged *before* the style guide is applied, so a tenant governs them (severity override,
+    # disable) exactly like any other registered rule.
+    if remote_refs is not None:
+        lint = lint.with_extra_findings(remote_refs.outcome.findings())
     # GOV-1.4: re-score the adapter's report under the tenant's resolved style guide
     # (tenant → default; a canonical import has no owning project yet, so the project tier
     # never applies). Resolution is a single indexed read and runs inline like the
@@ -1293,6 +1477,7 @@ async def run_adapter_import_job(
         persisted=result is not None or types_outcome is not None,
         types_outcome=types_outcome,
         scrub_report=scrub_report,
+        remote_ref_report=remote_refs.outcome.report() if remote_refs is not None else None,
     )
     if options.get("dry_run"):
         state.event("DRY_RUN", "Dry run: the normalized model was not persisted.")

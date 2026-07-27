@@ -355,6 +355,79 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Remote $ref resolution (MFI-29.4, #4391). An import resolves external `$ref` URLs
+    # only when it explicitly asks for it (``SpecImportOptions.resolve_remote_refs``,
+    # default false) — these settings bound what that opt-in may do and let an operator
+    # switch the capability off entirely:
+    #
+    #   remote_ref_resolution_allowed   Kill switch. False makes every import behave as if
+    #                                   resolution were off (external refs are reported as
+    #                                   findings, nothing is fetched), regardless of the
+    #                                   per-import flag.
+    #   remote_ref_max_refs             Maximum references inlined per import.
+    #   remote_ref_max_depth            Maximum nesting depth of chained remote references.
+    #   remote_ref_max_bytes            Total fetched-bytes ceiling per import.
+    #   remote_ref_fetch_timeout_seconds  Per-request timeout.
+    #   remote_ref_total_timeout_seconds  Wall-clock deadline for a whole resolution run;
+    #                                   keep it below the intake guard's per-stage wall
+    #                                   clock so the resolver's own budget fires first.
+    #   remote_ref_cache_*              Bounds for the process-wide content-addressed cache
+    #                                   that keeps a re-import from re-fetching.
+    remote_ref_resolution_allowed: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "APIOME_REMOTE_REF_RESOLUTION_ALLOWED",
+            "remote_ref_resolution_allowed",
+        ),
+    )
+    remote_ref_max_refs: int = Field(
+        default=50,
+        validation_alias=AliasChoices("APIOME_REMOTE_REF_MAX_REFS", "remote_ref_max_refs"),
+    )
+    remote_ref_max_depth: int = Field(
+        default=5,
+        validation_alias=AliasChoices("APIOME_REMOTE_REF_MAX_DEPTH", "remote_ref_max_depth"),
+    )
+    remote_ref_max_bytes: int = Field(
+        default=4 * 1024 * 1024,
+        validation_alias=AliasChoices("APIOME_REMOTE_REF_MAX_BYTES", "remote_ref_max_bytes"),
+    )
+    remote_ref_fetch_timeout_seconds: float = Field(
+        default=5.0,
+        validation_alias=AliasChoices(
+            "APIOME_REMOTE_REF_FETCH_TIMEOUT_SECONDS",
+            "remote_ref_fetch_timeout_seconds",
+        ),
+    )
+    remote_ref_total_timeout_seconds: float = Field(
+        default=15.0,
+        validation_alias=AliasChoices(
+            "APIOME_REMOTE_REF_TOTAL_TIMEOUT_SECONDS",
+            "remote_ref_total_timeout_seconds",
+        ),
+    )
+    remote_ref_cache_max_entries: int = Field(
+        default=64,
+        validation_alias=AliasChoices(
+            "APIOME_REMOTE_REF_CACHE_MAX_ENTRIES",
+            "remote_ref_cache_max_entries",
+        ),
+    )
+    remote_ref_cache_max_bytes: int = Field(
+        default=16 * 1024 * 1024,
+        validation_alias=AliasChoices(
+            "APIOME_REMOTE_REF_CACHE_MAX_BYTES",
+            "remote_ref_cache_max_bytes",
+        ),
+    )
+    remote_ref_cache_ttl_seconds: float = Field(
+        default=900.0,
+        validation_alias=AliasChoices(
+            "APIOME_REMOTE_REF_CACHE_TTL_SECONDS",
+            "remote_ref_cache_ttl_seconds",
+        ),
+    )
+
     # Per-tenant rate limiting (#3612). The limiter buckets requests per API key
     # / tenant slug / client IP and enforces a fixed window. Authenticated
     # traffic (API key or Authorization header) uses the higher limit; public

@@ -122,16 +122,25 @@ def _assert_host_public(host: str, *, verb: str) -> None:
             )
 
 
-def validate_url(url: str) -> None:
-    """Validate a single URL against the SSRF policy.
+def validate_url_policy(url: str) -> str:
+    """Validate a URL's *shape* against the SSRF policy, without resolving its host.
 
-    Always enforces the scheme and credential rules. When IP filtering is
-    enabled (the default), resolves the host and rejects the URL if *any*
-    resolved address is non-public.
+    The half of :func:`validate_url` that needs no DNS: the URL must parse, use an allowed
+    scheme, carry no credentials, and name a host. Split out (MFI-29.4) so a caller that
+    fetches through :func:`build_guarded_client` — whose request hook runs the *full* check
+    on every hop, including redirects — can still reject a structurally-disallowed URL
+    (``file:``, ``data:``, ``user:pass@``) up front with a precise reason, and without paying
+    for a resolution the client is about to do anyway.
+
+    Args:
+        url: The URL to vet.
+
+    Returns:
+        The URL's hostname, for a caller that wants to continue with :func:`validate_host`.
 
     Raises:
-        SSRFError: if the URL is malformed, uses a disallowed scheme, embeds
-            credentials, or resolves to a non-public address.
+        SSRFError: if the URL is malformed, uses a disallowed scheme, embeds credentials,
+            or has no host.
     """
     try:
         parsed = httpx.URL(url)
@@ -150,8 +159,21 @@ def validate_url(url: str) -> None:
     host = parsed.host
     if not host:
         raise SSRFError("URL is missing a host")
+    return host
 
-    _assert_host_public(host, verb="fetch")
+
+def validate_url(url: str) -> None:
+    """Validate a single URL against the SSRF policy.
+
+    Always enforces the scheme and credential rules (:func:`validate_url_policy`). When IP
+    filtering is enabled (the default), resolves the host and rejects the URL if *any*
+    resolved address is non-public.
+
+    Raises:
+        SSRFError: if the URL is malformed, uses a disallowed scheme, embeds
+            credentials, or resolves to a non-public address.
+    """
+    _assert_host_public(validate_url_policy(url), verb="fetch")
 
 
 def validate_host(host: str) -> None:

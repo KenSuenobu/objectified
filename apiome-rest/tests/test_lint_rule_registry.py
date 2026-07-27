@@ -23,6 +23,7 @@ from app.lint_rule_registry import (
     builtin_rule_ids,
     docs_anchor_for,
 )
+from app.intake_lint_rules import INTAKE_RULES
 from app.schema_lint import OPENAPI_RULES, RULE_CATALOGUE, lint_openapi_spec
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -36,8 +37,12 @@ _VALID_SEVERITIES = {"error", "warning", "info"}
 
 
 def _all_engine_rule_ids() -> set:
-    """The union of rule ids across every lint engine the registry aggregates."""
-    ids = set(OPENAPI_RULES)
+    """The union of rule ids across every lint engine the registry aggregates.
+
+    Includes the intake-stage catalogue (MFI-29.4): those rules fire while a source is being
+    ingested rather than from a model rule pack, so they have no engine to read them from.
+    """
+    ids = set(OPENAPI_RULES) | set(INTAKE_RULES)
     # Every pack the engine runs for all formats — the common pack and the IXH-5.4
     # example-conformance pack — taken from the engine itself rather than listed here.
     for pack in unconditional_rule_packs():
@@ -64,6 +69,7 @@ def test_registry_includes_known_rules_from_each_pack():
     assert "protobuf.field-no-required" in ids  # protobuf
     assert "arazzo.missing-success-criteria" in ids  # arazzo
     assert "examples.non-conforming-example" in ids  # examples (IXH-5.4)
+    assert "intake.unresolved-external-ref" in ids  # intake (MFI-29.4)
 
 
 def test_openapi_rule_catalogue_derives_from_enriched_specs():

@@ -755,6 +755,18 @@ class SpecImportOptions(BaseModel):
             "ambiguous; optional when a single root candidate is found."
         ),
     )
+    resolve_remote_refs: bool = Field(
+        False,
+        description=(
+            "Opt into SSRF-guarded remote `$ref` resolution for this import (MFI-29.4). When "
+            "true, external `$ref` URLs in the source document are fetched through the SSRF "
+            "guard under per-import budgets (max references, depth, bytes, timeout) and inlined "
+            "before the model is built, so the imported revision covers them. When false (the "
+            "default) nothing is fetched and every external reference is reported as a lint "
+            "finding instead. Honored only by sources whose descriptor reports "
+            "`supports_remote_refs` (AsyncAPI, JSON Schema)."
+        ),
+    )
     git_source: Optional[SpecImportGitSource] = Field(
         None,
         description=(
