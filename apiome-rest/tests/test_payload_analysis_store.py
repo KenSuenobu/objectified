@@ -27,6 +27,7 @@ from app.payload_analysis import (
     PayloadAnalysisDocument,
     ValueVisibility,
     analysis_content_fingerprint,
+    analyzer_capabilities,
     apply_value_visibility,
     bound_tree,
     source_digest,
@@ -118,6 +119,7 @@ class _StubDb:
                     "analyzer_key",
                     "analyzer_version",
                     "tool_versions",
+                    "capabilities",
                     "status",
                     "status_reason",
                     "tree",
@@ -196,6 +198,33 @@ def test_store_redacts_before_writing():
     assert written["redaction"]["value_visibility"] == ValueVisibility.STRUCTURAL
     assert written["redaction"]["redacted_node_count"] == 1
     assert record.analysis.tree[0].children[0].value is None
+
+
+def test_store_writes_the_analyzer_capability_declaration():
+    """CPDO-1.2: the record has to be self-describing, so what the analyzer models travels with it
+    rather than being looked up against whatever analyzer is installed at read time."""
+    stub = _StubDb()
+    document = _document().model_copy(
+        update={
+            "capabilities": analyzer_capabilities(
+                supported=["x12.transaction_set"],
+                unsupported=["x12.hl_hierarchy"],
+                limits={"maxNodes": 5000},
+            )
+        }
+    )
+    with patch("app.payload_analysis_store.db", stub):
+        record = store_analysis(
+            tenant_id=_TENANT,
+            project_id=_PROJECT,
+            version_id=_VERSION,
+            document=document,
+        )
+
+    written = stub.inserts[0]["capabilities"]
+    assert written["supported"] == ["x12.transaction_set"]
+    assert written["unsupported"] == ["x12.hl_hierarchy"]
+    assert record.analysis.capabilities.limits == {"maxNodes": 5000}
 
 
 def test_store_fingerprints_what_it_actually_stored():

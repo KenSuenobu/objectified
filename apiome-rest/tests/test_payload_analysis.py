@@ -33,12 +33,14 @@ from app.payload_analysis import (
     AnalysisMetrics,
     AnalysisNode,
     AnalysisWarning,
+    AnalyzerCapabilities,
     AnalyzerInfo,
     PayloadAnalysisDocument,
     RedactionInfo,
     SourceLocation,
     ValueVisibility,
     analysis_content_fingerprint,
+    analyzer_capabilities,
     apply_value_visibility,
     bound_tree,
     document_from_row,
@@ -546,6 +548,7 @@ def _row(document: PayloadAnalysisDocument, **overrides) -> dict:
         "analyzer_key": document.analyzer.key,
         "analyzer_version": document.analyzer.version,
         "tool_versions": document.analyzer.tool_versions,
+        "capabilities": payload["capabilities"],
         "status": document.status,
         "status_reason": document.status_reason,
         "tree": payload["tree"],
@@ -647,6 +650,7 @@ def test_contract_models_reject_unknown_fields():
         AnalysisNode,
         AnalysisWarning,
         AnalysisMetrics,
+        AnalyzerCapabilities,
         AnalyzerInfo,
         RedactionInfo,
         SourceLocation,
@@ -658,3 +662,56 @@ def test_schema_version_is_stated_on_every_document():
     """A reader can always tell which contract a record was written under."""
     assert _available_document().schema_version == PAYLOAD_ANALYSIS_SCHEMA_VERSION
     assert unavailable_document().schema_version == PAYLOAD_ANALYSIS_SCHEMA_VERSION
+
+
+# ---------------------------------------------------------------------------
+# Analyzer capabilities (CPDO-1.2)
+# ---------------------------------------------------------------------------
+def test_capabilities_are_normalized_into_a_deterministic_block():
+    """They are part of the canonicalized document, so an unsorted or duplicated declaration would
+    make an otherwise identical re-analysis fingerprint as new work."""
+    capabilities = analyzer_capabilities(
+        supported=["x12.segment", "x12.element", "x12.segment"],
+        unsupported=["x12.hl_hierarchy", ""],
+        limits={"maxNodes": 5000, "maxDepth": 32},
+    )
+
+    assert capabilities.supported == ["x12.element", "x12.segment"]
+    assert capabilities.unsupported == ["x12.hl_hierarchy"]
+    assert capabilities.limits == {"maxDepth": 32, "maxNodes": 5000}
+
+
+def test_capabilities_change_the_content_fingerprint():
+    """Two records over the same bytes from analyzers of different reach are different records."""
+    base = _available_document()
+    richer = base.model_copy(
+        update={"capabilities": analyzer_capabilities(supported=["x12.segment"])}
+    )
+
+    assert analysis_content_fingerprint(base) != analysis_content_fingerprint(richer)
+
+
+def test_capabilities_survive_a_round_trip_through_a_stored_row():
+    row = _row(
+        _available_document(),
+        capabilities={
+            "supported": ["x12.segment"],
+            "unsupported": ["x12.hl_hierarchy"],
+            "limits": {"maxNodes": 5000},
+        },
+    )
+
+    document = document_from_row(row)
+    assert document.capabilities.supported == ["x12.segment"]
+    assert document.capabilities.limits == {"maxNodes": 5000}
+    assert summary_from_row(row).capabilities.unsupported == ["x12.hl_hierarchy"]
+
+
+def test_a_record_written_before_capabilities_existed_reads_back_as_declaring_none():
+    """V209 rows have no ``capabilities`` column value. Empty is the truthful reading: the analyzers
+    that would have filled it did not exist when those records were written."""
+    row = _row(_available_document())
+    row.pop("capabilities")
+
+    assert document_from_row(row).capabilities == AnalyzerCapabilities()
+    assert summary_from_row(row).capabilities == AnalyzerCapabilities()

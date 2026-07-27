@@ -73,6 +73,8 @@ async def test_sample_adapter_runs_end_to_end() -> None:
     assert codes == [
         "ADAPTER_INIT",
         "PARSE_OK",
+        # CPDO-1.2: the native analysis runs between parse and normalize, while the AST exists.
+        "PAYLOAD_ANALYZED",
         "NORMALIZE_OK",
         "ROUTING_DECIDED",
         "VERSION_FINGERPRINT",

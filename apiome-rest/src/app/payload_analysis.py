@@ -8,8 +8,8 @@ cite them afterwards, and nothing notices when a parser upgrade changes them.
 
 This module is the contract for keeping them: a **payload analysis** is one immutable record of
 what an analyzer observed in one source revision. Its persistent home is ``apiome.payload_analysis``
-(apiome-db V209); the extractors that fill it arrive with CPDO-1.2, and the projection manifest that
-cites it with CPDO-1.3.
+(apiome-db V209/V210); the extractors that fill it are :mod:`app.payload_analyzer` and its per-format
+modules (CPDO-1.2), and the projection manifest that cites it arrives with CPDO-1.3.
 
 Three properties the contract is built around
 ---------------------------------------------
@@ -53,6 +53,7 @@ from pydantic import BaseModel, ConfigDict, Field
 __all__ = [
     "AnalysisMetrics",
     "AnalysisWarning",
+    "AnalyzerCapabilities",
     "AnalyzerInfo",
     "AnalysisNode",
     "MAX_TREE_DEPTH",
@@ -78,6 +79,7 @@ __all__ = [
     "SourceLocation",
     "ValueVisibility",
     "analysis_content_fingerprint",
+    "analyzer_capabilities",
     "bound_tree",
     "apply_value_visibility",
     "document_from_row",
@@ -97,7 +99,11 @@ __all__ = [
 #: Version of this contract. Bumped when a stored record's shape changes in a way a reader must
 #: know about; a record always states the version it was written under, so a reader can refuse
 #: rather than misread a record from a future contract.
-PAYLOAD_ANALYSIS_SCHEMA_VERSION = "1.0.0"
+#:
+#: ``1.1.0`` (CPDO-1.2) added :class:`AnalyzerCapabilities` — a minor bump because it is additive:
+#: a ``1.0.0`` record reads back with empty capabilities, which is the truthful statement that its
+#: analyzer declared none.
+PAYLOAD_ANALYSIS_SCHEMA_VERSION = "1.1.0"
 
 #: The analyzer described the whole source within budget.
 STATUS_AVAILABLE = "available"
@@ -365,6 +371,67 @@ class AnalyzerInfo(BaseModel):
     )
 
 
+class AnalyzerCapabilities(BaseModel):
+    """What the analyzer that wrote this record can and cannot describe — CPDO-1.2 (#4795).
+
+    A record's warnings say what went wrong *in this source*. Capabilities say what would have gone
+    wrong in **any** source: the constructs this analyzer models, the ones it knowingly does not, and
+    the numeric bounds it was working under. Both are needed to answer "why is there no detail here?"
+    — a construct absent from the tree is either absent from the source or outside the analyzer, and
+    only ``unsupported`` distinguishes them.
+
+    Construct keys are the analyzer's own dotted vocabulary (``x12.functional_group``,
+    ``copybook.redefines``), stable enough to cite from a UI. Both lists are sorted and de-duplicated
+    by :func:`analyzer_capabilities` so a record's serialization — and therefore its
+    ``content_fingerprint`` — does not depend on the order an analyzer happened to declare them in.
+
+    This is the *per-record* statement, written by the analyzer that ran. The cross-format registry
+    that answers the same question before an import runs is CPDO-2.4's.
+
+    Attributes:
+        supported: Construct keys this analyzer models, sorted.
+        unsupported: Construct keys it knowingly does not model, sorted. An entry here is a
+            capability boundary, not a defect in the source.
+        limits: Numeric bounds in force when the record was produced (node/depth budgets, value
+            preview length), so a reader can tell a bounded record from a small one.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    supported: List[str] = Field(default_factory=list)
+    unsupported: List[str] = Field(default_factory=list)
+    limits: Dict[str, int] = Field(default_factory=dict)
+
+
+def analyzer_capabilities(
+    *,
+    supported: Iterable[str] = (),
+    unsupported: Iterable[str] = (),
+    limits: Optional[Mapping[str, int]] = None,
+) -> AnalyzerCapabilities:
+    """Build a deterministic :class:`AnalyzerCapabilities`.
+
+    The single constructor, so every analyzer's declaration is normalized the same way: blank keys
+    dropped, duplicates collapsed, both lists sorted, limits coerced to ``int``. Determinism matters
+    here more than convenience — the capabilities block is part of the canonicalized document that
+    :func:`analysis_content_fingerprint` hashes, so an unsorted declaration would make an otherwise
+    identical re-analysis look like a new one and append a redundant sequence.
+
+    Args:
+        supported: Construct keys the analyzer models.
+        unsupported: Construct keys it knowingly does not model.
+        limits: Numeric bounds in force (e.g. ``{"maxNodes": 5000}``).
+
+    Returns:
+        The normalized :class:`AnalyzerCapabilities`.
+    """
+    return AnalyzerCapabilities(
+        supported=sorted({key.strip() for key in supported if key and key.strip()}),
+        unsupported=sorted({key.strip() for key in unsupported if key and key.strip()}),
+        limits={str(name): int(value) for name, value in sorted((limits or {}).items())},
+    )
+
+
 class PayloadAnalysisDocument(BaseModel):
     """The full analysis of one source revision — the persisted contract.
 
@@ -380,6 +447,7 @@ class PayloadAnalysisDocument(BaseModel):
         source_format: Adapter key of the analysed source.
         source_hash: ``sha256:<hex>`` of the analysed bytes; required for available/partial.
         analyzer: Which analyzer produced the record.
+        capabilities: What that analyzer models and does not model (CPDO-1.2).
         tree: Root nodes of the native structure; empty for unavailable/failed.
         metrics: Derived counts over ``tree``.
         warnings: What the analyzer could not do.
@@ -396,6 +464,7 @@ class PayloadAnalysisDocument(BaseModel):
     source_format: Optional[str] = Field(default=None, serialization_alias="sourceFormat")
     source_hash: Optional[str] = Field(default=None, serialization_alias="sourceHash")
     analyzer: AnalyzerInfo = Field(default_factory=AnalyzerInfo)
+    capabilities: AnalyzerCapabilities = Field(default_factory=AnalyzerCapabilities)
     tree: List[AnalysisNode] = Field(default_factory=list)
     metrics: AnalysisMetrics = Field(default_factory=AnalysisMetrics)
     warnings: List[AnalysisWarning] = Field(default_factory=list)
@@ -482,6 +551,8 @@ class PayloadAnalysisSummary(BaseModel):
         truncated: Whether bounding dropped nodes.
         warning_count: Number of analyzer warnings.
         kind_counts: Node count per kind — the detail header's summary metrics.
+        capabilities: What the analyzer models and does not model, so the detail screen can explain
+            a missing construct without fetching the tree (CPDO-1.2).
         value_visibility: The value-visibility level the record was stored under.
         analysis_id: Id of the underlying record, for a direct evidence reference.
         version_record_id: The source revision the analysis describes.
@@ -504,6 +575,7 @@ class PayloadAnalysisSummary(BaseModel):
     truncated: bool = False
     warning_count: int = Field(default=0, ge=0, serialization_alias="warningCount")
     kind_counts: Dict[str, int] = Field(default_factory=dict, serialization_alias="kindCounts")
+    capabilities: AnalyzerCapabilities = Field(default_factory=AnalyzerCapabilities)
     value_visibility: str = Field(
         default=ValueVisibility.DEFAULT, serialization_alias="valueVisibility"
     )
@@ -555,6 +627,7 @@ def unavailable_document(
     source_format: Optional[str] = None,
     message: Optional[str] = None,
     analyzer: Optional[AnalyzerInfo] = None,
+    capabilities: Optional[AnalyzerCapabilities] = None,
     failed: bool = False,
 ) -> PayloadAnalysisDocument:
     """Build the declared "no analysis" record.
@@ -569,6 +642,9 @@ def unavailable_document(
         message: Optional human-readable elaboration, recorded as an ``info`` warning. Must not
             contain payload values.
         analyzer: The analyzer that would have run / did fail, when identifiable.
+        capabilities: What that analyzer models, when identifiable. Worth carrying even on an
+            absence record: "no analyzer understands this format" and "the analyzer understands it
+            but crashed" are different answers to the same user question.
         failed: True when an analyzer ran and errored (:data:`STATUS_FAILED`); False when there was
             simply nothing to analyse (:data:`STATUS_UNAVAILABLE`).
 
@@ -589,6 +665,7 @@ def unavailable_document(
         status_reason=reason,
         source_format=source_format,
         analyzer=analyzer or AnalyzerInfo(),
+        capabilities=capabilities or AnalyzerCapabilities(),
         tree=[],
         metrics=AnalysisMetrics(warning_count=len(warnings)),
         warnings=warnings,
@@ -857,6 +934,7 @@ def summarize_document(
         truncated=document.metrics.truncated,
         warning_count=document.metrics.warning_count or len(document.warnings),
         kind_counts=dict(document.metrics.kind_counts),
+        capabilities=document.capabilities,
         value_visibility=document.redaction.value_visibility,
         analysis_id=analysis_id,
         version_record_id=version_record_id,
@@ -880,6 +958,7 @@ def summary_from_row(row: Mapping[str, Any]) -> PayloadAnalysisSummary:
     """
     metrics = AnalysisMetrics.model_validate(_as_mapping(row.get("metrics")))
     redaction = RedactionInfo.model_validate(_as_mapping(row.get("redaction")))
+    capabilities = AnalyzerCapabilities.model_validate(_as_mapping(row.get("capabilities")))
     status = str(row.get("status") or STATUS_UNAVAILABLE)
     analyzed_at = row.get("created_at")
 
@@ -896,6 +975,7 @@ def summary_from_row(row: Mapping[str, Any]) -> PayloadAnalysisSummary:
         truncated=metrics.truncated,
         warning_count=metrics.warning_count,
         kind_counts=dict(metrics.kind_counts),
+        capabilities=capabilities,
         value_visibility=redaction.value_visibility,
         analysis_id=row.get("id"),
         version_record_id=row.get("version_id"),
@@ -936,6 +1016,9 @@ def document_from_row(row: Mapping[str, Any]) -> PayloadAnalysisDocument:
     ]
     metrics = AnalysisMetrics.model_validate(_as_mapping(row.get("metrics")))
     redaction = RedactionInfo.model_validate(_as_mapping(row.get("redaction")))
+    # Absent for a record written under contract 1.0.0 — it degrades to "this analyzer declared no
+    # capabilities", which is exactly what was true of it.
+    capabilities = AnalyzerCapabilities.model_validate(_as_mapping(row.get("capabilities")))
 
     return PayloadAnalysisDocument(
         schema_version=str(row.get("schema_version") or PAYLOAD_ANALYSIS_SCHEMA_VERSION),
@@ -944,6 +1027,7 @@ def document_from_row(row: Mapping[str, Any]) -> PayloadAnalysisDocument:
         source_format=row.get("source_format"),
         source_hash=row.get("source_hash"),
         analyzer=analyzer,
+        capabilities=capabilities,
         tree=tree,
         metrics=metrics,
         warnings=warnings,

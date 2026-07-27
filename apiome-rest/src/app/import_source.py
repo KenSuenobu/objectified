@@ -22,6 +22,12 @@ through a uniform contract:
   paradigm-agnostic :class:`~app.canonical_model.CanonicalApi` (MFI-2.1), almost
   always by delegating to a registered :class:`~app.normalizer.Normalizer`
   (MFI-2.3) via :meth:`ImportSource._normalize_via_registry`.
+* **analyze** (``native_ast → payload analysis``) — describe the native AST while
+  it is still in hand (CPDO-1.2), so an X12 envelope or a copybook level survives
+  the import instead of being re-derived on every detail read. The default is the
+  format-blind walk in :mod:`app.payload_analyzer`; an adapter with format
+  semantics worth keeping overrides it, and declares what it can and cannot model
+  via :meth:`ImportSource.analysis_capabilities`.
 * **fingerprint** / **diff** / **lint** — operate on the *canonical* model, so
   they are written **once** here and work uniformly across every paradigm. The
   defaults are real implementations (a stable SHA-256 over the normalized model
@@ -56,6 +62,11 @@ from .normalizer import get_normalizer
 
 if TYPE_CHECKING:  # pragma: no cover - import for type checkers only (avoids a runtime cycle)
     from .fileset import IntakeFileset
+    from .payload_analysis import (
+        AnalyzerCapabilities,
+        AnalyzerInfo,
+        PayloadAnalysisDocument,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -537,6 +548,14 @@ class ImportSource(ABC):
     #: can hide/disable it instead of letting an import fail at parse. Adapters that degrade
     #: gracefully without their optional tool leave this empty.
     required_tools: ClassVar[Tuple[str, ...]] = ()
+    #: Key of the **payload analyzer** behind :meth:`analyze` (CPDO-1.2). Left at ``generic`` by an
+    #: adapter that keeps the default format-blind walk; an adapter with a native extractor sets its
+    #: own key, because a record produced by ``edix12`` and one produced by ``generic`` describe the
+    #: same bytes at completely different fidelity and must stay distinguishable afterwards.
+    analyzer_key: ClassVar[str] = "generic"
+    #: Version of that analyzer. Bumped when the tree it produces changes shape, so a record written
+    #: by an older extractor is detectable rather than silently mixed in with newer ones.
+    analyzer_version: ClassVar[str] = "1.0.0"
 
     def __init_subclass__(cls, *, register: bool = False, **kwargs: Any) -> None:
         """Optionally self-register a concrete subclass in the source registry.
@@ -645,6 +664,89 @@ class ImportSource(ABC):
         from .lint_engine import lint_canonical_model
 
         return LintReport.from_lint_result(lint_canonical_model(model))
+
+    # --- native payload analysis (CPDO-1.2) ---------------------------------
+
+    def analyzer_tool_versions(self) -> Dict[str, str]:
+        """Return the underlying parser/library versions this adapter's analyzer leaned on.
+
+        Recorded on the stored analysis so a record produced against ``pyx12 4.0.1`` is
+        distinguishable from one produced against a later release *without* re-running anything —
+        the case an analysis exists to make visible is "the parser changed and nobody noticed".
+
+        Returns:
+            A ``tool → version`` mapping; empty when the analyzer uses no external parser.
+        """
+        return {}
+
+    def analyzer_info(self) -> "AnalyzerInfo":
+        """Return the identity recorded on analyses this adapter produces.
+
+        Returns:
+            The :class:`~app.payload_analysis.AnalyzerInfo` naming the analyzer key, its version, and
+            its tool versions.
+        """
+        from .payload_analysis import AnalyzerInfo as _AnalyzerInfo
+
+        return _AnalyzerInfo(
+            key=self.analyzer_key,
+            version=self.analyzer_version,
+            tool_versions=self.analyzer_tool_versions(),
+        )
+
+    def analysis_capabilities(self) -> "AnalyzerCapabilities":
+        """Return what this adapter's analyzer models, and what it knowingly does not.
+
+        The per-record answer to "why is this construct missing?" — the default is the generic
+        walk's declaration, which claims no format semantics at all. An adapter with a native
+        extractor overrides this with its own vocabulary so a reader can tell an absent X12
+        functional group from an unmodelled one.
+
+        Returns:
+            The :class:`~app.payload_analysis.AnalyzerCapabilities` recorded on the analysis.
+        """
+        from .payload_analyzer import GENERIC_CAPABILITIES
+
+        return GENERIC_CAPABILITIES
+
+    def analyze(
+        self, native_ast: Any, *, source: Optional[str] = None
+    ) -> "PayloadAnalysisDocument":
+        """Describe the native AST as a bounded, revision-scoped payload analysis (CPDO-1.2).
+
+        Called by the import pipeline **after parse and before persistence**, while the AST is still
+        in hand — the whole point of the analysis is that the native structure survives an import
+        instead of being re-derived by whatever parser is installed at read time.
+
+        The default runs the format-blind walk (:func:`app.payload_analyzer.generic_analysis`), which
+        records nesting, ordering, and value presence for any AST shape. An adapter with format
+        semantics worth keeping — X12 envelopes, copybook levels — overrides this and emits its own
+        node vocabulary.
+
+        Implementations must be deterministic (the same AST and bytes must produce the same document,
+        since an identical re-analysis is recognised by content fingerprint rather than appended) and
+        must put observed payload values only in a node's ``value``, never in ``attributes``: the
+        value-visibility policy governs the former and cannot govern the latter.
+
+        Args:
+            native_ast: The AST this adapter's :meth:`parse` produced.
+            source: The exact source material analysed, hashed into the record's ``source_hash``.
+                ``None`` yields a declared ``unavailable`` record — an analysis that cannot name the
+                bytes it describes is not checkable, so it is not written.
+
+        Returns:
+            The :class:`~app.payload_analysis.PayloadAnalysisDocument`, with observed values still on
+            it: :func:`app.payload_analysis_store.store_analysis` applies the redaction policy.
+        """
+        from .payload_analyzer import generic_analysis
+
+        return generic_analysis(
+            native_ast,
+            analyzer=self.analyzer_info(),
+            capabilities=self.analysis_capabilities(),
+            source=source,
+            source_format=self.key,
+        )
 
     # --- shared helpers -----------------------------------------------------
 

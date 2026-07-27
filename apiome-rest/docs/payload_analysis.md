@@ -1,8 +1,9 @@
 # Revision-Scoped Payload Analysis (CPDO-1.1)
 
 > apiome#4794 — the analysis and evidence foundation of CPDO-EPIC-1 (#4790).
-> Blocks CPDO-1.2 (native extractors), CPDO-1.3 (projection manifest), and the
-> format-detail work in CPDO-EPIC-2.
+> Blocks CPDO-1.3 (projection manifest) and the format-detail work in
+> CPDO-EPIC-2. The extractors that fill these records landed in CPDO-1.2
+> (#4795) — see [payload_analyzers.md](./payload_analyzers.md).
 
 ## Why
 
@@ -28,6 +29,7 @@ whether what it is looking at still describes the source in front of it.
 | `app/catalog_routes.py` | `GET /v1/catalog/{tenant}/{item}` (summary) and `GET /v1/catalog/{tenant}/{item}/analysis` (record). |
 | `database.py` | `insert_payload_analysis`, `get_payload_analysis_for_version`, `get_payload_analysis_summary_row_for_version`, `get_payload_analysis_by_id`, `list_payload_analyses_for_version`, `purge_payload_analysis`. |
 | apiome-db `V209__payload_analysis_4794.sql` | `payload_analysis`, its write-once trigger, and `purge_payload_analysis(retention_days)`. |
+| apiome-db `V210__payload_analysis_capabilities_4795.sql` | The additive `capabilities` column (CPDO-1.2). |
 
 ## The three properties the contract is built around
 
@@ -146,6 +148,35 @@ A revision imported before this contract existed returns
 `status: "unavailable"`, an empty tree, and a reason code. It never returns a
 fabricated tree.
 
+## Analyzer capabilities (CPDO-1.2)
+
+A record's **warnings** say what went wrong in *this* source. Its
+**capabilities** say what would go wrong in any source — what the analyzer
+models, what it knowingly does not, and the numeric bounds it ran under:
+
+```json
+{
+  "supported":   ["x12.functional_group", "x12.transaction_set", "x12.composite_elements"],
+  "unsupported": ["x12.empty_elements", "x12.hl_hierarchy", "x12.ta1_acknowledgement"],
+  "limits":      { "maxNodes": 5000, "maxDepth": 32, "valuePreviewChars": 120 }
+}
+```
+
+Both lists are sorted and de-duplicated by `analyzer_capabilities()`, because
+the block is part of the canonicalized document that `content_fingerprint`
+hashes — an unsorted declaration would make an otherwise identical re-analysis
+look like new work and append a redundant sequence.
+
+It is recorded **per record**, not per format. Analyses are immutable and
+long-lived, so the only statement that stays true about a two-year-old record is
+the one its own analyzer made at the time. The cross-format registry that
+answers the same question *ahead of* an import is CPDO-2.4's.
+
+The block is also carried on the detail-read summary, so a format-detail screen
+can explain a missing construct without fetching the tree. A record written
+under contract `1.0.0` reads back with empty capabilities, which is the truthful
+statement about it: the analyzers that would have filled it did not exist yet.
+
 ## Published JSON Schema
 
 `document_json_schema()` returns the JSON Schema of `PayloadAnalysisDocument` in
@@ -163,9 +194,10 @@ the window. Age alone is never sufficient: the current analysis of a live
 revision is the catalog record and is never purged. Intended for the same
 scheduled maintenance job as `purge_preservation_claims` (V184).
 
-## What this ticket does not do
+## Where the records come from
 
-Producing analyses is CPDO-1.2's job: the analyzer SPI and the X12/copybook
-extractors that fill these records land there. Until then every revision reads
-back as a declared `unavailable`/`not_analyzed` record — which is exactly the
-behaviour the contract promises for a source nothing has analysed.
+Producing analyses is CPDO-1.2's job, and it is done: the analyzer SPI and the
+X12/copybook extractors that fill these records are documented in
+[payload_analyzers.md](./payload_analyzers.md). A revision imported before they
+existed still reads back as a declared `unavailable`/`not_analyzed` record —
+exactly the behaviour the contract promises for a source nothing has analysed.
