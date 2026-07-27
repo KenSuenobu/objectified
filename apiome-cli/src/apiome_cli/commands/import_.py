@@ -21,6 +21,11 @@ from apiome_cli.cli_context import (
 )
 from apiome_cli.client import api_paths
 from apiome_cli.client.errors import exit_on_api_error
+from apiome_cli.client.git_import import (
+    build_git_fileset_body,
+    decode_git_document,
+    fetch_git_fileset,
+)
 from apiome_cli.client.http import RestClient
 from apiome_cli.client.tenant_scope import require_tenant_slug
 from apiome_cli.import_.spec_import import (
@@ -1584,6 +1589,239 @@ def _resolve_generic_source(
         )
         raise typer.Exit(EXIT_USAGE)
     return provided[0]
+
+
+@app.command("git")
+def import_git(
+    ctx: typer.Context,
+    repo_url: str = typer.Argument(
+        ...,
+        metavar="REPO_URL",
+        help="Repository URL, for example ``https://github.com/owner/repo``.",
+    ),
+    ref: str | None = typer.Option(
+        None,
+        "--ref",
+        help="Branch, tag, or commit sha (default: the repository's default branch).",
+    ),
+    path: str = typer.Option(
+        "",
+        "--path",
+        help=(
+            "Path or glob selecting what to import — a directory (``protos/``), an "
+            "exact file, or a glob (``**/*.proto``). Default: the whole tree."
+        ),
+    ),
+    root: str | None = typer.Option(
+        None,
+        "--root",
+        help="Root document inside the selection, when auto-detection is ambiguous.",
+    ),
+    source_format: str | None = typer.Option(
+        None,
+        "--format",
+        help="Importer format key (default: the format detected for the root document).",
+    ),
+    repository_id: str | None = typer.Option(
+        None,
+        "--repository-id",
+        help="Registered repository whose stored credential authorizes a private read.",
+    ),
+    linked_account_id: str | None = typer.Option(
+        None,
+        "--linked-account-id",
+        help="Your linked account whose stored credential authorizes a private read.",
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help=_GENERIC_DRY_RUN_HELP
+    ),
+    import_timeout: float | None = typer.Option(
+        None,
+        "--import-timeout",
+        min=1.0,
+        help=_IMPORT_TIMEOUT_HELP,
+    ),
+    wait: bool = typer.Option(
+        True, "--wait/--no-wait", help="Poll the import until complete (default: wait)."
+    ),
+    poll_interval: float = typer.Option(
+        DEFAULT_POLL_INTERVAL,
+        "--poll-interval",
+        min=0.1,
+        help="Seconds between import job-status polls when waiting.",
+    ),
+    min_grade: str | None = typer.Option(None, "--min-grade", help=MIN_GRADE_HELP),
+    fail_on: str | None = typer.Option(None, "--fail-on", help=FAIL_ON_HELP),
+) -> None:
+    """Import a repository path or glob at a ref (MFI-29.3).
+
+    The server reads the selection at an immutable commit and packs it as the same
+    multi-file payload an archive upload produces, so the import runs the normal
+    pipeline — pre-flight gate included — and the created revision records which
+    repository, ref, and commit it came from.
+    """
+    _run_git_adapter_import(
+        ctx,
+        repo_url=repo_url,
+        ref=ref,
+        path=path,
+        root=root,
+        source_format=source_format,
+        repository_id=repository_id,
+        linked_account_id=linked_account_id,
+        dry_run=dry_run,
+        import_timeout_override=import_timeout,
+        wait=wait,
+        poll_interval=poll_interval,
+        min_grade=min_grade,
+        fail_on=fail_on,
+    )
+
+
+def _describe_git_selection(response: dict[str, Any]) -> str:
+    """Summarize a fetched selection for the progress line (members, root, commit)."""
+    git_source = response.get("git_source") or {}
+    members = response.get("members") or []
+    commit = str(git_source.get("commit_sha") or "")[:7]
+    skipped = response.get("skipped") or []
+    suffix = f", {len(skipped)} skipped" if skipped else ""
+    return (
+        f"Fetched {len(members)} file(s) from {git_source.get('repo_url', '')}"
+        f"@{git_source.get('ref', '')} ({commit}), root "
+        f"{response.get('archive_root', '')}{suffix}"
+    )
+
+
+def _run_git_adapter_import(
+    ctx: click.Context,
+    *,
+    repo_url: str,
+    ref: str | None,
+    path: str,
+    root: str | None,
+    source_format: str | None,
+    repository_id: str | None,
+    linked_account_id: str | None,
+    dry_run: bool,
+    import_timeout_override: float | None,
+    wait: bool,
+    poll_interval: float,
+    min_grade: str | None,
+    fail_on: str | None,
+) -> None:
+    """Fetch a repository selection and import it through the adapter pipeline.
+
+    Two calls: the git fileset endpoint resolves the ref, selects the files, and
+    returns them packed with their commit provenance; the packed bytes then run the
+    same submit → gate → poll → emit path as any other adapter import, so nothing
+    about the import semantics is git-specific except the provenance recorded on the
+    revision.
+    """
+    settings = settings_from_context(ctx)
+    require_api_key(settings)
+    min_grade, fail_on = coerce_gate_flags(min_grade, fail_on)
+    import_timeout = _resolve_import_timeout(ctx, import_timeout_override)
+    no_progress = no_progress_from_context(ctx)
+    verify = not insecure_from_context(ctx)
+
+    client = RestClient(settings, timeout=import_timeout, verify=verify)
+    tenant_slug = require_tenant_slug(settings, client)
+
+    response = fetch_git_fileset(
+        client,
+        tenant_slug,
+        build_git_fileset_body(
+            repo_url,
+            ref=ref,
+            path=path,
+            root=root,
+            repository_id=repository_id,
+            linked_account_id=linked_account_id,
+        ),
+    )
+    try:
+        raw_bytes = decode_git_document(response)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(EXIT_ERROR) from exc
+
+    resolved_format = (source_format or response.get("source_kind") or "").strip()
+    if not resolved_format:
+        typer.echo(
+            "The selected root document's format was not recognized. "
+            "Re-run with --format <key> (see 'apiome import --list').",
+            err=True,
+        )
+        raise typer.Exit(EXIT_USAGE)
+
+    descriptors = fetch_import_source_descriptors(client)
+    if find_source(descriptors, resolved_format) is None:
+        typer.echo(unknown_format_message(resolved_format, descriptors), err=True)
+        raise typer.Exit(EXIT_USAGE)
+
+    archive_root = response.get("archive_root") or None
+    source_label = response.get("filename") or "repository.zip"
+    git_source = response.get("git_source") or None
+
+    gate_import_before_job(
+        client,
+        tenant_slug,
+        document_bytes=raw_bytes,
+        min_grade=min_grade,
+        fail_on=fail_on,
+        source_kind=resolved_format,
+        filename=source_label,
+        input_kind="fileset",
+        archive_root=archive_root,
+    )
+
+    if not no_progress:
+        typer.echo(_describe_git_selection(response), err=True)
+        typer.echo(
+            format_document_import_progress(
+                document_label=resolved_format,
+                source=repo_url,
+                dry_run=dry_run,
+            ),
+            err=True,
+        )
+
+    body = build_adapter_import_body(
+        raw_bytes,
+        source_format=resolved_format,
+        source_label=source_label,
+        dry_run=dry_run,
+        archive_root=archive_root,
+        input_kind="fileset",
+        git_source=git_source,
+    )
+
+    import_started_at = time.monotonic()
+    job_response = post_spec_import_json(client, tenant_slug, body)
+    json_mode = json_mode_from_context(ctx)
+    resolution = resolve_import_result(
+        job_response,
+        client,
+        tenant_slug,
+        wait=wait,
+        poll_interval=poll_interval,
+        timeout=import_timeout,
+        no_progress=no_progress,
+    )
+    import_elapsed_seconds = time.monotonic() - import_started_at
+
+    if resolution.kind == "completed":
+        emit_adapter_import_summary(
+            resolution.payload,
+            json_mode=json_mode,
+            dry_run=dry_run,
+            elapsed_seconds=import_elapsed_seconds,
+        )
+        if import_result_has_errors(resolution.payload):
+            raise typer.Exit(EXIT_ERROR)
+        return
+
+    emit_import_job_accepted(resolution.payload, json_mode=json_mode)
 
 
 def _run_generic_adapter_import(

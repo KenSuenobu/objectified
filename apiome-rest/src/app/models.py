@@ -680,6 +680,29 @@ class SpecImportVersionTarget(BaseModel):
     description: Optional[str] = None
 
 
+class SpecImportGitSource(BaseModel):
+    """Provenance of a git-sourced import (MFI-29.3).
+
+    Echoed verbatim from the ``/import/git/fileset`` response by the client that
+    started the job, and recorded on the created revision's ``format_metadata`` so
+    the catalog can answer "which repo, which commit?" — and so a later
+    re-import-on-change comparison has an immutable commit to diff from.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    provider: str = Field(default="github", description="Hosting provider key (github).")
+    repo_url: str = Field(description="Canonical repository URL the files came from.")
+    owner: Optional[str] = Field(default=None, description="Repository owner / organisation.")
+    repo: Optional[str] = Field(default=None, description="Repository name.")
+    ref: str = Field(description="Branch, tag, or commit the caller selected.")
+    commit_sha: str = Field(description="Immutable commit the fileset was read at.")
+    path: str = Field(default="", description="Path or glob that selected the files.")
+    browse_url: Optional[str] = Field(
+        default=None, description="Human URL for the selection at that commit."
+    )
+
+
 class SpecImportOptions(BaseModel):
     """Optional importer flags (parity with dashboard Import dialog)."""
 
@@ -730,6 +753,15 @@ class SpecImportOptions(BaseModel):
             "When the uploaded document is a .zip/.tar.gz archive, the module-relative path of "
             "the root document inside the archive (MFI-29.1). Required when auto-detection is "
             "ambiguous; optional when a single root candidate is found."
+        ),
+    )
+    git_source: Optional[SpecImportGitSource] = Field(
+        None,
+        description=(
+            "Repository provenance for a git-sourced import (MFI-29.3): the payload returned by "
+            "``POST /v1/tenants/{tenant}/import/git/fileset``, echoed back unchanged. Recorded on "
+            "the created revision's format metadata (repo URL, ref, commit, path) and marks the "
+            "intake kind as 'git' rather than 'archive'."
         ),
     )
 

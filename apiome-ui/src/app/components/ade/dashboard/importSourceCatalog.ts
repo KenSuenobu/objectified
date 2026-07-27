@@ -188,12 +188,15 @@ export function baseImportSourceCards(): ImportSourceCard[] {
 }
 
 /**
- * The three base intake methods the catalog import stepper offers (MFI-26.1, §0.3 routing policy).
+ * The base intake methods the catalog import stepper offers (MFI-26.1, §0.3 routing policy;
+ * `git` added by MFI-29.3).
  *
  * `paste` is the source-method id the {@link ../catalog/CatalogImportDialog} branches on; it is
- * backed by the `clipboard` source card.
+ * backed by the `clipboard` source card. `git` selects a repository path or glob at a ref and
+ * imports it as a multi-file selection, so every registry adapter — not just the OpenAPI family —
+ * can be imported straight from a repository.
  */
-export type BaseIntakeMethod = 'file' | 'url' | 'paste';
+export type BaseIntakeMethod = 'file' | 'url' | 'paste' | 'git';
 
 /** A base intake tile: the source-method id the dialog uses, plus the card it renders from. */
 export interface BaseIntakeTile {
@@ -210,11 +213,12 @@ const BASE_INTAKE_METHODS: ReadonlyArray<{ key: string; method: BaseIntakeMethod
   { key: 'file', method: 'file' },
   { key: 'url', method: 'url' },
   { key: 'clipboard', method: 'paste' },
+  { key: 'git', method: 'git' },
 ];
 
 /**
- * Resolve the catalog importer's source tiles — File Upload / URL Import / Clipboard paste — in a
- * fixed order, from the loaded source cards (MFI-26.1, #4094).
+ * Resolve the catalog importer's source tiles — File Upload / URL Import / Clipboard paste /
+ * Git Repository — in a fixed order, from the loaded source cards (MFI-26.1, #4094; MFI-29.3).
  *
  * The grid is data-driven: each tile carries the label / description / icon reported by
  * `GET /v1/import/sources` (via the built-in fallback cards when the registry is unreachable), so it

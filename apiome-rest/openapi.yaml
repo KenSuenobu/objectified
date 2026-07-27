@@ -28622,6 +28622,89 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for rollbackacommittedspecificationimportresponse422.
+  /v1/tenants/{tenant_slug}/import/git/fileset:
+    post:
+      tags:
+      - spec-import
+      summary: Fetch a git repository selection as an importable fileset
+      description: 'Read a repository path or glob at a ref (MFI-29.3) and return
+        it as the payload the import flow already accepts: the selected files packed
+        as a deterministic archive (``document_base64``), the resolved root document,
+        the detected format, and the **commit** the files were read at.
+
+
+        Pass the returned bytes to ``POST /import/preflight`` and ``POST …/imports``
+        exactly as you would an uploaded archive, and echo ``git_source`` back in
+        ``options.git_source`` so the created revision records repository, ref, and
+        commit provenance. Nothing is persisted by this call.
+
+
+        Only github.com repositories are supported today. Private repositories are
+        read with a **stored** linked-account credential — named either by ``repository_id``
+        (a registered tenant repository) or ``linked_account_id`` (the caller''s own
+        linked account); tokens are never accepted in the request. Files that cannot
+        be imported (dotfiles, binaries, vendored trees, oversized blobs) are reported
+        in ``skipped`` rather than silently dropped.'
+      operationId: fetch_git_import_fileset_v1_tenants__tenant_slug__import_git_fileset_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Fetchagitrepositoryselectionasanimportabauthorization schema.
+          - type: 'null'
+            description: Fetchagitrepositoryselectionasanimportabauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Fetchagitrepositoryselectionasanimportab Xapikey schema.
+          - type: 'null'
+            description: Fetchagitrepositoryselectionasanimportab Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GitFilesetRequest'
+              description: Request body for fetchagitrepositoryselectionasanimportabrequest.
+        description: Request body for fetch a git repository selection as an importable
+          fileset.
+      responses:
+        '200':
+          description: Successful response for fetch a git repository selection as
+            an importable fileset.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitFilesetResponse'
+                description: Response payload for fetchagitrepositoryselectionasanimportabresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for fetchagitrepositoryselectionasanimportabresponse422.
   /v1/tenants/{tenant_slug}/schemas/{schema_ref}/validate:
     post:
       tags:
@@ -42114,6 +42197,7 @@ components:
       - event
       - graph
       - data_schema
+      - agent
       title: ApiParadigm
       description: 'The high-level interaction style a format belongs to.
 
@@ -45362,10 +45446,7 @@ components:
 
         :class:`~app.projection_taxonomy.ProjectionReason` pair (see
 
-        :data:`STATUS_FOR_COVERAGE`) — never a parallel status vocabulary.
-
-        ``inferred`` marks constructs synthesized from observations (request files /
-        traffic) and is never presented as declared.'
+        :data:`STATUS_FOR_COVERAGE`) — never a parallel status vocabulary.'
     CoverageEntry:
       properties:
         source_construct:
@@ -49726,6 +49807,160 @@ components:
       - message
       title: FunctionWarningBody
       description: A concern that does not block the write.
+    GitFilesetRequest:
+      properties:
+        repo_url:
+          type: string
+          title: Repo Url
+          description: Repository URL, for example https://github.com/owner/repo.
+          example: https://example.com/resource
+        ref:
+          anyOf:
+          - type: string
+            description: Request body for git fileset.
+          - type: 'null'
+            description: Request body for git fileset.
+          title: Ref
+          description: Branch, tag, or commit sha. Defaults to the repository's default
+            branch.
+        path:
+          type: string
+          title: Path
+          description: Path or glob selecting the files to import — a directory ('protos/'),
+            an exact file, or a glob ('**/*.proto'). Empty selects the whole tree.
+            The static prefix is stripped from member paths so sibling imports/refs
+            keep resolving.
+          default: ''
+          example: /resources/{id}
+        root:
+          anyOf:
+          - type: string
+            description: Request body for git fileset.
+          - type: 'null'
+            description: Request body for git fileset.
+          title: Root
+          description: Explicit root document, relative to the selection. Required
+            only when root auto-detection reports the selection as ambiguous.
+        repository_id:
+          anyOf:
+          - type: string
+            description: Request body for git fileset.
+          - type: 'null'
+            description: Request body for git fileset.
+          title: Repository Id
+          description: Registered tenant repository whose stored linked-account credential
+            authorizes the read (private repositories).
+        linked_account_id:
+          anyOf:
+          - type: string
+            description: Request body for git fileset.
+          - type: 'null'
+            description: Request body for git fileset.
+          title: Linked Account Id
+          description: The acting user's linked account whose stored token authorizes
+            the read, when no registered repository is used.
+        include_document:
+          type: boolean
+          title: Include Document
+          description: Include the packed archive bytes in the response (the import
+            payload). Set false to preview the selection — members, root, detection,
+            commit — without them.
+          default: true
+          example: false
+      additionalProperties: false
+      type: object
+      required:
+      - repo_url
+      title: GitFilesetRequest
+      description: A repository selection to fetch as an importable fileset.
+    GitFilesetResponse:
+      properties:
+        git_source:
+          $ref: '#/components/schemas/SpecImportGitSource'
+          description: Provenance to echo back in options.git_source when starting
+            the import.
+        filename:
+          type: string
+          title: Filename
+          description: Suggested filename for the packed archive (the import's source
+            label).
+          example: Example
+        document_base64:
+          anyOf:
+          - type: string
+            description: Response payload for git fileset.
+          - type: 'null'
+            description: Response payload for git fileset.
+          title: Document Base64
+          description: Standard base64 of the packed archive, ready for /import/preflight
+            and POST …/imports. Null when include_document was false.
+        archive_root:
+          type: string
+          title: Archive Root
+          description: Module-relative root document inside the packed archive.
+          example: example
+        members:
+          items:
+            type: string
+          type: array
+          title: Members
+          description: Sorted module-relative member paths.
+          maxItems: 1000
+        skipped:
+          items:
+            $ref: '#/components/schemas/GitFilesetSkippedMember'
+          type: array
+          title: Skipped
+          description: Repository files the selection matched but did not ingest,
+            with reasons.
+          maxItems: 1000
+        total_bytes:
+          type: integer
+          title: Total Bytes
+          description: Decoded size of every selected member, in bytes.
+          example: 1
+        source_kind:
+          anyOf:
+          - type: string
+            description: Response payload for git fileset.
+          - type: 'null'
+            description: Response payload for git fileset.
+          title: Source Kind
+          description: Registry key of the adapter detection picked for the root,
+            when importable.
+        detection:
+          $ref: '#/components/schemas/DetectFormatResponse'
+          description: Format detection for the resolved root document.
+      additionalProperties: false
+      type: object
+      required:
+      - git_source
+      - filename
+      - archive_root
+      - total_bytes
+      - detection
+      title: GitFilesetResponse
+      description: 'The fetched selection: import payload, detection, and commit provenance.'
+    GitFilesetSkippedMember:
+      properties:
+        path:
+          type: string
+          title: Path
+          description: Repository-relative path of the skipped file.
+          example: /resources/{id}
+        reason:
+          type: string
+          title: Reason
+          description: 'Why it was skipped: dotfile, binary-file, excluded-directory,
+            or too-large.'
+          example: example
+      additionalProperties: false
+      type: object
+      required:
+      - path
+      - reason
+      title: GitFilesetSkippedMember
+      description: A repository file excluded from the selection, and why.
     GitSourceLocator:
       properties:
         repo_url:
@@ -71572,6 +71807,77 @@ components:
       - message
       title: SpecImportEvent
       description: Structured log line from an import job.
+    SpecImportGitSource:
+      properties:
+        provider:
+          type: string
+          title: Provider
+          description: Hosting provider key (github).
+          default: github
+          example: example
+        repo_url:
+          type: string
+          title: Repo Url
+          description: Canonical repository URL the files came from.
+          example: https://example.com/resource
+        owner:
+          anyOf:
+          - type: string
+            description: Spec Import Git Source schema.
+          - type: 'null'
+            description: Spec Import Git Source schema.
+          title: Owner
+          description: Repository owner / organisation.
+        repo:
+          anyOf:
+          - type: string
+            description: Spec Import Git Source schema.
+          - type: 'null'
+            description: Spec Import Git Source schema.
+          title: Repo
+          description: Repository name.
+        ref:
+          type: string
+          title: Ref
+          description: Branch, tag, or commit the caller selected.
+          example: example
+        commit_sha:
+          type: string
+          title: Commit Sha
+          description: Immutable commit the fileset was read at.
+          example: example
+        path:
+          type: string
+          title: Path
+          description: Path or glob that selected the files.
+          default: ''
+          example: /resources/{id}
+        browse_url:
+          anyOf:
+          - type: string
+            description: Spec Import Git Source schema.
+          - type: 'null'
+            description: Spec Import Git Source schema.
+          title: Browse Url
+          description: Human URL for the selection at that commit.
+      additionalProperties: false
+      type: object
+      required:
+      - repo_url
+      - ref
+      - commit_sha
+      title: SpecImportGitSource
+      description: 'Provenance of a git-sourced import (MFI-29.3).
+
+
+        Echoed verbatim from the ``/import/git/fileset`` response by the client that
+
+        started the job, and recorded on the created revision''s ``format_metadata``
+        so
+
+        the catalog can answer "which repo, which commit?" — and so a later
+
+        re-import-on-change comparison has an immutable commit to diff from.'
     SpecImportJobAccepted:
       properties:
         job_id:
@@ -71958,6 +72264,16 @@ components:
             path of the root document inside the archive (MFI-29.1). Required when
             auto-detection is ambiguous; optional when a single root candidate is
             found.
+        git_source:
+          anyOf:
+          - $ref: '#/components/schemas/SpecImportGitSource'
+          - type: 'null'
+            description: Spec Import Options schema.
+          description: 'Repository provenance for a git-sourced import (MFI-29.3):
+            the payload returned by ``POST /v1/tenants/{tenant}/import/git/fileset``,
+            echoed back unchanged. Recorded on the created revision''s format metadata
+            (repo URL, ref, commit, path) and marks the intake kind as ''git'' rather
+            than ''archive''.'
       additionalProperties: false
       type: object
       title: SpecImportOptions

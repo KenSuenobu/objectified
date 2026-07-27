@@ -32,6 +32,7 @@ from .draft_lock_routes import router as draft_lock_router
 from .export_job_routes import router as export_job_router
 from .export_routes import router as export_router
 from .export_routes import tenant_router as export_tenant_router
+from .git_import_routes import router as git_import_router
 from .identity_routes import router as identity_router
 from .import_sources_routes import router as import_sources_router
 from .jsonschema_generator import generate_class_jsonschema_spec, generate_jsonschema_spec
@@ -108,7 +109,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.60.0",
+    version="1.61.0",
 )
 
 
@@ -309,6 +310,9 @@ app.include_router(mcp_policy_router)
 # MCP API key lifecycle (MTG-3.2, #4776): tenant-admin CRUD over mcp_api_keys.
 app.include_router(mcp_key_router)
 app.include_router(spec_import_router)
+# Git-repository intake (MFI-29.3, #4390): POST /v1/tenants/{tenant}/import/git/fileset —
+# fetches a repo path/glob at a ref as the archive payload the import flow already accepts.
+app.include_router(git_import_router)
 # Schema instance validation (IXH-5.1, #5113): POST /v1/tenants/{tenant}/schemas/{ref}/validate
 # — does this payload satisfy this schema? Mounted next to the import surface because the
 # reference grammar addresses the same project/catalog revisions imports create.
