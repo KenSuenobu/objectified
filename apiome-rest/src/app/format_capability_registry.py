@@ -122,7 +122,7 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "1"
+REGISTRY_VERSION = "2"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
@@ -797,11 +797,15 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
             "into siblings."
         ),
         source_location=SourceLocationSupport(
-            quality=SourceLocationQuality.PATH_ONLY,
+            quality=SourceLocationQuality.BYTE_OFFSETS,
             note=(
-                "The X12 parser exposes no byte offsets, so a node locates by envelope path and "
-                "sibling ordinal (``ISA/GS[0]/ST[2]/NM1[4]``). A UI can highlight the segment "
-                "by position; it cannot claim a byte range."
+                "The X12 parser exposes no positions, so the interchange text is scanned a second "
+                "time on its own declared delimiters and matched to the parsed segments. Every "
+                "segment, group and transaction set then carries the exact offset, length and line "
+                "of the bytes it was read from, alongside its envelope path "
+                "(``ISA/GS[0]/ST[2]/NM1[4]``). Where the two readings disagree the scan is "
+                "abandoned whole and the record falls back to path and ordinal — a record carries "
+                "positions that were checked against the parse, or it carries none."
             ),
         ),
         value_visibility=ValueVisibilitySupport(
@@ -819,25 +823,36 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
             dropped_constructs=[
                 "x12.control_numbers",
                 "x12.delimiters",
+                "x12.empty_elements",
+                "x12.envelope_control_totals",
                 "x12.functional_group",
                 "x12.interchange_envelope",
+                "x12.repeating_elements",
                 "x12.segment_ordinals",
+                "x12.segment_repeat_counts",
             ],
             note=(
                 "The canonical model describes one schema, so normalization reads the first "
                 "functional group's first transaction set and drops the envelope around it. "
                 "Every group and transaction set the interchange carried is in the analysis, "
-                "and only there."
+                "and only there. An analysis of an interchange carrying more than one says so "
+                "explicitly, naming the set the conversion was derived from."
             ),
         ),
         notes=[
-            "A present-but-empty element and an absent one arrive from the parser identically, "
-            "so an empty element is never asserted — the analysis says nothing rather than "
-            "guessing which it was.",
-            "HL loops are described as the segments they are, not as the hierarchy they encode; "
-            "repetition separators are not split into repeated occurrences.",
+            "An element position the source wrote and left empty is recorded as present with a "
+            "zero length; a position the source never wrote is not recorded at all. The two are "
+            "different facts about the payload and are never rendered as one.",
+            "HL loops are described as the segments they are, not as the hierarchy they encode. "
+            "Where the interchange declares a repetition separator (ISA11 at 00501 and later, "
+            "never at 00401) a repeated element carries its occurrences and states how many.",
+            "Control totals declared by the SE, GE and IEA trailers are recorded beside the "
+            "counts actually observed, so an interchange that disagrees with itself can be seen "
+            "to. The trailer segments themselves are not tree nodes, and TA1 acknowledgements are "
+            "removed by the parser before the analysis runs.",
             "No 4010/5010 implementation-guide conformance is evaluated — a structurally valid "
-            "interchange is not claimed to be a conformant one.",
+            "interchange is not claimed to be a conformant one, and an ST03 implementation "
+            "convention reference is recorded as the sender's claim rather than as a checked fact.",
         ],
     ),
     "cobolcopybook": _Seed(

@@ -514,8 +514,15 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
   // The Overview entity currently highlighted by a just-followed deep-link (cleared after a delay).
   const [highlightedAnchor, setHighlightedAnchor] = useState<string | null>(null);
   // A source location the Format details tab asked the Source viewer to reveal (CPDO-2.1) — it
-  // overrides the `?line=` compatibility deep link while it is set.
-  const [sourceFocus, setSourceFocus] = useState<{ line: number; file: string | null } | null>(null);
+  // overrides the `?line=` compatibility deep link while it is set. `range` carries the exact
+  // characters when the analyzer recorded them (CPDO-2.2's X12 scan), so the viewer selects the
+  // construct rather than merely centring the line it starts on.
+  const [sourceFocus, setSourceFocus] = useState<{
+    line: number;
+    file: string | null;
+    range: { offset: number; length: number } | null;
+    label: string | null;
+  } | null>(null);
 
   // "View code" (and any future deep link into the raw source) jumps to the Source & Code tab.
   const showSourceTab = useCallback(() => setActiveTab('source'), []);
@@ -535,10 +542,18 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
   const focusNodeId = searchParams.get('node');
 
   /** Reveal a native-analysis node's source location in the Source & Code tab. */
-  const showSourceLine = useCallback((line: number, file: string | null) => {
-    setSourceFocus({ line, file });
-    setActiveTab('source');
-  }, []);
+  const showSourceLine = useCallback(
+    (
+      line: number,
+      file: string | null,
+      range?: { offset: number; length: number } | null,
+      label?: string | null,
+    ) => {
+      setSourceFocus({ line, file, range: range ?? null, label: label ?? null });
+      setActiveTab('source');
+    },
+    [],
+  );
 
   /** The shareable address of one analysis node — `?tab=format&node=<id>` on this item's route. */
   const formatNodeHref = useCallback(
@@ -1157,6 +1172,8 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
             highlightLine={sourceFocus?.line ?? sourceDeepLink.line}
             focusSourcePath={sourceFocus?.file ?? sourceDeepLink.sourcePath}
             highlightOrigin={sourceFocus ? 'format-analysis' : 'compatibility'}
+            highlightRange={sourceFocus?.range ?? null}
+            highlightLabel={sourceFocus?.label ?? null}
           />
         </TabPanel>
 

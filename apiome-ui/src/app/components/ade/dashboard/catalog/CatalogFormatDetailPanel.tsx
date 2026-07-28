@@ -81,12 +81,32 @@ import {
   type AnalysisTreeRow,
   type AnalysisWarning,
 } from '@/app/utils/catalog-payload-analysis';
+import {
+  isX12Analysis,
+  x12ElementPresence,
+  x12PresencePresentation,
+  x12Reference,
+  x12SourceRange,
+  X12_KIND_COMPONENT,
+  X12_KIND_COMPOSITE,
+  X12_KIND_ELEMENT,
+  X12_KIND_REPETITION,
+} from '@/app/utils/catalog-x12-analysis';
+import { CatalogX12InspectorPanel } from './CatalogX12InspectorPanel';
 import { FormatCapabilityPanel } from './FormatCapabilityPanel';
 import { useFormatCapabilities } from './useFormatCapabilities';
 import {
   capabilityForFormat,
   explainAnalysisAbsence,
 } from './formatCapabilityRegistry';
+
+/** Node kinds whose presence badge the X12 inspector adds to a row. */
+const X12_VALUE_KINDS = new Set<string>([
+  X12_KIND_ELEMENT,
+  X12_KIND_COMPOSITE,
+  X12_KIND_COMPONENT,
+  X12_KIND_REPETITION,
+]);
 
 /** Uniform tree-row height (px) the windowing arithmetic assumes; matches the `h-8` row class. */
 const TREE_ROW_HEIGHT = 32;
@@ -114,8 +134,20 @@ export interface CatalogFormatDetailPanelProps {
   active: boolean;
   /** Whether the raw source was captured — gates the "view source" jumps (nothing to open otherwise). */
   sourceAvailable: boolean;
-  /** Jump the Source & Code tab to a 1-based source line (and optionally name the file). */
-  onViewSourceLine: (line: number, file: string | null) => void;
+  /**
+   * Jump the Source & Code tab to a 1-based source line (and optionally name the file).
+   *
+   * `range` refines the jump for an analyzer that records exact positions (CPDO-2.2's X12 scan):
+   * the viewer selects those characters instead of merely centring the line, which is the only
+   * useful behaviour for an interchange written on a single line. `label` names the construct in
+   * the viewer's note. Both are optional, so a line-only analyzer calls this unchanged.
+   */
+  onViewSourceLine: (
+    line: number,
+    file: string | null,
+    range?: { offset: number; length: number } | null,
+    label?: string | null,
+  ) => void;
   /** Build the shareable deep-link href for a node (`?tab=format&node=…`). */
   nodeHref: (nodeId: string) => string;
   /** Node id a deep link asked to reveal (the `?node=` query param). */
@@ -432,9 +464,14 @@ export function CatalogFormatDetailPanel({
 
   /** Follow a node's source location into the Source & Code tab, arming the focus return. */
   const viewSource = useCallback(
-    (line: number, file: string | null) => {
+    (
+      line: number,
+      file: string | null,
+      range?: { offset: number; length: number } | null,
+      label?: string | null,
+    ) => {
       restoreOnReturnRef.current = true;
-      onViewSourceLine(line, file);
+      onViewSourceLine(line, file, range ?? null, label ?? null);
     },
     [onViewSourceLine],
   );
@@ -571,11 +608,45 @@ export function CatalogFormatDetailPanel({
   const selectedNode = selectedRow?.node ?? null;
   const selectedLocation = selectedNode?.location ?? null;
   const selectedLine = nodeSourceLine(selectedLocation);
+  // An exact character range, when the analyzer recorded one. It is a strictly better jump than a
+  // line — an X12 interchange is routinely one line, where a line jump reveals nothing.
+  const selectedRange = x12SourceRange(selectedLocation);
   const selectedValue = selectedNode ? nodeValueStatement(selectedNode, visibility) : null;
   const selectedAttributes = selectedNode ? nodeAttributeEntries(selectedNode) : [];
   const selectedWarnings = selectedNode ? nodeWarnings.get(selectedNode.id) ?? [] : [];
   const filtering = filter.trim() !== '';
   const anythingExpanded = expandedIds.size > 0;
+  const isX12Record = isX12Analysis(analysisDocument, analysedFormat);
+  // X12-only evidence for the selected construct: its reference designator (`BEG04`, `CLM05-2`) and
+  // which of the four value states it is in. Both are null for any other analyzer's record.
+  const selectedPresence =
+    isX12Record && selectedNode && X12_VALUE_KINDS.has(selectedNode.kind)
+      ? x12ElementPresence(selectedNode)
+      : null;
+  const selectedReference = isX12Record && selectedNode ? x12Reference(selectedNode) : null;
+
+  /**
+   * Select and focus one node from outside the tree — what the X12 inspector's transaction-set
+   * links do. It expands the node's ancestors first, so the row exists before it is focused, and
+   * does nothing at all for a node this analysis does not carry rather than moving focus somewhere
+   * arbitrary.
+   */
+  const revealNode = useCallback(
+    (nodeId: string) => {
+      if (!analysisDocument) return;
+      const found = locateAnalysisNode(analysisDocument.tree, nodeId);
+      if (!found) return;
+      const nextExpanded = new Set(expandedIds);
+      for (const ancestorId of found.ancestorIds) nextExpanded.add(ancestorId);
+      nextExpanded.add(nodeId);
+      setExpandedIds(nextExpanded);
+      setFilter('');
+      const nextRows = buildAnalysisTreeRows(analysisDocument.tree, nextExpanded, '');
+      const index = nextRows.findIndex((row) => row.id === nodeId);
+      if (index >= 0) focusRow(index, nextRows);
+    },
+    [analysisDocument, expandedIds, focusRow],
+  );
 
   const treeDescriptionId = 'catalog-format-detail-tree-help';
 
@@ -584,6 +655,14 @@ export function CatalogFormatDetailPanel({
     const location = sourceLocationText(row.node.location);
     const warnings = nodeWarnings.get(row.id) ?? [];
     const worst = warnings[0];
+    // For an X12 element the *presence* of a value is the fact that distinguishes a position
+    // written and left empty from one that was never written — so it rides on the row rather than
+    // waiting for the reader to select it. Only the states that are not the ordinary case are
+    // badged, so a tree of ordinary elements stays readable.
+    const presence =
+      isX12Record && X12_VALUE_KINDS.has(row.node.kind) ? x12ElementPresence(row.node) : null;
+    const presenceBadge =
+      presence === 'empty' || presence === 'absent' ? x12PresencePresentation(presence) : null;
     return (
       <li
         key={row.id}
@@ -639,6 +718,15 @@ export function CatalogFormatDetailPanel({
           {row.node.redacted ? (
             <span className="shrink-0 rounded bg-violet-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
               redacted
+            </span>
+          ) : null}
+          {presenceBadge ? (
+            <span
+              data-testid="catalog-format-detail-node-presence"
+              data-presence={presence}
+              className="shrink-0 rounded bg-sky-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-sky-800 dark:bg-sky-900/40 dark:text-sky-300"
+            >
+              {presenceBadge.label}
             </span>
           ) : null}
           {worst ? (
@@ -845,6 +933,18 @@ export function CatalogFormatDetailPanel({
         </p>
       ) : null}
 
+      {/* CPDO-2.2: the interchange read as an interchange — envelope controls, declared delimiters,
+          every functional group and transaction set, and what the conversion was derived from. It
+          renders nothing for a record from any other analyzer. */}
+      {isX12Record && analysisDocument ? (
+        <CatalogX12InspectorPanel
+          document={analysisDocument}
+          sourceFormat={analysedFormat}
+          onRevealNode={revealNode}
+          className="mt-4"
+        />
+      ) : null}
+
       {/* The native tree. Absent when the record carries none — nothing here invents structure. */}
       {tree.length > 0 ? (
         <div className="mt-4 space-y-2">
@@ -968,6 +1068,28 @@ export function CatalogFormatDetailPanel({
                     icon={<EyeOff className="h-3 w-3" aria-hidden />}
                   />
                 ) : null}
+                {selectedPresence ? (
+                  <StateBadge
+                    label="Element position"
+                    value={x12PresencePresentation(selectedPresence).label}
+                    tone={
+                      x12PresencePresentation(selectedPresence).tone === 'positive'
+                        ? 'positive'
+                        : x12PresencePresentation(selectedPresence).tone === 'caution'
+                          ? 'caution'
+                          : 'neutral'
+                    }
+                    testId="catalog-format-detail-selected-presence"
+                  />
+                ) : null}
+                {selectedReference ? (
+                  <span
+                    data-testid="catalog-format-detail-selected-reference"
+                    className="font-mono text-[11px] text-gray-500 dark:text-gray-400"
+                  >
+                    {selectedReference}
+                  </span>
+                ) : null}
                 <Link
                   href={nodeHref(selectedNode.id)}
                   data-testid="catalog-format-detail-node-link"
@@ -1025,19 +1147,31 @@ export function CatalogFormatDetailPanel({
                 </ul>
               ) : null}
 
-              {/* The raw-source jump. Offered only when the location carries a line the raw viewer
-                  can open *and* the source was captured — the viewer streams through the existing
-                  `/api/catalog/{id}/source` proxy, so authorization is unchanged by this link. */}
+              {/* The raw-source jump. Offered only when the location addresses the raw source —
+                  an exact character range, or failing that a line — *and* the source was captured.
+                  The viewer streams through the existing `/api/catalog/{id}/source` proxy, so
+                  authorization is unchanged by this link. */}
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                {selectedLine !== null && sourceAvailable ? (
+                {(selectedRange !== null || selectedLine !== null) && sourceAvailable ? (
                   <button
                     type="button"
                     data-testid="catalog-format-detail-view-source"
-                    onClick={() => viewSource(selectedLine, selectedLocation?.file ?? null)}
+                    onClick={() =>
+                      viewSource(
+                        selectedRange?.line ?? selectedLine ?? 1,
+                        selectedLocation?.file ?? null,
+                        selectedRange,
+                        `${analysisKindLabel(selectedNode.kind)} ${analysisNodeLabel(selectedNode)}`,
+                      )
+                    }
                     className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                   >
-                    <Code className="h-3.5 w-3.5 text-indigo-500" aria-hidden /> View source at line{' '}
-                    {selectedLine}
+                    <Code className="h-3.5 w-3.5 text-indigo-500" aria-hidden />
+                    {selectedRange !== null
+                      ? `Highlight ${selectedRange.length.toLocaleString()} character${
+                          selectedRange.length === 1 ? '' : 's'
+                        } in the source`
+                      : `View source at line ${selectedLine}`}
                   </button>
                 ) : (
                   <p
@@ -1046,7 +1180,7 @@ export function CatalogFormatDetailPanel({
                   >
                     {!sourceAvailable
                       ? 'The raw source was not captured at import, so there is nothing to open.'
-                      : 'This analyzer locates constructs by structural path rather than by line, so the raw viewer cannot be opened at this construct.'}
+                      : 'This analyzer locates this construct by structural path rather than by a position in the raw source, so the raw viewer cannot be opened at it.'}
                   </p>
                 )}
               </div>

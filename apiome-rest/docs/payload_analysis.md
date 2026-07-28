@@ -92,6 +92,13 @@ infer.
 | `structural` *(default)* | Whether a value was present, and how long it was. Enough to distinguish an empty X12 element from an absent one, without carrying what it said. |
 | `full` | The observed value, truncated to 120 characters. Only for material explicitly decided to be safe to store; never a default. |
 
+A node whose observed value was **zero length** is not marked `redacted` at
+`structural` and is not counted: there was nothing in it to withhold, and
+flagging it would make a present-and-empty X12 element (CPDO-2.2) look exactly
+like one whose real value was suppressed — the one confusion this level exists to
+prevent. At `none` it *is* counted, because stripping the presence fact does
+withhold something. The same reasoning already governed a value observed absent.
+
 Redaction is applied **twice, deliberately**: once before the record is written,
 so the store never holds more than policy allows, and once on read, so a stored
 record can only ever be *further* restricted by a request. Restriction is

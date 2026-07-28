@@ -867,8 +867,14 @@ def apply_value_visibility(
                 update["value_length"] = (
                     len(node.value or "") if node.value_length is None else node.value_length
                 )
-                update["redacted"] = True
-                redacted_count += 1
+                # An observed value of zero length is not withheld, because there was nothing in it
+                # to withhold — a present-and-empty X12 element (CPDO-2.2) discloses nothing at any
+                # policy level. Marking it redacted would make it indistinguishable from an element
+                # whose real value was suppressed, which is the one confusion this block exists to
+                # prevent. The same reasoning governs the observed-absent case below.
+                if node.value:
+                    update["redacted"] = True
+                    redacted_count += 1
         else:  # ValueVisibility.NONE
             if had_value or node.value_present is not None or node.value_length is not None:
                 update["value"] = None

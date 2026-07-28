@@ -293,15 +293,41 @@ def test_x12_states_its_envelope_and_grammar_boundaries() -> None:
     entry = capability_for("edix12")
     assert "x12.interchange_envelope" in entry.supported_constructs
     assert "x12.functional_group" in entry.supported_constructs
-    # The grammar the extractor knowingly does not read.
-    for construct in ("x12.hl_hierarchy", "x12.repeating_elements", "x12.empty_elements"):
+    # The grammar the extractor knowingly does not read. HL nesting and implementation-guide
+    # conformance are boundaries of the analyzer itself, not of any one source.
+    for construct in (
+        "x12.hl_hierarchy",
+        "x12.ta1_acknowledgement",
+        "x12.iea_trailer",
+        "x12.implementation_guide_validation",
+    ):
         assert construct in entry.unsupported_constructs, construct
-    # Only ordinals and paths — the parser exposes no byte offsets.
-    assert entry.source_location.quality is SourceLocationQuality.PATH_ONLY
-    assert "x12.byte_offsets" in entry.unsupported_constructs
+    # CPDO-2.2: the interchange text is scanned and matched to the parse, so a construct carries
+    # the exact bytes it was read from — and empty positions and repetitions become readable with it.
+    assert entry.source_location.quality is SourceLocationQuality.BYTE_OFFSETS
+    for construct in (
+        "x12.byte_offsets",
+        "x12.empty_elements",
+        "x12.repeating_elements",
+        "x12.envelope_control_totals",
+        "x12.segment_repeat_counts",
+    ):
+        assert construct in entry.supported_constructs, construct
     # The envelope survives only in the analysis: normalization reads one transaction set.
-    assert "x12.functional_group" in entry.canonical_projection.dropped_constructs
-    assert "x12.interchange_envelope" in entry.canonical_projection.dropped_constructs
+    for construct in (
+        "x12.functional_group",
+        "x12.interchange_envelope",
+        "x12.empty_elements",
+        "x12.segment_repeat_counts",
+    ):
+        assert construct in entry.canonical_projection.dropped_constructs, construct
+
+
+def test_x12_never_claims_a_construct_it_both_models_and_does_not() -> None:
+    """The two lists are disjoint. CPDO-2.2 moved four constructs across, and a stale entry left in
+    both would make the panel say a construct is modelled and unmodelled on the same screen."""
+    entry = capability_for("edix12")
+    assert not set(entry.supported_constructs) & set(entry.unsupported_constructs)
 
 
 def test_copybook_states_its_layout_and_clause_boundaries() -> None:

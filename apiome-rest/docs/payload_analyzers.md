@@ -35,6 +35,7 @@ flowchart LR
 |---|---|
 | `app/payload_analyzer.py` | The shared machinery: `NativeNode`, the budgeted breadth-first walk, the status decision, the format-blind generic extractor, and `analyze_import` (the never-raising entry point). |
 | `app/edix12_analysis.py` | The X12 extractor: interchange → functional group → transaction set → segment → element/composite. |
+| `app/edix12_segment_scan.py` | CPDO-2.2's second reading of the interchange text: delimiters, segment offsets, element/component/repetition splitting. No `pyx12`, no AST. |
 | `app/cobolcopybook_analysis.py` | The copybook extractor: record → group → field → 88-condition, with source lines. |
 | `app/import_source.py` | The SPI: `analyzer_key`, `analyzer_version`, `analyzer_tool_versions()`, `analysis_capabilities()`, `analyze()`. |
 | `app/import_source_pipeline.py` | Runs the analysis after parse and stores it after persistence. |
@@ -121,13 +122,50 @@ sender, receiver, control numbers and delimiters label the tree and are already
 what the canonical model keeps in its `x12_envelope` extras. Element values are
 payload, and stay where the visibility policy can reach them.
 
-Declared unsupported: `x12.empty_elements` (pyx12 omits empty element positions,
-so present-and-empty is indistinguishable from absent — positions are never
-invented to cover the gap), `x12.hl_hierarchy` (HL segments are all in the tree,
-their nesting is not inferred; an interchange carrying them gets an `info`
-warning), `x12.ta1_acknowledgement` and `x12.iea_trailer` (dropped by the parser
-before the extractor sees the AST), `x12.repeating_elements`,
-`x12.byte_offsets`, `x12.implementation_guide_validation`.
+### The second reading (CPDO-2.2, #4798)
+
+`pyx12` answers questions about *values*, and three facts it cannot answer are
+read from the interchange text instead by `app/edix12_segment_scan.py` and
+**aligned** to the AST segment by segment: where a segment sits
+(`offset`/`length`/`line`), which element positions were written and left empty,
+and how a repeated value divides. Both readings are in source order, so aligning
+them is a match on segment ids; a single unmatched id abandons the scan whole and
+the record falls back to path-and-ordinal locations, because half-aligned
+positions would put a reader in front of the wrong bytes.
+
+That adds, per record: exact source ranges on every envelope and segment; element
+nodes for positions written and left empty (`value_present` true, `value_length`
+zero), with `elementPositionCount` recorded beside the parser's `elementCount`;
+`repetition` children under an element the declared repetition separator splits;
+`repeatIndex`/`repeatCount` per segment within its transaction set; the component
+and repetition separators, `ISA09`/`ISA10`/`ISA14`/`ISA15` (with the usage
+indicator's word), `GS04`/`GS05`/`GS07`, `ST03`, and the `IEA01`/`GE01`/`SE01`
+control totals beside the counts observed. `ISA11` is honoured as a repetition
+separator only from version `00501` — at `00401` that position is an ordinary
+code, and splitting on it would invent occurrences.
+
+A control-total mismatch is recorded, never reconciled, and never makes the
+record `partial`: the analysis is complete, and the status vocabulary means "what
+the analyzer could not do" rather than "what the interchange got wrong".
+
+An interchange carrying more than one transaction set gets an `info`
+`x12.canonical_projection_subset` warning naming the set the canonical model was
+derived from and how many it was not, so the conversion's scope is stated rather
+than left to be inferred from two screens.
+
+Declared unsupported for every record: `x12.hl_hierarchy` (HL segments are all in
+the tree, their nesting is not inferred; an interchange carrying them gets an
+`info` warning), `x12.ta1_acknowledgement` and `x12.iea_trailer` (dropped by the
+parser before the extractor sees the AST — a `TA1` the source carried is named in
+an `info` warning, and the trailers' control totals are recovered),
+`x12.implementation_guide_validation`.
+
+Declared **per record**, supported only where the scan aligned:
+`x12.byte_offsets`, `x12.empty_elements`, `x12.repeating_elements`,
+`x12.envelope_control_totals`. The adapter's `analysis_capabilities()` — the
+format-wide statement CPDO-2.4's registry publishes ahead of an import — declares
+all four supported, because the analyzer produces them for any interchange it can
+read.
 
 ## The COBOL copybook extractor
 

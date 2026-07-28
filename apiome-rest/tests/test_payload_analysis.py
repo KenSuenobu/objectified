@@ -377,12 +377,15 @@ def test_structural_visibility_keeps_shape_and_drops_values():
     assert first.value_length == 2
     assert first.redacted is True
 
-    # The empty-but-present element is still distinguishable from an absent one.
+    # The empty-but-present element is still distinguishable from an absent one — and from a
+    # withheld one. Nothing was withheld from it, because there was nothing in it to withhold, so it
+    # is neither flagged nor counted; only that keeps "observed empty" and "value suppressed" apart.
     assert second.value_present is True
     assert second.value_length == 0
+    assert second.redacted is False
 
     assert reduced.redaction.value_visibility == ValueVisibility.STRUCTURAL
-    assert reduced.redaction.redacted_node_count == 2
+    assert reduced.redaction.redacted_node_count == 1
 
 
 def test_none_visibility_drops_presence_metadata_too():
@@ -438,9 +441,12 @@ def test_unknown_visibility_withholds_rather_than_discloses():
 def test_redaction_accumulates_across_successive_applications():
     """Applying a second, narrower level adds to the count rather than resetting it."""
     structural = apply_value_visibility(_available_document(), ValueVisibility.STRUCTURAL)
-    assert structural.redaction.redacted_node_count == 2
+    # One of the two elements was observed empty, and ``structural`` withholds nothing from it.
+    assert structural.redaction.redacted_node_count == 1
+    # ``none`` then withholds both — the empty element's *presence* is itself information, and
+    # stripping that is a redaction even though its value was not.
     narrowed = apply_value_visibility(structural, ValueVisibility.NONE)
-    assert narrowed.redaction.redacted_node_count == 4
+    assert narrowed.redaction.redacted_node_count == 3
 
 
 def test_redaction_records_its_policy_source():
