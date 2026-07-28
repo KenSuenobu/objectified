@@ -37,6 +37,7 @@ flowchart LR
 | `app/edix12_analysis.py` | The X12 extractor: interchange → functional group → transaction set → segment → element/composite. |
 | `app/edix12_segment_scan.py` | CPDO-2.2's second reading of the interchange text: delimiters, segment offsets, element/component/repetition splitting. No `pyx12`, no AST. |
 | `app/cobolcopybook_analysis.py` | The copybook extractor: record → group → field → 88-condition, with source lines. |
+| `app/cobolcopybook_layout.py` | CPDO-2.3's storage arithmetic: PICTURE/USAGE widths, group sums, tables, REDEFINES overlays, and the unknowns it refuses to fill in. |
 | `app/import_source.py` | The SPI: `analyzer_key`, `analyzer_version`, `analyzer_tool_versions()`, `analysis_capabilities()`, `analyze()`. |
 | `app/import_source_pipeline.py` | Runs the analysis after parse and stores it after persistence. |
 | apiome-db `V210__payload_analysis_capabilities_4795.sql` | The additive `capabilities` column. |
@@ -188,13 +189,51 @@ lines in traversal order; a name that repeats (`FILLER`, most often) resolves to
 its own occurrence. A field that cannot be placed keeps its structural location
 and loses only its line — a wrong line number would be worse than none.
 
-**Unmodelled clauses are found by scanning the source**, because a `REDEFINES`
-the parser ignored leaves no trace in the parsed tree at all. Each one found is a
+**Unmodelled clauses are found by scanning the source**, because a clause the
+parser ignored leaves no trace in the parsed tree at all. Each one found is a
 `warning`, which makes the record `partial` with a stated reason; a copybook that
-uses none of them is `available`, and means it. `REDEFINES`, level-66 `RENAMES`,
-`COPY` and `COPY … REPLACING` are scanned for; `VALUE` on ordinary fields,
-sign/synchronized clauses, computed storage lengths and clauses continued onto a
-following line are declared in capabilities with nothing to scan for.
+uses none of them is `available`, and means it. Level-66 `RENAMES`, `COPY` and
+`COPY … REPLACING` are scanned for; `VALUE` on ordinary fields and
+sign/synchronized clauses are declared in capabilities with nothing to scan for.
+
+### Positions, not just names (CPDO-2.3, #4799)
+
+`app/cobolcopybook_layout.py` computes what makes a copybook a *layout*: every
+item's byte offset within the record, the bytes one occurrence takes, the bytes
+every occurrence takes, and the record's own length — as a **range** when a
+variable table makes it one. `05-ach-entry-detail.cpy` computes to 94 bytes,
+which is what the public NACHA file format fixes that record at.
+
+Three rules do the work: an item's length is its PICTURE's or the sum of its
+children's; a `REDEFINES` item starts where its target started and does **not**
+advance the cursor; and a variable table advances the cursor by an amount that is
+not a number, so everything after it has a range of offsets rather than an
+offset.
+
+It computes nothing it cannot know. A PICTURE the calculator does not read sizes
+to *unknown* with a stated reason, and that unknown propagates — the group
+containing it has no length, and nothing after it has an offset. An item after a
+variable table carries `offsetVariable` and no offset at all, because a minimum
+presented as *the* offset is the single most misleading number it could emit. A
+length and a reason are never both present.
+
+Every computed length rests on assumptions the copybook does not state — a
+single-byte encoding, packed decimal at two digits per byte plus a sign nibble,
+the common binary width table, an overpunched rather than separate sign, no
+`SYNCHRONIZED` slack. They ride on each record as an `info` warning, so a length
+is read as conditional rather than observed.
+
+The parser gained `REDEFINES`, fixed-size `OCCURS`, and continuation lines: a
+COBOL entry ends at a period rather than at a line break, so a clause split over
+two lines is now read as the one clause it is (which is how the shipped
+`01-customer-record.cpy` gets its `DEPENDING ON` controller). The canonical model
+still describes two overlays as independent fields; representing them as a union
+is #3991's, and normalization is unchanged by this.
+
+Only an *unsized item* makes a record `partial` — that is a boundary of the
+analyzer. A variable-length record, an unresolved ODO controller and a REDEFINES
+that does not fit are all facts about the copybook, recorded as `info` rather
+than graded, exactly as an X12 control-total mismatch is (CPDO-2.2).
 
 ## The generic extractor
 

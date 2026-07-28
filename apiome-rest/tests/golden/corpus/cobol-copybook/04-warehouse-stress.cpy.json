@@ -16,6 +16,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "X(4)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -27,6 +28,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(2)",
+            "redefines": null,
             "usage": "COMP"
           },
           {
@@ -38,6 +40,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(8)",
+            "redefines": null,
             "usage": "BINARY"
           },
           {
@@ -49,6 +52,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "S9(3)V9(2)",
+            "redefines": null,
             "usage": "COMP-3"
           },
           {
@@ -60,6 +64,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "X(5)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -71,6 +76,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(3)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -84,6 +90,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "X(6)",
+                "redefines": null,
                 "usage": null
               },
               {
@@ -104,6 +111,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "X(1)",
+                "redefines": null,
                 "usage": null
               },
               {
@@ -117,6 +125,7 @@
                     "occurs_max": null,
                     "occurs_min": null,
                     "picture": "S9(5)V9(3)",
+                    "redefines": null,
                     "usage": "COMP-3"
                   },
                   {
@@ -128,6 +137,7 @@
                     "occurs_max": null,
                     "occurs_min": null,
                     "picture": "S9(3)V9(3)",
+                    "redefines": null,
                     "usage": "COMP-3"
                   }
                 ],
@@ -138,6 +148,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": null,
+                "redefines": null,
                 "usage": null
               },
               {
@@ -149,6 +160,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "9(8)",
+                "redefines": null,
                 "usage": null
               }
             ],
@@ -159,6 +171,7 @@
             "occurs_max": 10,
             "occurs_min": 1,
             "picture": null,
+            "redefines": null,
             "usage": null
           },
           {
@@ -172,6 +185,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "X(8)",
+                "redefines": null,
                 "usage": null
               },
               {
@@ -183,6 +197,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "9(14)",
+                "redefines": null,
                 "usage": null
               }
             ],
@@ -193,6 +208,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": null,
+            "redefines": null,
             "usage": null
           }
         ],
@@ -203,6 +219,7 @@
         "occurs_max": null,
         "occurs_min": null,
         "picture": null,
+        "redefines": null,
         "usage": null
       }
     },
@@ -452,7 +469,7 @@
     "confidence": 0.98,
     "format": "cobolcopybook"
   },
-  "fingerprint": "sha256:47b2c532b84853b8c39d8ed73c261b87fc13a9e4287dc91e329a6ff8007464f9",
+  "fingerprint": "sha256:acb65ce32c8224cbf5d874b81bec5528b8666e7283ddeee688c4b1ede40b7b36",
   "lint": {
     "findings": 4,
     "grade": "A",

@@ -16,7 +16,10 @@
  *    control totals, two functional groups and a repeated segment, which is what the CPDO-2.2
  *    inspector reads;
  *  - {@link COPYBOOK_TREE} locates by file and line, so its fields open the viewer at a line and
- *    never at a byte range.
+ *    never at a byte range;
+ *  - {@link COPYBOOK_LAYOUT_TREE} and {@link COPYBOOK_VARIABLE_TREE} carry CPDO-2.3's storage
+ *    arithmetic — computed offsets, REDEFINES overlays, tables and, deliberately, the two ways a
+ *    position can be *unknowable*.
  */
 
 import type {
@@ -405,6 +408,277 @@ export function x12Record(overrides: Partial<AnalysisRecord['analysis']> = {}): 
 }
 
 /**
+ * A fixed-length copybook laid out end to end, with two REDEFINES overlays over one span of storage
+ * and a set of 88-level conditions (CPDO-2.3).
+ *
+ * The numbers mirror what `cobolcopybook_analysis.py` computes for the shipped
+ * `03-payment-redefines.cpy`: a 55-byte record whose overlays both start at byte 18 and neither of
+ * which pushes `PAYMENT-POSTED-DATE` past 48. A fixture that drifted from the extractor would let
+ * this suite pass against a record the backend never produces.
+ */
+export const COPYBOOK_LAYOUT_TREE: AnalysisNode[] = [
+  {
+    id: 'rec-payment',
+    kind: 'record',
+    name: 'PAYMENT-RECORD',
+    attributes: { level: 1, childCount: 6, offset: 1, length: 55, totalLength: 55 },
+    location: { file: 'payment.cpy', line: 7, path: 'PAYMENT-RECORD' },
+    children: [
+      {
+        id: 'fld-id',
+        kind: 'field',
+        name: 'PAYMENT-ID',
+        attributes: {
+          level: 5,
+          picture: '9(10)',
+          offset: 1,
+          length: 10,
+          totalLength: 10,
+          storageBasis: 'display',
+          digits: 10,
+        },
+        location: { file: 'payment.cpy', line: 8, path: 'PAYMENT-RECORD/PAYMENT-ID' },
+      },
+      {
+        id: 'fld-type',
+        kind: 'field',
+        name: 'PAYMENT-TYPE',
+        attributes: {
+          level: 5,
+          picture: 'X(1)',
+          conditionCount: 2,
+          offset: 11,
+          length: 1,
+          totalLength: 1,
+          storageBasis: 'display',
+        },
+        location: { file: 'payment.cpy', line: 9, path: 'PAYMENT-RECORD/PAYMENT-TYPE' },
+        children: [
+          {
+            id: 'cond-card',
+            kind: 'condition',
+            name: 'PAY-BY-CARD',
+            attributes: { level: 88, conditionValue: 'C' },
+            location: { file: 'payment.cpy', line: 10, path: 'PAYMENT-RECORD/PAYMENT-TYPE/PAY-BY-CARD' },
+          },
+          {
+            id: 'cond-bank',
+            kind: 'condition',
+            name: 'PAY-BY-BANK',
+            attributes: { level: 88, conditionValue: 'B' },
+            location: { file: 'payment.cpy', line: 11, path: 'PAYMENT-RECORD/PAYMENT-TYPE/PAY-BY-BANK' },
+          },
+        ],
+      },
+      {
+        id: 'fld-amount',
+        kind: 'field',
+        name: 'PAYMENT-AMOUNT',
+        attributes: {
+          level: 5,
+          picture: 'S9(9)V99',
+          usage: 'COMP-3',
+          offset: 12,
+          length: 6,
+          totalLength: 6,
+          storageBasis: 'packed',
+          digits: 11,
+          decimals: 2,
+          signed: true,
+        },
+        location: { file: 'payment.cpy', line: 12, path: 'PAYMENT-RECORD/PAYMENT-AMOUNT' },
+      },
+      {
+        id: 'fld-detail',
+        kind: 'field',
+        name: 'PAYMENT-DETAIL',
+        attributes: {
+          level: 5,
+          picture: 'X(30)',
+          offset: 18,
+          length: 30,
+          totalLength: 30,
+          storageBasis: 'display',
+          redefinedBy: ['CARD-DETAIL', 'BANK-DETAIL'],
+        },
+        location: { file: 'payment.cpy', line: 13, path: 'PAYMENT-RECORD/PAYMENT-DETAIL' },
+      },
+      {
+        id: 'grp-card',
+        kind: 'group',
+        name: 'CARD-DETAIL',
+        attributes: {
+          level: 5,
+          childCount: 2,
+          offset: 18,
+          length: 30,
+          totalLength: 30,
+          redefines: 'PAYMENT-DETAIL',
+        },
+        location: { file: 'payment.cpy', line: 14, path: 'PAYMENT-RECORD/CARD-DETAIL' },
+        children: [
+          {
+            id: 'fld-card-number',
+            kind: 'field',
+            name: 'CARD-NUMBER',
+            attributes: {
+              level: 10,
+              picture: '9(16)',
+              offset: 18,
+              length: 16,
+              totalLength: 16,
+              storageBasis: 'display',
+              digits: 16,
+            },
+            location: { file: 'payment.cpy', line: 15, path: 'PAYMENT-RECORD/CARD-DETAIL/CARD-NUMBER' },
+          },
+          {
+            id: 'fld-card-expiry',
+            kind: 'field',
+            name: 'CARD-EXPIRY-YYMM',
+            attributes: {
+              level: 10,
+              picture: '9(4)',
+              offset: 34,
+              length: 4,
+              totalLength: 4,
+              storageBasis: 'display',
+              digits: 4,
+            },
+            location: {
+              file: 'payment.cpy',
+              line: 16,
+              path: 'PAYMENT-RECORD/CARD-DETAIL/CARD-EXPIRY-YYMM',
+            },
+          },
+        ],
+      },
+      {
+        id: 'grp-bank',
+        kind: 'group',
+        name: 'BANK-DETAIL',
+        attributes: {
+          level: 5,
+          childCount: 1,
+          offset: 18,
+          length: 30,
+          totalLength: 30,
+          redefines: 'PAYMENT-DETAIL',
+        },
+        location: { file: 'payment.cpy', line: 17, path: 'PAYMENT-RECORD/BANK-DETAIL' },
+        children: [
+          {
+            id: 'fld-bank-routing',
+            kind: 'field',
+            name: 'BANK-ROUTING',
+            attributes: {
+              level: 10,
+              picture: '9(9)',
+              offset: 18,
+              length: 9,
+              totalLength: 9,
+              storageBasis: 'display',
+              digits: 9,
+            },
+            location: { file: 'payment.cpy', line: 18, path: 'PAYMENT-RECORD/BANK-DETAIL/BANK-ROUTING' },
+          },
+        ],
+      },
+      {
+        id: 'fld-posted',
+        kind: 'field',
+        name: 'PAYMENT-POSTED-DATE',
+        attributes: {
+          level: 5,
+          picture: '9(8)',
+          offset: 48,
+          length: 8,
+          totalLength: 8,
+          storageBasis: 'display',
+          digits: 8,
+        },
+        location: { file: 'payment.cpy', line: 19, path: 'PAYMENT-RECORD/PAYMENT-POSTED-DATE' },
+      },
+    ],
+  },
+];
+
+/**
+ * A copybook carrying both ways a position becomes unknowable (CPDO-2.3): a variable table, whose
+ * DEPENDING ON controller this copybook does not declare, and an item whose PICTURE cannot be
+ * sized — so the record has no total length at all.
+ */
+export const COPYBOOK_VARIABLE_TREE: AnalysisNode[] = [
+  {
+    id: 'rec-order',
+    kind: 'record',
+    name: 'ORDER-RECORD',
+    attributes: { level: 1, childCount: 3, offset: 1, variableLength: true },
+    location: { file: 'order.cpy', line: 1, path: 'ORDER-RECORD' },
+    children: [
+      {
+        id: 'fld-order-id',
+        kind: 'field',
+        name: 'ORDER-ID',
+        attributes: {
+          level: 5,
+          picture: '9(6)',
+          offset: 1,
+          length: 6,
+          totalLength: 6,
+          storageBasis: 'display',
+          digits: 6,
+        },
+        location: { file: 'order.cpy', line: 2, path: 'ORDER-RECORD/ORDER-ID' },
+      },
+      {
+        id: 'grp-lines',
+        kind: 'group',
+        name: 'ORDER-LINES',
+        attributes: {
+          level: 5,
+          childCount: 1,
+          occursMin: 1,
+          occursMax: 9,
+          dependingOn: 'OUTER-LINE-COUNT',
+          offset: 7,
+          length: 4,
+          totalLength: 36,
+          minTotalLength: 4,
+          variableLength: true,
+        },
+        location: { file: 'order.cpy', line: 3, path: 'ORDER-RECORD/ORDER-LINES' },
+        children: [
+          {
+            id: 'fld-line-sku',
+            kind: 'field',
+            name: 'LINE-SKU',
+            attributes: {
+              level: 10,
+              picture: 'X(4)',
+              offset: 7,
+              length: 4,
+              totalLength: 4,
+              storageBasis: 'display',
+            },
+            location: { file: 'order.cpy', line: 4, path: 'ORDER-RECORD/ORDER-LINES/LINE-SKU' },
+          },
+        ],
+      },
+      {
+        id: 'fld-note',
+        kind: 'field',
+        name: 'ORDER-NOTE',
+        // No length: PIC N is a national item, whose width depends on an encoding the copybook
+        // does not state. And no offset: it sits after the variable table.
+        attributes: { level: 5, picture: 'N(8)', offsetVariable: true },
+        location: { file: 'order.cpy', line: 5, path: 'ORDER-RECORD/ORDER-NOTE' },
+      },
+    ],
+  },
+];
+
+/**
  * The CPDO-2.2 case: an X12 analysis whose scan aligned, so it carries source ranges, delimiters,
  * control totals and repeat counts — and an `info` warning stating that the canonical conversion
  * read one of its two transaction sets.
@@ -452,6 +726,97 @@ export function x12ScannedRecord(
         message:
           'The canonical model is derived from transaction set 850 (0001) in functional group PO alone.',
       },
+    ],
+    ...overrides,
+  });
+}
+
+/** The assumption sentences the copybook analyzer publishes with every computed length. */
+export const COPYBOOK_ASSUMPTION_MESSAGE =
+  'Storage offsets and lengths are computed under assumptions this copybook does not state: ' +
+  'One byte per character position — a single-byte encoding (EBCDIC or ASCII). ' +
+  'COMP-3 items are packed two digits per byte with a trailing sign nibble. ' +
+  'No SYNCHRONIZED alignment is applied, so no slack bytes are inserted between items.';
+
+/**
+ * The CPDO-2.3 case: a fixed-length copybook laid out end to end, with REDEFINES overlays and the
+ * assumptions its byte counts rest on.
+ *
+ * @param overrides Fields to replace on the document.
+ */
+export function copybookLayoutRecord(
+  overrides: Partial<AnalysisRecord['analysis']> = {},
+): AnalysisRecord {
+  return copybookRecord({
+    analyzer: { key: 'cobolcopybook', version: '1.1.0', toolVersions: { cobolcopybook_parser: '1.1.0' } },
+    capabilities: {
+      supported: [
+        'copybook.computed_storage_length',
+        'copybook.redefines',
+        'copybook.storage_offsets',
+        'copybook.variable_length_records',
+      ],
+      unsupported: ['copybook.character_encoding_detection', 'copybook.renames_66'],
+      limits: { maxNodes: 5000, maxDepth: 32 },
+    },
+    // Deep-copied, because these suites edit a returned record to build their cases.
+    tree: JSON.parse(JSON.stringify(COPYBOOK_LAYOUT_TREE)) as AnalysisNode[],
+    metrics: {
+      nodeCount: 11,
+      maxDepth: 3,
+      truncated: false,
+      droppedNodeCount: 0,
+      kindCounts: { record: 1, group: 2, field: 6, condition: 2 },
+      warningCount: 1,
+    },
+    warnings: [
+      { code: 'copybook.layout_assumptions', severity: 'info', message: COPYBOOK_ASSUMPTION_MESSAGE },
+    ],
+    ...overrides,
+  });
+}
+
+/**
+ * The CPDO-2.3 hard case: a variable-length record whose ODO controller this copybook does not
+ * declare, and one item whose PICTURE cannot be sized at all.
+ *
+ * @param overrides Fields to replace on the document.
+ */
+export function copybookVariableRecord(
+  overrides: Partial<AnalysisRecord['analysis']> = {},
+): AnalysisRecord {
+  return copybookLayoutRecord({
+    status: 'partial',
+    statusReason: 'unsupported_format',
+    tree: JSON.parse(JSON.stringify(COPYBOOK_VARIABLE_TREE)) as AnalysisNode[],
+    metrics: {
+      nodeCount: 5,
+      maxDepth: 3,
+      truncated: false,
+      droppedNodeCount: 0,
+      kindCounts: { record: 1, group: 1, field: 3 },
+      warningCount: 4,
+    },
+    warnings: [
+      {
+        code: 'copybook.unsized_item',
+        severity: 'warning',
+        message:
+          "1 item(s) have no computable storage length (ORDER-NOTE). The PICTURE 'N(8)' uses a symbol this analysis does not size.",
+      },
+      {
+        code: 'copybook.variable_length_record',
+        severity: 'info',
+        message:
+          'This record carries a variable-length table, so one record occupies a range this analysis could not compute rather than a fixed size.',
+      },
+      {
+        code: 'copybook.odo_controller_unresolved',
+        severity: 'info',
+        message:
+          'DEPENDING ON names OUTER-LINE-COUNT, which this copybook does not declare. The controller may be declared in a surrounding copybook this one is copied into.',
+      },
+      { code: 'copybook.layout_assumptions', severity: 'info', message: COPYBOOK_ASSUMPTION_MESSAGE },
     ],
     ...overrides,
   });

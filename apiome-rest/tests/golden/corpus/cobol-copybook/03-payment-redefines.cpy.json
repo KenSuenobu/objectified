@@ -16,6 +16,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(10)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -36,6 +37,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "X(1)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -47,6 +49,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "S9(9)V99",
+            "redefines": null,
             "usage": "COMP-3"
           },
           {
@@ -58,6 +61,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "X(30)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -71,6 +75,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "9(16)",
+                "redefines": null,
                 "usage": null
               },
               {
@@ -82,6 +87,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "9(4)",
+                "redefines": null,
                 "usage": null
               },
               {
@@ -93,6 +99,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "X(10)",
+                "redefines": null,
                 "usage": null
               }
             ],
@@ -103,6 +110,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": null,
+            "redefines": "PAYMENT-DETAIL",
             "usage": null
           },
           {
@@ -116,6 +124,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "9(9)",
+                "redefines": null,
                 "usage": null
               },
               {
@@ -127,6 +136,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "X(17)",
+                "redefines": null,
                 "usage": null
               },
               {
@@ -138,6 +148,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "X(4)",
+                "redefines": null,
                 "usage": null
               }
             ],
@@ -148,6 +159,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": null,
+            "redefines": "PAYMENT-DETAIL",
             "usage": null
           },
           {
@@ -159,6 +171,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(8)",
+            "redefines": null,
             "usage": null
           }
         ],
@@ -169,6 +182,7 @@
         "occurs_max": null,
         "occurs_min": null,
         "picture": null,
+        "redefines": null,
         "usage": null
       }
     },
@@ -398,7 +412,7 @@
     "confidence": 0.98,
     "format": "cobolcopybook"
   },
-  "fingerprint": "sha256:ebdb2cbc9dd6799ebc76f9b27d513b8f65041095d735a5c4268c3846ecb500ff",
+  "fingerprint": "sha256:2f3dade8d3faa6f46190570c427d25e7c564182da4b52381f9196ac3500ff532",
   "lint": {
     "findings": 4,
     "grade": "A",

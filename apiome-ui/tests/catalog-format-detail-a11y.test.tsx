@@ -36,6 +36,7 @@ import {
   REGISTRY_SNAPSHOT,
   UNAVAILABLE_SUMMARY,
   wideRecord,
+  copybookLayoutRecord,
   x12Record,
   x12ScannedRecord,
 } from './helpers/payload-analysis-fixture';
@@ -138,6 +139,18 @@ describe('Format details pane — axe', () => {
     // The inspector adds a heading, two data tables, a badge row and a set of reveal buttons — the
     // surfaces a table-heavy panel most often gets wrong.
     await screen.findByTestId('catalog-x12-inspector');
+    expect(screen.getAllByRole('table').length).toBeGreaterThan(0);
+    expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
+  });
+
+  it('is clean with the copybook layout inspector mounted (CPDO-2.3)', async () => {
+    mockTransport(copybookLayoutRecord());
+    const container = renderPane({ sourceFormat: 'cobolcopybook' });
+
+    await waitFor(() => expect(screen.getByRole('tree')).toBeInTheDocument());
+    // The storage map is a data table with row headers, and the assumptions are a real list — the
+    // two structures a layout panel most often gets wrong.
+    await screen.findByTestId('catalog-copybook-inspector');
     expect(screen.getAllByRole('table').length).toBeGreaterThan(0);
     expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
   });
