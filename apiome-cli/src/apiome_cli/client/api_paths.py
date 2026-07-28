@@ -408,6 +408,24 @@ def contract_suite(tenant_slug: str, version_ref: str) -> str:
     return f"{V1}/tenants/{tenant_slug}/contracts/{version_ref}/suite"
 
 
+def contract_run(tenant_slug: str, version_ref: str) -> str:
+    """POST a contract-suite execution against a verification target (ECA-2.1 / ECA-2.2).
+
+    Compiles the suite, resolves the target, runs cases, and always records ECA-1.3 evidence.
+    ``version_ref`` uses the same path-shaped grammar as :func:`contract_suite`.
+    """
+    return f"{V1}/tenants/{tenant_slug}/contracts/{version_ref}/run"
+
+
+def verification_run_export(tenant_slug: str, run_id: str) -> str:
+    """GET one verification run as JSON or JUnit (ECA-1.3 export; used by ECA-2.2 CLI).
+
+    Callers append ``?format=json`` or ``?format=junit``. The server reproduces stored counts
+    rather than re-tallying, so the artifact cannot disagree with the evidence record.
+    """
+    return f"{V1}/tenants/{tenant_slug}/verification-runs/{run_id}/export"
+
+
 def version_compatibility_evidence_list(
     tenant_slug: str,
     project_id: str | UUID,
