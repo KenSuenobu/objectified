@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.66.0",
+    "version": "1.67.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -6965,6 +6965,116 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for list compatibility evidenceresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/contracts/{version_ref}/suite": {
+      "post": {
+        "tags": [
+          "contract-assurance"
+        ],
+        "summary": "Compile a deterministic contract suite from a version",
+        "description": "Compile a published version into an executable contract suite (ECA-1.1): one case per declared example, per schema-valid generated body, and per required negative case, with the operation, the source, and the expected outcome on every one of them.\n\n**Addressing** is the schema-reference grammar without a type segment \u2014 ``project/{project_slug}/{version}`` for a Project revision or ``catalog/{item}/{version}`` for a Catalog revision \u2014 so a suite is compiled from the same coordinate a payload is validated against.\n\n**Compilation is deterministic.** The same version and the same options produce a byte-identical manifest and therefore the same ``digest``, which is what lets a CI gate assert that a deployment was verified against a specific contract.\n\n**Declared examples come first.** A request body the author wrote is compiled ahead of anything generated, and is the only kind of case marked ``synthetic: false``. An example that does not satisfy its own schema is reported and left out rather than compiled into a test a correct implementation would fail.\n\n**Nothing is skipped silently.** A streaming operation, a non-HTTP paradigm, an XML-only body, a structured parameter, an undeclared status code \u2014 each appears in ``findings`` with a stable code, so partial coverage can never read as full coverage.\n\n**A suite carries no target and no credentials.** Paths are relative and security requirements are reported for the runner to satisfy; targets are configured separately.\n\nNothing is persisted. A version that yields no suite is **not** an HTTP error: the response is a 200 with ``ok: false`` and a stable intake-taxonomy ``error`` code plus remediation. Only addressing faults are HTTP errors \u2014 400 for a malformed or type-qualified reference, 404 for one that names nothing visible, 422 for one that resolves to material no canonical model can be rebuilt from.",
+        "operationId": "compile_contract_suite_for_version_v1_tenants__tenant_slug__contracts__version_ref__suite_post",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "version_ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version Ref",
+              "description": "Version Ref schema."
+            },
+            "description": "Path parameter identifying the version ref segment."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Compileadeterministiccontractsuitefromavauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Compileadeterministiccontractsuitefromavauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Compileadeterministiccontractsuitefromav Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Compileadeterministiccontractsuitefromav Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractSuiteCompileRequest",
+                "description": "Request body for compileadeterministiccontractsuitefromavrequest."
+              }
+            }
+          },
+          "description": "Request body for compile a deterministic contract suite from a version."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for compile a deterministic contract suite from a version.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractSuiteResponse",
+                  "description": "Response payload for compileadeterministiccontractsuitefromavresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for compileadeterministiccontractsuitefromavresponse422."
                 }
               }
             }
@@ -64367,6 +64477,562 @@
         "title": "ConnectionListResponse",
         "description": "ConnectionListResponse schema."
       },
+      "ContractCase": {
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "title": "Case Id",
+            "description": "Stable identifier, derived from the operation, the source, and what distinguishes this case from its siblings. The same version and options always yield the same id.",
+            "example": "case_01h2xcejqtf3fz5y5j0v8k9m2p"
+          },
+          "operation_key": {
+            "type": "string",
+            "title": "Operation Key",
+            "description": "Stable canonical operation key.",
+            "example": "GET"
+          },
+          "operation_name": {
+            "type": "string",
+            "title": "Operation Name",
+            "description": "Source operation name.",
+            "example": "GET"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "One of the case sources \u2014 where this case came from.",
+            "example": "human"
+          },
+          "source_detail": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Contract Case schema."
+              },
+              {
+                "type": "null",
+                "description": "Contract Case schema."
+              }
+            ],
+            "title": "Source Detail",
+            "description": "What distinguishes this case within its source \u2014 an example name, a mutation kind, or the parameter a negative case targets."
+          },
+          "source_pointer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Contract Case schema."
+              },
+              {
+                "type": "null",
+                "description": "Contract Case schema."
+              }
+            ],
+            "title": "Source Pointer",
+            "description": "JSON Pointer to the case's origin: into the source document for a declared example, into the body for a generated violation."
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Short human-readable name, unique within the operation.",
+            "example": "example"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "What the case exercises.",
+            "example": "A pet available for adoption in the store."
+          },
+          "synthetic": {
+            "type": "boolean",
+            "title": "Synthetic",
+            "description": "False only when the request body is an example the author wrote. True for every generated payload, so the label travels with the case.",
+            "example": false
+          },
+          "request": {
+            "$ref": "#/components/schemas/ContractCaseRequest",
+            "description": "The request to send."
+          },
+          "expect": {
+            "$ref": "#/components/schemas/ContractCaseExpectation",
+            "description": "What must come back."
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags",
+            "description": "The operation's tags, for filtered runs.",
+            "maxItems": 1000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "case_id",
+          "operation_key",
+          "operation_name",
+          "source",
+          "title",
+          "description",
+          "synthetic",
+          "request",
+          "expect"
+        ],
+        "title": "ContractCase",
+        "description": "One executable case: a request, its provenance, and its expected outcome."
+      },
+      "ContractCaseExpectation": {
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "title": "Outcome",
+            "description": "`success` or `client_error`.",
+            "example": "example"
+          },
+          "status_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Status Codes",
+            "description": "Acceptable status codes, from the contract's own declarations. A wildcard (`2XX`, `4XX`) means the range is acceptable.",
+            "maxItems": 1000
+          },
+          "status_declared": {
+            "type": "boolean",
+            "title": "Status Declared",
+            "description": "Whether `status_codes` came from the document. `false` means the compiler fell back to a range because the contract declared none \u2014 a weaker assertion, and one the suite states rather than hides.",
+            "example": false
+          },
+          "response_schema_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Contract Case Expectation schema."
+              },
+              {
+                "type": "null",
+                "description": "Contract Case Expectation schema."
+              }
+            ],
+            "title": "Response Schema Id",
+            "description": "Key into the manifest's `schemas` map for the schema the response body must satisfy. Null when the contract declares no response schema."
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "One sentence explaining why this outcome is expected.",
+            "example": "example"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "outcome",
+          "status_codes",
+          "status_declared",
+          "reason"
+        ],
+        "title": "ContractCaseExpectation",
+        "description": "What a conforming implementation must do with the case's request."
+      },
+      "ContractCaseRequest": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "HTTP verb, upper-cased.",
+            "example": "example"
+          },
+          "path_template": {
+            "type": "string",
+            "title": "Path Template",
+            "description": "Route template (`/pets/{petId}`).",
+            "example": "example"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "The template with every path parameter substituted and percent-encoded \u2014 append it to the target's base URL to get the request URL.",
+            "example": "/resources/{id}"
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/components/schemas/ContractRequestParameter"
+            },
+            "type": "array",
+            "title": "Parameters",
+            "description": "Parameter values, sorted by location then name.",
+            "maxItems": 1000
+          },
+          "has_body": {
+            "type": "boolean",
+            "title": "Has Body",
+            "description": "Whether the case sends a body at all. Distinguishes 'no body' from 'a body whose value is null', which are different requests.",
+            "default": false,
+            "example": true
+          },
+          "body": {
+            "anyOf": [
+              {
+                "description": "Request body for contract case."
+              },
+              {
+                "type": "null",
+                "description": "Request body for contract case."
+              }
+            ],
+            "title": "Body",
+            "description": "The request body, when there is one."
+          },
+          "media_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for contract case."
+              },
+              {
+                "type": "null",
+                "description": "Request body for contract case."
+              }
+            ],
+            "title": "Media Type",
+            "description": "Media type the body is sent as."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "method",
+          "path_template",
+          "path"
+        ],
+        "title": "ContractCaseRequest",
+        "description": "The request a case sends, complete enough to execute against a chosen target."
+      },
+      "ContractRequestParameter": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Source parameter name.",
+            "example": "Pet"
+          },
+          "location": {
+            "type": "string",
+            "title": "Location",
+            "description": "`path`, `query`, or `header`.",
+            "example": "example"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "description": "Wire value, already serialized as a string.",
+            "example": "example"
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin",
+            "description": "Where the value came from: `declared_example`, `default`, `enum`, or `generated`.",
+            "example": "example"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "description": "Whether the contract requires it.",
+            "default": false,
+            "example": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "location",
+          "value",
+          "origin"
+        ],
+        "title": "ContractRequestParameter",
+        "description": "One parameter value a case sends, with the evidence behind it."
+      },
+      "ContractSuiteCompileRequest": {
+        "properties": {
+          "options": {
+            "$ref": "#/components/schemas/ContractSuiteOptions",
+            "description": "Compiler options. They are echoed on the manifest and hashed into its digest, so the same version compiled with the same options always yields the same suite."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ContractSuiteCompileRequest",
+        "description": "What to compile for the version named in the URL.\n\nThe options are wrapped rather than inlined so the request can grow a sibling field without\nchanging the meaning of an existing body. An empty body compiles everything under the\ndefault options."
+      },
+      "ContractSuiteManifest": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version",
+            "description": "Manifest envelope version.",
+            "default": 1,
+            "example": 1
+          },
+          "compiler_version": {
+            "type": "integer",
+            "title": "Compiler Version",
+            "description": "Version of the compilation rules.",
+            "default": 1,
+            "example": 1
+          },
+          "digest": {
+            "type": "string",
+            "title": "Digest",
+            "description": "`sha256:<hex>` over the canonical bytes of this manifest with `digest` itself removed. Two suites with the same digest are the same suite.",
+            "default": "",
+            "example": "example"
+          },
+          "digest_algorithm": {
+            "type": "string",
+            "title": "Digest Algorithm",
+            "description": "Hash used for `digest`.",
+            "default": "sha256",
+            "example": "example"
+          },
+          "options": {
+            "$ref": "#/components/schemas/ContractSuiteOptions",
+            "description": "The options this suite was compiled with, normalized."
+          },
+          "api": {
+            "$ref": "#/components/schemas/SuiteApiInfo",
+            "description": "Identity of the compiled API."
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuiteSourceInfo"
+              },
+              {
+                "type": "null",
+                "description": "Contract Suite Manifest schema."
+              }
+            ],
+            "description": "Where the compiled version came from."
+          },
+          "operations": {
+            "items": {
+              "$ref": "#/components/schemas/SuiteOperation"
+            },
+            "type": "array",
+            "title": "Operations",
+            "description": "Covered operations, sorted by key.",
+            "maxItems": 1000
+          },
+          "cases": {
+            "items": {
+              "$ref": "#/components/schemas/ContractCase"
+            },
+            "type": "array",
+            "title": "Cases",
+            "description": "Every case, grouped by operation (sorted by key) then by source order.",
+            "maxItems": 1000
+          },
+          "schemas": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Schemas",
+            "description": "Response schemas referenced by `expect.response_schema_id`, keyed so identical types are carried once."
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/SuiteFinding"
+            },
+            "type": "array",
+            "title": "Findings",
+            "description": "What was not compiled, and what was compiled weakly \u2014 sorted by code, operation, then message. Never empty merely because the suite is large.",
+            "maxItems": 1000
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Counts",
+            "description": "Case counts by source, plus `cases`, `operations_compiled`, `operations_skipped`, and `findings`."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "options",
+          "api"
+        ],
+        "title": "ContractSuiteManifest",
+        "description": "The compiled suite: everything a runner needs, and everything a reviewer should know."
+      },
+      "ContractSuiteOptions": {
+        "properties": {
+          "seed": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Seed",
+            "description": "Seed for generated values. The same version and seed always produce the same payloads; change it to sample different values of the same shapes.",
+            "default": 0,
+            "example": 1
+          },
+          "include_declared_examples": {
+            "type": "boolean",
+            "title": "Include Declared Examples",
+            "description": "Compile the examples declared in the source document into request cases.",
+            "default": true,
+            "example": false
+          },
+          "include_generated": {
+            "type": "boolean",
+            "title": "Include Generated",
+            "description": "Compile schema-valid generated bodies (minimal, full, and branches).",
+            "default": true,
+            "example": false
+          },
+          "include_branches": {
+            "type": "boolean",
+            "title": "Include Branches",
+            "description": "Include one generated body per polymorphic (`oneOf`/`anyOf`/`if`) alternative of a request body. Ignored when generated cases are off.",
+            "default": true,
+            "example": false
+          },
+          "include_negative": {
+            "type": "boolean",
+            "title": "Include Negative",
+            "description": "Compile the negative cases: a missing required body, a missing required query parameter, a wrong-typed parameter, and single-constraint body violations.",
+            "default": true,
+            "example": false
+          },
+          "verify_examples": {
+            "type": "boolean",
+            "title": "Verify Examples",
+            "description": "Check every declared example against the schema governing it, and compile only the conforming ones. A non-conforming example is reported, never compiled: it would fail a correct implementation.",
+            "default": true,
+            "example": false
+          },
+          "include_response_schemas": {
+            "type": "boolean",
+            "title": "Include Response Schemas",
+            "description": "Carry the response schema each success case must satisfy in the manifest, so a runner validates responses without resolving the version again.",
+            "default": true,
+            "example": false
+          },
+          "max_example_cases_per_operation": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Max Example Cases Per Operation",
+            "description": "Cap on declared-example cases per operation.",
+            "default": 10,
+            "example": 1
+          },
+          "max_generated_cases_per_operation": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Max Generated Cases Per Operation",
+            "description": "Cap on generated valid bodies per operation. The minimal and full bodies come first; the remainder of the budget goes to polymorphic branches.",
+            "default": 4,
+            "example": 1
+          },
+          "max_negative_cases_per_operation": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Max Negative Cases Per Operation",
+            "description": "Cap on negative cases per operation. Structural negatives (missing body, missing parameter, wrong-typed parameter) are compiled first; the remainder of the budget goes to single-constraint body violations.",
+            "default": 6,
+            "example": 1
+          },
+          "max_operations": {
+            "type": "integer",
+            "maximum": 2000.0,
+            "minimum": 1.0,
+            "title": "Max Operations",
+            "description": "Cap on compiled operations. Truncation is always reported as a finding.",
+            "default": 500,
+            "example": 1
+          },
+          "operations": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "description": "Contract Suite Options schema."
+              },
+              {
+                "type": "null",
+                "description": "Contract Suite Options schema."
+              }
+            ],
+            "title": "Operations",
+            "description": "Restrict compilation to these operation keys (`GET /pets/{petId}`). Omit for every operation. A key that matches nothing is reported as a finding."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ContractSuiteOptions",
+        "description": "What to compile, and how much of it.\n\nEvery field is part of the suite's identity: the options are echoed in the manifest and\nhashed into its digest, so \"the same version compiled the same way\" is a checkable claim\nrather than a hope. Defaults compile the whole suite."
+      },
+      "ContractSuiteResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "Whether a suite could be compiled at all.",
+            "example": false
+          },
+          "version_ref": {
+            "type": "string",
+            "title": "Version Ref",
+            "description": "The reference exactly as it was requested.",
+            "example": "1.0.0"
+          },
+          "manifest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContractSuiteManifest"
+              },
+              {
+                "type": "null",
+                "description": "Response payload for contract suite."
+              }
+            ],
+            "description": "The compiled suite. Present whenever `ok` is true \u2014 including when it contains no cases, which is a real answer about a version that declares no operations."
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpecImportJobError"
+              },
+              {
+                "type": "null",
+                "description": "Response payload for contract suite."
+              }
+            ],
+            "description": "Populated when `ok` is false: stable taxonomy code plus remediation."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ok",
+          "version_ref"
+        ],
+        "title": "ContractSuiteResponse",
+        "description": "The compiled suite for one version."
+      },
       "ConversionDefaultsRequest": {
         "properties": {
           "title": {
@@ -100548,6 +101214,370 @@
         "type": "object",
         "title": "StyleGuideUpdateRequest",
         "description": "Rename / re-describe a custom style guide (GOV-2.1). Builtin guides are read-only."
+      },
+      "SuiteApiInfo": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Source name of the API.",
+            "example": "Pet"
+          },
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite API Info schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite API Info schema."
+              }
+            ],
+            "title": "Namespace",
+            "description": "Package/group/target namespace."
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite API Info schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite API Info schema."
+              }
+            ],
+            "title": "Title",
+            "description": "Human title, when declared."
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite API Info schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite API Info schema."
+              }
+            ],
+            "title": "Version",
+            "description": "Source-declared API version (`1.4.0`), when declared."
+          },
+          "format": {
+            "type": "string",
+            "title": "Format",
+            "description": "Source format key (`openapi-3.1`, `swagger-2` \u2026).",
+            "example": "openapi"
+          },
+          "paradigm": {
+            "type": "string",
+            "title": "Paradigm",
+            "description": "Canonical paradigm (`rest`, `graph`, `event` \u2026).",
+            "example": "example"
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite API Info schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite API Info schema."
+              }
+            ],
+            "title": "Protocol",
+            "description": "Primary transport protocol."
+          },
+          "servers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Servers",
+            "description": "Server URLs the document declares, in declaration order. A suite carries no target of its own \u2014 the runner selects one \u2014 so these are context, not a choice.",
+            "maxItems": 1000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "format",
+          "paradigm"
+        ],
+        "title": "SuiteApiInfo",
+        "description": "Identity of the API the suite was compiled from, as the canonical model states it."
+      },
+      "SuiteFinding": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Stable code from `SUITE_FINDING_CODES`.",
+            "example": "example"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level",
+            "description": "`unsupported`, `degraded`, or `info`.",
+            "example": "example"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "What was not compiled, and why.",
+            "example": "Example validation message."
+          },
+          "operation_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite Finding schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite Finding schema."
+              }
+            ],
+            "title": "Operation Key",
+            "description": "The operation concerned, when the finding has one."
+          },
+          "pointer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite Finding schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite Finding schema."
+              }
+            ],
+            "title": "Pointer",
+            "description": "JSON Pointer into the source document, when known."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "level",
+          "message"
+        ],
+        "title": "SuiteFinding",
+        "description": "Something the compiler could not express, or expressed more weakly than the contract."
+      },
+      "SuiteOperation": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Stable canonical operation key (`GET /pets/{petId}`).",
+            "example": "example"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Source operation name.",
+            "example": "Pet"
+          },
+          "service_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite Operation schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite Operation schema."
+              }
+            ],
+            "title": "Service Key",
+            "description": "Key of the service/tag grouping the operation."
+          },
+          "http_method": {
+            "type": "string",
+            "title": "Http Method",
+            "description": "HTTP verb, upper-cased.",
+            "example": "example"
+          },
+          "http_path": {
+            "type": "string",
+            "title": "Http Path",
+            "description": "Route template, exactly as declared.",
+            "example": "example"
+          },
+          "deprecated": {
+            "type": "boolean",
+            "title": "Deprecated",
+            "description": "Whether the operation is deprecated.",
+            "default": false,
+            "example": false
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags",
+            "description": "Declared tags, in source order.",
+            "maxItems": 1000
+          },
+          "case_count": {
+            "type": "integer",
+            "title": "Case Count",
+            "description": "How many cases were compiled for this operation.",
+            "example": 1
+          },
+          "request_media_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite Operation schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite Operation schema."
+              }
+            ],
+            "title": "Request Media Type",
+            "description": "Media type compiled request bodies are sent as."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "http_method",
+          "http_path",
+          "case_count"
+        ],
+        "title": "SuiteOperation",
+        "description": "One operation the suite covers, and how much of it was compiled."
+      },
+      "SuiteSourceInfo": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite Source Info schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite Source Info schema."
+              }
+            ],
+            "title": "Kind",
+            "description": "`project` or `catalog` \u2014 which surface the artifact lives on."
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite Source Info schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite Source Info schema."
+              }
+            ],
+            "title": "Reference",
+            "description": "The reference the caller resolved (`project/petstore/1.0.0`)."
+          },
+          "artifact_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite Source Info schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite Source Info schema."
+              }
+            ],
+            "title": "Artifact Id",
+            "description": "Artifact (project/item) id."
+          },
+          "artifact_slug": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite Source Info schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite Source Info schema."
+              }
+            ],
+            "title": "Artifact Slug",
+            "description": "Artifact slug."
+          },
+          "revision_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite Source Info schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite Source Info schema."
+              }
+            ],
+            "title": "Revision Id",
+            "description": "Resolved revision id."
+          },
+          "version_label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite Source Info schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite Source Info schema."
+              }
+            ],
+            "title": "Version Label",
+            "description": "Version label of the resolved revision (`1.0.0`)."
+          },
+          "source_format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Suite Source Info schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite Source Info schema."
+              }
+            ],
+            "title": "Source Format",
+            "description": "Import-source format key the revision derives from."
+          },
+          "published": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Suite Source Info schema."
+              },
+              {
+                "type": "null",
+                "description": "Suite Source Info schema."
+              }
+            ],
+            "title": "Published",
+            "description": "Whether the resolved revision is published. `null` when the caller did not establish it \u2014 never assumed. A suite compiled from an unpublished revision is valid, but it is not a contract anyone has agreed to."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SuiteSourceInfo",
+        "description": "Where the compiled version came from, as the caller resolved it.\n\nThe compiler never looks anything up; whatever a caller knows about the artifact is passed\nin and echoed here so a manifest identifies its own provenance."
       },
       "SunsetTimelineEntryOut": {
         "properties": {

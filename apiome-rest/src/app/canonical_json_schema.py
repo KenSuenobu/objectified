@@ -60,6 +60,7 @@ __all__ = [
     "MAX_PROJECTED_DEFS",
     "CanonicalSchemaProjection",
     "CanonicalTypeNotFoundError",
+    "build_ref_json_schema",
     "build_type_json_schema",
     "list_projectable_types",
 ]
@@ -264,7 +265,88 @@ def build_type_json_schema(
 
     root_schema = _type_to_schema(root, walk)
 
-    # Breadth-first over the reachable set: every ``$ref`` emitted by _type_to_schema registers
+    return _finish_document(
+        root_schema,
+        walk,
+        max_defs=max_defs,
+        title=root.name or root.key,
+        type_key=root.key,
+        type_name=root.name or root.key,
+    )
+
+
+def build_ref_json_schema(
+    api: CanonicalApi,
+    ref: TypeRef,
+    *,
+    constraints: Optional[Constraints] = None,
+    title: Optional[str] = None,
+    max_defs: int = MAX_PROJECTED_DEFS,
+) -> CanonicalSchemaProjection:
+    """Project a *use-site* type reference into a self-contained draft 2020-12 schema.
+
+    :func:`build_type_json_schema` projects a type the model **names**. A use site — an
+    operation parameter, or a body declared as ``[Pet]`` rather than as ``Pet`` — is a
+    :class:`~app.canonical_model.TypeRef` instead, and its list wrappers and its own constraints
+    are part of the contract. The contract-suite compiler (ECA-1.1) needs exactly that: the
+    schema a *value at this site* must satisfy, ``$defs`` and all.
+
+    Args:
+        api: The canonical model the reference resolves against.
+        ref: The reference to project. A list wrapper becomes an ``array`` schema; a name that
+            resolves to a model type becomes a ``$ref`` into ``$defs``; anything else is read
+            as a scalar (and reported in ``unmapped_scalars`` when it has no JSON analogue).
+        constraints: Use-site validation facets (a parameter's ``enum``/``pattern``/bounds),
+            applied on top of the projected reference.
+        title: Optional ``title`` for the document; omitted when ``None``.
+        max_defs: Ceiling on how many types are pulled into ``$defs``.
+
+    Returns:
+        The :class:`CanonicalSchemaProjection`. Unlike the named-type projection this never
+        raises: a reference to a type the model does not define projects to the scalar
+        vocabulary (or to ``{}``) and says so through ``unmapped_scalars``.
+    """
+    walk = _Walk(types_by_key={t.key: t for t in api.types if t.key})
+    root_schema = _ref_to_schema(ref, walk)
+    _apply_constraints(root_schema, constraints)
+
+    leaf = ref
+    while leaf.item is not None:
+        leaf = leaf.item
+    return _finish_document(
+        root_schema,
+        walk,
+        max_defs=max_defs,
+        title=title,
+        type_key=leaf.name or "",
+        type_name=leaf.name or "",
+    )
+
+
+def _finish_document(
+    root_schema: Dict[str, Any],
+    walk: _Walk,
+    *,
+    max_defs: int,
+    title: Optional[str],
+    type_key: str,
+    type_name: str,
+) -> CanonicalSchemaProjection:
+    """Drain the reachable ``$defs`` set and wrap a root subschema into a standalone document.
+
+    Args:
+        root_schema: The projected root subschema; its ``$ref``s have already registered their
+            targets on ``walk``.
+        walk: The bookkeeping the projection walked with.
+        max_defs: Ceiling on how many types are pulled into ``$defs``.
+        title: ``title`` for the document, or ``None`` to omit it.
+        type_key: Value for :attr:`CanonicalSchemaProjection.type_key`.
+        type_name: Value for :attr:`CanonicalSchemaProjection.type_name`.
+
+    Returns:
+        The finished :class:`CanonicalSchemaProjection`.
+    """
+    # Breadth-first over the reachable set: every ``$ref`` emitted while projecting registers
     # its target in ``defs_keys``, so draining that mapping until it stops growing collects
     # exactly the transitive closure. The seen-set makes a type cycle terminate on its second
     # visit rather than recursing forever.
@@ -289,7 +371,6 @@ def build_type_json_schema(
             defs[walk.defs_keys[key]] = _type_to_schema(target, walk)
 
     document: Dict[str, Any] = {"$schema": DRAFT_2020_12_META_URI}
-    title = root.name or root.key
     if title:
         document["title"] = title
     document.update(root_schema)
@@ -298,8 +379,8 @@ def build_type_json_schema(
 
     return CanonicalSchemaProjection(
         document=document,
-        type_key=root.key,
-        type_name=root.name or root.key,
+        type_key=type_key,
+        type_name=type_name,
         unmapped_scalars=tuple(sorted(walk.unmapped)),
         truncated=walk.truncated,
     )

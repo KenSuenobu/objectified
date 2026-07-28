@@ -16,6 +16,7 @@ from jsonschema.validators import Draft202012Validator
 from app.canonical_json_schema import (
     CANONICAL_SCALAR_SCHEMAS,
     CanonicalTypeNotFoundError,
+    build_ref_json_schema,
     build_type_json_schema,
     list_projectable_types,
 )
@@ -416,3 +417,47 @@ def test_scalar_map_only_holds_legal_json_schema_types(scalar_name: str) -> None
 
     assert set(fragment) <= {"type", "format", "contentEncoding"}
     assert fragment["type"] in {"string", "integer", "number", "boolean", "null"}
+
+
+# ===========================================================================
+# Use-site (TypeRef) projection — ECA-1.1 (#4729)
+# ===========================================================================
+
+
+def test_a_use_site_reference_projects_its_list_wrappers() -> None:
+    """A body declared as ``[Pet]`` is an array of Pet, not a Pet."""
+    api = _api([Type(key="Pet", name="Pet", kind=TypeKind.RECORD)])
+
+    projection = build_ref_json_schema(api, TypeRef(item=TypeRef(name="Pet")))
+
+    assert projection.document["type"] == "array"
+    assert projection.document["items"] == {"$ref": "#/$defs/Pet"}
+    assert "Pet" in projection.document["$defs"]
+    assert projection.type_key == "Pet"
+
+
+def test_a_use_site_reference_applies_its_own_constraints() -> None:
+    """A parameter's enum/bounds live at the use site, not on the type it names."""
+    api = _api([])
+
+    projection = build_ref_json_schema(
+        api,
+        TypeRef(name="integer"),
+        constraints=Constraints(minimum=1, maximum=50),
+        title="limit",
+    )
+
+    assert projection.document["type"] == "integer"
+    assert (projection.document["minimum"], projection.document["maximum"]) == (1, 50)
+    assert projection.document["title"] == "limit"
+    Draft202012Validator.check_schema(projection.document)
+
+
+def test_a_use_site_reference_to_an_unknown_type_reports_rather_than_raises() -> None:
+    """Unlike the named-type projection, a use site is never rejected — it is reported."""
+    api = _api([])
+
+    projection = build_ref_json_schema(api, TypeRef(name="Widget"))
+
+    assert projection.document.get("type") is None
+    assert projection.unmapped_scalars == ("Widget",)
