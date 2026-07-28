@@ -424,6 +424,12 @@ apiome compat --project payments-api --version 1.1.0 --base-version 1.0.0
 apiome compat --project payments-api --version 1.1.0 --base-version 1.0.0 --format sarif
 apiome compat --project payments-api --version 1.1.0 --base-version 1.0.0 --fail-on dangerous
 
+# Executable contract suite (ECA-1.1): deterministic cases compiled from a version
+# --out writes the canonical bytes the digest covers, and the digest is re-derived locally
+apiome contract suite --project payments-api --version 1.0.0
+apiome contract suite --project payments-api --version 1.0.0 --out ./artifacts/contract-suite.json
+apiome contract suite --project payments-api --version 1.0.0 --no-negative --operation "GET /payments"
+
 # Classified diff CI gate (inline candidate vs published contract)
 # Exit 0 = pass, 1 = threshold met, 2 = auth/network/parse/oversize
 apiome diff ./openapi.yaml --against payments-api@latest --fail-on breaking

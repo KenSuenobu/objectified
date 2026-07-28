@@ -5,6 +5,47 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.202.0] - 2026-07-27
+
+### Added
+- **Version contract-suite compiler (#4729, ECA-1.1)** — a published specification is passive: until
+  somebody hand-writes verification cases, "the API matches its contract" is an opinion, and the
+  cases that do get written differ between teams and cannot be reproduced later. One canonical
+  version plus one set of compiler options now produce one versioned manifest of executable request
+  cases. See [docs/contract_suite.md](./docs/contract_suite.md).
+  - **`app/contract_suite.py`** — the pure compiler. Declared examples first, then schema-valid
+    generated bodies (required-only, every-property, one per polymorphic branch), then the negative
+    cases a contract needs to be worth running (a required body omitted, a required query parameter
+    dropped, a wrong-typed parameter, and bodies that each violate exactly one schema constraint).
+    Every case carries its operation, its source, its provenance pointer, and the outcome the
+    contract promises.
+  - **Deterministic by construction.** The same model and options produce byte-identical output:
+    `canonical_manifest_bytes()` is that artifact (sorted keys, tight separators, trailing newline)
+    and `digest` is its SHA-256 with the digest field blanked. Nothing reads the clock, the network,
+    or an unseeded PRNG; generated values are seeded from `(suite seed, operation key)`, operations
+    compile in canonical-key order, and options are normalized before they are hashed. This is what
+    makes "verified against suite `sha256:…`" a checkable claim — and why `compiler_version` exists.
+  - **Honest about what it cannot express.** Streaming operations, non-HTTP paradigms, XML-only
+    bodies, structured parameters, cookie parameters, undeclared route placeholders, undeclared
+    status codes, unmapped scalars, truncated schemas, and capped coverage each become a
+    `SuiteFinding` with a stable code and level. A declared example that does not satisfy its own
+    schema is reported with its pointer and **not** compiled: it would fail a correct implementation.
+  - **`app/contract_suite_examples.py`** — attributes a source document's examples to
+    `(path, method, request body | parameter | response)` by pointer, across OpenAPI 3.x and
+    Swagger 2, reusing the IXH-5.4 example table rather than restating where examples live.
+    Anything belonging to no operation is counted, never dropped silently.
+  - **`POST /v1/tenants/{tenant}/contracts/{version_ref}/suite`** — gated on `versions:view`,
+    addressed with the schema-reference grammar minus the type segment
+    (`project/{slug}/{version}`, `catalog/{item}/{version}`). Nothing is persisted. A version that
+    yields no suite is a 200 with `ok: false` and an intake-taxonomy code; only addressing faults
+    are HTTP errors. The manifest records whether the resolved revision is published — looked up,
+    never assumed.
+  - **A suite carries no target and no credentials.** Paths are relative and security requirements
+    are reported for the runner to satisfy; targets are ECA-1.2 and run evidence is ECA-1.3.
+  - **`canonical_json_schema.build_ref_json_schema`** — projects a *use-site* `TypeRef` (a
+    parameter, a list-wrapped body) with its own constraints, sharing the `$defs` walk with the
+    named-type projection instead of duplicating it.
+
 ## [1.201.0] - 2026-07-27
 
 ### Added

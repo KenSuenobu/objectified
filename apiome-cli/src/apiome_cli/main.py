@@ -11,6 +11,7 @@ from apiome_cli.commands import (
     auth,
     compat,
     config,
+    contract,
     convert,
     diff,
     doctor,
@@ -68,6 +69,7 @@ app.add_typer(versions.app, name="versions")
 app.add_typer(paths.app, name="paths")
 app.add_typer(lint.app, name="lint")
 app.add_typer(compat.app, name="compat")
+app.add_typer(contract.app, name="contract")
 app.command("diff")(diff.diff)
 app.add_typer(spec.app, name="spec")
 app.add_typer(operations.app, name="operations")

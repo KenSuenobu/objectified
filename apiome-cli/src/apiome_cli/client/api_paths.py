@@ -398,6 +398,16 @@ def version_compatibility_evidence(
     return f"{V1}/versions/{tenant_slug}/{project_id}/compatibility/evidence"
 
 
+def contract_suite(tenant_slug: str, version_ref: str) -> str:
+    """POST a contract-suite compilation for one version (ECA-1.1).
+
+    ``version_ref`` is the path-shaped reference the schema surface uses without a trailing
+    type segment — ``project/{slug}/{version}`` or ``catalog/{item}/{version}`` — and is
+    carried as multiple path segments, which is why it is interpolated rather than escaped.
+    """
+    return f"{V1}/tenants/{tenant_slug}/contracts/{version_ref}/suite"
+
+
 def version_compatibility_evidence_list(
     tenant_slug: str,
     project_id: str | UUID,
