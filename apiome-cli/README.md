@@ -430,6 +430,14 @@ apiome contract suite --project payments-api --version 1.0.0
 apiome contract suite --project payments-api --version 1.0.0 --out ./artifacts/contract-suite.json
 apiome contract suite --project payments-api --version 1.0.0 --no-negative --operation "GET /payments"
 
+# Contract verification against a registered target (ECA-2.2): run + JUnit/JSON CI artifacts
+# Exit 0 only when the stored outcome is passed; evidence id and failure codes print on failure
+# Target auth is env/stored on the server — never pasted on the CLI
+apiome verify contract --project payments-api --version 1.0.0 --target mock
+apiome verify contract --project payments-api --version 1.0.0 --target mock --format junit --out ./artifacts/contract.xml
+apiome verify contract --project payments-api --version 1.0.0 --target staging --context commit=$GITHUB_SHA --idempotency-key build-$GITHUB_RUN_ID
+apiome --json verify contract --project payments-api --version 1.0.0 --target mock
+
 # Classified diff CI gate (inline candidate vs published contract)
 # Exit 0 = pass, 1 = threshold met, 2 = auth/network/parse/oversize
 apiome diff ./openapi.yaml --against payments-api@latest --fail-on breaking
