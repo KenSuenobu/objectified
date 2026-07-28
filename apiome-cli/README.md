@@ -1068,6 +1068,37 @@ apiome --json mock status payments-api 1.0.0
 apiome --json mock enable payments-api 1.0.0
 ```
 
+### Run a portable mock (local / CI)
+
+`mock run` needs **no API key and no tenant scope**: it launches a
+version-pinned [mock bundle](../docs/guide/mock-bundle-format.md), which is the
+whole configuration. It prefers a locally installed `apiome-mock` and otherwise
+launches the official container image; both execute the same runtime, so both
+answer the same mock conformance corpus.
+
+```bash
+# Serve a bundle at http://127.0.0.1:8775/{tenant}/{project}/{version}/...
+apiome mock run petstore-1.0.0-mock-bundle.json
+
+# Pick the runtime and the port explicitly
+apiome mock run petstore-1.0.0-mock-bundle.json --runtime docker --port 9000
+
+# Serve spec paths at the root instead of the hosted URL shape
+apiome mock run petstore-1.0.0-mock-bundle.json --base-path root
+
+# Show the command that would run, without launching anything
+apiome mock run petstore-1.0.0-mock-bundle.json --dry-run
+apiome --json mock run petstore-1.0.0-mock-bundle.json --dry-run
+
+# Verify a signed bundle (the secret is passed via the environment, never argv)
+APIOME_MOCK_BUNDLE_SECRET=… apiome mock run bundle.json --require-signature
+```
+
+Wait on `GET /ready` (not `/health`) before sending traffic — it reports the
+digest of the bundle actually being served. Full reference, including the
+runtime's flags, structured log events, and exit codes:
+[docs/guide/portable-mock-runtime.md](../docs/guide/portable-mock-runtime.md).
+
 ### Export reconstructed specs (CI artifacts)
 
 Requires tenant scope (`APIOME_TENANT_ID` or `--tenant`). Sends `X-API-Key` when configured so protected published versions are visible. Document bytes go to `--output`; diagnostics and metadata go to stderr. With global `--json`, metadata is JSON on stdout when `--output` is a file, and on stderr when `--output -` so stdout stays byte-safe for pipelines.

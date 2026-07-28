@@ -26,6 +26,45 @@ runtime compatibility window, every content digest, the HMAC signature, and that
 credentials are present; incompatibility raises `MockBundleIncompatibleError` with the required
 version range. Full format reference: [docs/guide/mock-bundle-format.md](../docs/guide/mock-bundle-format.md).
 
+## Portable runtime (PMR-1.2)
+
+`apiome-mock run` serves one bundle with no database, no network, and no credentials — the same
+runtime the official image and `apiome mock run` execute:
+
+```bash
+uv run apiome-mock run --bundle petstore-1.0.0-mock-bundle.json      # serve a bundle
+uv run apiome-mock verify --bundle petstore-1.0.0-mock-bundle.json   # check it without serving
+uv run apiome-mock selftest                                          # prove this build passes the corpus
+```
+
+`/health` is liveness and `/ready` is readiness (it reports the served bundle's digest).
+Configuration comes only from the flags declared in `apiome_mock/portable_config.py` and their
+`APIOME_MOCK_*` environment variables. Every log line is one JSON object.
+
+The **conformance corpus** (`src/apiome_mock/conformance_data/`) is the shared proof that every
+deployment behaves identically; run it against any running mock with
+`apiome-mock conformance --base-url http://127.0.0.1:8775`. Regenerate the corpus bundle after
+editing its spec:
+
+```bash
+uv run python scripts/build_conformance_bundle.py           # rewrite
+uv run python scripts/build_conformance_bundle.py --check   # verify it is current
+```
+
+Full guide: [docs/guide/portable-mock-runtime.md](../docs/guide/portable-mock-runtime.md).
+
+## Container image
+
+One image, two runtimes — `serve` (hosted, the default) and `run` (portable):
+
+```bash
+docker run --rm -p 8775:8775 -v "$PWD/mock-bundle.json:/bundle/mock-bundle.json:ro" \
+  ghcr.io/apiome/apiome-mock:latest run
+docker run --rm ghcr.io/apiome/apiome-mock:latest selftest   # the image passes the corpus
+
+scripts/build-image.sh --push ghcr.io/apiome/apiome-mock:0.3.0   # linux/amd64 + linux/arm64
+```
+
 ## Development
 
 ```bash

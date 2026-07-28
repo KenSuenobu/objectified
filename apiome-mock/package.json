@@ -1,6 +1,6 @@
 {
   "name": "apiome-mock",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Yarn workspace anchor for the apiome-mock Python package (uv + pyproject.toml).",
   "scripts": {

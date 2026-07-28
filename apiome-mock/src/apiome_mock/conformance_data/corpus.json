@@ -1,0 +1,223 @@
+{
+  "corpusFormat": "apiome.mock.conformance/v1",
+  "description": "Shared mock conformance corpus (#4742, PMR-1.2). Every deployment of the mock runtime - the in-process app, `apiome mock run`, and the official container image - must answer these requests identically while serving conformance_data/bundle.json.",
+  "bundle": "bundle.json",
+  "cases": [
+    {
+      "name": "health-is-reserved-and-live",
+      "why": "Liveness probe answers at the runtime root, never routed to the spec.",
+      "request": { "method": "GET", "path": "/health", "absolute": true },
+      "expect": { "status": 200, "contentType": "application/json", "jsonEquals": { "status": "ok" } }
+    },
+    {
+      "name": "ready-reports-the-served-bundle",
+      "why": "Readiness identifies exactly which bundle is being served, so CI can assert the pin.",
+      "request": { "method": "GET", "path": "/ready", "absolute": true },
+      "expect": {
+        "status": 200,
+        "contentType": "application/json",
+        "jsonContains": {
+          "status": "ready",
+          "runtime": { "name": "apiome-mock", "mode": "portable" },
+          "bundle": {
+            "tenant": "conformance",
+            "project": "petstore",
+            "version": "1.0.0",
+            "signed": false,
+            "operations": 5
+          }
+        }
+      }
+    },
+    {
+      "name": "list-serves-the-spec-example",
+      "why": "Example-first resolution: a declared response example is returned verbatim.",
+      "request": { "method": "GET", "path": "/pets" },
+      "expect": {
+        "status": 200,
+        "contentType": "application/json",
+        "jsonEquals": [{ "id": 1, "name": "Rex" }]
+      }
+    },
+    {
+      "name": "path-parameters-route-to-the-item-operation",
+      "why": "Templated paths match concrete segments and resolve the item response.",
+      "request": { "method": "GET", "path": "/pets/1" },
+      "expect": { "status": 200, "jsonEquals": { "id": 1, "name": "Rex" } }
+    },
+    {
+      "name": "unmatched-path-is-a-problem-404",
+      "why": "Unknown routes fail as RFC 7807 problem+json, not as a framework error page.",
+      "request": { "method": "GET", "path": "/unicorns" },
+      "expect": {
+        "status": 404,
+        "contentType": "application/problem+json",
+        "jsonContains": { "title": "Not Found", "status": 404 }
+      }
+    },
+    {
+      "name": "wrong-method-is-405-with-allow",
+      "why": "A known path with an unknown method reports the methods that do exist.",
+      "request": { "method": "PUT", "path": "/pets" },
+      "expect": {
+        "status": 405,
+        "contentType": "application/problem+json",
+        "headers": { "Allow": "GET, POST" },
+        "jsonContains": { "title": "Method Not Allowed", "status": 405 }
+      }
+    },
+    {
+      "name": "query-parameter-validation-rejects-out-of-range",
+      "why": "Request validation runs against the pinned spec and reports the violation location.",
+      "request": { "method": "GET", "path": "/pets", "query": { "limit": "0" } },
+      "expect": {
+        "status": 400,
+        "contentType": "application/problem+json",
+        "jsonContains": {
+          "title": "Bad Request",
+          "violations": [{ "location": "query.limit", "message": "<root>: 0 is less than the minimum of 1" }]
+        }
+      }
+    },
+    {
+      "name": "missing-required-body-is-rejected",
+      "why": "A required request body is enforced before any response is resolved.",
+      "request": { "method": "POST", "path": "/pets", "headers": { "Content-Type": "application/json" } },
+      "expect": {
+        "status": 400,
+        "contentType": "application/problem+json",
+        "jsonContains": { "title": "Bad Request", "violations": [{ "location": "body", "message": "request body is required" }] }
+      }
+    },
+    {
+      "name": "create-returns-the-declared-201-example",
+      "why": "Non-GET operations resolve their own declared success status and example.",
+      "request": { "method": "POST", "path": "/pets", "json": { "id": 9, "name": "Nym" } },
+      "expect": { "status": 201, "jsonEquals": { "id": 9, "name": "Nym" } }
+    },
+    {
+      "name": "prefer-header-forces-a-declared-status",
+      "why": "Prefer: code=<status> selects any response the spec declares.",
+      "request": { "method": "GET", "path": "/pets/1", "headers": { "Prefer": "code=404" } },
+      "expect": { "status": 404, "jsonEquals": { "detail": "No pet with that id." } }
+    },
+    {
+      "name": "forcing-an-undeclared-status-is-refused",
+      "why": "The mock never invents a response the contract does not declare.",
+      "request": { "method": "GET", "path": "/pets", "query": { "__status": "418" } },
+      "expect": {
+        "status": 400,
+        "contentType": "application/problem+json",
+        "jsonContains": { "title": "Undefined Response Status", "requestedStatus": 418 }
+      }
+    },
+    {
+      "name": "no-content-response-has-an-empty-body",
+      "why": "A 204 stays a 204 with nothing in the body.",
+      "request": { "method": "DELETE", "path": "/pets/1" },
+      "expect": { "status": 204, "bodyEmpty": true }
+    },
+    {
+      "name": "unsatisfiable-accept-is-406",
+      "why": "Content negotiation refuses rather than silently returning the wrong media type.",
+      "request": { "method": "GET", "path": "/pets", "headers": { "Accept": "application/xml" } },
+      "expect": {
+        "status": 406,
+        "contentType": "application/problem+json",
+        "jsonContains": { "title": "Not Acceptable", "status": 406 }
+      }
+    },
+    {
+      "name": "scenario-header-serves-the-canned-response",
+      "why": "Bundled scenarios override the default response, headers included.",
+      "request": { "method": "GET", "path": "/pets", "headers": { "X-Mock-Scenario": "quota-exceeded" } },
+      "expect": {
+        "status": 429,
+        "headers": { "Retry-After": "60", "X-Mock-Scenario": "quota-exceeded" },
+        "jsonEquals": { "detail": "Quota exceeded." }
+      }
+    },
+    {
+      "name": "scenario-sequences-advance-per-session",
+      "why": "A multi-response scenario walks its sequence, tracked by X-Mock-Session.",
+      "request": {
+        "method": "GET",
+        "path": "/pets",
+        "headers": { "X-Mock-Scenario": "flaky-list", "X-Mock-Session": "conformance-sequence" },
+        "repeat": 2
+      },
+      "expect": {
+        "status": 200,
+        "headers": { "X-Mock-Scenario-Call": "2" },
+        "jsonEquals": [{ "id": 1, "name": "Rex" }]
+      }
+    },
+    {
+      "name": "unknown-scenario-is-refused-with-the-available-list",
+      "why": "A typo in X-Mock-Scenario fails loudly and says what does exist.",
+      "request": { "method": "GET", "path": "/pets", "headers": { "X-Mock-Scenario": "nope" } },
+      "expect": {
+        "status": 400,
+        "contentType": "application/problem+json",
+        "jsonContains": {
+          "title": "Unknown Scenario",
+          "availableScenarios": ["flaky-list", "outage", "quota-exceeded", "slow"]
+        }
+      }
+    },
+    {
+      "name": "chaos-error-injection-serves-the-declared-5xx",
+      "why": "Injected failures still come from the contract, marked with X-Mock-Chaos.",
+      "request": { "method": "GET", "path": "/pets", "headers": { "X-Mock-Scenario": "outage" } },
+      "expect": {
+        "status": 500,
+        "headers": { "X-Mock-Chaos": "error" },
+        "jsonEquals": { "error": "pet store is on fire" }
+      }
+    },
+    {
+      "name": "chaos-delay-is-reported-on-the-response",
+      "why": "An injected delay is observable, so a client can tell latency from a hang.",
+      "request": { "method": "GET", "path": "/pets", "headers": { "X-Mock-Scenario": "slow" } },
+      "expect": {
+        "status": 200,
+        "headers": { "X-Mock-Chaos-Delay-Ms": "5" },
+        "jsonEquals": [{ "id": 1, "name": "Rex" }]
+      }
+    },
+    {
+      "name": "session-state-is-readable-after-a-create",
+      "why": "Stateful CRUD works with no database behind the runtime.",
+      "setup": [
+        {
+          "method": "POST",
+          "path": "/pets",
+          "headers": { "X-Mock-Session": "conformance-crud" },
+          "json": { "id": 42, "name": "Kit" }
+        }
+      ],
+      "request": { "method": "GET", "path": "/pets/42", "headers": { "X-Mock-Session": "conformance-crud" } },
+      "expect": { "status": 200, "jsonEquals": { "id": 42, "name": "Kit" } }
+    },
+    {
+      "name": "session-state-does-not-leak-between-sessions",
+      "why": "One session's writes are invisible to another, which is what makes CI runs isolated.",
+      "setup": [
+        {
+          "method": "POST",
+          "path": "/pets",
+          "headers": { "X-Mock-Session": "conformance-writer" },
+          "json": { "id": 77, "name": "Ghost" }
+        }
+      ],
+      "request": { "method": "GET", "path": "/pets", "headers": { "X-Mock-Session": "conformance-reader" } },
+      "expect": { "status": 200, "jsonEquals": [] }
+    },
+    {
+      "name": "seeded-synthesis-is-deterministic",
+      "why": "A schema-only response with ?__seed= must produce the same body on every runtime.",
+      "request": { "method": "GET", "path": "/pets/7/tags", "query": { "__seed": "7" } },
+      "expect": { "status": 200, "jsonEquals": { "tags": ["lorem", "consectetur"] } }
+    }
+  ]
+}
