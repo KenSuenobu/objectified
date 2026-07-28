@@ -20,6 +20,7 @@ from apiome_mock.chaos import (
     effective_knobs,
     should_inject_error,
 )
+from apiome_mock.lifecycle import handle_lifecycle_request, is_lifecycle_path
 from apiome_mock.problems import (
     bad_request,
     chaos_injected_error,
@@ -325,6 +326,21 @@ async def serve_compiled_request(
     """
     instance = _instance_path(tenant, project, version, path)
     relative_path = "/" + path.strip("/") if path.strip("/") else "/"
+
+    # Data lifecycle control plane (#4745, PMR-2.2): the __mock__ segment is reserved ahead of
+    # spec routing, and control responses skip scenarios and chaos — a chaos-delayed or
+    # scenario-overridden reset would defeat the point of a deterministic test hook.
+    if is_lifecycle_path(relative_path):
+        return await handle_lifecycle_request(
+            request,
+            relative_path=relative_path,
+            compiled=compiled,
+            tenant=tenant,
+            project=project,
+            version=version,
+            instance=instance,
+            store=session_store,
+        )
 
     operation, path_params, allowed_methods = match_request(compiled.operations, request.method, relative_path)
     if operation is None:

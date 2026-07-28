@@ -239,7 +239,7 @@ Hosted SIM is closed. Package the same semantics for CLI/Docker/CI so ECA and SD
 | 5.1 | Mock bundle format (version-pinned, secret-free) — **Done** | **#4741** PMR-1.1 | #4946 | Y |
 | 5.2 | CLI + Docker mock runtime — **Done** | **#4742** PMR-1.2 | #4946 | Y |
 | 5.3 | Declarative matching & templates — **Done** | **#4744** PMR-2.1 | #4947 | Y |
-| 5.4 | Fixture packs & data lifecycle | **#4745** PMR-2.2 | #4947 | Y |
+| 5.4 | Fixture packs & data lifecycle — **Done** | **#4745** PMR-2.2 | #4947 | Y |
 | 5.5 | Mock CI action + conformance corpus | **#4748** PMR-3.1 | #4948 | Y |
 
 **Defer (Future):** serverless #4743, callbacks #4746, proxy capture #4747, attestation #4749.
@@ -385,7 +385,6 @@ Filter: [`milestone:RC4 is:open`](https://github.com/apiome/apiome/milestone/1).
 | 4393 | MFI-29.6 Secret scrubbing on intake |
 | 4351 | MFX-41.4 Deep links & resumable Studio state |
 | 4359 | MFX-42.6 Re-verify on change + result caching |
-| 4745 | PMR-2.2 Mock fixture packs and data lifecycle |
 | 4748 | PMR-3.1 Mock CI action and conformance corpus |
 
 ### Epic parents (tracking)
