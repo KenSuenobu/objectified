@@ -4,7 +4,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "./scripts/dev.sh",
-    "test": "yarn workspace @apiome/cli test && yarn workspace apiome-db test && yarn workspace apiome-mcp test && yarn workspace apiome-mock test && yarn workspace apiome-ui test && yarn workspace apiome-browse test",
+    "test": "yarn workspace @apiome/cli test && yarn workspace apiome-db test && yarn workspace apiome-mcp test && yarn workspace apiome-mock test && yarn workspace apiome-ui test && yarn workspace apiome-browse test && yarn workspace @apiome/mock-action test",
     "cli:build": "turbo run cli:build",
     "cli:test": "turbo run cli:test",
     "cli:lint": "turbo run cli:lint"
@@ -16,7 +16,8 @@
     "apiome-mock",
     "apiome-ui",
     "apiome-browse",
-    "apiome-rest"
+    "apiome-rest",
+    "mock-action"
   ],
   "packageManager": "yarn@4.12.0",
   "resolutions": {

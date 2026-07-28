@@ -20,6 +20,7 @@ from apiome_mock.cli_run import (
     EXIT_CONFIG_ERROR,
     EXIT_CONFORMANCE_FAILED,
     EXIT_OK,
+    EXIT_PARITY_FAILED,
 )
 from apiome_mock.conformance import DEFAULT_BUNDLE_PATH
 from apiome_mock.portable_config import RUNTIME_OPTIONS
@@ -299,3 +300,90 @@ def test_selftest_ignores_ambient_runtime_tuning(
 
 def test_the_packaged_bundle_is_the_one_selftest_serves() -> None:
     assert DEFAULT_BUNDLE_PATH.is_file()
+
+
+# ---------------------------------------------------------------------------
+# parity (#4748, PMR-3.1)
+# ---------------------------------------------------------------------------
+
+
+def test_parity_against_two_unreachable_deployments_reports_every_case(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Both sides failing is a parity failure, not a crash — and every case is still reported."""
+    code = main(
+        [
+            "parity",
+            "--hosted-url",
+            "http://127.0.0.1:1",
+            "--portable-url",
+            "http://127.0.0.1:2",
+            "--wait",
+            "0",
+            "--json",
+        ]
+    )
+
+    assert code == EXIT_PARITY_FAILED
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["ok"] is False
+    assert payload["mismatched"] == payload["compared"]
+    assert payload["skipped"] == 2  # /health and /ready describe the deployment, not the contract
+    assert all(
+        "hosted request failed" in "".join(case["differences"]) for case in payload["cases"] if not case["skipped"]
+    )
+
+
+def test_parity_reports_a_portable_readiness_timeout(capsys: pytest.CaptureFixture[str]) -> None:
+    code = main(
+        [
+            "parity",
+            "--hosted-url",
+            "http://127.0.0.1:1",
+            "--portable-url",
+            "http://127.0.0.1:2",
+            "--wait",
+            "0.2",
+        ]
+    )
+
+    assert code == EXIT_CONFORMANCE_FAILED
+    assert "did not become ready" in capsys.readouterr().err
+
+
+def test_parity_rejects_an_unreadable_corpus(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as exit_info:
+        main(
+            [
+                "parity",
+                "--hosted-url",
+                "http://127.0.0.1:1",
+                "--portable-url",
+                "http://127.0.0.1:2",
+                "--corpus",
+                str(tmp_path / "absent.json"),
+            ]
+        )
+
+    assert exit_info.value.code == EXIT_CONFIG_ERROR
+    assert "corpus could not be loaded" in capsys.readouterr().err
+
+
+def test_parity_prints_a_human_report_by_default(capsys: pytest.CaptureFixture[str]) -> None:
+    code = main(
+        [
+            "parity",
+            "--hosted-url",
+            "http://127.0.0.1:1",
+            "--portable-url",
+            "http://127.0.0.1:2",
+            "--wait",
+            "0",
+        ]
+    )
+    output = capsys.readouterr().out
+
+    assert code == EXIT_PARITY_FAILED
+    assert "[SKIP] health-is-reserved-and-live (deployment-shape endpoint)" in output
+    assert "[DIFF]" in output
+    assert "cases match between hosted and portable" in output

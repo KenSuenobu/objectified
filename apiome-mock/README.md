@@ -44,12 +44,33 @@ Configuration comes only from the flags declared in `apiome_mock/portable_config
 The **conformance corpus** (`src/apiome_mock/conformance_data/`) is the shared proof that every
 deployment behaves identically; run it against any running mock with
 `apiome-mock conformance --base-url http://127.0.0.1:8775`. Regenerate the corpus bundle after
-editing its spec:
+editing its spec or settings:
 
 ```bash
 uv run python scripts/build_conformance_bundle.py           # rewrite
 uv run python scripts/build_conformance_bundle.py --check   # verify it is current
 ```
+
+## CI parity and the mock action (PMR-3.1)
+
+`conformance` proves one deployment answers the corpus. **`parity`** proves a hosted deployment and
+a portable one *agree*, diffing every response (status, `X-Mock-*`/`Content-Type`/`Allow`/
+`Retry-After`, and the body — structurally for JSON). Transport headers and the reserved
+`/health` + `/ready` endpoints are excluded by design and reported as skipped; exit code is `6` on
+any difference:
+
+```bash
+uv run apiome-mock parity \
+  --hosted-url https://mock.apiome.dev --hosted-mount /acme/petstore/1.0.0 \
+  --portable-url http://127.0.0.1:8775
+```
+
+The corpus covers routing, request validation, scenarios and sequences, declarative rules and
+templates, chaos, session CRUD and isolation, fixture packs and the `__mock__` reset lifecycle, and
+seeded determinism — so parity is asserted across all of it.
+
+To start a pinned runtime inside a CI job (loopback-only URL, reported digests, automatic
+cleanup), use the [mock action](../mock-action/README.md).
 
 Full guide: [docs/guide/portable-mock-runtime.md](../docs/guide/portable-mock-runtime.md).
 
@@ -142,7 +163,7 @@ docker run --rm -p 8775:8775 -v "$PWD/mock-bundle.json:/bundle/mock-bundle.json:
   ghcr.io/apiome/apiome-mock:latest run
 docker run --rm ghcr.io/apiome/apiome-mock:latest selftest   # the image passes the corpus
 
-scripts/build-image.sh --push ghcr.io/apiome/apiome-mock:0.3.0   # linux/amd64 + linux/arm64
+scripts/build-image.sh --push ghcr.io/apiome/apiome-mock:0.6.0   # linux/amd64 + linux/arm64
 ```
 
 ## Development

@@ -60,7 +60,7 @@ image still runs the hosted, database-backed mock as its default command (`serve
 Build it for every supported architecture:
 
 ```bash
-apiome-mock/scripts/build-image.sh --push ghcr.io/apiome/apiome-mock:0.3.0
+apiome-mock/scripts/build-image.sh --push ghcr.io/apiome/apiome-mock:0.6.0
 # PLATFORMS=linux/amd64 apiome-mock/scripts/build-image.sh --load apiome-mock:dev   # local testing
 ```
 
@@ -99,7 +99,7 @@ exits instead), and `/health` cannot tell you *which* bundle answered.
   "status": "ready",
   "runtime": {
     "name": "apiome-mock",
-    "version": "0.3.0",
+    "version": "0.6.0",
     "mode": "portable",
     "basePath": "version",
     "mount": "/acme-corp/petstore/1.0.0"
@@ -196,7 +196,7 @@ apiome-mock verify --bundle ./mock-bundle.json --json
 
 The runtime ships a shared conformance corpus: a declarative set of requests and expected
 responses, run against a *running* mock. Passing it is what lets the CLI and the image claim
-identical behavior — and it is the corpus a CI action (PMR-3.1) will extend.
+identical behavior.
 
 ```bash
 apiome-mock selftest                                    # serve the packaged bundle, run the corpus
@@ -209,9 +209,60 @@ corpus" is one reproducible command. Both commands exit `5` on any failure and p
 `--json`, emit) the failing case, the reason, and what the case exists to pin down.
 
 The corpus covers example-first responses, path parameters, request validation, `405`/`404`/`406`
-handling, forced statuses (`Prefer: code=`), scenarios and scenario sequences, chaos injection and
-delay reporting, session-scoped CRUD and its isolation, seeded deterministic synthesis, and the two
-operational endpoints.
+handling, forced statuses (`Prefer: code=`), scenarios and scenario sequences, declarative match
+rules and bounded templates, chaos injection and delay reporting, session-scoped CRUD and its
+isolation, fixture packs and the session-reset lifecycle, seeded deterministic synthesis, and the
+two operational endpoints.
+
+## Hosted/portable parity
+
+Passing the corpus proves each deployment is correct on its own. `parity` proves the two *agree* —
+it runs the same corpus against both and diffs every response, which catches drift that per-side
+pass/fail hides (two runtimes can each satisfy the corpus while disagreeing on something the corpus
+does not assert):
+
+```bash
+apiome-mock parity \
+  --hosted-url https://mock.apiome.dev --hosted-mount /acme/petstore/1.0.0 \
+  --portable-url http://127.0.0.1:8775
+```
+
+```
+[MATCH] scenario-header-serves-the-canned-response
+[DIFF]  chaos-delay-is-reported-on-the-response
+        header x-mock-chaos-delay-ms: hosted '5', portable None
+28/28 cases match between hosted and portable (2 deployment-shape cases skipped)
+```
+
+Compared: status, the mock's own semantic headers (`X-Mock-*`, `Content-Type`, `Allow`,
+`Retry-After`), and the body — structurally when both sides return JSON, so key order and
+whitespace never register as a difference. Not compared: transport headers (`date`, `server`,
+`content-length`), which differ between a container and a hosted service without any *behavior*
+differing, and the reserved operational endpoints (`/health`, `/ready`), which describe the
+deployment rather than the contract and are reported as skipped. Exit code is `6` on any
+difference.
+
+## In CI
+
+The [mock action](../../mock-action/README.md) starts a pinned runtime for the rest of a job,
+hands back a loopback-only service URL, and removes the container automatically when the job ends:
+
+```yaml
+- uses: apiome/apiome/mock-action@v1
+  id: mock
+  with:
+    bundle: petstore-1.0.0-mock-bundle.json
+    image: ghcr.io/apiome/apiome-mock:0.6.0   # pin a version or a digest
+    conformance: "true"
+
+- run: npm test
+  env:
+    API_BASE_URL: ${{ steps.mock.outputs.service-url }}
+```
+
+The action publishes `bundle-digest` and `runtime-version` as outputs and writes them to the job
+summary. Record or assert them: a green suite proves nothing if nobody can tell which artifact
+answered it.
 
 ## What the portable runtime does not do
 

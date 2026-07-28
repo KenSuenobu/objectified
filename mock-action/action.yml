@@ -1,0 +1,75 @@
+name: Apiome Mock Runtime
+description: >
+  Start a version-pinned Apiome portable mock for the rest of the job, expose a
+  loopback-only service URL, report the runtime and bundle digests, and remove
+  the container automatically when the job ends.
+author: Apiome
+
+branding:
+  icon: server
+  color: blue
+
+inputs:
+  bundle:
+    description: Path to the mock bundle to serve (workspace-relative or absolute).
+    required: true
+  image:
+    description: Pinned runtime image. Pin a version tag or a digest in CI; latest drifts.
+    required: false
+    default: ghcr.io/apiome/apiome-mock:latest
+  port:
+    description: Host port to publish. "0" (default) picks a free one, so parallel jobs never collide.
+    required: false
+    default: "0"
+  host:
+    description: >
+      Host interface to publish on. Defaults to 127.0.0.1 so the mock is reachable
+      from the job and from nothing else; override only when a service container
+      on the same network must reach it.
+    required: false
+    default: 127.0.0.1
+  wait:
+    description: Seconds to wait for the runtime to report readiness before failing.
+    required: false
+    default: "60"
+  conformance:
+    description: When true, run the shared conformance corpus against the started runtime.
+    required: false
+    default: "false"
+  require-signature:
+    description: When true, refuse to serve an unsigned bundle.
+    required: false
+    default: "false"
+  bundle-secret:
+    description: >
+      Shared HMAC secret the bundle signature must verify against. Pass a repository
+      secret; it is forwarded to the container by name, never on a command line.
+    required: false
+    default: ""
+  pull:
+    description: When true (default), pull the image before starting it.
+    required: false
+    default: "true"
+
+outputs:
+  service-url:
+    description: Base URL of the started mock, including the version mount (loopback by default).
+  base-url:
+    description: Root URL of the runtime, without the version mount (for /health and /ready).
+  mount:
+    description: Path prefix the runtime serves the spec under (/{tenant}/{project}/{version}).
+  bundle-digest:
+    description: Digest of the served bundle — the artifact identity to record in the job.
+    # Assert this in a later step to prove the job ran against the bundle it intended to.
+  runtime-version:
+    description: Version of the apiome-mock runtime serving the bundle.
+  container:
+    description: Name of the started container (removed automatically in the post step).
+  port:
+    description: Host port the runtime was published on.
+
+runs:
+  using: node20
+  main: main.js
+  post: post.js
+  post-if: always()

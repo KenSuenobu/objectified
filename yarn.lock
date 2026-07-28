@@ -35,6 +35,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@apiome/mock-action@workspace:mock-action":
+  version: 0.0.0-use.local
+  resolution: "@apiome/mock-action@workspace:mock-action"
+  languageName: unknown
+  linkType: soft
+
 "@asamuzakjp/css-color@npm:^3.2.0":
   version: 3.2.0
   resolution: "@asamuzakjp/css-color@npm:3.2.0"

@@ -1,7 +1,9 @@
-"""``apiome-mock run``/``verify``/``conformance`` implementations (#4742, PMR-1.2).
+"""``apiome-mock run``/``verify``/``conformance``/``parity`` implementations (#4742, PMR-1.2).
 
 These are the portable-runtime commands: they never touch Postgres, and everything they need comes
-from a mock bundle plus the knobs declared in :mod:`apiome_mock.portable_config`.
+from a mock bundle plus the knobs declared in :mod:`apiome_mock.portable_config`. ``parity``
+(#4748, PMR-3.1) is the exception in one respect — it *addresses* a hosted deployment over HTTP to
+compare it against a portable one — but it still needs no database of its own.
 
 Exit codes are stable, because CI scripts branch on them:
 
@@ -13,6 +15,7 @@ Code  Meaning
 3     Bundle verification failed — malformed, tampered, unsigned when required, or credential-bearing.
 4     Bundle is well-formed but incompatible with this runtime version.
 5     Conformance failures — the runtime answered at least one corpus case wrongly.
+6     Parity failures — hosted and portable deployments answered at least one case differently.
 ===== ==========================================================================================
 """
 
@@ -47,6 +50,7 @@ from apiome_mock.conformance import (
     wait_for_ready,
 )
 from apiome_mock.logging_config import configure_portable_logging, uvicorn_log_config
+from apiome_mock.parity import ParityReport, run_parity
 from apiome_mock.portable_config import PortableSettings, settings_from_args
 
 __all__ = [
@@ -55,7 +59,9 @@ __all__ = [
     "EXIT_CONFIG_ERROR",
     "EXIT_CONFORMANCE_FAILED",
     "EXIT_OK",
+    "EXIT_PARITY_FAILED",
     "conformance_command",
+    "parity_command",
     "run_command",
     "selftest_command",
     "serve_in_background",
@@ -67,6 +73,7 @@ EXIT_CONFIG_ERROR = 2
 EXIT_BUNDLE_INVALID = 3
 EXIT_BUNDLE_INCOMPATIBLE = 4
 EXIT_CONFORMANCE_FAILED = 5
+EXIT_PARITY_FAILED = 6
 
 _log = structlog.get_logger(__name__)
 
@@ -311,6 +318,72 @@ def _print_report(report: ConformanceReport) -> None:
         for failure in result.failures:
             print(f"         {failure}")
     print(report.summary())
+
+
+def _print_parity_report(report: ParityReport) -> None:
+    """Print a human-readable hosted/portable parity report."""
+    for case in report.cases:
+        if case.skipped:
+            print(f"[SKIP] {case.name} (deployment-shape endpoint)")
+            continue
+        marker = "MATCH" if case.matched else "DIFF"
+        print(f"[{marker}] {case.name}")
+        for difference in case.differences:
+            print(f"        {difference}")
+    print(report.summary())
+
+
+def parity_command(args: argparse.Namespace) -> int:
+    """Compare a hosted deployment against a portable one, case by case (#4748, PMR-3.1).
+
+    Both deployments answer the same corpus and every response is diffed (status, mock semantic
+    headers, body), which catches drift that per-side pass/fail cannot: two runtimes can each
+    satisfy the corpus while disagreeing on something the corpus does not assert.
+
+    Args:
+        args: Parsed ``parity`` namespace (``hosted_url``, ``portable_url``, ``hosted_mount``,
+            ``portable_mount``, ``corpus``, ``timeout``, ``wait``, ``json``).
+
+    Returns:
+        0 when every compared case matches, 6 when any case differs, 5 when a deployment never
+        became ready.
+
+    Raises:
+        SystemExit: Exit code 2 when the corpus file cannot be read or is not a supported corpus.
+    """
+    try:
+        corpus = load_corpus(args.corpus)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"Conformance corpus could not be loaded: {exc}", file=sys.stderr)
+        raise SystemExit(EXIT_CONFIG_ERROR) from exc
+
+    hosted_url = str(args.hosted_url).rstrip("/")
+    portable_url = str(args.portable_url).rstrip("/")
+
+    # Only the portable runtime publishes readiness; a hosted mock is a long-lived service whose
+    # availability is the caller's concern, so waiting applies to the portable side alone.
+    if args.wait > 0 and not wait_for_ready(portable_url, timeout=args.wait):
+        print(f"{portable_url} did not become ready within {args.wait:g}s.", file=sys.stderr)
+        return EXIT_CONFORMANCE_FAILED
+
+    # The corpus stores spec-relative paths, so each side needs its mount prefix. The portable
+    # runtime reports one on /ready; a hosted mock always serves /{tenant}/{project}/{version},
+    # which the caller passes explicitly.
+    portable_mount = args.portable_mount if args.portable_mount is not None else discover_mount(portable_url)
+    hosted_mount = args.hosted_mount if args.hosted_mount is not None else portable_mount
+
+    report = run_parity(
+        http_sender(hosted_url, mount=hosted_mount, timeout=args.timeout),
+        http_sender(portable_url, mount=portable_mount, timeout=args.timeout),
+        corpus=corpus,
+        hosted_url=hosted_url,
+        portable_url=portable_url,
+    )
+    if args.json:
+        print(json.dumps(report.as_dict(), indent=2, sort_keys=True))
+    else:
+        _print_parity_report(report)
+    return EXIT_OK if report.ok else EXIT_PARITY_FAILED
 
 
 def conformance_command(args: argparse.Namespace) -> int:

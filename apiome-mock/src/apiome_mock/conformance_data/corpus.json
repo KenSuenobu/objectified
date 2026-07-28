@@ -161,7 +161,7 @@
         "contentType": "application/problem+json",
         "jsonContains": {
           "title": "Unknown Scenario",
-          "availableScenarios": ["flaky-list", "outage", "quota-exceeded", "slow"]
+          "availableScenarios": ["flaky-list", "outage", "quota-exceeded", "slow", "templated-lookup"]
         }
       }
     },
@@ -218,6 +218,144 @@
       "why": "A schema-only response with ?__seed= must produce the same body on every runtime.",
       "request": { "method": "GET", "path": "/pets/7/tags", "query": { "__seed": "7" } },
       "expect": { "status": 200, "jsonEquals": { "tags": ["lorem", "consectetur"] } }
+    },
+    {
+      "name": "declarative-rule-selects-and-templates-the-response",
+      "why": "A matching rule serves its own responses, rendered from request fields, fixture pack data, and seeded randomness (#4744).",
+      "request": {
+        "method": "GET",
+        "path": "/pets/42",
+        "headers": { "X-Mock-Scenario": "templated-lookup" },
+        "query": { "__seed": "7" }
+      },
+      "expect": {
+        "status": 200,
+        "headers": { "X-Mock-Scenario-Rule": "1", "X-Mock-Fixture": "hello from the pack" },
+        "jsonEquals": { "id": "42", "name": "Bella", "trace": "3ee5" }
+      }
+    },
+    {
+      "name": "unmatched-rule-falls-back-to-the-scenario-responses",
+      "why": "When no rule's predicates hold, the override's plain responses serve instead (#4744).",
+      "request": {
+        "method": "GET",
+        "path": "/pets/9",
+        "headers": { "X-Mock-Scenario": "templated-lookup" }
+      },
+      "expect": { "status": 404, "jsonEquals": { "detail": "No rule matched." } }
+    },
+    {
+      "name": "fixture-pack-listing-reports-the-pack-digest",
+      "why": "The lifecycle control plane publishes each pack's versioned identity so a test can pin the data it seeds (#4745).",
+      "request": { "method": "GET", "path": "/__mock__/fixture-packs" },
+      "expect": {
+        "status": 200,
+        "jsonEquals": {
+          "packs": [
+            {
+              "name": "seeded-pets",
+              "description": "Two pets and the catalog values templates read.",
+              "digest": "sha256:b1f5da7f9be8d3b0a5545866aabccf862d05ddfeaaf2c7d84619f27c26544167",
+              "packFormat": "apiome.mock.fixture-pack/v1",
+              "packFormatVersion": 1,
+              "fixtures": ["catalog"],
+              "collections": { "/pets": 2 },
+              "resources": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "session-reset-to-a-pack-reports-what-it-seeded",
+      "why": "A reset echoes the pack digest and resource count, so a test can assert the exact state it started from (#4745).",
+      "request": {
+        "method": "POST",
+        "path": "/__mock__/session/reset",
+        "headers": { "X-Mock-Session": "conformance-seed" },
+        "json": { "pack": "seeded-pets" }
+      },
+      "expect": {
+        "status": 200,
+        "jsonEquals": {
+          "session": "conformance-seed",
+          "reset": true,
+          "pack": "seeded-pets",
+          "packDigest": "sha256:b1f5da7f9be8d3b0a5545866aabccf862d05ddfeaaf2c7d84619f27c26544167",
+          "collections": 1,
+          "resources": 2
+        }
+      }
+    },
+    {
+      "name": "seeded-session-serves-the-pack-resources",
+      "why": "Fixture pack collections become readable session state, which is what makes a test's data deterministic (#4745).",
+      "setup": [
+        {
+          "method": "POST",
+          "path": "/__mock__/session/reset",
+          "headers": { "X-Mock-Session": "conformance-seeded-list" },
+          "json": { "pack": "seeded-pets" }
+        }
+      ],
+      "request": { "method": "GET", "path": "/pets", "headers": { "X-Mock-Session": "conformance-seeded-list" } },
+      "expect": {
+        "status": 200,
+        "jsonEquals": [
+          { "id": 1, "name": "Rex" },
+          { "id": 2, "name": "Bella" }
+        ]
+      }
+    },
+    {
+      "name": "session-reset-without-a-pack-clears-the-session",
+      "why": "An empty reset discards prior writes, so cases cannot inherit each other's state (#4745).",
+      "setup": [
+        {
+          "method": "POST",
+          "path": "/__mock__/session/reset",
+          "headers": { "X-Mock-Session": "conformance-clear" },
+          "json": { "pack": "seeded-pets" }
+        },
+        {
+          "method": "POST",
+          "path": "/__mock__/session/reset",
+          "headers": { "X-Mock-Session": "conformance-clear" }
+        }
+      ],
+      "request": { "method": "GET", "path": "/pets", "headers": { "X-Mock-Session": "conformance-clear" } },
+      "expect": { "status": 200, "jsonEquals": [] }
+    },
+    {
+      "name": "unknown-fixture-pack-is-refused-with-the-available-list",
+      "why": "A typo in the pack name fails loudly and says what does exist (#4745).",
+      "request": {
+        "method": "POST",
+        "path": "/__mock__/session/reset",
+        "headers": { "X-Mock-Session": "conformance-unknown-pack" },
+        "json": { "pack": "nope" }
+      },
+      "expect": {
+        "status": 400,
+        "contentType": "application/problem+json",
+        "jsonContains": { "title": "Unknown Fixture Pack", "availablePacks": ["seeded-pets"] }
+      }
+    },
+    {
+      "name": "session-reset-requires-a-session-header",
+      "why": "A reset names the session it clears; without one it refuses rather than guessing (#4745).",
+      "request": { "method": "POST", "path": "/__mock__/session/reset" },
+      "expect": {
+        "status": 400,
+        "contentType": "application/problem+json",
+        "jsonContains": { "title": "Session Required" }
+      }
+    },
+    {
+      "name": "unknown-control-path-is-refused-not-spec-routed",
+      "why": "The reserved __mock__ namespace never falls through to spec routing, whatever is under it (#4745).",
+      "request": { "method": "GET", "path": "/__mock__/nope" },
+      "expect": { "status": 404, "contentType": "application/problem+json" }
     }
   ]
 }
