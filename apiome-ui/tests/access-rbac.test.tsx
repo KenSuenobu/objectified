@@ -111,14 +111,15 @@ afterEach(() => {
 });
 
 describe('RolesClient (#3611)', () => {
-  it('renders the role list and an 11x5 permission matrix', async () => {
+  it('renders the role list and a 12x5 permission matrix', async () => {
     render(<RolesClient />);
 
     // Role names appear in the left list.
     expect(await screen.findByText('Owner')).toBeInTheDocument();
     expect(screen.getByText('Release Manager')).toBeInTheDocument();
 
-    // All 11 resources render as rows (lint_findings added by CLX-4.1, #4859).
+    // All 12 resources render as rows (lint_findings added by CLX-4.1, #4859;
+    // verification_targets by ECA-1.2, #4730).
     for (const label of [
       'Projects',
       'Versions',
@@ -131,6 +132,7 @@ describe('RolesClient (#3611)', () => {
       'API Keys',
       'Billing',
       'Lint Findings',
+      'Verification Targets',
     ]) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
@@ -140,9 +142,9 @@ describe('RolesClient (#3611)', () => {
     const headers = within(matrix).getAllByRole('columnheader').map((h) => h.textContent);
     expect(headers).toEqual(['Resource', 'View', 'Create', 'Edit', 'Delete', 'Publish']);
 
-    // 11 resources x 5 actions = 55 toggle cells.
+    // 12 resources x 5 actions = 60 toggle cells.
     const toggles = within(matrix).getAllByRole('button');
-    expect(toggles).toHaveLength(55);
+    expect(toggles).toHaveLength(60);
   });
 });
 

@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.67.0
+  version: 1.68.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -5145,6 +5145,562 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for compileadeterministiccontractsuitefromavresponse422.
+  /v1/tenants/{tenant_slug}/verification-targets:
+    get:
+      tags:
+      - contract-assurance
+      summary: List the tenant's verification targets
+      description: 'Every live verification target defined in the tenant, newest first.
+
+
+        A target is **secret-free by construction**: it carries a credential *reference*
+        (an environment-variable name, or an id in the encrypted credential vault),
+        never a credential, so this response needs no redacted variant.
+
+
+        Requires `verification_targets:view` — the same permission a run needs to
+        resolve one.'
+      operationId: list_verification_targets_v1_tenants__tenant_slug__verification_targets_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listthetenantsverificationtargetsauthorization schema.
+          - type: 'null'
+            description: Listthetenantsverificationtargetsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listthetenantsverificationtargets Xapikey schema.
+          - type: 'null'
+            description: Listthetenantsverificationtargets Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for list the tenant's verification targets.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationTargetListResponse'
+                description: Response payload for listthetenantsverificationtargetsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for listthetenantsverificationtargetsresponse422.
+    post:
+      tags:
+      - contract-assurance
+      summary: Define a verification target
+      description: 'Define where a compiled contract suite may be executed.
+
+
+        **The URL is vetted before anything is stored.** http/https only, no `user:pass@`
+        authority, and — for the default `public` network class — every address the
+        host resolves to must be globally routable. A target that must reach an internal
+        address declares `network_class: private`, which requires an `approval_reason`;
+        the authenticated caller is recorded as its approver.
+
+
+        **The credential is a reference, never a value.** `auth.kind: env` stores
+        an environment-variable NAME the runner reads from its own environment; `auth.kind:
+        stored` stores the id of a row in the encrypted credential vault. Both shapes
+        are validated here and constrained again in the database, so a pasted token
+        is rejected rather than stored.
+
+
+        Requires `verification_targets:create`.'
+      operationId: create_verification_target_v1_tenants__tenant_slug__verification_targets_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Defineaverificationtargetauthorization schema.
+          - type: 'null'
+            description: Defineaverificationtargetauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Defineaverificationtarget Xapikey schema.
+          - type: 'null'
+            description: Defineaverificationtarget Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationTargetInput'
+              description: Request body for defineaverificationtargetrequest.
+        description: Request body for define a verification target.
+      responses:
+        '201':
+          description: Successful response for define a verification target.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationTargetRecord'
+                description: Response payload for defineaverificationtargetresponse201.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for defineaverificationtargetresponse422.
+  /v1/tenants/{tenant_slug}/verification-targets/{target_ref}:
+    get:
+      tags:
+      - contract-assurance
+      summary: Read one verification target
+      description: 'Read a target by its slug or its id. Accepting both is what lets
+        CI name a stable handle (`staging`) while an evidence record names an immutable
+        id.
+
+
+        Requires `verification_targets:view`.'
+      operationId: get_verification_target_v1_tenants__tenant_slug__verification_targets__target_ref__get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: target_ref
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Target Ref
+          description: Target Ref schema.
+        description: Path parameter identifying the target ref segment.
+      - name: include_deleted
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Resolve retired targets too. Evidence records name a target
+            id, and that reference has to keep resolving after the target is retired.
+          default: false
+          title: Include Deleted
+        description: Resolve retired targets too. Evidence records name a target id,
+          and that reference has to keep resolving after the target is retired.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Readoneverificationtargetauthorization schema.
+          - type: 'null'
+            description: Readoneverificationtargetauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Readoneverificationtarget Xapikey schema.
+          - type: 'null'
+            description: Readoneverificationtarget Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for read one verification target.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationTargetRecord'
+                description: Response payload for readoneverificationtargetresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for readoneverificationtargetresponse422.
+    patch:
+      tags:
+      - contract-assurance
+      summary: Update a verification target
+      description: 'Apply a partial update. Omitted fields are left alone; `auth`
+        and `policy` are replaced wholesale when present, because a half-applied credential
+        reference is exactly the state that puts a value in the wrong column.
+
+
+        The result is validated as a whole: supplying `network_class: private` and
+        its `approval_reason` together is one coherent change, and moving a target
+        back to `public` re-runs the address check its URL previously skipped.
+
+
+        Requires `verification_targets:edit`.'
+      operationId: update_verification_target_v1_tenants__tenant_slug__verification_targets__target_ref__patch
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: target_ref
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Target Ref
+          description: Target Ref schema.
+        description: Path parameter identifying the target ref segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Updateaverificationtargetauthorization schema.
+          - type: 'null'
+            description: Updateaverificationtargetauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Updateaverificationtarget Xapikey schema.
+          - type: 'null'
+            description: Updateaverificationtarget Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationTargetPatch'
+              description: Request body for updateaverificationtargetrequest.
+        description: Request body for update a verification target.
+      responses:
+        '200':
+          description: Successful response for update a verification target.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationTargetRecord'
+                description: Response payload for updateaverificationtargetresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for updateaverificationtargetresponse422.
+    delete:
+      tags:
+      - contract-assurance
+      summary: Retire a verification target
+      description: 'Soft-delete a target. The definition stays readable by id (`?include_deleted=true`)
+        so an evidence record that names it keeps resolving, and the slug is freed
+        for reuse.
+
+
+        Requires `verification_targets:delete`.'
+      operationId: delete_verification_target_v1_tenants__tenant_slug__verification_targets__target_ref__delete
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: target_ref
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Target Ref
+          description: Target Ref schema.
+        description: Path parameter identifying the target ref segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Retireaverificationtargetauthorization schema.
+          - type: 'null'
+            description: Retireaverificationtargetauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Retireaverificationtarget Xapikey schema.
+          - type: 'null'
+            description: Retireaverificationtarget Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '204':
+          description: Successful response for retire a verification target.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for retireaverificationtargetresponse422.
+  /v1/tenants/{tenant_slug}/verification-targets/{target_ref}/resolve:
+    post:
+      tags:
+      - contract-assurance
+      summary: Resolve a verification target for a run
+      description: 'Select a target for a verification run — **the audited moment
+        a definition becomes traffic**.
+
+
+        Everything a read tolerates is refused here: a retired target, a disabled
+        one, and a URL that no longer satisfies its network class. That last check
+        is re-run at resolve time on purpose: DNS moves, so a hostname that resolved
+        publicly when the target was defined can point at an internal address today
+        while the definition looks unchanged.
+
+
+        Success **and** refusal are written to the audit ledger, with the acting user
+        or CI runner, so "which target did this run use" and "what was turned away"
+        are answered from the same place.
+
+
+        The response carries the target identity, the base URL, the policy the runner
+        must honour, and the credential *reference* — never a credential.
+
+
+        Requires `verification_targets:view`.'
+      operationId: resolve_verification_target_v1_tenants__tenant_slug__verification_targets__target_ref__resolve_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: target_ref
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Target Ref
+          description: Target Ref schema.
+        description: Path parameter identifying the target ref segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Resolveaverificationtargetforarunauthorization schema.
+          - type: 'null'
+            description: Resolveaverificationtargetforarunauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Resolveaverificationtargetforarun Xapikey schema.
+          - type: 'null'
+            description: Resolveaverificationtargetforarun Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/ResolveTargetRequest'
+              - type: 'null'
+                description: Request body for resolveaverificationtargetforarunrequest.
+              title: Body
+              description: Body schema.
+        description: Request body for resolve a verification target for a run.
+      responses:
+        '200':
+          description: Successful response for resolve a verification target for a
+            run.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolvedTarget'
+                description: Response payload for resolveaverificationtargetforarunresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for resolveaverificationtargetforarunresponse422.
+  /v1/tenants/{tenant_slug}/verification-targets-audit:
+    get:
+      tags:
+      - contract-assurance
+      summary: Read the verification-target audit ledger
+      description: 'The append-only record of every target definition change and every
+        target *selection*, including denials, newest first.
+
+
+        Entries carry the actor and whether they were an interactive user or a CI
+        runner (`actor_kind: api_key`). The `detail` block holds non-secret context
+        only — an update records which field names changed, never their values, and
+        a resolve records the credential reference *kind* but never the reference
+        itself.
+
+
+        Requires `verification_targets:view`.'
+      operationId: read_verification_target_audit_v1_tenants__tenant_slug__verification_targets_audit_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: target_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Readtheverificationtargetauditledgertargetid schema.
+          - type: 'null'
+            description: Readtheverificationtargetauditledgertargetid schema.
+          description: Restrict the ledger to one target's history.
+          title: Target Id
+        description: Restrict the ledger to one target's history.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          description: Maximum entries to return.
+          default: 100
+          title: Limit
+        description: Maximum entries to return.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Readtheverificationtargetauditledgerauthorization schema.
+          - type: 'null'
+            description: Readtheverificationtargetauditledgerauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Readtheverificationtargetauditledger Xapikey schema.
+          - type: 'null'
+            description: Readtheverificationtargetauditledger Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for read the verification-target audit
+            ledger.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetAuditResponse'
+                description: Response payload for readtheverificationtargetauditledgerresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for readtheverificationtargetauditledgerresponse422.
   /v1/diff/{tenant_slug}/classified:
     post:
       tags:
@@ -71069,6 +71625,23 @@ components:
         coverage KPIs of ``GET …/unresolved`` (#3457/#3454); ``reresolved_primitive_count``
 
         is how many primitives had at least one edge status flip during this pass.'
+    ResolveTargetRequest:
+      properties:
+        suite_digest:
+          anyOf:
+          - type: string
+            maxLength: 200
+            description: Request body for resolve target.
+          - type: 'null'
+            description: Request body for resolve target.
+          title: Suite Digest
+          description: The ECA-1.1 suite digest this run will execute. Recorded on
+            the audit entry so a target selection can be tied to the exact contract
+            it was selected for.
+      additionalProperties: false
+      type: object
+      title: ResolveTargetRequest
+      description: What a runner says when it selects a target.
     ResolvedPrimitiveRefs:
       properties:
         id:
@@ -71256,6 +71829,80 @@ components:
         target ``$id`` within the caller''s read scope); they are ``None`` for an
 
         ``unresolved`` edge whose target does not yet exist.'
+    ResolvedTarget:
+      properties:
+        target_id:
+          type: string
+          title: Target Id
+          description: The resolved target's id — the run's target identity.
+          example: target_01h2xcejqtf3fz5y5j0v8k9m2p
+        slug:
+          type: string
+          title: Slug
+          description: The handle that was resolved.
+          example: pet-store
+        name:
+          type: string
+          title: Name
+          description: Display name at resolution time.
+          example: Pet
+        environment:
+          type: string
+          title: Environment
+          description: Environment class.
+          example: example
+        network_class:
+          type: string
+          title: Network Class
+          description: '`public` or `private`.'
+          example: example
+        base_url:
+          type: string
+          title: Base Url
+          description: Normalized base URL to join relative paths onto.
+          example: https://example.com/resource
+        policy:
+          $ref: '#/components/schemas/VerificationPolicy'
+          description: The policy the runner must honour.
+        auth:
+          $ref: '#/components/schemas/TargetAuthReference'
+          description: Where the runner obtains the credential. No credential material
+            is returned by this API — an `env` reference is read from the runner's
+            own environment, and a `stored` one is unsealed only at request time by
+            the runner service.
+        resolved_at:
+          type: string
+          format: date-time
+          title: Resolved At
+          description: When the target was resolved.
+          example: '2026-07-28T00:48:37Z'
+      additionalProperties: false
+      type: object
+      required:
+      - target_id
+      - slug
+      - name
+      - environment
+      - network_class
+      - base_url
+      - policy
+      - auth
+      - resolved_at
+      title: ResolvedTarget
+      description: 'A target selected for a run: identity, endpoint, policy, and a
+        credential *reference*.
+
+
+        This is the object an ECA-2.1 runner executes against and the one ECA-1.3
+        records the identity
+
+        of. It is deliberately the same secret-free shape as the stored record plus
+        the resolution''s
+
+        own facts — because "what the run used" and "what is configured" should never
+        be two different
+
+        truths.'
     ResponseContentTypeRequest:
       properties:
         media_type:
@@ -76923,6 +77570,161 @@ components:
       - sessions
       title: TailSessionsResponse
       description: A lane's recent live tail sessions.
+    TargetAuditEntry:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Audit entry id.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        target_id:
+          anyOf:
+          - type: string
+            description: Target Audit Entry schema.
+          - type: 'null'
+            description: Target Audit Entry schema.
+          title: Target Id
+          description: Target acted on, when found.
+        target_slug:
+          anyOf:
+          - type: string
+            description: Target Audit Entry schema.
+          - type: 'null'
+            description: Target Audit Entry schema.
+          title: Target Slug
+          description: Slug as named at the time.
+        action:
+          type: string
+          title: Action
+          description: 'One of: target.create, target.update, target.delete, target.resolve.'
+          example: example
+        outcome:
+          type: string
+          title: Outcome
+          description: '`success`, `denied`, or `failure`.'
+          example: example
+        reason:
+          anyOf:
+          - type: string
+            description: Target Audit Entry schema.
+          - type: 'null'
+            description: Target Audit Entry schema.
+          title: Reason
+          description: Stable code for a non-success.
+        actor_id:
+          anyOf:
+          - type: string
+            description: Target Audit Entry schema.
+          - type: 'null'
+            description: Target Audit Entry schema.
+          title: Actor Id
+          description: Acting user, when attributable.
+        actor_label:
+          anyOf:
+          - type: string
+            description: Target Audit Entry schema.
+          - type: 'null'
+            description: Target Audit Entry schema.
+          title: Actor Label
+          description: Actor email/name at the time.
+        actor_kind:
+          type: string
+          title: Actor Kind
+          description: '`user`, `api_key` (a CI runner), or `system`.'
+          example: example
+        detail:
+          additionalProperties: true
+          type: object
+          title: Detail
+          description: Non-secret context; never credential material.
+        created_at:
+          anyOf:
+          - type: string
+            description: Target Audit Entry schema.
+          - type: 'null'
+            description: Target Audit Entry schema.
+          title: Created At
+          description: When the action happened.
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - action
+      - outcome
+      - actor_kind
+      title: TargetAuditEntry
+      description: One entry from the target audit ledger.
+    TargetAuditResponse:
+      properties:
+        entries:
+          items:
+            $ref: '#/components/schemas/TargetAuditEntry'
+          type: array
+          title: Entries
+          description: Ledger entries, newest first.
+          maxItems: 100
+        count:
+          type: integer
+          title: Count
+          description: How many entries were returned.
+          example: 1
+      additionalProperties: false
+      type: object
+      required:
+      - count
+      title: TargetAuditResponse
+      description: The audit ledger read.
+    TargetAuthReference:
+      properties:
+        kind:
+          type: string
+          title: Kind
+          description: 'Where the credential lives: `none`, `env`, or `stored`.'
+          default: none
+          example: example
+        scheme:
+          anyOf:
+          - type: string
+            description: Target Auth Reference schema.
+          - type: 'null'
+            description: Target Auth Reference schema.
+          title: Scheme
+          description: 'How the resolved secret is presented: `bearer`, `header`,
+            or `basic`.'
+        ref:
+          anyOf:
+          - type: string
+            description: Target Auth Reference schema.
+          - type: 'null'
+            description: Target Auth Reference schema.
+          title: Ref
+          description: 'The reference itself: an environment-variable NAME for `env`,
+            a credential-vault UUID for `stored`. Never a secret value — a token cannot
+            satisfy either shape.'
+        header_name:
+          anyOf:
+          - type: string
+            description: Target Auth Reference schema.
+          - type: 'null'
+            description: Target Auth Reference schema.
+          title: Header Name
+          description: Header field-name for the `header` scheme (RFC 9110 token grammar).
+      additionalProperties: false
+      type: object
+      title: TargetAuthReference
+      description: "How a runner obtains the credential for a target — a pointer,\
+        \ never the secret.\n\n``kind`` selects the mechanism and ``ref`` names the\
+        \ credential within it:\n\n* ``none``   — an anonymous target. Every other\
+        \ field must be absent.\n* ``env``    — ``ref`` is an **environment variable\
+        \ name** the runner reads from its own\n  environment (``APIOME_STAGING_TOKEN``).\
+        \ The platform stores the name and never sees the\n  value, which is what\
+        \ makes a self-hosted CI run work without handing the platform a secret.\n\
+        * ``stored`` — ``ref`` is the **id** of a row in the encrypted credential\
+        \ vault\n  (``apiome.mcp_endpoint_credentials``). The ciphertext and its key\
+        \ version stay there.\n\n``scheme`` says how the resolved value is presented\
+        \ (``Authorization: Bearer …``, a named\nheader, or HTTP Basic) and ``header_name``\
+        \ names the header for the ``header`` scheme. Both\nare shapes rather than\
+        \ secrets."
     TargetFidelity:
       properties:
         tier:
@@ -79776,6 +80578,427 @@ components:
       title: VariantBody
       description: One personalization variant, with everything §29.5 requires shown
         together.
+    VerificationPolicy:
+      properties:
+        request_timeout_seconds:
+          type: integer
+          maximum: 300.0
+          minimum: 1.0
+          title: Request Timeout Seconds
+          description: Per-request timeout, in seconds.
+          default: 30
+          example: 1
+        max_concurrency:
+          type: integer
+          maximum: 32.0
+          minimum: 1.0
+          title: Max Concurrency
+          description: Maximum concurrent in-flight requests.
+          default: 4
+          example: 1
+        retry_attempts:
+          type: integer
+          maximum: 5.0
+          minimum: 0.0
+          title: Retry Attempts
+          description: Retries per case for *transport* failures only. A contract
+            failure is never retried — that would let a flaky pass mask a real incompatibility
+            (ECA-2.1).
+          default: 0
+          example: 1
+        retry_backoff_ms:
+          type: integer
+          maximum: 60000.0
+          minimum: 0.0
+          title: Retry Backoff Ms
+          description: Backoff between retries, in milliseconds.
+          default: 250
+          example: 1
+        allow_mutating_methods:
+          type: boolean
+          title: Allow Mutating Methods
+          description: 'Whether POST/PUT/PATCH/DELETE cases may be executed. Off by
+            default: a contract run against a live system should not write to it unless
+            someone said so.'
+          default: false
+          example: false
+        follow_redirects:
+          type: boolean
+          title: Follow Redirects
+          description: Whether the runner follows 3xx responses. Off by default, because
+            a redirect silently changes which host answered a contract case.
+          default: false
+          example: false
+        verify_tls:
+          type: boolean
+          title: Verify Tls
+          description: Whether TLS certificates are verified. Only an approved private-network
+            target may turn this off (a self-signed internal box).
+          default: true
+          example: false
+        failure_action:
+          type: string
+          title: Failure Action
+          description: 'What a failing run does to a gate: `block` or `warn`.'
+          default: block
+          example: example
+        max_allowed_failures:
+          type: integer
+          minimum: 0.0
+          title: Max Allowed Failures
+          description: Case failures tolerated before the run is considered failed.
+            Zero — a contract is not partially binding.
+          default: 0
+          example: 1
+      additionalProperties: false
+      type: object
+      title: VerificationPolicy
+      description: 'How a runner is allowed to behave against this target, and what
+        a failure means.
+
+
+        Every bound is deliberate rather than advisory: a target is a *permission*
+        to send traffic to
+
+        someone''s system, so the registry — not the runner — decides the ceiling
+        on concurrency, the
+
+        per-request timeout, and whether mutating methods may be exercised at all.
+
+
+        The defaults are the safe reading of "verify a contract": four concurrent
+        requests, a 30-second
+
+        timeout, no retries, read-only methods, no redirect following, TLS verified,
+        and a failure that
+
+        blocks the gate.'
+    VerificationTargetInput:
+      properties:
+        slug:
+          type: string
+          maxLength: 128
+          title: Slug
+          description: Stable handle used from the CLI and CI (`--target staging`).
+          example: pet-store
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+          description: Human-readable display name.
+          example: Pet
+        description:
+          anyOf:
+          - type: string
+            maxLength: 2000
+            description: Verification Target Input schema.
+          - type: 'null'
+            description: Verification Target Input schema.
+          title: Description
+          description: Optional note about what this target is.
+        environment:
+          type: string
+          title: Environment
+          description: '`mock`, `development`, `test`, `staging`, or `production`.'
+          default: staging
+          example: example
+        base_url:
+          type: string
+          title: Base Url
+          description: Base URL the suite's relative paths are joined onto.
+          example: https://example.com/resource
+        network_class:
+          type: string
+          title: Network Class
+          description: '`public` (must resolve to a globally routable address) or
+            `private` (an internal target, which requires `approval_reason`).'
+          default: public
+          example: example
+        approval_reason:
+          anyOf:
+          - type: string
+            maxLength: 2000
+            description: Verification Target Input schema.
+          - type: 'null'
+            description: Verification Target Input schema.
+          title: Approval Reason
+          description: Why a private-network target is justified. Required when `network_class`
+            is `private`; the approver is the authenticated caller.
+        auth:
+          $ref: '#/components/schemas/TargetAuthReference'
+          description: The credential reference — never a credential.
+        policy:
+          $ref: '#/components/schemas/VerificationPolicy'
+          description: Execution and failure policy.
+        enabled:
+          type: boolean
+          title: Enabled
+          description: A disabled target stays defined but cannot be resolved.
+          default: true
+          example: true
+      additionalProperties: false
+      type: object
+      required:
+      - slug
+      - name
+      - base_url
+      title: VerificationTargetInput
+      description: A complete target definition, as a caller supplies it on create.
+    VerificationTargetListResponse:
+      properties:
+        targets:
+          items:
+            $ref: '#/components/schemas/VerificationTargetRecord'
+          type: array
+          title: Targets
+          description: The tenant's live targets, newest first.
+          maxItems: 1000
+        count:
+          type: integer
+          title: Count
+          description: How many targets were returned.
+          example: 1
+      additionalProperties: false
+      type: object
+      required:
+      - count
+      title: VerificationTargetListResponse
+      description: Every live target defined in the tenant.
+    VerificationTargetPatch:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+            description: Verification Target Patch schema.
+          - type: 'null'
+            description: Verification Target Patch schema.
+          title: Name
+          description: Human-readable name.
+        description:
+          anyOf:
+          - type: string
+            maxLength: 2000
+            description: Verification Target Patch schema.
+          - type: 'null'
+            description: Verification Target Patch schema.
+          title: Description
+          description: Free-text description.
+        environment:
+          anyOf:
+          - type: string
+            description: Verification Target Patch schema.
+          - type: 'null'
+            description: Verification Target Patch schema.
+          title: Environment
+          description: Environment.
+        base_url:
+          anyOf:
+          - type: string
+            description: Verification Target Patch schema.
+          - type: 'null'
+            description: Verification Target Patch schema.
+          title: Base Url
+          description: Base URL.
+        network_class:
+          anyOf:
+          - type: string
+            description: Verification Target Patch schema.
+          - type: 'null'
+            description: Verification Target Patch schema.
+          title: Network Class
+          description: Network Class.
+        approval_reason:
+          anyOf:
+          - type: string
+            maxLength: 2000
+            description: Verification Target Patch schema.
+          - type: 'null'
+            description: Verification Target Patch schema.
+          title: Approval Reason
+          description: Approval Reason.
+        auth:
+          anyOf:
+          - $ref: '#/components/schemas/TargetAuthReference'
+          - type: 'null'
+            description: Verification Target Patch schema.
+          description: Auth.
+        policy:
+          anyOf:
+          - $ref: '#/components/schemas/VerificationPolicy'
+          - type: 'null'
+            description: Verification Target Patch schema.
+          description: Policy.
+        enabled:
+          anyOf:
+          - type: boolean
+            description: Verification Target Patch schema.
+          - type: 'null'
+            description: Verification Target Patch schema.
+          title: Enabled
+          description: Whether the resource is active.
+      additionalProperties: false
+      type: object
+      title: VerificationTargetPatch
+      description: 'A partial update. Every field is optional; omitted fields are
+        left as they are.
+
+
+        ``auth`` and ``policy`` are replaced wholesale when present, because a half-applied
+        credential
+
+        reference (a new ``ref`` against an old ``kind``) is exactly the kind of state
+        that stores a
+
+        secret in the wrong column.'
+    VerificationTargetRecord:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Target id — the identity an evidence row records.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        tenant_id:
+          type: string
+          title: Tenant Id
+          description: Tenant that owns the target.
+          example: ten_01h2xcejqtf3fz5y5j0v8k9m2p
+        slug:
+          type: string
+          title: Slug
+          description: Stable handle used from the CLI and CI.
+          example: pet-store
+        name:
+          type: string
+          title: Name
+          description: Human-readable display name.
+          example: Pet
+        description:
+          anyOf:
+          - type: string
+            description: Verification Target schema.
+          - type: 'null'
+            description: Verification Target schema.
+          title: Description
+          description: Operator note.
+        environment:
+          type: string
+          title: Environment
+          description: Environment class.
+          example: example
+        base_url:
+          type: string
+          title: Base Url
+          description: Base URL, normalized (no trailing slash).
+          example: https://example.com/resource
+        network_class:
+          type: string
+          title: Network Class
+          description: '`public` or `private`.'
+          example: example
+        approved_by:
+          anyOf:
+          - type: string
+            description: Verification Target schema.
+          - type: 'null'
+            description: Verification Target schema.
+          title: Approved By
+          description: User who approved a private-network target.
+        approved_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Verification Target schema.
+          - type: 'null'
+            description: Verification Target schema.
+          title: Approved At
+          description: When the private-network exception was approved.
+        approval_reason:
+          anyOf:
+          - type: string
+            description: Verification Target schema.
+          - type: 'null'
+            description: Verification Target schema.
+          title: Approval Reason
+          description: Why a private-network target is justified.
+        auth:
+          $ref: '#/components/schemas/TargetAuthReference'
+          description: The credential reference — never a credential.
+        policy:
+          $ref: '#/components/schemas/VerificationPolicy'
+          description: Execution and failure policy.
+        enabled:
+          type: boolean
+          title: Enabled
+          description: Whether the target may be resolved for a run.
+          example: true
+        created_by:
+          anyOf:
+          - type: string
+            description: Verification Target schema.
+          - type: 'null'
+            description: Verification Target schema.
+          title: Created By
+          description: User who created the target.
+        updated_by:
+          anyOf:
+          - type: string
+            description: Verification Target schema.
+          - type: 'null'
+            description: Verification Target schema.
+          title: Updated By
+          description: User who last modified it.
+        created_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Verification Target schema.
+          - type: 'null'
+            description: Verification Target schema.
+          title: Created At
+          description: When it was defined.
+        updated_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Verification Target schema.
+          - type: 'null'
+            description: Verification Target schema.
+          title: Updated At
+          description: When it last changed.
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Verification Target schema.
+          - type: 'null'
+            description: Verification Target schema.
+          title: Deleted At
+          description: Soft-delete timestamp; a retired target is still resolvable
+            by id for the evidence rows that name it.
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - tenant_id
+      - slug
+      - name
+      - environment
+      - base_url
+      - network_class
+      - auth
+      - policy
+      - enabled
+      title: VerificationTargetRecord
+      description: 'A stored target, as every reader sees it.
+
+
+        There is no redacted variant of this model because there is nothing to redact:
+        the schema
+
+        cannot hold credential material, so the full record is always safe to return.'
     VersionBranchCreateRequest:
       properties:
         name:
