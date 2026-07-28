@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.72.0",
+    "version": "1.75.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -17701,6 +17701,234 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for set version mock scenariosresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/fixture-packs": {
+      "get": {
+        "tags": [
+          "versions"
+        ],
+        "summary": "Get Version Mock Fixture Packs",
+        "description": "Return the version's mock fixture packs and their content digests (#4745, PMR-2.2).",
+        "operationId": "get_version_mock_fixture_packs_v1_versions__tenant_slug___project_id___version_record_id__mock_fixture_packs_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id",
+              "description": "Project Id schema."
+            },
+            "description": "Project identifier that scopes the request."
+          },
+          {
+            "name": "version_record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version Record Id",
+              "description": "Version Record Id schema."
+            },
+            "description": "Version row identifier (``versions.id`` UUID)."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Get Version Mock Fixture Packsauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Get Version Mock Fixture Packsauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Get Version Mock Fixture Packs Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Get Version Mock Fixture Packs Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for get version mock fixture packs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionMockFixturePacksResponse",
+                  "description": "Response payload for get version mock fixture packsresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for get version mock fixture packsresponse422."
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "versions"
+        ],
+        "summary": "Set Version Mock Fixture Packs",
+        "description": "Replace the version's mock fixture packs (#4745, PMR-2.2).\n\nPacks are validated against the versioned fixture pack schema (format id and version, name\nshapes, collection path/resource rules, size caps) and stored canonically in\n``versions.mock_settings`` under ``fixturePacks``, alongside the other mock knobs. The\nresponse echoes each pack's content digest \u2014 the identity a test asserts when it resets a\nsession to the pack. An empty ``packs`` map clears them.",
+        "operationId": "set_version_mock_fixture_packs_v1_versions__tenant_slug___project_id___version_record_id__mock_fixture_packs_put",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id",
+              "description": "Project Id schema."
+            },
+            "description": "Project identifier that scopes the request."
+          },
+          {
+            "name": "version_record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version Record Id",
+              "description": "Version Record Id schema."
+            },
+            "description": "Version row identifier (``versions.id`` UUID)."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Set Version Mock Fixture Packsauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Set Version Mock Fixture Packsauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Set Version Mock Fixture Packs Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Set Version Mock Fixture Packs Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionMockFixturePacksRequest",
+                "description": "Request body for set version mock fixture packsrequest."
+              }
+            }
+          },
+          "description": "Request body for set version mock fixture packs."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for set version mock fixture packs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionMockFixturePacksResponse",
+                  "description": "Response payload for set version mock fixture packsresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for set version mock fixture packsresponse422."
                 }
               }
             }
@@ -43375,6 +43603,169 @@
         }
       }
     },
+    "/v1/import/format-capabilities": {
+      "get": {
+        "tags": [
+          "import-sources"
+        ],
+        "summary": "Get the source-format capability & parsing-limit registry",
+        "description": "Return the versioned source-format capability registry (CPDO-2.4): one entry per registered import source \u2014 the native hierarchy its analyzer models, the quality of the source locations it can point at, the value visibility it can ever carry, the grammar it knowingly does not read, how much survives the projection onto the canonical model, and whether the format converts \u2014 each stamped with the analyzer key, analyzer version and underlying tool versions that back the claim. The snapshot also carries the reviewed explanation for every way a detail can be absent, and the map from a stored payload-analysis reason code onto those categories. Exactly one category means the source material is missing; a parser limit, a capability boundary, an analyzer failure and a redaction each mean something else. This is static reference data \u2014 the same for every tenant and every item \u2014 so the UI can fetch it once and cache it by ``version``.",
+        "operationId": "get_format_capability_registry_v1_import_format_capabilities_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Getthesourceformatcapabilityparsinglimitauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Getthesourceformatcapabilityparsinglimitauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Getthesourceformatcapabilityparsinglimit Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Getthesourceformatcapabilityparsinglimit Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for get the source-format capability & parsing-limit registry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormatCapabilitySnapshot",
+                  "description": "Response payload for getthesourceformatcapabilityparsinglimitresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for getthesourceformatcapabilityparsinglimitresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/import/format-capabilities/{format_key}": {
+      "get": {
+        "tags": [
+          "import-sources"
+        ],
+        "summary": "Get one source format's capability entry",
+        "description": "Return the capability & parsing-limit entry for a single source format (CPDO-2.4). **Always resolves**: a reviewed format returns its reviewed entry, any other registered adapter returns one derived from the adapter itself, and a key no adapter is registered under returns an ``unknown_format`` entry that claims nothing about the format. That last case is deliberate \u2014 a catalog item can name an adapter that was later retired, and a 404 there would leave the UI with exactly the \"no details\" dead end this registry exists to remove. A key that could never have been registered (wrong character class, or over 64 characters) is a 422 rather than an echo.",
+        "operationId": "get_format_capability_v1_import_format_capabilities__format_key__get",
+        "parameters": [
+          {
+            "name": "format_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Format Key",
+              "description": "Format Key schema."
+            },
+            "description": "Path parameter identifying the format key segment."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Getonesourceformatscapabilityentryauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Getonesourceformatscapabilityentryauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Getonesourceformatscapabilityentry Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Getonesourceformatscapabilityentry Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for get one source format's capability entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormatCapability",
+                  "description": "Response payload for getonesourceformatscapabilityentryresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for getonesourceformatscapabilityentryresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/import/detect": {
       "post": {
         "tags": [
@@ -60790,6 +61181,64 @@
   },
   "components": {
     "schemas": {
+      "AbsenceCategory": {
+        "type": "string",
+        "enum": [
+          "source_missing",
+          "not_analyzed",
+          "format_unsupported",
+          "parse_limit",
+          "analyzer_failed",
+          "value_redacted",
+          "absent_in_source",
+          "undeclared"
+        ],
+        "title": "AbsenceCategory",
+        "description": "The closed vocabulary of *why* a detail is not there (CPDO-2.4).\n\nEight causes that \"no details\" used to conflate. Exactly one of them is a statement about\nthe customer's source material being absent; the rest are statements about apiome, about a\npolicy, or about the source's *content*. :data:`_ABSENCE_EXPLANATIONS` is the single place\nthat decides which, and only :attr:`SOURCE_MISSING` sets ``source_missing``."
+      },
+      "AbsenceExplanation": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/AbsenceCategory",
+            "description": "The cause category this explanation is for."
+          },
+          "category_label": {
+            "type": "string",
+            "title": "Category Label",
+            "description": "Short human label (e.g. 'Parser limit').",
+            "example": "domain"
+          },
+          "summary_template": {
+            "type": "string",
+            "title": "Summary Template",
+            "description": "Reviewed one-line explanation, optionally with a single ``{construct}`` slot.",
+            "example": "Example description for documentation and mocks."
+          },
+          "remediation": {
+            "type": "string",
+            "title": "Remediation",
+            "description": "Short, safe guidance for this category.",
+            "example": "example"
+          },
+          "source_missing": {
+            "type": "boolean",
+            "title": "Source Missing",
+            "description": "True only when the source material itself was never captured. Never true for a parser, capability, policy or content cause.",
+            "example": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "category",
+          "category_label",
+          "summary_template",
+          "remediation",
+          "source_missing"
+        ],
+        "title": "AbsenceExplanation",
+        "description": "The reviewed wording for one :class:`AbsenceCategory` (CPDO-2.4).\n\nOne per category, so the eight causes are worded and rendered *separately*.\n:attr:`summary_template` may contain a single ``{construct}`` slot, substituted only with\nan apiome-controlled construct key.\n\n:attr:`source_missing` is the load-bearing field: it is ``True`` for exactly one category,\nand it is what a UI must consult before saying anything about the customer's source being\nabsent. A parse limit, an unsupported format and an analyzer failure all leave it ``False``."
+      },
       "AcknowledgeAlertRequest": {
         "properties": {
           "note": {
@@ -61408,6 +61857,38 @@
         "type": "object",
         "title": "AnalyzerCapabilities",
         "description": "What the analyzer that wrote this record can and cannot describe \u2014 CPDO-1.2 (#4795).\n\nA record's warnings say what went wrong *in this source*. Capabilities say what would have gone\nwrong in **any** source: the constructs this analyzer models, the ones it knowingly does not, and\nthe numeric bounds it was working under. Both are needed to answer \"why is there no detail here?\"\n\u2014 a construct absent from the tree is either absent from the source or outside the analyzer, and\nonly ``unsupported`` distinguishes them.\n\nConstruct keys are the analyzer's own dotted vocabulary (``x12.functional_group``,\n``copybook.redefines``), stable enough to cite from a UI. Both lists are sorted and de-duplicated\nby :func:`analyzer_capabilities` so a record's serialization \u2014 and therefore its\n``content_fingerprint`` \u2014 does not depend on the order an analyzer happened to declare them in.\n\nThis is the *per-record* statement, written by the analyzer that ran. The cross-format registry\nthat answers the same question before an import runs is CPDO-2.4's.\n\nAttributes:\n    supported: Construct keys this analyzer models, sorted.\n    unsupported: Construct keys it knowingly does not model, sorted. An entry here is a\n        capability boundary, not a defect in the source.\n    limits: Numeric bounds in force when the record was produced (node/depth budgets, value\n        preview length), so a reader can tell a bounded record from a small one."
+      },
+      "AnalyzerEvidence": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Analyzer key (the adapter key, or ``generic``).",
+            "example": "example"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "The analyzer implementation version this entry describes.",
+            "example": "1.0.0"
+          },
+          "tool_versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Tool Versions",
+            "description": "Underlying parser/library versions the analyzer leans on."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "version"
+        ],
+        "title": "AnalyzerEvidence",
+        "description": "Which analyzer backs this entry's claims, and what it was built on.\n\nThe \"tool/version evidence\" the ticket asks for. A capability claim without it is an\nopinion: \"X12 composites are modelled\" is only checkable if the reader knows *which*\nextractor at *which* version, over *which* parser release, is being described.\n\nDeliberately a snake_case sibling of :class:`~app.payload_analysis.AnalyzerInfo` rather\nthan a reuse of it: that model serializes under camelCase aliases for the payload-analysis\nsurface, and this registry's contract \u2014 like :mod:`app.capability_registry`'s \u2014 is\nsnake_case end to end. One casing per contract beats one model across two.\n\nAttributes:\n    key: Analyzer key (the adapter key, or ``generic`` for the format-blind walk).\n    version: That analyzer's version.\n    tool_versions: Underlying parser/library versions it leans on; empty when it uses none."
       },
       "AnalyzerInfo": {
         "properties": {
@@ -63999,6 +64480,37 @@
         "title": "CacheWarningBody",
         "description": "A concern that does not block the write."
       },
+      "CanonicalProjectionSupport": {
+        "properties": {
+          "coverage": {
+            "$ref": "#/components/schemas/ProjectionCoverage",
+            "description": "Whether every observed construct, some, or none reach the canonical model."
+          },
+          "dropped_constructs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dropped Constructs",
+            "description": "Reviewed construct keys the canonical model has no representation for. Empty on a derived entry, which makes no claim.",
+            "maxItems": 1000
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "description": "One line on what the canonical model keeps and what only the analysis holds.",
+            "example": "example"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "coverage",
+          "note"
+        ],
+        "title": "CanonicalProjectionSupport",
+        "description": "How much of the native analysis survives onto the canonical model."
+      },
       "CapabilitiesResponse": {
         "properties": {
           "capabilities": {
@@ -64259,6 +64771,16 @@
         "type": "object",
         "title": "CapabilityProfile",
         "description": "Static declaration of which canonical constructs a target can represent.\n\nConsumed by the fidelity engine (MFX-EPIC-2) to predict loss *before* emit.\nEach flag is ``True`` when the target can carry the construct faithfully (not\nmerely approximate or synthesize a stand-in)."
+      },
+      "CapabilityProvenance": {
+        "type": "string",
+        "enum": [
+          "reviewed",
+          "derived",
+          "unknown_format"
+        ],
+        "title": "CapabilityProvenance",
+        "description": "Where a :class:`FormatCapability` entry's claims come from (CPDO-2.4).\n\nThe single field that tells a reader how much weight an entry carries. It is not a quality\ngrade \u2014 a ``derived`` entry is as *true* as a reviewed one, because everything in it was\nread off the adapter \u2014 but a reviewed entry additionally states boundaries nobody could\nderive, and an ``unknown_format`` entry deliberately states nothing."
       },
       "CapabilityReference": {
         "properties": {
@@ -67537,6 +68059,63 @@
         "type": "object",
         "title": "ConversionDefaultsRequest",
         "description": "User-supplied defaults that close cheap gaps *before* a catalog \u2192 OpenAPI conversion commits\n(MFI-22.6).\n\nAll optional; each is applied to the emitted document only where the source model left the\ncorresponding construct empty (a default never overwrites a value the source declared). Mirrors\nthe inline defaults the preview screen (MFI-22.4) collects and the ``ConversionDefaults`` the job\n(MFI-22.5) consumes."
+      },
+      "ConversionSupport": {
+        "type": "string",
+        "enum": [
+          "supported",
+          "tool_unavailable",
+          "unsupported"
+        ],
+        "title": "ConversionSupport",
+        "description": "Whether this format participates in the canonical conversion graph."
+      },
+      "ConversionSupportEntry": {
+        "properties": {
+          "support": {
+            "$ref": "#/components/schemas/ConversionSupport",
+            "description": "Whether a conversion path exists at all."
+          },
+          "canonical_formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Canonical Formats",
+            "description": "Declared format keys that resolve to a registered normalizer \u2014 the routes onto the canonical model, sorted. Empty when the adapter normalizes in-adapter.",
+            "maxItems": 1000
+          },
+          "normalizes_in_adapter": {
+            "type": "boolean",
+            "title": "Normalizes In Adapter",
+            "description": "True when no registered normalizer claims any declared key and the adapter builds the canonical model itself. Not a gap \u2014 a different route.",
+            "default": false,
+            "example": false
+          },
+          "declared_formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Declared Formats",
+            "description": "Every format key the adapter declares, sorted. A mix of normalizer keys and detection aliases, so a key here without a normalizer is not by itself a missing route.",
+            "maxItems": 1000
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "description": "One line on the conversion route or its absence.",
+            "example": "example"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "support",
+          "note"
+        ],
+        "title": "ConversionSupportEntry",
+        "description": "Whether this format participates in the conversion graph, and by which route.\n\nThe route matters less than the *fact*: an adapter that persists a catalog item has, by\ncontract, produced a canonical model for it, so it can reach every export destination. What\nvaries is how \u2014 through a normalizer registered under one of the adapter's declared format\nkeys, or inside the adapter itself \u2014 and whether it can run here at all."
       },
       "ConvertCatalogItemRequest": {
         "properties": {
@@ -72181,6 +72760,17 @@
         "title": "FirstTenantProvisionResponse",
         "description": "Result of ``POST /v1/onboarding/first-tenant``."
       },
+      "FormatAvailability": {
+        "type": "string",
+        "enum": [
+          "available",
+          "tool_unavailable",
+          "preview_only",
+          "unregistered"
+        ],
+        "title": "FormatAvailability",
+        "description": "Whether this format can actually be imported and analysed in the current runtime."
+      },
       "FormatCandidateModel": {
         "properties": {
           "format": {
@@ -72238,6 +72828,224 @@
         ],
         "title": "FormatCandidateModel",
         "description": "One ranked format guess (mirrors :class:`app.format_detection.FormatCandidate`)."
+      },
+      "FormatCapability": {
+        "properties": {
+          "format": {
+            "type": "string",
+            "title": "Format",
+            "description": "Stable import-source registry key (e.g. ``edix12``).",
+            "example": "openapi"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human label for the format.",
+            "example": "example"
+          },
+          "paradigm": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Format Capability schema."
+              },
+              {
+                "type": "null",
+                "description": "Format Capability schema."
+              }
+            ],
+            "title": "Paradigm",
+            "description": "The canonical paradigm the adapter produces, or null for an unknown format."
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/CapabilityProvenance",
+            "description": "Whether this entry is reviewed, derived from the adapter, or a declaration that the format is unknown."
+          },
+          "availability": {
+            "$ref": "#/components/schemas/FormatAvailability",
+            "description": "Whether this format can be imported and analysed in the current runtime."
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Format Capability schema."
+              },
+              {
+                "type": "null",
+                "description": "Format Capability schema."
+              }
+            ],
+            "title": "Unavailable Reason",
+            "description": "Why the format is unavailable here, or null when it is available."
+          },
+          "native_hierarchy": {
+            "$ref": "#/components/schemas/NativeHierarchy",
+            "description": "Native Hierarchy."
+          },
+          "native_hierarchy_note": {
+            "type": "string",
+            "title": "Native Hierarchy Note",
+            "description": "One line on what the tree's node vocabulary actually is.",
+            "example": "example"
+          },
+          "analyzer": {
+            "$ref": "#/components/schemas/AnalyzerEvidence",
+            "description": "The analyzer and tool versions backing every claim in this entry."
+          },
+          "source_location": {
+            "$ref": "#/components/schemas/SourceLocationSupport",
+            "description": "The best source pointer nodes from this format can carry."
+          },
+          "value_visibility": {
+            "$ref": "#/components/schemas/ValueVisibilitySupport",
+            "description": "The value material this format's analysis can ever carry."
+          },
+          "supported_constructs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supported Constructs",
+            "description": "Construct keys the analyzer models, sorted. Their absence from a tree means they were not in the source.",
+            "maxItems": 1000
+          },
+          "unsupported_constructs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unsupported Constructs",
+            "description": "Construct keys the analyzer knowingly does not model, sorted \u2014 the format's unsupported grammar. Their absence from a tree means nothing about the source.",
+            "maxItems": 1000
+          },
+          "limits": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Limits",
+            "description": "The numeric parsing limits in force (node/depth budgets, value preview length), so a bounded record is distinguishable from a small one."
+          },
+          "canonical_projection": {
+            "$ref": "#/components/schemas/CanonicalProjectionSupport",
+            "description": "Canonical Projection."
+          },
+          "conversion": {
+            "$ref": "#/components/schemas/ConversionSupportEntry",
+            "description": "Whether this format participates in the conversion graph, and by which route."
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes",
+            "description": "Reviewed prose about this format's boundaries, in reading order.",
+            "maxItems": 1000
+          },
+          "registry_version": {
+            "type": "string",
+            "title": "Registry Version",
+            "description": "The registry contract version this entry belongs to.",
+            "example": "1.0.0"
+          },
+          "review_date": {
+            "type": "string",
+            "title": "Review Date",
+            "description": "When this entry's claims were last reviewed.",
+            "example": "example"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "format",
+          "label",
+          "provenance",
+          "availability",
+          "native_hierarchy",
+          "native_hierarchy_note",
+          "analyzer",
+          "source_location",
+          "value_visibility",
+          "canonical_projection",
+          "conversion",
+          "registry_version",
+          "review_date"
+        ],
+        "title": "FormatCapability",
+        "description": "The versioned capability & parsing-limit entry for one source format (CPDO-2.4).\n\nEverything a reader needs to know what apiome will *ever* be able to say about a document\nof this format, before opening one: the native hierarchy it preserves, the source pointers\nit can offer, the values it can carry, the grammar it does not read, what survives\nnormalization, and whether it converts \u2014 each backed by the analyzer and tool versions in\n:attr:`analyzer`."
+      },
+      "FormatCapabilitySnapshot": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "The registry contract version (:data:`REGISTRY_VERSION`).",
+            "example": "1.0.0"
+          },
+          "review_date": {
+            "type": "string",
+            "title": "Review Date",
+            "description": "When the registry's seeds/explanations were reviewed.",
+            "example": "example"
+          },
+          "analysis_schema_version": {
+            "type": "string",
+            "title": "Analysis Schema Version",
+            "description": "The payload-analysis contract version this registry's reason mapping pairs with, so a reader can tell the two apart when either moves.",
+            "example": "1.0.0"
+          },
+          "absence_categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Absence Categories",
+            "description": "The canonical set of absence-category strings, sorted. Contract tests reject any category outside this set.",
+            "maxItems": 1000
+          },
+          "absences": {
+            "items": {
+              "$ref": "#/components/schemas/AbsenceExplanation"
+            },
+            "type": "array",
+            "title": "Absences",
+            "description": "The reviewed explanation for each absence category, in vocabulary order.",
+            "maxItems": 1000
+          },
+          "reason_absence_categories": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Reason Absence Categories",
+            "description": "Analysis reason code \u2192 absence category, for every reason code CPDO-1.1 can store."
+          },
+          "formats": {
+            "items": {
+              "$ref": "#/components/schemas/FormatCapability"
+            },
+            "type": "array",
+            "title": "Formats",
+            "description": "One capability entry per registered import source, in key order.",
+            "maxItems": 1000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version",
+          "review_date",
+          "analysis_schema_version",
+          "absence_categories",
+          "absences",
+          "reason_absence_categories",
+          "formats"
+        ],
+        "title": "FormatCapabilitySnapshot",
+        "description": "The full, deterministic registry view exposed to the REST contract + UI (CPDO-2.4).\n\nDerived from the (deterministic) import-source registry and the static seeds, so identical\ninputs yield an identical snapshot \u2014 safe to cache by :attr:`version` and to mirror in a\nTypeScript contract."
       },
       "FormatLintCapabilitiesResponse": {
         "properties": {
@@ -89585,6 +90393,68 @@
         "title": "MockChaosSpec",
         "description": "Chaos knobs for a version or one scenario: a default plus per-operation overrides (#4455 SIM-4.3)."
       },
+      "MockFixturePackSpec": {
+        "properties": {
+          "packFormat": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Mock Fixture Pack Spec schema."
+              },
+              {
+                "type": "null",
+                "description": "Mock Fixture Pack Spec schema."
+              }
+            ],
+            "title": "Packformat",
+            "description": "Pack format id; defaults to \"apiome.mock.fixture-pack/v1\" when omitted."
+          },
+          "packFormatVersion": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Mock Fixture Pack Spec schema."
+              },
+              {
+                "type": "null",
+                "description": "Mock Fixture Pack Spec schema."
+              }
+            ],
+            "title": "Packformatversion",
+            "description": "Pack format revision; defaults to the current version when omitted."
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Description",
+            "description": "Human summary of the data set.",
+            "default": "",
+            "example": "A pet available for adoption in the store."
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data",
+            "description": "Template fixture values by name, readable as {{fixture.<name>...}} (#4744 PMR-2.1)."
+          },
+          "collections": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Collections",
+            "description": "Seed resources per CRUD collection path (e.g. \"/pets\"), applied on session reset."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MockFixturePackSpec",
+        "description": "One versioned fixture pack: deterministic seed data for stateful mocks (#4745 PMR-2.2)."
+      },
       "MockInstanceResponse": {
         "properties": {
           "id": {
@@ -89835,6 +90705,137 @@
         "title": "MockProvisionRequest",
         "description": "Request body to provision a mock instance from a published version."
       },
+      "MockRequestPredicateSpec": {
+        "properties": {
+          "equals": {
+            "title": "Equals",
+            "description": "Value equality (string sources coerce to the expected type)."
+          },
+          "notEquals": {
+            "title": "Notequals",
+            "description": "Negated equality."
+          },
+          "contains": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for mock request predicate spec."
+              },
+              {
+                "type": "null",
+                "description": "Request body for mock request predicate spec."
+              }
+            ],
+            "title": "Contains",
+            "description": "Substring for strings; element equality for arrays."
+          },
+          "matches": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 256,
+                "description": "Request body for mock request predicate spec."
+              },
+              {
+                "type": "null",
+                "description": "Request body for mock request predicate spec."
+              }
+            ],
+            "title": "Matches",
+            "description": "Bounded regular expression evaluated with re.search."
+          },
+          "in": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array",
+                "maxItems": 50,
+                "description": "Request body for mock request predicate spec."
+              },
+              {
+                "type": "null",
+                "description": "Request body for mock request predicate spec."
+              }
+            ],
+            "title": "In",
+            "description": "Equality against any listed value."
+          },
+          "exists": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Request body for mock request predicate spec."
+              },
+              {
+                "type": "null",
+                "description": "Request body for mock request predicate spec."
+              }
+            ],
+            "title": "Exists",
+            "description": "Require the parameter/header/pointer to be present (true) or absent (false)."
+          },
+          "gt": {
+            "anyOf": [
+              {
+                "type": "number",
+                "description": "Request body for mock request predicate spec."
+              },
+              {
+                "type": "null",
+                "description": "Request body for mock request predicate spec."
+              }
+            ],
+            "title": "Gt",
+            "description": "Numeric greater-than."
+          },
+          "gte": {
+            "anyOf": [
+              {
+                "type": "number",
+                "description": "Request body for mock request predicate spec."
+              },
+              {
+                "type": "null",
+                "description": "Request body for mock request predicate spec."
+              }
+            ],
+            "title": "Gte",
+            "description": "Numeric greater-than-or-equal."
+          },
+          "lt": {
+            "anyOf": [
+              {
+                "type": "number",
+                "description": "Request body for mock request predicate spec."
+              },
+              {
+                "type": "null",
+                "description": "Request body for mock request predicate spec."
+              }
+            ],
+            "title": "Lt",
+            "description": "Numeric less-than."
+          },
+          "lte": {
+            "anyOf": [
+              {
+                "type": "number",
+                "description": "Request body for mock request predicate spec."
+              },
+              {
+                "type": "null",
+                "description": "Request body for mock request predicate spec."
+              }
+            ],
+            "title": "Lte",
+            "description": "Numeric less-than-or-equal."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MockRequestPredicateSpec",
+        "description": "Operators applied to one request value inside a rule's ``when`` block (#4744 PMR-2.1).\n\nAt least one operator must be set; several operators combine with AND. Deep validation\n(regex compilation, list caps) happens in ``app.mock_match.validate_when``."
+      },
       "MockScenario": {
         "properties": {
           "name": {
@@ -89874,27 +90875,6 @@
         ],
         "title": "MockScenario",
         "description": "A named, selectable set of per-operation overrides."
-      },
-      "MockScenarioOperationSpec": {
-        "properties": {
-          "responses": {
-            "items": {
-              "$ref": "#/components/schemas/MockScenarioResponseSpec"
-            },
-            "type": "array",
-            "maxItems": 20,
-            "minItems": 1,
-            "title": "Responses",
-            "description": "One response = fixed; several = per-call sequence (sticks on the last)."
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "responses"
-        ],
-        "title": "MockScenarioOperationSpec",
-        "description": "Canned response(s) for one operation; 2+ responses form a sequence (#4454 SIM-4.2)."
       },
       "MockScenarioResponseSpec": {
         "properties": {
@@ -90056,6 +91036,46 @@
         ],
         "title": "MockScenarioSwitchRequest",
         "description": "Request body to switch a mock instance's active scenario."
+      },
+      "MockScenarioWhenSpec": {
+        "properties": {
+          "path": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MockRequestPredicateSpec"
+            },
+            "type": "object",
+            "title": "Path",
+            "description": "Predicates over path template parameters, keyed by parameter name."
+          },
+          "query": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MockRequestPredicateSpec"
+            },
+            "type": "object",
+            "title": "Query",
+            "description": "Predicates over query parameters, keyed by parameter name (any value may match)."
+          },
+          "header": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MockRequestPredicateSpec"
+            },
+            "type": "object",
+            "title": "Header",
+            "description": "Predicates over request headers, keyed by case-insensitive header name."
+          },
+          "body": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MockRequestPredicateSpec"
+            },
+            "type": "object",
+            "title": "Body",
+            "description": "Predicates over the JSON request body, keyed by RFC 6901 JSON Pointer."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MockScenarioWhenSpec",
+        "description": "Declarative request predicates gating one scenario rule (#4744 PMR-2.1).\n\nEvery predicate present must hold (AND). ``body`` keys are RFC 6901 JSON Pointers into the\nparsed JSON request body; the other sections are keyed by parameter/header name."
       },
       "MockUsageDailyRollup": {
         "properties": {
@@ -90268,6 +91288,16 @@
         "type": "object",
         "title": "NativeEvidence",
         "description": "Source-native evidence for a construct, where safely available (EFP-1.1).\n\nPopulated best-effort from the canonical construct's source name and its\n``extras`` bag (format-specific): a native identifier, the native/source name,\nand a source location (line/range) when the parser captured one. Every field is\noptional \u2014 a construct with no recoverable native detail carries a bare node\nrather than a fabricated one."
+      },
+      "NativeHierarchy": {
+        "type": "string",
+        "enum": [
+          "native",
+          "generic",
+          "none"
+        ],
+        "title": "NativeHierarchy",
+        "description": "How much of the format's own structure the analysis tree preserves."
       },
       "OpenApiChangeReportRequest": {
         "properties": {
@@ -93655,6 +94685,17 @@
         ],
         "title": "ProjectVersionChangelogsResponse",
         "description": "All published-revision changelog summaries for a project, newest publish first."
+      },
+      "ProjectionCoverage": {
+        "type": "string",
+        "enum": [
+          "full",
+          "partial",
+          "none",
+          "unknown"
+        ],
+        "title": "ProjectionCoverage",
+        "description": "How much of what the analyzer observes survives onto the canonical model.\n\nThe analysis tree and the catalog's entity/field rows are two different views of one\nimport. A construct present in the first and absent from the second was *dropped by\nnormalization*, which is neither a parse limit nor a missing source."
       },
       "ProjectionEdge": {
         "properties": {
@@ -98067,7 +99108,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-07-28T02:53:17Z"
+            "example": "2026-07-28T18:43:36Z"
           }
         },
         "additionalProperties": false,
@@ -102061,6 +103102,39 @@
         "type": "object",
         "title": "SourceLocation",
         "description": "Where in the original source a node came from.\n\nA pointer, never a copy: the fields address a range in the raw source the catalog already\nserves, so a UI can open the source viewer at the right place (CPDO-2.1) without the analysis\ncarrying the bytes. Every field is optional because source-location quality differs by format \u2014\na copybook parser knows the line, an X12 parser knows the segment ordinal and byte offset, and a\nJSON-derived analyzer may know only a path.\n\nAttributes:\n    file: Path within a multi-file source layout, when the source was a fileset.\n    line: 1-based line number.\n    column: 1-based column number.\n    offset: 0-based byte offset from the start of the source.\n    length: Length in bytes of the addressed range.\n    ordinal: Position among sibling constructs (e.g. the segment index within an interchange).\n    path: Analyzer-specific path expression (e.g. ``ISA/GS[0]/ST[2]/NM1[4]``)."
+      },
+      "SourceLocationQuality": {
+        "type": "string",
+        "enum": [
+          "byte_offsets",
+          "line_numbers",
+          "path_only",
+          "none"
+        ],
+        "title": "SourceLocationQuality",
+        "description": "The best source pointer a node from this format can carry.\n\nDetermines what \"jump to source\" can do, and \u2014 more importantly \u2014 how precisely a UI may\nclaim to know *where* something is. A path-only analyzer must never render a line number."
+      },
+      "SourceLocationSupport": {
+        "properties": {
+          "quality": {
+            "$ref": "#/components/schemas/SourceLocationQuality",
+            "description": "The strongest pointer kind nodes from this format can carry."
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "description": "One line on what that means for navigation \u2014 what a reader can and cannot be shown.",
+            "example": "example"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "quality",
+          "note"
+        ],
+        "title": "SourceLocationSupport",
+        "description": "The best source pointer this format's analyzer can attach to a node."
       },
       "SourceReviewRequest": {
         "properties": {
@@ -109184,6 +110258,37 @@
         "title": "ValueProvenance",
         "description": "Where one value in a synthesized instance came from.\n\nAttributes:\n    pointer: RFC 6901 JSON Pointer to the value **in the instance** (``\"\"`` for the root).\n    origin: ``const``, ``example``, ``default``, or ``enum`` when the value is the schema\n        author's own, ``synthesized`` when this module invented it.\n    schema_pointer: Where in the schema the value (or the constraint it was built from)\n        came from. Written ``<uri>#<pointer>`` when the subschema lives in a referenced\n        document, and as a bare pointer when it lives in the schema itself.\n    synthetic: ``False`` only when the value was copied verbatim out of the schema.\n        ``True`` for everything this module generated."
       },
+      "ValueVisibilitySupport": {
+        "properties": {
+          "default": {
+            "type": "string",
+            "title": "Default",
+            "description": "The value-visibility level applied when no explicit policy is chosen.",
+            "example": "example"
+          },
+          "maximum": {
+            "type": "string",
+            "title": "Maximum",
+            "description": "The highest level this format's analyzer can ever supply, regardless of policy \u2014 ``none`` when the analyzer observes no values at all.",
+            "example": "example"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "description": "One line on why the ceiling is where it is.",
+            "example": "example"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "default",
+          "maximum",
+          "note"
+        ],
+        "title": "ValueVisibilitySupport",
+        "description": "The value material this format's analysis can ever carry.\n\nTwo different limits, and conflating them is how a UI ends up implying a value was hidden\nwhen the analyzer never had one. :attr:`default` is the policy applied when nobody chose;\n:attr:`maximum` is the ceiling the *analyzer* imposes \u2014 a COBOL copybook is a layout, not\ndata, so its analysis has no observed values to withhold at any policy level."
+      },
       "VariantBody": {
         "properties": {
           "id": {
@@ -110128,14 +111233,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-07-28T02:53:17Z"
+            "example": "2026-07-28T18:43:36Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-07-28T02:53:17Z"
+            "example": "2026-07-28T18:43:36Z"
           },
           "outcome": {
             "anyOf": [
@@ -113043,6 +114148,44 @@
         "title": "VersionForkRequest",
         "description": "Fork a schema version line into another project from a source revision (cross-project sandbox)."
       },
+      "VersionMockFixturePacksRequest": {
+        "properties": {
+          "packs": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MockFixturePackSpec"
+            },
+            "type": "object",
+            "title": "Packs",
+            "description": "Fixture packs keyed by pack name; an empty map clears them."
+          }
+        },
+        "type": "object",
+        "title": "VersionMockFixturePacksRequest",
+        "description": "Replace the version's mock fixture packs (#4745 PMR-2.2)."
+      },
+      "VersionMockFixturePacksResponse": {
+        "properties": {
+          "packs": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MockFixturePackSpec"
+            },
+            "type": "object",
+            "title": "Packs",
+            "description": "Fixture packs keyed by pack name, in canonical stored form."
+          },
+          "digests": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Digests",
+            "description": "sha256:<hex> content digest of each pack \u2014 the identity tests pin on reset."
+          }
+        },
+        "type": "object",
+        "title": "VersionMockFixturePacksResponse",
+        "description": "The version's persisted mock fixture packs and their content digests (#4745 PMR-2.2)."
+      },
       "VersionMockScenariosRequest": {
         "properties": {
           "scenarios": {
@@ -115625,7 +116768,7 @@
           },
           "operations": {
             "additionalProperties": {
-              "$ref": "#/components/schemas/MockScenarioOperationSpec"
+              "$ref": "#/components/schemas/MockScenarioOperationSpecInput"
             },
             "type": "object",
             "title": "Operations",
@@ -115661,7 +116804,7 @@
           },
           "operations": {
             "additionalProperties": {
-              "$ref": "#/components/schemas/MockScenarioOperationSpec"
+              "$ref": "#/components/schemas/MockScenarioOperationSpecOutput"
             },
             "type": "object",
             "title": "Operations",
@@ -115684,6 +116827,110 @@
         "type": "object",
         "title": "MockScenarioSpec",
         "description": "Named mock scenario definition returned from a version."
+      },
+      "MockScenarioOperationSpecInput": {
+        "properties": {
+          "responses": {
+            "items": {
+              "$ref": "#/components/schemas/MockScenarioResponseSpec"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Responses",
+            "description": "One response = fixed; several = per-call sequence (sticks on the last)."
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/MockScenarioRuleSpecInput"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Rules",
+            "description": "Ordered declarative rules evaluated before the fallback responses (#4744 PMR-2.1)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MockScenarioOperationSpec",
+        "description": "Canned response(s) for one operation; 2+ responses form a sequence (#4454 SIM-4.2).\n\nRules (#4744 PMR-2.1) are evaluated in order against each request; the first match serves its\nresponses. Plain ``responses`` are the fallback when no rule matches, and with neither a\nmatching rule nor a fallback the request falls through to the default spec-driven mock flow."
+      },
+      "MockScenarioOperationSpecOutput": {
+        "properties": {
+          "responses": {
+            "items": {
+              "$ref": "#/components/schemas/MockScenarioResponseSpec"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Responses",
+            "description": "One response = fixed; several = per-call sequence (sticks on the last)."
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/MockScenarioRuleSpecOutput"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Rules",
+            "description": "Ordered declarative rules evaluated before the fallback responses (#4744 PMR-2.1)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MockScenarioOperationSpec",
+        "description": "Canned response(s) for one operation; 2+ responses form a sequence (#4454 SIM-4.2).\n\nRules (#4744 PMR-2.1) are evaluated in order against each request; the first match serves its\nresponses. Plain ``responses`` are the fallback when no rule matches, and with neither a\nmatching rule nor a fallback the request falls through to the default spec-driven mock flow."
+      },
+      "MockScenarioRuleSpecInput": {
+        "properties": {
+          "when": {
+            "$ref": "#/components/schemas/MockScenarioWhenSpec",
+            "description": "Request predicates; the first rule whose predicates all hold serves its responses."
+          },
+          "responses": {
+            "items": {
+              "$ref": "#/components/schemas/MockScenarioResponseSpec"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Responses",
+            "description": "One response = fixed; several = per-call sequence (sticks on the last)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "when",
+          "responses"
+        ],
+        "title": "MockScenarioRuleSpec",
+        "description": "One declarative rule: request predicates plus the response(s) they select (#4744 PMR-2.1)."
+      },
+      "MockScenarioRuleSpecOutput": {
+        "properties": {
+          "when": {
+            "$ref": "#/components/schemas/MockScenarioWhenSpec",
+            "description": "Request predicates; the first rule whose predicates all hold serves its responses."
+          },
+          "responses": {
+            "items": {
+              "$ref": "#/components/schemas/MockScenarioResponseSpec"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Responses",
+            "description": "One response = fixed; several = per-call sequence (sticks on the last)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "when",
+          "responses"
+        ],
+        "title": "MockScenarioRuleSpec",
+        "description": "One declarative rule: request predicates plus the response(s) they select (#4744 PMR-2.1)."
       },
       "SlateCacheAuditEntryBody": {
         "properties": {

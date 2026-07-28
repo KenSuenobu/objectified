@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import yaml
 
 from app.openapi_enrichment import enrich_openapi_spec
@@ -42,6 +44,64 @@ def test_renames_non_pascal_case_component_schemas() -> None:
     assert "MockScenarioSpec-Input" not in schemas
     assert "MockScenarioSpecInput" in schemas
     assert "SpecImportMultipartUploadBody" in schemas
+
+
+def test_no_component_schema_name_survives_non_pascal_case() -> None:
+    """The rename pass must leave *nothing* the linter's naming rule would reject.
+
+    Asserted over the whole document rather than over a curated list: the generated names come
+    and go as models change, and a spec regeneration should not need a hand-edit here to stay
+    lint-clean.
+    """
+    schemas = enrich_openapi_spec(_load_spec())["components"]["schemas"]
+    offenders = [name for name in schemas if not re.match(r"^[A-Z][A-Za-z0-9]*$", name)]
+    assert offenders == []
+
+
+def test_renames_fastapi_split_model_ids_without_merging_the_pair() -> None:
+    """``Foo-Input`` / ``Foo-Output`` lose the hyphen and stay two distinct components.
+
+    FastAPI emits the pair when a model's validation and serialization schemas differ. Merging
+    them would claim the model round-trips identically when the generator has just said it does
+    not, so only the hyphen is closed.
+    """
+    spec = {
+        "components": {
+            "schemas": {
+                "MockScenarioRuleSpec-Input": {"type": "object", "properties": {}},
+                "MockScenarioRuleSpec-Output": {"type": "object", "properties": {}},
+                # Not PascalCase once the hyphen closes, so it is left alone rather than
+                # half-fixed into another name the linter would still reject.
+                "lower_case-Input": {"type": "object", "properties": {}},
+            }
+        },
+        "paths": {},
+    }
+    schemas = enrich_openapi_spec(spec)["components"]["schemas"]
+    assert "MockScenarioRuleSpecInput" in schemas
+    assert "MockScenarioRuleSpecOutput" in schemas
+    assert "MockScenarioRuleSpec-Input" not in schemas
+    assert "MockScenarioRuleSpec-Output" not in schemas
+    assert "lower_case-Input" in schemas
+
+
+def test_split_model_rename_rewrites_every_reference() -> None:
+    """A renamed component takes its ``$ref``s with it, or the document stops resolving."""
+    spec = {
+        "components": {
+            "schemas": {
+                "WidgetSpec-Input": {"type": "object", "properties": {}},
+                "Envelope": {
+                    "type": "object",
+                    "properties": {"widget": {"$ref": "#/components/schemas/WidgetSpec-Input"}},
+                },
+            }
+        },
+        "paths": {},
+    }
+    enriched = enrich_openapi_spec(spec)
+    ref = enriched["components"]["schemas"]["Envelope"]["properties"]["widget"]["$ref"]
+    assert ref == "#/components/schemas/WidgetSpecInput"
 
 
 def _missing_field_descriptions(spec: dict) -> list[str]:

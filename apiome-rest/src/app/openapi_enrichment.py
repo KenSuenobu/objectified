@@ -9,7 +9,9 @@ fills the documentation gaps the in-spec linter (:mod:`app.schema_lint`) checks:
 * scalar leaf ``example`` values
 * ``maxItems`` on array properties
 * PascalCase renames for a few auto-generated component schema names
-  (curated map plus FastAPI ``app__module__Leaf`` nested-model ids)
+  (curated map, FastAPI ``app__module__Leaf`` nested-model ids, and the
+  ``Model-Input`` / ``Model-Output`` pair FastAPI emits when a model serializes
+  differently than it validates)
 
 Curated overrides cover domain models (primitives, classes, paths, operations); everything
 else gets deterministic, human-readable defaults derived from schema/property names.
@@ -27,7 +29,9 @@ _SCALAR_TYPES = frozenset({"string", "number", "integer", "boolean"})
 _DEFAULT_ARRAY_MAX_ITEMS = 1000
 _LIST_ARRAY_MAX_ITEMS = 100
 
-# Auto-generated component names → stable PascalCase ids the linter accepts.
+# Auto-generated component names → stable PascalCase ids the linter accepts. Entries here take
+# precedence over the derivation rules below, so a name that needs a *specific* id is pinned
+# rather than left to a heuristic.
 SCHEMA_RENAMES: Dict[str, str] = {
     "Body_start_spec_import_multipart_v1_tenants__tenant_slug__imports_upload_post": (
         "SpecImportMultipartUploadBody"
@@ -35,6 +39,17 @@ SCHEMA_RENAMES: Dict[str, str] = {
     "MockScenarioSpec-Input": "MockScenarioSpecInput",
     "MockScenarioSpec-Output": "MockScenarioSpecOutput",
 }
+
+#: The suffixes FastAPI appends when a model's validation and serialization schemas diverge, so
+#: one Pydantic model becomes two components. The hyphen is what fails
+#: ``naming.schema-pascal-case``; the split itself is legitimate and must be preserved, so the
+#: rename closes the hyphen rather than merging the pair.
+_SPLIT_MODEL_SUFFIXES: tuple[str, ...] = ("-Input", "-Output")
+
+#: What ``naming.schema-pascal-case`` accepts. Used to check a split-model *stem* before closing
+#: its hyphen: a stem that is not already PascalCase would still fail the rule afterwards, so it
+#: is left for the curated map rather than half-fixed here.
+_PASCAL_CASE_RE = re.compile(r"^[A-Z][A-Za-z0-9]*$")
 
 # Schema-level descriptions for high-traffic / domain models.
 SCHEMA_DESCRIPTIONS: Dict[str, str] = {
@@ -331,6 +346,33 @@ def _fastapi_module_schema_rename(name: str) -> Optional[str]:
     return candidate if candidate != name else None
 
 
+def _fastapi_split_model_rename(name: str) -> Optional[str]:
+    """Turn a FastAPI split-model id (``FooSpec-Input``) into PascalCase (``FooSpecInput``).
+
+    FastAPI emits two components for one Pydantic model whose validation and serialization
+    schemas differ. The hyphen is the only thing wrong with the generated id, so the rename
+    closes it and keeps the two components distinct — merging them would claim a model round-trips
+    identically when the generator has just said it does not.
+
+    A general rule rather than a curated entry per pair: the split appears and disappears as
+    models change, and a regenerated spec should not need a hand-edit here to stay lint-clean.
+
+    Args:
+        name: The generated component schema name.
+
+    Returns:
+        The PascalCase id, or ``None`` when ``name`` is not a split-model id or its stem is not
+        already PascalCase (in which case closing the hyphen would not make it valid anyway).
+    """
+    for suffix in _SPLIT_MODEL_SUFFIXES:
+        if not name.endswith(suffix):
+            continue
+        stem = name[: -len(suffix)]
+        if _PASCAL_CASE_RE.match(stem):
+            return f"{stem}{suffix[1:]}"
+    return None
+
+
 def _rename_component_schemas(spec: MutableMapping[str, Any]) -> None:
     components = spec.setdefault("components", {})
     schemas = components.get("schemas")
@@ -341,7 +383,7 @@ def _rename_component_schemas(spec: MutableMapping[str, Any]) -> None:
     for name in list(schemas):
         if name in renames:
             continue
-        auto = _fastapi_module_schema_rename(name)
+        auto = _fastapi_module_schema_rename(name) or _fastapi_split_model_rename(name)
         if auto and auto not in reserved:
             renames[name] = auto
             reserved.add(auto)
