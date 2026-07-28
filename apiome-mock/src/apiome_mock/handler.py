@@ -43,7 +43,7 @@ from apiome_mock.scenarios import parse_mock_scenario_name, serve_scenario_respo
 from apiome_mock.schema_synthesizer import parse_mock_seed
 from apiome_mock.session_store import SessionStore
 from apiome_mock.spec_cache import SpecCache
-from apiome_mock.spec_loader import get_mock_access_status, load_compiled_spec
+from apiome_mock.spec_loader import CompiledSpec, get_mock_access_status, load_compiled_spec
 from apiome_mock.stateful_handler import parse_mock_session_token, try_handle_stateful_crud
 
 
@@ -229,9 +229,12 @@ async def handle_mock_request(
     api_key: ValidatedApiKey | None = None,
     session_store: SessionStore | None = None,
 ) -> Response:
-    """Serve a mock response for ``/{tenant}/{project}/{version}/{path}``."""
+    """Serve a mock response for ``/{tenant}/{project}/{version}/{path}`` (hosted, Postgres-backed).
+
+    Resolves access and the compiled spec from the database, then delegates the actual behavior to
+    :func:`serve_compiled_request`.
+    """
     instance = _instance_path(tenant, project, version, path)
-    relative_path = "/" + path.strip("/") if path.strip("/") else "/"
     raw_api_key = request.headers.get("X-Api-Key") or request.headers.get("x-api-key")
     if raw_api_key and api_key is None:
         return unauthorized(
@@ -270,6 +273,51 @@ async def handle_mock_request(
             f"No published spec for {tenant}/{project}/{version}.",
             instance=instance,
         )
+
+    return await serve_compiled_request(
+        request,
+        compiled=compiled,
+        tenant=tenant,
+        project=project,
+        version=version,
+        path=path,
+        session_store=session_store,
+    )
+
+
+async def serve_compiled_request(
+    request: Request,
+    *,
+    compiled: CompiledSpec,
+    tenant: str,
+    project: str,
+    version: str,
+    path: str,
+    session_store: SessionStore | None = None,
+) -> Response:
+    """Serve a mock response from an already-resolved :class:`CompiledSpec`.
+
+    This is the whole of the mock's request behavior — routing, scenarios, chaos, validation,
+    stateful CRUD, and example-first response resolution — with no dependency on Postgres. The
+    hosted path (:func:`handle_mock_request`) reaches it after resolving the spec from the
+    database; the portable runtime (:mod:`apiome_mock.portable`) reaches it with the spec compiled
+    from a mock bundle. Sharing this function is what makes the two runtimes behave identically.
+
+    Args:
+        request: The incoming request.
+        compiled: The compiled spec to serve.
+        tenant: Tenant slug, used for problem ``instance`` paths and chaos delay accounting.
+        project: Project slug, used for problem ``instance`` paths.
+        version: Version label, used for problem ``instance`` paths.
+        path: Request path *relative to* the ``/{tenant}/{project}/{version}`` prefix.
+        session_store: Store backing ``X-Mock-Session`` state; ``None`` disables stateful CRUD.
+
+    Returns:
+        The mock response (a spec-derived response, a canned scenario response, or a problem+json
+        document describing why no response could be served).
+    """
+    instance = _instance_path(tenant, project, version, path)
+    relative_path = "/" + path.strip("/") if path.strip("/") else "/"
 
     operation, path_params, allowed_methods = match_request(compiled.operations, request.method, relative_path)
     if operation is None:
