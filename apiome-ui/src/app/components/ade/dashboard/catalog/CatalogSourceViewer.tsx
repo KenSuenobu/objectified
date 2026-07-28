@@ -87,12 +87,24 @@ export interface CatalogSourceViewerProps {
   /** Whether the Source tab is active; the raw source is fetched the first time this is true. */
   active: boolean;
   /**
-   * Optional 1-based line to reveal when the editor loads (from ``?line=`` /
-   * compatibility evidence deep links, CLX-2.3).
+   * Optional 1-based line to reveal when the editor loads (from ``?line=`` / compatibility evidence
+   * deep links, CLX-2.3) — and re-revealed whenever it *changes*, which is what lets the Format
+   * details tab (CPDO-2.1) send the reader to a second construct without remounting the editor.
    */
   highlightLine?: number | null;
   /** Optional path label shown when a deep link targeted a specific source file. */
   focusSourcePath?: string | null;
+  /**
+   * Who asked for {@link highlightLine}, so the note names the real reason rather than always
+   * claiming a compatibility deep link.
+   */
+  highlightOrigin?: 'compatibility' | 'format-analysis';
+}
+
+/** The slice of the Monaco editor API this viewer drives, so the ref needs no editor types. */
+interface RevealableEditor {
+  revealLineInCenter: (line: number) => void;
+  setPosition: (position: { lineNumber: number; column: number }) => void;
 }
 
 /**
@@ -111,6 +123,7 @@ export function CatalogSourceViewer({
   active,
   highlightLine = null,
   focusSourcePath = null,
+  highlightOrigin = 'compatibility',
 }: CatalogSourceViewerProps) {
   const [status, setStatus] = useState<SourceStatus>('idle');
   const [raw, setRaw] = useState<string>('');
@@ -119,7 +132,9 @@ export function CatalogSourceViewer({
   const [wrap, setWrap] = useState(true);
   // Guards the one-shot lazy fetch so re-activating the tab never re-fetches.
   const fetchStartedRef = useRef(false);
-  const highlightAppliedRef = useRef(false);
+  // The mounted editor, so a *later* highlight request can be revealed without remounting (and
+  // therefore re-fetching) the source. Null until Monaco mounts, and for the offline fallback.
+  const editorRef = useRef<RevealableEditor | null>(null);
 
   const loadSource = useCallback(async () => {
     // Lazy + one-shot: only fetch once the tab is active, only when there is a source to fetch, and
@@ -164,6 +179,20 @@ export function CatalogSourceViewer({
   useEffect(() => {
     void loadSource();
   }, [loadSource]);
+
+  /** Centre `line` in the mounted editor, ignoring a non-line or an editor that is not up yet. */
+  const revealLine = useCallback((line: number | null | undefined) => {
+    if (!editorRef.current || typeof line !== 'number' || line <= 0) return;
+    editorRef.current.revealLineInCenter(line);
+    editorRef.current.setPosition({ lineNumber: line, column: 1 });
+  }, []);
+
+  // Re-reveal whenever the requested line changes. The first reveal happens in `onMount` (the editor
+  // does not exist before then); this covers every later request — a second construct followed from
+  // the Format details tab, or a second compatibility deep link on the same mounted editor.
+  useEffect(() => {
+    revealLine(highlightLine);
+  }, [highlightLine, revealLine]);
 
   // The language tag: format-derived, then refined by the loaded bytes for JSON-or-YAML formats.
   const language = monacoLanguageForCatalogFormat(sourceFormat, status === 'loaded' ? raw : null);
@@ -254,7 +283,9 @@ export function CatalogSourceViewer({
               data-testid="catalog-detail-source-highlight"
               className="catalog-source-highlight-note mt-2 text-xs text-gray-600 dark:text-gray-400"
             >
-              Compatibility deep link
+              {highlightOrigin === 'format-analysis'
+                ? 'Format details construct'
+                : 'Compatibility deep link'}
               {focusSourcePath ? (
                 <>
                   {' '}
@@ -288,19 +319,9 @@ export function CatalogSourceViewer({
                   padding: { top: 14, bottom: 14 },
                   automaticLayout: true,
                 }}
-                onMount={(editor: {
-                  revealLineInCenter: (line: number) => void;
-                  setPosition: (pos: { lineNumber: number; column: number }) => void;
-                }) => {
-                  if (
-                    typeof highlightLine === 'number' &&
-                    highlightLine > 0 &&
-                    !highlightAppliedRef.current
-                  ) {
-                    highlightAppliedRef.current = true;
-                    editor.revealLineInCenter(highlightLine);
-                    editor.setPosition({ lineNumber: highlightLine, column: 1 });
-                  }
+                onMount={(editor: RevealableEditor) => {
+                  editorRef.current = editor;
+                  revealLine(highlightLine);
                 }}
               />
             ) : status === 'error' ? (

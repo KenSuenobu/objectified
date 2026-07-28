@@ -337,6 +337,8 @@ describe('CatalogItemDetailClient', () => {
     await screen.findByTestId('catalog-detail-tabs');
     for (const [id, label] of [
       ['overview', 'Overview'],
+      // Format details (CPDO-2.1, #4797) — the native payload view, beside the canonical Overview.
+      ['format', 'Format details'],
       ['source', 'Source & Code'],
       ['provenance', 'Provenance'],
       ['lint', 'Lint & Score'],
@@ -432,7 +434,16 @@ describe('CatalogItemDetailClient', () => {
     );
 
     overviewTab.focus();
+    // Format details (CPDO-2.1, #4797) sits between Overview and Source & Code, so one ArrowRight
+    // reaches it and the second reaches Source & Code.
     fireEvent.keyDown(overviewTab, { key: 'ArrowRight' });
+
+    const formatTab = screen.getByTestId('catalog-detail-tab-format');
+    expect(formatTab).toHaveAttribute('aria-selected', 'true');
+    expect(formatTab).toHaveAttribute('tabindex', '0');
+    expect(document.activeElement).toBe(formatTab);
+
+    fireEvent.keyDown(formatTab, { key: 'ArrowRight' });
 
     expect(sourceTab).toHaveAttribute('aria-selected', 'true');
     expect(sourceTab).toHaveAttribute('tabindex', '0');
