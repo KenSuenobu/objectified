@@ -41,6 +41,7 @@ class Resource:
     BILLING = "billing"
     LINT_FINDINGS = "lint_findings"
     VERIFICATION_TARGETS = "verification_targets"
+    VERIFICATION_EVIDENCE = "verification_evidence"
 
 
 class Action:
@@ -68,6 +69,7 @@ RESOURCES = frozenset(
         Resource.BILLING,
         Resource.LINT_FINDINGS,
         Resource.VERIFICATION_TARGETS,
+        Resource.VERIFICATION_EVIDENCE,
     }
 )
 

@@ -22364,6 +22364,444 @@ class Database:
         )
         return int(rows[0]["purged"]) if rows and rows[0].get("purged") is not None else 0
 
+    # ------------------------------------------------------------------
+    # Verification evidence (ECA-1.3, #4731)
+    # ------------------------------------------------------------------
+
+    #: Columns every run read returns, so a row always adapts cleanly into
+    #: :func:`app.verification_evidence.summary_from_row`.
+    _VERIFICATION_RUN_COLUMNS = """
+        id::text AS id, tenant_id::text AS tenant_id,
+        suite_digest, suite_schema_version, suite_compiler_version, suite_case_count,
+        target_id::text AS target_id, target_slug, target_environment, target_network_class,
+        target_base_url,
+        runner_name, runner_version,
+        recorded_by::text AS recorded_by, actor_label, actor_kind,
+        started_at, finished_at, duration_ms, outcome,
+        total_cases, passed_cases, failed_cases, errored_cases, skipped_cases,
+        source, context, idempotency_key, created_at
+    """
+
+    #: The columns of one stored case result.
+    _VERIFICATION_RUN_OPERATION_COLUMNS = """
+        id::text AS id, run_id::text AS run_id, sequence, case_id, operation_key, operation_name,
+        case_source, http_method, http_path, outcome, failure_code, failure_message,
+        expected_status, actual_status, started_at, finished_at, duration_ms, attempts
+    """
+
+    #: The columns of one stored assertion.
+    _VERIFICATION_RUN_ASSERTION_COLUMNS = """
+        id::text AS id, operation_id::text AS operation_id, sequence, kind, outcome,
+        subject, expected, actual, code, message
+    """
+
+    #: The columns of one stored artifact reference.
+    _VERIFICATION_RUN_ARTIFACT_COLUMNS = """
+        id::text AS id, operation_id::text AS operation_id, kind, label, media_type, uri,
+        size_bytes, content_sha256, redacted, redaction, created_at
+    """
+
+    def insert_verification_evidence(
+        self,
+        *,
+        run: Dict[str, Any],
+        operations: Optional[List[Dict[str, Any]]] = None,
+        artifacts: Optional[List[Dict[str, Any]]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Write one complete run — cases, assertions, and artifact references — atomically.
+
+        Evidence is immutable (V212 rejects every UPDATE), so it has to be written whole: a
+        transaction that fails partway leaves nothing behind rather than a run that can never be
+        completed. Every child row is stamped with the run's own tenant, which the composite
+        foreign keys then verify against the parent.
+
+        Args:
+            run: The ``verification_run`` column map, including ``tenant_id``.
+            operations: Case rows in stored order, each optionally carrying ``assertions`` and
+                ``artifacts`` lists.
+            artifacts: Run-level artifact rows (``operation_id`` is NULL for these).
+
+        Returns:
+            The stored run row, or ``None`` when ``tenant_id`` is not a UUID.
+        """
+        tenant_id = str(run.get("tenant_id") or "")
+        if not tenant_id or not is_uuid_string(tenant_id):
+            return None
+
+        target_id = run.get("target_id")
+        run_params = (
+            tenant_id,
+            run.get("suite_digest"),
+            run.get("suite_schema_version"),
+            run.get("suite_compiler_version"),
+            run.get("suite_case_count"),
+            target_id if target_id and is_uuid_string(str(target_id)) else None,
+            run.get("target_slug"),
+            run.get("target_environment"),
+            run.get("target_network_class") or "public",
+            run.get("target_base_url"),
+            run.get("runner_name"),
+            run.get("runner_version"),
+            (
+                run.get("recorded_by")
+                if run.get("recorded_by") and is_uuid_string(str(run.get("recorded_by")))
+                else None
+            ),
+            run.get("actor_label"),
+            run.get("actor_kind") or "user",
+            run.get("started_at"),
+            run.get("finished_at"),
+            int(run.get("duration_ms") or 0),
+            run.get("outcome"),
+            int(run.get("total_cases") or 0),
+            int(run.get("passed_cases") or 0),
+            int(run.get("failed_cases") or 0),
+            int(run.get("errored_cases") or 0),
+            int(run.get("skipped_cases") or 0),
+            json.dumps(run.get("source") or {}, sort_keys=True, default=str),
+            json.dumps(run.get("context") or {}, sort_keys=True, default=str),
+            run.get("idempotency_key"),
+        )
+        run_query = f"""
+            INSERT INTO apiome.verification_run (
+                tenant_id, suite_digest, suite_schema_version, suite_compiler_version,
+                suite_case_count, target_id, target_slug, target_environment,
+                target_network_class, target_base_url, runner_name, runner_version,
+                recorded_by, actor_label, actor_kind, started_at, finished_at, duration_ms,
+                outcome, total_cases, passed_cases, failed_cases, errored_cases, skipped_cases,
+                source, context, idempotency_key
+            )
+            VALUES (
+                %s::uuid, %s, %s, %s, %s, %s::uuid, %s, %s, %s, %s, %s, %s,
+                %s::uuid, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s::jsonb, %s::jsonb, %s
+            )
+            RETURNING {self._VERIFICATION_RUN_COLUMNS}
+        """
+
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(run_query, run_params)
+                run_row = cursor.fetchone()
+                run_id = str(run_row["id"])
+
+                for operation in operations or []:
+                    cursor.execute(
+                        """
+                        INSERT INTO apiome.verification_run_operation (
+                            tenant_id, run_id, sequence, case_id, operation_key, operation_name,
+                            case_source, http_method, http_path, outcome, failure_code,
+                            failure_message, expected_status, actual_status, started_at,
+                            finished_at, duration_ms, attempts
+                        )
+                        VALUES (
+                            %s::uuid, %s::uuid, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                            %s, %s, %s, %s
+                        )
+                        RETURNING id::text AS id
+                        """,
+                        (
+                            tenant_id,
+                            run_id,
+                            int(operation.get("sequence") or 0),
+                            operation.get("case_id"),
+                            operation.get("operation_key"),
+                            operation.get("operation_name"),
+                            operation.get("case_source"),
+                            operation.get("http_method"),
+                            operation.get("http_path"),
+                            operation.get("outcome"),
+                            operation.get("failure_code"),
+                            operation.get("failure_message"),
+                            operation.get("expected_status"),
+                            operation.get("actual_status"),
+                            operation.get("started_at"),
+                            operation.get("finished_at"),
+                            int(operation.get("duration_ms") or 0),
+                            int(operation.get("attempts") or 1),
+                        ),
+                    )
+                    operation_id = str(cursor.fetchone()["id"])
+
+                    for assertion in operation.get("assertions") or []:
+                        cursor.execute(
+                            """
+                            INSERT INTO apiome.verification_run_assertion (
+                                tenant_id, run_id, operation_id, sequence, kind, outcome,
+                                subject, expected, actual, code, message
+                            )
+                            VALUES (
+                                %s::uuid, %s::uuid, %s::uuid, %s, %s, %s, %s, %s, %s, %s, %s
+                            )
+                            """,
+                            (
+                                tenant_id,
+                                run_id,
+                                operation_id,
+                                int(assertion.get("sequence") or 0),
+                                assertion.get("kind"),
+                                assertion.get("outcome"),
+                                assertion.get("subject"),
+                                assertion.get("expected"),
+                                assertion.get("actual"),
+                                assertion.get("code"),
+                                assertion.get("message"),
+                            ),
+                        )
+
+                    for artifact in operation.get("artifacts") or []:
+                        self._insert_verification_run_artifact(
+                            cursor, tenant_id, run_id, operation_id, artifact
+                        )
+
+                for artifact in artifacts or []:
+                    self._insert_verification_run_artifact(
+                        cursor, tenant_id, run_id, None, artifact
+                    )
+
+            conn.commit()
+            return run_row
+        except Exception:
+            conn.rollback()
+            raise
+
+    @staticmethod
+    def _insert_verification_run_artifact(
+        cursor: Any,
+        tenant_id: str,
+        run_id: str,
+        operation_id: Optional[str],
+        artifact: Dict[str, Any],
+    ) -> None:
+        """Insert one artifact reference on an open cursor (ECA-1.3, #4731).
+
+        Shared by the per-case and run-level loops so the column list exists once. ``redacted`` is
+        always written ``TRUE`` — V212's CHECK admits nothing else, and the contract layer has
+        already refused a submission that claimed otherwise.
+
+        Args:
+            cursor: The open cursor inside the run's transaction.
+            tenant_id: The run's tenant, stamped on every child row.
+            run_id: The owning run.
+            operation_id: The owning case, or ``None`` for a run-level artifact.
+            artifact: The artifact row map.
+        """
+        cursor.execute(
+            """
+            INSERT INTO apiome.verification_run_artifact (
+                tenant_id, run_id, operation_id, kind, label, media_type, uri, size_bytes,
+                content_sha256, redacted, redaction
+            )
+            VALUES (%s::uuid, %s::uuid, %s::uuid, %s, %s, %s, %s, %s, %s, TRUE, %s::jsonb)
+            """,
+            (
+                tenant_id,
+                run_id,
+                operation_id,
+                artifact.get("kind"),
+                artifact.get("label"),
+                artifact.get("media_type"),
+                artifact.get("uri"),
+                artifact.get("size_bytes"),
+                artifact.get("content_sha256"),
+                json.dumps(artifact.get("redaction") or {}, sort_keys=True, default=str),
+            ),
+        )
+
+    def get_verification_run(self, run_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
+        """One run by id, scoped to a tenant (ECA-1.3, #4731).
+
+        Args:
+            run_id: The run id.
+            tenant_id: Tenant the caller is acting in; a run in another tenant reads as absent.
+
+        Returns:
+            The run row, or ``None``.
+        """
+        if not run_id or not is_uuid_string(str(run_id)):
+            return None
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        rows = self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_RUN_COLUMNS}
+            FROM apiome.verification_run
+            WHERE id = %s::uuid AND tenant_id = %s::uuid
+            """,
+            (run_id, tenant_id),
+        )
+        return rows[0] if rows else None
+
+    def get_verification_run_by_idempotency_key(
+        self, tenant_id: str, idempotency_key: str
+    ) -> Optional[Dict[str, Any]]:
+        """One run by its caller-supplied retry key (ECA-1.3, #4731).
+
+        Args:
+            tenant_id: Tenant the caller is acting in.
+            idempotency_key: The key the runner supplied.
+
+        Returns:
+            The run row, or ``None`` when this tenant has no run under that key.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)) or not idempotency_key:
+            return None
+        rows = self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_RUN_COLUMNS}
+            FROM apiome.verification_run
+            WHERE tenant_id = %s::uuid AND idempotency_key = %s
+            """,
+            (tenant_id, idempotency_key),
+        )
+        return rows[0] if rows else None
+
+    def list_verification_runs(
+        self,
+        tenant_id: str,
+        *,
+        target_id: Optional[str] = None,
+        suite_digest: Optional[str] = None,
+        outcome: Optional[str] = None,
+        limit: int = 50,
+    ) -> List[Dict[str, Any]]:
+        """A tenant's runs, newest first (ECA-1.3, #4731).
+
+        Args:
+            tenant_id: Tenant whose evidence to read.
+            target_id: Restrict to one target.
+            suite_digest: Restrict to one compiled suite.
+            outcome: Restrict to one verdict.
+            limit: Maximum rows (clamped to 1..200).
+
+        Returns:
+            The run rows; empty when nothing matches (or the tenant id is not a UUID).
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        clauses = ""
+        params: List[Any] = [tenant_id]
+        if target_id and is_uuid_string(str(target_id)):
+            clauses += " AND target_id = %s::uuid"
+            params.append(target_id)
+        if suite_digest:
+            clauses += " AND suite_digest = %s"
+            params.append(suite_digest)
+        if outcome:
+            clauses += " AND outcome = %s"
+            params.append(outcome)
+        params.append(max(1, min(int(limit), 200)))
+        return self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_RUN_COLUMNS}
+            FROM apiome.verification_run
+            WHERE tenant_id = %s::uuid{clauses}
+            ORDER BY created_at DESC
+            LIMIT %s
+            """,
+            tuple(params),
+        )
+
+    def list_verification_run_operations(
+        self, run_id: str, tenant_id: str
+    ) -> List[Dict[str, Any]]:
+        """One run's case results, in stored order (ECA-1.3, #4731).
+
+        Args:
+            run_id: The run id.
+            tenant_id: Tenant the caller is acting in.
+
+        Returns:
+            The case rows; empty when the run has none or is not this tenant's.
+        """
+        if not run_id or not is_uuid_string(str(run_id)):
+            return []
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        return self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_RUN_OPERATION_COLUMNS}
+            FROM apiome.verification_run_operation
+            WHERE run_id = %s::uuid AND tenant_id = %s::uuid
+            ORDER BY sequence
+            """,
+            (run_id, tenant_id),
+        )
+
+    def list_verification_run_assertions(
+        self, run_id: str, tenant_id: str
+    ) -> List[Dict[str, Any]]:
+        """Every assertion recorded across one run's cases, in stored order (ECA-1.3, #4731).
+
+        Read flat rather than per case, so assembling a run costs a fixed number of queries no
+        matter how many cases it recorded.
+
+        Args:
+            run_id: The run id.
+            tenant_id: Tenant the caller is acting in.
+
+        Returns:
+            The assertion rows.
+        """
+        if not run_id or not is_uuid_string(str(run_id)):
+            return []
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        return self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_RUN_ASSERTION_COLUMNS}
+            FROM apiome.verification_run_assertion
+            WHERE run_id = %s::uuid AND tenant_id = %s::uuid
+            ORDER BY operation_id, sequence
+            """,
+            (run_id, tenant_id),
+        )
+
+    def list_verification_run_artifacts(
+        self, run_id: str, tenant_id: str
+    ) -> List[Dict[str, Any]]:
+        """Every artifact reference recorded on one run (ECA-1.3, #4731).
+
+        Args:
+            run_id: The run id.
+            tenant_id: Tenant the caller is acting in.
+
+        Returns:
+            The artifact rows; run-level ones carry a NULL ``operation_id``.
+        """
+        if not run_id or not is_uuid_string(str(run_id)):
+            return []
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        return self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_RUN_ARTIFACT_COLUMNS}
+            FROM apiome.verification_run_artifact
+            WHERE run_id = %s::uuid AND tenant_id = %s::uuid
+            ORDER BY created_at, id
+            """,
+            (run_id, tenant_id),
+        )
+
+    def purge_verification_evidence(self, retention_days: int = 365) -> int:
+        """Run the verification-evidence retention sweep (ECA-1.3, #4731).
+
+        Delegates to ``apiome.purge_verification_evidence`` (apiome-db V212), which hard-deletes
+        runs older than the window; their cases, assertions, and artifact references cascade.
+
+        Args:
+            retention_days: Retention window in days; negative values are treated as ``0``.
+
+        Returns:
+            The number of purged runs.
+        """
+        rows = self.execute_query(
+            "SELECT apiome.purge_verification_evidence(%s) AS purged",
+            (max(0, int(retention_days)),),
+        )
+        return int(rows[0]["purged"]) if rows and rows[0].get("purged") is not None else 0
+
 
 # Global database instance
 db = Database()
