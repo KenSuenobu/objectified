@@ -45,6 +45,15 @@ export const FINDINGS_VIRTUALIZE_ABOVE = 50;
 export const EXPORT_MANIFEST_TREE_VIRTUALIZE_ABOVE = 50;
 
 /**
+ * Catalog **Format details** native-analysis tree rows (CPDO-2.1) beyond this count are
+ * windowed, not all mounted. Its own budget rather than a share of
+ * {@link TREE_VIRTUALIZE_ABOVE}: this tree is the analyzer's native structure bounded
+ * server-side at 5000 nodes / 32 levels (CPDO-1.1), so its worst case is a different
+ * shape from the canonical entity explorer's.
+ */
+export const ANALYSIS_TREE_VIRTUALIZE_ABOVE = 50;
+
+/**
  * Export preview-manifest pages one "Load more entities" click walks before pausing —
  * the export twin of {@link LOAD_ALL_PAGE_CAP} (the same 1000-entity server pages).
  */
@@ -162,6 +171,17 @@ export const PREVIEW_BUDGETS: readonly PreviewBudget[] = [
     mechanism: 'windowed',
     aboveBudget: 'Rows are windowed around the viewport; the focused row is pinned so it never unmounts.',
     fullDataPath: 'Scroll the tree — every loaded row is reachable; the list itself is complete.',
+  },
+  {
+    id: 'ANALYSIS_TREE_VIRTUALIZE_ABOVE',
+    surface: 'Catalog Format details native-analysis tree (CPDO-2.1)',
+    budget: ANALYSIS_TREE_VIRTUALIZE_ABOVE,
+    unit: 'visible tree rows',
+    mechanism: 'windowed',
+    aboveBudget:
+      'Rows are windowed around the viewport ("windowed" note shown); the focused row is pinned so it never unmounts.',
+    fullDataPath:
+      'Scroll the tree — every node of the stored analysis is reachable. Nodes the analyzer’s own 5000-node budget dropped are stated separately by the record’s bounding note.',
   },
   {
     id: 'EXPORT_MANIFEST_PAGES_PER_WINDOW',

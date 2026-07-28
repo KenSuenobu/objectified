@@ -35,6 +35,15 @@ Two mechanisms appear below, with different obligations:
 | Test Bench payload editor (IXH-5.3) | 1,000,000 UTF-8 bytes (`TEST_BENCH_PAYLOAD_MAX_BYTES`) | Truncated | Validation is refused with the payload size stated against the bound | **Copy as curl** — the REST endpoint handles any size the import guards allow |
 | Test Bench findings list (IXH-5.3) | 50 rows (`TEST_BENCH_FINDINGS_VIRTUALIZE_ABOVE`) | Windowed | Rows window ("windowed" note); the focused row is pinned | Scroll — every returned finding is reachable |
 | Test Bench validation request (IXH-5.3) | 200 findings/validation (`TEST_BENCH_MAX_FINDINGS`) | Truncated | "Showing X of Y findings — the report was truncated" | **Copy as curl** and raise `max_findings` on the REST call |
+| Catalog **Format details** native-analysis tree (CPDO-2.1) | 50 rows (`ANALYSIS_TREE_VIRTUALIZE_ABOVE`) | Windowed | Rows window ("windowed" note); the focused row is pinned | Scroll — every node of the stored analysis is reachable. Nodes the analyzer's own 5000-node budget dropped are a *separate* statement (see below) |
+
+The last row is not an import-preview surface: it belongs to the catalog item detail screen
+and is documented in [CATALOG_FORMAT_DETAILS.md](./CATALOG_FORMAT_DETAILS.md). It lives in
+the same registry because `preview-budgets.ts` is where every bound is defined, and because
+it reuses the same `computeWindowedRange` machinery and the same focus-pinning rule. Note
+that surface has **two** independent bounds — this client-side windowing, and the
+server-side 5000-node/32-level analysis budget (CPDO-1.1) whose dropped nodes are stated by
+the record's own `metrics.truncated`, never reachable by scrolling.
 
 Draw-budget selection is **worst-first** (`selectDrawnGraphEntries`, shared from
 `components/ade/dashboard/export/projectionGraph.ts`): aggregates always draw, then rows by

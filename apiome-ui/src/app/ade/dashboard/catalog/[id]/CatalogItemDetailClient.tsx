@@ -11,14 +11,17 @@
  * The header (idhead) carries the quality/lint orbs and the CTAs: **Convert** is the primary action
  * (it opens the existing `ConversionPreviewDialog`) and **View code** jumps to the Source tab. Below
  * it a tab bar (MFI-25.1, #4086) organizes the `/api/catalog/{id}` payload (MFI-23.2 envelope + the
- * 23.9 enrichments) into five panes that switch **without a route change**:
+ * 23.9 enrichments) into panes that switch **without a route change**:
  *   1. **Overview** — the normalized services / operations / types / channels counts.
- *   2. **Source & Code** — file name / URL / discovery, viewable + downloadable via the
+ *   2. **Format details** — the imported payload in its *own* vocabulary, driven only by
+ *      `payload_analysis` (CPDO-2.1, #4797). It sits beside Overview on purpose: Overview is the
+ *      canonical projection, this is the native structure the projection was made from.
+ *   3. **Source & Code** — file name / URL / discovery, viewable + downloadable via the
  *      `/api/catalog/{id}/source` proxy (streams captured content, or redirects to the source URL).
- *   3. **Provenance** — format/protocol, tool versions, import-job reference, timestamps + creator.
- *   4. **Lint & Score** — the score/grade summary, linking into the shared quality-history and lint
+ *   4. **Provenance** — format/protocol, tool versions, import-job reference, timestamps + creator.
+ *   5. **Lint & Score** — the score/grade summary, linking into the shared quality-history and lint
  *      dialogs (the very same dialogs the header orbs open).
- *   5. **Versions** — a link into the shared version history (catalog items share the versions table).
+ *   6. **Versions** — a link into the shared version history (catalog items share the versions table).
  *
  * There is intentionally **no Publish/Edit** here: catalog items are the non-publishable slice of
  * projects (MFI-23.1), minted by the import routing (MFI-23.7), and read-only on this screen.
@@ -114,6 +117,8 @@ import { SchemaTestBench } from '@/app/components/ade/dashboard/test-bench/Schem
 import { useAuthSession } from '@lib/auth/session-client';
 import { CatalogVersionsPanel } from '@/app/components/ade/dashboard/catalog/CatalogVersionsPanel';
 import { CatalogRelatedArtifactsPanel } from '@/app/components/ade/dashboard/catalog/CatalogRelatedArtifactsPanel';
+import { CatalogFormatDetailPanel } from '@/app/components/ade/dashboard/catalog/CatalogFormatDetailPanel';
+import type { AnalysisSummary } from '@/app/utils/catalog-payload-analysis';
 import type { RelatedArtifact } from '@/app/utils/catalog-related-artifacts';
 
 /** The normalized-content counts the import recorded for the item (each null until captured). */
@@ -156,6 +161,12 @@ interface CatalogItemDetail {
   summary?: CatalogNormalizedSummary;
   /** The normalized, paradigm-tagged parsed entity groups (MFI-25.2); `[]`/absent when unavailable. */
   parsed?: CatalogParsedGroup[] | null;
+  /**
+   * The tree-free native-payload-analysis summary (CPDO-1.1, #4794): status, reason code, analyzer
+   * identity and node counts, never payload material. The Format details tab reads it to decide
+   * whether the full record is worth a (permission-gated) request.
+   */
+  analysis?: AnalysisSummary | null;
   source?: CatalogSourceDescriptor;
   /** The convert-to-OpenAPI back-link (MFI-23.11): present once the item has been converted. */
   conversion?: CatalogConversion | null;
@@ -172,6 +183,7 @@ const DETAIL_TABS_ID_PREFIX = 'catalog-detail';
 /** The detail panes (mockup `multi-format-import/index.html` + IXH-5.3), in tab order. */
 const DETAIL_TABS = [
   { id: 'overview', label: 'Overview' },
+  { id: 'format', label: 'Format details' },
   { id: 'source', label: 'Source & Code' },
   { id: 'provenance', label: 'Provenance' },
   { id: 'lint', label: 'Lint & Score' },
@@ -180,6 +192,9 @@ const DETAIL_TABS = [
 ] as const satisfies readonly DetailTab[];
 
 type DetailTabId = (typeof DETAIL_TABS)[number]['id'];
+
+/** Tab ids a `?tab=` deep link may name, so an unknown value is ignored rather than blanking the shell. */
+const DETAIL_TAB_IDS: ReadonlySet<string> = new Set(DETAIL_TABS.map((tab) => tab.id));
 
 /** The orb border colour for a quality/lint band (mirrors CatalogItemCard). */
 function scoreOrbBorderClass(band: NumericScoreTierStyle['band'] | null): string {
@@ -498,17 +513,39 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
   const [pendingAnchor, setPendingAnchor] = useState<string | null>(null);
   // The Overview entity currently highlighted by a just-followed deep-link (cleared after a delay).
   const [highlightedAnchor, setHighlightedAnchor] = useState<string | null>(null);
+  // A source location the Format details tab asked the Source viewer to reveal (CPDO-2.1) — it
+  // overrides the `?line=` compatibility deep link while it is set.
+  const [sourceFocus, setSourceFocus] = useState<{ line: number; file: string | null } | null>(null);
 
   // "View code" (and any future deep link into the raw source) jumps to the Source & Code tab.
   const showSourceTab = useCallback(() => setActiveTab('source'), []);
 
-  // Compatibility / CI deep links (?tab=source&sourcePath=&line=) open the Source tab (CLX-2.3).
+  // Compatibility / CI deep links (?tab=source&sourcePath=&line=) open the Source tab (CLX-2.3);
+  // any other `?tab=` naming a known pane opens that pane (CPDO-2.1's `?tab=format&node=…`).
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab === 'source' || sourceDeepLink.sourcePath || sourceDeepLink.line) {
       setActiveTab('source');
+      return;
     }
+    if (tab && DETAIL_TAB_IDS.has(tab)) setActiveTab(tab as DetailTabId);
   }, [searchParams, sourceDeepLink.line, sourceDeepLink.sourcePath]);
+
+  // The analysis node a `?node=` deep link wants the Format details tab to reveal (CPDO-2.1).
+  const focusNodeId = searchParams.get('node');
+
+  /** Reveal a native-analysis node's source location in the Source & Code tab. */
+  const showSourceLine = useCallback((line: number, file: string | null) => {
+    setSourceFocus({ line, file });
+    setActiveTab('source');
+  }, []);
+
+  /** The shareable address of one analysis node — `?tab=format&node=<id>` on this item's route. */
+  const formatNodeHref = useCallback(
+    (nodeId: string) =>
+      `${CATALOG_LIST_HREF}/${encodeURIComponent(itemId)}?tab=format&node=${encodeURIComponent(nodeId)}`,
+    [itemId],
+  );
 
   // Follow a lint finding to its parsed entity: switch to the Overview tab and queue the scroll.
   const navigateToEntity = useCallback((name: string) => {
@@ -1092,6 +1129,21 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
           <CatalogParsedGroups parsed={parsed} highlightedAnchor={highlightedAnchor} />
         </TabPanel>
 
+        {/* FORMAT DETAILS — the imported payload in its own vocabulary, driven only by
+            `payload_analysis` (CPDO-2.1). Lazy: nothing is fetched until this tab is selected. */}
+        <TabPanel tabId="format" active={activeTab} testId="catalog-detail-pane-format">
+          <CatalogFormatDetailPanel
+            itemId={item.id}
+            summary={item.analysis ?? null}
+            sourceFormat={item.sourceFormat ?? null}
+            active={activeTab === 'format'}
+            sourceAvailable={Boolean(source?.downloadable)}
+            onViewSourceLine={showSourceLine}
+            nodeHref={formatNodeHref}
+            focusNodeId={focusNodeId}
+          />
+        </TabPanel>
+
         {/* SOURCE & CODE — the raw imported source rendered read-only in Monaco (MFI-25.4) */}
         <TabPanel tabId="source" active={activeTab} testId="catalog-detail-pane-source">
           <CatalogSourceViewer
@@ -1102,8 +1154,9 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
             hasContent={Boolean(source?.hasContent)}
             sourceUri={source?.uri ?? null}
             active={activeTab === 'source'}
-            highlightLine={sourceDeepLink.line}
-            focusSourcePath={sourceDeepLink.sourcePath}
+            highlightLine={sourceFocus?.line ?? sourceDeepLink.line}
+            focusSourcePath={sourceFocus?.file ?? sourceDeepLink.sourcePath}
+            highlightOrigin={sourceFocus ? 'format-analysis' : 'compatibility'}
           />
         </TabPanel>
 
