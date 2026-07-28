@@ -176,6 +176,16 @@ class Settings(BaseSettings):
         ),
     )
 
+    # HMAC-SHA256 secret signing portable mock bundle manifests (PMR-1.1, #4741). Unset => bundles
+    # are exported unsigned ("signature": null). Share with the portable runtime and CI verifiers.
+    mock_bundle_signing_secret: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "APIOME_MOCK_BUNDLE_SIGNING_SECRET",
+            "mock_bundle_signing_secret",
+        ),
+    )
+
     # How far ahead of expiry the lint.waiver.expiring webhook fires (CLX-4.2, #4860).
     lint_waiver_expiry_warning_hours: int = Field(
         default=72,
