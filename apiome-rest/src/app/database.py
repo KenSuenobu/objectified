@@ -11007,7 +11007,7 @@ class Database:
         "source_protocol, source_version_label, source_tool_versions, target_project_id, "
         "target_version_id, target_version_label, fidelity_report, fidelity_score, "
         "fidelity_grade, fidelity_tier, lint_score, lint_grade, converter_tool_versions, "
-        "reconverted, created_by, created_at"
+        "reconverted, projection_manifest_hash, projection_manifest, created_by, created_at"
     )
 
     def create_conversion_provenance(
@@ -11032,18 +11032,26 @@ class Database:
         lint_grade: Optional[str],
         converter_tool_versions: Optional[Dict[str, Any]],
         reconverted: bool,
+        projection_manifest_hash: Optional[str] = None,
+        projection_manifest: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Append one convert-to-project provenance row (MFI-22.5) and return it.
 
         Records the lineage of a catalog → OpenAPI conversion: the source catalog item + revision it
         was converted from (with its format/protocol/tool provenance), the publishable Project +
         revision it produced, the fidelity report the user reviewed, the captured OpenAPI lint score,
-        and the converter tool versions that produced it. The ``conversion_provenance`` table is
+        the converter tool versions that produced it, and the projection-manifest snapshot the
+        conversion was committed under (CPDO-1.3, V214). The ``conversion_provenance`` table is
         append-only (a DB trigger rejects UPDATE/DELETE), so a re-convert calls this again with a new
         target revision rather than mutating the prior row.
 
-        JSONB bags (``*_tool_versions``, ``fidelity_report``) are wrapped in :class:`psycopg2.extras.Json`;
-        ``None`` becomes the column default (``{}``).
+        JSONB bags (``*_tool_versions``, ``fidelity_report``, ``projection_manifest``) are wrapped in
+        :class:`psycopg2.extras.Json`; ``None`` becomes the column default (``{}``).
+
+        Args:
+            projection_manifest_hash: Content-addressed id of the CPDO-1.3 projection manifest;
+                ``None`` stores the empty-string default, which reads as "no manifest was recorded".
+            projection_manifest: The bounded ``ConversionManifestSummary`` for that snapshot.
 
         Returns:
             The inserted row as a dict.
@@ -11054,10 +11062,11 @@ class Database:
                  source_protocol, source_version_label, source_tool_versions, target_project_id,
                  target_version_id, target_version_label, fidelity_report, fidelity_score,
                  fidelity_grade, fidelity_tier, lint_score, lint_grade, converter_tool_versions,
-                 reconverted)
+                 reconverted, projection_manifest_hash, projection_manifest)
             VALUES (%s, %s, %s, %s, %s, %s, %s, COALESCE(%s, '{{}}'::jsonb), %s, %s, %s,
                     COALESCE(%s, '{{}}'::jsonb), %s, %s, %s, %s, %s,
-                    COALESCE(%s, '{{}}'::jsonb), %s)
+                    COALESCE(%s, '{{}}'::jsonb), %s, COALESCE(%s, ''),
+                    COALESCE(%s, '{{}}'::jsonb))
             RETURNING {self._CONVERSION_PROVENANCE_COLUMNS}
         """
         params = (
@@ -11080,6 +11089,8 @@ class Database:
             lint_grade,
             Json(converter_tool_versions) if converter_tool_versions is not None else None,
             reconverted,
+            projection_manifest_hash,
+            Json(projection_manifest) if projection_manifest is not None else None,
         )
         conn = self.connect()
         try:

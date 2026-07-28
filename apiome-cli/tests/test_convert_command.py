@@ -145,3 +145,153 @@ def test_convert_out_requires_dry_run() -> None:
     """--out only makes sense for a dry-run; using it on a commit is a usage error."""
     result = runner.invoke(app, ["convert", _ITEM, "--out", "x.json"])
     assert result.exit_code == EXIT_USAGE
+
+
+# ---------------------------------------------------------------------------
+# Projection manifest (CPDO-1.3) — --projection-out and the summary line
+# ---------------------------------------------------------------------------
+
+_PROJECTION_BASE = f"http://localhost:8000/v1/catalog/acme-corp/{_ITEM}/projection"
+
+
+def _projection_summary(**overrides) -> dict:
+    """The bounded manifest summary a convert response carries."""
+    summary = {
+        "schema_version": "1.0.0",
+        "manifest_hash": "abcdef0123456789" + "0" * 48,
+        "status_counts": {"retained": 4, "inferred": 2, "dropped": 1, "unavailable": 0},
+        "total_constructs": 7,
+        "truncated": False,
+        "dropped_edge_count": 0,
+    }
+    summary.update(overrides)
+    return summary
+
+
+def test_convert_prints_the_projection_snapshot_line(httpx_mock) -> None:
+    """The human summary names the snapshot id and how many constructs were not carried faithfully."""
+    httpx_mock.add_response(
+        url=f"{_CONVERT_BASE}?dryRun=true",
+        json={
+            "report": _report(), "openapi": _OPENAPI_DOC, "sourceFormat": "graphql",
+            "target": "openapi", "projection": _projection_summary(),
+        },
+    )
+    result = runner.invoke(app, ["convert", _ITEM, "--dry-run"])
+    assert result.exit_code == EXIT_SUCCESS
+    assert "Projection manifest abcdef012345" in result.stdout
+    assert "7 source construct(s), 3 not carried faithfully" in result.stdout
+
+
+def test_convert_without_a_projection_prints_no_snapshot_line(httpx_mock) -> None:
+    """A response with no manifest says nothing about one rather than inventing a hash."""
+    httpx_mock.add_response(
+        url=f"{_CONVERT_BASE}?dryRun=true",
+        json={"report": _report(), "openapi": _OPENAPI_DOC, "target": "openapi"},
+    )
+    result = runner.invoke(app, ["convert", _ITEM, "--dry-run"])
+    assert result.exit_code == EXIT_SUCCESS
+    assert "Projection manifest" not in result.stdout
+
+
+def test_convert_reports_a_bounded_manifest(httpx_mock) -> None:
+    """A truncated manifest says so, so a scripted run never reads it as complete."""
+    httpx_mock.add_response(
+        url=f"{_CONVERT_BASE}?dryRun=true",
+        json={
+            "report": _report(), "openapi": _OPENAPI_DOC, "target": "openapi",
+            "projection": _projection_summary(truncated=True, dropped_edge_count=311),
+        },
+    )
+    result = runner.invoke(app, ["convert", _ITEM, "--dry-run"])
+    assert result.exit_code == EXIT_SUCCESS
+    assert "Manifest bounded: 311 row(s) omitted" in result.stdout
+
+
+def test_projection_out_writes_the_paged_manifest(tmp_path: Path, httpx_mock) -> None:
+    """``--projection-out`` walks every cursor and writes one assembled machine-readable manifest."""
+    httpx_mock.add_response(
+        url=f"{_CONVERT_BASE}?dryRun=true",
+        json={
+            "report": _report(), "openapi": _OPENAPI_DOC, "target": "openapi",
+            "projection": _projection_summary(),
+        },
+    )
+    httpx_mock.add_response(
+        url=_PROJECTION_BASE,
+        json={
+            "itemId": _ITEM, "target": "openapi", "summary": _projection_summary(),
+            "page": {
+                "manifest_hash": _projection_summary()["manifest_hash"],
+                "nodes": [{"id": "source:construct:Widget", "kind": "source", "label": "Widget"}],
+                "edges": [{"id": "construct:type:Widget", "status": "retained"}],
+                "next_cursor": "Mg==", "total": 2,
+            },
+        },
+    )
+    httpx_mock.add_response(
+        url=_PROJECTION_BASE,
+        json={
+            "itemId": _ITEM, "target": "openapi", "summary": _projection_summary(),
+            "page": {
+                "manifest_hash": _projection_summary()["manifest_hash"],
+                # The same node repeats on the second page; it must not be duplicated.
+                "nodes": [
+                    {"id": "source:construct:Widget", "kind": "source", "label": "Widget"},
+                    {"id": "target:/components/schemas/Widget", "kind": "target", "label": "W"},
+                ],
+                "edges": [{"id": "loss:0000:graphql-subscription", "status": "dropped"}],
+                "next_cursor": None, "total": 2,
+            },
+        },
+    )
+
+    target = tmp_path / "manifest.json"
+    result = runner.invoke(
+        app, ["convert", _ITEM, "--dry-run", "--projection-out", str(target)]
+    )
+    assert result.exit_code == EXIT_SUCCESS
+
+    manifest = json.loads(target.read_text())
+    assert manifest["summary"]["manifest_hash"] == _projection_summary()["manifest_hash"]
+    assert [edge["id"] for edge in manifest["edges"]] == [
+        "construct:type:Widget",
+        "loss:0000:graphql-subscription",
+    ]
+    assert [node["id"] for node in manifest["nodes"]] == [
+        "source:construct:Widget",
+        "target:/components/schemas/Widget",
+    ]
+    assert manifest["pagesTruncated"] is False
+
+
+def test_projection_out_forwards_the_conversion_defaults(tmp_path: Path, httpx_mock) -> None:
+    """The manifest is fetched under the same defaults, since defaults change the snapshot hash."""
+    httpx_mock.add_response(
+        url=f"{_CONVERT_BASE}?dryRun=true",
+        json={"report": _report(), "openapi": _OPENAPI_DOC, "target": "openapi"},
+    )
+    httpx_mock.add_response(
+        url=_PROJECTION_BASE,
+        json={
+            "summary": _projection_summary(),
+            "page": {"nodes": [], "edges": [], "next_cursor": None, "total": 0},
+        },
+    )
+    result = runner.invoke(
+        app,
+        [
+            "convert", _ITEM, "--dry-run",
+            "--title", "My API", "--server", "https://x",
+            "--projection-out", str(tmp_path / "m.json"),
+        ],
+    )
+    assert result.exit_code == EXIT_SUCCESS
+
+    projection_request = [
+        request for request in httpx_mock.get_requests() if request.url.path.endswith("/projection")
+    ][0]
+    body = json.loads(projection_request.content)
+    assert body["defaults"] == {"title": "My API", "servers": ["https://x"]}
+    assert body["target"] == "openapi"
+    assert body["limit"] == 500

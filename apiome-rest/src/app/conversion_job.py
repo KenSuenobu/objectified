@@ -15,7 +15,9 @@ a high-fidelity report. Every other format still:
    (optionally closing cheap gaps with user-supplied ``defaults`` — an info title/version or
    servers the source lacked);
 2. **analyzes** its fidelity (:func:`app.fidelity.analyze_fidelity`) so the report the user saw in
-   the preview is the report persisted with the result;
+   the preview is the report persisted with the result, and builds the **projection manifest**
+   (:mod:`app.conversion_projection`, CPDO-1.3) from the same triple — the traceable
+   source-construct → OpenAPI-pointer graph behind that report;
 3. **mints or re-versions a publishable OpenAPI Project** from the emitted document by *reusing the
    spec-import submit→commit engine* (:mod:`app.spec_import_engine`) — a first conversion creates a
    new Project + ``v1``; a **re-convert of a changed source** appends a *new version* to the Project
@@ -23,8 +25,10 @@ a high-fidelity report. Every other format still:
    duplicating the Project;
 4. runs the existing **OpenAPI lint/score** (MFI-EPIC-4) on the converted result; and
 5. **persists provenance** — the source artifact id + source revision + source format/protocol +
-   the fidelity report + the converter tool versions — into ``apiome.conversion_provenance`` (V139), so
-   the converted spec links back to its origin and a later re-import diffs cleanly.
+   the fidelity report + the converter tool versions + the projection manifest hash/summary
+   (V214) — into ``apiome.conversion_provenance`` (V139), so the converted spec links back to its
+   origin, a later re-import diffs cleanly, and a stored conversion can be compared snapshot-for-
+   snapshot with the one before it.
 
 The orchestration (:func:`run_conversion`) is written against small **ports**
 (:class:`SpecCommitter`, :class:`LintScorer`, :class:`ProvenanceStore`) so the
@@ -47,8 +51,16 @@ from typing import Any, Dict, List, Optional, Protocol
 from pydantic import BaseModel, ConfigDict, Field
 
 from .canonical_model import CanonicalApi, Server
+from .conversion_projection import (
+    ConversionManifest,
+    ConversionManifestSummary,
+    build_conversion_manifest,
+    summarize_conversion_manifest,
+)
+from .emitter import EmitResult
 from .export_service import ExportError, emit_canonical, resolve_emit_format
 from .fidelity import FidelityReport, analyze_fidelity
+from .payload_analysis import PayloadAnalysisDocument
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +169,12 @@ class ConversionSource(BaseModel):
         description="Captured raw source text (needed for TypeSpec native emit and OpenAPI "
         "passthrough when ``api.raw`` is absent) — MFI-22.7.",
     )
+    analysis: Optional[PayloadAnalysisDocument] = Field(
+        default=None,
+        description="The source revision's payload analysis (CPDO-1.1/1.2), when one exists. "
+        "Feeds the projection manifest's source-side evidence; ``None`` yields a manifest that "
+        "declares the analysis unavailable rather than one that quietly omits the question.",
+    )
 
 
 class ConversionCommit(BaseModel):
@@ -200,6 +218,10 @@ class ConversionPreview(BaseModel):
         description="How the document was produced: ``passthrough``, ``typespec_native``, or "
         "``lossy`` (MFI-22.7).",
     )
+    manifest: ConversionManifest = Field(
+        description="The deterministic conversion projection manifest (CPDO-1.3) — which source "
+        "construct became which OpenAPI pointer, and why anything did not.",
+    )
 
 
 class ConversionResult(BaseModel):
@@ -223,6 +245,10 @@ class ConversionResult(BaseModel):
         default=LOSSY_CONVERSION_MODE,
         description="How the document was produced: ``passthrough``, ``typespec_native``, or "
         "``lossy`` (MFI-22.7).",
+    )
+    projection: ConversionManifestSummary = Field(
+        description="The bounded projection-manifest summary persisted with the provenance row "
+        "(CPDO-1.3): the snapshot hash, the tool versions that produced it, and the tallies.",
     )
 
 
@@ -278,6 +304,7 @@ class ProvenanceStore(Protocol):
         lint: Optional[LintScore],
         converter_tool_versions: Dict[str, Any],
         reconverted: bool,
+        projection: ConversionManifestSummary,
     ) -> Dict[str, Any]:
         """Append one provenance row; return it (must include ``id``)."""
         ...
@@ -375,8 +402,11 @@ def preview_conversion(
     Runs the pure, deterministic first half of :func:`run_conversion`. OpenAPI/Swagger sources
     and TypeSpec take the near-lossless paths (MFI-22.7 — passthrough / ``tsp`` native emit);
     every other format fills cheap gaps from ``defaults``, emits via the OpenAPI 3.1 emitter
-    (MFI-22.1), and analyzes fidelity (MFI-22.3). No Project/version is created and nothing is
-    persisted, so this is safe to call for a preview (MFI-22.4) or a CLI ``--dry-run`` (MFI-22.6).
+    (MFI-22.1), and analyzes fidelity (MFI-22.3). Either way the projection manifest (CPDO-1.3)
+    is built from the same ``(model, document, report)`` triple, so the traceable graph and the
+    aggregate report a user sees always describe one conversion. No Project/version is created
+    and nothing is persisted, so this is safe to call for a preview (MFI-22.4) or a CLI
+    ``--dry-run`` (MFI-22.6).
 
     Args:
         source: The loaded canonical model + source provenance coordinates.
@@ -386,7 +416,8 @@ def preview_conversion(
 
     Returns:
         A :class:`ConversionPreview` with the fidelity report, the would-be OpenAPI document,
-        and the :attr:`~ConversionPreview.conversion_mode` that produced them.
+        the projection manifest, and the :attr:`~ConversionPreview.conversion_mode` that
+        produced them.
 
     Raises:
         ConversionError: If ``target_format`` is unsupported, or a native/passthrough path fails.
@@ -408,11 +439,24 @@ def preview_conversion(
         document, report = resolve_passthrough_preview(
             mode=mode, api=source.api, source_text=source.source_text
         )
+        # The passthrough/native paths adopt or compile a document rather than walking the
+        # canonical model, so there is no per-pointer provenance trail; the manifest is built
+        # without one, where a resolvable pointer is faithful by construction.
         return ConversionPreview(
             fidelity=report,
             document=document,
             target_format=resolved_format,
             conversion_mode=mode.value,
+            manifest=_build_manifest(
+                api=source.api,
+                document=document,
+                report=report,
+                emit_result=None,
+                source=source,
+                defaults=defaults,
+                target_format=resolved_format,
+                conversion_mode=mode.value,
+            ),
         )
 
     api = _apply_defaults(source.api, defaults)
@@ -427,6 +471,52 @@ def preview_conversion(
         document=emit_result.document,
         target_format=resolved_format,
         conversion_mode=LOSSY_CONVERSION_MODE,
+        manifest=_build_manifest(
+            api=api,
+            document=emit_result.document,
+            report=report,
+            emit_result=emit_result,
+            source=source,
+            defaults=defaults,
+            target_format=resolved_format,
+            conversion_mode=LOSSY_CONVERSION_MODE,
+        ),
+    )
+
+
+def _build_manifest(
+    *,
+    api: CanonicalApi,
+    document: Dict[str, Any],
+    report: FidelityReport,
+    emit_result: Optional[EmitResult],
+    source: ConversionSource,
+    defaults: Optional[ConversionDefaults],
+    target_format: str,
+    conversion_mode: str,
+) -> ConversionManifest:
+    """Build the CPDO-1.3 projection manifest for one preview, from the coordinates in ``source``.
+
+    A thin adapter so both conversion paths (lossy and passthrough/native) assemble the manifest
+    from one place and therefore stamp the same provenance — the converter tool versions for the
+    mode that ran, the source revision coordinates, and the revision's payload analysis when the
+    caller loaded one.
+    """
+    return build_conversion_manifest(
+        api=api,
+        document=document,
+        report=report,
+        emit_result=emit_result,
+        target_format=target_format,
+        conversion_mode=conversion_mode,
+        tool_versions=converter_tool_versions(conversion_mode=conversion_mode),
+        defaults=defaults.model_dump(mode="json") if defaults is not None else None,
+        analysis=source.analysis,
+        project_id=source.source_project_id,
+        version_record_id=source.source_version_id,
+        source_format=source.source_format,
+        source_protocol=source.source_protocol,
+        source_version_label=source.source_version_label,
     )
 
 
@@ -472,6 +562,7 @@ async def run_conversion(
     preview = preview_conversion(source, defaults, target_format)
     report = preview.fidelity
     conversion_mode = preview.conversion_mode
+    projection = summarize_conversion_manifest(preview.manifest)
 
     # 3. First-convert vs re-convert: a prior conversion of this source names the Project a re-convert
     #    must add a new version to, so we never duplicate a Project on re-convert.
@@ -507,6 +598,7 @@ async def run_conversion(
         lint=lint,
         converter_tool_versions=converter_tool_versions(conversion_mode=conversion_mode),
         reconverted=reconverted,
+        projection=projection,
     )
 
     # 6. Auto-link source catalog item ↔ converted publishable Project (MFI-6.4, #4410).
@@ -535,6 +627,7 @@ async def run_conversion(
         provenance_id=str(prov["id"]),
         document=preview.document,
         conversion_mode=conversion_mode,
+        projection=projection,
     )
 
 
@@ -713,6 +806,7 @@ class DbConversionProvenanceStore:
         lint: Optional[LintScore],
         converter_tool_versions: Dict[str, Any],
         reconverted: bool,
+        projection: ConversionManifestSummary,
     ) -> Dict[str, Any]:
         from .database import db
 
@@ -736,6 +830,8 @@ class DbConversionProvenanceStore:
             lint_grade=lint.grade if lint else None,
             converter_tool_versions=converter_tool_versions,
             reconverted=reconverted,
+            projection_manifest_hash=projection.manifest_hash,
+            projection_manifest=projection.model_dump(mode="json"),
         )
 
 

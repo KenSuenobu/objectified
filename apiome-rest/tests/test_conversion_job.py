@@ -22,7 +22,6 @@ from typing import Any, Dict, List, Optional
 import pytest
 
 import app.database as database
-
 from app.canonical_model import (
     ApiIdentity,
     ApiParadigm,
@@ -58,11 +57,39 @@ from app.conversion_job import (
     preview_conversion,
     run_conversion,
 )
+from app.conversion_projection import (
+    ConversionAnalysisRef,
+    ConversionManifestSource,
+    ConversionManifestSummary,
+)
 from app.fidelity import FidelityReport, FidelityTier
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
+
+def _projection_summary() -> ConversionManifestSummary:
+    """A minimal CPDO-1.3 manifest summary for adapter-level tests."""
+    return ConversionManifestSummary(
+        schema_version="1.0.0",
+        manifest_hash="cafe1234",
+        source=ConversionManifestSource(
+            source_format="rest",
+            analysis=ConversionAnalysisRef(available=False, status="unavailable"),
+        ),
+        target_format="openapi-3.1",
+        conversion_mode="lossy",
+        tool_versions={"apiome-rest": "9.9.9"},
+        defaults={},
+        status_counts={},
+        reason_counts={},
+        scope_counts={},
+        node_count=0,
+        edge_count=0,
+        total_constructs=0,
+        is_lossless=True,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -538,8 +565,12 @@ def test_db_provenance_store_maps_fields(monkeypatch: pytest.MonkeyPatch) -> Non
         ),
         fidelity=fidelity, lint=LintScore(score=90, grade="A"),
         converter_tool_versions={"apiome-rest": "9.9.9"}, reconverted=False,
+        projection=_projection_summary(),
     )
     assert row == {"id": "prov-x"}
+    # CPDO-1.3: the manifest snapshot is persisted alongside the fidelity report.
+    assert captured["projection_manifest_hash"] == "cafe1234"
+    assert captured["projection_manifest"]["manifest_hash"] == "cafe1234"
     assert captured["source_project_id"] == "cat-1"
     assert captured["target_version_id"] == "v-1"
     assert captured["fidelity_score"] == 77
