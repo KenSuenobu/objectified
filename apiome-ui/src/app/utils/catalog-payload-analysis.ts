@@ -262,6 +262,7 @@ const KIND_LABEL: Record<string, string> = {
   element: 'Element',
   composite: 'Composite',
   component: 'Component',
+  repetition: 'Repetition',
   // COBOL copybook (cobolcopybook_analysis.py)
   record: 'Record',
   group: 'Group',

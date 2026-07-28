@@ -245,7 +245,10 @@ async def test_the_stored_record_carries_capabilities_tool_versions_and_location
     row = _stored_rows(db)[0]
 
     assert "x12.functional_group" in row["capabilities"]["supported"]
-    assert "x12.empty_elements" in row["capabilities"]["unsupported"]
+    # CPDO-2.2: the delimiter scan aligned to the parse, so this record can see an element position
+    # written and left empty. A record whose scan failed declares the same construct unsupported.
+    assert "x12.empty_elements" in row["capabilities"]["supported"]
+    assert "x12.hl_hierarchy" in row["capabilities"]["unsupported"]
     assert row["capabilities"]["limits"]["maxNodes"] > 0
     assert row["tool_versions"]["pyx12"]
     assert all(node["location"]["path"] for node in _walk(row["tree"]))
@@ -421,7 +424,7 @@ async def test_the_summary_reports_the_analysis_without_carrying_any_of_it() -> 
     assert block["node_count"] > 0
     assert block["truncated"] is False
     assert block["stored"] is True
-    assert "x12.empty_elements" in block["unsupported"]
+    assert "x12.hl_hierarchy" in block["unsupported"]
     assert "tree" not in block
 
 
@@ -476,7 +479,8 @@ async def test_a_detail_read_serves_the_stored_analysis_without_reconstructing_i
     assert summary.status == STATUS_AVAILABLE
     assert summary.analyzer_key == "edix12"
     assert summary.kind_counts["transaction_set"] == 2
-    assert "x12.empty_elements" in summary.capabilities.unsupported
+    assert "x12.hl_hierarchy" in summary.capabilities.unsupported
+    assert "x12.empty_elements" in summary.capabilities.supported
 
 
 async def test_the_detail_summary_is_built_without_reading_the_tree_column() -> None:

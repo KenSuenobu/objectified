@@ -90,8 +90,21 @@ class EdiX12ImportSource(ImportSource, register=True):
         return edix12_tool_versions()
 
     def analysis_capabilities(self) -> AnalyzerCapabilities:
-        """Return the X12 extractor's capability declaration (CPDO-1.2)."""
-        return edix12_capabilities()
+        """Return the X12 extractor's capability declaration (CPDO-1.2).
+
+        This is the **format-wide** answer — what the analyzer models given an interchange it can
+        read — and it is what CPDO-2.4's registry publishes ahead of any import. It therefore
+        declares the source-position constructs (CPDO-2.2) supported: the analyzer produces them
+        for any interchange whose delimiter scan matches its parse, which is the ordinary case.
+
+        The narrower, per-record answer lives on the record itself: :func:`analyze_edix12` stamps
+        each analysis with what *that* analysis managed, so an interchange whose scan could not be
+        aligned carries a declaration saying those constructs are absent from it.
+
+        Returns:
+            The analyzer's capability declaration.
+        """
+        return edix12_capabilities(source_positions=True)
 
     def analyze(
         self, native_ast: Any, *, source: Optional[str] = None

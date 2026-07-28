@@ -535,7 +535,7 @@ describe('selected construct evidence', () => {
 
     fireEvent.click(row('gs-0')!);
     const note = await screen.findByTestId('catalog-format-detail-no-source-jump');
-    expect(note).toHaveTextContent(/structural path rather than by line/i);
+    expect(note).toHaveTextContent(/structural path rather than by a position in the raw source/i);
     expect(screen.queryByTestId('catalog-format-detail-view-source')).not.toBeInTheDocument();
     expect(onViewSourceLine).not.toHaveBeenCalled();
   });
@@ -547,7 +547,9 @@ describe('selected construct evidence', () => {
     fireEvent.click(row('fld-amount')!);
     fireEvent.click(await screen.findByTestId('catalog-format-detail-view-source'));
 
-    expect(onViewSourceLine).toHaveBeenCalledWith(12, 'claim.cpy');
+    // A copybook node knows its line and not its bytes, so the range is null and the viewer falls
+    // back to centring the line. The construct is still named, so the viewer can say what sent it.
+    expect(onViewSourceLine).toHaveBeenCalledWith(12, 'claim.cpy', null, 'Field CLAIM-AMOUNT');
   });
 
   it('offers no jump at all when the raw source was never captured', async () => {

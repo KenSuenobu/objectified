@@ -6,12 +6,17 @@
  * fixture that drifted between suites would let one of them keep passing against a shape the others
  * no longer produce.
  *
- * The two trees are deliberately different in the one way the tab's behaviour turns on:
+ * The trees are deliberately different in the ways the tab's behaviour turns on:
  *
- *  - {@link X12_TREE} locates by envelope path and sibling ordinal (no line), so no node in it can
- *    open the line-addressed raw viewer — and it carries both a withheld element value and an
+ *  - {@link X12_TREE} locates by envelope path and sibling ordinal only — the record of an
+ *    interchange whose delimiter scan could not be matched to its parse (CPDO-2.2) — so no node in
+ *    it can open the raw viewer, and it carries both a withheld element value and an
  *    observed-*empty* one, which must never be described the same way;
- *  - {@link COPYBOOK_TREE} locates by file and line, so its fields can.
+ *  - {@link X12_SCANNED_TREE} is the ordinary case: exact source ranges, declared delimiters,
+ *    control totals, two functional groups and a repeated segment, which is what the CPDO-2.2
+ *    inspector reads;
+ *  - {@link COPYBOOK_TREE} locates by file and line, so its fields open the viewer at a line and
+ *    never at a byte range.
  */
 
 import type {
@@ -91,6 +96,242 @@ export const X12_TREE: AnalysisNode[] = [
 /** Nodes in {@link X12_TREE} — the number the pane's metrics and row counts are asserted against. */
 export const X12_NODE_COUNT = 7;
 
+/**
+ * The raw interchange {@link X12_SCANNED_TREE} describes, so a source range can be asserted against
+ * the bytes it selects rather than against a remembered number.
+ */
+export const X12_SCANNED_SOURCE = [
+  'ISA*00*          *00*          *ZZ*SENDERID       *ZZ*RECEIVERID     *260116*1015*U*00401*000000004*0*P*>~',
+  'GS*PO*SENDERID*RECEIVERID*20260116*1015*10*X*004010~',
+  'ST*850*0001~',
+  'BEG*00*NE*PO-0002**20260116~',
+  'PO1*1*10*EA*4.99~',
+  'PO1*2*20*EA*9.99~',
+  'SE*5*0001~',
+  'GE*1*10~',
+  'GS*FA*SENDERID*RECEIVERID*20260116*1015*11*X*004010~',
+  'ST*997*0002~',
+  'AK1*PO*10~',
+  'SE*3*0002~',
+  'GE*1*11~',
+  'IEA*2*000000004~',
+].join('\n');
+
+/** Offset of one segment's text in {@link X12_SCANNED_SOURCE}, so the fixture cannot drift. */
+function at(text: string): { offset: number; length: number; line: number } {
+  const offset = X12_SCANNED_SOURCE.indexOf(text);
+  if (offset < 0) throw new Error(`fixture source does not contain ${text}`);
+  return {
+    offset,
+    length: text.length,
+    line: X12_SCANNED_SOURCE.slice(0, offset).split('\n').length,
+  };
+}
+
+/**
+ * An interchange whose scan aligned to its parse: two functional groups, exact source ranges, all
+ * four delimiters, declared control totals, a repeated `PO1` and an element written and left empty.
+ *
+ * Every fact the CPDO-2.2 inspector renders is here, and only facts the Python extractor actually
+ * emits — an attribute this tree carries that `edix12_analysis.py` does not would let the UI suite
+ * pass against a record the backend never produces.
+ */
+export const X12_SCANNED_TREE: AnalysisNode[] = [
+  {
+    id: 'isa',
+    kind: 'interchange',
+    name: 'ISA',
+    label: 'Interchange 000000004',
+    attributes: {
+      senderId: 'SENDERID',
+      receiverId: 'RECEIVERID',
+      interchangeVersion: '00401',
+      controlNumber: '000000004',
+      elementSeparator: '*',
+      componentSeparator: '>',
+      repetitionSeparatorDeclared: false,
+      segmentTerminator: '~',
+      functionalGroupCount: 2,
+      declaredFunctionalGroupCount: 2,
+      date: '260116',
+      time: '1015',
+      acknowledgmentRequested: '0',
+      usageIndicator: 'P',
+      usageIndicatorLabel: 'Production',
+    },
+    location: { ...at(X12_SCANNED_SOURCE.split('~')[0]), ordinal: 0, path: 'ISA' },
+    children: [
+      {
+        id: 'gs-0',
+        kind: 'functional_group',
+        name: 'PO',
+        label: 'Functional group PO (10)',
+        attributes: {
+          functionalId: 'PO',
+          version: '004010',
+          sender: 'SENDERID',
+          receiver: 'RECEIVERID',
+          controlNumber: '10',
+          transactionSetCount: 1,
+          declaredTransactionSetCount: 1,
+          date: '20260116',
+          time: '1015',
+          responsibleAgencyCode: 'X',
+        },
+        location: {
+          ...at('GS*PO*SENDERID*RECEIVERID*20260116*1015*10*X*004010'),
+          ordinal: 0,
+          path: 'ISA/GS[0]',
+        },
+        children: [
+          {
+            id: 'st-0',
+            kind: 'transaction_set',
+            name: '850',
+            label: 'Transaction set 850 (0001)',
+            attributes: {
+              setId: '850',
+              controlNumber: '0001',
+              segmentCount: 3,
+              declaredSegmentCount: 5,
+              envelopeSegmentCount: 5,
+            },
+            location: { ...at('ST*850*0001'), ordinal: 0, path: 'ISA/GS[0]/ST[0]' },
+            children: [
+              {
+                id: 'seg-beg',
+                kind: 'segment',
+                name: 'BEG',
+                attributes: {
+                  segmentId: 'BEG',
+                  elementCount: 4,
+                  elementPositionCount: 5,
+                  repeatIndex: 0,
+                  repeatCount: 1,
+                },
+                location: {
+                  ...at('BEG*00*NE*PO-0002**20260116'),
+                  ordinal: 0,
+                  path: 'ISA/GS[0]/ST[0]/BEG[0]',
+                },
+                children: [
+                  {
+                    id: 'el-beg03',
+                    kind: 'element',
+                    name: 'BEG03',
+                    attributes: { position: '03', reference: 'BEG03' },
+                    location: { ordinal: 2, path: 'ISA/GS[0]/ST[0]/BEG[0]/BEG03' },
+                    valuePresent: true,
+                    valueLength: 7,
+                    redacted: true,
+                  },
+                  {
+                    id: 'el-beg04',
+                    kind: 'element',
+                    name: 'BEG04',
+                    attributes: { position: '04', reference: 'BEG04' },
+                    location: { ordinal: 3, path: 'ISA/GS[0]/ST[0]/BEG[0]/BEG04' },
+                    valuePresent: true,
+                    valueLength: 0,
+                  },
+                ],
+              },
+              {
+                id: 'seg-po1-0',
+                kind: 'segment',
+                name: 'PO1',
+                label: 'PO1 (1 of 2)',
+                attributes: {
+                  segmentId: 'PO1',
+                  elementCount: 4,
+                  elementPositionCount: 4,
+                  repeatIndex: 0,
+                  repeatCount: 2,
+                },
+                location: {
+                  ...at('PO1*1*10*EA*4.99'),
+                  ordinal: 1,
+                  path: 'ISA/GS[0]/ST[0]/PO1[1]',
+                },
+              },
+              {
+                id: 'seg-po1-1',
+                kind: 'segment',
+                name: 'PO1',
+                label: 'PO1 (2 of 2)',
+                attributes: {
+                  segmentId: 'PO1',
+                  elementCount: 4,
+                  elementPositionCount: 4,
+                  repeatIndex: 1,
+                  repeatCount: 2,
+                },
+                location: {
+                  ...at('PO1*2*20*EA*9.99'),
+                  ordinal: 2,
+                  path: 'ISA/GS[0]/ST[0]/PO1[2]',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'gs-1',
+        kind: 'functional_group',
+        name: 'FA',
+        label: 'Functional group FA (11)',
+        attributes: {
+          functionalId: 'FA',
+          version: '004010',
+          sender: 'SENDERID',
+          receiver: 'RECEIVERID',
+          controlNumber: '11',
+          transactionSetCount: 1,
+          declaredTransactionSetCount: 1,
+        },
+        location: {
+          ...at('GS*FA*SENDERID*RECEIVERID*20260116*1015*11*X*004010'),
+          ordinal: 1,
+          path: 'ISA/GS[1]',
+        },
+        children: [
+          {
+            id: 'st-1',
+            kind: 'transaction_set',
+            name: '997',
+            label: 'Transaction set 997 (0002)',
+            attributes: {
+              setId: '997',
+              controlNumber: '0002',
+              segmentCount: 1,
+              // Deliberately disagreeing with the body: SE01 says 4, the envelope holds 3.
+              declaredSegmentCount: 4,
+              envelopeSegmentCount: 3,
+            },
+            location: { ...at('ST*997*0002'), ordinal: 0, path: 'ISA/GS[1]/ST[0]' },
+            children: [
+              {
+                id: 'seg-ak1',
+                kind: 'segment',
+                name: 'AK1',
+                attributes: {
+                  segmentId: 'AK1',
+                  elementCount: 2,
+                  elementPositionCount: 2,
+                  repeatIndex: 0,
+                  repeatCount: 1,
+                },
+                location: { ...at('AK1*PO*10'), ordinal: 0, path: 'ISA/GS[1]/ST[0]/AK1[0]' },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
+
 /** A copybook layout: line-addressed locations, so the raw viewer *can* be opened at a field. */
 export const COPYBOOK_TREE: AnalysisNode[] = [
   {
@@ -161,6 +402,59 @@ export function x12Record(overrides: Partial<AnalysisRecord['analysis']> = {}): 
       ...overrides,
     },
   };
+}
+
+/**
+ * The CPDO-2.2 case: an X12 analysis whose scan aligned, so it carries source ranges, delimiters,
+ * control totals and repeat counts — and an `info` warning stating that the canonical conversion
+ * read one of its two transaction sets.
+ *
+ * @param overrides Fields to replace on the document.
+ */
+export function x12ScannedRecord(
+  overrides: Partial<AnalysisRecord['analysis']> = {},
+): AnalysisRecord {
+  return x12Record({
+    // Deep-copied, because these suites edit a returned record to build their cases — a shared tree
+    // would let one test's edit decide the next test's fixture.
+    analyzer: { key: 'edix12', version: '1.1.0', toolVersions: { pyx12: '4.0.1' } },
+    capabilities: {
+      supported: [
+        'x12.byte_offsets',
+        'x12.empty_elements',
+        'x12.envelope_control_totals',
+        'x12.functional_group',
+        'x12.repeating_elements',
+        'x12.segment_repeat_counts',
+      ],
+      unsupported: ['x12.hl_hierarchy', 'x12.implementation_guide_validation'],
+      limits: { maxNodes: 5000, maxDepth: 32 },
+    },
+    tree: JSON.parse(JSON.stringify(X12_SCANNED_TREE)) as AnalysisNode[],
+    metrics: {
+      nodeCount: 11,
+      maxDepth: 5,
+      truncated: false,
+      droppedNodeCount: 0,
+      kindCounts: {
+        interchange: 1,
+        functional_group: 2,
+        transaction_set: 2,
+        segment: 4,
+        element: 2,
+      },
+      warningCount: 1,
+    },
+    warnings: [
+      {
+        code: 'x12.canonical_projection_subset',
+        severity: 'info',
+        message:
+          'The canonical model is derived from transaction set 850 (0001) in functional group PO alone.',
+      },
+    ],
+    ...overrides,
+  });
 }
 
 /** An `available`, unbounded, warning-free copybook analysis. */

@@ -37,6 +37,7 @@ import {
   UNAVAILABLE_SUMMARY,
   wideRecord,
   x12Record,
+  x12ScannedRecord,
 } from './helpers/payload-analysis-fixture';
 
 /** axe options: WCAG 2.1 A/AA; contrast and the page-landmark rule need a real page. */
@@ -126,6 +127,18 @@ describe('Format details pane — axe', () => {
       expect(screen.getByRole('heading', { name: /what apiome records/i })).toBeInTheDocument(),
     );
 
+    expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
+  });
+
+  it('is clean with the X12 inspector mounted (CPDO-2.2)', async () => {
+    mockTransport(x12ScannedRecord());
+    const container = renderPane();
+
+    await waitFor(() => expect(screen.getByRole('tree')).toBeInTheDocument());
+    // The inspector adds a heading, two data tables, a badge row and a set of reveal buttons — the
+    // surfaces a table-heavy panel most often gets wrong.
+    await screen.findByTestId('catalog-x12-inspector');
+    expect(screen.getAllByRole('table').length).toBeGreaterThan(0);
     expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
   });
 

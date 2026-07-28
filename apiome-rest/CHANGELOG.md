@@ -5,6 +5,55 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.211.0] - 2026-07-28
+
+### Added
+- **X12 interchange and transaction-set inspection (#4798, CPDO-2.2)** — `pyx12` answers
+  questions about *values*, so three facts an inspector needs were never in the record: where a
+  segment sits in the file, which element positions were written and left **empty**, and how a
+  repeated value divides. All three are in the interchange text, which the analysis already holds
+  in order to hash it.
+  - **`app/edix12_segment_scan.py`** is a second, independent reading of those bytes — a
+    delimiter-aware scan with no `pyx12` import and no AST. It reads each interchange's *own* four
+    delimiters out of its ISA header by counting element separators, and honours `ISA11` as a
+    repetition separator only from version `00501` (at `00401` that position is an ordinary code,
+    and splitting on it would invent occurrences from any value containing a `U`).
+  - **The two readings are aligned segment by segment.** Both are in source order, so alignment is
+    a match on segment ids; a single unmatched id abandons the scan **whole** and the record falls
+    back to CPDO-1.2's path-and-ordinal locations. A record therefore carries positions that were
+    checked against the parse, or carries none — half-aligned positions would put a reader in front
+    of the wrong bytes.
+  - **What the tree gained**: exact `offset`/`length`/`line` on every envelope and segment; element
+    nodes for positions written and left empty (`valuePresent` true, `valueLength` zero) beside the
+    parser's own count; `repetition` children under a split element; `repeatIndex`/`repeatCount`
+    per segment within its transaction set; the component and repetition separators; `ISA09`,
+    `ISA10`, `ISA14` and `ISA15` (with the usage indicator's word — `T` and `P` is the difference
+    between a test file and real claims); `GS04`, `GS05`, `GS07`; `ST03`; and the `IEA01`/`GE01`/
+    `SE01` control totals beside the counts actually observed.
+  - **A control-total mismatch is recorded, never reconciled**, and never makes a record `partial`:
+    the analysis is complete, and the status vocabulary means "what the analyzer could not do", not
+    "what the interchange got wrong". A missing declaration is likewise not agreement.
+  - **`x12.canonical_projection_subset`** (`info`) names the transaction set the canonical model was
+    derived from and how many it was not, so an OpenAPI derived from a sixth of an interchange says
+    so instead of leaving the reader to compare two screens.
+  - **Capabilities narrow per record.** `x12.byte_offsets`, `x12.empty_elements`,
+    `x12.repeating_elements` and `x12.envelope_control_totals` are declared supported only where the
+    scan aligned; the adapter's format-wide `analysis_capabilities()` declares all four, which is
+    what the CPDO-2.4 registry publishes ahead of an import.
+  - Analyzer version `1.1.0`. See [docs/payload_analyzers.md](./docs/payload_analyzers.md).
+
+### Changed
+- **Format capability registry to version `2` (#4798)** — the `edix12` entry's source-location
+  quality moves from `path_only` to `byte_offsets`, its notes are rewritten around what the second
+  reading can now state, and `x12.empty_elements`, `x12.repeating_elements`,
+  `x12.envelope_control_totals` and `x12.segment_repeat_counts` join its dropped-by-projection list.
+  Mirrored in `scripts/format_capabilities/vocabulary.json`.
+- **`structural` visibility no longer flags a zero-length observed value as redacted** — there was
+  nothing in it to withhold, and marking it would make a present-and-empty X12 element
+  indistinguishable from one whose real value was suppressed. `none` still counts it, because
+  stripping the presence fact does withhold something. The same reasoning already governed a value
+  observed absent.
+
 ## [1.210.0] - 2026-07-28
 
 ### Added

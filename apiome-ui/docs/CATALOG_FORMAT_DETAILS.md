@@ -86,13 +86,15 @@ from `attributes`, so one renderer walks any analyzer's output), its source loca
 value statement, its own warnings, a shareable deep link, and — conditionally — a raw-source
 jump.
 
-**The jump is offered only when the location carries a line.** Source-location quality
-differs by analyzer and the pane refuses to hide that:
+**The jump is offered only when the location addresses the raw source** — an exact character range,
+or failing that a line. Source-location quality differs by analyzer and the pane refuses to hide
+that:
 
 | Analyzer | Location | Raw-viewer jump |
 |---|---|---|
 | COBOL copybook | `file` + `line` + path | **Yes** — opens Source & Code centred on the line |
-| EDI X12 | envelope `path` + sibling `ordinal` | No — the pane says it locates by structural path rather than by line |
+| EDI X12 envelope / segment | `offset` + `length` + `line` + path (CPDO-2.2) | **Yes** — selects the exact characters the construct was read from |
+| EDI X12 element / component | envelope `path` + sibling `ordinal` | No — the scan positions segments, and the pane says so |
 | Generic walk | `path` only | No — same statement |
 
 A jump switches to the **Source & Code** tab, whose viewer re-centres on the requested line
@@ -162,4 +164,5 @@ The budget constant lives in `src/app/utils/preview-budgets.ts` with every other
 - It does not describe conversion. What the projection keeps or drops is the **Convert to
   OpenAPI** graph's job (CPDO-3.1, #4801) over CPDO-1.3's projection manifest.
 - It does not own format-specific presentation. The X12 and copybook inspectors (CPDO-2.2
-  #4798, CPDO-2.3 #4799) build on this common shell.
+  #4798, CPDO-2.3 #4799) build on this common shell — the X12 one is mounted above the tree and
+  documented in [CATALOG_X12_INSPECTOR.md](./CATALOG_X12_INSPECTOR.md).

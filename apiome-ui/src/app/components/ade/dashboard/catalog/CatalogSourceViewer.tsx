@@ -99,12 +99,41 @@ export interface CatalogSourceViewerProps {
    * claiming a compatibility deep link.
    */
   highlightOrigin?: 'compatibility' | 'format-analysis';
+  /**
+   * An exact character range to select, from an analyzer that records source positions (CPDO-2.2's
+   * X12 scan). It is a *refinement* of {@link highlightLine}, never a replacement: a viewer that
+   * could not select the range still reveals the line, so the reader always lands somewhere real.
+   */
+  highlightRange?: { offset: number; length: number } | null;
+  /** What the highlighted range is, e.g. `Segment NM1 (3 of 4)`, named in the note. */
+  highlightLabel?: string | null;
 }
 
-/** The slice of the Monaco editor API this viewer drives, so the ref needs no editor types. */
+/**
+ * The slice of the Monaco editor API this viewer drives, so the ref needs no editor types.
+ *
+ * `getModel` is optional because the offline `<pre>` fallback has no model — a range request then
+ * simply does not select anything, rather than throwing on a viewer that is already degraded.
+ */
 interface RevealableEditor {
   revealLineInCenter: (line: number) => void;
   setPosition: (position: { lineNumber: number; column: number }) => void;
+  getModel?: () => EditorModel | null;
+  setSelection?: (range: EditorRange) => void;
+  revealRangeInCenter?: (range: EditorRange) => void;
+}
+
+/** A Monaco text model, reduced to the one call that turns an offset into a line/column. */
+interface EditorModel {
+  getPositionAt: (offset: number) => { lineNumber: number; column: number };
+}
+
+/** A Monaco range, in the 1-based line/column coordinates the editor works in. */
+interface EditorRange {
+  startLineNumber: number;
+  startColumn: number;
+  endLineNumber: number;
+  endColumn: number;
 }
 
 /**
@@ -124,6 +153,8 @@ export function CatalogSourceViewer({
   highlightLine = null,
   focusSourcePath = null,
   highlightOrigin = 'compatibility',
+  highlightRange = null,
+  highlightLabel = null,
 }: CatalogSourceViewerProps) {
   const [status, setStatus] = useState<SourceStatus>('idle');
   const [raw, setRaw] = useState<string>('');
@@ -187,12 +218,40 @@ export function CatalogSourceViewer({
     editorRef.current.setPosition({ lineNumber: line, column: 1 });
   }, []);
 
-  // Re-reveal whenever the requested line changes. The first reveal happens in `onMount` (the editor
-  // does not exist before then); this covers every later request — a second construct followed from
-  // the Format details tab, or a second compatibility deep link on the same mounted editor.
+  /**
+   * Select an exact character range, so a construct that knows its bytes highlights *those bytes*
+   * rather than the whole line they sit on. That distinction is the point for a format like X12,
+   * where an entire interchange is routinely one line.
+   *
+   * Silently a no-op on an editor with no model (the offline `<pre>` fallback) or an editor build
+   * without the selection API: the line reveal has already run, so the reader is still in the right
+   * place — one degrades to the other rather than to nothing.
+   */
+  const revealRange = useCallback((range: { offset: number; length: number } | null) => {
+    const editor = editorRef.current;
+    if (!editor || !range) return;
+    const model = editor.getModel?.();
+    if (!model || !editor.setSelection) return;
+    const start = model.getPositionAt(range.offset);
+    const end = model.getPositionAt(range.offset + range.length);
+    const selection = {
+      startLineNumber: start.lineNumber,
+      startColumn: start.column,
+      endLineNumber: end.lineNumber,
+      endColumn: end.column,
+    };
+    editor.setSelection(selection);
+    editor.revealRangeInCenter?.(selection);
+  }, []);
+
+  // Re-reveal whenever the requested position changes. The first reveal happens in `onMount` (the
+  // editor does not exist before then); this covers every later request — a second construct
+  // followed from the Format details tab, or a second compatibility deep link on the same mounted
+  // editor. The line goes first so a range that cannot be selected still lands somewhere real.
   useEffect(() => {
     revealLine(highlightLine);
-  }, [highlightLine, revealLine]);
+    revealRange(highlightRange);
+  }, [highlightLine, highlightRange, revealLine, revealRange]);
 
   // The language tag: format-derived, then refined by the loaded bytes for JSON-or-YAML formats.
   const language = monacoLanguageForCatalogFormat(sourceFormat, status === 'loaded' ? raw : null);
@@ -278,7 +337,7 @@ export function CatalogSourceViewer({
             imported source.
           </p>
 
-          {typeof highlightLine === 'number' && highlightLine > 0 ? (
+          {(typeof highlightLine === 'number' && highlightLine > 0) || highlightRange ? (
             <p
               data-testid="catalog-detail-source-highlight"
               className="catalog-source-highlight-note mt-2 text-xs text-gray-600 dark:text-gray-400"
@@ -286,13 +345,32 @@ export function CatalogSourceViewer({
               {highlightOrigin === 'format-analysis'
                 ? 'Format details construct'
                 : 'Compatibility deep link'}
+              {highlightLabel ? (
+                <>
+                  {' '}
+                  <span className="font-mono">{highlightLabel}</span>
+                </>
+              ) : null}
               {focusSourcePath ? (
                 <>
                   {' '}
                   for <span className="font-mono">{focusSourcePath}</span>
                 </>
               ) : null}
-              : highlighting line {highlightLine}.
+              :{' '}
+              {highlightRange ? (
+                <>
+                  selecting {highlightRange.length.toLocaleString()} character
+                  {highlightRange.length === 1 ? '' : 's'} from offset{' '}
+                  {highlightRange.offset.toLocaleString()}
+                  {typeof highlightLine === 'number' && highlightLine > 0
+                    ? ` on line ${highlightLine}`
+                    : ''}
+                  .
+                </>
+              ) : (
+                <>highlighting line {highlightLine}.</>
+              )}
             </p>
           ) : null}
 
@@ -322,6 +400,7 @@ export function CatalogSourceViewer({
                 onMount={(editor: RevealableEditor) => {
                   editorRef.current = editor;
                   revealLine(highlightLine);
+                  revealRange(highlightRange);
                 }}
               />
             ) : status === 'error' ? (
