@@ -176,7 +176,7 @@ Remaining open leftovers intentionally **not** closed: MTG-EPIC-5 #4764, GOV-1.5
 | 2.4 | Format capability / parsing-limit registry — **Done** | **#4796** CPDO-2.4 | Y with 2.3 |
 | 2.5 | Format detail tab + evidence navigation — **Done** | **#4797** CPDO-2.1 | After 2.1–2.2 |
 | 2.6 | X12 inspector — **Done** | **#4798** CPDO-2.2 | Y with 2.7 |
-| 2.7 | COBOL copybook inspector | **#4799** CPDO-2.3 | Y with 2.6 |
+| 2.7 | COBOL copybook inspector — **Done** | **#4799** CPDO-2.3 | Y with 2.6 |
 | 2.8 | Projection graph renderer + a11y fallback | **#4801** CPDO-3.1 | After 2.3 |
 | 2.9 | Conversion evidence drawer + remediation | **#4802** CPDO-3.2 | After 2.8 |
 | 2.10 | Conversion provenance history | **#4803** CPDO-3.3 | Y late |
@@ -371,7 +371,6 @@ Filter: [`milestone:RC4 is:open`](https://github.com/apiome/apiome/milestone/1).
 | 4225 | OLO-7.3 Auth threat-model checklist review |
 | 4794 | CPDO-1.1 Revision-scoped payload analysis contract |
 | 4800 | CPDO-1.3 Projection manifest and graph API |
-| 4799 | CPDO-2.3 COBOL copybook layout inspector |
 | 4801 | CPDO-3.1 Projection graph renderer and accessible fallback |
 | 4802 | CPDO-3.2 Conversion evidence drawer and remediation flow |
 | 4803 | CPDO-3.3 Conversion provenance evidence history |

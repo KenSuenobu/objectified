@@ -16,6 +16,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(10)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -27,6 +28,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "X(12)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -38,6 +40,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(4)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -49,6 +52,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "S9(7)V99",
+            "redefines": null,
             "usage": "COMP-3"
           },
           {
@@ -60,6 +64,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "S9(9)V99",
+            "redefines": null,
             "usage": "COMP-3"
           }
         ],
@@ -70,6 +75,7 @@
         "occurs_max": null,
         "occurs_min": null,
         "picture": null,
+        "redefines": null,
         "usage": null
       }
     },
@@ -242,7 +248,7 @@
     "confidence": 0.98,
     "format": "cobolcopybook"
   },
-  "fingerprint": "sha256:834ece5f295868f343d6569564659392091df075125c02f6c9c70c694a2c50aa",
+  "fingerprint": "sha256:97e7af0af77edce0c66cecd527cf160edecb9e18926d08d90b0f33c206cc3293",
   "lint": {
     "findings": 2,
     "grade": "A",

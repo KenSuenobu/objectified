@@ -1156,6 +1156,8 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
             onViewSourceLine={showSourceLine}
             nodeHref={formatNodeHref}
             focusNodeId={focusNodeId}
+            onRevealEntity={navigateToEntity}
+            entityNames={entityNames}
           />
         </TabPanel>
 

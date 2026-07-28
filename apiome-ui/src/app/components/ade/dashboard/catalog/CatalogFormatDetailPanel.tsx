@@ -92,6 +92,8 @@ import {
   X12_KIND_ELEMENT,
   X12_KIND_REPETITION,
 } from '@/app/utils/catalog-x12-analysis';
+import { isCopybookAnalysis } from '@/app/utils/catalog-copybook-analysis';
+import { CatalogCopybookInspectorPanel } from './CatalogCopybookInspectorPanel';
 import { CatalogX12InspectorPanel } from './CatalogX12InspectorPanel';
 import { FormatCapabilityPanel } from './FormatCapabilityPanel';
 import { useFormatCapabilities } from './useFormatCapabilities';
@@ -152,6 +154,16 @@ export interface CatalogFormatDetailPanelProps {
   nodeHref: (nodeId: string) => string;
   /** Node id a deep link asked to reveal (the `?node=` query param). */
   focusNodeId?: string | null;
+  /**
+   * Follow a native construct to the canonical entity it normalized into, on the Overview tab
+   * (CPDO-2.3). Absent for a screen with no parsed model to jump to.
+   */
+  onRevealEntity?: (entityName: string) => void;
+  /**
+   * The parsed-entity names the Overview renders. The copybook inspector offers a canonical link
+   * only for an item that actually matches one, so a link is never offered that cannot be honoured.
+   */
+  entityNames?: readonly string[];
   /**
    * Tree viewport height override; tests pass a small value to exercise real windowing (jsdom
    * reports every element height as 0, so the height cannot be measured).
@@ -274,6 +286,8 @@ export function CatalogFormatDetailPanel({
   onViewSourceLine,
   nodeHref,
   focusNodeId = null,
+  onRevealEntity,
+  entityNames,
   viewportHeight = ANALYSIS_TREE_HEIGHT,
 }: CatalogFormatDetailPanelProps) {
   const [status, setStatus] = useState<AnalysisFetchStatus>('idle');
@@ -617,6 +631,7 @@ export function CatalogFormatDetailPanel({
   const filtering = filter.trim() !== '';
   const anythingExpanded = expandedIds.size > 0;
   const isX12Record = isX12Analysis(analysisDocument, analysedFormat);
+  const isCopybookRecord = isCopybookAnalysis(analysisDocument, analysedFormat);
   // X12-only evidence for the selected construct: its reference designator (`BEG04`, `CLM05-2`) and
   // which of the four value states it is in. Both are null for any other analyzer's record.
   const selectedPresence =
@@ -941,6 +956,20 @@ export function CatalogFormatDetailPanel({
           document={analysisDocument}
           sourceFormat={analysedFormat}
           onRevealNode={revealNode}
+          className="mt-4"
+        />
+      ) : null}
+
+      {/* CPDO-2.3: the copybook read as a layout — the record's byte length, the storage map, the
+          REDEFINES overlays, the tables and their controllers, and the assumptions every byte count
+          rests on. It renders nothing for a record from any other analyzer. */}
+      {isCopybookRecord && analysisDocument ? (
+        <CatalogCopybookInspectorPanel
+          document={analysisDocument}
+          sourceFormat={analysedFormat}
+          onRevealNode={revealNode}
+          onRevealEntity={onRevealEntity}
+          entityNames={entityNames}
           className="mt-4"
         />
       ) : null}

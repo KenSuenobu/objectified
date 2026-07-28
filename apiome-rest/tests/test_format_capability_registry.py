@@ -340,11 +340,46 @@ def test_copybook_states_its_layout_and_clause_boundaries() -> None:
         "copybook.source_lines",
     ):
         assert construct in entry.supported_constructs, construct
-    for construct in ("copybook.redefines", "copybook.renames_66", "copybook.copy_replacing"):
+    # CPDO-2.3: REDEFINES is parsed and laid out, and storage is computed from PICTURE/USAGE.
+    for construct in (
+        "copybook.redefines",
+        "copybook.computed_storage_length",
+        "copybook.storage_offsets",
+        "copybook.variable_length_records",
+    ):
+        assert construct in entry.supported_constructs, construct
+    # The grammar the parser still does not read, and the encoding a length only ever assumes.
+    for construct in (
+        "copybook.renames_66",
+        "copybook.copy_replacing",
+        "copybook.character_encoding_detection",
+    ):
         assert construct in entry.unsupported_constructs, construct
     assert entry.source_location.quality is SourceLocationQuality.LINE_NUMBERS
-    # The layout semantics survive only in the analysis.
-    assert "copybook.picture_clauses" in entry.canonical_projection.dropped_constructs
+    # The layout semantics survive only in the analysis — offsets and overlays included.
+    for construct in (
+        "copybook.picture_clauses",
+        "copybook.storage_offsets",
+        "copybook.redefines",
+    ):
+        assert construct in entry.canonical_projection.dropped_constructs, construct
+
+
+def test_copybook_never_claims_a_construct_it_both_models_and_does_not() -> None:
+    """CPDO-2.3 moved five constructs across; one left in both lists would make the panel say a
+    construct is modelled and unmodelled on the same screen."""
+    entry = capability_for("cobolcopybook")
+    assert not set(entry.supported_constructs) & set(entry.unsupported_constructs)
+
+
+def test_copybook_states_the_assumptions_its_computed_lengths_rest_on() -> None:
+    """A byte count is only true under an encoding and a representation the copybook never states,
+    so the registry says so before a reader ever opens a record."""
+    notes = " ".join(capability_for("cobolcopybook").notes).lower()
+
+    assert "single-byte" in notes
+    assert "synchronized" in notes
+    assert "variable-length table" in notes
 
 
 def test_copybook_value_ceiling_matches_what_its_analyzer_can_produce() -> None:

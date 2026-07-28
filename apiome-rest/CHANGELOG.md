@@ -5,6 +5,51 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.212.0] - 2026-07-28
+
+### Added
+- **COBOL copybook layout inspection (#4799, CPDO-2.3)** — a copybook is a *positional*
+  description, and the position is the half a normalized field list cannot hold. `PIC S9(9)V99
+  COMP-3` says six bytes, packed, and the field after it starts six bytes further into the record.
+  - **`app/cobolcopybook_layout.py`** computes it: every item's byte offset, the bytes one
+    occurrence takes, the bytes every occurrence takes, and the record's own length — as a **range**
+    when a variable table makes it one. `05-ach-entry-detail.cpy` computes to 94 bytes, which is
+    what the public NACHA file format fixes that record at.
+  - **It computes nothing it cannot know.** A PICTURE the calculator does not read sizes to
+    *unknown* with a stated reason, and the unknown propagates — the group containing it has no
+    length, and nothing after it has an offset. An item after a variable-length table carries
+    `offsetVariable` and **no** offset, because a minimum presented as *the* offset is the single
+    most misleading number it could emit. A length and a reason are never both present.
+  - **REDEFINES is parsed** (`CobolField.redefines`) and laid out as what it is: the same storage
+    described a second time. A redefining item starts at its target's offset and does not advance
+    the record; each item records what it redefines and what redefines it.
+  - **A clause continued onto a second source line is read as one clause.** A COBOL entry ends at a
+    period, not at a line break — before this, the `DEPENDING ON` of any table that declared it on a
+    following line was silently lost, including in the shipped `01-customer-record.cpy`. Fixed-size
+    `OCCURS n TIMES` is read too.
+  - **The assumptions ride on every record** as an `info` warning: a single-byte encoding, packed
+    decimal at two digits per byte plus a sign nibble, the common binary width table, an overpunched
+    rather than separate sign, no `SYNCHRONIZED` slack. A computed length is conditional, and the
+    conditions ship with it.
+  - **Only an unsized item makes a record `partial`** — that is a boundary of the analyzer. A
+    variable-length record, an unresolved ODO controller and a REDEFINES that does not fit are facts
+    about the *copybook*, recorded as `info` rather than graded, exactly as an X12 control-total
+    mismatch is (CPDO-2.2).
+  - Analyzer version `1.1.0`, parser `1.1.0`. See
+    [docs/payload_analyzers.md](./docs/payload_analyzers.md).
+
+### Changed
+- **Format capability registry to version `3` (#4799)** — the `cobolcopybook` entry moves
+  `copybook.redefines`, `copybook.computed_storage_length`, `copybook.storage_offsets`,
+  `copybook.variable_length_records` and `copybook.multi_line_clauses` to supported, adds
+  `copybook.character_encoding_detection` to unsupported (an encoding is assumed, never detected),
+  and states the assumptions in its notes. Mirrored in
+  `scripts/format_capabilities/vocabulary.json`.
+- **Copybook corpus goldens regenerated** — the round-trip extras gained `redefines`, and
+  `01-customer-record.cpy` now carries the `depending_on` controller its continuation line declared.
+  The canonical type/field structure is otherwise unchanged; representing a REDEFINES overlay as a
+  union remains #3991's.
+
 ## [1.211.0] - 2026-07-28
 
 ### Added

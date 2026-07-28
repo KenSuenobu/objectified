@@ -164,5 +164,6 @@ The budget constant lives in `src/app/utils/preview-budgets.ts` with every other
 - It does not describe conversion. What the projection keeps or drops is the **Convert to
   OpenAPI** graph's job (CPDO-3.1, #4801) over CPDO-1.3's projection manifest.
 - It does not own format-specific presentation. The X12 and copybook inspectors (CPDO-2.2
-  #4798, CPDO-2.3 #4799) build on this common shell — the X12 one is mounted above the tree and
-  documented in [CATALOG_X12_INSPECTOR.md](./CATALOG_X12_INSPECTOR.md).
+  #4798, CPDO-2.3 #4799) build on this common shell — both are mounted above the tree and
+  documented in [CATALOG_X12_INSPECTOR.md](./CATALOG_X12_INSPECTOR.md) and
+  [CATALOG_COPYBOOK_INSPECTOR.md](./CATALOG_COPYBOOK_INSPECTOR.md).

@@ -16,6 +16,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(8)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -29,6 +30,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "X(20)",
+                "redefines": null,
                 "usage": null
               },
               {
@@ -40,6 +42,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "X(20)",
+                "redefines": null,
                 "usage": null
               }
             ],
@@ -50,6 +53,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": null,
+            "redefines": null,
             "usage": null
           },
           {
@@ -74,6 +78,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "X(1)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -85,6 +90,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "S9(9)V99",
+            "redefines": null,
             "usage": "COMP-3"
           },
           {
@@ -96,6 +102,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(2)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -109,6 +116,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "X(1)",
+                "redefines": null,
                 "usage": null
               },
               {
@@ -120,16 +128,18 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "X(15)",
+                "redefines": null,
                 "usage": null
               }
             ],
             "conditions": [],
-            "depending_on": null,
+            "depending_on": "CUST-PHONE-COUNT",
             "level": 5,
             "name": "CUST-PHONES",
             "occurs_max": 5,
             "occurs_min": 1,
             "picture": null,
+            "redefines": null,
             "usage": null
           },
           {
@@ -141,6 +151,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(8)",
+            "redefines": null,
             "usage": null
           }
         ],
@@ -151,6 +162,7 @@
         "occurs_max": null,
         "occurs_min": null,
         "picture": null,
+        "redefines": null,
         "usage": null
       }
     },
@@ -306,7 +318,7 @@
             "description": null,
             "extras": {
               "cobol_conditions": [],
-              "cobol_depending_on": null,
+              "cobol_depending_on": "CUST-PHONE-COUNT",
               "cobol_level": 5,
               "cobol_occurs_max": 5,
               "cobol_occurs_min": 1,
@@ -389,7 +401,7 @@
     "confidence": 0.98,
     "format": "cobolcopybook"
   },
-  "fingerprint": "sha256:69950dd01819a21ebe18f532fae00381b74bc5e4dd0f860908a170b017dd6e09",
+  "fingerprint": "sha256:bc5e9889db3d84dcfecbb88f80a69646fc5b8c1c31831e75ac0f00b30ef3ce5a",
   "lint": {
     "findings": 4,
     "grade": "A",

@@ -217,7 +217,12 @@ describe('the Format details tab', () => {
     expect(analysisCalls()).toHaveLength(1);
     expect(screen.getByTestId('catalog-detail-pane-format')).toBeVisible();
     expect(screen.getByTestId('catalog-format-detail-status')).toHaveTextContent('Available');
-    expect(screen.getByText('CLAIM-RECORD')).toBeInTheDocument();
+    // The record name appears in the structure tree and again in CPDO-2.3's layout inspector,
+    // which the pane mounts above it for a copybook.
+    expect(
+      screen.getAllByRole('treeitem').some((row) => row.textContent?.includes('CLAIM-RECORD')),
+    ).toBe(true);
+    expect(screen.getByTestId('catalog-copybook-inspector')).toBeInTheDocument();
     // The Overview pane stays mounted (hidden), so nothing about it was disturbed.
     expect(screen.getByTestId('catalog-detail-pane-overview')).not.toBeVisible();
   });

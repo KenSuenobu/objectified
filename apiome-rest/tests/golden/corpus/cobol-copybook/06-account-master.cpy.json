@@ -16,6 +16,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(12)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -29,6 +30,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "X(30)",
+                "redefines": null,
                 "usage": null
               },
               {
@@ -40,6 +42,7 @@
                 "occurs_max": null,
                 "occurs_min": null,
                 "picture": "X(11)",
+                "redefines": null,
                 "usage": null
               }
             ],
@@ -50,6 +53,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": null,
+            "redefines": null,
             "usage": null
           },
           {
@@ -74,6 +78,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "X(2)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -85,6 +90,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "S9(11)V99",
+            "redefines": null,
             "usage": "COMP-3"
           },
           {
@@ -96,6 +102,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(8)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -107,6 +114,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(8)",
+            "redefines": null,
             "usage": null
           },
           {
@@ -118,6 +126,7 @@
             "occurs_max": null,
             "occurs_min": null,
             "picture": "9(4)",
+            "redefines": null,
             "usage": null
           }
         ],
@@ -128,6 +137,7 @@
         "occurs_max": null,
         "occurs_min": null,
         "picture": null,
+        "redefines": null,
         "usage": null
       }
     },
@@ -361,7 +371,7 @@
     "confidence": 0.98,
     "format": "cobolcopybook"
   },
-  "fingerprint": "sha256:bd55472bf2ff3aac00748c55454091aecfabb496e52e6b36cd9056243aded4bb",
+  "fingerprint": "sha256:fafbf108004ddeba0929b03537d1b8f1ce72c2cc6a09485ff72bca65f6eb8bc9",
   "lint": {
     "findings": 3,
     "grade": "A",

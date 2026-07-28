@@ -36,6 +36,47 @@ __all__ = [
 _EVENT_OPERATION_KINDS = frozenset({OperationKind.PUBLISH, OperationKind.SUBSCRIBE})
 _TYPES_ONLY_DROP_MESSAGE = "only data schemas are exported"
 
+#: Last column of a fixed-format copybook's code area (columns 8-72; 1-6 are the sequence area and
+#: 7 the indicator). A reader that honours the format — including this repo's own parser — stops at
+#: this column, so a clause emitted past it is not merely ugly: it is silently truncated, and the
+#: truncated text parses as a *different, shorter data name*.
+_CODE_AREA_END = 72
+
+
+def _fixed_format_entry(prefix: str, head: str, clauses: List[str]) -> List[str]:
+    """Lay out one data-description entry inside the fixed-format code area.
+
+    A COBOL entry ends at a period, not at a line break, so an entry too long for one line
+    continues onto the next. Clauses are kept whole — a clause is never split across the boundary,
+    because half of ``DEPENDING ON CUST-PHONE-COUNT`` is not a shorter clause, it is a wrong one.
+
+    Args:
+        prefix: The leading whitespace placing the entry in the code area.
+        head: The entry's level and name (``05  CUST-PHONES``), which always starts the first line.
+        clauses: The clauses to follow it, each already rendered.
+
+    Returns:
+        One or more source lines, the last of which carries the terminating period. A single clause
+        longer than the code area is emitted on its own line rather than dropped — an over-long name
+        is the source's problem, and truncating it here would invent a different one.
+    """
+    # Continuations indent past the name, which is how a hand-written copybook reads.
+    continuation = " " * (len(prefix) + 15)
+    lines: List[str] = []
+    current = head if not prefix else f"{prefix}{head}"
+
+    for clause in clauses:
+        candidate = f"{current} {clause}"
+        # +1 for the period this entry must still end with.
+        if len(candidate) + 1 <= _CODE_AREA_END:
+            current = candidate
+            continue
+        lines.append(current)
+        current = f"{continuation}{clause}"
+
+    lines.append(f"{current}.")
+    return lines
+
 
 class CobolCopybookFidelityRulePack(CapabilityRulePack):
     """Fidelity rules for COBOL copybook export."""
@@ -163,33 +204,40 @@ class _CobolCopybookWriter:
         occurs_min = node.get("occurs_min")
         occurs_max = node.get("occurs_max")
         depending_on = node.get("depending_on")
+        redefines = node.get("redefines")
         children = node.get("children") or []
 
         prefix = " " * 7 + " " * (indent * 4)
-        remainder_parts: List[str] = []
+        clauses: List[str] = []
+        # REDEFINES comes first, as COBOL requires: it qualifies the item's storage, and everything
+        # after it describes that storage. Emitting it at all is CPDO-2.3 — without it an export
+        # turns two overlays into two sequential items and silently changes the record's length.
+        if isinstance(redefines, str) and redefines:
+            clauses.append(f"REDEFINES {redefines}")
         if isinstance(picture, str) and picture:
-            remainder_parts.append(f"PIC {picture}")
+            clauses.append(f"PIC {picture}")
         if isinstance(usage, str) and usage:
-            remainder_parts.append(usage)
+            clauses.append(usage)
         if occurs_max is not None:
             low = int(occurs_min or 1)
             high = int(occurs_max)
-            occurs = f"OCCURS {low} TO {high} TIMES"
+            clauses.append(f"OCCURS {low} TO {high} TIMES")
             if isinstance(depending_on, str) and depending_on:
-                occurs += f" DEPENDING ON {depending_on}"
-            remainder_parts.append(occurs)
-        remainder = " ".join(remainder_parts)
-        line = f"{prefix}{level:02d}  {name}."
-        if remainder:
-            line = f"{prefix}{level:02d}  {name} {remainder}."
-        lines.append(line)
+                # Its own clause, so it wraps onto a continuation line whole rather than being cut
+                # in half by the code-area boundary.
+                clauses.append(f"DEPENDING ON {depending_on}")
+        lines.extend(_fixed_format_entry(prefix, f"{level:02d}  {name}", clauses))
 
         for condition in node.get("conditions") or []:
             if not isinstance(condition, dict):
                 continue
             cond_name = str(condition.get("name", "VALUE"))
             cond_value = str(condition.get("value", ""))
-            lines.append(f"{prefix}    88  {cond_name:<24} VALUE '{cond_value}'.")
+            lines.extend(
+                _fixed_format_entry(
+                    f"{prefix}    ", f"88  {cond_name:<24}", [f"VALUE '{cond_value}'"]
+                )
+            )
 
         if isinstance(children, list):
             for child in children:

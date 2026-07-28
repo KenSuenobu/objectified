@@ -8,7 +8,7 @@ Syntax errors surface as :class:`CobolCopybookParseError`.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Dict, List, Optional, Tuple
 
 __all__ = [
@@ -30,6 +30,14 @@ _OCCURS_RE = re.compile(
     r"OCCURS\s+(\d+)\s+TO\s+(\d+)\s+TIMES(?:\s+DEPENDING\s+ON\s+([\w-]+))?",
     re.IGNORECASE,
 )
+#: A fixed-size table — ``OCCURS 5 TIMES``, with ``TIMES`` optional as most compilers allow. Read
+#: only when the variable form above did not match, so ``OCCURS 1 TO 5 TIMES`` is never mistaken for
+#: a fixed table of one. A fixed table's bounds are equal, which is what makes it fixed.
+_FIXED_OCCURS_RE = re.compile(r"OCCURS\s+(\d+)(?:\s+TIMES)?\b", re.IGNORECASE)
+#: ``REDEFINES <name>`` — the item shares the storage of a previously declared sibling rather than
+#: following it. Read here (CPDO-2.3) so the layout analysis can overlay the two; the canonical
+#: model's union representation is #3991's, and normalization is deliberately unchanged by this.
+_REDEFINES_RE = re.compile(r"\bREDEFINES\s+([\w-]+)", re.IGNORECASE)
 _FIELD_RE = re.compile(r"^(\d{2})\s+([\w-]+)\.?(?:\s+(.*))?$")
 _CONDITION_RE = re.compile(
     r"^88\s+([\w-]+)\s+VALUE\s+(.+?)\.?\s*$",
@@ -49,6 +57,23 @@ class Cobol88Condition:
 
 @dataclass
 class CobolField:
+    """One data-definition entry.
+
+    Attributes:
+        level: COBOL level number.
+        name: The data name as declared.
+        picture: The PICTURE character-string, without the ``PIC`` keyword.
+        usage: The USAGE clause (``COMP-3``, ``BINARY``, …), upper-cased.
+        occurs_min: Minimum occurrences. Equal to ``occurs_max`` for a fixed table.
+        occurs_max: Maximum occurrences.
+        depending_on: The ODO controller named by ``DEPENDING ON``.
+        redefines: The name of the sibling whose storage this item redefines (CPDO-2.3). ``None``
+            for an ordinary item — the two are different facts, so an item that redefines nothing
+            carries nothing rather than its own name.
+        conditions: 88-level condition names declared under this item.
+        children: Subordinate items.
+    """
+
     level: int
     name: str
     picture: Optional[str] = None
@@ -56,6 +81,7 @@ class CobolField:
     occurs_min: Optional[int] = None
     occurs_max: Optional[int] = None
     depending_on: Optional[str] = None
+    redefines: Optional[str] = None
     conditions: Tuple[Cobol88Condition, ...] = ()
     children: List["CobolField"] = field(default_factory=list)
 
@@ -142,10 +168,37 @@ def _parse_picture(remainder: str) -> tuple[Optional[str], Optional[str]]:
 
 
 def _parse_occurs(remainder: str) -> tuple[Optional[int], Optional[int], Optional[str]]:
+    """Read the OCCURS bounds and any DEPENDING ON controller from one entry's clause text.
+
+    Args:
+        remainder: The entry text after its level and name.
+
+    Returns:
+        ``(occurs_min, occurs_max, depending_on)``. A fixed table (``OCCURS 5 TIMES``) reports equal
+        bounds and no controller; an item with no OCCURS reports three ``None``\\s, which is a
+        different fact from a table of one and is kept as one.
+    """
     match = _OCCURS_RE.search(remainder)
-    if not match:
-        return None, None, None
-    return int(match.group(1)), int(match.group(2)), match.group(3)
+    if match:
+        return int(match.group(1)), int(match.group(2)), match.group(3)
+    fixed = _FIXED_OCCURS_RE.search(remainder)
+    if fixed:
+        count = int(fixed.group(1))
+        return count, count, None
+    return None, None, None
+
+
+def _parse_redefines(remainder: str) -> Optional[str]:
+    """Read the name this entry redefines, if it redefines one.
+
+    Args:
+        remainder: The entry text after its level and name.
+
+    Returns:
+        The redefined data name, or ``None``.
+    """
+    match = _REDEFINES_RE.search(remainder)
+    return match.group(1) if match else None
 
 
 def iter_definition_lines(content: str) -> List[CopybookSourceLine]:
@@ -190,11 +243,59 @@ def iter_definition_lines(content: str) -> List[CopybookSourceLine]:
 
 
 def _parse_flat_fields(content: str) -> List[CobolField]:
+    """Read every data-definition entry in ``content``, in source order.
+
+    A COBOL data-description entry ends at a period, not at a line break, so an entry's clauses may
+    continue onto following lines::
+
+        05  CUST-PHONES OCCURS 1 TO 5 TIMES
+                       DEPENDING ON CUST-PHONE-COUNT.
+
+    A line that declares no level number and no condition name is therefore a **continuation** of the
+    entry above it: it is joined onto that entry's clause text and the clauses are re-read from the
+    whole. Before CPDO-2.3 such a line was skipped, which silently lost the ``DEPENDING ON``
+    controller of any table that declared it on a second line.
+
+    Args:
+        content: The copybook source text.
+
+    Returns:
+        The entries, flat and in source order — :func:`_build_tree` gives them their nesting.
+    """
     entries: List[CobolField] = []
+    # The clause text of the entry currently open, so a continuation line can be joined onto it.
+    # Reset whenever an entry is completed by a period or a new entry begins.
+    open_remainder: Optional[str] = None
+
     for line in content.splitlines():
         effective = _effective_line(line)
         if not effective:
             continue
+        if (
+            open_remainder is not None
+            and entries
+            and not _CONDITION_RE.match(effective)
+            and not _FIELD_RE.match(effective)
+        ):
+            # A continuation: re-read the clauses over the joined text, so a clause split across
+            # lines is read as the one clause it is.
+            joined = f"{open_remainder} {effective}".strip()
+            previous = entries[-1]
+            picture, usage = _parse_picture(joined)
+            occurs_min, occurs_max, depending_on = _parse_occurs(joined)
+            entries[-1] = replace(
+                previous,
+                picture=picture if picture is not None else previous.picture,
+                usage=usage if usage is not None else previous.usage,
+                occurs_min=occurs_min if occurs_min is not None else previous.occurs_min,
+                occurs_max=occurs_max if occurs_max is not None else previous.occurs_max,
+                depending_on=depending_on if depending_on is not None else previous.depending_on,
+                redefines=_parse_redefines(joined) or previous.redefines,
+            )
+            open_remainder = None if joined.rstrip().endswith(".") else joined
+            continue
+
+        open_remainder = None
         condition_match = _CONDITION_RE.match(effective)
         if condition_match:
             if not entries:
@@ -208,6 +309,7 @@ def _parse_flat_fields(content: str) -> List[CobolField]:
                 occurs_min=previous.occurs_min,
                 occurs_max=previous.occurs_max,
                 depending_on=previous.depending_on,
+                redefines=previous.redefines,
                 conditions=previous.conditions
                 + (Cobol88Condition(condition_match.group(1), condition_match.group(2).strip("'\""),),),
                 children=list(previous.children),
@@ -230,8 +332,11 @@ def _parse_flat_fields(content: str) -> List[CobolField]:
                 occurs_min=occurs_min,
                 occurs_max=occurs_max,
                 depending_on=depending_on,
+                redefines=_parse_redefines(remainder),
             )
         )
+        # The entry stays open for continuation lines until a period closes it.
+        open_remainder = None if effective.rstrip().endswith(".") else remainder
     return entries
 
 
@@ -276,6 +381,7 @@ def field_template(field: CobolField) -> Dict[str, object]:
         "occurs_min": field.occurs_min,
         "occurs_max": field.occurs_max,
         "depending_on": field.depending_on,
+        "redefines": field.redefines,
         "conditions": [
             {"name": condition.name, "value": condition.value}
             for condition in field.conditions

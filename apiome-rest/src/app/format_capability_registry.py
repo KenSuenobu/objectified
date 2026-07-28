@@ -122,7 +122,7 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "2"
+REGISTRY_VERSION = "3"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
@@ -859,7 +859,8 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
         native_hierarchy=NativeHierarchy.NATIVE,
         native_hierarchy_note=(
             "Record → group → field → 88-level condition name, each carrying its level number, "
-            "PICTURE, USAGE and OCCURS bounds."
+            "PICTURE, USAGE, OCCURS bounds, and the byte offset and length it occupies within "
+            "the record."
         ),
         source_location=SourceLocationSupport(
             quality=SourceLocationQuality.LINE_NUMBERS,
@@ -882,27 +883,37 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
         canonical_projection=CanonicalProjectionSupport(
             coverage=ProjectionCoverage.PARTIAL,
             dropped_constructs=[
+                "copybook.computed_storage_length",
                 "copybook.condition_names_88",
                 "copybook.level_numbers",
                 "copybook.occurs_bounds",
                 "copybook.occurs_depending_on",
                 "copybook.picture_clauses",
+                "copybook.redefines",
+                "copybook.storage_offsets",
                 "copybook.usage_clauses",
             ],
             note=(
                 "The canonical model keeps a field's name and inferred type. Everything that "
                 "makes a copybook a *layout* — levels, PICTURE, USAGE, OCCURS bounds, "
-                "88-conditions — survives only in the analysis."
+                "88-conditions, byte offsets, and the fact that two items share one span of "
+                "storage — survives only in the analysis. A REDEFINES overlay normalizes to an "
+                "ordinary sibling field; representing it as a union is #3991's."
             ),
         ),
         notes=[
-            "REDEFINES, level-66 RENAMES and COPY ... REPLACING are not read by the parser. They "
-            "are detected by scanning the source, and each one found makes the record partial "
-            "with a stated reason rather than presenting a partial layout as a complete one.",
-            "A clause continued onto a following source line is read only as far as the first "
-            "line goes, so a DEPENDING ON split across lines is not picked up.",
-            "Storage sizes are not computed from PICTURE/USAGE — the declared layout is "
-            "described, not the byte arithmetic it implies.",
+            "Byte offsets and lengths are computed from PICTURE and USAGE under assumptions the "
+            "copybook does not state — a single-byte encoding, packed decimal at two digits per "
+            "byte plus a sign nibble, the common binary width table, an overpunched rather than "
+            "separate sign, and no SYNCHRONIZED slack. Every record names them, so a length is "
+            "read as conditional rather than observed.",
+            "An item whose PICTURE cannot be sized has no length, and nothing after it has an "
+            "offset. An item after a variable-length table has a range of offsets rather than an "
+            "offset, and carries none — a minimum presented as the offset would be worse than "
+            "no answer.",
+            "Level-66 RENAMES and COPY ... REPLACING are not read by the parser. They are "
+            "detected by scanning the source, and each one found makes the record partial with a "
+            "stated reason rather than presenting a partial layout as a complete one.",
         ],
     ),
 }
