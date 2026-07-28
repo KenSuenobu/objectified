@@ -11,6 +11,13 @@ result instead of silently accepting it.
 ``--to openapi`` is the only target today, but the verb is target-generic for future emitters. Optional
 ``--title`` / ``--api-version`` / ``--server`` supply defaults the conversion applies only where the
 source left a gap (info title/version, servers), so a converted spec starts less incomplete.
+
+``--projection-out`` writes the **machine-readable projection manifest** (CPDO-1.3): the deterministic
+graph of which source construct became which OpenAPI JSON Pointer, with a status, reason code,
+evidence references and remediation on every edge. It is paged out of the read-only
+``POST .../projection`` endpoint under the *same* defaults the conversion uses — those defaults are
+folded into the snapshot hash, so a manifest fetched with different ones would describe a different
+conversion.
 """
 
 from __future__ import annotations
@@ -26,7 +33,12 @@ from apiome_cli.cli_context import (
     settings_from_context,
 )
 from apiome_cli.client import api_paths
-from apiome_cli.client.conversion_output import format_conversion_summary, is_low_tier
+from apiome_cli.client.conversion_output import (
+    PROJECTION_PAGE_SIZE,
+    assemble_projection_manifest,
+    format_conversion_summary,
+    is_low_tier,
+)
 from apiome_cli.client.http import RestClient
 from apiome_cli.client.tenant_scope import require_tenant_slug
 from apiome_cli.config import require_api_key
@@ -53,6 +65,40 @@ def _build_defaults(
     return defaults or None
 
 
+def _fetch_projection_manifest(
+    client: RestClient,
+    tenant_slug: str,
+    artifact: str,
+    defaults: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Page the full projection manifest for ``artifact`` out of the read-only projection endpoint.
+
+    Passes the *same* ``defaults`` the conversion request carries, because they are folded into the
+    manifest's snapshot hash: fetching without them would return a manifest describing a different
+    conversion from the one the user just ran.
+
+    Args:
+        client: The authenticated REST client.
+        tenant_slug: Resolved tenant slug.
+        artifact: The catalog item id being converted.
+        defaults: The gap-filling defaults, or ``None`` when none were supplied.
+
+    Returns:
+        ``{"summary": {...}, "nodes": [...], "edges": [...], "pagesTruncated": bool}``.
+    """
+    path = api_paths.catalog_projection(tenant_slug, artifact)
+
+    def _fetch(cursor: str | None) -> dict[str, Any]:
+        page_body: dict[str, Any] = {"target": "openapi", "limit": PROJECTION_PAGE_SIZE}
+        if defaults is not None:
+            page_body["defaults"] = defaults
+        if cursor is not None:
+            page_body["cursor"] = cursor
+        return client.post(path, json=page_body).json()
+
+    return assemble_projection_manifest(_fetch)
+
+
 def convert(
     ctx: typer.Context,
     artifact: str = typer.Argument(..., help="Catalog item id (the non-OpenAPI import) to convert."),
@@ -66,6 +112,12 @@ def convert(
         None,
         "--out",
         help="Write the would-be OpenAPI document here (dry-run only; '-' for stdout).",
+    ),
+    projection_out: str | None = typer.Option(
+        None,
+        "--projection-out",
+        help="Write the machine-readable projection manifest here ('-' for stdout): which source "
+        "construct became which OpenAPI pointer, and why anything did not.",
     ),
     force: bool = typer.Option(
         False, "--force", help="Do not exit non-zero on a low-fidelity result."
@@ -83,7 +135,8 @@ def convert(
     """Convert a catalog item to OpenAPI (``POST .../convert``); print the fidelity summary + warning.
 
     A commit (the default) creates a publishable Project/version from the converted OpenAPI document;
-    ``--dry-run`` returns the fidelity report only. Exits non-zero on a low-fidelity tier unless
+    ``--dry-run`` returns the fidelity report only. ``--projection-out`` additionally writes the
+    machine-readable projection manifest (CPDO-1.3). Exits non-zero on a low-fidelity tier unless
     ``--force`` — a hint that the converted spec is substantially incomplete.
     """
     target = to.strip().lower()
@@ -119,6 +172,10 @@ def convert(
         document = response.get("openapi")
         payload = json.dumps(document, indent=2).encode("utf-8")
         write_document_bytes(payload, out)
+
+    if projection_out is not None:
+        manifest = _fetch_projection_manifest(client, tenant_slug, artifact, defaults)
+        write_document_bytes(json.dumps(manifest, indent=2).encode("utf-8"), projection_out)
 
     if json_mode_from_context(ctx):
         emit_json(response)

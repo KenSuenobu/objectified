@@ -2084,6 +2084,12 @@ class ConvertDryRunResponse(BaseModel):
         description="How the document was produced: passthrough (OpenAPI/Swagger), "
         "typespec_native, or lossy (MFI-22.7).",
     )
+    projection: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="The bounded projection-manifest summary for this conversion (CPDO-1.3): the "
+        "snapshot hash, the converter tool versions, and the per-status/reason/scope tallies. The "
+        "node/edge graph itself is paged from POST .../projection using this hash.",
+    )
 
 
 class ConvertCommitResponse(BaseModel):
@@ -2121,6 +2127,64 @@ class ConvertCommitResponse(BaseModel):
         description="How the document was produced: passthrough (OpenAPI/Swagger), "
         "typespec_native, or lossy (MFI-22.7).",
     )
+    projection: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="The bounded projection-manifest summary persisted with the provenance row "
+        "(CPDO-1.3), so a committed conversion names the snapshot it was made under.",
+    )
+
+
+class CatalogProjectionRequest(BaseModel):
+    """Request body for ``POST /v1/catalog/{tenant_slug}/{item_id}/projection`` (CPDO-1.3).
+
+    Read-only despite the verb: the endpoint rebuilds the deterministic manifest for the item's
+    latest revision and returns one page of it, creating nothing. ``defaults`` must match what the
+    conversion would be run with, because gap-filling defaults are folded into the snapshot hash —
+    previewing the projection with different defaults describes a different conversion.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    target: str = Field(default="openapi", description="Conversion target (only 'openapi' today).")
+    defaults: Optional[ConversionDefaultsRequest] = Field(
+        default=None,
+        description="The same gap-filling defaults the conversion would use; folded into the hash.",
+    )
+    scope: Optional[str] = Field(
+        default=None,
+        description="Restrict the page to one edge scope: checklist / construct / loss / analysis. "
+        "Omit to page every scope in canonical order.",
+    )
+    cursor: Optional[str] = Field(
+        default=None, description="Opaque cursor from a previous page; omit to start at the beginning."
+    )
+    limit: int = Field(
+        default=50,
+        ge=1,
+        le=500,
+        description="Maximum edges per page; clamped server-side to the hard cap.",
+    )
+
+
+class CatalogProjectionResponse(BaseModel):
+    """One bounded page of a catalog item's conversion projection manifest (CPDO-1.3).
+
+    Carries the snapshot ``summary`` (hash, tool versions, tallies) alongside the ``page`` of edges
+    and the nodes they reference, so a caller can render a page without a second request and can
+    tell — via the hash — whether two pages came from the same snapshot.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    item_id: str = Field(serialization_alias="itemId", description="The catalog item id.")
+    version_record_id: Optional[str] = Field(
+        default=None,
+        serialization_alias="versionRecordId",
+        description="The source revision the manifest describes.",
+    )
+    target: str = Field(default="openapi", description="The conversion target.")
+    summary: Dict[str, Any] = Field(description="The bounded projection-manifest summary.")
+    page: Dict[str, Any] = Field(description="This page of edges + the nodes they reference.")
 
 
 class ProjectCreateRequest(BaseModel):

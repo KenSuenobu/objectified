@@ -9,6 +9,10 @@ behind the UI preview (MFI-22.4), the CLI, and the API:
 * ``dryRun=false`` runs the commit job and returns the created ids + report (the job itself is faked
   here — its own logic is covered in ``test_conversion_job.py``);
 * an item with no captured source to reconstruct from surfaces the loader's 422.
+
+It also covers the sibling read ``POST .../projection`` (CPDO-1.3): the paged projection manifest is
+the same snapshot the dry-run names by hash, is scope-filterable, rejects an unknown scope and a
+malformed cursor, and degrades truthfully when the payload-analysis store is unreadable.
 """
 
 from __future__ import annotations
@@ -19,6 +23,11 @@ from fastapi.testclient import TestClient
 
 from app.auth import validate_authentication
 from app.conversion_job import ConversionResult, LintScore
+from app.conversion_projection import (
+    ConversionAnalysisRef,
+    ConversionManifestSource,
+    ConversionManifestSummary,
+)
 from app.fidelity import FidelityReport, FidelityTier
 from app.main import app
 
@@ -57,6 +66,29 @@ def _fake_report() -> FidelityReport:
     return FidelityReport(
         score=74, grade="C", tier=FidelityTier.MEDIUM,
         items=[], losses=[], coverage_counts={}, penalty=26,
+    )
+
+
+def _fake_projection() -> ConversionManifestSummary:
+    """A minimal projection summary standing in for the CPDO-1.3 manifest a commit produces."""
+    return ConversionManifestSummary(
+        schema_version="1.0.0",
+        manifest_hash="deadbeef",
+        source=ConversionManifestSource(
+            source_format="graphql",
+            analysis=ConversionAnalysisRef(available=False, status="unavailable"),
+        ),
+        target_format="openapi-3.1",
+        conversion_mode="lossy",
+        tool_versions={"apiome-rest": "9.9.9"},
+        defaults={},
+        status_counts={},
+        reason_counts={},
+        scope_counts={},
+        node_count=0,
+        edge_count=0,
+        total_constructs=0,
+        is_lossless=False,
     )
 
 
@@ -158,6 +190,7 @@ def test_convert_query_param_overrides_body_dry_run():
                 version_record_id="ver-9", created_project=True, reconverted=False,
                 fidelity=_fake_report(), lint=LintScore(score=90, grade="A"),
                 provenance_id="prov-9", document={"openapi": "3.1.0"},
+                projection=_fake_projection(),
             )
             response = client.post(
                 "/v1/catalog/test-tenant/cat-1/convert?dryRun=false",
@@ -190,6 +223,7 @@ def test_convert_forwards_defaults_to_the_job():
                 project_id="p", project_slug="s", version_id="1.0.0", version_record_id="v",
                 created_project=True, reconverted=False, fidelity=_fake_report(),
                 lint=None, provenance_id="pr", document={"openapi": "3.1.0"},
+                projection=_fake_projection(),
             )
             client.post(
                 "/v1/catalog/test-tenant/cat-1/convert?dryRun=false",
@@ -217,5 +251,212 @@ def test_convert_422_when_no_captured_source():
             response = client.post("/v1/catalog/test-tenant/cat-nosrc/convert?dryRun=true")
         assert response.status_code == 422
         assert "source" in response.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+# ---------------------------------------------------------------------------
+# Projection manifest (CPDO-1.3) — the graph API behind the fidelity report
+# ---------------------------------------------------------------------------
+def test_dry_run_returns_the_projection_summary():
+    """A dry-run names the snapshot it previewed, so a caller can page the matching manifest."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.catalog_routes.db") as mock_db, patch(
+            "app.catalog_routes.load_analysis_for_item"
+        ) as mock_analysis:
+            mock_db.get_catalog_item_by_id.return_value = _CATALOG_ITEM
+            mock_db.get_latest_revision_id_for_project.return_value = "rev-1"
+            mock_analysis.side_effect = RuntimeError("analysis store down")
+            response = client.post("/v1/catalog/test-tenant/cat-1/convert?dryRun=true")
+        assert response.status_code == 200
+        projection = response.json()["projection"]
+        assert len(projection["manifest_hash"]) == 64
+        assert projection["schema_version"] == "1.0.0"
+        assert projection["target_format"] == "openapi-3.1"
+        # An unreadable analysis store degrades that one field; it never fails the conversion.
+        assert projection["source"]["analysis"]["available"] is False
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+def test_projection_requires_auth():
+    """The projection read is tenant-scoped and authenticated like every other catalog read."""
+    assert client.post("/v1/catalog/test-tenant/cat-1/projection").status_code == 401
+
+
+def test_projection_404_when_not_a_catalog_item():
+    """An unknown id (or a publishable Project's id) is 404, as on every catalog read."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.catalog_routes.db") as mock_db:
+            mock_db.get_catalog_item_by_id.return_value = None
+            response = client.post("/v1/catalog/test-tenant/nope/projection")
+        assert response.status_code == 404
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+def test_projection_returns_a_page_matching_the_dry_run_snapshot():
+    """The page and the dry-run describe one snapshot: same hash, same defaults."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.catalog_routes.db") as mock_db, patch(
+            "app.catalog_routes.load_analysis_for_item"
+        ) as mock_analysis:
+            mock_db.get_catalog_item_by_id.return_value = _CATALOG_ITEM
+            mock_db.get_latest_revision_id_for_project.return_value = "rev-1"
+            mock_analysis.side_effect = RuntimeError("analysis store down")
+            dry_run = client.post("/v1/catalog/test-tenant/cat-1/convert?dryRun=true")
+            projection = client.post(
+                "/v1/catalog/test-tenant/cat-1/projection", json={"limit": 5}
+            )
+        assert projection.status_code == 200
+        body = projection.json()
+        assert body["itemId"] == "cat-1"
+        assert body["versionRecordId"] == "rev-1"
+        assert body["summary"]["manifest_hash"] == dry_run.json()["projection"]["manifest_hash"]
+        assert len(body["page"]["edges"]) == 5
+        assert body["page"]["next_cursor"]
+        assert body["page"]["total"] == body["summary"]["edge_count"]
+        # Every edge on the page carries a cause unless it was retained (the CPDO-1.3 AC).
+        for edge in body["page"]["edges"]:
+            assert edge["status"] == "retained" or edge["reason"]
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+def test_projection_can_be_restricted_to_one_scope():
+    """A renderer that only wants the construct lane asks for just that scope."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.catalog_routes.db") as mock_db, patch(
+            "app.catalog_routes.load_analysis_for_item"
+        ) as mock_analysis:
+            mock_db.get_catalog_item_by_id.return_value = _CATALOG_ITEM
+            mock_db.get_latest_revision_id_for_project.return_value = "rev-1"
+            mock_analysis.side_effect = RuntimeError("analysis store down")
+            response = client.post(
+                "/v1/catalog/test-tenant/cat-1/projection",
+                json={"scope": "construct", "limit": 500},
+            )
+        assert response.status_code == 200
+        edges = response.json()["page"]["edges"]
+        assert edges
+        assert {edge["scope"] for edge in edges} == {"construct"}
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+def test_projection_rejects_an_unknown_scope():
+    """An unknown scope is a 400 naming the vocabulary, not a silently unfiltered page."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.catalog_routes.db") as mock_db:
+            mock_db.get_catalog_item_by_id.return_value = _CATALOG_ITEM
+            response = client.post(
+                "/v1/catalog/test-tenant/cat-1/projection", json={"scope": "everything"}
+            )
+        assert response.status_code == 400
+        assert "checklist" in response.json()["detail"]
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+def test_projection_rejects_a_malformed_cursor():
+    """A malformed cursor is a 422, not a silent restart from the first page."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.catalog_routes.db") as mock_db, patch(
+            "app.catalog_routes.load_analysis_for_item"
+        ) as mock_analysis:
+            mock_db.get_catalog_item_by_id.return_value = _CATALOG_ITEM
+            mock_db.get_latest_revision_id_for_project.return_value = "rev-1"
+            mock_analysis.side_effect = RuntimeError("analysis store down")
+            response = client.post(
+                "/v1/catalog/test-tenant/cat-1/projection", json={"cursor": "!!not-base64!!"}
+            )
+        assert response.status_code == 422
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+def test_projection_defaults_change_the_snapshot():
+    """Gap-filling defaults are folded into the hash, so a different set is a different snapshot."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.catalog_routes.db") as mock_db, patch(
+            "app.catalog_routes.load_analysis_for_item"
+        ) as mock_analysis:
+            mock_db.get_catalog_item_by_id.return_value = _CATALOG_ITEM
+            mock_db.get_latest_revision_id_for_project.return_value = "rev-1"
+            mock_analysis.side_effect = RuntimeError("analysis store down")
+            plain = client.post("/v1/catalog/test-tenant/cat-1/projection", json={})
+            titled = client.post(
+                "/v1/catalog/test-tenant/cat-1/projection",
+                json={"defaults": {"title": "Renamed"}},
+            )
+        assert plain.status_code == titled.status_code == 200
+        assert (
+            plain.json()["summary"]["manifest_hash"]
+            != titled.json()["summary"]["manifest_hash"]
+        )
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+def test_projection_400_on_unsupported_target():
+    """Only ``openapi`` is a conversion target today, on the projection read as on the convert verb."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.catalog_routes.db") as mock_db:
+            mock_db.get_catalog_item_by_id.return_value = _CATALOG_ITEM
+            response = client.post(
+                "/v1/catalog/test-tenant/cat-1/projection", json={"target": "asyncapi"}
+            )
+        assert response.status_code == 400
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+def test_projection_422_when_no_captured_source():
+    """An item with nothing to reconstruct surfaces the loader's 422 here too."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.catalog_routes.db") as mock_db, patch(
+            "app.catalog_routes.load_analysis_for_item"
+        ) as mock_analysis:
+            mock_db.get_catalog_item_by_id.return_value = _CATALOG_ITEM_NO_SOURCE
+            mock_db.get_latest_revision_id_for_project.return_value = "rev-1"
+            mock_analysis.side_effect = RuntimeError("analysis store down")
+            response = client.post("/v1/catalog/test-tenant/cat-nosrc/projection")
+        assert response.status_code == 422
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+def test_projection_is_gated_on_imports_view():
+    """The page carries source-native coordinates, so it needs the permission governing them."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.catalog_routes.db") as mock_db:
+            mock_db.get_catalog_item_by_id.return_value = _CATALOG_ITEM
+            mock_db.user_has_permission.return_value = False
+            response = client.post("/v1/catalog/test-tenant/cat-1/projection")
+        assert response.status_code == 403
+        assert "imports:view" in response.json()["detail"]
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+def test_projection_checks_the_item_before_the_permission():
+    """An id in another tenant must 404 rather than confirm itself with a 403."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.catalog_routes.db") as mock_db:
+            mock_db.get_catalog_item_by_id.return_value = None
+            mock_db.user_has_permission.return_value = False
+            response = client.post("/v1/catalog/test-tenant/cat-other-tenant/projection")
+        assert response.status_code == 404
     finally:
         app.dependency_overrides.pop(validate_authentication, None)

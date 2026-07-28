@@ -550,6 +550,9 @@ apiome convert <artifact-id> --to openapi
 # Fill cheap gaps the source did not carry (applied only where the source is empty):
 apiome convert <artifact-id> --title "Widgets API" --api-version 1.0.0 --server https://api.example.com
 
+# Write the machine-readable projection manifest ('-' writes to stdout):
+apiome convert <artifact-id> --dry-run --projection-out projection.json
+
 # Machine-readable report/result:
 apiome --json convert <artifact-id> --dry-run
 ```
@@ -558,11 +561,37 @@ apiome --json convert <artifact-id> --dry-run
 verb is target-generic for future emitters). The command prints the fidelity **grade + score + tier**,
 the mandatory warning, and the gaps OpenAPI favors but the conversion lacks.
 
+**Projection manifest.** Where the fidelity report says *how much* a conversion loses, the projection
+manifest says **which source construct became which OpenAPI JSON Pointer, and why anything did not**.
+Every response carries its bounded summary — the snapshot hash, the converter tool versions, and the
+per-status tallies — and `--projection-out` writes the whole graph:
+
+```jsonc
+{
+  "summary": { "manifest_hash": "…", "status_counts": { "retained": 12, "dropped": 1, … } },
+  "nodes":   [ { "id": "source:construct:GET /widgets", "kind": "source", … },
+               { "id": "target:/paths/~1widgets/get",   "kind": "target", … } ],
+  "edges":   [ { "id": "construct:operation:GET /widgets", "scope": "construct",
+                 "status": "retained" },
+               { "id": "construct:channel:user/signedup", "scope": "construct",
+                 "status": "dropped", "reason": "destination_unsupported",
+                 "remediation": "OpenAPI has no equivalent construct; …" } ]
+}
+```
+
+Edge statuses are `retained` / `transformed` / `inferred` / `dropped` / `unavailable` /
+`not-applicable`; every one except `retained` carries a `reason` code and a `remediation`. `dropped`
+means apiome *established* the construct is absent; `unavailable` means it could not determine where
+the construct went, or that the source analysis never saw it — the two are never conflated. The
+manifest is deterministic: the same source revision converted with the same `--title` /
+`--api-version` / `--server` defaults yields the same `manifest_hash`.
+
 **Exit codes.** A **low** fidelity tier exits non-zero — a CI-friendly hint that the converted spec
 will be substantially incomplete. Pass `--force` to accept a low-fidelity result and exit `0`, or
 supply `--title` / `--api-version` / `--server` to close gaps and lift the tier. `--out` is valid only
-with `--dry-run` (the commit path creates the project instead of writing a file). Requires a workspace
-API key and tenant scope.
+with `--dry-run` (the commit path creates the project instead of writing a file); `--projection-out`
+works with both, since the projection read has no side effects. Requires a workspace API key and
+tenant scope.
 
 ### Export a version to a target format
 

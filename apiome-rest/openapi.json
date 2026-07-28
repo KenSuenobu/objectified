@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.77.0",
+    "version": "1.78.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -6097,6 +6097,119 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for convert catalog itemresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/catalog/{tenant_slug}/{item_id}/projection": {
+      "post": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Page through a catalog item's conversion projection manifest",
+        "description": "Return one bounded page of the item's source \u2192 OpenAPI projection manifest (CPDO-1.3).\n\nThe graph API behind the fidelity report: where the report says *how much* a conversion would\nlose, this says **which source construct became which OpenAPI pointer, and why anything did\nnot**. Rebuilds the deterministic manifest for the item's latest revision \u2014 the same manifest a\ndry-run and a commit reference by hash, so a page fetched here describes the conversion the user\nis about to run \u2014 and pages its edges.\n\nStrictly read-only despite the POST verb, which carries the ``defaults`` body: gap-filling\ndefaults are folded into the snapshot hash, so a projection previewed with different defaults\nfrom the ones the conversion will use would describe a different conversion. Nothing is created\nand nothing is persisted.\n\n**What it exposes, and why it is gated.** The page carries source-native *coordinates* \u2014 a\nconstruct's native name/id, the line or offset a parser recorded, and payload-analysis node ids\n\u2014 so a reader can open the source viewer where the evidence is. It carries no payload *values*\nat all. That is the same class of data as the analysis read (CPDO-1.1), so it is gated on the\nsame ``imports:view`` permission, checked **after** the item lookup so a cross-tenant id 404s\nrather than confirming its existence with a 403.\n\nLike every other catalog read this is restricted to the non-publishable slice (a Project's id, or\nan unknown id, yields 404) and authenticated via JWT token or API key.\n\nArgs:\n    tenant_slug: The tenant slug.\n    item_id: The catalog item ID (a project id).\n    request: Target + defaults + page window (``scope`` / ``cursor`` / ``limit``).\n    auth_data: Authentication data (injected by dependency).\n\nReturns:\n    The :class:`~app.models.CatalogProjectionResponse` \u2014 the snapshot summary and one page.\n\nRaises:\n    HTTPException: 400 for an unsupported target or scope, 404 for an unknown item, 422 when the\n        item has no reconstructable source or the cursor is malformed.",
+        "operationId": "get_catalog_projection_v1_catalog__tenant_slug___item_id__projection_post",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id",
+              "description": "Item Id schema."
+            },
+            "description": "Catalog item identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Pagethroughacatalogitemsconversionprojecauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Pagethroughacatalogitemsconversionprojecauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Pagethroughacatalogitemsconversionprojec Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Pagethroughacatalogitemsconversionprojec Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogProjectionRequest",
+                "default": {
+                  "target": "openapi",
+                  "limit": 50
+                },
+                "description": "Request body for pagethroughacatalogitemsconversionprojecrequest."
+              }
+            }
+          },
+          "description": "Request body for page through a catalog item's conversion projection manifest."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for page through a catalog item's conversion projection manifest.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogProjectionResponse",
+                  "description": "Response payload for pagethroughacatalogitemsconversionprojecresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for pagethroughacatalogitemsconversionprojecresponse422."
                 }
               }
             }
@@ -65843,6 +65956,121 @@
         "title": "CatalogParsedGroup",
         "description": "A group of parsed entities (MFI-25.2): the top level of the ``parsed`` tree.\n\nEntities are grouped in the way each paradigm reads most naturally (GraphQL by operations/types,\ngRPC by services/messages, AsyncAPI by channels/operations/messages). ``title`` names the block\n(e.g. \"Operations\", \"Messages\") and ``subtitle`` is an optional sub-line."
       },
+      "CatalogProjectionRequest": {
+        "properties": {
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "Conversion target (only 'openapi' today).",
+            "default": "openapi",
+            "example": "example"
+          },
+          "defaults": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversionDefaultsRequest"
+              },
+              {
+                "type": "null",
+                "description": "Request body for catalog projection."
+              }
+            ],
+            "description": "The same gap-filling defaults the conversion would use; folded into the hash."
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for catalog projection."
+              },
+              {
+                "type": "null",
+                "description": "Request body for catalog projection."
+              }
+            ],
+            "title": "Scope",
+            "description": "Restrict the page to one edge scope: checklist / construct / loss / analysis. Omit to page every scope in canonical order."
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for catalog projection."
+              },
+              {
+                "type": "null",
+                "description": "Request body for catalog projection."
+              }
+            ],
+            "title": "Cursor",
+            "description": "Opaque cursor from a previous page; omit to start at the beginning."
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "description": "Maximum edges per page; clamped server-side to the hard cap.",
+            "default": 50,
+            "example": 50
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CatalogProjectionRequest",
+        "description": "Request body for ``POST /v1/catalog/{tenant_slug}/{item_id}/projection`` (CPDO-1.3).\n\nRead-only despite the verb: the endpoint rebuilds the deterministic manifest for the item's\nlatest revision and returns one page of it, creating nothing. ``defaults`` must match what the\nconversion would be run with, because gap-filling defaults are folded into the snapshot hash \u2014\npreviewing the projection with different defaults describes a different conversion."
+      },
+      "CatalogProjectionResponse": {
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "title": "Itemid",
+            "description": "The catalog item id.",
+            "example": "example"
+          },
+          "versionRecordId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for catalog projection."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for catalog projection."
+              }
+            ],
+            "title": "Versionrecordid",
+            "description": "The source revision the manifest describes."
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "The conversion target.",
+            "default": "openapi",
+            "example": "example"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Summary",
+            "description": "The bounded projection-manifest summary."
+          },
+          "page": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Page",
+            "description": "This page of edges + the nodes they reference."
+          }
+        },
+        "type": "object",
+        "required": [
+          "itemId",
+          "summary",
+          "page"
+        ],
+        "title": "CatalogProjectionResponse",
+        "description": "One bounded page of a catalog item's conversion projection manifest (CPDO-1.3).\n\nCarries the snapshot ``summary`` (hash, tool versions, tallies) alongside the ``page`` of edges\nand the nodes they reference, so a caller can render a page without a second request and can\ntell \u2014 via the hash \u2014 whether two pages came from the same snapshot."
+      },
       "CatalogSourceDescriptor": {
         "properties": {
           "kind": {
@@ -99108,7 +99336,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-07-28T21:53:22Z"
+            "example": "2026-07-28T23:26:43Z"
           }
         },
         "additionalProperties": false,
@@ -111233,14 +111461,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-07-28T21:53:22Z"
+            "example": "2026-07-28T23:26:43Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-07-28T21:53:22Z"
+            "example": "2026-07-28T23:26:43Z"
           },
           "outcome": {
             "anyOf": [

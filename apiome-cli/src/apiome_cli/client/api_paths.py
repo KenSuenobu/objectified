@@ -162,6 +162,15 @@ def catalog_convert(tenant_slug: str, item_id: str, *, dry_run: bool) -> str:
     return f"{V1}/catalog/{tenant_slug}/{item_id}/convert?dryRun={flag}"
 
 
+def catalog_projection(tenant_slug: str, item_id: str) -> str:
+    """Catalog item conversion projection manifest, page by page (CPDO-1.3).
+
+    Read-only despite the POST verb: the body carries the gap-filling ``defaults``, which are folded
+    into the snapshot hash, plus the page window (``scope`` / ``cursor`` / ``limit``).
+    """
+    return f"{V1}/catalog/{tenant_slug}/{item_id}/projection"
+
+
 def tenant_repositories(tenant_slug: str) -> str:
     return f"{V1}/tenants/{tenant_slug}/repositories"
 

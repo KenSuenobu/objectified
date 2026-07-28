@@ -15,6 +15,7 @@ endpoints exist here. All endpoints are tenant-scoped and require authentication
 API key.
 """
 
+import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -36,6 +37,11 @@ from .conversion_job import (
     preview_conversion,
     run_conversion,
 )
+from .conversion_projection import (
+    ConversionEdgeScope,
+    paginate_conversion_evidence,
+    summarize_conversion_manifest,
+)
 from .database import db
 from .lint_routes import build_lint_report
 from .models import (
@@ -43,6 +49,8 @@ from .models import (
     CatalogItemDetailSchema,
     CatalogItemSchema,
     CatalogNormalizedSummary,
+    CatalogProjectionRequest,
+    CatalogProjectionResponse,
     CatalogSourceDescriptor,
     ConvertCatalogItemRequest,
     ConvertCommitResponse,
@@ -52,6 +60,8 @@ from .models import (
 from .payload_analysis import PayloadAnalysisRecord, ValueVisibility
 from .payload_analysis_store import analysis_summary_for_item, load_analysis_for_item
 from .permissions import Action, Resource, enforce_permission
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/catalog", tags=["catalog"])
 
@@ -314,15 +324,44 @@ async def lint_catalog_item(
     return await build_lint_report(version, item_id, tenant_slug, tenant_id, catalog_item=item)
 
 
-def _conversion_defaults(request: ConvertCatalogItemRequest) -> Optional[ConversionDefaults]:
-    """Map the request's optional user defaults onto the job's :class:`ConversionDefaults`."""
-    if request.defaults is None:
+def _conversion_defaults(request: Any) -> Optional[ConversionDefaults]:
+    """Map a request's optional user defaults onto the job's :class:`ConversionDefaults`.
+
+    Shared by the convert verb and the projection read, which must agree exactly: the defaults are
+    folded into the projection snapshot hash, so a projection previewed with different defaults from
+    the ones the conversion will run with would describe a different conversion.
+    """
+    defaults = getattr(request, "defaults", None)
+    if defaults is None:
         return None
     return ConversionDefaults(
-        title=request.defaults.title,
-        version=request.defaults.version,
-        servers=list(request.defaults.servers),
+        title=defaults.title,
+        version=defaults.version,
+        servers=list(defaults.servers),
     )
+
+
+def _load_conversion_source(tenant_id: str, item: Dict[str, Any]):
+    """Rebuild the conversion source for a catalog item, with its payload analysis attached.
+
+    The analysis read is best-effort by design: a store fault must not make a catalog item
+    unconvertible, and the manifest already has a truthful way to say an analysis was not available
+    (:class:`~app.conversion_projection.ConversionAnalysisRef`). Returns the source plus the revision
+    id it was built from, which the projection response echoes.
+    """
+    item_id = str(item["id"])
+    source_version_id = db.get_latest_revision_id_for_project(item_id, tenant_id)
+    try:
+        analysis = load_analysis_for_item(
+            tenant_id, item, version_record_id=source_version_id
+        ).analysis
+    except Exception:  # noqa: BLE001 - a missing analysis must never block a conversion
+        logger.warning("Payload analysis unreadable for catalog item %s", item_id, exc_info=True)
+        analysis = None
+    source = build_conversion_source(
+        item, source_version_id=source_version_id, analysis=analysis
+    )
+    return source, source_version_id
 
 
 @router.post(
@@ -387,8 +426,7 @@ async def convert_catalog_item(
     defaults = _conversion_defaults(request)
 
     try:
-        source_version_id = db.get_latest_revision_id_for_project(item_id, tenant_id)
-        source = build_conversion_source(item, source_version_id=source_version_id)
+        source, _source_version_id = _load_conversion_source(tenant_id, item)
 
         if effective_dry_run:
             preview = preview_conversion(source, defaults)
@@ -398,6 +436,7 @@ async def convert_catalog_item(
                 source_format=source.source_format,
                 target="openapi",
                 conversion_mode=preview.conversion_mode,
+                projection=summarize_conversion_manifest(preview.manifest).model_dump(mode="json"),
             )
 
         result = await run_conversion(
@@ -421,6 +460,104 @@ async def convert_catalog_item(
         provenance_id=result.provenance_id,
         report=result.fidelity.model_dump(mode="json"),
         conversion_mode=result.conversion_mode,
+        projection=result.projection.model_dump(mode="json"),
+    )
+
+
+@router.post(
+    "/{tenant_slug}/{item_id}/projection",
+    response_model=CatalogProjectionResponse,
+    summary="Page through a catalog item's conversion projection manifest",
+)
+async def get_catalog_projection(
+    tenant_slug: str,
+    item_id: str,
+    request: CatalogProjectionRequest = CatalogProjectionRequest(),
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> CatalogProjectionResponse:
+    """Return one bounded page of the item's source → OpenAPI projection manifest (CPDO-1.3).
+
+    The graph API behind the fidelity report: where the report says *how much* a conversion would
+    lose, this says **which source construct became which OpenAPI pointer, and why anything did
+    not**. Rebuilds the deterministic manifest for the item's latest revision — the same manifest a
+    dry-run and a commit reference by hash, so a page fetched here describes the conversion the user
+    is about to run — and pages its edges.
+
+    Strictly read-only despite the POST verb, which carries the ``defaults`` body: gap-filling
+    defaults are folded into the snapshot hash, so a projection previewed with different defaults
+    from the ones the conversion will use would describe a different conversion. Nothing is created
+    and nothing is persisted.
+
+    **What it exposes, and why it is gated.** The page carries source-native *coordinates* — a
+    construct's native name/id, the line or offset a parser recorded, and payload-analysis node ids
+    — so a reader can open the source viewer where the evidence is. It carries no payload *values*
+    at all. That is the same class of data as the analysis read (CPDO-1.1), so it is gated on the
+    same ``imports:view`` permission, checked **after** the item lookup so a cross-tenant id 404s
+    rather than confirming its existence with a 403.
+
+    Like every other catalog read this is restricted to the non-publishable slice (a Project's id, or
+    an unknown id, yields 404) and authenticated via JWT token or API key.
+
+    Args:
+        tenant_slug: The tenant slug.
+        item_id: The catalog item ID (a project id).
+        request: Target + defaults + page window (``scope`` / ``cursor`` / ``limit``).
+        auth_data: Authentication data (injected by dependency).
+
+    Returns:
+        The :class:`~app.models.CatalogProjectionResponse` — the snapshot summary and one page.
+
+    Raises:
+        HTTPException: 400 for an unsupported target or scope, 404 for an unknown item, 422 when the
+            item has no reconstructable source or the cursor is malformed.
+    """
+    _ = tenant_slug
+    tenant_id = auth_data["tenant_id"]
+
+    if request.target.strip().lower() != "openapi":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported conversion target {request.target!r}; only 'openapi' is available today.",
+        )
+
+    scope: Optional[ConversionEdgeScope] = None
+    if request.scope is not None:
+        try:
+            scope = ConversionEdgeScope(request.scope.strip().lower())
+        except ValueError as exc:
+            allowed = ", ".join(member.value for member in ConversionEdgeScope)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown projection scope {request.scope!r}; expected one of: {allowed}.",
+            ) from exc
+
+    item = db.get_catalog_item_by_id(item_id, tenant_id)
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Catalog item not found: {item_id}")
+
+    enforce_permission(
+        db, auth_data, Resource.IMPORTS, Action.VIEW, target=f"catalog:{item_id}:projection"
+    )
+
+    try:
+        source, source_version_id = _load_conversion_source(tenant_id, item)
+        preview = preview_conversion(source, _conversion_defaults(request))
+    except ConversionError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+
+    try:
+        page = paginate_conversion_evidence(
+            preview.manifest, cursor=request.cursor, limit=request.limit, scope=scope
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return CatalogProjectionResponse(
+        item_id=item_id,
+        version_record_id=source_version_id,
+        target="openapi",
+        summary=summarize_conversion_manifest(preview.manifest).model_dump(mode="json"),
+        page=page.model_dump(mode="json"),
     )
 
 

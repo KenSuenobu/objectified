@@ -39,6 +39,7 @@ from .import_source import (
     get_import_source,
     load_builtin_import_sources,
 )
+from .payload_analysis import PayloadAnalysisDocument
 
 __all__ = [
     "resolve_conversion_adapter",
@@ -97,6 +98,7 @@ def build_conversion_source(
     item: Dict[str, Any],
     *,
     source_version_id: Optional[str] = None,
+    analysis: Optional[PayloadAnalysisDocument] = None,
 ) -> ConversionSource:
     """Rebuild a :class:`ConversionSource` from a stored catalog item row.
 
@@ -111,6 +113,10 @@ def build_conversion_source(
             ``source_format``.
         source_version_id: The source revision (``versions.id``) being converted, recorded on the
             provenance so a later re-import diffs cleanly; ``None`` when it cannot be resolved.
+        analysis: The revision's payload analysis (CPDO-1.1/1.2), when the caller loaded one. Carried
+            through so the projection manifest (CPDO-1.3) can say what the analyzer *could not*
+            describe; ``None`` yields a manifest that declares the analysis unavailable rather than
+            one that silently omits the question.
 
     Returns:
         A :class:`ConversionSource` ready for :func:`app.conversion_job.preview_conversion` /
@@ -151,4 +157,5 @@ def build_conversion_source(
         source_version_label=api.version,
         source_tool_versions=item.get("tool_versions") or {},
         source_text=raw,
+        analysis=analysis,
     )
