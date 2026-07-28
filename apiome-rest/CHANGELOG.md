@@ -5,6 +5,24 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.205.0] - 2026-07-27
+
+### Added
+- **HTTP contract runner (#4732, ECA-2.1)** — execute a compiled ECA-1.1 suite against an
+  ECA-1.2 verification target with bounded concurrency, per-case timeouts, transport-only
+  retries (never masking a status/schema failure), response-schema validation (IXH-5.1), and
+  immutable ECA-1.3 evidence on every execution. See
+  [docs/contract_runner.md](./docs/contract_runner.md).
+  - **`POST /v1/tenants/{tenant}/contracts/{version_ref}/run`** — compile → resolve → run →
+    `record_run`. Requires `versions:view` and `verification_evidence:create`. Answers **201**
+    for new evidence, **200** for idempotent replay or `ok: false` taxonomy refusals.
+  - **Runner name** `apiome-contract-runner` matches the evidence fixtures and JUnit properties.
+  - **Private-network SSRF exception** — `build_guarded_client(allow_private=True)` for approved
+    `network_class: private` targets (localhost Apiome mock) while still rejecting `file:` /
+    credentialed URLs on every hop.
+  - Stable failure codes: `status-mismatch`, `response-schema-mismatch`, `transport-error`,
+    `timeout`, `auth-unavailable`, `mutating-method-blocked`.
+
 ## [1.204.0] - 2026-07-27
 
 ### Added

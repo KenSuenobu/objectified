@@ -129,6 +129,21 @@ def test_guarded_client_allows_request_to_public_host():
     assert resp.text == "ok"
 
 
+def test_guarded_client_allows_private_when_flag_set():
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, text="ok"))
+    with build_guarded_client(transport=transport, allow_private=True) as client:
+        resp = client.get("http://127.0.0.1:8775/mock/pets")
+    assert resp.status_code == 200
+    assert resp.text == "ok"
+
+
+def test_guarded_client_private_still_rejects_bad_scheme():
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, text="ok"))
+    with build_guarded_client(transport=transport, allow_private=True) as client:
+        with pytest.raises(SSRFError, match="scheme"):
+            client.get("file:///etc/passwd")
+
+
 def test_guarded_client_blocks_redirect_to_internal_host():
     # First hop is public and returns a 302 to an internal host; the guard must
     # reject the second hop. Resolution maps the public host to a public IP and

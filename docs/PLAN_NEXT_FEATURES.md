@@ -257,7 +257,7 @@ CTG already classifies and gates diffs. ECA makes a published version *runnable*
 | 6.1 | Version contract-suite compiler — **Done** | **#4729** ECA-1.1 | #4942 | Published canonical model |
 | 6.2 | Environment & target registry — **Done** | **#4730** ECA-1.2 | #4942 | Secrets/SSRF from MFI-29.4 |
 | 6.3 | Verification evidence schema — **Done** | **#4731** ECA-1.3 | #4942 | 6.1 + 6.2 |
-| 6.4 | HTTP contract runner | **#4732** ECA-2.1 | #4943 | Prefer PMR/SIM as first target |
+| 6.4 | HTTP contract runner — **Done** | **#4732** ECA-2.1 | #4943 | Prefer PMR/SIM as first target |
 | 6.5 | CLI `apiome verify contract` | **#4733** ECA-2.2 | #4943 | 6.4 |
 | 6.6 | Evidence-backed policy evaluator | **#4734** ECA-3.1 | #4944 | 6.3 + CTG publish classification |
 
@@ -390,7 +390,6 @@ Filter: [`milestone:RC4 is:open`](https://github.com/apiome/apiome/milestone/1).
 | 4744 | PMR-2.1 Declarative mock matching and templates |
 | 4745 | PMR-2.2 Mock fixture packs and data lifecycle |
 | 4748 | PMR-3.1 Mock CI action and conformance corpus |
-| 4732 | ECA-2.1 HTTP contract runner |
 | 4733 | ECA-2.2 CLI contract verification command |
 | 4734 | ECA-3.1 Evidence-backed policy evaluator |
 
