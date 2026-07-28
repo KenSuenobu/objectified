@@ -245,3 +245,137 @@ def test_put_scenarios_clears_with_empty_map(client: TestClient) -> None:
     assert resp.status_code == 200
     assert resp.json()["scenarios"] == {}
     assert set_mock.call_args.kwargs["scenarios"] == {}
+
+
+# ---------------------------------------------------------------------------
+# Declarative rules and templates (#4744, PMR-2.1)
+# ---------------------------------------------------------------------------
+
+RULES_PAYLOAD = {
+    "scenarios": {
+        "personalized": {
+            "operations": {
+                "GET /pets": {
+                    "rules": [
+                        {
+                            "when": {"query": {"limit": {"gt": 10}}},
+                            "responses": [{"status": 429, "offSpec": True}],
+                        }
+                    ],
+                    "responses": [{"status": 200, "body": ["{{random.choice('a', 'b')}}"]}],
+                }
+            }
+        }
+    }
+}
+
+
+def test_put_scenarios_with_rules_and_templates_persists(client: TestClient) -> None:
+    stored_settings = {"scenarios": {}}
+    with patch(
+        "app.versions_routes.db.get_version_by_id",
+        return_value=_version_row(),
+    ), patch(
+        "app.versions_routes._generated_spec_for_version",
+        return_value=SPEC,
+    ), patch(
+        "app.versions_routes.db.set_version_mock_scenarios",
+        return_value=_version_row(mock_settings=stored_settings),
+    ) as set_mock, patch("app.versions_routes.enforce_permission"):
+        resp = client.put(
+            f"/v1/versions/{TENANT}/{PROJECT_ID}/{VERSION_ID}/mock/scenarios",
+            json=RULES_PAYLOAD,
+        )
+    assert resp.status_code == 200, resp.text
+    stored = set_mock.call_args.kwargs["scenarios"]
+    override = stored["personalized"]["operations"]["GET /pets"]
+    assert override["rules"][0]["when"] == {"query": {"limit": {"gt": 10.0}}}
+    assert override["rules"][0]["responses"] == [{"status": 429, "offSpec": True}]
+    assert override["responses"] == [{"status": 200, "body": ["{{random.choice('a', 'b')}}"]}]
+
+
+def test_put_scenarios_with_invalid_template_returns_422(client: TestClient) -> None:
+    payload = {
+        "scenarios": {
+            "s": {
+                "operations": {
+                    "GET /pets": {"responses": [{"status": 429, "body": "{{secrets.env}}"}]}
+                }
+            }
+        }
+    }
+    with patch(
+        "app.versions_routes.db.get_version_by_id",
+        return_value=_version_row(),
+    ), patch(
+        "app.versions_routes._generated_spec_for_version",
+        return_value=SPEC,
+    ), patch("app.versions_routes.enforce_permission"):
+        resp = client.put(
+            f"/v1/versions/{TENANT}/{PROJECT_ID}/{VERSION_ID}/mock/scenarios",
+            json=payload,
+        )
+    assert resp.status_code == 422
+    errors = resp.json()["detail"]["errors"]
+    assert any("unknown expression root" in error for error in errors)
+
+
+def test_put_scenarios_with_invalid_predicate_returns_422(client: TestClient) -> None:
+    payload = {
+        "scenarios": {
+            "s": {
+                "operations": {
+                    "GET /pets": {
+                        "rules": [
+                            {
+                                "when": {"query": {"tag": {"matches": "("}}},
+                                "responses": [{"status": 429}],
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+    with patch(
+        "app.versions_routes.db.get_version_by_id",
+        return_value=_version_row(),
+    ), patch(
+        "app.versions_routes._generated_spec_for_version",
+        return_value=SPEC,
+    ), patch("app.versions_routes.enforce_permission"):
+        resp = client.put(
+            f"/v1/versions/{TENANT}/{PROJECT_ID}/{VERSION_ID}/mock/scenarios",
+            json=payload,
+        )
+    assert resp.status_code == 422
+    errors = resp.json()["detail"]["errors"]
+    assert any("regular expression" in error for error in errors)
+
+
+def test_get_scenarios_round_trips_rules(client: TestClient) -> None:
+    settings = {
+        "scenarios": {
+            "personalized": {
+                "operations": {
+                    "GET /pets": {
+                        "rules": [
+                            {
+                                "when": {"query": {"limit": {"gt": 10}}},
+                                "responses": [{"status": 429, "offSpec": True}],
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+    with patch(
+        "app.versions_routes.db.get_version_by_id",
+        return_value=_version_row(mock_settings=settings),
+    ), patch("app.versions_routes.enforce_permission"):
+        resp = client.get(f"/v1/versions/{TENANT}/{PROJECT_ID}/{VERSION_ID}/mock/scenarios")
+    assert resp.status_code == 200, resp.text
+    override = resp.json()["scenarios"]["personalized"]["operations"]["GET /pets"]
+    assert override["rules"][0]["when"]["query"]["limit"]["gt"] == 10
+    assert override["rules"][0]["responses"][0]["status"] == 429

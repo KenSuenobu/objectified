@@ -27,7 +27,7 @@ reports :data:`BUNDLE_EPOCH` as its ``updated_at``.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, NoReturn
@@ -43,6 +43,7 @@ from app.mock_engine import MockOperation, extract_operations
 
 from apiome_mock import __version__
 from apiome_mock.chaos import ChaosConfig, parse_chaos
+from apiome_mock.fixture_data import decode_bundle_fixtures
 from apiome_mock.scenarios import Scenario, parse_scenarios
 from apiome_mock.spec_loader import CompiledSpec
 
@@ -107,6 +108,8 @@ class LoadedBundle:
         scenarios: Scenario overrides parsed from the bundled settings.
         chaos: Version-level chaos knobs parsed from the bundled settings.
         fixtures: Fixture entries declared by the manifest (name, media type, digest, size).
+        fixture_data: Decoded fixture values by name, readable by response templates
+            (#4744, PMR-2.1).
         signed: Whether the bundle carried a signature block.
         source: Filesystem path the bundle was read from, when it came from a file.
     """
@@ -118,6 +121,7 @@ class LoadedBundle:
     scenarios: Mapping[str, Scenario]
     chaos: ChaosConfig
     fixtures: tuple[Mapping[str, Any], ...] = ()
+    fixture_data: Mapping[str, Any] = field(default_factory=dict)
     signed: bool = False
     source: Path | None = None
 
@@ -164,6 +168,7 @@ class LoadedBundle:
             operations=self.operations,
             scenarios=self.scenarios,
             chaos=self.chaos,
+            fixtures=self.fixture_data,
         )
 
 
@@ -230,6 +235,7 @@ def load_bundle_document(
     settings = document.get("settings") or {}
     contents = manifest.get("contents")
     fixtures = contents.get("fixtures") if isinstance(contents, Mapping) else []
+    fixture_entries = tuple(entry for entry in fixtures or [] if isinstance(entry, Mapping))
 
     return LoadedBundle(
         manifest=manifest,
@@ -238,7 +244,8 @@ def load_bundle_document(
         operations=tuple(extract_operations(spec)),
         scenarios=parse_scenarios(settings),
         chaos=parse_chaos(settings),
-        fixtures=tuple(entry for entry in fixtures or [] if isinstance(entry, Mapping)),
+        fixtures=fixture_entries,
+        fixture_data=decode_bundle_fixtures(fixture_entries, document.get("fixtures")),
         signed=document.get("signature") is not None,
         source=source,
     )

@@ -53,6 +53,46 @@ uv run python scripts/build_conformance_bundle.py --check   # verify it is curre
 
 Full guide: [docs/guide/portable-mock-runtime.md](../docs/guide/portable-mock-runtime.md).
 
+## Declarative matching and templates (PMR-2.1)
+
+Scenario operation overrides may carry ordered **match rules** — request predicates plus the
+responses they select. The first rule whose predicates all hold serves its responses, the plain
+`responses` list is the fallback, and with neither the request falls through to the default
+spec-driven flow:
+
+```json
+{
+  "GET /pets/{petId}": {
+    "rules": [
+      {
+        "when": {
+          "path":   {"petId":  {"equals": "42"}},
+          "query":  {"limit":  {"gt": 10, "lte": 100}},
+          "header": {"x-tier": {"in": ["gold", "silver"]}},
+          "body":   {"/items/0/sku": {"matches": "^SKU-"}}
+        },
+        "responses": [{"status": 200, "body": {"id": "{{request.path.petId}}"}}]
+      }
+    ],
+    "responses": [{"status": 404}]
+  }
+}
+```
+
+Predicate operators: `equals`, `notEquals`, `contains`, `matches` (bounded regex), `in`,
+`exists`, `gt`/`gte`/`lt`/`lte`. `body` keys are RFC 6901 JSON Pointers into the JSON request
+body. A response body or header value may embed bounded `{{ ... }}` **templates** over request
+fields (`request.method`, `request.path.<name>`, `request.query.<name>`, `request.header.<name>`,
+`request.body#/<pointer>`), seeded randomness (`random.int(1, 100)`, `random.float`,
+`random.uuid()`, `random.hex(8)`, `random.bool()`, `random.choice('a', 'b')`), and fixture data
+(`fixture.<name>#/<pointer>` — bundle fixture payloads or the `mock_settings.fixtures` map).
+
+Random draws are seeded from the `__seed` query parameter, so the same request and seed always
+render byte-identical output. Renders run under CPU and output budgets (`template-limits-exceeded`
+problem on breach), and the language has no reachable host objects — network, filesystem, and
+process access are not expressible. Predicates and templates are validated in apiome-rest when
+scenarios are saved; the matched rule is echoed in `X-Mock-Scenario-Rule`.
+
 ## Container image
 
 One image, two runtimes — `serve` (hosted, the default) and `run` (portable):

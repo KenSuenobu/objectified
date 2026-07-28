@@ -2878,16 +2878,139 @@ class MockScenarioResponseSpec(BaseModel):
     )
 
 
-class MockScenarioOperationSpec(BaseModel):
-    """Canned response(s) for one operation; 2+ responses form a sequence (#4454 SIM-4.2)."""
+class MockRequestPredicateSpec(BaseModel):
+    """Operators applied to one request value inside a rule's ``when`` block (#4744 PMR-2.1).
+
+    At least one operator must be set; several operators combine with AND. Deep validation
+    (regex compilation, list caps) happens in ``app.mock_match.validate_when``.
+    """
 
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
 
+    equals: Any = Field(default=None, description="Value equality (string sources coerce to the expected type).")
+    not_equals: Any = Field(
+        default=None,
+        validation_alias=AliasChoices("notEquals", "not_equals"),
+        serialization_alias="notEquals",
+        description="Negated equality.",
+    )
+    contains: Optional[str] = Field(
+        default=None,
+        description="Substring for strings; element equality for arrays.",
+    )
+    matches: Optional[str] = Field(
+        default=None,
+        max_length=256,
+        description="Bounded regular expression evaluated with re.search.",
+    )
+    in_: Optional[List[Any]] = Field(
+        default=None,
+        validation_alias=AliasChoices("in", "in_"),
+        serialization_alias="in",
+        max_length=50,
+        description="Equality against any listed value.",
+    )
+    exists: Optional[bool] = Field(
+        default=None,
+        description="Require the parameter/header/pointer to be present (true) or absent (false).",
+    )
+    gt: Optional[float] = Field(default=None, description="Numeric greater-than.")
+    gte: Optional[float] = Field(default=None, description="Numeric greater-than-or-equal.")
+    lt: Optional[float] = Field(default=None, description="Numeric less-than.")
+    lte: Optional[float] = Field(default=None, description="Numeric less-than-or-equal.")
+
+    @model_validator(mode="after")
+    def _require_one_operator(self) -> "MockRequestPredicateSpec":
+        if not self.model_fields_set:
+            raise ValueError("a predicate must set at least one operator")
+        return self
+
+    def to_storage(self) -> Dict[str, Any]:
+        """Canonicalize into the operator object read by the runtime (only set operators)."""
+        aliases = {"not_equals": "notEquals", "in_": "in"}
+        out: Dict[str, Any] = {}
+        for field_name in self.model_fields_set:
+            out[aliases.get(field_name, field_name)] = getattr(self, field_name)
+        return out
+
+
+class MockScenarioWhenSpec(BaseModel):
+    """Declarative request predicates gating one scenario rule (#4744 PMR-2.1).
+
+    Every predicate present must hold (AND). ``body`` keys are RFC 6901 JSON Pointers into the
+    parsed JSON request body; the other sections are keyed by parameter/header name.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    path: Dict[str, MockRequestPredicateSpec] = Field(
+        default_factory=dict,
+        description="Predicates over path template parameters, keyed by parameter name.",
+    )
+    query: Dict[str, MockRequestPredicateSpec] = Field(
+        default_factory=dict,
+        description="Predicates over query parameters, keyed by parameter name (any value may match).",
+    )
+    header: Dict[str, MockRequestPredicateSpec] = Field(
+        default_factory=dict,
+        description="Predicates over request headers, keyed by case-insensitive header name.",
+    )
+    body: Dict[str, MockRequestPredicateSpec] = Field(
+        default_factory=dict,
+        description="Predicates over the JSON request body, keyed by RFC 6901 JSON Pointer.",
+    )
+
+    def to_storage(self) -> Dict[str, Any]:
+        """Canonicalize into the ``when`` shape read by the runtime (only non-empty sections)."""
+        out: Dict[str, Any] = {}
+        for section in ("path", "query", "header", "body"):
+            predicates: Dict[str, MockRequestPredicateSpec] = getattr(self, section)
+            if predicates:
+                out[section] = {key: predicate.to_storage() for key, predicate in predicates.items()}
+        return out
+
+
+class MockScenarioRuleSpec(BaseModel):
+    """One declarative rule: request predicates plus the response(s) they select (#4744 PMR-2.1)."""
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    when: MockScenarioWhenSpec = Field(
+        description="Request predicates; the first rule whose predicates all hold serves its responses.",
+    )
     responses: List[MockScenarioResponseSpec] = Field(
         min_length=1,
         max_length=20,
         description="One response = fixed; several = per-call sequence (sticks on the last).",
     )
+
+
+class MockScenarioOperationSpec(BaseModel):
+    """Canned response(s) for one operation; 2+ responses form a sequence (#4454 SIM-4.2).
+
+    Rules (#4744 PMR-2.1) are evaluated in order against each request; the first match serves its
+    responses. Plain ``responses`` are the fallback when no rule matches, and with neither a
+    matching rule nor a fallback the request falls through to the default spec-driven mock flow.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    responses: List[MockScenarioResponseSpec] = Field(
+        default_factory=list,
+        max_length=20,
+        description="One response = fixed; several = per-call sequence (sticks on the last).",
+    )
+    rules: List[MockScenarioRuleSpec] = Field(
+        default_factory=list,
+        max_length=20,
+        description="Ordered declarative rules evaluated before the fallback responses (#4744 PMR-2.1).",
+    )
+
+    @model_validator(mode="after")
+    def _require_rules_or_responses(self) -> "MockScenarioOperationSpec":
+        if not self.responses and not self.rules:
+            raise ValueError("an operation override needs at least one response or rule")
+        return self
 
 
 class MockChaosKnobsSpec(BaseModel):

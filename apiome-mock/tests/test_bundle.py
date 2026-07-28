@@ -134,7 +134,7 @@ def test_loaded_bundle_carries_scenarios_and_chaos() -> None:
     loaded = load_bundle_document(_document(), secret=SECRET)
 
     assert set(loaded.scenarios) == {"quota-exceeded"}
-    responses = loaded.scenarios["quota-exceeded"].operations["GET /pets"]
+    responses = loaded.scenarios["quota-exceeded"].operations["GET /pets"].responses
     assert [response.status for response in responses] == [429]
     assert responses[0].headers == (("Retry-After", "60"),)
 
@@ -147,6 +147,13 @@ def test_loaded_bundle_exposes_fixture_references() -> None:
     loaded = load_bundle_document(_document(), secret=SECRET)
     assert [entry["name"] for entry in loaded.fixtures] == ["pets.json"]
     assert loaded.fixtures[0]["bytes"] == len(FIXTURES[0].content)
+
+
+def test_loaded_bundle_decodes_fixture_data_for_templates() -> None:
+    """Fixture payloads become template-readable values on the compiled spec (#4744, PMR-2.1)."""
+    loaded = load_bundle_document(_document(), secret=SECRET)
+    assert loaded.fixture_data == {"pets.json": {"pets": [{"id": 1}]}}
+    assert loaded.to_compiled_spec().fixtures == loaded.fixture_data
 
 
 def test_to_compiled_spec_matches_the_hosted_serving_unit() -> None:

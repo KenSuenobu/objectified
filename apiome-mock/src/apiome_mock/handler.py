@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from app.mock_engine import MockOperation
+from app.mock_template import TemplateLimitError
 from fastapi import Request
 from fastapi.responses import JSONResponse, Response
 from psycopg_pool import AsyncConnectionPool
@@ -26,6 +27,7 @@ from apiome_mock.problems import (
     mock_disabled,
     not_acceptable,
     not_found,
+    template_limits_exceeded,
     unauthorized,
     undefined_response_status,
     unknown_scenario,
@@ -39,7 +41,12 @@ from apiome_mock.response_resolver import (
     select_response_by_status,
 )
 from apiome_mock.routing import match_request
-from apiome_mock.scenarios import parse_mock_scenario_name, serve_scenario_response
+from apiome_mock.scenarios import (
+    build_match_context,
+    parse_mock_scenario_name,
+    select_scenario_responses,
+    serve_scenario_response,
+)
 from apiome_mock.schema_synthesizer import parse_mock_seed
 from apiome_mock.session_store import SessionStore
 from apiome_mock.spec_cache import SpecCache
@@ -364,27 +371,53 @@ async def serve_compiled_request(
             response.headers[CHAOS_DELAY_HEADER] = str(applied_delay_ms)
         return response
 
+    seed = parse_mock_seed(request.query_params.get("__seed"))
+
     if scenario is not None:
-        canned_responses = scenario.operations.get(operation.key)
-        if canned_responses:
-            client = request.client
-            return _with_chaos_delay(
-                await serve_scenario_response(
-                    scenario=scenario,
-                    responses=canned_responses,
-                    operation_key=operation.key,
-                    tenant=tenant,
-                    project=project,
-                    version=version,
-                    session_token=session_token,
-                    client_ip=client.host if client and client.host else "unknown",
-                    store=session_store,
-                )
+        override = scenario.operations.get(operation.key)
+        if override is not None:
+            # Declarative rules (#4744, PMR-2.1): the first rule whose request
+            # predicates hold serves its responses; the plain responses list is
+            # the fallback; with neither, the request falls through to the
+            # default flow below as if the scenario did not cover the operation.
+            ctx = await build_match_context(
+                request,
+                path_params=path_params,
+                needs_body=override.needs_body,
             )
+            selection = select_scenario_responses(override, ctx)
+            if selection is not None:
+                rule_index, canned_responses = selection
+                client = request.client
+                try:
+                    return _with_chaos_delay(
+                        await serve_scenario_response(
+                            scenario=scenario,
+                            responses=canned_responses,
+                            operation_key=operation.key,
+                            rule_index=rule_index,
+                            ctx=ctx,
+                            seed=seed,
+                            fixtures=compiled.fixtures,
+                            tenant=tenant,
+                            project=project,
+                            version=version,
+                            session_token=session_token,
+                            client_ip=client.host if client and client.host else "unknown",
+                            store=session_store,
+                        )
+                    )
+                except TemplateLimitError as exc:
+                    return _with_chaos_delay(
+                        template_limits_exceeded(
+                            f"Scenario '{scenario.name}' response template for {operation.key} "
+                            f"exceeded its render limits: {exc}",
+                            instance=instance,
+                        )
+                    )
 
     prefer_header = request.headers.get("prefer")
     accept = request.headers.get("accept")
-    seed = parse_mock_seed(request.query_params.get("__seed"))
     forced_status = parse_forced_status(prefer_header, request.query_params)
     if forced_status is not None:
         return _with_chaos_delay(

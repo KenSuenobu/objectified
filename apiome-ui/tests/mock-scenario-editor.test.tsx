@@ -348,3 +348,105 @@ describe('MockScenarioEditor — latency & chaos (#4455, SIM-4.3)', () => {
     expect(scenarios.degraded).not.toHaveProperty('chaos');
   });
 });
+
+describe('MockScenarioEditor — match rules and templates (#4744, PMR-2.1)', () => {
+  const RULES = [
+    { when: { query: { limit: { gt: 10 } } }, responses: [{ status: 429 }] },
+  ];
+
+  it('round-trips stored match rules through the rules textarea', async () => {
+    mockFetch({
+      personalized: {
+        operations: {
+          'GET /pets': {
+            rules: RULES,
+            responses: [{ status: 200, body: [] }],
+          },
+        },
+      },
+    });
+    renderEditor();
+
+    const rulesField = await screen.findByLabelText('Scenario 1 operation 1 match rules');
+    expect(rulesField).toHaveValue(JSON.stringify(RULES, null, 2));
+
+    fireEvent.click(screen.getByTestId('mock-scenario-save'));
+    await waitFor(() => expect(putBody()).toBeDefined());
+    const scenarios = putBody()?.scenarios as Record<string, {
+      operations: Record<string, { rules?: unknown; responses?: unknown }>;
+    }>;
+    expect(scenarios.personalized.operations['GET /pets'].rules).toEqual(RULES);
+    expect(scenarios.personalized.operations['GET /pets'].responses).toEqual([
+      { status: 200, body: [] },
+    ]);
+  });
+
+  it('saves a rules-only operation without fallback responses', async () => {
+    mockFetch({
+      personalized: {
+        operations: { 'GET /pets': { rules: RULES } },
+      },
+    });
+    renderEditor();
+
+    await screen.findByLabelText('Scenario 1 operation 1 match rules');
+    fireEvent.click(screen.getByTestId('mock-scenario-save'));
+    await waitFor(() => expect(putBody()).toBeDefined());
+    const scenarios = putBody()?.scenarios as Record<string, {
+      operations: Record<string, { rules?: unknown; responses?: unknown }>;
+    }>;
+    expect(scenarios.personalized.operations['GET /pets'].rules).toEqual(RULES);
+    expect(scenarios.personalized.operations['GET /pets'].responses).toBeUndefined();
+  });
+
+  it('blocks the save and lists an error when the rules JSON is invalid', async () => {
+    mockFetch(STORED_SCENARIOS);
+    renderEditor();
+
+    const rulesField = await screen.findByLabelText('Scenario 1 operation 1 match rules');
+    fireEvent.change(rulesField, { target: { value: '{not json' } });
+    fireEvent.click(screen.getByTestId('mock-scenario-save'));
+
+    await waitFor(() => expect(screen.getByTestId('mock-scenario-errors')).toBeInTheDocument());
+    expect(screen.getByTestId('mock-scenario-errors').textContent).toContain(
+      'match rules must be valid JSON'
+    );
+    expect(putBody()).toBeUndefined();
+  });
+
+  it('blocks the save when a rule is missing predicates or responses', async () => {
+    mockFetch(STORED_SCENARIOS);
+    renderEditor();
+
+    const rulesField = await screen.findByLabelText('Scenario 1 operation 1 match rules');
+    fireEvent.change(rulesField, {
+      target: { value: JSON.stringify([{ when: {}, responses: [] }]) },
+    });
+    fireEvent.click(screen.getByTestId('mock-scenario-save'));
+
+    await waitFor(() => expect(screen.getByTestId('mock-scenario-errors')).toBeInTheDocument());
+    expect(screen.getByTestId('mock-scenario-errors').textContent).toContain(
+      "'responses' must be a non-empty array"
+    );
+    expect(putBody()).toBeUndefined();
+  });
+
+  it('surfaces server-side template validation errors from the 422 response', async () => {
+    mockFetch(STORED_SCENARIOS, {
+      ok: false,
+      json: {
+        success: false,
+        errors: ["Scenario 'quota-exceeded', operation 'GET /pets', response 1, body: unknown expression root"],
+      },
+    });
+    renderEditor();
+
+    await screen.findByLabelText('Scenario 1 operation 1 key');
+    fireEvent.click(screen.getByTestId('mock-scenario-save'));
+
+    await waitFor(() => expect(screen.getByTestId('mock-scenario-errors')).toBeInTheDocument());
+    expect(screen.getByTestId('mock-scenario-errors').textContent).toContain(
+      'unknown expression root'
+    );
+  });
+});
