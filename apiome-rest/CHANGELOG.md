@@ -5,6 +5,32 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.210.0] - 2026-07-28
+
+### Added
+- **Format capability & parsing-limit registry (#4796, CPDO-2.4)** — the versioned answer to
+  "why is there no detail here?", so an unsupported format, an uncaptured source, a parser
+  limit, a redaction and a genuinely absent construct stop sharing one sentence. See
+  [docs/format_capabilities.md](./docs/format_capabilities.md).
+  - **`GET /v1/import/format-capabilities`** returns the whole registry; **`GET
+    …/{format_key}`** returns one entry. Both are authenticated, tenant-independent registry
+    metadata, deterministic and cacheable by `version`.
+  - **One entry per registered import source**, each stating native hierarchy,
+    source-location quality, value-visibility ceiling, unsupported grammar,
+    canonical-projection coverage and conversion-graph support — stamped with the analyzer
+    key/version and underlying tool versions backing the claim.
+  - **Safe fallback for every format:** a reviewed seed where one exists, otherwise an entry
+    derived from the live adapter with pessimistic defaults, and an `unknown_format` entry for
+    a key whose adapter was retired (200, not 404 — a 404 there is the "no details" dead end).
+  - **X12 and copybook boundaries are explicit** — X12 keeps the whole envelope the canonical
+    model drops; the copybook value ceiling is `none`, because a layout has no runtime values
+    to withhold.
+  - **`source_missing` is true for exactly one absence category**, reachable only from
+    `no_source_captured`. Enforced in the registry, on the wire, and in the UI panel.
+  - Cross-language contract via `scripts/format_capabilities/vocabulary.json`, asserted from
+    both the Python and TypeScript suites.
+  - OpenAPI version **1.75.0**.
+
 ## [1.206.0] - 2026-07-27
 
 ### Added

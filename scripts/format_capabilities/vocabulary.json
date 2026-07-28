@@ -1,0 +1,128 @@
+{
+  "_comment": "Canonical source-format capability vocabulary (CPDO-2.4, #4796) — the single source of truth the Python registry (apiome-rest/src/app/format_capability_registry.py) and its TypeScript mirror (apiome-ui/src/app/components/ade/dashboard/catalog/formatCapabilityRegistry.ts) are both asserted against, so the two cannot silently drift. Mirror tests: apiome-rest/tests/test_format_capability_registry.py and apiome-ui/tests/format-capability-registry.test.ts. `source_missing` must stay true on exactly one absence — a parser, capability, policy or content cause is never a missing source. Bump `registry_version` and `review_date` together with any change here.",
+  "registry_version": "1",
+  "review_date": "2026-07-28",
+  "analysis_schema_version": "1.1.0",
+  "vocabularies": {
+    "capability_provenance": [
+      "reviewed",
+      "derived",
+      "unknown_format"
+    ],
+    "format_availability": [
+      "available",
+      "tool_unavailable",
+      "preview_only",
+      "unregistered"
+    ],
+    "native_hierarchy": [
+      "native",
+      "generic",
+      "none"
+    ],
+    "source_location_quality": [
+      "byte_offsets",
+      "line_numbers",
+      "path_only",
+      "none"
+    ],
+    "projection_coverage": [
+      "full",
+      "partial",
+      "none",
+      "unknown"
+    ],
+    "conversion_support": [
+      "supported",
+      "tool_unavailable",
+      "unsupported"
+    ],
+    "absence_category": [
+      "source_missing",
+      "not_analyzed",
+      "format_unsupported",
+      "parse_limit",
+      "analyzer_failed",
+      "value_redacted",
+      "absent_in_source",
+      "undeclared"
+    ],
+    "construct_availability": [
+      "modelled",
+      "unmodelled",
+      "undeclared"
+    ],
+    "analysis_reason": [
+      "not_analyzed",
+      "no_source_captured",
+      "unsupported_format",
+      "bounds_exceeded",
+      "analyzer_failed"
+    ]
+  },
+  "reason_absence_categories": {
+    "not_analyzed": "not_analyzed",
+    "no_source_captured": "source_missing",
+    "unsupported_format": "format_unsupported",
+    "bounds_exceeded": "parse_limit",
+    "analyzer_failed": "analyzer_failed"
+  },
+  "absences": [
+    {
+      "category": "source_missing",
+      "category_label": "Source not captured",
+      "summary_template": "No source material was captured for this revision, so there is nothing to analyse for {construct}.",
+      "remediation": "Re-import the item so its source is captured, then the analysis will run.",
+      "source_missing": true
+    },
+    {
+      "category": "not_analyzed",
+      "category_label": "Not analysed yet",
+      "summary_template": "This revision has not been analysed, so nothing is known about {construct} either way.",
+      "remediation": "Re-import the item to produce an analysis for its current revision.",
+      "source_missing": false
+    },
+    {
+      "category": "format_unsupported",
+      "category_label": "Format not analysed",
+      "summary_template": "apiome has no native analyzer for this format, so {construct} is not described. The source itself is unaffected.",
+      "remediation": "This is an apiome capability boundary, not a problem with the source.",
+      "source_missing": false
+    },
+    {
+      "category": "parse_limit",
+      "category_label": "Parser limit",
+      "summary_template": "apiome's analyzer for this format does not describe {construct}; the source may well contain it.",
+      "remediation": "This is an apiome parser limitation — read the original source to confirm what is there.",
+      "source_missing": false
+    },
+    {
+      "category": "analyzer_failed",
+      "category_label": "Analysis failed",
+      "summary_template": "The analyzer failed on this revision, so {construct} was never described. The import itself completed.",
+      "remediation": "Re-import to retry the analysis; the catalog item is unaffected.",
+      "source_missing": false
+    },
+    {
+      "category": "value_redacted",
+      "category_label": "Value withheld",
+      "summary_template": "The structure of {construct} is known, but its value is withheld by the value-visibility policy in force.",
+      "remediation": "Request a wider value visibility only if the stored record was written under one; a record never held values it can now reveal.",
+      "source_missing": false
+    },
+    {
+      "category": "absent_in_source",
+      "category_label": "Not in the source",
+      "summary_template": "The analyzer models {construct} and did not observe it, so this source does not contain it.",
+      "remediation": "No action needed — this is a statement about the source, not about apiome.",
+      "source_missing": false
+    },
+    {
+      "category": "undeclared",
+      "category_label": "No statement",
+      "summary_template": "apiome's capability registry makes no statement about {construct} for this format, so its absence means nothing either way.",
+      "remediation": "Read the original source to determine what is there.",
+      "source_missing": false
+    }
+  ]
+}

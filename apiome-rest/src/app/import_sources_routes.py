@@ -15,6 +15,16 @@ up in the UI with no UI code change.
 ``POST /v1/import/detect`` (MFI-1.5) sniffs a document's format so the importer —
 UI or CLI — can pre-select the right source and, when the input is ambiguous,
 prompt the user instead of guessing.
+
+``GET /v1/import/format-capabilities`` (CPDO-2.4) publishes the versioned
+source-format capability & parsing-limit registry
+(:mod:`app.format_capability_registry`) — for every registered format, what its
+analyzer models, what it knowingly does not, how good its source pointers are,
+what survives normalization, and whether it converts — plus the reviewed wording
+for every way a detail can be absent. It is the same *kind* of registry list as
+``/sources`` above (non-tenant registry metadata, authenticated but unscoped), and
+it is what lets a catalog screen explain a missing construct honestly instead of
+collapsing five different causes into "no details".
 """
 
 from __future__ import annotations
@@ -28,6 +38,13 @@ from pydantic import BaseModel, Field
 
 from .archive_intake import ArchiveIntakeError, detect_archive_format, is_archive_payload
 from .auth import validate_session_credentials
+from .format_capability_registry import (
+    FormatCapability,
+    FormatCapabilitySnapshot,
+    capability_for,
+    is_valid_format_key,
+    registry_snapshot,
+)
 from .format_detection import FormatCandidate, FormatDetection, detect_format
 from .import_source import (
     DetectionInput,
@@ -69,6 +86,91 @@ async def list_import_sources(
     # parameter* the caller never sends, rejecting every real call with 422.
     _ = auth_data
     return ImportSourceListResponse(sources=describe_import_sources())
+
+
+@router.get(
+    "/format-capabilities",
+    response_model=FormatCapabilitySnapshot,
+    summary="Get the source-format capability & parsing-limit registry",
+    description=(
+        "Return the versioned source-format capability registry (CPDO-2.4): one entry per "
+        "registered import source — the native hierarchy its analyzer models, the quality of "
+        "the source locations it can point at, the value visibility it can ever carry, the "
+        "grammar it knowingly does not read, how much survives the projection onto the "
+        "canonical model, and whether the format converts — each stamped with the analyzer key, "
+        "analyzer version and underlying tool versions that back the claim. The snapshot also "
+        "carries the reviewed explanation for every way a detail can be absent, and the map from "
+        "a stored payload-analysis reason code onto those categories. Exactly one category means "
+        "the source material is missing; a parser limit, a capability boundary, an analyzer "
+        "failure and a redaction each mean something else. This is static reference data — the "
+        "same for every tenant and every item — so the UI can fetch it once and cache it by "
+        "``version``."
+    ),
+)
+async def get_format_capability_registry(
+    auth_data: Dict[str, Any] = Depends(validate_session_credentials),
+) -> FormatCapabilitySnapshot:
+    """Return the versioned source-format capability & parsing-limit registry snapshot.
+
+    Deterministic and format-independent — it describes the *formats*, not any particular
+    import — so it is safe to cache by :attr:`FormatCapabilitySnapshot.version`. Uses the
+    session-credentials dependency for the same reason as :func:`list_import_sources`: with no
+    ``{tenant_slug}`` path segment, the tenant-scoped dependency would make ``tenant_slug`` a
+    required query parameter and 422 every real call.
+
+    Args:
+        auth_data: Authenticated session context (the snapshot content is tenant-independent).
+
+    Returns:
+        The full :class:`~app.format_capability_registry.FormatCapabilitySnapshot`.
+    """
+    _ = auth_data
+    return registry_snapshot()
+
+
+@router.get(
+    "/format-capabilities/{format_key}",
+    response_model=FormatCapability,
+    summary="Get one source format's capability entry",
+    description=(
+        "Return the capability & parsing-limit entry for a single source format (CPDO-2.4). "
+        "**Always resolves**: a reviewed format returns its reviewed entry, any other registered "
+        "adapter returns one derived from the adapter itself, and a key no adapter is registered "
+        "under returns an ``unknown_format`` entry that claims nothing about the format. That "
+        "last case is deliberate — a catalog item can name an adapter that was later retired, "
+        "and a 404 there would leave the UI with exactly the \"no details\" dead end this "
+        "registry exists to remove. A key that could never have been registered (wrong "
+        "character class, or over 64 characters) is a 422 rather than an echo."
+    ),
+)
+async def get_format_capability(
+    format_key: str,
+    auth_data: Dict[str, Any] = Depends(validate_session_credentials),
+) -> FormatCapability:
+    """Return one format's capability entry, resolving any registered or retired key.
+
+    Args:
+        format_key: The import-source key (aliases such as ``protobuf`` → ``grpc`` resolve).
+        auth_data: Authenticated session context (the entry is tenant-independent).
+
+    Returns:
+        The format's :class:`~app.format_capability_registry.FormatCapability`.
+
+    Raises:
+        HTTPException: 422 when ``format_key`` is not shaped like a format key at all — the
+            value is rejected at the boundary rather than echoed back inside an entry.
+    """
+    _ = auth_data
+    normalized = format_key.strip().lower()
+    if not is_valid_format_key(normalized):
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "format_key must be 1–64 characters of lowercase letters, digits, '.', '_' or "
+                "'-', starting with a letter or digit."
+            ),
+        )
+    return capability_for(normalized)
 
 
 class DetectFormatRequest(BaseModel):

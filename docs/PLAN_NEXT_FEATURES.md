@@ -173,7 +173,7 @@ Remaining open leftovers intentionally **not** closed: MTG-EPIC-5 #4764, GOV-1.5
 | 2.1 | Revision-scoped payload analysis contract | **#4794** CPDO-1.1 | N — foundation |
 | 2.2 | Native-analysis extractors at import — **Done** | **#4795** CPDO-1.2 | N — after 2.1 |
 | 2.3 | Projection manifest & graph API | **#4800** CPDO-1.3 | Y with early UI skeleton |
-| 2.4 | Format capability / parsing-limit registry | **#4796** CPDO-2.4 | Y with 2.3 |
+| 2.4 | Format capability / parsing-limit registry — **Done** | **#4796** CPDO-2.4 | Y with 2.3 |
 | 2.5 | Format detail tab + evidence navigation | **#4797** CPDO-2.1 | After 2.1–2.2 |
 | 2.6 | X12 inspector | **#4798** CPDO-2.2 | Y with 2.7 |
 | 2.7 | COBOL copybook inspector | **#4799** CPDO-2.3 | Y with 2.6 |
@@ -371,7 +371,6 @@ Filter: [`milestone:RC4 is:open`](https://github.com/apiome/apiome/milestone/1).
 | 4225 | OLO-7.3 Auth threat-model checklist review |
 | 4794 | CPDO-1.1 Revision-scoped payload analysis contract |
 | 4800 | CPDO-1.3 Projection manifest and graph API |
-| 4796 | CPDO-2.4 Format capability and parsing-limit registry |
 | 4797 | CPDO-2.1 Format detail tab and evidence navigation |
 | 4798 | CPDO-2.2 X12 interchange and transaction-set inspector |
 | 4799 | CPDO-2.3 COBOL copybook layout inspector |
