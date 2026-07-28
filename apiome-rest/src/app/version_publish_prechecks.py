@@ -13,6 +13,8 @@ from .database import db
 from .models import VersionPublishRequest
 from .publication_change_report import resolve_baseline_revision_id_for_change_report
 from .schema_compatibility import CompatibilityRules
+from .verification_policy_routes import decision_payload_for_http
+from .verification_policy_store import evaluate_and_record
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +34,7 @@ class PublishPrecheckOutcome:
         guide_name: The applied guide's display name, when computed.
         severity_counts: Per-severity violation counts when lint succeeded.
         error_findings: Error-severity findings (rule id + location) when lint succeeded.
+        verification_decision: ECA-3.1 evidence-backed policy decision when evaluated.
     """
 
     lint_error_count: Optional[int] = None
@@ -39,6 +42,7 @@ class PublishPrecheckOutcome:
     guide_name: Optional[str] = None
     severity_counts: Optional[Dict[str, int]] = None
     error_findings: Optional[tuple[Dict[str, str], ...]] = None
+    verification_decision: Optional[Dict[str, Any]] = None
 
 
 def enforce_publish_prechecks(
@@ -56,12 +60,16 @@ def enforce_publish_prechecks(
     (project → tenant → default) and report the violation counts on the returned
     :class:`PublishPrecheckOutcome`. Since GOV-2.5 (#4437) **error**-severity violations
     block publish (422) unless ``skip_publish_checks`` is set with a force-publish reason.
+    Since ECA-3.1 (#4734) the evidence-backed verification policy is evaluated with
+    ``purpose=publish``; when enforcement is ``block`` and the decision fails, publish is
+    refused with the same decision payload the dashboard renders.
 
     Returns:
         The observed :class:`PublishPrecheckOutcome`.
 
     Raises:
-        HTTPException: 422 for documentation gaps or invalid OpenAPI materialization.
+        HTTPException: 422 for documentation gaps, style-guide errors, or a blocking
+            verification-policy decision.
         HTTPException: 409 when compatibility is breaking and ``allow_breaking`` is false.
     """
     if bool(request.skip_publish_checks):
@@ -153,34 +161,95 @@ def enforce_publish_prechecks(
         mode=request.change_report_baseline_mode,
         manual_baseline_revision_id=request.change_report_baseline_revision_id,
     )
-    if not baseline_revision_id:
-        return outcome
+    if baseline_revision_id:
+        base_row = db.get_version_by_id(str(baseline_revision_id), tenant_id)
+        if base_row and base_row.get("published"):
+            rules = CompatibilityRules()
+            base_spec = openapi_for_revision(base_row, tenant_slug, tenant_id)
+            result = CompatibilityCheckEngine.run(base_spec, head_spec, rules)
 
-    base_row = db.get_version_by_id(str(baseline_revision_id), tenant_id)
-    if not base_row or not base_row.get("published"):
-        return outcome
+            if result.overall == "breaking" and not bool(request.allow_breaking):
+                proj = db.get_project_by_id(project_id, tenant_id)
+                proj_slug = str((proj or {}).get("slug") or project_id)
+                from_label = str(base_row.get("version_id") or baseline_revision_id)
+                to_label = str(existing.get("version_id") or version_record_id)
+                report_hint = f"/{tenant_slug}/{proj_slug}/changes/{from_label}...{to_label}"
 
-    rules = CompatibilityRules()
-    base_spec = openapi_for_revision(base_row, tenant_slug, tenant_id)
-    result = CompatibilityCheckEngine.run(base_spec, head_spec, rules)
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        "Breaking schema changes detected versus the published baseline "
+                        f"({from_label} → {to_label}). "
+                        "Review the change report or pass allowBreaking=true on the publish "
+                        f"request. Change report path: {report_hint}"
+                    ),
+                )
 
-    if result.overall != "breaking":
-        return outcome
-    if bool(request.allow_breaking):
-        return outcome
-
-    proj = db.get_project_by_id(project_id, tenant_id)
-    proj_slug = str((proj or {}).get("slug") or project_id)
-    from_label = str(base_row.get("version_id") or baseline_revision_id)
-    to_label = str(existing.get("version_id") or version_record_id)
-    report_hint = f"/{tenant_slug}/{proj_slug}/changes/{from_label}...{to_label}"
-
-    raise HTTPException(
-        status_code=409,
-        detail=(
-            "Breaking schema changes detected versus the published baseline "
-            f"({from_label} → {to_label}). "
-            "Review the change report or pass allowBreaking=true on the publish request. "
-            f"Change report path: {report_hint}"
-        ),
+    return _with_verification_policy(
+        outcome,
+        tenant_id=tenant_id,
+        project_id=project_id,
+        version_record_id=version_record_id,
     )
+
+
+def _with_verification_policy(
+    outcome: PublishPrecheckOutcome,
+    *,
+    tenant_id: str,
+    project_id: str,
+    version_record_id: str,
+) -> PublishPrecheckOutcome:
+    """Attach the ECA-3.1 decision and refuse publish when enforcement blocks.
+
+    Args:
+        outcome: The lint/compat outcome so far.
+        tenant_id: Tenant context.
+        project_id: Project of the revision being published.
+        version_record_id: Catalog revision id.
+
+    Returns:
+        ``outcome`` with ``verification_decision`` set.
+
+    Raises:
+        HTTPException: 422 when policy ``enforcement=block`` and the decision failed.
+    """
+    try:
+        decision, evaluation_id = evaluate_and_record(
+            tenant_id=tenant_id,
+            purpose="publish",
+            project_id=project_id,
+            version_record_id=version_record_id,
+            actor_kind="system",
+            actor_label="publish-precheck",
+        )
+        payload = decision_payload_for_http(decision, evaluation_id)
+    except Exception:  # noqa: BLE001 - policy faults must not invent a silent block
+        logger.warning(
+            "Verification policy evaluate failed for revision %s; continuing without "
+            "the ECA-3.1 signal",
+            version_record_id,
+            exc_info=True,
+        )
+        return outcome
+
+    enriched = PublishPrecheckOutcome(
+        lint_error_count=outcome.lint_error_count,
+        guide_id=outcome.guide_id,
+        guide_name=outcome.guide_name,
+        severity_counts=outcome.severity_counts,
+        error_findings=outcome.error_findings,
+        verification_decision=payload,
+    )
+    if decision.enforcement == "block" and not decision.passed:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": (
+                    "Evidence-backed verification policy blocked publish. "
+                    "Fix the failed gates, update the policy, or force-publish with a reason."
+                ),
+                "verificationPolicyDecision": payload,
+            },
+        )
+    return enriched

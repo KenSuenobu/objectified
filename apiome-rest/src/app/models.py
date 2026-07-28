@@ -4301,6 +4301,251 @@ class QualityPolicyVersionListResponse(BaseModel):
     count: int = 0
 
 
+class VerificationPolicyOut(BaseModel):
+    """The tenant's evidence-backed publish/deploy policy in force (ECA-3.1, #4734)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    policy_version_id: Optional[str] = Field(
+        None,
+        serialization_alias="policyVersionId",
+        description="Row id of the applied policy version; null when the tenant has none saved.",
+    )
+    version_number: int = Field(
+        0,
+        serialization_alias="versionNumber",
+        description="Monotonic version number; 0 for the built-in default.",
+    )
+    content_fingerprint: str = Field(
+        "default",
+        serialization_alias="contentFingerprint",
+        description="SHA-256 over the canonicalized policy body.",
+    )
+    is_default: bool = Field(
+        True,
+        serialization_alias="isDefault",
+        description="True when no tenant policy is saved and the advisory default applies.",
+    )
+    required_suite_digests: List[str] = Field(
+        default_factory=list,
+        serialization_alias="requiredSuiteDigests",
+        description="ECA-1.1 suite digests that must have recent passing evidence.",
+    )
+    max_evidence_age_seconds: Optional[int] = Field(
+        None,
+        serialization_alias="maxEvidenceAgeSeconds",
+        description="Maximum age of cited evidence in seconds; null = no freshness gate.",
+    )
+    required_target_network_class: Optional[str] = Field(
+        None,
+        serialization_alias="requiredTargetNetworkClass",
+        description="Optional public/private filter on cited evidence.",
+    )
+    purpose: str = Field(
+        "both",
+        description="Which evaluate purposes this policy covers: publish, deploy, or both.",
+    )
+    breaking_change_action: str = Field(
+        "warn",
+        serialization_alias="breakingChangeAction",
+        description="Whole-spec breaking posture: ignore, warn, or block (#4475; not consumer-aware).",
+    )
+    enforcement: str = Field(
+        "advisory",
+        description="advisory = report only; block = refuse publish/deploy when evaluate fails.",
+    )
+    actor_label: Optional[str] = Field(
+        None, serialization_alias="actorLabel", description="Who saved this version."
+    )
+    created_at: Optional[Union[datetime, str]] = Field(
+        None, serialization_alias="createdAt", description="When this version was saved."
+    )
+
+
+class VerificationPolicyPutRequest(BaseModel):
+    """Append a new evidence-backed verification policy version (ECA-3.1, #4734)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    required_suite_digests: Optional[List[str]] = Field(
+        None,
+        validation_alias=AliasChoices(
+            "requiredSuiteDigests", "required_suite_digests"
+        ),
+        serialization_alias="requiredSuiteDigests",
+        description="ECA-1.1 digests (sha256:<64 hex>); omit to keep the current list.",
+    )
+    max_evidence_age_seconds: Optional[int] = Field(
+        None,
+        ge=1,
+        validation_alias=AliasChoices(
+            "maxEvidenceAgeSeconds", "max_evidence_age_seconds"
+        ),
+        serialization_alias="maxEvidenceAgeSeconds",
+        description="Freshness ceiling in seconds; omit to keep current; send null via clear flag.",
+    )
+    clear_max_evidence_age_seconds: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "clearMaxEvidenceAgeSeconds", "clear_max_evidence_age_seconds"
+        ),
+        serialization_alias="clearMaxEvidenceAgeSeconds",
+        description="When true, clears maxEvidenceAgeSeconds even if omitted.",
+    )
+    required_target_network_class: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices(
+            "requiredTargetNetworkClass", "required_target_network_class"
+        ),
+        serialization_alias="requiredTargetNetworkClass",
+    )
+    clear_required_target_network_class: bool = Field(
+        False,
+        validation_alias=AliasChoices(
+            "clearRequiredTargetNetworkClass", "clear_required_target_network_class"
+        ),
+        serialization_alias="clearRequiredTargetNetworkClass",
+        description="When true, clears the network-class filter.",
+    )
+    purpose: Optional[str] = Field(
+        None,
+        description="publish, deploy, or both; omit to keep current.",
+    )
+    breaking_change_action: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices(
+            "breakingChangeAction", "breaking_change_action"
+        ),
+        serialization_alias="breakingChangeAction",
+    )
+    enforcement: Optional[str] = Field(
+        None,
+        description="advisory or block; omit to keep current.",
+    )
+
+
+class VerificationPolicyVersionListResponse(BaseModel):
+    """Saved verification-policy versions, newest first (ECA-3.1, #4734)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    versions: List[VerificationPolicyOut] = Field(default_factory=list)
+    count: int = 0
+
+
+class VerificationPolicyEvaluateRequest(BaseModel):
+    """Evaluate publish/deploy policy for a subject revision (ECA-3.1, #4734)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    purpose: str = Field(
+        ...,
+        description="Evaluate purpose: publish or deploy.",
+    )
+    project_slug: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices("projectSlug", "project_slug"),
+        serialization_alias="projectSlug",
+        description="Project slug (required with versionSlug, or when resolving versionId).",
+    )
+    project_id: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices("projectId", "project_id"),
+        serialization_alias="projectId",
+    )
+    version_id: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices("versionId", "version_id", "versionRecordId"),
+        serialization_alias="versionId",
+        description="Catalog revision UUID (versions.id).",
+    )
+    version_slug: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices("versionSlug", "version_slug", "versionRef"),
+        serialization_alias="versionSlug",
+        description="Version slug within the project (e.g. 1.2.0).",
+    )
+
+
+class VerificationPolicyGateResultOut(BaseModel):
+    """One named gate result inside a policy decision."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    gate: str
+    passed: bool
+    detail: Dict[str, Any] = Field(default_factory=dict)
+    action: Optional[str] = None
+
+
+class VerificationPolicyDecisionOut(BaseModel):
+    """Auditable evaluate decision shared by API, publish precheck, and dashboard."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    passed: bool
+    enforcement: str
+    policy_version_id: Optional[str] = Field(
+        None, serialization_alias="policyVersionId"
+    )
+    policy_content_fingerprint: str = Field(
+        ..., serialization_alias="policyContentFingerprint"
+    )
+    evaluation_id: Optional[str] = Field(None, serialization_alias="evaluationId")
+    evidence_run_ids: List[str] = Field(
+        default_factory=list, serialization_alias="evidenceRunIds"
+    )
+    gate_results: List[VerificationPolicyGateResultOut] = Field(
+        default_factory=list, serialization_alias="gateResults"
+    )
+    warnings: List[Dict[str, Any]] = Field(default_factory=list)
+    purpose: str
+    skipped: bool = False
+
+
+class VerificationPolicyEvaluationOut(BaseModel):
+    """One persisted evaluation row (ECA-3.1, #4734)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    tenant_id: str = Field(..., serialization_alias="tenantId")
+    project_id: Optional[str] = Field(None, serialization_alias="projectId")
+    version_record_id: Optional[str] = Field(
+        None, serialization_alias="versionRecordId"
+    )
+    policy_version_id: Optional[str] = Field(
+        None, serialization_alias="policyVersionId"
+    )
+    policy_content_fingerprint: str = Field(
+        ..., serialization_alias="policyContentFingerprint"
+    )
+    purpose: str
+    passed: bool
+    enforcement: str
+    gate_results: List[Any] = Field(
+        default_factory=list, serialization_alias="gateResults"
+    )
+    evidence_run_ids: List[str] = Field(
+        default_factory=list, serialization_alias="evidenceRunIds"
+    )
+    warnings: List[Any] = Field(default_factory=list)
+    actor_label: Optional[str] = Field(None, serialization_alias="actorLabel")
+    actor_kind: Optional[str] = Field(None, serialization_alias="actorKind")
+    evaluated_at: Optional[Union[datetime, str]] = Field(
+        None, serialization_alias="evaluatedAt"
+    )
+
+
+class VerificationPolicyEvaluationListResponse(BaseModel):
+    """Recent verification-policy evaluations."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    evaluations: List[VerificationPolicyEvaluationOut] = Field(default_factory=list)
+    count: int = 0
+
+
 class SecretScrubPolicyOut(BaseModel):
     """The tenant's intake secret-scrub policy in force (MFI-29.6, #4393)."""
 

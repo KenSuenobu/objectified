@@ -22802,6 +22802,215 @@ class Database:
         )
         return int(rows[0]["purged"]) if rows and rows[0].get("purged") is not None else 0
 
+    # -------------------------------------------------------------------------
+    # Verification publish/deploy policy (ECA-3.1, #4734)
+    # -------------------------------------------------------------------------
+
+    #: Columns every verification-policy read returns.
+    _VERIFICATION_POLICY_COLUMNS = """
+        id::text AS id, tenant_id::text AS tenant_id, version_number, content_fingerprint,
+        required_suite_digests, max_evidence_age_seconds, required_target_network_class,
+        purpose, breaking_change_action, enforcement,
+        actor_user_id::text AS actor_user_id, actor_label, created_at
+    """
+
+    #: Columns every verification-policy evaluation read returns.
+    _VERIFICATION_POLICY_EVALUATION_COLUMNS = """
+        id::text AS id, tenant_id::text AS tenant_id,
+        project_id::text AS project_id, version_record_id::text AS version_record_id,
+        policy_version_id::text AS policy_version_id, policy_content_fingerprint,
+        purpose, passed, enforcement, gate_results, evidence_run_ids, warnings,
+        actor_user_id::text AS actor_user_id, actor_label, actor_kind,
+        evaluated_at, created_at
+    """
+
+    def get_latest_verification_policy(self, tenant_id: str) -> Optional[Dict[str, Any]]:
+        """Return the highest-version verification policy for a tenant, if any (ECA-3.1)."""
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        rows = self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_POLICY_COLUMNS}
+            FROM apiome.verification_policies
+            WHERE tenant_id = %s::uuid
+            ORDER BY version_number DESC
+            LIMIT 1
+            """,
+            (tenant_id,),
+        )
+        return dict(rows[0]) if rows else None
+
+    def list_verification_policies(
+        self, tenant_id: str, *, limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """Return verification policy versions newest first (ECA-3.1)."""
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        rows = self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_POLICY_COLUMNS}
+            FROM apiome.verification_policies
+            WHERE tenant_id = %s::uuid
+            ORDER BY version_number DESC
+            LIMIT %s
+            """,
+            (tenant_id, max(1, min(int(limit), 200))),
+        )
+        return [dict(r) for r in rows]
+
+    def insert_verification_policy(
+        self,
+        *,
+        tenant_id: str,
+        content_fingerprint: str,
+        required_suite_digests: List[str],
+        max_evidence_age_seconds: Optional[int],
+        required_target_network_class: Optional[str],
+        purpose: str,
+        breaking_change_action: str,
+        enforcement: str,
+        actor_user_id: Optional[str] = None,
+        actor_label: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Append a new verification policy version for a tenant (ECA-3.1, #4734)."""
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        query = f"""
+            INSERT INTO apiome.verification_policies (
+                tenant_id, version_number, content_fingerprint,
+                required_suite_digests, max_evidence_age_seconds,
+                required_target_network_class, purpose, breaking_change_action,
+                enforcement, actor_user_id, actor_label
+            )
+            SELECT %s::uuid,
+                   COALESCE(MAX(version_number), 0) + 1,
+                   %s, %s, %s, %s, %s, %s, %s, %s::uuid, %s
+            FROM apiome.verification_policies
+            WHERE tenant_id = %s::uuid
+            RETURNING {self._VERIFICATION_POLICY_COLUMNS}
+        """
+        params = (
+            tenant_id,
+            content_fingerprint,
+            list(required_suite_digests or []),
+            max_evidence_age_seconds,
+            required_target_network_class,
+            purpose,
+            breaking_change_action,
+            enforcement,
+            actor_user_id if actor_user_id and is_uuid_string(str(actor_user_id)) else None,
+            actor_label,
+            tenant_id,
+        )
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, params)
+                row = cursor.fetchone()
+            conn.commit()
+            return dict(row) if row else None
+        except Exception:
+            conn.rollback()
+            raise
+
+    def record_verification_policy_evaluation(
+        self, evaluation: Dict[str, Any]
+    ) -> Optional[str]:
+        """Insert one write-once verification policy evaluation (ECA-3.1, #4734).
+
+        Args:
+            evaluation: Column-name -> value dict for ``verification_policy_evaluations``.
+
+        Returns:
+            The new evaluation id, or ``None`` when the tenant id is invalid.
+        """
+        tenant_id = evaluation.get("tenant_id")
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        evidence_ids = [
+            str(x)
+            for x in (evaluation.get("evidence_run_ids") or [])
+            if x and is_uuid_string(str(x))
+        ]
+        policy_version_id = evaluation.get("policy_version_id")
+        project_id = evaluation.get("project_id")
+        version_record_id = evaluation.get("version_record_id")
+        actor_user_id = evaluation.get("actor_user_id")
+        query = f"""
+            INSERT INTO apiome.verification_policy_evaluations (
+                tenant_id, project_id, version_record_id,
+                policy_version_id, policy_content_fingerprint,
+                purpose, passed, enforcement, gate_results, evidence_run_ids, warnings,
+                actor_user_id, actor_label, actor_kind
+            ) VALUES (
+                %s::uuid, %s::uuid, %s::uuid,
+                %s::uuid, %s,
+                %s, %s, %s, %s::jsonb, %s::uuid[], %s::jsonb,
+                %s::uuid, %s, %s
+            )
+            RETURNING id::text AS id
+        """
+        rows = self.execute_query(
+            query,
+            (
+                tenant_id,
+                project_id if project_id and is_uuid_string(str(project_id)) else None,
+                (
+                    version_record_id
+                    if version_record_id and is_uuid_string(str(version_record_id))
+                    else None
+                ),
+                (
+                    policy_version_id
+                    if policy_version_id and is_uuid_string(str(policy_version_id))
+                    else None
+                ),
+                evaluation["policy_content_fingerprint"],
+                evaluation["purpose"],
+                bool(evaluation.get("passed")),
+                evaluation.get("enforcement") or "advisory",
+                Json(evaluation.get("gate_results") or []),
+                evidence_ids,
+                Json(evaluation.get("warnings") or []),
+                (
+                    actor_user_id
+                    if actor_user_id and is_uuid_string(str(actor_user_id))
+                    else None
+                ),
+                evaluation.get("actor_label"),
+                evaluation.get("actor_kind"),
+            ),
+        )
+        return str(rows[0]["id"]) if rows else None
+
+    def list_verification_policy_evaluations(
+        self,
+        tenant_id: str,
+        *,
+        version_record_id: Optional[str] = None,
+        limit: int = 50,
+    ) -> List[Dict[str, Any]]:
+        """List verification policy evaluations newest first (ECA-3.1, #4734)."""
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        clauses = ""
+        params: List[Any] = [tenant_id]
+        if version_record_id and is_uuid_string(str(version_record_id)):
+            clauses += " AND version_record_id = %s::uuid"
+            params.append(version_record_id)
+        params.append(max(1, min(int(limit), 200)))
+        rows = self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_POLICY_EVALUATION_COLUMNS}
+            FROM apiome.verification_policy_evaluations
+            WHERE tenant_id = %s::uuid{clauses}
+            ORDER BY evaluated_at DESC, id DESC
+            LIMIT %s
+            """,
+            tuple(params),
+        )
+        return [dict(r) for r in rows]
+
 
 # Global database instance
 db = Database()

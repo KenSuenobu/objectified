@@ -39,6 +39,7 @@ import {
 } from '@/app/components/ui/Dialog';
 import { useDialog } from '@/app/components/providers/DialogProvider';
 import QualityPolicyPanel from './QualityPolicyPanel';
+import VerificationPolicyPanel from './VerificationPolicyPanel';
 import {
   fetchMyPermissions,
   styleGuidesApi,
@@ -702,6 +703,10 @@ export default function StyleGuidesClient() {
             user who cannot see the policy cannot understand why a commit was refused. */}
         <div className="mt-8">
           <QualityPolicyPanel readOnly={!canMutate} />
+        </div>
+
+        <div className="mt-8">
+          <VerificationPolicyPanel readOnly={!canMutate} />
         </div>
       </main>
 

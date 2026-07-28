@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.70.0",
+    "version": "1.71.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -13248,6 +13248,509 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for recordawaiveragainstablockingqualityverdresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/governance/verification-policy": {
+      "get": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "Get the tenant's evidence-backed verification policy",
+        "description": "The publish/deploy verification policy in force (ECA-3.1). A tenant that has never saved one gets the documented default \u2014 advisory, no required digests, warn on whole-spec breaking \u2014 with ``isDefault: true``.",
+        "operationId": "get_verification_policy_v1_tenants__tenant_slug__governance_verification_policy_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Getthetenantsevidencebackedverificationpauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Getthetenantsevidencebackedverificationpauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Getthetenantsevidencebackedverificationp Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Getthetenantsevidencebackedverificationp Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for get the tenant's evidence-backed verification policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationPolicyOut",
+                  "description": "Response payload for getthetenantsevidencebackedverificationpresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for getthetenantsevidencebackedverificationpresponse422."
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "Save a new version of the tenant's verification policy",
+        "description": "Append a new policy version (ECA-3.1). Rows are immutable. Omitted fields carry forward from the current version. Tenant administrators only.",
+        "operationId": "put_verification_policy_v1_tenants__tenant_slug__governance_verification_policy_put",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Saveanewversionofthetenantsverificationpauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Saveanewversionofthetenantsverificationpauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Saveanewversionofthetenantsverificationp Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Saveanewversionofthetenantsverificationp Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerificationPolicyPutRequest",
+                "description": "Request body for saveanewversionofthetenantsverificationprequest."
+              }
+            }
+          },
+          "description": "Request body for save a new version of the tenant's verification policy."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for save a new version of the tenant's verification policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationPolicyOut",
+                  "description": "Response payload for saveanewversionofthetenantsverificationpresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for saveanewversionofthetenantsverificationpresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/governance/verification-policy/versions": {
+      "get": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "List saved verification-policy versions",
+        "operationId": "list_verification_policy_versions_v1_tenants__tenant_slug__governance_verification_policy_versions_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit",
+              "description": "Limit schema."
+            },
+            "description": "Maximum number of rows to return."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listsavedverificationpolicyversionsauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listsavedverificationpolicyversionsauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listsavedverificationpolicyversions Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listsavedverificationpolicyversions Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for list saved verification-policy versions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationPolicyVersionListResponse",
+                  "description": "Response payload for listsavedverificationpolicyversionsresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for listsavedverificationpolicyversionsresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/governance/verification-policy/evaluate": {
+      "post": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "Evaluate publish/deploy policy against evidence",
+        "description": "Evaluate the tenant's verification policy for a subject revision. The decision cites exact ECA-1.3 evidence run IDs, persists an evaluation row, and is the same payload the dashboard and publish precheck consume. Breaking findings are whole-spec via version changelogs (#4475); consumer-aware acknowledgment is #4479.",
+        "operationId": "evaluate_verification_policy_route_v1_tenants__tenant_slug__governance_verification_policy_evaluate_post",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Evaluatepublishdeploypolicyagainstevidenauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Evaluatepublishdeploypolicyagainstevidenauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Evaluatepublishdeploypolicyagainsteviden Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Evaluatepublishdeploypolicyagainsteviden Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerificationPolicyEvaluateRequest",
+                "description": "Request body for evaluatepublishdeploypolicyagainstevidenrequest."
+              }
+            }
+          },
+          "description": "Request body for evaluate publish/deploy policy against evidence."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for evaluate publish/deploy policy against evidence.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationPolicyDecisionOut",
+                  "description": "Response payload for evaluatepublishdeploypolicyagainstevidenresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for evaluatepublishdeploypolicyagainstevidenresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/governance/verification-policy/evaluations": {
+      "get": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "List recent verification-policy evaluations",
+        "operationId": "list_verification_policy_evaluations_route_v1_tenants__tenant_slug__governance_verification_policy_evaluations_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "versionRecordId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listrecentverificationpolicyevaluationsversion Record ID schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listrecentverificationpolicyevaluationsversion Record ID schema."
+                }
+              ],
+              "description": "Optional catalog revision filter.",
+              "title": "Versionrecordid"
+            },
+            "description": "Optional catalog revision filter."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit",
+              "description": "Limit schema."
+            },
+            "description": "Maximum number of rows to return."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listrecentverificationpolicyevaluationsauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listrecentverificationpolicyevaluationsauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listrecentverificationpolicyevaluations Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listrecentverificationpolicyevaluations Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for list recent verification-policy evaluations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationPolicyEvaluationListResponse",
+                  "description": "Response payload for listrecentverificationpolicyevaluationsresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for listrecentverificationpolicyevaluationsresponse422."
                 }
               }
             }
@@ -97453,7 +97956,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-07-28T01:54:20Z"
+            "example": "2026-07-28T02:27:26Z"
           }
         },
         "additionalProperties": false,
@@ -108758,6 +109261,672 @@
         "title": "VerificationPolicy",
         "description": "How a runner is allowed to behave against this target, and what a failure means.\n\nEvery bound is deliberate rather than advisory: a target is a *permission* to send traffic to\nsomeone's system, so the registry \u2014 not the runner \u2014 decides the ceiling on concurrency, the\nper-request timeout, and whether mutating methods may be exercised at all.\n\nThe defaults are the safe reading of \"verify a contract\": four concurrent requests, a 30-second\ntimeout, no retries, read-only methods, no redirect following, TLS verified, and a failure that\nblocks the gate."
       },
+      "VerificationPolicyDecisionOut": {
+        "properties": {
+          "passed": {
+            "type": "boolean",
+            "title": "Passed",
+            "description": "Passed.",
+            "example": false
+          },
+          "enforcement": {
+            "type": "string",
+            "title": "Enforcement",
+            "description": "Enforcement.",
+            "example": "example"
+          },
+          "policyVersionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for verification policy decision."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy decision."
+              }
+            ],
+            "title": "Policyversionid",
+            "description": "Policy Version ID."
+          },
+          "policyContentFingerprint": {
+            "type": "string",
+            "title": "Policycontentfingerprint",
+            "description": "Policy Content Fingerprint.",
+            "example": "a1b2c3d4e5f6789012345678901234ab"
+          },
+          "evaluationId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for verification policy decision."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy decision."
+              }
+            ],
+            "title": "Evaluationid",
+            "description": "Evaluation ID."
+          },
+          "evidenceRunIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidencerunids",
+            "description": "Evidence Run IDs.",
+            "maxItems": 1000
+          },
+          "gateResults": {
+            "items": {
+              "$ref": "#/components/schemas/VerificationPolicyGateResultOut"
+            },
+            "type": "array",
+            "title": "Gateresults",
+            "description": "Gate Results.",
+            "maxItems": 100
+          },
+          "warnings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "description": "Warnings.",
+            "maxItems": 1000
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose",
+            "description": "Purpose.",
+            "example": "example"
+          },
+          "skipped": {
+            "type": "boolean",
+            "title": "Skipped",
+            "default": false,
+            "description": "Skipped.",
+            "example": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "passed",
+          "enforcement",
+          "policyContentFingerprint",
+          "purpose"
+        ],
+        "title": "VerificationPolicyDecisionOut",
+        "description": "Auditable evaluate decision shared by API, publish precheck, and dashboard."
+      },
+      "VerificationPolicyEvaluateRequest": {
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "title": "Purpose",
+            "description": "Evaluate purpose: publish or deploy.",
+            "example": "example"
+          },
+          "projectSlug": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for verification policy evaluate."
+              },
+              {
+                "type": "null",
+                "description": "Request body for verification policy evaluate."
+              }
+            ],
+            "title": "Projectslug",
+            "description": "Project slug (required with versionSlug, or when resolving versionId)."
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for verification policy evaluate."
+              },
+              {
+                "type": "null",
+                "description": "Request body for verification policy evaluate."
+              }
+            ],
+            "title": "Projectid",
+            "description": "Project ID."
+          },
+          "versionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for verification policy evaluate."
+              },
+              {
+                "type": "null",
+                "description": "Request body for verification policy evaluate."
+              }
+            ],
+            "title": "Versionid",
+            "description": "Catalog revision UUID (versions.id)."
+          },
+          "versionSlug": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for verification policy evaluate."
+              },
+              {
+                "type": "null",
+                "description": "Request body for verification policy evaluate."
+              }
+            ],
+            "title": "Versionslug",
+            "description": "Version slug within the project (e.g. 1.2.0)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "purpose"
+        ],
+        "title": "VerificationPolicyEvaluateRequest",
+        "description": "Evaluate publish/deploy policy for a subject revision (ECA-3.1, #4734)."
+      },
+      "VerificationPolicyEvaluationListResponse": {
+        "properties": {
+          "evaluations": {
+            "items": {
+              "$ref": "#/components/schemas/VerificationPolicyEvaluationOut"
+            },
+            "type": "array",
+            "title": "Evaluations",
+            "description": "Evaluations.",
+            "maxItems": 1000
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0,
+            "description": "Number of count.",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "title": "VerificationPolicyEvaluationListResponse",
+        "description": "Recent verification-policy evaluations."
+      },
+      "VerificationPolicyEvaluationOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Stable resource identifier.",
+            "example": "res_01h2xcejqtf3fz5y5j0v8k9m2p"
+          },
+          "tenantId": {
+            "type": "string",
+            "title": "Tenantid",
+            "description": "Tenant ID.",
+            "example": "example"
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for verification policy evaluation."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy evaluation."
+              }
+            ],
+            "title": "Projectid",
+            "description": "Project ID."
+          },
+          "versionRecordId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for verification policy evaluation."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy evaluation."
+              }
+            ],
+            "title": "Versionrecordid",
+            "description": "Version Record ID."
+          },
+          "policyVersionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for verification policy evaluation."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy evaluation."
+              }
+            ],
+            "title": "Policyversionid",
+            "description": "Policy Version ID."
+          },
+          "policyContentFingerprint": {
+            "type": "string",
+            "title": "Policycontentfingerprint",
+            "description": "Policy Content Fingerprint.",
+            "example": "a1b2c3d4e5f6789012345678901234ab"
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose",
+            "description": "Purpose.",
+            "example": "example"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed",
+            "description": "Passed.",
+            "example": false
+          },
+          "enforcement": {
+            "type": "string",
+            "title": "Enforcement",
+            "description": "Enforcement.",
+            "example": "example"
+          },
+          "gateResults": {
+            "items": {},
+            "type": "array",
+            "title": "Gateresults",
+            "description": "Gate Results.",
+            "maxItems": 100
+          },
+          "evidenceRunIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidencerunids",
+            "description": "Evidence Run IDs.",
+            "maxItems": 1000
+          },
+          "warnings": {
+            "items": {},
+            "type": "array",
+            "title": "Warnings",
+            "description": "Warnings.",
+            "maxItems": 1000
+          },
+          "actorLabel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for verification policy evaluation."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy evaluation."
+              }
+            ],
+            "title": "Actorlabel",
+            "description": "Actor Label."
+          },
+          "actorKind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for verification policy evaluation."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy evaluation."
+              }
+            ],
+            "title": "Actorkind",
+            "description": "Actor Kind."
+          },
+          "evaluatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "description": "Response payload for verification policy evaluation."
+              },
+              {
+                "type": "string",
+                "description": "Response payload for verification policy evaluation."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy evaluation."
+              }
+            ],
+            "title": "Evaluatedat",
+            "description": "Evaluated At."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenantId",
+          "policyContentFingerprint",
+          "purpose",
+          "passed",
+          "enforcement"
+        ],
+        "title": "VerificationPolicyEvaluationOut",
+        "description": "One persisted evaluation row (ECA-3.1, #4734)."
+      },
+      "VerificationPolicyGateResultOut": {
+        "properties": {
+          "gate": {
+            "type": "string",
+            "title": "Gate",
+            "description": "Gate.",
+            "example": "example"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed",
+            "description": "Passed.",
+            "example": false
+          },
+          "detail": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Detail",
+            "description": "Detail."
+          },
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for verification policy gate result."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy gate result."
+              }
+            ],
+            "title": "Action",
+            "description": "Action."
+          }
+        },
+        "type": "object",
+        "required": [
+          "gate",
+          "passed"
+        ],
+        "title": "VerificationPolicyGateResultOut",
+        "description": "One named gate result inside a policy decision."
+      },
+      "VerificationPolicyOut": {
+        "properties": {
+          "policyVersionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for verification policy."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy."
+              }
+            ],
+            "title": "Policyversionid",
+            "description": "Row id of the applied policy version; null when the tenant has none saved."
+          },
+          "versionNumber": {
+            "type": "integer",
+            "title": "Versionnumber",
+            "description": "Monotonic version number; 0 for the built-in default.",
+            "default": 0,
+            "example": 1
+          },
+          "contentFingerprint": {
+            "type": "string",
+            "title": "Contentfingerprint",
+            "description": "SHA-256 over the canonicalized policy body.",
+            "default": "default",
+            "example": "a1b2c3d4e5f6789012345678901234ab"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "title": "Isdefault",
+            "description": "True when no tenant policy is saved and the advisory default applies.",
+            "default": true,
+            "example": false
+          },
+          "requiredSuiteDigests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Requiredsuitedigests",
+            "description": "ECA-1.1 suite digests that must have recent passing evidence.",
+            "maxItems": 1000
+          },
+          "maxEvidenceAgeSeconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Response payload for verification policy."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy."
+              }
+            ],
+            "title": "Maxevidenceageseconds",
+            "description": "Maximum age of cited evidence in seconds; null = no freshness gate."
+          },
+          "requiredTargetNetworkClass": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for verification policy."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy."
+              }
+            ],
+            "title": "Requiredtargetnetworkclass",
+            "description": "Optional public/private filter on cited evidence."
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose",
+            "description": "Which evaluate purposes this policy covers: publish, deploy, or both.",
+            "default": "both",
+            "example": "example"
+          },
+          "breakingChangeAction": {
+            "type": "string",
+            "title": "Breakingchangeaction",
+            "description": "Whole-spec breaking posture: ignore, warn, or block (#4475; not consumer-aware).",
+            "default": "warn",
+            "example": "example"
+          },
+          "enforcement": {
+            "type": "string",
+            "title": "Enforcement",
+            "description": "advisory = report only; block = refuse publish/deploy when evaluate fails.",
+            "default": "advisory",
+            "example": "example"
+          },
+          "actorLabel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for verification policy."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy."
+              }
+            ],
+            "title": "Actorlabel",
+            "description": "Who saved this version."
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "description": "Response payload for verification policy."
+              },
+              {
+                "type": "string",
+                "description": "Response payload for verification policy."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for verification policy."
+              }
+            ],
+            "title": "Createdat",
+            "description": "When this version was saved."
+          }
+        },
+        "type": "object",
+        "title": "VerificationPolicyOut",
+        "description": "The tenant's evidence-backed publish/deploy policy in force (ECA-3.1, #4734)."
+      },
+      "VerificationPolicyPutRequest": {
+        "properties": {
+          "requiredSuiteDigests": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "description": "Request body for verification policy put."
+              },
+              {
+                "type": "null",
+                "description": "Request body for verification policy put."
+              }
+            ],
+            "title": "Requiredsuitedigests",
+            "description": "ECA-1.1 digests (sha256:<64 hex>); omit to keep the current list."
+          },
+          "maxEvidenceAgeSeconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0,
+                "description": "Request body for verification policy put."
+              },
+              {
+                "type": "null",
+                "description": "Request body for verification policy put."
+              }
+            ],
+            "title": "Maxevidenceageseconds",
+            "description": "Freshness ceiling in seconds; omit to keep current; send null via clear flag."
+          },
+          "clearMaxEvidenceAgeSeconds": {
+            "type": "boolean",
+            "title": "Clearmaxevidenceageseconds",
+            "description": "When true, clears maxEvidenceAgeSeconds even if omitted.",
+            "default": false,
+            "example": false
+          },
+          "requiredTargetNetworkClass": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for verification policy put."
+              },
+              {
+                "type": "null",
+                "description": "Request body for verification policy put."
+              }
+            ],
+            "title": "Requiredtargetnetworkclass",
+            "description": "Required Target Network Class."
+          },
+          "clearRequiredTargetNetworkClass": {
+            "type": "boolean",
+            "title": "Clearrequiredtargetnetworkclass",
+            "description": "When true, clears the network-class filter.",
+            "default": false,
+            "example": false
+          },
+          "purpose": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for verification policy put."
+              },
+              {
+                "type": "null",
+                "description": "Request body for verification policy put."
+              }
+            ],
+            "title": "Purpose",
+            "description": "publish, deploy, or both; omit to keep current."
+          },
+          "breakingChangeAction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for verification policy put."
+              },
+              {
+                "type": "null",
+                "description": "Request body for verification policy put."
+              }
+            ],
+            "title": "Breakingchangeaction",
+            "description": "Breaking Change Action."
+          },
+          "enforcement": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for verification policy put."
+              },
+              {
+                "type": "null",
+                "description": "Request body for verification policy put."
+              }
+            ],
+            "title": "Enforcement",
+            "description": "advisory or block; omit to keep current."
+          }
+        },
+        "type": "object",
+        "title": "VerificationPolicyPutRequest",
+        "description": "Append a new evidence-backed verification policy version (ECA-3.1, #4734)."
+      },
+      "VerificationPolicyVersionListResponse": {
+        "properties": {
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/VerificationPolicyOut"
+            },
+            "type": "array",
+            "title": "Versions",
+            "description": "Versions.",
+            "maxItems": 1000
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0,
+            "description": "Number of count.",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "title": "VerificationPolicyVersionListResponse",
+        "description": "Saved verification-policy versions, newest first (ECA-3.1, #4734)."
+      },
       "VerificationRunInput": {
         "properties": {
           "target_ref": {
@@ -108848,14 +110017,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-07-28T01:54:20Z"
+            "example": "2026-07-28T02:27:26Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-07-28T01:54:20Z"
+            "example": "2026-07-28T02:27:26Z"
           },
           "outcome": {
             "anyOf": [

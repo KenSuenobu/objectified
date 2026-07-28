@@ -155,7 +155,9 @@ import {
 } from '@/app/utils/versions-dashboard-sort';
 import { VersionMockCell, type VersionMockChange } from '../../../components/ade/dashboard/VersionMockCell';
 import { PublishGuideViolationsPanel } from '../../../components/ade/dashboard/PublishGuideViolationsPanel';
+import VerificationPolicyDecisionPanel from '../../../components/ade/dashboard/VerificationPolicyDecisionPanel';
 import type { VersionLintReport } from '@/app/utils/version-lint-report';
+import type { VerificationPolicyDecision } from '../style-guides/verification-policy-api';
 import { useMockUsage } from '@/app/hooks/useMockUsage';
 import { mockUsageSeriesKey } from '@/app/utils/mock-usage-series';
 
@@ -436,6 +438,8 @@ const Versions = () => {
   /** Required when force publish is checked (GOV-2.5). */
   const [publishForceReason, setPublishForceReason] = useState('');
   const [publishLintReport, setPublishLintReport] = useState<VersionLintReport | null>(null);
+  const [publishVerificationDecision, setPublishVerificationDecision] =
+    useState<VerificationPolicyDecision | null>(null);
   /** Publication change report baseline (CR): mirrors REST publish-preview / publish bodies. */
   const [publishChangeReportBaselineMode, setPublishChangeReportBaselineMode] = useState<
     'auto' | 'initial' | 'manual'
@@ -1394,6 +1398,7 @@ const Versions = () => {
     setPublishForce(false);
     setPublishForceReason('');
     setPublishLintReport(null);
+    setPublishVerificationDecision(null);
     setPublishPreview(null);
     setPublishPreviewError(null);
     setShowPublishDialog(true);
@@ -1489,6 +1494,11 @@ const Versions = () => {
 
   const publishLintErrorCount = publishLintReport?.severityCounts?.error ?? 0;
   const publishBlockedByGuideErrors = publishLintErrorCount > 0 && !publishForce;
+  const publishBlockedByVerificationPolicy =
+    !!publishVerificationDecision &&
+    publishVerificationDecision.enforcement === 'block' &&
+    !publishVerificationDecision.passed &&
+    !publishForce;
   const publishForceReasonMissing = publishForce && !publishForceReason.trim();
 
   const handlePublishConfirm = async () => {
@@ -1524,6 +1534,14 @@ const Versions = () => {
     if (publishBlockedByGuideErrors) {
       await alertDialog({
         message: 'Resolve style-guide error violations or enable force publish with a reason.',
+        variant: 'error',
+      });
+      return;
+    }
+    if (publishBlockedByVerificationPolicy) {
+      await alertDialog({
+        message:
+          'Resolve verification-policy gates or enable force publish with a reason.',
         variant: 'error',
       });
       return;
@@ -4405,11 +4423,21 @@ const Versions = () => {
               const publishVersion = versions.find((v) => v.id === publishVersionId);
               if (!publishVersion) return null;
               return (
-                <PublishGuideViolationsPanel
-                  projectId={publishVersion.project_id}
-                  versionId={publishVersionId}
-                  onReportChange={(report) => setPublishLintReport(report)}
-                />
+                <>
+                  <PublishGuideViolationsPanel
+                    projectId={publishVersion.project_id}
+                    versionId={publishVersionId}
+                    onReportChange={(report) => setPublishLintReport(report)}
+                  />
+                  <VerificationPolicyDecisionPanel
+                    projectId={publishVersion.project_id}
+                    versionId={publishVersionId}
+                    projectSlug={selectedProject?.slug}
+                    versionSlug={publishVersion.version_id}
+                    enabled={showPublishDialog}
+                    onDecisionChange={setPublishVerificationDecision}
+                  />
+                </>
               );
             })()}
             <div className="space-y-2">
@@ -4429,7 +4457,8 @@ const Versions = () => {
                 <>
                   <Alert variant="warning" className="text-sm">
                     Publish prechecks will be bypassed — missing class descriptions, OpenAPI build,
-                    backward-compatibility gates, and style-guide error violations are not enforced.
+                    backward-compatibility gates, style-guide error violations, and evidence-backed
+                    verification policy are not enforced.
                     A reason is required and recorded in the audit trail.
                   </Alert>
                   <div className="space-y-2">
@@ -4544,7 +4573,11 @@ const Versions = () => {
             <Button variant="outline" onClick={() => { setShowPublishDialog(false); setPublishVersionId(null); }}>Cancel</Button>
             <Button
               onClick={handlePublishConfirm}
-              disabled={publishBlockedByGuideErrors || publishForceReasonMissing}
+              disabled={
+                publishBlockedByGuideErrors ||
+                publishBlockedByVerificationPolicy ||
+                publishForceReasonMissing
+              }
             >
               Publish
             </Button>
