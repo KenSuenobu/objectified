@@ -179,9 +179,23 @@ SPEC: dict[str, Any] = {
     },
 }
 
-#: Mock settings embedded in the bundle. Only the portable subset survives export (scenarios and
-#: chaos); the redaction pass in ``app.mock_bundle`` drops everything else.
+#: Mock settings embedded in the bundle. Only the portable subset survives export (scenarios,
+#: chaos, and fixture packs); the redaction pass in ``app.mock_bundle`` drops everything else.
 SETTINGS: dict[str, Any] = {
+    "fixturePacks": {
+        # Deterministic seed data (#4745, PMR-2.2). ``collections`` seeds the session store on
+        # reset; ``data`` is readable from response templates as {{fixture.<name>...}}.
+        "seeded-pets": {
+            "description": "Two pets and the catalog values templates read.",
+            "data": {"catalog": {"greeting": "hello from the pack", "topSeller": "Bella"}},
+            "collections": {
+                "/pets": [
+                    {"id": 1, "name": "Rex"},
+                    {"id": 2, "name": "Bella"},
+                ]
+            },
+        },
+    },
     "scenarios": {
         "quota-exceeded": {
             "description": "Listing pets is throttled.",
@@ -213,12 +227,41 @@ SETTINGS: dict[str, Any] = {
             "operations": {},
             "chaos": {"operations": {"GET /pets": {"errorRate": 100}}},
         },
+        "templated-lookup": {
+            # Declarative matching + bounded templates (#4744, PMR-2.1). The rule's predicates
+            # select the response; its body and headers are rendered from request fields, the
+            # fixture pack's data, and seeded randomness — identical on every runtime.
+            "description": "A rule matches one pet id and templates the response from pack data.",
+            "operations": {
+                "GET /pets/{petId}": {
+                    "rules": [
+                        {
+                            "when": {"path": {"petId": {"equals": "42"}}},
+                            "responses": [
+                                {
+                                    "status": 200,
+                                    "headers": {"X-Mock-Fixture": "{{fixture.catalog#/greeting}}"},
+                                    "body": {
+                                        "id": "{{request.path.petId}}",
+                                        "name": "{{fixture.catalog#/topSeller}}",
+                                        # Seeded draw: identical on every runtime for a given
+                                        # ?__seed=, which is what the corpus pins.
+                                        "trace": "{{random.hex(4)}}",
+                                    },
+                                }
+                            ],
+                        }
+                    ],
+                    "responses": [{"status": 404, "body": {"detail": "No rule matched."}}],
+                }
+            },
+        },
         "slow": {
             "description": "A small, bounded injected delay on listing.",
             "operations": {},
             "chaos": {"operations": {"GET /pets": {"delayMs": 5}}},
         },
-    }
+    },
 }
 
 

@@ -9,9 +9,10 @@ Two runtimes live behind one command:
     network, and no credentials — the command ``apiome mock run`` and the official image both
     execute.
 
-``verify`` and ``conformance`` support the portable path: the first proves a bundle is loadable
-before a job depends on it, the second proves a *running* runtime answers the shared conformance
-corpus correctly, which is how the CLI and the image are held to identical behavior.
+``verify``, ``conformance``, and ``parity`` support the portable path: the first proves a bundle is
+loadable before a job depends on it, the second proves a *running* runtime answers the shared
+conformance corpus correctly (how the CLI and the image are held to identical behavior), and the
+third (#4748, PMR-3.1) diffs a hosted deployment against a portable one response by response.
 
 Every ``run`` flag is generated from :data:`apiome_mock.portable_config.RUNTIME_OPTIONS`, so the
 help text, the environment variables, and the documented reference table cannot drift apart.
@@ -129,6 +130,68 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Emit the conformance report as JSON.",
     )
 
+    parity_parser = subparsers.add_parser(
+        "parity",
+        help="Compare a hosted mock deployment against a portable one, case by case.",
+        description=(
+            "Run the shared conformance corpus against both a hosted mock and a portable runtime "
+            "and diff every response (status, mock headers, body). This proves the two agree "
+            "rather than merely that each passes on its own (#4748, PMR-3.1)."
+        ),
+    )
+    parity_parser.add_argument(
+        "--hosted-url",
+        required=True,
+        metavar="URL",
+        help="Root URL of the hosted mock, e.g. https://mock.apiome.dev.",
+    )
+    parity_parser.add_argument(
+        "--portable-url",
+        required=True,
+        metavar="URL",
+        help="Root URL of the portable runtime, e.g. http://127.0.0.1:8775.",
+    )
+    parity_parser.add_argument(
+        "--hosted-mount",
+        default=None,
+        metavar="PREFIX",
+        help=(
+            "Path prefix the hosted mock serves the version under, e.g. /acme/petstore/1.0.0 "
+            "(default: the portable runtime's mount, which is the same shape)."
+        ),
+    )
+    parity_parser.add_argument(
+        "--portable-mount",
+        default=None,
+        metavar="PREFIX",
+        help="Path prefix the portable runtime serves the spec under (default: read from /ready).",
+    )
+    parity_parser.add_argument(
+        "--corpus",
+        default=None,
+        metavar="PATH",
+        help="Corpus document to run (default: the corpus shipped with this runtime).",
+    )
+    parity_parser.add_argument(
+        "--wait",
+        type=float,
+        default=30.0,
+        metavar="SECONDS",
+        help="Wait this long for the portable runtime's /ready before running (0 disables waiting).",
+    )
+    parity_parser.add_argument(
+        "--timeout",
+        type=float,
+        default=10.0,
+        metavar="SECONDS",
+        help="Per-request timeout.",
+    )
+    parity_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the parity report as JSON.",
+    )
+
     selftest_parser = subparsers.add_parser(
         "selftest",
         help="Serve the packaged conformance bundle and run the corpus against it.",
@@ -198,13 +261,14 @@ def main(argv: list[str] | None = None) -> int:
         _serve(args)
         return 0
 
-    if args.command in {"run", "verify", "conformance", "selftest"}:
+    if args.command in {"run", "verify", "conformance", "parity", "selftest"}:
         from apiome_mock import cli_run
 
         handlers = {
             "run": cli_run.run_command,
             "verify": cli_run.verify_command,
             "conformance": cli_run.conformance_command,
+            "parity": cli_run.parity_command,
             "selftest": cli_run.selftest_command,
         }
         return handlers[args.command](args)

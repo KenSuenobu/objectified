@@ -1,0 +1,10 @@
+{
+  "name": "@apiome/mock-action",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GitHub Action that starts a version-pinned Apiome portable mock for a CI job",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "lint": "node --check lib.js && node --check main.js && node --check post.js && node --check tests/lib.test.js"
+  }
+}

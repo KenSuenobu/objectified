@@ -129,7 +129,60 @@ def test_the_committed_bundle_verifies_offline() -> None:
 
     assert loaded.tenant_slug == "conformance"
     assert loaded.signed is False  # unsigned on purpose: the corpus must run with no secret
-    assert sorted(loaded.scenarios) == ["flaky-list", "outage", "quota-exceeded", "slow"]
+    assert sorted(loaded.scenarios) == [
+        "flaky-list",
+        "outage",
+        "quota-exceeded",
+        "slow",
+        "templated-lookup",
+    ]
+    assert sorted(loaded.fixture_packs) == ["seeded-pets"]
+
+
+def test_the_corpus_pins_the_bundled_fixture_pack_digest() -> None:
+    """The corpus asserts a pack digest literally; this catches an edit that moves it (#4748).
+
+    Without this, changing the pack's seed data would fail the corpus with a digest mismatch that
+    reads like a runtime bug rather than "you edited the pack and did not update the corpus".
+    """
+    pack = load_bundle_file(DEFAULT_BUNDLE_PATH).fixture_packs["seeded-pets"]
+    pinned = {
+        case.expect["jsonEquals"]["packs"][0]["digest"]
+        for case in load_corpus().cases
+        if case.name == "fixture-pack-listing-reports-the-pack-digest"
+    }
+
+    assert pinned == {pack.digest}, (
+        f"corpus pins {pinned}, bundled pack digests to {pack.digest}; "
+        "regenerate the bundle and update the corpus together"
+    )
+
+
+def test_the_corpus_covers_every_behavior_family() -> None:
+    """PMR-3.1 acceptance: scenario, session, validation, chaos, and fixture behavior are covered.
+
+    Families are matched against case names so a corpus that loses a whole area of coverage fails
+    here rather than silently shrinking.
+    """
+    names = [case.name for case in load_corpus().cases]
+    families = {
+        "routing": ("path-parameters", "unmatched-path", "wrong-method"),
+        "validation": ("validation", "missing-required-body", "undeclared-status", "unsatisfiable-accept"),
+        "scenario": ("scenario-header", "scenario-sequences", "unknown-scenario"),
+        "rules-and-templates": ("declarative-rule", "unmatched-rule"),
+        "session": ("session-state-is-readable", "session-state-does-not-leak", "session-reset"),
+        "chaos": ("chaos-error-injection", "chaos-delay"),
+        "fixture": ("fixture-pack-listing", "seeded-session", "unknown-fixture-pack"),
+        "determinism": ("seeded-synthesis",),
+    }
+
+    missing = {
+        family: markers
+        for family, markers in families.items()
+        if not all(any(marker in name for name in names) for marker in markers)
+    }
+
+    assert missing == {}
 
 
 # ---------------------------------------------------------------------------

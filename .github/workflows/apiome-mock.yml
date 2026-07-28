@@ -8,6 +8,7 @@ on:
       - 'apiome-mock/**'
       - 'apiome-mcp/**'
       - 'apiome-rest/**'
+      - 'mock-action/**'
       - 'docker-compose.yml'
       - 'docker-compose.env.example'
       - 'apiome-db/**'
@@ -18,6 +19,7 @@ on:
       - 'apiome-mock/**'
       - 'apiome-mcp/**'
       - 'apiome-rest/**'
+      - 'mock-action/**'
       - 'docker-compose.yml'
       - 'docker-compose.env.example'
       - 'apiome-db/**'
@@ -81,6 +83,27 @@ jobs:
       - name: Run pytest
         run: uv run pytest
         working-directory: apiome-mock
+
+  mock-action:
+    name: Test the mock CI action
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Syntax check the action scripts
+        run: node --check lib.js && node --check main.js && node --check post.js
+        working-directory: mock-action
+
+      - name: Run mock-action tests
+        run: node --test tests/*.test.js
+        working-directory: mock-action
 
   publish-docker-image:
     name: Build and push apiome-mock image
