@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.71.0
+  version: 1.72.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -12783,6 +12783,99 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for set version mock scenariosresponse422.
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/bundle:
+    get:
+      tags:
+      - versions
+      summary: Get Version Mock Bundle
+      description: "Export the version's portable mock bundle (#4741, PMR-1.1).\n\n\
+        The bundle pins the version snapshot (its generated OpenAPI document), the\
+        \ portable subset of\n``versions.mock_settings`` (scenarios and chaos knobs),\
+        \ and fixture digests into one\nself-contained, signed JSON document that\
+        \ apiome-mock can serve offline — in CI, on a laptop,\nor inside an air-gapped\
+        \ network.\n\nThe document is deterministic: exporting the same version with\
+        \ the same settings always yields\nthe same ``manifestDigest``, which is the\
+        \ identifier release proofs attach (PMR-3.2). Tenant\ncredentials never travel:\
+        \ only allowlisted settings keys are bundled, and credential-shaped\nfields\
+        \ inside them are dropped and listed in ``manifest.redactions``.\n\nArgs:\n\
+        \    tenant_slug: The tenant slug.\n    project_id: The project ID that must\
+        \ own the version.\n    version_record_id: The version record ID (UUID) to\
+        \ export.\n    response: Injected so the export can advertise a download filename.\n\
+        \    auth_data: Authentication context; requires ``versions:view``.\n\nReturns:\n\
+        \    The bundle document (``bundleFormat``, ``manifest``, ``manifestDigest``,\
+        \ ``signature``,\n    ``spec``, ``settings``, ``fixtures``).\n\nRaises:\n\
+        \    HTTPException: 404 when the version does not exist in the project, 409\
+        \ when mock serving\n        is not enabled for the version."
+      operationId: get_version_mock_bundle_v1_versions__tenant_slug___project_id___version_record_id__mock_bundle_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Version Mock Bundleauthorization schema.
+          - type: 'null'
+            description: Get Version Mock Bundleauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Version Mock Bundle Xapikey schema.
+          - type: 'null'
+            description: Get Version Mock Bundle Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get version mock bundle.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Version Mock Bundle V1 Versions  Tenant Slug   Project
+                  Id   Version Record Id  Mock Bundle Get
+                description: Response Get Version Mock Bundle V1 Versions  Tenant
+                  Slug   Project Id   Version Record Id  Mock Bundle Get schema.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get version mock bundleresponse422.
   /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/unpublish:
     post:
       tags:
@@ -73355,7 +73448,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-07-28T02:27:26Z'
+          example: '2026-07-28T02:53:17Z'
       additionalProperties: false
       type: object
       required:
@@ -82688,13 +82781,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-07-28T02:27:26Z'
+          example: '2026-07-28T02:53:17Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-07-28T02:27:26Z'
+          example: '2026-07-28T02:53:17Z'
         outcome:
           anyOf:
           - type: string

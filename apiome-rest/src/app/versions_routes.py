@@ -20,6 +20,7 @@ from .branch_push_policy import effective_require_merge_path
 from .compatibility_engine import CompatibilityCheckEngine, compat_audit_detail, openapi_for_revision
 from .config import settings
 from .database import BranchNotFoundError, StaleHeadPushError, db
+from .mock_bundle import BundleIdentity, build_bundle
 from .mock_scenario_settings import (
     chaos_from_storage,
     chaos_to_storage,
@@ -2250,6 +2251,89 @@ async def set_version_mock_scenarios(
         scenarios={name: MockScenarioSpec.model_validate(raw) for name, raw in stored.items()},
         chaos=_parse_stored_chaos(updated.get("mock_settings"), version_record_id),
     )
+
+
+def _bundle_filename(project_slug: str, version_label: str) -> str:
+    """Build the bundle download filename, stripped to header-safe characters (#4741, PMR-1.1).
+
+    Version labels are free text, so every character outside ``[A-Za-z0-9._-]`` is replaced with an
+    underscore; a quote or newline reaching a ``Content-Disposition`` header would otherwise let a
+    label break out of the header.
+
+    Args:
+        project_slug: The project slug.
+        version_label: The version label (e.g. ``"1.0.0"``).
+
+    Returns:
+        A safe ``<project>-<version>-mock-bundle.json`` filename.
+    """
+    safe = re.sub(r"[^A-Za-z0-9._-]", "_", f"{project_slug}-{version_label}")
+    return f"{safe}-mock-bundle.json"
+
+
+@router.get("/{tenant_slug}/{project_id}/{version_record_id}/mock/bundle")
+async def get_version_mock_bundle(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    response: Response,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> Dict[str, Any]:
+    """Export the version's portable mock bundle (#4741, PMR-1.1).
+
+    The bundle pins the version snapshot (its generated OpenAPI document), the portable subset of
+    ``versions.mock_settings`` (scenarios and chaos knobs), and fixture digests into one
+    self-contained, signed JSON document that apiome-mock can serve offline — in CI, on a laptop,
+    or inside an air-gapped network.
+
+    The document is deterministic: exporting the same version with the same settings always yields
+    the same ``manifestDigest``, which is the identifier release proofs attach (PMR-3.2). Tenant
+    credentials never travel: only allowlisted settings keys are bundled, and credential-shaped
+    fields inside them are dropped and listed in ``manifest.redactions``.
+
+    Args:
+        tenant_slug: The tenant slug.
+        project_id: The project ID that must own the version.
+        version_record_id: The version record ID (UUID) to export.
+        response: Injected so the export can advertise a download filename.
+        auth_data: Authentication context; requires ``versions:view``.
+
+    Returns:
+        The bundle document (``bundleFormat``, ``manifest``, ``manifestDigest``, ``signature``,
+        ``spec``, ``settings``, ``fixtures``).
+
+    Raises:
+        HTTPException: 404 when the version does not exist in the project, 409 when mock serving
+            is not enabled for the version.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.VIEW)
+    existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+
+    if not existing.get("mock_enabled"):
+        raise HTTPException(
+            status_code=409,
+            detail="Mock serving is not enabled for this version; enable it before exporting a bundle.",
+        )
+
+    project_slug = str(existing.get("project_slug") or existing["project_id"])
+    version_label = str(existing["version_id"])
+    bundle = build_bundle(
+        identity=BundleIdentity(
+            tenant=tenant_slug,
+            project=project_slug,
+            version=version_label,
+            revision_id=str(existing["id"]),
+            published=bool(existing.get("published")),
+            protocol="openapi",
+        ),
+        spec=_generated_spec_for_version(existing, tenant_slug),
+        mock_settings=existing.get("mock_settings"),
+        secret=settings.mock_bundle_signing_secret,
+    )
+    response.headers["Content-Disposition"] = (
+        f'attachment; filename="{_bundle_filename(project_slug, version_label)}"'
+    )
+    return bundle
 
 
 @router.post("/{tenant_slug}/{project_id}/{version_record_id}/unpublish")
