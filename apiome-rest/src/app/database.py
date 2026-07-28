@@ -21904,6 +21904,466 @@ class Database:
             except Exception:
                 pass
 
+    # ------------------------------------------------------------------
+    # Verification target registry (ECA-1.2, #4730)
+    # ------------------------------------------------------------------
+
+    #: Columns every verification-target read returns, so a row always adapts cleanly into
+    #: :func:`app.verification_target.record_from_row`.
+    _VERIFICATION_TARGET_COLUMNS = """
+        id::text AS id, tenant_id::text AS tenant_id, slug, name, description,
+        environment, base_url, network_class,
+        approved_by::text AS approved_by, approved_at, approval_reason,
+        auth_kind, auth_scheme, auth_ref, auth_header_name,
+        policy, enabled,
+        created_by::text AS created_by, updated_by::text AS updated_by,
+        created_at, updated_at, deleted_at
+    """
+
+    #: The columns of one audit entry, ready for the ledger read.
+    _VERIFICATION_TARGET_AUDIT_COLUMNS = """
+        id::text AS id, tenant_id::text AS tenant_id, target_id::text AS target_id, target_slug,
+        action, outcome, reason, actor_id::text AS actor_id, actor_label, actor_kind,
+        detail, created_at
+    """
+
+    def list_verification_targets(
+        self, tenant_id: str, *, limit: int = 200
+    ) -> List[Dict[str, Any]]:
+        """A tenant's live verification targets, newest first (ECA-1.2, #4730).
+
+        Args:
+            tenant_id: Tenant whose registry to read.
+            limit: Maximum rows to return (clamped to 1..500).
+
+        Returns:
+            The target rows; empty when the tenant has defined none (or the id is not a UUID).
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        return self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_TARGET_COLUMNS}
+            FROM apiome.verification_target
+            WHERE tenant_id = %s::uuid AND deleted_at IS NULL
+            ORDER BY created_at DESC
+            LIMIT %s
+            """,
+            (tenant_id, max(1, min(int(limit), 500))),
+        )
+
+    def get_verification_target_by_slug(
+        self, tenant_id: str, slug: str
+    ) -> Optional[Dict[str, Any]]:
+        """One live target by its handle (ECA-1.2, #4730).
+
+        Args:
+            tenant_id: Tenant the caller is acting in.
+            slug: The target's stable handle.
+
+        Returns:
+            The target row, or ``None`` when no live target in this tenant carries that slug.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)) or not slug:
+            return None
+        rows = self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_TARGET_COLUMNS}
+            FROM apiome.verification_target
+            WHERE tenant_id = %s::uuid AND slug = %s AND deleted_at IS NULL
+            """,
+            (tenant_id, slug),
+        )
+        return rows[0] if rows else None
+
+    def get_verification_target_by_id(
+        self, target_id: str, tenant_id: str, *, include_deleted: bool = False
+    ) -> Optional[Dict[str, Any]]:
+        """One target by id, scoped to a tenant (ECA-1.2, #4730).
+
+        ``include_deleted`` is what keeps an ECA-1.3 evidence reference resolvable: a run that
+        names a target must still be able to say what that target was after it is retired.
+
+        Args:
+            target_id: The target row id.
+            tenant_id: Tenant the caller is acting in; a target in another tenant reads as absent.
+            include_deleted: Include soft-deleted targets.
+
+        Returns:
+            The target row, or ``None``.
+        """
+        if not target_id or not is_uuid_string(str(target_id)):
+            return None
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        clause = "" if include_deleted else " AND deleted_at IS NULL"
+        rows = self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_TARGET_COLUMNS}
+            FROM apiome.verification_target
+            WHERE id = %s::uuid AND tenant_id = %s::uuid{clause}
+            """,
+            (target_id, tenant_id),
+        )
+        return rows[0] if rows else None
+
+    def insert_verification_target(
+        self,
+        *,
+        tenant_id: str,
+        slug: str,
+        name: str,
+        environment: str,
+        base_url: str,
+        description: Optional[str] = None,
+        network_class: str = "public",
+        approved_by: Optional[str] = None,
+        approval_reason: Optional[str] = None,
+        auth_kind: str = "none",
+        auth_scheme: Optional[str] = None,
+        auth_ref: Optional[str] = None,
+        auth_header_name: Optional[str] = None,
+        policy: Optional[Dict[str, Any]] = None,
+        enabled: bool = True,
+        created_by: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Define a new verification target (ECA-1.2, #4730).
+
+        The columns this writes are secret-free by construction: ``auth_ref`` holds an
+        environment-variable name or a credential-vault id, and V211's CHECK constraints reject
+        anything else — so a caller that manages to bypass the API-level validation still cannot
+        store credential material.
+
+        ``approved_at`` is set by the database (``CURRENT_TIMESTAMP``) whenever an approver is
+        recorded, so the approval time is the server's, not the caller's.
+
+        Args:
+            tenant_id: Owning tenant.
+            slug: Stable handle, unique among the tenant's live targets.
+            name: Display name.
+            environment: ``mock`` | ``development`` | ``test`` | ``staging`` | ``production``.
+            base_url: Normalized base URL.
+            description: Optional operator note.
+            network_class: ``public`` or ``private``.
+            approved_by: Approving user, required for a private-network target.
+            approval_reason: Why the private-network exception is justified.
+            auth_kind: ``none`` | ``env`` | ``stored``.
+            auth_scheme: ``bearer`` | ``header`` | ``basic``.
+            auth_ref: Environment-variable name or credential-vault UUID — never a secret.
+            auth_header_name: Header name for the ``header`` scheme.
+            policy: Execution/failure policy as a JSON-ready dict.
+            enabled: Whether the target may be resolved.
+            created_by: The acting user.
+
+        Returns:
+            The stored row, or ``None`` when ``tenant_id`` is not a UUID.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        query = f"""
+            INSERT INTO apiome.verification_target (
+                tenant_id, slug, name, description, environment, base_url,
+                network_class, approved_by, approved_at, approval_reason,
+                auth_kind, auth_scheme, auth_ref, auth_header_name,
+                policy, enabled, created_by, updated_by
+            )
+            VALUES (
+                %s::uuid, %s, %s, %s, %s, %s,
+                %s, %s::uuid,
+                CASE WHEN %s::uuid IS NULL THEN NULL ELSE CURRENT_TIMESTAMP END,
+                %s,
+                %s, %s, %s, %s,
+                %s::jsonb, %s, %s::uuid, %s::uuid
+            )
+            RETURNING {self._VERIFICATION_TARGET_COLUMNS}
+        """
+        params = (
+            tenant_id,
+            slug,
+            name,
+            description,
+            environment,
+            base_url,
+            network_class,
+            approved_by,
+            approved_by,
+            approval_reason,
+            auth_kind,
+            auth_scheme,
+            auth_ref,
+            auth_header_name,
+            json.dumps(policy or {}, sort_keys=True),
+            enabled,
+            created_by,
+            created_by,
+        )
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, params)
+                row = cursor.fetchone()
+            conn.commit()
+            return row
+        except Exception:
+            conn.rollback()
+            raise
+
+    #: Columns :meth:`update_verification_target` will write, mapped to their SQL casts. A field
+    #: outside this set is ignored rather than interpolated, so the update can never be steered
+    #: into an unintended column.
+    _VERIFICATION_TARGET_UPDATABLE = {
+        "name": "%s",
+        "description": "%s",
+        "environment": "%s",
+        "base_url": "%s",
+        "network_class": "%s",
+        "approval_reason": "%s",
+        "approved_by": "%s::uuid",
+        "auth_kind": "%s",
+        "auth_scheme": "%s",
+        "auth_ref": "%s",
+        "auth_header_name": "%s",
+        "policy": "%s::jsonb",
+        "enabled": "%s",
+    }
+
+    def update_verification_target(
+        self,
+        target_id: str,
+        tenant_id: str,
+        fields: Dict[str, Any],
+        *,
+        updated_by: Optional[str] = None,
+        touch_approval: bool = False,
+    ) -> Optional[Dict[str, Any]]:
+        """Apply a partial update to a live target (ECA-1.2, #4730).
+
+        Only the columns in :attr:`_VERIFICATION_TARGET_UPDATABLE` may be set; anything else in
+        ``fields`` is dropped. ``updated_at`` always moves, so "when did this target last change"
+        never depends on the caller remembering to say so.
+
+        Args:
+            target_id: The target to update.
+            tenant_id: Tenant the caller is acting in.
+            fields: Column -> value map of the changes.
+            updated_by: The acting user.
+            touch_approval: Set ``approved_at`` to now (used when a private-network approval is
+                (re)recorded as part of the same update).
+
+        Returns:
+            The updated row, or ``None`` when the target does not exist in this tenant, or when
+            nothing updatable was supplied.
+        """
+        if not target_id or not is_uuid_string(str(target_id)):
+            return None
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+
+        assignments: List[str] = []
+        params: List[Any] = []
+        for column, placeholder in self._VERIFICATION_TARGET_UPDATABLE.items():
+            if column not in fields:
+                continue
+            value = fields[column]
+            assignments.append(f"{column} = {placeholder}")
+            params.append(
+                json.dumps(value or {}, sort_keys=True) if column == "policy" else value
+            )
+        if not assignments:
+            return None
+
+        assignments.append("updated_at = CURRENT_TIMESTAMP")
+        assignments.append("updated_by = %s::uuid")
+        params.append(updated_by)
+        if touch_approval:
+            assignments.append("approved_at = CURRENT_TIMESTAMP")
+        elif "approved_by" in fields and fields["approved_by"] is None:
+            # Clearing the approver clears its timestamp too; a target that is no longer private
+            # must not keep an approval date that nothing approves.
+            assignments.append("approved_at = NULL")
+
+        query = f"""
+            UPDATE apiome.verification_target
+            SET {', '.join(assignments)}
+            WHERE id = %s::uuid AND tenant_id = %s::uuid AND deleted_at IS NULL
+            RETURNING {self._VERIFICATION_TARGET_COLUMNS}
+        """
+        params.extend([target_id, tenant_id])
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, tuple(params))
+                row = cursor.fetchone()
+            conn.commit()
+            return row
+        except Exception:
+            conn.rollback()
+            raise
+
+    def soft_delete_verification_target(
+        self, target_id: str, tenant_id: str, *, deleted_by: Optional[str] = None
+    ) -> bool:
+        """Retire a target without destroying it (ECA-1.2, #4730).
+
+        Soft delete, because an ECA-1.3 evidence row names a target id and that reference must
+        keep resolving. The slug is freed for reuse (the uniqueness index is partial on
+        ``deleted_at IS NULL``).
+
+        Args:
+            target_id: The target to retire.
+            tenant_id: Tenant the caller is acting in.
+            deleted_by: The acting user, recorded as the last modifier.
+
+        Returns:
+            True when a live target was retired; False when there was nothing to retire.
+        """
+        if not target_id or not is_uuid_string(str(target_id)):
+            return False
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return False
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    UPDATE apiome.verification_target
+                    SET deleted_at = CURRENT_TIMESTAMP,
+                        updated_at = CURRENT_TIMESTAMP,
+                        updated_by = %s::uuid,
+                        enabled = FALSE
+                    WHERE id = %s::uuid AND tenant_id = %s::uuid AND deleted_at IS NULL
+                    RETURNING id
+                    """,
+                    (deleted_by, target_id, tenant_id),
+                )
+                row = cursor.fetchone()
+            conn.commit()
+            return row is not None
+        except Exception:
+            conn.rollback()
+            raise
+
+    def insert_verification_target_audit(
+        self,
+        *,
+        tenant_id: str,
+        action: str,
+        outcome: str,
+        target_id: Optional[str] = None,
+        target_slug: Optional[str] = None,
+        reason: Optional[str] = None,
+        actor_id: Optional[str] = None,
+        actor_label: Optional[str] = None,
+        actor_kind: str = "user",
+        detail: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Append one entry to the verification-target audit ledger (ECA-1.2, #4730).
+
+        Every definition change and every target *selection* lands here, including refusals — a
+        denied resolve is exactly the event an auditor wants to see.
+
+        Args:
+            tenant_id: Tenant the action happened in.
+            action: ``target.create`` | ``target.update`` | ``target.delete`` | ``target.resolve``.
+            outcome: ``success`` | ``denied`` | ``failure``.
+            target_id: The target acted on, when one was found.
+            target_slug: The slug as it was at the time (recorded even when no target matched).
+            reason: Stable machine code; required by the schema for a non-success outcome.
+            actor_id: Acting user, when attributable.
+            actor_label: Email/name as displayed at the time.
+            actor_kind: ``user`` | ``api_key`` | ``system``.
+            detail: Non-secret context (changed fields, environment, network class).
+
+        Returns:
+            The stored row, or ``None`` when ``tenant_id`` is not a UUID.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        query = f"""
+            INSERT INTO apiome.verification_target_audit (
+                tenant_id, target_id, target_slug, action, outcome, reason,
+                actor_id, actor_label, actor_kind, detail
+            )
+            VALUES (%s::uuid, %s::uuid, %s, %s, %s, %s, %s::uuid, %s, %s, %s::jsonb)
+            RETURNING {self._VERIFICATION_TARGET_AUDIT_COLUMNS}
+        """
+        params = (
+            tenant_id,
+            target_id if target_id and is_uuid_string(str(target_id)) else None,
+            target_slug,
+            action,
+            outcome,
+            reason,
+            actor_id if actor_id and is_uuid_string(str(actor_id)) else None,
+            actor_label,
+            actor_kind,
+            json.dumps(detail or {}, sort_keys=True),
+        )
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, params)
+                row = cursor.fetchone()
+            conn.commit()
+            return row
+        except Exception:
+            conn.rollback()
+            raise
+
+    def list_verification_target_audit(
+        self,
+        tenant_id: str,
+        *,
+        target_id: Optional[str] = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Read the verification-target audit ledger, newest first (ECA-1.2, #4730).
+
+        Args:
+            tenant_id: Tenant whose ledger to read.
+            target_id: Restrict to one target's history.
+            limit: Maximum rows (clamped to 1..500).
+
+        Returns:
+            The audit rows; empty when nothing has been recorded.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        clause = ""
+        params: List[Any] = [tenant_id]
+        if target_id and is_uuid_string(str(target_id)):
+            clause = " AND target_id = %s::uuid"
+            params.append(target_id)
+        params.append(max(1, min(int(limit), 500)))
+        return self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_TARGET_AUDIT_COLUMNS}
+            FROM apiome.verification_target_audit
+            WHERE tenant_id = %s::uuid{clause}
+            ORDER BY created_at DESC
+            LIMIT %s
+            """,
+            tuple(params),
+        )
+
+    def purge_verification_target_audit(self, retention_days: int = 365) -> int:
+        """Run the verification-target audit retention sweep (ECA-1.2, #4730).
+
+        Delegates to ``apiome.purge_verification_target_audit`` (apiome-db V211), which hard-deletes
+        ledger entries older than the window.
+
+        Args:
+            retention_days: Retention window in days; negative values are treated as ``0``.
+
+        Returns:
+            The number of purged rows.
+        """
+        rows = self.execute_query(
+            "SELECT apiome.purge_verification_target_audit(%s) AS purged",
+            (max(0, int(retention_days)),),
+        )
+        return int(rows[0]["purged"]) if rows and rows[0].get("purged") is not None else 0
+
 
 # Global database instance
 db = Database()

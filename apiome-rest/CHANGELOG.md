@@ -5,6 +5,46 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.203.0] - 2026-07-27
+
+### Added
+- **Environment and target registry (#4730, ECA-1.2)** — a compiled contract suite carries no URL
+  and no credential, so until now everything about *where* a run points lived outside the platform:
+  a CI variable here, a shell export there. Nothing recorded which target a run used, nothing
+  stopped one from pointing at an internal address, and credentials travelled next to the
+  configuration that named them. Targets are now tenant-scoped, secret-free records with an
+  append-only ledger of every change and every selection. See
+  [docs/verification_targets.md](./docs/verification_targets.md).
+  - **A target never holds a secret.** `auth.kind` says where the credential lives — `env` (an
+    environment-variable **name** the runner reads from its own environment, `^[A-Z_][A-Z0-9_]*$`)
+    or `stored` (a UUID in the existing encrypted credential vault) — and both shapes are enforced
+    in the Pydantic contract *and* as V211 CHECK constraints. A bearer token, an API key, a base64
+    blob, and a JWT all fail the env grammar, so a paste cannot become a stored credential.
+  - **URL validation blocks private-network SSRF by default.** Every base URL goes through
+    `app.ssrf_guard`: `http`/`https` only, no `user:pass@` authority, and — for the default
+    `network_class: public` — every resolved address must be globally routable (loopback, RFC1918,
+    link-local incl. `169.254.169.254`, CGNAT, and IPv4-mapped IPv6 forms all refused). An internal
+    target requires `network_class: private` plus an `approval_reason`, and records the caller as
+    its approver. The address check runs **again at resolve time**, because DNS moves while a
+    definition looks unchanged.
+  - **Target selection is audited.** `POST .../{ref}/resolve` writes a `target.resolve` entry
+    whether it succeeds or not, with the actor and whether they were an interactive user or a CI
+    runner (`actor_kind: api_key`). An update records which *field names* changed and never their
+    values; a resolve records the credential reference *kind* and never the reference itself.
+  - **`verification_targets` RBAC resource** (apiome-db V211) — Owner/Admin manage; Editor, Viewer,
+    and any member with no explicit role may view, which is what a resolve requires.
+  - **Endpoints** — `GET|POST /v1/tenants/{tenant}/verification-targets`,
+    `GET|PATCH|DELETE .../{ref}`, `POST .../{ref}/resolve`, and
+    `GET /v1/tenants/{tenant}/verification-targets-audit`. `{ref}` is a slug **or** an id, so CI
+    names a stable handle while an evidence record names an immutable one. Every refusal carries a
+    stable `{code, message}`.
+  - **Run records carry a target identity, never credentials** — `target_identity()` is the
+    ECA-1.3 seam (id, slug, environment, network class, base URL). Retired targets are
+    soft-deleted so an evidence reference keeps resolving; the slug is freed for reuse.
+  - **Policy is set by the registry, not the runner** — timeout, concurrency, retries (transport
+    only), mutating methods off by default, redirects off, TLS verification only disableable on an
+    approved private target, and a failing run blocking the gate by default.
+
 ## [1.202.0] - 2026-07-27
 
 ### Added

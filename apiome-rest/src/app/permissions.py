@@ -40,6 +40,7 @@ class Resource:
     API_KEYS = "api_keys"
     BILLING = "billing"
     LINT_FINDINGS = "lint_findings"
+    VERIFICATION_TARGETS = "verification_targets"
 
 
 class Action:
@@ -66,6 +67,7 @@ RESOURCES = frozenset(
         Resource.API_KEYS,
         Resource.BILLING,
         Resource.LINT_FINDINGS,
+        Resource.VERIFICATION_TARGETS,
     }
 )
 
