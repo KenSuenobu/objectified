@@ -29,6 +29,7 @@ const RESOURCES: { key: string; label: string }[] = [
   { key: 'billing', label: 'Billing' },
   { key: 'lint_findings', label: 'Lint Findings' },
   { key: 'verification_targets', label: 'Verification Targets' },
+  { key: 'verification_evidence', label: 'Verification Evidence' },
 ];
 
 const ACTIONS: { key: string; label: string }[] = [

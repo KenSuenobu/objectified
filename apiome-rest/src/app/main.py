@@ -98,6 +98,7 @@ from .version_change_report_routes import router as version_change_report_router
 from .version_changelog_routes import router as version_changelog_router
 from .version_merge_routes import router as version_merge_router
 from .version_tags_routes import router as version_tags_router
+from .verification_evidence_routes import router as verification_evidence_router
 from .verification_target_routes import router as verification_target_router
 from .versions_routes import router as versions_router
 from .workflow_audit_routes import router as workflow_audit_router
@@ -113,7 +114,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.68.0",
+    version="1.69.0",
 )
 
 
@@ -260,6 +261,7 @@ app.include_router(identity_router)
 app.include_router(compatibility_router)
 app.include_router(contract_suite_router)
 app.include_router(verification_target_router)
+app.include_router(verification_evidence_router)
 app.include_router(classified_diff_router)
 app.include_router(lint_router)
 app.include_router(lint_rules_router)

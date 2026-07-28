@@ -5,6 +5,54 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.204.0] - 2026-07-27
+
+### Added
+- **Verification evidence schema (#4731, ECA-1.3)** — a contract run used to end as runner output:
+  a log, a scrollback, maybe a JUnit file in a CI artifact bucket. None of that can be queried,
+  compared across runs, or pointed at by a gate, and it disappears when the CI job's retention
+  window closes. A run is now four immutable, tenant-scoped records plus two exports. See
+  [docs/verification_evidence.md](./docs/verification_evidence.md).
+  - **Evidence is immutable and written whole.** `verification_run`, `verification_run_operation`,
+    `verification_run_assertion`, and `verification_run_artifact` (apiome-db V212) each carry the
+    shared `BEFORE UPDATE` guard that rejects any in-place edit. That is livable because a run is
+    recorded in **one transaction** — there is no open-append-close path, so partial evidence is
+    never stored. The REST surface says the same by omission: no `PATCH`, `PUT`, or `DELETE` on a
+    run. The only removal is `apiome.purge_verification_evidence(days)`.
+  - **Tenant-scoped all the way down.** `tenant_id` is on all four tables, and each child
+    references its parent on `(id, tenant_id)` — a composite foreign key, so a cross-tenant child
+    is structurally impossible rather than merely unlikely.
+  - **The verdict is derived, never asserted.** Counts and outcome are computed from the case
+    records; a declared `outcome` that disagrees is refused (`evidence-outcome-mismatch`), and V212
+    refuses the row a second time. `errored` outranks `failed` — a gate must tell "incompatible"
+    from "we never found out". Only `cancelled`, which no record can imply, is taken on the
+    runner's word.
+  - **A failure always says why.** A case recorded `failed`/`errored` needs a `failure_code`, a
+    failed assertion needs a `code`, and a case recorded `passed` may carry neither a failure code
+    nor a failed assertion.
+  - **Artifacts are linked, redacted, and verifiable.** There is no column and no model field for
+    content; a `data:` URI is refused (that is embedding), as is a URI carrying `user:pass@`;
+    `redacted` admits only `TRUE`; `content_sha256` lets a reader verify what they fetched; and
+    every free-text field goes through `app.intake_secret_scrub.scrub_message` before truncation,
+    so a token a runner quoted never reaches storage.
+  - **A run names the target it used.** The ECA-1.2 identity is snapshotted (id, slug, environment,
+    network class, base URL) from a *read* rather than a resolve — recording history must not fail
+    because the target has since been disabled, nor claim a fresh selection happened. The
+    credential reference is deliberately not part of the snapshot.
+  - **JUnit and JSON exports reproduce stored outcomes.** `GET .../{run_id}/export?format=json`
+    returns the stored record with sorted keys (two exports of a run are byte-identical);
+    `format=junit` returns JUnit XML whose counters come from the **stored counts**, one
+    `<testcase>` per stored case in stored order, `failed` → `<failure>` and `errored` →
+    `<error>`, with the suite digest and target identity as `<properties>`.
+  - **Recording is idempotent.** A repeated upload with the same `idempotency_key` returns the
+    original run with `200` instead of minting a duplicate, including when a concurrent upload
+    loses the unique-index race.
+  - **`verification_evidence` RBAC resource** (apiome-db V212) — Owner/Admin manage; **Editor may
+    view and create**, because recording a run is what verification is and a CI runner's API key
+    resolves to that grid; Viewer may view.
+  - **Endpoints** — `POST|GET /v1/tenants/{tenant}/verification-runs`, `GET .../{run_id}`, and
+    `GET .../{run_id}/export`. Every refusal carries a stable `{code, message}`.
+
 ## [1.203.0] - 2026-07-27
 
 ### Added

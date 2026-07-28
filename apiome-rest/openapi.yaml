@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.68.0
+  version: 1.69.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -5701,6 +5701,373 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for readtheverificationtargetauditledgerresponse422.
+  /v1/tenants/{tenant_slug}/verification-runs:
+    post:
+      tags:
+      - contract-assurance
+      summary: Record verification evidence for a finished run
+      description: 'Record one finished contract run as **immutable** evidence: the
+        executed suite digest, the target identity, timing, per-case outcomes, per-assertion
+        detail, and references to redacted artifacts.
+
+
+        **The verdict is derived, not accepted.** Case counts and the run outcome
+        are computed from the submitted case records; a declared `outcome` that disagrees
+        is refused. Only `cancelled` — which no set of records can imply — is taken
+        on the runner''s word.
+
+
+        **A failure must say why.** A case recorded as `failed` or `errored` needs
+        a `failure_code`, and a failed assertion needs a `code`; an outcome with no
+        stated reason cannot be compared across runs or gated on.
+
+
+        **Artifacts are linked, never embedded.** An artifact reference carries a
+        URI, a size, and a content hash — a `data:` URI is refused, as is one embedding
+        `user:pass@` credentials — and every free-text field is scrubbed for credentials
+        before storage.
+
+
+        **Recording is idempotent.** Repeating the request with the same `idempotency_key`
+        returns the originally stored run with `200` rather than creating a duplicate.
+
+
+        Requires `verification_evidence:create`.'
+      operationId: create_verification_run_v1_tenants__tenant_slug__verification_runs_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Recordverificationevidenceforafinishedruauthorization schema.
+          - type: 'null'
+            description: Recordverificationevidenceforafinishedruauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Recordverificationevidenceforafinishedru Xapikey schema.
+          - type: 'null'
+            description: Recordverificationevidenceforafinishedru Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationRunInput'
+              description: Request body for recordverificationevidenceforafinishedrurequest.
+        description: Request body for record verification evidence for a finished
+          run.
+      responses:
+        '201':
+          description: Successful response for record verification evidence for a
+            finished run.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationRunRecord'
+                description: Response payload for recordverificationevidenceforafinishedruresponse201.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for recordverificationevidenceforafinishedruresponse422.
+    get:
+      tags:
+      - contract-assurance
+      summary: List verification runs
+      description: 'Recorded runs, newest first, without per-case detail.
+
+
+        The filters are the questions a gate asks: the newest evidence for *this*
+        compiled suite (`suite_digest`), everything that ran against *this* target
+        (`target_id`), or only the failures (`outcome`).
+
+
+        Requires `verification_evidence:view`.'
+      operationId: list_verification_runs_v1_tenants__tenant_slug__verification_runs_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: target_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listverificationrunstargetid schema.
+          - type: 'null'
+            description: Listverificationrunstargetid schema.
+          description: Restrict to one target.
+          title: Target Id
+        description: Restrict to one target.
+      - name: suite_digest
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listverificationrunssuitedigest schema.
+          - type: 'null'
+            description: Listverificationrunssuitedigest schema.
+          description: Restrict to one compiled suite digest (`sha256:<hex>`).
+          title: Suite Digest
+        description: Restrict to one compiled suite digest (`sha256:<hex>`).
+      - name: outcome
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listverificationrunsoutcome schema.
+          - type: 'null'
+            description: Listverificationrunsoutcome schema.
+          description: 'Restrict to one verdict: passed, failed, errored, cancelled.'
+          title: Outcome
+        description: 'Restrict to one verdict: passed, failed, errored, cancelled.'
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Maximum runs to return.
+          default: 50
+          title: Limit
+        description: Maximum runs to return.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listverificationrunsauthorization schema.
+          - type: 'null'
+            description: Listverificationrunsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listverificationruns Xapikey schema.
+          - type: 'null'
+            description: Listverificationruns Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for list verification runs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationRunListResponse'
+                description: Response payload for listverificationrunsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for listverificationrunsresponse422.
+  /v1/tenants/{tenant_slug}/verification-runs/{run_id}:
+    get:
+      tags:
+      - contract-assurance
+      summary: Read one verification run
+      description: 'One run in full: every case record, its assertions, and the references
+        to its redacted artifacts.
+
+
+        The target identity is the **snapshot taken at run time**, not a live read
+        of the target — a target that has since been renamed, repointed, or retired
+        cannot rewrite what this run says it did.
+
+
+        Requires `verification_evidence:view`.'
+      operationId: read_verification_run_v1_tenants__tenant_slug__verification_runs__run_id__get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Run Id
+          description: Run Id schema.
+        description: Path parameter identifying the run id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Readoneverificationrunauthorization schema.
+          - type: 'null'
+            description: Readoneverificationrunauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Readoneverificationrun Xapikey schema.
+          - type: 'null'
+            description: Readoneverificationrun Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for read one verification run.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationRunRecord'
+                description: Response payload for readoneverificationrunresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for readoneverificationrunresponse422.
+  /v1/tenants/{tenant_slug}/verification-runs/{run_id}/export:
+    get:
+      tags:
+      - contract-assurance
+      summary: Export one verification run as JSON or JUnit
+      description: 'Export the stored evidence.
+
+
+        * `json` — the whole record (`application/json`), keys sorted so two exports
+        of the same run are byte-identical and can be diffed without a semantic differ.
+
+        * `junit` — JUnit XML (`application/xml`), which GitHub Actions, GitLab, Jenkins,
+        and Buildkite render natively. One `<testcase>` per stored case in stored
+        order; a contract violation becomes `<failure>` and an unexecutable case becomes
+        `<error>`, because that is the distinction contract verification needs. The
+        suite digest and target identity travel as `<properties>`.
+
+
+        Neither exporter recomputes a verdict: the counters come from the stored counts,
+        so an export can never disagree with the run it exports.
+
+
+        Requires `verification_evidence:view`.'
+      operationId: export_verification_run_v1_tenants__tenant_slug__verification_runs__run_id__export_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Run Id
+          description: Run Id schema.
+        description: Path parameter identifying the run id segment.
+      - name: format
+        in: query
+        required: false
+        schema:
+          type: string
+          description: 'Export format: json, junit.'
+          default: json
+          title: Format
+        description: 'Export format: json, junit.'
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Exportoneverificationrunas Jsonor Junitauthorization schema.
+          - type: 'null'
+            description: Exportoneverificationrunas Jsonor Junitauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Exportoneverificationrunas Jsonor Junit Xapikey schema.
+          - type: 'null'
+            description: Exportoneverificationrunas Jsonor Junit Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: The exported evidence.
+          content:
+            application/json:
+              schema:
+                description: Response payload for exportoneverificationrunas jsonor
+                  junitresponse200.
+            application/xml: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for exportoneverificationrunas jsonor
+                  junitresponse422.
   /v1/diff/{tenant_slug}/classified:
     post:
       tags:
@@ -43762,6 +44129,307 @@ components:
         be
 
         ``None`` independently — stated, never guessed.'
+    ArtifactRecord:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Artifact reference id.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        operation_id:
+          anyOf:
+          - type: string
+            description: Artifact schema.
+          - type: 'null'
+            description: Artifact schema.
+          title: Operation Id
+          description: Owning case, or null for a run-level artifact.
+        kind:
+          type: string
+          title: Kind
+          description: What the artifact is.
+          example: example
+        label:
+          anyOf:
+          - type: string
+            description: Artifact schema.
+          - type: 'null'
+            description: Artifact schema.
+          title: Label
+          description: Short human label.
+        media_type:
+          anyOf:
+          - type: string
+            description: Artifact schema.
+          - type: 'null'
+            description: Artifact schema.
+          title: Media Type
+          description: Media type of the artifact.
+        uri:
+          type: string
+          title: Uri
+          description: Where the artifact lives.
+          example: example
+        size_bytes:
+          anyOf:
+          - type: integer
+            description: Artifact schema.
+          - type: 'null'
+            description: Artifact schema.
+          title: Size Bytes
+          description: Size in bytes, when known.
+        content_sha256:
+          anyOf:
+          - type: string
+            description: Artifact schema.
+          - type: 'null'
+            description: Artifact schema.
+          title: Content Sha256
+          description: SHA-256 of the referenced bytes.
+        redacted:
+          type: boolean
+          title: Redacted
+          description: Always true — see the V212 CHECK.
+          default: true
+          example: false
+        redaction:
+          additionalProperties: true
+          type: object
+          title: Redaction
+          description: Counts of what redaction removed.
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - kind
+      - uri
+      title: ArtifactRecord
+      description: 'A stored artifact reference: a link and a hash, never the bytes.'
+    ArtifactReferenceInput:
+      properties:
+        kind:
+          type: string
+          title: Kind
+          description: 'What the artifact is: request, response, log, har, report,
+            diff, other.'
+          example: example
+        uri:
+          type: string
+          maxLength: 4000
+          title: Uri
+          description: 'Where the artifact lives — an `http(s)`, `s3`, or `gs` URL,
+            or a scheme-less object-store key. A `data:` URI is refused: that would
+            embed the artifact.'
+          example: example
+        label:
+          anyOf:
+          - type: string
+            maxLength: 200
+            description: Artifact Reference Input schema.
+          - type: 'null'
+            description: Artifact Reference Input schema.
+          title: Label
+          description: Short human label for the artifact.
+        media_type:
+          anyOf:
+          - type: string
+            maxLength: 200
+            description: Artifact Reference Input schema.
+          - type: 'null'
+            description: Artifact Reference Input schema.
+          title: Media Type
+          description: Media type of the referenced artifact.
+        size_bytes:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Artifact Reference Input schema.
+          - type: 'null'
+            description: Artifact Reference Input schema.
+          title: Size Bytes
+          description: Size of the referenced artifact, when known.
+        content_sha256:
+          anyOf:
+          - type: string
+            maxLength: 64
+            description: Artifact Reference Input schema.
+          - type: 'null'
+            description: Artifact Reference Input schema.
+          title: Content Sha256
+          description: SHA-256 of the referenced bytes, so a reader can verify what
+            they fetched.
+        redacted:
+          type: boolean
+          title: Redacted
+          description: Asserts the artifact was redacted before it was stored. Submitting
+            `false` is refused — the schema has no representation for unredacted evidence.
+          default: true
+          example: false
+        redaction:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Redaction
+          description: 'Counts of what redaction removed (`{"headers": 2, "body_fields":
+            1}`). Counts only — naming the removed values would defeat the redaction.'
+      additionalProperties: false
+      type: object
+      required:
+      - kind
+      - uri
+      title: ArtifactReferenceInput
+      description: 'A pointer to a redacted run artifact — a link and a hash, never
+        the bytes.
+
+
+        There is deliberately no field for content. A request/response capture, a
+        HAR file, or a runner
+
+        log belongs in the tenant''s artifact storage; the evidence record says *where*
+        it is, *what* it
+
+        is, and *what it hashes to*, so a reader can fetch it and confirm they got
+        the same bytes the
+
+        run recorded.'
+    AssertionInput:
+      properties:
+        kind:
+          type: string
+          title: Kind
+          description: 'What was checked: status_code, response_schema, header, content_type,
+            latency, custom.'
+          example: example
+        outcome:
+          type: string
+          title: Outcome
+          description: 'One of: passed, failed, skipped.'
+          example: example
+        subject:
+          anyOf:
+          - type: string
+            maxLength: 500
+            description: Assertion Input schema.
+          - type: 'null'
+            description: Assertion Input schema.
+          title: Subject
+          description: 'What was asserted on: a JSON Pointer, a header name, or a
+            label.'
+        expected:
+          anyOf:
+          - type: string
+            maxLength: 10000
+            description: Assertion Input schema.
+          - type: 'null'
+            description: Assertion Input schema.
+          title: Expected
+          description: Redacted rendering of what the contract required.
+        actual:
+          anyOf:
+          - type: string
+            maxLength: 10000
+            description: Assertion Input schema.
+          - type: 'null'
+            description: Assertion Input schema.
+          title: Actual
+          description: Redacted rendering of what was observed.
+        code:
+          anyOf:
+          - type: string
+            maxLength: 120
+            description: Assertion Input schema.
+          - type: 'null'
+            description: Assertion Input schema.
+          title: Code
+          description: Stable machine code; required when the assertion failed.
+        message:
+          anyOf:
+          - type: string
+            maxLength: 20000
+            description: Assertion Input schema.
+          - type: 'null'
+            description: Assertion Input schema.
+          title: Message
+          description: Redacted human explanation.
+      additionalProperties: false
+      type: object
+      required:
+      - kind
+      - outcome
+      title: AssertionInput
+      description: 'One check inside a case: what was asserted, what was expected,
+        and what was observed.'
+    AssertionRecord:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Assertion id.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        sequence:
+          type: integer
+          title: Sequence
+          description: Stored order within the case.
+          example: 1
+        kind:
+          type: string
+          title: Kind
+          description: What was checked.
+          example: example
+        outcome:
+          type: string
+          title: Outcome
+          description: '`passed`, `failed`, or `skipped`.'
+          example: example
+        subject:
+          anyOf:
+          - type: string
+            description: Assertion schema.
+          - type: 'null'
+            description: Assertion schema.
+          title: Subject
+          description: What was asserted on.
+        expected:
+          anyOf:
+          - type: string
+            description: Assertion schema.
+          - type: 'null'
+            description: Assertion schema.
+          title: Expected
+          description: What the contract required.
+        actual:
+          anyOf:
+          - type: string
+            description: Assertion schema.
+          - type: 'null'
+            description: Assertion schema.
+          title: Actual
+          description: What was observed.
+        code:
+          anyOf:
+          - type: string
+            description: Assertion schema.
+          - type: 'null'
+            description: Assertion schema.
+          title: Code
+          description: Stable code for a failed assertion.
+        message:
+          anyOf:
+          - type: string
+            description: Assertion schema.
+          - type: 'null'
+            description: Assertion schema.
+          title: Message
+          description: Redacted explanation.
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - sequence
+      - kind
+      - outcome
+      title: AssertionRecord
+      description: A stored assertion, as every reader and both exporters see it.
     BotPresetBody:
       properties:
         key:
@@ -66438,6 +67106,299 @@ components:
       type: object
       title: OperationDescriptionRequest
       description: Request body for creating or updating operation description metadata.
+    OperationRecord:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Case record id.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        sequence:
+          type: integer
+          title: Sequence
+          description: Stored order within the run.
+          example: 1
+        case_id:
+          type: string
+          title: Case Id
+          description: ECA-1.1 case id.
+          example: case_01h2xcejqtf3fz5y5j0v8k9m2p
+        operation_key:
+          type: string
+          title: Operation Key
+          description: Canonical operation key.
+          example: GET
+        operation_name:
+          anyOf:
+          - type: string
+            description: Operation schema.
+          - type: 'null'
+            description: Operation schema.
+          title: Operation Name
+          description: Source operation name.
+        case_source:
+          anyOf:
+          - type: string
+            description: Operation schema.
+          - type: 'null'
+            description: Operation schema.
+          title: Case Source
+          description: Where the case came from.
+        http_method:
+          type: string
+          title: Http Method
+          description: HTTP verb executed.
+          example: example
+        http_path:
+          type: string
+          title: Http Path
+          description: Request path executed.
+          example: example
+        outcome:
+          type: string
+          title: Outcome
+          description: '`passed`, `failed`, `errored`, or `skipped`.'
+          example: example
+        failure_code:
+          anyOf:
+          - type: string
+            description: Operation schema.
+          - type: 'null'
+            description: Operation schema.
+          title: Failure Code
+          description: Stable code for a non-pass.
+        failure_message:
+          anyOf:
+          - type: string
+            description: Operation schema.
+          - type: 'null'
+            description: Operation schema.
+          title: Failure Message
+          description: Redacted explanation.
+        expected_status:
+          anyOf:
+          - type: string
+            description: Operation schema.
+          - type: 'null'
+            description: Operation schema.
+          title: Expected Status
+          description: Status the contract declared.
+        actual_status:
+          anyOf:
+          - type: integer
+            description: Operation schema.
+          - type: 'null'
+            description: Operation schema.
+          title: Actual Status
+          description: Status returned.
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Operation schema.
+          - type: 'null'
+            description: Operation schema.
+          title: Started At
+          description: When the case started.
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Operation schema.
+          - type: 'null'
+            description: Operation schema.
+          title: Finished At
+          description: When the case finished.
+        duration_ms:
+          type: integer
+          title: Duration Ms
+          description: Case duration in milliseconds.
+          default: 0
+          example: 1
+        attempts:
+          type: integer
+          title: Attempts
+          description: Transport attempts.
+          default: 1
+          example: 1
+        assertions:
+          items:
+            $ref: '#/components/schemas/AssertionRecord'
+          type: array
+          title: Assertions
+          description: The case's assertions, in stored order.
+          maxItems: 1000
+        artifacts:
+          items:
+            $ref: '#/components/schemas/ArtifactRecord'
+          type: array
+          title: Artifacts
+          description: The case's artifact references.
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - sequence
+      - case_id
+      - operation_key
+      - http_method
+      - http_path
+      - outcome
+      title: OperationRecord
+      description: A stored case result, with its assertions and artifact references.
+    OperationResultInput:
+      properties:
+        case_id:
+          type: string
+          maxLength: 300
+          minLength: 1
+          title: Case Id
+          description: The ECA-1.1 case id, so evidence traces back to the compiled
+            case.
+          example: case_01h2xcejqtf3fz5y5j0v8k9m2p
+        operation_key:
+          type: string
+          maxLength: 500
+          minLength: 1
+          title: Operation Key
+          description: Canonical operation key (`GET /pets/{petId}`).
+          example: GET
+        operation_name:
+          anyOf:
+          - type: string
+            maxLength: 300
+            description: Operation Result Input schema.
+          - type: 'null'
+            description: Operation Result Input schema.
+          title: Operation Name
+          description: Source operation name, when the suite carried one.
+        case_source:
+          anyOf:
+          - type: string
+            maxLength: 120
+            description: Operation Result Input schema.
+          - type: 'null'
+            description: Operation Result Input schema.
+          title: Case Source
+          description: 'Where the case came from: a declared example, a generated
+            body, a negative case.'
+        http_method:
+          type: string
+          maxLength: 20
+          minLength: 1
+          title: Http Method
+          description: HTTP verb executed.
+          example: example
+        http_path:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Http Path
+          description: Request path executed, relative to the target base URL.
+          example: example
+        outcome:
+          type: string
+          title: Outcome
+          description: 'One of: passed, failed, errored, skipped.'
+          example: example
+        failure_code:
+          anyOf:
+          - type: string
+            maxLength: 120
+            description: Operation Result Input schema.
+          - type: 'null'
+            description: Operation Result Input schema.
+          title: Failure Code
+          description: Stable machine code; required for anything that did not pass.
+        failure_message:
+          anyOf:
+          - type: string
+            maxLength: 20000
+            description: Operation Result Input schema.
+          - type: 'null'
+            description: Operation Result Input schema.
+          title: Failure Message
+          description: Redacted explanation of the failure.
+        expected_status:
+          anyOf:
+          - type: string
+            maxLength: 20
+            description: Operation Result Input schema.
+          - type: 'null'
+            description: Operation Result Input schema.
+          title: Expected Status
+          description: Status the contract declared; may be a range (`2XX`).
+        actual_status:
+          anyOf:
+          - type: integer
+            maximum: 599.0
+            minimum: 100.0
+            description: Operation Result Input schema.
+          - type: 'null'
+            description: Operation Result Input schema.
+          title: Actual Status
+          description: Status the implementation returned.
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Operation Result Input schema.
+          - type: 'null'
+            description: Operation Result Input schema.
+          title: Started At
+          description: When the case started.
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Operation Result Input schema.
+          - type: 'null'
+            description: Operation Result Input schema.
+          title: Finished At
+          description: When the case finished.
+        duration_ms:
+          type: integer
+          minimum: 0.0
+          title: Duration Ms
+          description: Case duration in milliseconds.
+          default: 0
+          example: 1
+        attempts:
+          type: integer
+          maximum: 100.0
+          minimum: 1.0
+          title: Attempts
+          description: Transport attempts. A contract failure is never retried (the
+            ECA-1.2 policy), so a value above 1 always means the transport was retried
+            — never that a red result was re-rolled until it went green.
+          default: 1
+          example: 1
+        assertions:
+          items:
+            $ref: '#/components/schemas/AssertionInput'
+          type: array
+          title: Assertions
+          description: The individual checks this case performed.
+          maxItems: 1000
+        artifacts:
+          items:
+            $ref: '#/components/schemas/ArtifactReferenceInput'
+          type: array
+          title: Artifacts
+          description: References to this case's redacted artifacts.
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - case_id
+      - operation_key
+      - http_method
+      - http_path
+      - outcome
+      title: OperationResultInput
+      description: 'One executed case: which operation it exercised, how it went,
+        and why it did not pass.'
     OperationSchema:
       properties:
         id:
@@ -71875,7 +72836,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-07-28T00:48:37Z'
+          example: '2026-07-28T01:17:52Z'
       additionalProperties: false
       type: object
       required:
@@ -80673,6 +81634,542 @@ components:
         and a failure that
 
         blocks the gate.'
+    VerificationRunInput:
+      properties:
+        target_ref:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Target Ref
+          description: The verification target this run executed against — its slug
+            or its id. Recorded as an identity snapshot, so a later rename or retirement
+            cannot rewrite the evidence.
+          example: example
+        suite_digest:
+          type: string
+          maxLength: 100
+          title: Suite Digest
+          description: The ECA-1.1 manifest digest that was executed (`sha256:<hex>`).
+          example: example
+        suite_schema_version:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Verification Run Input schema.
+          - type: 'null'
+            description: Verification Run Input schema.
+          title: Suite Schema Version
+          description: Manifest envelope version of the executed suite.
+        suite_compiler_version:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Verification Run Input schema.
+          - type: 'null'
+            description: Verification Run Input schema.
+          title: Suite Compiler Version
+          description: Compiler rules version of the executed suite.
+        suite_case_count:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Verification Run Input schema.
+          - type: 'null'
+            description: Verification Run Input schema.
+          title: Suite Case Count
+          description: How many cases the manifest declared. Recorded so a run that
+            executed fewer is visibly partial rather than silently so.
+        runner_name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Runner Name
+          description: Which runner produced the evidence.
+          example: Example
+        runner_version:
+          anyOf:
+          - type: string
+            maxLength: 100
+            description: Verification Run Input schema.
+          - type: 'null'
+            description: Verification Run Input schema.
+          title: Runner Version
+          description: Runner version, so a behaviour change is attributable.
+        started_at:
+          type: string
+          format: date-time
+          title: Started At
+          description: When the run began.
+          example: '2026-07-28T01:17:52Z'
+        finished_at:
+          type: string
+          format: date-time
+          title: Finished At
+          description: When the run ended.
+          example: '2026-07-28T01:17:52Z'
+        outcome:
+          anyOf:
+          - type: string
+            description: Verification Run Input schema.
+          - type: 'null'
+            description: Verification Run Input schema.
+          title: Outcome
+          description: Optional declared verdict. It is *checked* against the outcome
+            derived from the operation records and refused when it disagrees; only
+            `cancelled` — which no record can imply — is taken on the runner's word.
+        source:
+          additionalProperties: true
+          type: object
+          title: Source
+          description: Provenance of the compiled suite (artifact kind, reference,
+            revision, version label), as the manifest reports it.
+        context:
+          additionalProperties: true
+          type: object
+          title: Context
+          description: Non-secret CI context (commit, branch, workflow URL). Never
+            credentials.
+        idempotency_key:
+          anyOf:
+          - type: string
+            maxLength: 200
+            description: Verification Run Input schema.
+          - type: 'null'
+            description: Verification Run Input schema.
+          title: Idempotency Key
+          description: Retry key. A runner that uploads evidence and loses the response
+            can repeat the request with the same key and get the original run back
+            instead of a duplicate.
+        operations:
+          items:
+            $ref: '#/components/schemas/OperationResultInput'
+          type: array
+          title: Operations
+          description: One record per executed case.
+          maxItems: 1000
+        artifacts:
+          items:
+            $ref: '#/components/schemas/ArtifactReferenceInput'
+          type: array
+          title: Artifacts
+          description: Run-level artifact references (the runner log, a summary report).
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - target_ref
+      - suite_digest
+      - runner_name
+      - started_at
+      - finished_at
+      title: VerificationRunInput
+      description: 'A complete run, as a runner submits it once execution has finished.
+
+
+        Evidence is recorded in **one** shot rather than opened, appended to, and
+        closed: that is what
+
+        makes immutability enforceable rather than aspirational (V212 rejects every
+        UPDATE), and it
+
+        means a half-written run can never be mistaken for a finished one.'
+    VerificationRunListResponse:
+      properties:
+        runs:
+          items:
+            $ref: '#/components/schemas/VerificationRunSummary'
+          type: array
+          title: Runs
+          description: Matching runs, newest first.
+          maxItems: 1000
+        count:
+          type: integer
+          title: Count
+          description: How many runs were returned.
+          example: 1
+      additionalProperties: false
+      type: object
+      required:
+      - count
+      title: VerificationRunListResponse
+      description: A page of run summaries.
+    VerificationRunRecord:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Run id — what a gate decision cites as its evidence.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        tenant_id:
+          type: string
+          title: Tenant Id
+          description: Tenant that owns the evidence.
+          example: ten_01h2xcejqtf3fz5y5j0v8k9m2p
+        suite_digest:
+          type: string
+          title: Suite Digest
+          description: The executed ECA-1.1 manifest digest.
+          example: example
+        suite_schema_version:
+          anyOf:
+          - type: integer
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Suite Schema Version
+          description: Manifest envelope version.
+        suite_compiler_version:
+          anyOf:
+          - type: integer
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Suite Compiler Version
+          description: Compiler rules version.
+        suite_case_count:
+          anyOf:
+          - type: integer
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Suite Case Count
+          description: Cases the manifest declared.
+        target_id:
+          anyOf:
+          - type: string
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Target Id
+          description: Target used, when it still exists.
+        target_slug:
+          type: string
+          title: Target Slug
+          description: Target handle at run time.
+          example: example-resource
+        target_environment:
+          type: string
+          title: Target Environment
+          description: Environment class at run time.
+          example: example
+        target_network_class:
+          type: string
+          title: Target Network Class
+          description: '`public` or `private`, at run time.'
+          example: example
+        target_base_url:
+          type: string
+          title: Target Base Url
+          description: Base URL at run time.
+          example: https://example.com/resource
+        runner_name:
+          type: string
+          title: Runner Name
+          description: Which runner produced the evidence.
+          example: Example
+        runner_version:
+          anyOf:
+          - type: string
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Runner Version
+          description: Runner version.
+        recorded_by:
+          anyOf:
+          - type: string
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Recorded By
+          description: User who recorded the evidence.
+        actor_label:
+          anyOf:
+          - type: string
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Actor Label
+          description: Actor email/name at the time.
+        actor_kind:
+          type: string
+          title: Actor Kind
+          description: '`user`, `api_key`, or `system`.'
+          default: user
+          example: example
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Started At
+          description: When the run began.
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Finished At
+          description: When the run ended.
+        duration_ms:
+          type: integer
+          title: Duration Ms
+          description: Wall-clock duration in milliseconds.
+          default: 0
+          example: 1
+        outcome:
+          type: string
+          title: Outcome
+          description: '`passed`, `failed`, `errored`, or `cancelled`.'
+          example: example
+        counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Counts
+          description: '`total`, `passed`, `failed`, `errored`, `skipped` — always
+            summing to total.'
+        source:
+          additionalProperties: true
+          type: object
+          title: Source
+          description: Provenance of the compiled suite.
+        context:
+          additionalProperties: true
+          type: object
+          title: Context
+          description: Non-secret CI context.
+        idempotency_key:
+          anyOf:
+          - type: string
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Idempotency Key
+          description: Caller-supplied retry key.
+        created_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Created At
+          description: When the evidence was recorded (server clock).
+        operations:
+          items:
+            $ref: '#/components/schemas/OperationRecord'
+          type: array
+          title: Operations
+          description: Case records, in stored order.
+          maxItems: 1000
+        artifacts:
+          items:
+            $ref: '#/components/schemas/ArtifactRecord'
+          type: array
+          title: Artifacts
+          description: Run-level artifact references.
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - tenant_id
+      - suite_digest
+      - target_slug
+      - target_environment
+      - target_network_class
+      - target_base_url
+      - runner_name
+      - outcome
+      title: VerificationRunRecord
+      description: A run with its full detail — what a read of one run, and both exporters,
+        work from.
+    VerificationRunSummary:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Run id — what a gate decision cites as its evidence.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        tenant_id:
+          type: string
+          title: Tenant Id
+          description: Tenant that owns the evidence.
+          example: ten_01h2xcejqtf3fz5y5j0v8k9m2p
+        suite_digest:
+          type: string
+          title: Suite Digest
+          description: The executed ECA-1.1 manifest digest.
+          example: example
+        suite_schema_version:
+          anyOf:
+          - type: integer
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Suite Schema Version
+          description: Manifest envelope version.
+        suite_compiler_version:
+          anyOf:
+          - type: integer
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Suite Compiler Version
+          description: Compiler rules version.
+        suite_case_count:
+          anyOf:
+          - type: integer
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Suite Case Count
+          description: Cases the manifest declared.
+        target_id:
+          anyOf:
+          - type: string
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Target Id
+          description: Target used, when it still exists.
+        target_slug:
+          type: string
+          title: Target Slug
+          description: Target handle at run time.
+          example: example-resource
+        target_environment:
+          type: string
+          title: Target Environment
+          description: Environment class at run time.
+          example: example
+        target_network_class:
+          type: string
+          title: Target Network Class
+          description: '`public` or `private`, at run time.'
+          example: example
+        target_base_url:
+          type: string
+          title: Target Base Url
+          description: Base URL at run time.
+          example: https://example.com/resource
+        runner_name:
+          type: string
+          title: Runner Name
+          description: Which runner produced the evidence.
+          example: Example
+        runner_version:
+          anyOf:
+          - type: string
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Runner Version
+          description: Runner version.
+        recorded_by:
+          anyOf:
+          - type: string
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Recorded By
+          description: User who recorded the evidence.
+        actor_label:
+          anyOf:
+          - type: string
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Actor Label
+          description: Actor email/name at the time.
+        actor_kind:
+          type: string
+          title: Actor Kind
+          description: '`user`, `api_key`, or `system`.'
+          default: user
+          example: example
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Started At
+          description: When the run began.
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Finished At
+          description: When the run ended.
+        duration_ms:
+          type: integer
+          title: Duration Ms
+          description: Wall-clock duration in milliseconds.
+          default: 0
+          example: 1
+        outcome:
+          type: string
+          title: Outcome
+          description: '`passed`, `failed`, `errored`, or `cancelled`.'
+          example: example
+        counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Counts
+          description: '`total`, `passed`, `failed`, `errored`, `skipped` — always
+            summing to total.'
+        source:
+          additionalProperties: true
+          type: object
+          title: Source
+          description: Provenance of the compiled suite.
+        context:
+          additionalProperties: true
+          type: object
+          title: Context
+          description: Non-secret CI context.
+        idempotency_key:
+          anyOf:
+          - type: string
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Idempotency Key
+          description: Caller-supplied retry key.
+        created_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Verification Run schema.
+          - type: 'null'
+            description: Verification Run schema.
+          title: Created At
+          description: When the evidence was recorded (server clock).
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - tenant_id
+      - suite_digest
+      - target_slug
+      - target_environment
+      - target_network_class
+      - target_base_url
+      - runner_name
+      - outcome
+      title: VerificationRunSummary
+      description: A run without its per-case detail — what a list read returns.
     VerificationTargetInput:
       properties:
         slug:
