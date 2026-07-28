@@ -6872,6 +6872,66 @@ class Database:
             conn.rollback()
             raise e
 
+    def set_version_mock_fixture_packs(
+        self,
+        version_record_id: str,
+        tenant_id: str,
+        user_id: str,
+        *,
+        packs: Dict[str, Any],
+    ) -> Optional[Dict[str, Any]]:
+        """Replace the ``fixturePacks`` key of ``versions.mock_settings`` (#4745, PMR-2.2).
+
+        Only that one key is rewritten; every other mock knob (scenarios, chaos, the
+        private-draft ``mode``) is preserved. An empty mapping removes the key. The update
+        bumps ``updated_at`` so the mock spec-cache NOTIFY trigger fires and running mocks
+        pick up the new packs.
+
+        Args:
+            version_record_id: The ``versions.id`` UUID.
+            tenant_id: Tenant owning the version (scope check).
+            user_id: Acting user; must be the version creator or a tenant admin.
+            packs: Canonical fixture pack documents keyed by pack name.
+
+        Returns:
+            The updated version row, or ``None`` when the caller lacks ownership.
+        """
+        fragment = json.dumps({"fixturePacks": packs}) if packs else "{}"
+        query = """
+            UPDATE apiome.versions v
+            SET mock_settings = (COALESCE(v.mock_settings, '{}'::jsonb) - 'fixturePacks') || %s::jsonb,
+                updated_at = CURRENT_TIMESTAMP
+            FROM apiome.projects p
+            WHERE v.id = %s
+              AND v.project_id = p.id
+              AND p.tenant_id = %s
+              AND v.deleted_at IS NULL
+              AND p.deleted_at IS NULL
+              AND (
+                v.creator_id = %s
+                OR EXISTS (
+                  SELECT 1 FROM apiome.tenant_administrators ta
+                  WHERE ta.tenant_id = p.tenant_id AND ta.user_id = %s
+                )
+              )
+            RETURNING v.id
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    query,
+                    (fragment, version_record_id, tenant_id, user_id, user_id),
+                )
+                updated = cursor.fetchone()
+                conn.commit()
+                if not updated:
+                    return None
+                return self.get_version_by_id(version_record_id, tenant_id)
+        except Exception as e:
+            conn.rollback()
+            raise e
+
     def version_has_data_records(self, version_record_id: str) -> bool:
         """Return True if any data_record exists for class_schema rows belonging to this version."""
         query = """

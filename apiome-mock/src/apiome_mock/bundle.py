@@ -44,6 +44,7 @@ from app.mock_engine import MockOperation, extract_operations
 from apiome_mock import __version__
 from apiome_mock.chaos import ChaosConfig, parse_chaos
 from apiome_mock.fixture_data import decode_bundle_fixtures
+from apiome_mock.fixture_packs import FixturePack, merged_template_data, parse_fixture_packs
 from apiome_mock.scenarios import Scenario, parse_scenarios
 from apiome_mock.spec_loader import CompiledSpec
 
@@ -110,6 +111,8 @@ class LoadedBundle:
         fixtures: Fixture entries declared by the manifest (name, media type, digest, size).
         fixture_data: Decoded fixture values by name, readable by response templates
             (#4744, PMR-2.1).
+        fixture_packs: Versioned fixture packs parsed from the bundled settings, so portable
+            sessions can seed and reset exactly like hosted ones (#4745, PMR-2.2).
         signed: Whether the bundle carried a signature block.
         source: Filesystem path the bundle was read from, when it came from a file.
     """
@@ -122,6 +125,7 @@ class LoadedBundle:
     chaos: ChaosConfig
     fixtures: tuple[Mapping[str, Any], ...] = ()
     fixture_data: Mapping[str, Any] = field(default_factory=dict)
+    fixture_packs: Mapping[str, FixturePack] = field(default_factory=dict)
     signed: bool = False
     source: Path | None = None
 
@@ -168,7 +172,10 @@ class LoadedBundle:
             operations=self.operations,
             scenarios=self.scenarios,
             chaos=self.chaos,
-            fixtures=self.fixture_data,
+            # Pack data overlays the embedded fixture payloads, mirroring the hosted
+            # fixtures-then-packs precedence (#4745, PMR-2.2).
+            fixtures={**self.fixture_data, **merged_template_data(self.fixture_packs)},
+            fixture_packs=self.fixture_packs,
         )
 
 
@@ -246,6 +253,7 @@ def load_bundle_document(
         chaos=parse_chaos(settings),
         fixtures=fixture_entries,
         fixture_data=decode_bundle_fixtures(fixture_entries, document.get("fixtures")),
+        fixture_packs=parse_fixture_packs(settings),
         signed=document.get("signature") is not None,
         source=source,
     )

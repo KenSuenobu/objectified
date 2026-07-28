@@ -77,7 +77,9 @@ http://127.0.0.1:8775/{tenant}/{project}/{version}/{spec path}
 
 Pass `--base-path root` to serve spec paths directly at `/` instead
 (`http://127.0.0.1:8775/pets`). `/health` and `/ready` are reserved in both modes and are never
-routed to the spec.
+routed to the spec, and the `__mock__` segment under the mounted prefix is reserved for the data
+lifecycle control plane (fixture packs, session reset — see
+[mock-fixture-packs.md](mock-fixture-packs.md)).
 
 Anything outside the mounted prefix answers `404` as `application/problem+json`, naming the prefix
 that *is* mounted.

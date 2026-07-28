@@ -3115,6 +3115,60 @@ class VersionMockScenariosResponse(BaseModel):
     )
 
 
+class MockFixturePackSpec(BaseModel):
+    """One versioned fixture pack: deterministic seed data for stateful mocks (#4745 PMR-2.2)."""
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    pack_format: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("packFormat", "pack_format"),
+        serialization_alias="packFormat",
+        description='Pack format id; defaults to "apiome.mock.fixture-pack/v1" when omitted.',
+    )
+    pack_format_version: Optional[int] = Field(
+        default=None,
+        validation_alias=AliasChoices("packFormatVersion", "pack_format_version"),
+        serialization_alias="packFormatVersion",
+        description="Pack format revision; defaults to the current version when omitted.",
+    )
+    description: str = Field(default="", max_length=500, description="Human summary of the data set.")
+    data: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Template fixture values by name, readable as {{fixture.<name>...}} (#4744 PMR-2.1).",
+    )
+    collections: Dict[str, List[Dict[str, Any]]] = Field(
+        default_factory=dict,
+        description='Seed resources per CRUD collection path (e.g. "/pets"), applied on session reset.',
+    )
+
+
+class VersionMockFixturePacksRequest(BaseModel):
+    """Replace the version's mock fixture packs (#4745 PMR-2.2)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    packs: Dict[str, MockFixturePackSpec] = Field(
+        default_factory=dict,
+        description="Fixture packs keyed by pack name; an empty map clears them.",
+    )
+
+
+class VersionMockFixturePacksResponse(BaseModel):
+    """The version's persisted mock fixture packs and their content digests (#4745 PMR-2.2)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    packs: Dict[str, MockFixturePackSpec] = Field(
+        default_factory=dict,
+        description="Fixture packs keyed by pack name, in canonical stored form.",
+    )
+    digests: Dict[str, str] = Field(
+        default_factory=dict,
+        description="sha256:<hex> content digest of each pack — the identity tests pin on reset.",
+    )
+
+
 class VersionPublishChangeReportPreviewRequest(BaseModel):
     """Preview publication change report before publishing (same baseline fields as publish)."""
 

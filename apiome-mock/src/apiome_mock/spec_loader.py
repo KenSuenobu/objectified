@@ -16,6 +16,7 @@ from psycopg_pool import AsyncConnectionPool
 from apiome_mock.api_key import ValidatedApiKey, is_private_mock_mode
 from apiome_mock.chaos import EMPTY_CHAOS, ChaosConfig, parse_chaos
 from apiome_mock.fixture_data import parse_fixtures
+from apiome_mock.fixture_packs import FixturePack, merged_template_data, parse_fixture_packs
 from apiome_mock.scenarios import Scenario, parse_scenarios
 
 MockAccessStatus = Literal["ok", "disabled", "missing"]
@@ -105,6 +106,8 @@ class CompiledSpec:
     """Version-level chaos knobs parsed from ``versions.mock_settings`` (#4455, SIM-4.3)."""
     fixtures: Mapping[str, Any] = field(default_factory=dict)
     """Fixture data readable by response templates (#4744, PMR-2.1)."""
+    fixture_packs: Mapping[str, FixturePack] = field(default_factory=dict)
+    """Versioned fixture packs sessions can reset to (#4745, PMR-2.2)."""
 
     @property
     def cache_key(self) -> tuple[str, str, str]:
@@ -183,6 +186,7 @@ async def _compile_from_row(
     if not isinstance(updated_at, datetime):
         raise TypeError("expected versions.updated_at to be a datetime")
 
+    fixture_packs = parse_fixture_packs(mock_settings)
     return CompiledSpec(
         revision_id=revision_id,
         tenant_slug=str(row["tenant_slug"]),
@@ -193,7 +197,9 @@ async def _compile_from_row(
         operations=operations,
         scenarios=parse_scenarios(mock_settings),
         chaos=parse_chaos(mock_settings),
-        fixtures=parse_fixtures(mock_settings),
+        # Pack data overlays the flat fixtures map, so templates can read both (#4745).
+        fixtures={**parse_fixtures(mock_settings), **merged_template_data(fixture_packs)},
+        fixture_packs=fixture_packs,
     )
 
 

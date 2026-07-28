@@ -93,6 +93,46 @@ problem on breach), and the language has no reachable host objects — network, 
 process access are not expressible. Predicates and templates are validated in apiome-rest when
 scenarios are saved; the matched rule is echoed in `X-Mock-Scenario-Rule`.
 
+## Fixture packs and data lifecycle (PMR-2.2)
+
+A **fixture pack** is a named, versioned, digestible unit of deterministic seed data, stored in
+`versions.mock_settings.fixturePacks` (and carried inside portable bundles). Its `data` section
+feeds template fixtures (`{{fixture.<name>...}}`); its `collections` section seeds the stateful
+CRUD session store:
+
+```json
+{
+  "smoke": {
+    "packFormat": "apiome.mock.fixture-pack/v1",
+    "packFormatVersion": 1,
+    "description": "Two pets.",
+    "data": {"pets": [{"id": 1, "name": "Rex"}]},
+    "collections": {"/pets": [{"id": 1, "name": "Rex"}, {"id": 2, "name": "Bella"}]}
+  }
+}
+```
+
+Author packs with `PUT /v1/versions/{tenant}/{project_id}/{version_record_id}/mock/fixture-packs`
+(apiome-rest validates the schema and returns each pack's `sha256:<hex>` content digest). Every
+mock version — hosted or portable — reserves the `__mock__` segment for the data lifecycle
+control plane:
+
+```bash
+# discover packs and pin their digests
+curl $MOCK/demo/petstore/1.0.0/__mock__/fixture-packs
+
+# reset the calling session to a pack (deterministic seed), or to empty without a body
+curl -X POST -H "X-Mock-Session: test-1" -H "Content-Type: application/json" \
+  -d '{"pack": "smoke"}' $MOCK/demo/petstore/1.0.0/__mock__/session/reset
+```
+
+A reset atomically replaces the session's resources *and* scenario sequence counters; the
+response echoes the pack name, digest, and seeded resource count. State is namespaced by
+tenant + project + version + `X-Mock-Session` token, and a reset can only ever touch the
+caller's own namespace — data never crosses tenant, version, or session boundaries. Control
+routes bypass scenarios and chaos injection. Full guide:
+[docs/guide/mock-fixture-packs.md](../docs/guide/mock-fixture-packs.md).
+
 ## Container image
 
 One image, two runtimes — `serve` (hosted, the default) and `run` (portable):

@@ -10,6 +10,7 @@ from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 from apiome_mock.session_store import (
+    SeedCollections,
     SessionCapacityError,
     SessionCaps,
     SessionKey,
@@ -325,6 +326,98 @@ class PostgresSessionStore:
                     if deleted:
                         await self._touch_session(cur, key, now)
                     return deleted
+
+    async def replace_session(
+        self,
+        key: SessionKey,
+        collections: SeedCollections,
+    ) -> tuple[int, int]:
+        """Replace the session's rows in one transaction; see the protocol for semantics (#4745)."""
+        # Serialize and cap-check the seed before touching the database, so a failed seed
+        # aborts before the DELETE and the previous state survives (the transaction would
+        # roll back anyway, but failing early avoids pointless writes).
+        deduped: dict[tuple[str, str], tuple[str, int]] = {}
+        for collection_path, items in collections.items():
+            for resource_id, resource in items:
+                payload = dict(resource)
+                # Last occurrence wins on a duplicate id, matching put semantics.
+                deduped[(collection_path, resource_id)] = (
+                    json.dumps(payload),
+                    resource_byte_size(payload),
+                )
+        rows = [
+            (collection_path, resource_id, payload_json, size)
+            for (collection_path, resource_id), (payload_json, size) in deduped.items()
+        ]
+        total_bytes = sum(size for _, _, _, size in rows)
+        if len(rows) > self._caps.max_resources:
+            raise SessionCapacityError(
+                f"Session resource limit of {self._caps.max_resources} exceeded.",
+            )
+        if total_bytes > self._caps.max_bytes:
+            raise SessionCapacityError(
+                f"Session size limit of {self._caps.max_bytes} bytes exceeded.",
+            )
+
+        now = _utcnow()
+        expires = self._expiry(now)
+        async with self._pool.connection() as conn:
+            async with conn.transaction():
+                async with conn.cursor(row_factory=dict_row) as cur:
+                    await self._purge_expired(cur, now)
+                    if rows:
+                        count, _ = await self._session_stats(cur, key, now)
+                        if count == 0:
+                            active = await self._active_session_count(cur, now)
+                            if active >= self._caps.max_sessions:
+                                raise SessionCapacityError(
+                                    f"Session limit of {self._caps.max_sessions} reached; "
+                                    "retry later or reuse an existing X-Mock-Session token.",
+                                )
+                    await cur.execute(
+                        """
+                        DELETE FROM apiome.mock_session_state
+                        WHERE tenant_slug = %s
+                          AND project_slug = %s
+                          AND version_label = %s
+                          AND session_token = %s
+                        """,
+                        (key.tenant, key.project, key.version, key.session_token),
+                    )
+                    for collection_path, resource_id, payload_json, size in rows:
+                        await cur.execute(
+                            """
+                            INSERT INTO apiome.mock_session_state (
+                                tenant_slug, project_slug, version_label, session_token,
+                                collection_path, resource_id, resource, byte_size,
+                                expires_at, last_activity_at
+                            ) VALUES (
+                                %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s
+                            )
+                            ON CONFLICT (
+                                tenant_slug, project_slug, version_label, session_token,
+                                collection_path, resource_id
+                            )
+                            DO UPDATE SET
+                                resource = EXCLUDED.resource,
+                                byte_size = EXCLUDED.byte_size,
+                                expires_at = EXCLUDED.expires_at,
+                                last_activity_at = EXCLUDED.last_activity_at
+                            """,
+                            (
+                                key.tenant,
+                                key.project,
+                                key.version,
+                                key.session_token,
+                                collection_path,
+                                resource_id,
+                                payload_json,
+                                size,
+                                expires,
+                                now,
+                            ),
+                        )
+                    return len(rows), total_bytes
 
     async def next_integer_id(
         self,

@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from apiome_mock.session_store import (
+    SeedCollections,
     SessionCapacityError,
     SessionCaps,
     SessionKey,
@@ -156,6 +157,57 @@ class InMemorySessionStore:
                 del session.collections[collection_path]
             self._touch(session, now)
             return True
+
+    async def replace_session(
+        self,
+        key: SessionKey,
+        collections: SeedCollections,
+    ) -> tuple[int, int]:
+        """Swap in a fully built session snapshot; see the protocol for semantics (#4745)."""
+        # Build and cap-check the candidate state before taking the lock, so a failed seed
+        # never leaves the session half-replaced.
+        built: dict[str, dict[str, dict[str, Any]]] = {}
+        total_bytes = 0
+        resource_count = 0
+        for collection_path, items in collections.items():
+            bucket: dict[str, dict[str, Any]] = {}
+            for resource_id, resource in items:
+                bucket[resource_id] = dict(resource)
+            if not bucket:
+                continue
+            built[collection_path] = bucket
+            resource_count += len(bucket)
+            total_bytes += sum(resource_byte_size(item) for item in bucket.values())
+        if resource_count > self._caps.max_resources:
+            raise SessionCapacityError(
+                f"Session resource limit of {self._caps.max_resources} exceeded.",
+            )
+        if total_bytes > self._caps.max_bytes:
+            raise SessionCapacityError(
+                f"Session size limit of {self._caps.max_bytes} bytes exceeded.",
+            )
+
+        now = self._now()
+        with self._lock:
+            self._purge_expired(now)
+            existing = self._sessions.get(key)
+            if not built:
+                if existing is not None:
+                    del self._sessions[key]
+                return 0, 0
+            if existing is None and len(self._sessions) >= self._caps.max_sessions:
+                raise SessionCapacityError(
+                    f"Session limit of {self._caps.max_sessions} reached; "
+                    "retry later or reuse an existing X-Mock-Session token.",
+                )
+            session = _SessionData(
+                collections=built,
+                total_bytes=total_bytes,
+                resource_count=resource_count,
+            )
+            self._touch(session, now)
+            self._sessions[key] = session
+            return resource_count, total_bytes
 
     async def next_integer_id(
         self,

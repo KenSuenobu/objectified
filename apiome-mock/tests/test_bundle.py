@@ -156,6 +156,29 @@ def test_loaded_bundle_decodes_fixture_data_for_templates() -> None:
     assert loaded.to_compiled_spec().fixtures == loaded.fixture_data
 
 
+def test_loaded_bundle_carries_fixture_packs(tmp_path: Path) -> None:
+    """Fixture packs ride in the bundled settings and survive the file round trip (#4745, PMR-2.2)."""
+    from app.mock_fixture_packs import fixture_pack_digest
+
+    pack = {
+        "description": "Seed pets.",
+        "data": {"greeting": "hello"},
+        "collections": {"/pets": [{"id": 1, "name": "Rex"}]},
+    }
+    settings = {**SETTINGS, "fixturePacks": {"smoke": pack}}
+    loaded = load_bundle_file(_write(tmp_path, _document(mock_settings=settings)), secret=SECRET)
+
+    assert set(loaded.fixture_packs) == {"smoke"}
+    assert loaded.fixture_packs["smoke"].digest == fixture_pack_digest(pack)
+    assert loaded.fixture_packs["smoke"].collections["/pets"] == (("1", {"id": 1, "name": "Rex"}),)
+
+    compiled = loaded.to_compiled_spec()
+    assert compiled.fixture_packs == loaded.fixture_packs
+    # Pack data overlays the embedded fixture payloads for templates.
+    assert compiled.fixtures["greeting"] == "hello"
+    assert compiled.fixtures["pets.json"] == {"pets": [{"id": 1}]}
+
+
 def test_to_compiled_spec_matches_the_hosted_serving_unit() -> None:
     compiled = load_bundle_document(_document(), secret=SECRET).to_compiled_spec()
 

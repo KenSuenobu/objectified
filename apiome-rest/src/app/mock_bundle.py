@@ -112,8 +112,9 @@ DEFAULT_KEY_ID = "apiome-mock-bundle-hmac-v1"
 DIGEST_ALGORITHM = "sha256"
 
 #: The only ``versions.mock_settings`` keys that travel in a bundle. Everything else — notably the
-#: private-mock ``mode`` — is hosted-plane access control with no meaning offline.
-BUNDLED_SETTINGS_KEYS: Tuple[str, ...] = ("scenarios", "chaos")
+#: private-mock ``mode`` — is hosted-plane access control with no meaning offline. ``fixturePacks``
+#: (#4745, PMR-2.2) rides along so portable sessions can seed and reset exactly like hosted ones.
+BUNDLED_SETTINGS_KEYS: Tuple[str, ...] = ("scenarios", "chaos", "fixturePacks")
 
 # --- verification problem codes ---------------------------------------------------------------
 

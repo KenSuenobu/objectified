@@ -21,6 +21,12 @@ from .compatibility_engine import CompatibilityCheckEngine, compat_audit_detail,
 from .config import settings
 from .database import BranchNotFoundError, StaleHeadPushError, db
 from .mock_bundle import BundleIdentity, build_bundle
+from .mock_fixture_packs import (
+    fixture_pack_digests,
+    fixture_packs_from_storage,
+    fixture_packs_to_storage,
+    validate_fixture_packs,
+)
 from .mock_scenario_settings import (
     chaos_from_storage,
     chaos_to_storage,
@@ -31,11 +37,14 @@ from .mock_scenario_settings import (
 )
 from .models import (
     MockChaosSpec,
+    MockFixturePackSpec,
     MockScenarioSpec,
     SunsetTimelineEntryOut,
     SunsetTimelineResponse,
     VersionCreateRequest,
     VersionForkRequest,
+    VersionMockFixturePacksRequest,
+    VersionMockFixturePacksResponse,
     VersionMockScenariosRequest,
     VersionMockScenariosResponse,
     VersionMockToggleRequest,
@@ -2251,6 +2260,90 @@ async def set_version_mock_scenarios(
         scenarios={name: MockScenarioSpec.model_validate(raw) for name, raw in stored.items()},
         chaos=_parse_stored_chaos(updated.get("mock_settings"), version_record_id),
     )
+
+
+def _stored_fixture_packs_response(mock_settings: Any, version_record_id: str) -> VersionMockFixturePacksResponse:
+    """Build the fixture-packs response from a stored ``mock_settings`` value (#4745, PMR-2.2).
+
+    Malformed stored entries never break the editor; they are omitted (the runtime skips them
+    the same way) and logged.
+    """
+    stored = fixture_packs_from_storage(mock_settings)
+    packs: Dict[str, MockFixturePackSpec] = {}
+    for name, raw in stored.items():
+        try:
+            packs[name] = MockFixturePackSpec.model_validate(raw)
+        except ValueError:
+            logger.warning("Skipping malformed mock fixture pack %r on version %s", name, version_record_id)
+    return VersionMockFixturePacksResponse(
+        packs=packs,
+        digests=fixture_pack_digests({name: stored[name] for name in packs}),
+    )
+
+
+@router.get("/{tenant_slug}/{project_id}/{version_record_id}/mock/fixture-packs")
+async def get_version_mock_fixture_packs(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockFixturePacksResponse:
+    """Return the version's mock fixture packs and their content digests (#4745, PMR-2.2)."""
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.VIEW)
+    existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+    return _stored_fixture_packs_response(existing.get("mock_settings"), version_record_id)
+
+
+@router.put("/{tenant_slug}/{project_id}/{version_record_id}/mock/fixture-packs")
+async def set_version_mock_fixture_packs(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    request: VersionMockFixturePacksRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockFixturePacksResponse:
+    """Replace the version's mock fixture packs (#4745, PMR-2.2).
+
+    Packs are validated against the versioned fixture pack schema (format id and version, name
+    shapes, collection path/resource rules, size caps) and stored canonically in
+    ``versions.mock_settings`` under ``fixturePacks``, alongside the other mock knobs. The
+    response echoes each pack's content digest — the identity a test asserts when it resets a
+    session to the pack. An empty ``packs`` map clears them.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
+    _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+
+    user_id = get_authenticated_user_id(auth_data)
+    if not user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Mock settings require user authentication (JWT token or API key with attribution)",
+        )
+
+    proposed = {
+        name: spec.model_dump(by_alias=True, exclude_none=True)
+        for name, spec in request.packs.items()
+    }
+    errors = validate_fixture_packs(proposed)
+    if errors:
+        raise HTTPException(
+            status_code=422,
+            detail={"message": "Fixture packs failed validation.", "errors": errors},
+        )
+
+    storage = fixture_packs_to_storage(proposed)
+    updated = db.set_version_mock_fixture_packs(
+        version_record_id,
+        auth_data["tenant_id"],
+        user_id,
+        packs=storage,
+    )
+    if not updated:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the version creator or a tenant administrator can change mock settings",
+        )
+    return _stored_fixture_packs_response(updated.get("mock_settings"), version_record_id)
 
 
 def _bundle_filename(project_slug: str, version_label: str) -> str:

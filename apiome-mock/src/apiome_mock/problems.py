@@ -137,6 +137,45 @@ def unknown_scenario(
     )
 
 
+def unknown_fixture_pack(
+    detail: str,
+    *,
+    instance: str | None = None,
+    available: list[str] | None = None,
+) -> JSONResponse:
+    """400 returned when a session reset names a fixture pack that does not exist (#4745, PMR-2.2)."""
+    return problem_response(
+        status=400,
+        title="Unknown Fixture Pack",
+        detail=detail,
+        problem_type="unknown-fixture-pack",
+        instance=instance,
+        extra={"availablePacks": available or []},
+    )
+
+
+def session_required(detail: str, *, instance: str | None = None) -> JSONResponse:
+    """400 returned when a session lifecycle operation lacks the X-Mock-Session header (#4745)."""
+    return problem_response(
+        status=400,
+        title="Session Required",
+        detail=detail,
+        problem_type="session-required",
+        instance=instance,
+    )
+
+
+def session_store_unavailable(detail: str, *, instance: str | None = None) -> JSONResponse:
+    """503 returned when session lifecycle operations have no session store to act on (#4745)."""
+    return problem_response(
+        status=503,
+        title="Session Store Unavailable",
+        detail=detail,
+        problem_type="session-store-unavailable",
+        instance=instance,
+    )
+
+
 def template_limits_exceeded(detail: str, *, instance: str | None = None) -> JSONResponse:
     """500 returned when a scenario response template exhausts its render budget (#4744, PMR-2.1)."""
     return problem_response(
