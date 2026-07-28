@@ -208,15 +208,33 @@ def _request_guard_hook(request: httpx.Request) -> None:
     validate_url(str(request.url))
 
 
-def build_guarded_client(**kwargs) -> httpx.Client:
+def _request_guard_hook_shape_only(request: httpx.Request) -> None:
+    """httpx request hook that enforces scheme/credential rules but not public IPs.
+
+    Used by the ECA-2.1 contract runner against an approved ``network_class: private``
+    verification target (for example a localhost Apiome mock). Shape rules still apply
+    on every hop so a ``file:`` or ``user:pass@`` redirect cannot slip through.
+    """
+    validate_url_policy(str(request.url))
+
+
+def build_guarded_client(*, allow_private: bool = False, **kwargs) -> httpx.Client:
     """Build an :class:`httpx.Client` whose every request is SSRF-validated.
 
     Drop-in replacement for ``httpx.Client(...)`` at the user-URL fetch sites.
     Any caller-supplied ``request`` event hooks are preserved and the guard is
     appended so it runs last.
+
+    Args:
+        allow_private: When ``True``, only scheme and credential rules run on each
+            hop (no public-IP filter). Reserved for approved private-network
+            verification targets (ECA-1.2 / ECA-2.1); default remains fail-closed.
+        **kwargs: Forwarded to ``httpx.Client``.
     """
     event_hooks = dict(kwargs.pop("event_hooks", {}) or {})
     request_hooks = list(event_hooks.get("request", []))
-    request_hooks.append(_request_guard_hook)
+    request_hooks.append(
+        _request_guard_hook_shape_only if allow_private else _request_guard_hook
+    )
     event_hooks["request"] = request_hooks
     return httpx.Client(event_hooks=event_hooks, **kwargs)
