@@ -16,6 +16,15 @@ injection — live under the sibling ``"chaos"`` key (and optionally inside a
 scenario), validated and canonicalized here with the same rules; value
 ranges (delay/jitter <= 30s, error rate 0-100%) are enforced by the
 ``MockChaosKnobsSpec`` pydantic model.
+
+Declarative rules and templates (#4744, PMR-2.1): an operation override may
+carry ordered ``rules`` — request predicates (``when``) validated by
+``app.mock_match`` plus the responses they select — and any response body or
+header value may embed the bounded ``{{ ... }}`` templates validated by
+``app.mock_template``. Templated bodies skip the response-schema conformance
+check (their rendered values are request-dependent) but still validate
+status, media type, and template syntax, so a scenario that saves cleanly
+can never contain an unparseable template.
 """
 
 from __future__ import annotations
@@ -26,7 +35,15 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from .mock_data_generator import validate_value
 from .mock_engine import MockOperation, extract_operations
-from .models import MockChaosKnobsSpec, MockChaosSpec, MockScenarioResponseSpec, MockScenarioSpec
+from .mock_match import validate_when
+from .mock_template import validate_template_text, validate_template_value, value_contains_template
+from .models import (
+    MockChaosKnobsSpec,
+    MockChaosSpec,
+    MockScenarioOperationSpec,
+    MockScenarioResponseSpec,
+    MockScenarioSpec,
+)
 
 MAX_SCENARIOS = 50
 """Maximum named scenarios per version."""
@@ -147,11 +164,76 @@ def _validate_response_against_spec(
     schema = media_obj.get("schema") if isinstance(media_obj, dict) else None
     if not isinstance(schema, dict):
         return
+    if value_contains_template(response.body):
+        # A templated body renders per request (#4744, PMR-2.1), so its final
+        # values cannot be checked against the response schema at save time.
+        # Template syntax is still validated in _validate_response_entry, and
+        # the status/media-type checks above still apply.
+        return
     validation_error = validate_value(response.body, schema, dict(spec))
     if validation_error is not None:
         errors.append(
             f"{context}: body does not match the {operation.key} status {response.status} "
             f"response schema ({validation_error}); set offSpec to store it anyway."
+        )
+
+
+def _validate_response_entry(
+    response: MockScenarioResponseSpec,
+    *,
+    operation: MockOperation,
+    spec: Mapping[str, Any],
+    context: str,
+    errors: List[str],
+) -> None:
+    """Run every save-time check for one canned response.
+
+    Headers are checked for shape and CR/LF safety, header values and the body
+    for template validity (#4744, PMR-2.1), and — unless the response opts out
+    with ``offSpec`` — the response is checked against the operation's spec.
+    """
+    _validate_headers(response.headers, context=context, errors=errors)
+    for name, value in response.headers.items():
+        errors.extend(validate_template_text(value, context=f"{context}, header '{name}'"))
+    if "body" in response.model_fields_set:
+        errors.extend(validate_template_value(response.body, context=f"{context}, body"))
+    if not response.off_spec:
+        _validate_response_against_spec(
+            response,
+            operation=operation,
+            spec=spec,
+            context=context,
+            errors=errors,
+        )
+
+
+def _validate_operation_override(
+    override: MockScenarioOperationSpec,
+    *,
+    operation: MockOperation,
+    spec: Mapping[str, Any],
+    context: str,
+    errors: List[str],
+) -> None:
+    """Validate one operation override: its rules (#4744, PMR-2.1) and fallback responses."""
+    for rule_index, rule in enumerate(override.rules):
+        rule_context = f"{context}, rule {rule_index + 1}"
+        errors.extend(validate_when(rule.when.to_storage(), context=f"{rule_context} when"))
+        for response_index, response in enumerate(rule.responses):
+            _validate_response_entry(
+                response,
+                operation=operation,
+                spec=spec,
+                context=f"{rule_context}, response {response_index + 1}",
+                errors=errors,
+            )
+    for index, response in enumerate(override.responses):
+        _validate_response_entry(
+            response,
+            operation=operation,
+            spec=spec,
+            context=f"{context}, response {index + 1}",
+            errors=errors,
         )
 
 
@@ -235,17 +317,13 @@ def validate_mock_scenarios(
             if operation is None:
                 errors.append(f"{context}: no operation {op_key} exists in this version's spec.")
                 continue
-            for index, response in enumerate(override.responses):
-                response_context = f"{context}, response {index + 1}"
-                _validate_headers(response.headers, context=response_context, errors=errors)
-                if not response.off_spec:
-                    _validate_response_against_spec(
-                        response,
-                        operation=operation,
-                        spec=spec,
-                        context=response_context,
-                        errors=errors,
-                    )
+            _validate_operation_override(
+                override,
+                operation=operation,
+                spec=spec,
+                context=context,
+                errors=errors,
+            )
         errors.extend(
             validate_mock_chaos(
                 scenario.chaos,
@@ -276,6 +354,22 @@ def _response_to_storage(response: MockScenarioResponseSpec) -> Dict[str, Any]:
         out["mediaType"] = response.media_type
     if response.off_spec:
         out["offSpec"] = True
+    return out
+
+
+def _override_to_storage(override: MockScenarioOperationSpec) -> Dict[str, Any]:
+    """Canonicalize one operation override (rules first, then fallback responses)."""
+    out: Dict[str, Any] = {}
+    if override.rules:
+        out["rules"] = [
+            {
+                "when": rule.when.to_storage(),
+                "responses": [_response_to_storage(response) for response in rule.responses],
+            }
+            for rule in override.rules
+        ]
+    if override.responses or not override.rules:
+        out["responses"] = [_response_to_storage(response) for response in override.responses]
     return out
 
 
@@ -319,9 +413,7 @@ def scenarios_to_storage(scenarios: Mapping[str, MockScenarioSpec]) -> Dict[str,
         operations: Dict[str, Any] = {}
         for op_key_raw, override in scenario.operations.items():
             op_key = normalize_operation_key(op_key_raw) or op_key_raw
-            operations[op_key] = {
-                "responses": [_response_to_storage(response) for response in override.responses]
-            }
+            operations[op_key] = _override_to_storage(override)
         entry: Dict[str, Any] = {"operations": operations}
         if scenario.description:
             entry["description"] = scenario.description

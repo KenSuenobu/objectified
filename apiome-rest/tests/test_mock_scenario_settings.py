@@ -238,3 +238,223 @@ def test_normalize_operation_key() -> None:
     assert normalize_operation_key("get /pets") == "GET /pets"
     assert normalize_operation_key("GET") is None
     assert normalize_operation_key("GET pets") is None
+
+
+# ---------------------------------------------------------------------------
+# Declarative rules and templates (#4744, PMR-2.1)
+# ---------------------------------------------------------------------------
+
+
+def test_valid_rules_and_templates_pass() -> None:
+    scenarios = _scenarios(
+        {
+            "personalized": {
+                "operations": {
+                    "GET /pets/{petId}": {
+                        "rules": [
+                            {
+                                "when": {"path": {"petId": {"equals": "42"}}},
+                                "responses": [
+                                    {
+                                        "status": 200,
+                                        "headers": {"X-Trace": "{{random.hex(8)}}"},
+                                        "body": {
+                                            "id": "{{request.path.petId}}",
+                                            "name": "{{random.choice('Rex', 'Ada')}}",
+                                        },
+                                    }
+                                ],
+                            }
+                        ],
+                        "responses": [{"status": 200, "body": {"id": 1, "name": "Rex"}}],
+                    }
+                }
+            }
+        }
+    )
+    assert validate_mock_scenarios(scenarios, SPEC) == []
+
+
+def test_rule_with_invalid_regex_reports_context() -> None:
+    scenarios = _scenarios(
+        {
+            "s": {
+                "operations": {
+                    "GET /pets": {
+                        "rules": [
+                            {
+                                "when": {"query": {"tag": {"matches": "("}}},
+                                "responses": [{"status": 429}],
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    )
+    errors = validate_mock_scenarios(scenarios, SPEC)
+    assert any("rule 1 when" in error and "regular expression" in error for error in errors)
+
+
+def test_rule_with_empty_when_is_rejected() -> None:
+    scenarios = _scenarios(
+        {
+            "s": {
+                "operations": {
+                    "GET /pets": {
+                        "rules": [{"when": {}, "responses": [{"status": 429}]}]
+                    }
+                }
+            }
+        }
+    )
+    errors = validate_mock_scenarios(scenarios, SPEC)
+    assert any("at least one predicate" in error for error in errors)
+
+
+def test_templated_body_skips_schema_conformance() -> None:
+    # A literal string body would fail the Pet schema; a templated one is
+    # request-dependent, so the schema check is skipped (status/media type
+    # checks still apply).
+    scenarios = _scenarios(
+        {
+            "s": {
+                "operations": {
+                    "GET /pets/{petId}": {
+                        "responses": [
+                            {"status": 200, "body": {"id": "{{request.path.petId}}", "name": "Rex"}}
+                        ]
+                    }
+                }
+            }
+        }
+    )
+    assert validate_mock_scenarios(scenarios, SPEC) == []
+
+
+def test_untemplated_body_still_schema_checked() -> None:
+    scenarios = _scenarios(
+        {
+            "s": {
+                "operations": {
+                    "GET /pets/{petId}": {
+                        "responses": [{"status": 200, "body": {"id": "not-an-int", "name": "Rex"}}]
+                    }
+                }
+            }
+        }
+    )
+    errors = validate_mock_scenarios(scenarios, SPEC)
+    assert any("does not match" in error for error in errors)
+
+
+def test_invalid_template_in_body_is_rejected() -> None:
+    scenarios = _scenarios(
+        {
+            "s": {
+                "operations": {
+                    "GET /pets": {
+                        "responses": [{"status": 429, "body": {"note": "{{secrets.env}}"}}]
+                    }
+                }
+            }
+        }
+    )
+    errors = validate_mock_scenarios(scenarios, SPEC)
+    assert any("unknown expression root" in error for error in errors)
+
+
+def test_invalid_template_in_header_is_rejected() -> None:
+    scenarios = _scenarios(
+        {
+            "s": {
+                "operations": {
+                    "GET /pets": {
+                        "responses": [
+                            {"status": 429, "headers": {"X-Trace": "{{random.eval('x')}}"}}
+                        ]
+                    }
+                }
+            }
+        }
+    )
+    errors = validate_mock_scenarios(scenarios, SPEC)
+    assert any("header 'X-Trace'" in error for error in errors)
+
+
+def test_templated_rule_responses_are_validated_too() -> None:
+    scenarios = _scenarios(
+        {
+            "s": {
+                "operations": {
+                    "GET /pets": {
+                        "rules": [
+                            {
+                                "when": {"query": {"limit": {"exists": True}}},
+                                "responses": [{"status": 429, "body": "{{ oops"}],
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    )
+    errors = validate_mock_scenarios(scenarios, SPEC)
+    assert any("unterminated" in error for error in errors)
+
+
+def test_rules_storage_round_trip() -> None:
+    scenarios = _scenarios(
+        {
+            "s": {
+                "operations": {
+                    "get /pets": {
+                        "rules": [
+                            {
+                                "when": {"query": {"limit": {"gt": 10}}},
+                                "responses": [{"status": 429, "offSpec": True}],
+                            }
+                        ],
+                        "responses": [{"status": 200, "body": []}],
+                    }
+                }
+            }
+        }
+    )
+    storage = scenarios_to_storage(scenarios)
+    override = storage["s"]["operations"]["GET /pets"]
+    assert override["rules"] == [
+        {"when": {"query": {"limit": {"gt": 10.0}}}, "responses": [{"status": 429, "offSpec": True}]}
+    ]
+    assert override["responses"] == [{"status": 200, "body": []}]
+
+
+def test_rules_only_override_omits_empty_responses() -> None:
+    scenarios = _scenarios(
+        {
+            "s": {
+                "operations": {
+                    "GET /pets": {
+                        "rules": [
+                            {
+                                "when": {"query": {"limit": {"exists": True}}},
+                                "responses": [{"status": 429}],
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    )
+    override = scenarios_to_storage(scenarios)["s"]["operations"]["GET /pets"]
+    assert "responses" not in override
+    assert len(override["rules"]) == 1
+
+
+def test_operation_without_rules_or_responses_is_rejected() -> None:
+    try:
+        MockScenarioSpec.model_validate({"operations": {"GET /pets": {}}})
+    except ValueError as exc:
+        assert "at least one response or rule" in str(exc)
+    else:  # pragma: no cover - the validation must fail
+        raise AssertionError("expected a validation error")

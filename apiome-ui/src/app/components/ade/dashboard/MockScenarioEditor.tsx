@@ -10,6 +10,14 @@
  * `mock_settings` and are served by apiome-mock when a consumer sends the
  * `X-Mock-Scenario: <name>` header.
  *
+ * Declarative matching and templates (#4744, PMR-2.1): an operation may also
+ * carry ordered match rules — request predicates over path/query/header/body
+ * plus the responses they select — edited here as raw JSON (like headers and
+ * bodies). Response bodies and header values may embed bounded `{{ ... }}`
+ * templates (request fields, seeded randomness, fixture data); the server
+ * validates predicates and templates on save and 422 errors are listed
+ * verbatim under the form.
+ *
  * The dialog also edits the latency/chaos knobs (#4455, SIM-4.3): a version
  * default and per-route overrides for injected delay (± jitter, capped at
  * 30s) and error rate (percent of calls answered with an injected 5xx). A
@@ -58,12 +66,36 @@ export interface MockChaosPayload {
   operations?: Record<string, MockChaosKnobsPayload>;
 }
 
+/**
+ * Request predicates gating one match rule (#4744, PMR-2.1). Sections are keyed
+ * by parameter/header name (or JSON Pointer for `body`); each value is an
+ * operator object like `{"equals": "42"}` — deep validation happens server-side.
+ */
+export interface MockScenarioWhenPayload {
+  path?: Record<string, Record<string, unknown>>;
+  query?: Record<string, Record<string, unknown>>;
+  header?: Record<string, Record<string, unknown>>;
+  body?: Record<string, Record<string, unknown>>;
+}
+
+/** One declarative match rule: predicates plus the responses they select (#4744, PMR-2.1). */
+export interface MockScenarioRulePayload {
+  when: MockScenarioWhenPayload;
+  responses: MockScenarioResponsePayload[];
+}
+
+/** One operation override: ordered match rules and/or fallback responses. */
+export interface MockScenarioOperationPayload {
+  responses?: MockScenarioResponsePayload[];
+  rules?: MockScenarioRulePayload[];
+}
+
 /** Scenario definitions as stored by REST, keyed by scenario name. */
 export type MockScenariosPayload = Record<
   string,
   {
     description?: string;
-    operations: Record<string, { responses: MockScenarioResponsePayload[] }>;
+    operations: Record<string, MockScenarioOperationPayload>;
     chaos?: MockChaosPayload;
   }
 >;
@@ -77,10 +109,11 @@ interface ResponseDraft {
   offSpec: boolean;
 }
 
-/** Form state for one operation override. */
+/** Form state for one operation override; match rules stay raw JSON until save. */
 interface OperationDraft {
   key: string;
   responses: ResponseDraft[];
+  rulesText: string;
 }
 
 /** Form state for one set of chaos knobs (text fields until save). */
@@ -258,9 +291,66 @@ function draftsFromPayload(payload: MockScenariosPayload): ScenarioDraft[] {
         mediaType: response.mediaType ?? '',
         offSpec: Boolean(response.offSpec),
       })),
+      rulesText:
+        override.rules && override.rules.length > 0 ? JSON.stringify(override.rules, null, 2) : '',
     })),
     chaos: scenario.chaos ? chaosDraftFromPayload(scenario.chaos) : null,
   }));
+}
+
+/**
+ * Parse one operation's match-rules JSON text (#4744, PMR-2.1).
+ *
+ * Client-side checks cover the shape only (an array of `{when, responses}`
+ * objects with numeric statuses); predicate operators and templates are
+ * validated server-side on save.
+ *
+ * @returns the parsed rules, or `null` after reporting an error.
+ */
+function parseRulesText(
+  text: string,
+  context: string,
+  errors: string[]
+): MockScenarioRulePayload[] | null {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    errors.push(`${context}: match rules must be valid JSON.`);
+    return null;
+  }
+  if (!Array.isArray(parsed)) {
+    errors.push(`${context}: match rules must be a JSON array of {when, responses} objects.`);
+    return null;
+  }
+  const rules: MockScenarioRulePayload[] = [];
+  for (const [index, entry] of parsed.entries()) {
+    const ruleContext = `${context}, rule ${index + 1}`;
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      errors.push(`${ruleContext}: each rule must be a {when, responses} object.`);
+      return null;
+    }
+    const rule = entry as Record<string, unknown>;
+    if (!rule.when || typeof rule.when !== 'object' || Array.isArray(rule.when)) {
+      errors.push(`${ruleContext}: 'when' must be an object of request predicates.`);
+      return null;
+    }
+    if (!Array.isArray(rule.responses) || rule.responses.length === 0) {
+      errors.push(`${ruleContext}: 'responses' must be a non-empty array.`);
+      return null;
+    }
+    for (const [responseIndex, response] of rule.responses.entries()) {
+      const status = (response as Record<string, unknown> | null)?.status;
+      if (typeof status !== 'number' || status < 100 || status > 599) {
+        errors.push(
+          `${ruleContext}, response ${responseIndex + 1}: status must be a number between 100 and 599.`
+        );
+        return null;
+      }
+    }
+    rules.push(entry as unknown as MockScenarioRulePayload);
+  }
+  return rules;
 }
 
 /**
@@ -287,7 +377,7 @@ function payloadFromDrafts(
       return;
     }
 
-    const operations: Record<string, { responses: MockScenarioResponsePayload[] }> = {};
+    const operations: Record<string, MockScenarioOperationPayload> = {};
     scenario.operations.forEach((operation, operationIndex) => {
       const key = operation.key.trim();
       if (!key) {
@@ -297,6 +387,12 @@ function payloadFromDrafts(
       if (operations[key]) {
         errors.push(`Scenario '${label}': duplicate operation '${key}'.`);
         return;
+      }
+
+      let rules: MockScenarioRulePayload[] | null = null;
+      if (operation.rulesText.trim()) {
+        rules = parseRulesText(operation.rulesText, `Scenario '${label}', operation '${key}'`, errors);
+        if (rules === null) return;
       }
 
       const responses: MockScenarioResponsePayload[] = [];
@@ -342,10 +438,13 @@ function payloadFromDrafts(
         responses.push(entry);
       });
 
-      if (responses.length > 0) {
-        operations[key] = { responses };
+      if (responses.length > 0 || (rules && rules.length > 0)) {
+        operations[key] = {
+          ...(responses.length > 0 ? { responses } : {}),
+          ...(rules && rules.length > 0 ? { rules } : {}),
+        };
       } else {
-        errors.push(`Scenario '${label}': operation '${key}' needs at least one response.`);
+        errors.push(`Scenario '${label}': operation '${key}' needs at least one response or match rule.`);
       }
     });
 
@@ -752,7 +851,7 @@ export function MockScenarioEditor({
                             />
                             Off-spec
                           </label>
-                          {operation.responses.length > 1 && (
+                          {(operation.responses.length > 1 || operation.rulesText.trim() !== '') && (
                             <Button
                               type="button"
                               variant="ghost"
@@ -786,7 +885,9 @@ export function MockScenarioEditor({
                               bodyText: e.target.value,
                             })
                           }
-                          placeholder="Body as JSON; leave blank for an empty response body"
+                          placeholder={
+                            'Body as JSON; leave blank for an empty response body. Supports {{templates}}, e.g. {"id": "{{request.path.petId}}"}'
+                          }
                           aria-label={`Scenario ${scenarioIndex + 1} operation ${operationIndex + 1} response ${responseIndex + 1} body`}
                           className="font-mono text-xs min-h-[64px]"
                         />
@@ -806,6 +907,24 @@ export function MockScenarioEditor({
                     >
                       <Plus className="h-3.5 w-3.5" /> Add sequence step
                     </Button>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        Match rules (advanced) — evaluated before the responses above; first match
+                        wins, responses above are the fallback
+                      </span>
+                      <Textarea
+                        value={operation.rulesText}
+                        onChange={(e) =>
+                          updateOperation(scenarioIndex, operationIndex, { rulesText: e.target.value })
+                        }
+                        placeholder={
+                          'Rules as JSON, e.g. [{"when": {"query": {"limit": {"gt": 10}}}, "responses": [{"status": 429}]}] (optional)'
+                        }
+                        aria-label={`Scenario ${scenarioIndex + 1} operation ${operationIndex + 1} match rules`}
+                        className="font-mono text-xs min-h-[44px]"
+                      />
+                    </div>
                   </div>
                 ))}
 
@@ -815,7 +934,10 @@ export function MockScenarioEditor({
                   size="sm"
                   onClick={() =>
                     updateScenario(scenarioIndex, {
-                      operations: [...scenario.operations, { key: '', responses: [{ ...EMPTY_RESPONSE }] }],
+                      operations: [
+                        ...scenario.operations,
+                        { key: '', responses: [{ ...EMPTY_RESPONSE }], rulesText: '' },
+                      ],
                     })
                   }
                   className="self-start"

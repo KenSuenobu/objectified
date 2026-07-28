@@ -137,6 +137,17 @@ def unknown_scenario(
     )
 
 
+def template_limits_exceeded(detail: str, *, instance: str | None = None) -> JSONResponse:
+    """500 returned when a scenario response template exhausts its render budget (#4744, PMR-2.1)."""
+    return problem_response(
+        status=500,
+        title="Template Limits Exceeded",
+        detail=detail,
+        problem_type="template-limits-exceeded",
+        instance=instance,
+    )
+
+
 def chaos_injected_error(detail: str, *, instance: str | None = None) -> JSONResponse:
     """500 returned by chaos error injection when the spec defines no 5xx (#4455, SIM-4.3)."""
     return problem_response(

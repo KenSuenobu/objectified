@@ -47,7 +47,9 @@ def test_parse_scenarios_reads_valid_definitions() -> None:
     assert set(scenarios) == {"quota-exceeded"}
     scenario = scenarios["quota-exceeded"]
     assert scenario.description == "Throttle list calls."
-    responses = scenario.operations["GET /pets"]
+    override = scenario.operations["GET /pets"]
+    assert override.rules == ()
+    responses = override.responses
     assert len(responses) == 1
     assert responses[0].status == 429
     assert responses[0].headers == (("Retry-After", "60"),)
@@ -83,7 +85,7 @@ def test_parse_scenarios_skips_malformed_entries() -> None:
     assert scenarios["bad-status"].operations == {}
     assert scenarios["bad-op-key"].operations == {}
     assert scenarios["bad-responses"].operations == {}
-    assert scenarios["ok"].operations["GET /pets"][0].status == 503
+    assert scenarios["ok"].operations["GET /pets"].responses[0].status == 503
 
 
 def test_parse_response_media_type_falls_back_to_content_type_header() -> None:
@@ -104,7 +106,7 @@ def test_parse_response_media_type_falls_back_to_content_type_header() -> None:
             }
         }
     }
-    response = parse_scenarios(settings)["s"].operations["GET /pets"][0]
+    response = parse_scenarios(settings)["s"].operations["GET /pets"].responses[0]
     assert response.media_type == "text/csv"
 
 
@@ -133,7 +135,7 @@ def test_parse_response_filters_reserved_headers() -> None:
             }
         }
     }
-    response = parse_scenarios(settings)["s"].operations["GET /pets"][0]
+    response = parse_scenarios(settings)["s"].operations["GET /pets"].responses[0]
     assert response.headers == (("X-Ok", "yes"),)
 
 
@@ -173,3 +175,80 @@ def test_build_response_serializes_json_and_text_bodies() -> None:
         ScenarioResponse(status=200, headers=(), body=None, has_body=True, media_type="application/json")
     )
     assert null_body_response.body == b"null"
+
+
+def test_parse_scenarios_reads_rules() -> None:
+    settings = {
+        "scenarios": {
+            "s": {
+                "operations": {
+                    "GET /pets": {
+                        "rules": [
+                            {
+                                "when": {"query": {"limit": {"gt": 10}}},
+                                "responses": [{"status": 429}],
+                            }
+                        ],
+                        "responses": [{"status": 200, "body": []}],
+                    }
+                }
+            }
+        }
+    }
+    override = parse_scenarios(settings)["s"].operations["GET /pets"]
+    assert len(override.rules) == 1
+    assert override.rules[0].responses[0].status == 429
+    assert override.responses[0].status == 200
+    assert override.needs_body is False
+
+
+def test_parse_scenarios_drops_rules_with_invalid_when() -> None:
+    settings = {
+        "scenarios": {
+            "s": {
+                "operations": {
+                    "GET /pets": {
+                        "rules": [
+                            {"when": {}, "responses": [{"status": 429}]},
+                            {"when": {"query": {"a": {"like": "x"}}}, "responses": [{"status": 429}]},
+                            {"when": {"query": {"a": {"equals": "x"}}}, "responses": []},
+                            {"when": {"query": {"a": {"equals": "x"}}}, "responses": [{"status": 503}]},
+                        ]
+                    }
+                }
+            }
+        }
+    }
+    override = parse_scenarios(settings)["s"].operations["GET /pets"]
+    # Only the last rule is valid: empty when, unknown operator, and empty
+    # responses all drop the whole rule rather than matching more broadly.
+    assert len(override.rules) == 1
+    assert override.rules[0].responses[0].status == 503
+    assert override.responses == ()
+
+
+def test_parse_scenarios_flags_body_needs() -> None:
+    settings = {
+        "scenarios": {
+            "predicate": {
+                "operations": {
+                    "POST /pets": {
+                        "rules": [
+                            {
+                                "when": {"body": {"/name": {"exists": True}}},
+                                "responses": [{"status": 201}],
+                            }
+                        ]
+                    }
+                }
+            },
+            "template": {
+                "operations": {
+                    "POST /pets": {"responses": [{"status": 201, "body": {"echo": "{{request.body#/name}}"}}]}
+                }
+            },
+        }
+    }
+    scenarios = parse_scenarios(settings)
+    assert scenarios["predicate"].operations["POST /pets"].needs_body is True
+    assert scenarios["template"].operations["POST /pets"].needs_body is True
