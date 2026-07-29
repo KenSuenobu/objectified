@@ -9,6 +9,7 @@ We continue to improve the platform based on your feedback with improvements and
 - Primitives: Major UX improvements in the import functionality
 - Primitives: Shows unregistered namespaces that were detected
 - Primitives: Now shows unassigned/unspecified namespaces in JSON Type definitions
+- Primitives: Grouping primitives in a namespace now works logically as expected
 
 ## Bug Fixes
 
