@@ -160,6 +160,29 @@ describe('conversion projection graph — axe', () => {
     expect(screen.getByTestId('conversion-projection-evidence')).toBeInTheDocument();
     expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
   });
+
+  it('is axe-clean with the evidence drawer safe-default form open (CPDO-3.2)', async () => {
+    const payload = fixture(1) as { page: { nodes: ConversionProjectionNode[]; edges: ConversionProjectionEdge[] } };
+    // Make the one row a default-fixable checklist gap so the approval form renders.
+    payload.page.nodes[0].construct_key = 'info.version';
+    payload.page.edges[0] = {
+      ...payload.page.edges[0],
+      scope: 'checklist',
+      status: 'dropped',
+      reason: 'source_incomplete',
+      remediation: 'Supply a version default before converting.',
+    };
+    installFetch(payload);
+    const { container } = render(
+      <ConversionProjectionGraphPanel itemId="item-1" enabled onApplyDefaults={() => {}} />,
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId('conversion-projection-table')).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByTestId('conversion-projection-node-construct:type:type:T0'));
+    expect(screen.getByTestId('conversion-projection-safe-default')).toBeInTheDocument();
+    expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
+  });
 });
 
 describe('conversion projection graph — keyboard contract', () => {

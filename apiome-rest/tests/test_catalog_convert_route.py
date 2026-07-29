@@ -405,6 +405,109 @@ def test_projection_defaults_change_the_snapshot():
         app.dependency_overrides.pop(validate_authentication, None)
 
 
+def test_approved_defaults_recompute_report_and_manifest_together():
+    """CPDO-3.2 (#4802): one defaults change, one snapshot — report and manifest agree.
+
+    A dry-run and a projection given the *same* defaults must name the same snapshot hash
+    (what lets the UI recompute the fidelity report and the evidence graph atomically), and
+    the defaults must genuinely close the gap in *both*: the report's ``info.version``
+    checklist row flips to ``present`` and the manifest's ``checklist:info.version`` edge
+    flips to ``retained`` — never one without the other (the builder reconciles them).
+    """
+    app.dependency_overrides[validate_authentication] = _override_auth
+    defaults = {"version": "9.9.9", "servers": ["https://api.example.com"]}
+    try:
+        with patch("app.catalog_routes.db") as mock_db, patch(
+            "app.catalog_routes.load_analysis_for_item"
+        ) as mock_analysis:
+            mock_db.get_catalog_item_by_id.return_value = _CATALOG_ITEM
+            mock_db.get_latest_revision_id_for_project.return_value = "rev-1"
+            mock_analysis.side_effect = RuntimeError("analysis store down")
+            bare_dry_run = client.post("/v1/catalog/test-tenant/cat-1/convert?dryRun=true")
+            dry_run = client.post(
+                "/v1/catalog/test-tenant/cat-1/convert?dryRun=true",
+                json={"target": "openapi", "dryRun": True, "defaults": defaults},
+            )
+            projection = client.post(
+                "/v1/catalog/test-tenant/cat-1/projection",
+                json={"defaults": defaults, "scope": "checklist", "limit": 500},
+            )
+        assert bare_dry_run.status_code == dry_run.status_code == projection.status_code == 200
+
+        # Same defaults → same snapshot, on both surfaces.
+        assert (
+            dry_run.json()["projection"]["manifest_hash"]
+            == projection.json()["summary"]["manifest_hash"]
+        )
+
+        def coverage(response, key):
+            (item,) = [i for i in response.json()["report"]["items"] if i["key"] == key]
+            return item["coverage"]
+
+        # The report's gaps close…
+        assert coverage(bare_dry_run, "info.version") != "present"
+        assert coverage(bare_dry_run, "servers") != "present"
+        assert coverage(dry_run, "info.version") == "present"
+        assert coverage(dry_run, "servers") == "present"
+
+        # …and the manifest's matching checklist edges flip with them.
+        edges = {e["id"]: e for e in projection.json()["page"]["edges"]}
+        assert edges["checklist:info.version"]["status"] == "retained"
+        assert edges["checklist:servers"]["status"] == "retained"
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+def test_projection_page_carries_drawer_evidence_and_no_raw_source():
+    """CPDO-3.2 (#4802): the wire carries the drawer's facts, and only paths/ranges.
+
+    The evidence drawer needs the construct key (its safe-default match), a reason and
+    remediation on every non-retained edge, and the summary's tool versions — all on the
+    page it already loads. What the wire must *not* carry is the captured source text
+    itself: evidence references are structured locations (file/line/column/offset/length/
+    ordinal/path), which is how the drawer obeys the redaction policy by construction.
+    """
+    app.dependency_overrides[validate_authentication] = _override_auth
+    location_keys = {"file", "line", "column", "offset", "length", "ordinal", "path"}
+    try:
+        with patch("app.catalog_routes.db") as mock_db, patch(
+            "app.catalog_routes.load_analysis_for_item"
+        ) as mock_analysis:
+            mock_db.get_catalog_item_by_id.return_value = _CATALOG_ITEM
+            mock_db.get_latest_revision_id_for_project.return_value = "rev-1"
+            mock_analysis.side_effect = RuntimeError("analysis store down")
+            response = client.post(
+                "/v1/catalog/test-tenant/cat-1/projection", json={"limit": 500}
+            )
+        assert response.status_code == 200
+        body = response.json()
+
+        # Tool-version provenance for the drawer's attribution line.
+        assert body["summary"]["tool_versions"]
+
+        # The default-fixable checklist gap names its construct key on its source node.
+        nodes = {n["id"]: n for n in body["page"]["nodes"]}
+        version_edge = next(
+            e for e in body["page"]["edges"] if e["id"] == "checklist:info.version"
+        )
+        assert nodes[version_edge["source"]]["construct_key"] == "info.version"
+        assert version_edge["status"] != "retained"
+        assert version_edge["reason"]
+        assert version_edge["remediation"]
+
+        # Evidence references are structured paths/ranges only.
+        for edge in body["page"]["edges"]:
+            for ref in edge["evidence"]:
+                assert set(ref) == {"kind", "ref", "location"}
+                if ref["location"] is not None:
+                    assert set(ref["location"]) == location_keys
+
+        # The captured source text never rides the projection wire.
+        assert _GRAPHQL_SDL not in response.text
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
 def test_projection_400_on_unsupported_target():
     """Only ``openapi`` is a conversion target today, on the projection read as on the convert verb."""
     app.dependency_overrides[validate_authentication] = _override_auth

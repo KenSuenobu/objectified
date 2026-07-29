@@ -17,7 +17,7 @@
  * snapshot; invalidate in-flight walks with a monotonic token on config change/unmount.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CONVERSION_PROJECTION_PAGE_LIMIT,
   conversionEvidencePageIssues,
@@ -26,6 +26,7 @@ import {
   type ConversionProjectionEdge,
   type ConversionProjectionNode,
 } from '@/app/utils/conversion-projection';
+import { cleanDefaults, type ConversionDefaults } from '@/app/utils/conversion-fidelity';
 
 /** Pages fetched per window — one auto-load walks at most this many cursors. */
 export const PROJECTION_PAGES_PER_WINDOW = 5;
@@ -60,11 +61,15 @@ export interface UseConversionProjectionResult {
  * @param enabled Only fetch while truthy (the preview's projection section is expanded).
  * @param itemId The catalog item id (a project id); no fetch while null.
  * @param pageLimit Edges per page (tests pass a small value to exercise the walk).
+ * @param defaults Approved gap-filling defaults (CPDO-3.2). They fold into the snapshot
+ *   hash, so a change is a new snapshot: the walk restarts from scratch, which is what keeps
+ *   the graph and the recomputed fidelity report describing the same manifest.
  */
 export function useConversionProjection(
   enabled: boolean,
   itemId: string | null,
   pageLimit: number = CONVERSION_PROJECTION_PAGE_LIMIT,
+  defaults?: ConversionDefaults,
 ): UseConversionProjectionResult {
   const [summary, setSummary] = useState<ConversionManifestSummary | null>(null);
   const [nodes, setNodes] = useState<ConversionProjectionNode[]>([]);
@@ -83,6 +88,14 @@ export function useConversionProjection(
   // Monotonic token: a config change or unmount invalidates any in-flight walk.
   const walkToken = useRef(0);
 
+  // A stable identity for the cleaned defaults, so an equivalent object (e.g. a fresh `{}`
+  // each render) does not restart the walk, while an approved change does.
+  const defaultsKey = JSON.stringify(cleanDefaults(defaults ?? {}));
+  const cleanedDefaults = useMemo(
+    () => JSON.parse(defaultsKey) as ConversionDefaults,
+    [defaultsKey],
+  );
+
   /** Walk up to one window of pages from the given cursor, accumulating results. */
   const fetchWindow = useCallback(
     async (token: number, startCursor: string | null) => {
@@ -93,6 +106,7 @@ export function useConversionProjection(
         let cursor = startCursor;
         for (let pageIndex = 0; pageIndex < PROJECTION_PAGES_PER_WINDOW; pageIndex += 1) {
           const response = await fetchConversionProjection(itemId, {
+            defaults: cleanedDefaults,
             cursor,
             limit: pageLimit,
           });
@@ -144,7 +158,7 @@ export function useConversionProjection(
         if (token === walkToken.current) setLoading(false);
       }
     },
-    [itemId, pageLimit],
+    [itemId, pageLimit, cleanedDefaults],
   );
 
   useEffect(() => {

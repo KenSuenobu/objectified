@@ -442,3 +442,223 @@ describe('Mermaid text export', () => {
     expect(text).toContain('4 constructs retained (aggregated)');
   });
 });
+
+// ---------------------------------------------------------------------------
+// 8. Evidence drawer helpers (CPDO-3.2)
+// ---------------------------------------------------------------------------
+
+describe('conversionProjectionGraph — evidence drawer helpers (CPDO-3.2)', () => {
+  const rowsFrom = (nodes: ConversionProjectionNode[], edges: ConversionProjectionEdge[]) =>
+    buildConversionProjectionRows(nodes, edges);
+
+  describe('safeDefaultForRow', () => {
+    it('offers the matching default for the info/servers gaps, by checklist key', () => {
+      const cases: Array<[string, string]> = [
+        ['info.title', 'title'],
+        ['info.version', 'version'],
+        ['servers', 'servers'],
+      ];
+      for (const [key, field] of cases) {
+        const nodes = [sourceNode(`source:checklist:${key}`, key, { constructKey: key })];
+        const edges = [
+          edge(`checklist:${key}`, 'checklist', `source:checklist:${key}`, null, 'unavailable', {
+            reason: 'source_incomplete',
+          }),
+        ];
+        const [row] = rowsFrom(nodes, edges);
+        expect(conversionMod.safeDefaultForRow(row)?.field).toBe(field);
+      }
+    });
+
+    it('offers the matching default by emitted pointer when the key is absent', () => {
+      const nodes = [
+        sourceNode('source:construct:x', 'x'),
+        targetNode('target:/info/version', '/info/version'),
+      ];
+      const edges = [
+        edge('construct:x', 'construct', 'source:construct:x', 'target:/info/version', 'inferred', {
+          reason: 'source_incomplete',
+        }),
+      ];
+      const [row] = rowsFrom(nodes, edges);
+      expect(conversionMod.safeDefaultForRow(row)?.field).toBe('version');
+    });
+
+    it('offers nothing for retained rows or non-default constructs', () => {
+      const nodes = [
+        sourceNode('source:checklist:info.title', 'API title', { constructKey: 'info.title' }),
+        sourceNode('source:checklist:responses', 'Responses', { constructKey: 'responses' }),
+      ];
+      const retained = edge(
+        'checklist:info.title',
+        'checklist',
+        'source:checklist:info.title',
+        null,
+        'retained',
+      );
+      const unrelated = edge(
+        'checklist:responses',
+        'checklist',
+        'source:checklist:responses',
+        null,
+        'dropped',
+      );
+      const rows = rowsFrom(nodes, [retained, unrelated]);
+      for (const row of rows) expect(conversionMod.safeDefaultForRow(row)).toBeNull();
+    });
+  });
+
+  describe('applySafeDefault', () => {
+    it('merges a trimmed scalar and never mutates the input', () => {
+      const current = { title: 'Old' };
+      const next = conversionMod.applySafeDefault(current, 'version', '  2.0.0 ');
+      expect(next).toEqual({ title: 'Old', version: '2.0.0' });
+      expect(current).toEqual({ title: 'Old' });
+    });
+
+    it('splits servers on commas, dropping blanks; empty input clears the field', () => {
+      expect(
+        conversionMod.applySafeDefault({}, 'servers', ' https://a.example , , https://b.example '),
+      ).toEqual({ servers: ['https://a.example', 'https://b.example'] });
+      expect(
+        conversionMod.applySafeDefault({ servers: ['https://a.example'] }, 'servers', '  '),
+      ).toEqual({});
+      expect(conversionMod.applySafeDefault({ title: 'T' }, 'title', '')).toEqual({});
+    });
+  });
+
+  describe('fidelityFindingForRow', () => {
+    const report = {
+      score: 50,
+      grade: 'D',
+      tier: 'low' as const,
+      penalty: 50,
+      coverage_counts: {},
+      items: [
+        {
+          key: 'info.version',
+          title: 'API version',
+          coverage: 'missing' as const,
+          weight: 3,
+          count: 1,
+          examples: ['/info/version'],
+          reason: 'source declares no API version; a placeholder was emitted',
+        },
+      ],
+      losses: [
+        {
+          kind: 'n/a' as const,
+          subject: 'graphql-subscription',
+          detail: 'subscriptions have no OpenAPI representation',
+          pointer: null,
+        },
+      ],
+    };
+
+    it('links a checklist edge to its report row by construct key', () => {
+      const nodes = [
+        sourceNode('source:checklist:info.version', 'API version', { constructKey: 'info.version' }),
+      ];
+      const edges = [
+        edge('checklist:info.version', 'checklist', 'source:checklist:info.version', null, 'unavailable', {
+          reason: 'source_incomplete',
+        }),
+      ];
+      const [row] = rowsFrom(nodes, edges);
+      expect(conversionMod.fidelityFindingForRow(row, report)).toEqual({
+        kind: 'checklist',
+        label: 'API version',
+        badge: 'missing',
+        text: 'source declares no API version; a placeholder was emitted',
+      });
+    });
+
+    it('links a loss edge by its id index, cross-checking the subject', () => {
+      const nodes = [sourceNode('source:loss:0', 'graphql-subscription')];
+      const edges = [
+        edge('loss:0000:graphql-subscription', 'loss', 'source:loss:0', null, 'dropped'),
+      ];
+      const [row] = rowsFrom(nodes, edges);
+      expect(conversionMod.fidelityFindingForRow(row, report)).toEqual({
+        kind: 'loss',
+        label: 'graphql-subscription',
+        badge: 'no OpenAPI form',
+        text: 'subscriptions have no OpenAPI representation',
+      });
+      // A lying subject yields null, never a wrong finding.
+      const lyingEdges = [edge('loss:0000:other-loss', 'loss', 'source:loss:0', null, 'dropped')];
+      const [lyingRow] = rowsFrom(nodes, lyingEdges);
+      expect(conversionMod.fidelityFindingForRow(lyingRow, report)).toBeNull();
+    });
+
+    it('yields null for construct/analysis scopes and when no report is loaded', () => {
+      const nodes = [sourceNode('source:construct:x', 'x', { constructKey: 'info.version' })];
+      const edges = [edge('construct:x', 'construct', 'source:construct:x', null, 'dropped')];
+      const [row] = rowsFrom(nodes, edges);
+      expect(conversionMod.fidelityFindingForRow(row, report)).toBeNull();
+      expect(conversionMod.fidelityFindingForRow(row, null)).toBeNull();
+    });
+  });
+
+  describe('formatEvidenceRefLocation', () => {
+    it('composes file, line/col, offset/length, ordinal and path parts', () => {
+      expect(
+        conversionMod.formatEvidenceRefLocation({
+          file: 'schema.graphql',
+          line: 12,
+          column: 3,
+          offset: 120,
+          length: 34,
+          ordinal: null,
+          path: null,
+        }),
+      ).toBe('schema.graphql · line 12, col 3 · offset 120 (+34)');
+      expect(
+        conversionMod.formatEvidenceRefLocation({
+          file: null,
+          line: null,
+          column: null,
+          offset: null,
+          length: null,
+          ordinal: 4,
+          path: '$.definitions.Pet',
+        }),
+      ).toBe('item 4 · $.definitions.Pet');
+    });
+
+    it('returns null when nothing is known, and sanitizes hostile text', () => {
+      expect(conversionMod.formatEvidenceRefLocation(null)).toBeNull();
+      expect(
+        conversionMod.formatEvidenceRefLocation({
+          file: null,
+          line: null,
+          column: null,
+          offset: null,
+          length: null,
+          ordinal: null,
+          path: null,
+        }),
+      ).toBeNull();
+      expect(
+        conversionMod.formatEvidenceRefLocation({
+          file: 'a‮b.json',
+          line: 1,
+          column: null,
+          offset: null,
+          length: null,
+          ordinal: null,
+          path: null,
+        }),
+      ).toBe('ab.json · line 1');
+    });
+  });
+
+  describe('formatToolVersions', () => {
+    it('sorts by tool name and skips empty entries; empty map yields null', () => {
+      expect(
+        conversionMod.formatToolVersions({ emitter: '3.1.4', converter: '2.0', '': 'x', broken: '' }),
+      ).toBe('converter v2.0 · emitter v3.1.4');
+      expect(conversionMod.formatToolVersions({})).toBeNull();
+    });
+  });
+});
