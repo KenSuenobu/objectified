@@ -5802,7 +5802,7 @@ export async function createPrimitive(
     if (error.code === '23505') {
       return JSON.stringify({
         success: false,
-        error: `A primitive with name "${name}" already exists in category "${category}"`
+        error: `A type named "${name}" already exists in that namespace. Names are unique per namespace.`
       });
     }
 
@@ -5911,7 +5911,7 @@ export async function updatePrimitive(
     if (error.code === '23505') {
       return JSON.stringify({
         success: false,
-        error: 'A primitive with that name already exists in the category'
+        error: 'A type with that name already exists in this namespace'
       });
     }
 

@@ -636,7 +636,11 @@ async def create_primitive(
         if "unique constraint" in str(e).lower():
             raise HTTPException(
                 status_code=409,
-                detail=f"A primitive with name '{request.name}' already exists in category '{request.category}'"
+                detail=(
+                    f"A type named '{request.name}' already exists in namespace "
+                    f"'{request.namespace or '(unassigned)'}'. Names are unique per namespace — "
+                    f"import into a different namespace to keep both."
+                )
             )
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -780,7 +784,7 @@ async def update_primitive(
         if "unique constraint" in str(e).lower():
             raise HTTPException(
                 status_code=409,
-                detail="A primitive with that name already exists in the category"
+                detail="A type with that name already exists in this namespace"
             )
         raise HTTPException(status_code=500, detail=str(e))
 
