@@ -196,3 +196,68 @@ export function visibilityLabel(ns: TypeNamespaceCollection): string {
   if (ns.scope === 'system') return 'All tenants';
   return ns.is_public ? 'Public' : 'Tenant only';
 }
+
+/**
+ * A namespace that types already sit in but that has no `apiome.type_namespaces` row.
+ *
+ * The registry stores a type's namespace as a plain string on the primitive
+ * (``primitives_routes._create_imported_primitive``) while Type collections lists rows from
+ * ``apiome.type_namespaces``, and only the Namespace CRUD API ever writes those rows. An import
+ * into a namespace nobody created therefore lands types in a namespace the collections list
+ * cannot show. These are those namespaces — detected from the types themselves.
+ */
+export interface DetectedNamespace {
+  /** The namespace path found on the types. */
+  namespace: string;
+  /** How many of the tenant's types are in it. */
+  typeCount: number;
+}
+
+/** The namespace field of a type, as far as these helpers care. */
+interface NamespacedType {
+  namespace?: string | null;
+}
+
+/** Whether a type carries no namespace at all (`null`, absent, or blank). */
+export function isUnassignedNamespace(value: string | null | undefined): boolean {
+  return (value ?? '').trim() === '';
+}
+
+/**
+ * Count the types that belong to no namespace.
+ *
+ * Both `create_primitive` and the import path accept a null namespace, so these types exist but
+ * can never appear under any namespace grouping.
+ *
+ * @param types - The tenant's types.
+ * @returns How many have no namespace.
+ */
+export function countUnassignedTypes(types: NamespacedType[]): number {
+  return types.filter((type) => isUnassignedNamespace(type.namespace)).length;
+}
+
+/**
+ * Find the namespaces that types use but that are not registered as collections.
+ *
+ * @param types - The tenant's types (the namespace strings actually in use).
+ * @param registered - The namespace rows Type collections lists.
+ * @returns One entry per unregistered namespace, most-used first then alphabetical.
+ */
+export function detectUnregisteredNamespaces(
+  types: NamespacedType[],
+  registered: Array<{ namespace: string }>
+): DetectedNamespace[] {
+  const known = new Set(registered.map((row) => row.namespace));
+  const counts = new Map<string, number>();
+
+  for (const type of types) {
+    const namespace = (type.namespace ?? '').trim();
+    // A type with no namespace has nothing to register — it is counted as unassigned instead.
+    if (!namespace || known.has(namespace)) continue;
+    counts.set(namespace, (counts.get(namespace) ?? 0) + 1);
+  }
+
+  return [...counts.entries()]
+    .map(([namespace, typeCount]) => ({ namespace, typeCount }))
+    .sort((a, b) => b.typeCount - a.typeCount || a.namespace.localeCompare(b.namespace));
+}

@@ -17,7 +17,7 @@ import {
 import { Button } from '@/app/components/ui/Button';
 import { Label } from '@/app/components/ui/Label';
 import { Input } from '@/app/components/ui/Input';
-import { Alert } from '@/app/components/ui/Alert';
+import { Alert, AlertTitle } from '@/app/components/ui/Alert';
 import { Badge } from '@/app/components/ui/Badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/app/components/ui/Dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/app/components/ui/Tabs';
@@ -46,6 +46,14 @@ import {
   describeDetectedTypes,
   type DetectedType,
 } from './primitiveImportModel';
+import {
+  applyRefRewrites,
+  buildKnownTargets,
+  refRewriteMap,
+  resolveImportRefs,
+  summarizeRefResolutions,
+  type RefResolution,
+} from './primitiveRefResolution';
 import {
   persistPrimitiveImportPreferences,
   readPrimitiveImportPreferences,
@@ -190,6 +198,56 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
     if (!parsedDoc) return {};
     return extractDefinitions(parsedDoc, sourceKind, sourceLabel ?? undefined);
   }, [parsedDoc, sourceKind, sourceLabel]);
+
+  /**
+   * The tenant's existing types, used to tell a `$ref` that points at something real from one that
+   * points nowhere. Loaded once when the wizard opens; a failure leaves the list empty, which
+   * degrades resolution to "matches only types in this document" rather than breaking the step.
+   */
+  const [registryTypes, setRegistryTypes] = useState<
+    Array<{ schema_id?: string | null; namespace?: string | null; name?: string | null }>
+  >([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch('/api/primitives');
+        const data = await response.json();
+        if (!cancelled && response.ok && data?.success !== false) {
+          setRegistryTypes(Array.isArray(data.primitives) ? data.primitives : []);
+        }
+      } catch {
+        // Offline / unauthorized — resolution still runs against this document's own types.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /**
+   * Where every `$ref` in the detected types points, and what had to be rewritten to get it there.
+   * Recomputed as the target namespace changes, since that is what relative refs resolve against.
+   */
+  const refResolutions = useMemo(() => {
+    const names = Object.keys(previewDefinitions);
+    if (names.length === 0) return [];
+    const knownTargets = buildKnownTargets(registryTypes, names, targetNamespace);
+    return resolveImportRefs(previewDefinitions, { targetNamespace, knownTargets });
+  }, [previewDefinitions, registryTypes, targetNamespace]);
+
+  const refSummary = useMemo(() => summarizeRefResolutions(refResolutions), [refResolutions]);
+
+  /**
+   * The document actually sent for review and commit: the reader's source with every repaired
+   * `$ref` replaced by one that resolves. The parsed source itself is left alone so detection
+   * always re-runs from what was supplied.
+   */
+  const documentForImport = useCallback(
+    (doc: Record<string, unknown>) => applyRefRewrites(doc, refRewriteMap(refResolutions)),
+    [refResolutions]
+  );
 
   /** Store a successfully parsed source document and reset downstream review state. */
   const acceptDocument = useCallback((doc: Record<string, unknown>, label: string | null) => {
@@ -356,7 +414,7 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
     setReviewError(null);
 
     try {
-      const body = buildImportRequestBody(doc, options, sourceLabel);
+      const body = buildImportRequestBody(documentForImport(doc), options, sourceLabel);
       const response = await fetch('/api/primitives/import/review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -379,7 +437,7 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
     } finally {
       setReviewing(false);
     }
-  }, [parsedDoc, sourceMethod, schemaText, options, sourceLabel, acceptDocument]);
+  }, [parsedDoc, sourceMethod, schemaText, options, sourceLabel, acceptDocument, documentForImport]);
 
   const toggleSelected = useCallback((name: string) => {
     setSelectedNames((current) => {
@@ -422,7 +480,7 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
     setReviewError(null);
 
     try {
-      const body = buildImportRequestBody(parsedDoc, options, sourceLabel, {
+      const body = buildImportRequestBody(documentForImport(parsedDoc), options, sourceLabel, {
         selectedNames: names,
         resolutions,
       });
@@ -447,7 +505,7 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
     } finally {
       setImporting(false);
     }
-  }, [parsedDoc, review, selectedNames, resolutions, options, sourceLabel, onMessage]);
+  }, [parsedDoc, review, selectedNames, resolutions, options, sourceLabel, onMessage, documentForImport]);
 
   // Memoized on the definitions: the draft 2020-12 check compiles a metaschema validator, which is
   // not work to repeat on every keystroke elsewhere in the step.
@@ -508,6 +566,8 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
               parseError={parseError}
               reviewError={reviewError}
               detectedTypes={detectedTypes}
+              refResolutions={refResolutions}
+              refSummary={refSummary}
               hasDocument={Boolean(parsedDoc)}
             />
           )}
@@ -618,7 +678,17 @@ const DETECTED_TYPES_LIST_CAP = 12;
  * fragment is a well-formed schema, which is knowable here. Conflicts and scope are the review
  * step's answer, so nothing in this panel claims the import will succeed.
  */
-function DetectedTypesPanel({ types, sourceKind }: { types: DetectedType[]; sourceKind: SourceKind }) {
+function DetectedTypesPanel({
+  types,
+  sourceKind,
+  refResolutions,
+  refSummary,
+}: {
+  types: DetectedType[];
+  sourceKind: SourceKind;
+  refResolutions: RefResolution[];
+  refSummary: { resolved: number; repaired: number; unresolved: number; external: number };
+}) {
   const invalidCount = types.filter((type) => !type.valid).length;
   const shown = types.slice(0, DETECTED_TYPES_LIST_CAP);
   const remaining = types.length - shown.length;
@@ -671,6 +741,120 @@ function DetectedTypesPanel({ types, sourceKind }: { types: DetectedType[]; sour
           +{remaining} more not listed here — all {types.length} are imported and reviewed.
         </p>
       ) : null}
+      <RefResolutionSection resolutions={refResolutions} summary={refSummary} />
+    </div>
+  );
+}
+
+/** How many `$ref` rows of each kind are listed before the rest are summarized. */
+const REF_LIST_CAP = 8;
+
+/**
+ * The `$ref` resolution report, under the detected types.
+ *
+ * Says where each reference landed: how many resolved (and how many of those had to be rewritten to
+ * get there), and — as a warning — every reference that names a type nothing can satisfy.
+ */
+function RefResolutionSection({
+  resolutions,
+  summary,
+}: {
+  resolutions: RefResolution[];
+  summary: { resolved: number; repaired: number; unresolved: number; external: number };
+}) {
+  // Nothing to say about a document with no cross-type references at all.
+  if (summary.resolved === 0 && summary.unresolved === 0) return null;
+
+  const resolved = resolutions.filter((entry) => entry.status === 'resolved' || entry.status === 'repaired');
+  const unresolved = resolutions.filter((entry) => entry.status === 'unresolved');
+
+  return (
+    <div
+      data-testid="ref-resolution"
+      className="border-t border-gray-200 dark:border-gray-700 px-3 py-2 space-y-2"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-gray-700 dark:text-gray-300" data-testid="ref-resolved-summary">
+          Resolved {summary.resolved} $ref{summary.resolved === 1 ? '' : 's'}
+        </span>
+        {summary.repaired > 0 ? (
+          <span
+            className="rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-200"
+            data-testid="ref-repaired-summary"
+          >
+            {summary.repaired} rewritten to resolve
+          </span>
+        ) : null}
+      </div>
+
+      {resolved.length > 0 ? (
+        <ul className="space-y-1" data-testid="ref-resolved-list">
+          {resolved.slice(0, REF_LIST_CAP).map((entry) => (
+            <li
+              key={`${entry.typeName}-${entry.ref}`}
+              data-testid={`ref-resolved-${entry.ref}`}
+              data-status={entry.status}
+              className="flex flex-wrap items-baseline gap-x-1.5 text-[11px]"
+            >
+              <CheckCircle className="h-3 w-3 shrink-0 translate-y-0.5 text-emerald-500" aria-hidden />
+              <span className="font-mono text-gray-700 dark:text-gray-300 break-all">{entry.ref}</span>
+              <span className="text-gray-400">→</span>
+              <span className="font-mono text-emerald-700 dark:text-emerald-300 break-all">{entry.target}</span>
+              {entry.origin === 'import' ? (
+                <span className="text-gray-500 dark:text-gray-400">(in this import)</span>
+              ) : null}
+              {entry.rewrittenTo ? (
+                <span className="text-amber-700 dark:text-amber-300 break-all">
+                  rewritten to <span className="font-mono">{entry.rewrittenTo}</span>
+                </span>
+              ) : null}
+            </li>
+          ))}
+          {resolved.length > REF_LIST_CAP ? (
+            <li className="text-[11px] text-gray-500 dark:text-gray-400" data-testid="ref-resolved-truncated">
+              +{resolved.length - REF_LIST_CAP} more resolved
+            </li>
+          ) : null}
+        </ul>
+      ) : null}
+
+      {/* `Alert` renders the variant's own icon, so passing one as a child would show it twice. */}
+      {unresolved.length > 0 ? (
+        <Alert variant="warning" data-testid="ref-unresolved">
+          <div className="space-y-1">
+            <AlertTitle className="text-sm">
+              Unresolved $ref{unresolved.length === 1 ? '' : 's'}
+            </AlertTitle>
+            <p className="text-xs">
+              {unresolved.length} $ref{unresolved.length === 1 ? '' : 's'} could not be resolved. The
+              referenced schemas were looked up in the registry and in this document — they either do not
+              exist, or their names did not resolve. Importing will leave these references dangling.
+            </p>
+            <ul className="space-y-0.5">
+              {unresolved.slice(0, REF_LIST_CAP).map((entry) => (
+                <li
+                  key={`${entry.typeName}-${entry.ref}`}
+                  data-testid={`ref-unresolved-${entry.ref}`}
+                  className="text-[11px]"
+                >
+                  <span className="font-mono break-all">{entry.ref}</span>
+                  <span className="text-gray-500 dark:text-gray-400"> in </span>
+                  <span className="font-mono">{entry.typeName}</span>
+                  {entry.reason ? <span className="block text-gray-600 dark:text-gray-400">{entry.reason}</span> : null}
+                </li>
+              ))}
+              {unresolved.length > REF_LIST_CAP ? (
+                <li className="text-[11px]" data-testid="ref-unresolved-truncated">
+                  +{unresolved.length - REF_LIST_CAP} more unresolved
+                </li>
+              ) : null}
+            </ul>
+            <p className="text-xs font-medium" data-testid="ref-unresolved-recommendation">
+              Recommendation: import these refs into the namespace before importing this schema.
+            </p>
+          </div>
+        </Alert>
+      ) : null}
     </div>
   );
 }
@@ -709,6 +893,8 @@ interface SourceStepProps {
   parseError: string | null;
   reviewError: string | null;
   detectedTypes: DetectedType[];
+  refResolutions: RefResolution[];
+  refSummary: { resolved: number; repaired: number; unresolved: number; external: number };
   hasDocument: boolean;
 }
 
@@ -730,6 +916,8 @@ function SourceStep(props: SourceStepProps) {
     parseError,
     reviewError,
     detectedTypes,
+    refResolutions,
+    refSummary,
     hasDocument,
   } = props;
 
@@ -765,7 +953,14 @@ function SourceStep(props: SourceStepProps) {
 
       <SourceMethodInput {...props} />
 
-      {detectedTypes.length > 0 && <DetectedTypesPanel types={detectedTypes} sourceKind={sourceKind} />}
+      {detectedTypes.length > 0 && (
+        <DetectedTypesPanel
+          types={detectedTypes}
+          sourceKind={sourceKind}
+          refResolutions={refResolutions}
+          refSummary={refSummary}
+        />
+      )}
 
       {!hasDocument && parseError && (
         <Alert variant="error">

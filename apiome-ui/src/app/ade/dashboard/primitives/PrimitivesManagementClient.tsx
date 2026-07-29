@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthSession } from '@lib/auth/session-client';
 import {
@@ -20,6 +20,7 @@ import {
   FolderTree,
   Settings,
 } from 'lucide-react';
+import { countUnassignedTypes, detectUnregisteredNamespaces } from './namespaceModel';
 import { Button } from '@/app/components/ui/Button';
 import { Input } from '@/app/components/ui/Input';
 import { Alert } from '@/app/components/ui/Alert';
@@ -202,8 +203,8 @@ export default function PrimitivesManagementClient() {
       filtered = filtered.filter((p) => p.category === selectedCategory);
     }
 
-    if (selectedNamespace) {
-      filtered = filtered.filter((p) => (p.namespace ?? '') === selectedNamespace);
+    if (selectedNamespace !== null) {
+      filtered = filtered.filter((p) => (p.namespace ?? '').trim() === selectedNamespace);
     }
 
     if (searchQuery.trim()) {
@@ -297,6 +298,15 @@ export default function PrimitivesManagementClient() {
   const handleNamespaceSelect = (namespace: string) => {
     setSelectedNamespace((current) => (current === namespace ? null : namespace));
   };
+
+  // Type collections lists `apiome.type_namespaces` rows, but a type's namespace is just a string on
+  // the primitive and nothing registers it — so a namespace can be in use with no row, and a type can
+  // have no namespace at all. Both are derived here from the types already loaded.
+  const unassignedTypeCount = useMemo(() => countUnassignedTypes(primitives), [primitives]);
+  const detectedNamespaces = useMemo(
+    () => detectUnregisteredNamespaces(primitives, namespaces),
+    [primitives, namespaces]
+  );
 
   const categories = Array.from(new Set(primitives.map((p) => p.category))).sort();
 
@@ -424,6 +434,7 @@ export default function PrimitivesManagementClient() {
             <PrimitivesNamespacesView
               namespaces={namespaces}
               unresolvedByNamespace={unresolvedByNamespace}
+              detectedNamespaces={detectedNamespaces}
               loading={registryLoading}
               onRefresh={refreshAll}
               onMessage={showMessage}
@@ -437,6 +448,8 @@ export default function PrimitivesManagementClient() {
               scopeFilter={namespaceScopeFilter}
               onScopeFilterChange={setNamespaceScopeFilter}
               onNamespaceSelect={handleNamespaceSelect}
+              unassignedCount={unassignedTypeCount}
+              detectedNamespaces={detectedNamespaces}
               loading={registryLoading}
             />
             <PrimitivesRecentActivity imports={imports} loading={registryLoading} />
@@ -458,13 +471,14 @@ export default function PrimitivesManagementClient() {
               </div>
 
               <div className="flex items-center gap-4 flex-wrap">
-                {selectedNamespace ? (
+                {selectedNamespace !== null ? (
                   <button
                     type="button"
+                    data-testid="selected-namespace-chip"
                     onClick={() => setSelectedNamespace(null)}
                     className="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
                   >
-                    Namespace: {selectedNamespace} ×
+                    Namespace: {selectedNamespace === '' ? 'Unassigned' : selectedNamespace} ×
                   </button>
                 ) : null}
 

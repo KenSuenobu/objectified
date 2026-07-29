@@ -24,10 +24,16 @@ import {
 import type { TypeNamespaceCollection } from './primitivesRegistryTypes';
 import { visibilityLabel } from './namespaceModel';
 import NamespaceEditorDialog from './NamespaceEditorDialog';
+import type { DetectedNamespace } from './namespaceModel';
 
 interface Props {
   namespaces: TypeNamespaceCollection[];
   unresolvedByNamespace: Record<string, number>;
+  /**
+   * Namespaces types already sit in that have no registry row. Offered in the create dialog so an
+   * imported namespace can be registered without retyping its path.
+   */
+  detectedNamespaces: DetectedNamespace[];
   loading: boolean;
   /** Reload the registry overview after a namespace is created or edited. */
   onRefresh: () => void | Promise<void>;
@@ -70,6 +76,7 @@ function shortBaseUri(baseUri: string): string {
 export default function PrimitivesNamespacesView({
   namespaces,
   unresolvedByNamespace,
+  detectedNamespaces,
   loading,
   onRefresh,
   onMessage,
@@ -341,6 +348,7 @@ export default function PrimitivesNamespacesView({
       {showDialog && (
         <NamespaceEditorDialog
           namespace={editing}
+          detectedNamespaces={detectedNamespaces}
           onClose={() => setShowDialog(false)}
           onSaved={handleSaved}
           onMessage={onMessage}

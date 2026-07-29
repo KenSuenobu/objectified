@@ -17,6 +17,9 @@ import {
   isSystemNamespacePath,
   validateNamespaceForm,
   isNamespaceFormValid,
+  countUnassignedTypes,
+  detectUnregisteredNamespaces,
+  isUnassignedNamespace,
   buildCreateRequestBody,
   buildUpdateRequestBody,
   visibilityLabel,
@@ -238,5 +241,78 @@ describe('visibilityLabel', () => {
 
   it('labels public tenant namespaces as public', () => {
     expect(visibilityLabel({ ...tenantNs, is_public: true })).toBe('Public');
+  });
+});
+
+describe('unassigned + unregistered namespace detection', () => {
+  // Mirrors the real registry: types carry a namespace string, but only explicitly created
+  // namespaces have a `type_namespaces` row for Type collections to list.
+  const TYPES = [
+    { namespace: 'std/v0/types' },
+    { namespace: 'std/v0/types' },
+    { namespace: 'self/v1/schemas/api/schemas' },
+    { namespace: null },
+    { namespace: undefined },
+    { namespace: '   ' },
+    {},
+  ];
+  const REGISTERED = [{ namespace: 'std/v0/primitives' }, { namespace: 'std/v0/types' }];
+
+  describe('isUnassignedNamespace', () => {
+    it('treats null, undefined and blank alike', () => {
+      expect(isUnassignedNamespace(null)).toBe(true);
+      expect(isUnassignedNamespace(undefined)).toBe(true);
+      expect(isUnassignedNamespace('  ')).toBe(true);
+      expect(isUnassignedNamespace('std/v0/types')).toBe(false);
+    });
+  });
+
+  describe('countUnassignedTypes', () => {
+    it('counts every type with no namespace at all', () => {
+      expect(countUnassignedTypes(TYPES)).toBe(4);
+    });
+
+    it('is zero when every type is placed', () => {
+      expect(countUnassignedTypes([{ namespace: 'std/v0/types' }])).toBe(0);
+      expect(countUnassignedTypes([])).toBe(0);
+    });
+  });
+
+  describe('detectUnregisteredNamespaces', () => {
+    it('reports namespaces in use that have no registry row', () => {
+      expect(detectUnregisteredNamespaces(TYPES, REGISTERED)).toEqual([
+        { namespace: 'self/v1/schemas/api/schemas', typeCount: 1 },
+      ]);
+    });
+
+    it('excludes namespaces that are already registered', () => {
+      const detected = detectUnregisteredNamespaces(
+        [{ namespace: 'std/v0/types' }],
+        [{ namespace: 'std/v0/types' }]
+      );
+      expect(detected).toEqual([]);
+    });
+
+    it('never reports unassigned types as a namespace to register', () => {
+      // There is nothing to register for a type with no namespace — it is counted separately.
+      expect(detectUnregisteredNamespaces([{ namespace: null }, { namespace: '' }], [])).toEqual([]);
+    });
+
+    it('orders by type count, then alphabetically', () => {
+      const detected = detectUnregisteredNamespaces(
+        [
+          { namespace: 'b/ns' },
+          { namespace: 'a/ns' },
+          { namespace: 'c/ns' },
+          { namespace: 'c/ns' },
+        ],
+        []
+      );
+      expect(detected).toEqual([
+        { namespace: 'c/ns', typeCount: 2 },
+        { namespace: 'a/ns', typeCount: 1 },
+        { namespace: 'b/ns', typeCount: 1 },
+      ]);
+    });
   });
 });

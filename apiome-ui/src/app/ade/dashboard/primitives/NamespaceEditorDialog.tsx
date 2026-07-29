@@ -25,12 +25,18 @@ import {
   emptyNamespaceForm,
   formFromNamespace,
   validateNamespaceForm,
+  type DetectedNamespace,
   type NamespaceFormData,
 } from './namespaceModel';
 
 interface Props {
   /** The namespace being edited, or ``null`` to create a new tenant namespace. */
   namespace: TypeNamespaceCollection | null;
+  /**
+   * Namespaces types already use that have no registry row, offered as a picker when creating.
+   * Defaults to empty so callers that have nothing to detect need not pass it.
+   */
+  detectedNamespaces?: DetectedNamespace[];
   onClose: () => void;
   onSaved: () => void;
   onMessage: (type: 'success' | 'error', message: string) => void;
@@ -43,7 +49,13 @@ interface Props {
  * proxy the Namespace CRUD API (#3451). System-core namespaces never reach this dialog — they
  * are read-only — so the form always targets a tenant-owned namespace.
  */
-export default function NamespaceEditorDialog({ namespace, onClose, onSaved, onMessage }: Props) {
+export default function NamespaceEditorDialog({
+  namespace,
+  detectedNamespaces = [],
+  onClose,
+  onSaved,
+  onMessage,
+}: Props) {
   const isEdit = namespace !== null;
   const [form, setForm] = useState<NamespaceFormData>(() =>
     namespace ? formFromNamespace(namespace) : emptyNamespaceForm()
@@ -109,6 +121,33 @@ export default function NamespaceEditorDialog({ namespace, onClose, onSaved, onM
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {/* Types can already sit in a namespace nobody registered — most often after an import,
+              which writes the namespace onto the type without creating a collection row. Offering
+              those paths here turns "my imported namespace is missing" into one selection. */}
+          {!isEdit && detectedNamespaces.length > 0 ? (
+            <FormField
+              label="Detected namespaces"
+              helperText="Namespaces already in use by types but not yet registered as collections."
+            >
+              <select
+                data-testid="detected-namespace-select"
+                aria-label="Detected namespaces"
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) update('namespace', e.target.value);
+                }}
+                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-mono text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              >
+                <option value="">Select a detected namespace…</option>
+                {detectedNamespaces.map((detected) => (
+                  <option key={detected.namespace} value={detected.namespace}>
+                    {detected.namespace} ({detected.typeCount} type{detected.typeCount === 1 ? '' : 's'})
+                  </option>
+                ))}
+              </select>
+            </FormField>
+          ) : null}
+
           <FormField
             label="Namespace path"
             required={!isEdit}
