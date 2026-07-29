@@ -193,6 +193,19 @@ export interface CatalogProjectionResponse {
   page: ConversionEvidencePage;
 }
 
+/**
+ * A pluggable page source for the projection walk (CPDO-3.3, #4803).
+ *
+ * The live preview walks the rebuild endpoint; a conversion-history reader walks a *persisted*
+ * evidence snapshot instead. Both hand the walk hook a function of this shape, so every
+ * integrity check (per-page structure, cross-page snapshot identity, windowing) applies to
+ * stored evidence exactly as it does to a fresh rebuild.
+ */
+export type ConversionEvidencePageSource = (opts: {
+  cursor: string | null;
+  limit: number;
+}) => Promise<CatalogProjectionResponse>;
+
 // ---------------------------------------------------------------------------
 // Page integrity
 // ---------------------------------------------------------------------------

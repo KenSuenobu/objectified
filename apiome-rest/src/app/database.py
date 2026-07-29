@@ -2872,8 +2872,9 @@ class Database:
     #: simply yields NULLs (no conversion). ``conv_*`` columns are consumed by the catalog routes.
     _CATALOG_CONVERSION_LATERAL = """
             LEFT JOIN LATERAL (
-                SELECT cp.target_project_id, cp.target_version_id, cp.target_version_label,
-                       cp.reconverted, cp.fidelity_grade, cp.fidelity_tier, cp.created_at
+                SELECT cp.id, cp.target_project_id, cp.target_version_id, cp.target_version_label,
+                       cp.reconverted, cp.fidelity_grade, cp.fidelity_tier, cp.created_at,
+                       cp.projection_manifest_hash
                 FROM apiome.conversion_provenance cp
                 WHERE cp.tenant_id = p.tenant_id AND cp.source_project_id = p.id
                 ORDER BY cp.created_at DESC
@@ -2885,6 +2886,8 @@ class Database:
     #: The ``conv_*`` / ``conv_target_*`` SELECT list projecting the conversion lateral above onto
     #: stable, prefixed column names the routes build a :class:`CatalogConversionRef` from.
     _CATALOG_CONVERSION_COLUMNS = """
+                   conv.id AS conv_provenance_id,
+                   conv.projection_manifest_hash AS conv_manifest_hash,
                    conv.target_project_id AS conv_target_project_id,
                    conv.target_version_id AS conv_target_version_id,
                    conv.target_version_label AS conv_target_version_label,
@@ -11007,8 +11010,34 @@ class Database:
         "source_protocol, source_version_label, source_tool_versions, target_project_id, "
         "target_version_id, target_version_label, fidelity_report, fidelity_score, "
         "fidelity_grade, fidelity_tier, lint_score, lint_grade, converter_tool_versions, "
-        "reconverted, projection_manifest_hash, projection_manifest, created_by, created_at"
+        "reconverted, projection_manifest_hash, projection_manifest, source_hash, "
+        "created_by, created_at"
     )
+
+    #: The same columns qualified with the ``cp`` alias the history queries join around.
+    _CONVERSION_PROVENANCE_COLUMNS_CP = ", ".join(
+        f"cp.{column.strip()}" for column in _CONVERSION_PROVENANCE_COLUMNS.split(",")
+    )
+
+    #: Enrichment the CPDO-3.3 history listings add to each ledger row: whether its evidence
+    #: snapshot actually exists (V215; pre-V215 rows have the empty hash and no snapshot), and the
+    #: display coordinates of both projects. LEFT JOINs so a deleted/null side yields NULLs.
+    _CONVERSION_HISTORY_SELECT = """
+        SELECT {columns},
+               (cp.projection_manifest_hash <> '' AND EXISTS (
+                    SELECT 1 FROM apiome.conversion_evidence_snapshot s
+                    WHERE s.tenant_id = cp.tenant_id
+                      AND s.manifest_hash = cp.projection_manifest_hash
+               )) AS snapshot_available,
+               sp.name AS source_project_name,
+               sp.deleted_at AS source_project_deleted_at,
+               tp.name AS target_project_name,
+               tp.slug AS target_project_slug,
+               tp.deleted_at AS target_project_deleted_at
+        FROM apiome.conversion_provenance cp
+        LEFT JOIN apiome.projects sp ON sp.id = cp.source_project_id
+        LEFT JOIN apiome.projects tp ON tp.id = cp.target_project_id
+    """
 
     def create_conversion_provenance(
         self,
@@ -11034,6 +11063,7 @@ class Database:
         reconverted: bool,
         projection_manifest_hash: Optional[str] = None,
         projection_manifest: Optional[Dict[str, Any]] = None,
+        source_hash: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Append one convert-to-project provenance row (MFI-22.5) and return it.
 
@@ -11052,6 +11082,8 @@ class Database:
             projection_manifest_hash: Content-addressed id of the CPDO-1.3 projection manifest;
                 ``None`` stores the empty-string default, which reads as "no manifest was recorded".
             projection_manifest: The bounded ``ConversionManifestSummary`` for that snapshot.
+            source_hash: ``sha256:``-prefixed digest of the exact source text converted (CPDO-3.3,
+                V215); ``None`` stores the empty-string default ("recorded before CPDO-3.3").
 
         Returns:
             The inserted row as a dict.
@@ -11062,11 +11094,11 @@ class Database:
                  source_protocol, source_version_label, source_tool_versions, target_project_id,
                  target_version_id, target_version_label, fidelity_report, fidelity_score,
                  fidelity_grade, fidelity_tier, lint_score, lint_grade, converter_tool_versions,
-                 reconverted, projection_manifest_hash, projection_manifest)
+                 reconverted, projection_manifest_hash, projection_manifest, source_hash)
             VALUES (%s, %s, %s, %s, %s, %s, %s, COALESCE(%s, '{{}}'::jsonb), %s, %s, %s,
                     COALESCE(%s, '{{}}'::jsonb), %s, %s, %s, %s, %s,
                     COALESCE(%s, '{{}}'::jsonb), %s, COALESCE(%s, ''),
-                    COALESCE(%s, '{{}}'::jsonb))
+                    COALESCE(%s, '{{}}'::jsonb), COALESCE(%s, ''))
             RETURNING {self._CONVERSION_PROVENANCE_COLUMNS}
         """
         params = (
@@ -11091,6 +11123,7 @@ class Database:
             reconverted,
             projection_manifest_hash,
             Json(projection_manifest) if projection_manifest is not None else None,
+            source_hash,
         )
         conn = self.connect()
         try:
@@ -11128,15 +11161,157 @@ class Database:
         """All conversion-provenance rows that produced ``target_project_id`` (newest first).
 
         The reverse of :meth:`get_latest_conversion_for_source`: "where did this converted Project come
-        from?" — one Project accumulates one row per (re-)convert. Tenant-scoped.
+        from?" — one Project accumulates one row per (re-)convert. Rows carry the CPDO-3.3 history
+        enrichment (``snapshot_available``, source/target project display columns). Tenant-scoped.
         """
         query = f"""
-            SELECT {self._CONVERSION_PROVENANCE_COLUMNS}
-            FROM apiome.conversion_provenance
-            WHERE tenant_id = %s AND target_project_id = %s
-            ORDER BY created_at DESC
+            {self._CONVERSION_HISTORY_SELECT.format(columns=self._CONVERSION_PROVENANCE_COLUMNS_CP)}
+            WHERE cp.tenant_id = %s AND cp.target_project_id = %s
+            ORDER BY cp.created_at DESC
         """
         return self.execute_query(query, (tenant_id, target_project_id))
+
+    def get_conversions_for_source(
+        self, tenant_id: str, source_project_id: str
+    ) -> List[Dict[str, Any]]:
+        """All conversion-provenance rows converted *from* ``source_project_id`` (newest first).
+
+        The catalog item's full conversion history (CPDO-3.3): one row per convert/re-convert, with
+        the ``snapshot_available`` flag and the source/target project display columns joined on.
+        Tenant-scoped.
+        """
+        query = f"""
+            {self._CONVERSION_HISTORY_SELECT.format(columns=self._CONVERSION_PROVENANCE_COLUMNS_CP)}
+            WHERE cp.tenant_id = %s AND cp.source_project_id = %s
+            ORDER BY cp.created_at DESC
+        """
+        return self.execute_query(query, (tenant_id, source_project_id))
+
+    def get_conversion_provenance_by_id(
+        self, tenant_id: str, provenance_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """One conversion-provenance row by id with the CPDO-3.3 history enrichment, or ``None``.
+
+        Tenant-scoped: an id belonging to another tenant reads as absent, so the evidence routes 404
+        it without confirming its existence.
+        """
+        query = f"""
+            {self._CONVERSION_HISTORY_SELECT.format(columns=self._CONVERSION_PROVENANCE_COLUMNS_CP)}
+            WHERE cp.tenant_id = %s AND cp.id = %s
+        """
+        rows = self.execute_query(query, (tenant_id, provenance_id))
+        return rows[0] if rows else None
+
+    # -----------------------------------------------------------------------
+    # Conversion evidence snapshots (apiome.conversion_evidence_snapshot, V215, CPDO-3.3)
+    # -----------------------------------------------------------------------
+
+    #: Columns returned by conversion-evidence-snapshot reads, in a fixed order.
+    _CONVERSION_EVIDENCE_SNAPSHOT_COLUMNS = (
+        "tenant_id, manifest_hash, schema_version, conversion_mode, source_format, "
+        "target_format, tool_versions, defaults, manifest, node_count, edge_count, "
+        "truncated, created_by, created_at"
+    )
+
+    def upsert_conversion_evidence_snapshot(
+        self,
+        *,
+        tenant_id: str,
+        manifest_hash: str,
+        schema_version: str,
+        conversion_mode: str,
+        source_format: Optional[str],
+        target_format: str,
+        tool_versions: Optional[Dict[str, Any]],
+        defaults: Optional[Dict[str, Any]],
+        manifest: Dict[str, Any],
+        node_count: int,
+        edge_count: int,
+        truncated: bool,
+        created_by: Optional[str],
+    ) -> Dict[str, Any]:
+        """Store one content-addressed conversion evidence snapshot (CPDO-3.3, V215) and return it.
+
+        Content addressing makes the write a dedupe: ``ON CONFLICT (tenant_id, manifest_hash) DO
+        NOTHING``, so re-converting an unchanged source under unchanged defaults/tools reuses the
+        existing snapshot row untouched (the table is write-once — a trigger rejects UPDATE). When
+        the insert deduped, the existing row is read back and returned so the caller always gets the
+        stored row.
+
+        Args:
+            manifest: The full ``ConversionManifest`` JSON, with ``source.project_id`` and
+                ``source.version_record_id`` nulled by the caller (hash-excluded ids must not leak
+                the first writer's coordinates into a shared snapshot).
+
+        Returns:
+            The stored (or pre-existing) snapshot row as a dict.
+        """
+        query = f"""
+            INSERT INTO apiome.conversion_evidence_snapshot
+                (tenant_id, manifest_hash, schema_version, conversion_mode, source_format,
+                 target_format, tool_versions, defaults, manifest, node_count, edge_count,
+                 truncated, created_by)
+            VALUES (%s, %s, %s, %s, %s, %s, COALESCE(%s, '{{}}'::jsonb),
+                    COALESCE(%s, '{{}}'::jsonb), %s, %s, %s, %s, %s)
+            ON CONFLICT (tenant_id, manifest_hash) DO NOTHING
+            RETURNING {self._CONVERSION_EVIDENCE_SNAPSHOT_COLUMNS}
+        """
+        params = (
+            tenant_id,
+            manifest_hash,
+            schema_version,
+            conversion_mode,
+            source_format,
+            target_format,
+            Json(tool_versions) if tool_versions is not None else None,
+            Json(defaults) if defaults is not None else None,
+            Json(manifest),
+            node_count,
+            edge_count,
+            truncated,
+            created_by,
+        )
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, params)
+                result = cursor.fetchone()
+                conn.commit()
+        except Exception as e:
+            conn.rollback()
+            raise e
+        if result is not None:
+            return result
+        existing = self.get_conversion_evidence_snapshot(tenant_id, manifest_hash)
+        if existing is None:  # pragma: no cover - a lost race with the orphan purge
+            raise RuntimeError(
+                f"Conversion evidence snapshot {manifest_hash} deduped but could not be read back."
+            )
+        return existing
+
+    def get_conversion_evidence_snapshot(
+        self, tenant_id: str, manifest_hash: str
+    ) -> Optional[Dict[str, Any]]:
+        """One conversion evidence snapshot by content address, or ``None``. Tenant-scoped."""
+        query = f"""
+            SELECT {self._CONVERSION_EVIDENCE_SNAPSHOT_COLUMNS}
+            FROM apiome.conversion_evidence_snapshot
+            WHERE tenant_id = %s AND manifest_hash = %s
+        """
+        rows = self.execute_query(query, (tenant_id, manifest_hash))
+        return rows[0] if rows else None
+
+    def purge_conversion_evidence_snapshots(self, retention_days: int = 90) -> int:
+        """Purge aged conversion evidence snapshots no provenance row references; return the count.
+
+        Thin delegate over ``apiome.purge_conversion_evidence_snapshots`` (V215). Because the
+        provenance ledger is append-only, only crash orphans — a snapshot written by a commit whose
+        provenance insert then failed — ever match; referenced snapshots are permanent until tenant
+        deletion cascades them.
+        """
+        query = "SELECT apiome.purge_conversion_evidence_snapshots(%s) AS purged"
+        rows = self.execute_query(query, (retention_days,))
+        return rows[0]["purged"] if rows else 0
 
     # -----------------------------------------------------------------------
     # Cross-format API identity (api_identity_groups / api_identity_members, V140, MFI-6.4)

@@ -30,6 +30,12 @@ from .catalog_detail import (
     resolve_source_payload,
 )
 from .catalog_parsed_model import derive_catalog_parsed_model
+from .conversion_evidence import (
+    current_source_digest,
+    evidence_response,
+    parse_evidence_scope,
+    provenance_entry,
+)
 from .conversion_job import (
     ConversionDefaults,
     ConversionError,
@@ -45,6 +51,7 @@ from .conversion_projection import (
 from .database import db
 from .lint_routes import build_lint_report
 from .models import (
+    CatalogConversionHistoryResponse,
     CatalogConversionRef,
     CatalogItemDetailSchema,
     CatalogItemSchema,
@@ -52,6 +59,7 @@ from .models import (
     CatalogProjectionRequest,
     CatalogProjectionResponse,
     CatalogSourceDescriptor,
+    ConversionEvidenceResponse,
     ConvertCatalogItemRequest,
     ConvertCommitResponse,
     ConvertDryRunResponse,
@@ -89,6 +97,8 @@ def _build_conversion_ref(item: Dict[str, Any]) -> Optional[CatalogConversionRef
         converted_at=item.get("conv_converted_at"),
         fidelity_grade=item.get("conv_fidelity_grade"),
         fidelity_tier=item.get("conv_fidelity_tier"),
+        provenance_id=str(item["conv_provenance_id"]) if item.get("conv_provenance_id") else None,
+        manifest_hash=item.get("conv_manifest_hash") or None,
     )
 
 
@@ -559,6 +569,140 @@ async def get_catalog_projection(
         summary=summarize_conversion_manifest(preview.manifest).model_dump(mode="json"),
         page=page.model_dump(mode="json"),
     )
+
+
+@router.get(
+    "/{tenant_slug}/{item_id}/conversions",
+    response_model=CatalogConversionHistoryResponse,
+    summary="List a catalog item's conversion provenance history",
+)
+async def get_catalog_conversion_history(
+    tenant_slug: str,
+    item_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> CatalogConversionHistoryResponse:
+    """Return a catalog item's full conversion history, newest first (CPDO-3.3).
+
+    One entry per convert/re-convert from the append-only ``conversion_provenance`` ledger: the
+    target Project + revision it produced, the fidelity outcome, the converter tool versions, the
+    content-addressed evidence snapshot id (and whether that snapshot is actually stored and
+    replayable), and the digest of the exact source text converted. ``currentSourceHash`` digests
+    the item's *currently captured* source so a client can mark rows whose ``sourceHash`` differs
+    as historic — "the source has changed since this conversion was approved".
+
+    Exposes the same class of metadata the unguarded catalog list/detail already carry on their
+    ``conversion`` back-link, so like them it requires authentication + tenant scoping only; the
+    per-conversion *evidence graph* read is the gated one. Restricted to the non-publishable slice
+    (a Project's id, or an unknown id, yields 404).
+
+    Args:
+        tenant_slug: The tenant slug.
+        item_id: The catalog item ID (a project id).
+        auth_data: Authentication data (injected by dependency).
+
+    Returns:
+        The :class:`~app.models.CatalogConversionHistoryResponse`, newest first.
+    """
+    _ = tenant_slug
+    tenant_id = auth_data["tenant_id"]
+
+    item = db.get_catalog_item_by_id(item_id, tenant_id)
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Catalog item not found: {item_id}")
+
+    rows = db.get_conversions_for_source(tenant_id, item_id)
+    return CatalogConversionHistoryResponse(
+        item_id=item_id,
+        current_source_hash=current_source_digest(item),
+        conversions=[provenance_entry(row) for row in rows],
+    )
+
+
+@router.get(
+    "/{tenant_slug}/{item_id}/conversions/{provenance_id}/evidence",
+    response_model=ConversionEvidenceResponse,
+    summary="Page through the stored evidence snapshot of one historical conversion",
+)
+async def get_catalog_conversion_evidence(
+    tenant_slug: str,
+    item_id: str,
+    provenance_id: str,
+    scope: Optional[str] = Query(
+        None,
+        description="Restrict the page to one edge scope: checklist / construct / loss / analysis.",
+    ),
+    cursor: Optional[str] = Query(
+        None, description="Opaque cursor from a previous page; omit to start at the beginning."
+    ),
+    limit: int = Query(
+        50, ge=1, le=500, description="Maximum edges per page; clamped server-side."
+    ),
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> ConversionEvidenceResponse:
+    """Return one page of the exact evidence graph a historical conversion was approved with.
+
+    Served from the content-addressed snapshot store (CPDO-3.3, V215) — **never rebuilt** — so the
+    graph is the one the user reviewed at commit time, regardless of how the source or the
+    converter changed since. A GET, unlike the projection's POST: the stored snapshot already fixed
+    its defaults, so there is no body to agree on. A snapshot that cannot be served degrades to an
+    explicit HTTP 200 state (``predates_snapshots`` / ``snapshot_missing`` / ``unreadable``), never
+    an error — pre-CPDO-3.3 conversions are a normal part of any history.
+
+    Carries the same class of source-native coordinates as the projection read, so it is gated on
+    the same ``imports:view`` permission, checked **after** the item lookup so a cross-tenant id
+    404s rather than confirming its existence with a 403. A provenance row that does not belong to
+    this item also 404s, so one item's evidence cannot be probed through another's URL.
+
+    Args:
+        tenant_slug: The tenant slug.
+        item_id: The catalog item ID (a project id).
+        provenance_id: The ``conversion_provenance`` row whose snapshot to page.
+        scope: Restrict the page to one edge scope; omit to page every scope.
+        cursor: Opaque page cursor.
+        limit: Maximum edges per page.
+        auth_data: Authentication data (injected by dependency).
+
+    Returns:
+        The :class:`~app.models.ConversionEvidenceResponse` — snapshot state, summary, and one page.
+
+    Raises:
+        HTTPException: 400 for an unknown scope, 404 for an unknown item/provenance row, 422 for a
+            malformed cursor.
+    """
+    _ = tenant_slug
+    tenant_id = auth_data["tenant_id"]
+
+    parsed_scope = parse_evidence_scope(scope)
+
+    item = db.get_catalog_item_by_id(item_id, tenant_id)
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Catalog item not found: {item_id}")
+
+    enforce_permission(
+        db, auth_data, Resource.IMPORTS, Action.VIEW, target=f"catalog:{item_id}:evidence"
+    )
+
+    row = db.get_conversion_provenance_by_id(tenant_id, provenance_id)
+    if not row or str(row.get("source_project_id")) != str(item_id):
+        raise HTTPException(status_code=404, detail=f"Conversion not found: {provenance_id}")
+
+    snapshot_row = None
+    if row.get("projection_manifest_hash"):
+        snapshot_row = db.get_conversion_evidence_snapshot(
+            tenant_id, row["projection_manifest_hash"]
+        )
+
+    try:
+        return evidence_response(
+            row=row,
+            snapshot_row=snapshot_row,
+            cursor=cursor,
+            limit=limit,
+            scope=parsed_scope,
+            item_id=item_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get("/{tenant_slug}/{item_id}/source")

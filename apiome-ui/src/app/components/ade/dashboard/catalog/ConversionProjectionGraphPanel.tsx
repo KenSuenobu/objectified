@@ -86,7 +86,10 @@ import {
 } from './conversionProjectionGraph';
 import { ConversionEvidenceDrawer, StatusText } from './ConversionEvidenceDrawer';
 import { useConversionProjection } from './useConversionProjection';
-import type { ConversionManifestSummary } from '@/app/utils/conversion-projection';
+import type {
+  ConversionEvidencePageSource,
+  ConversionManifestSummary,
+} from '@/app/utils/conversion-projection';
 import { CONVERSION_PROJECTION_STATUSES } from '@/app/utils/conversion-projection';
 import type { ConversionDefaults, FidelityReport } from '@/app/utils/conversion-fidelity';
 import {
@@ -134,6 +137,12 @@ export interface ConversionProjectionGraphPanelProps {
   onApplyDefaults?: (defaults: ConversionDefaults) => void;
   /** True while the owner is recomputing the report; the drawer's form waits. */
   recomputing?: boolean;
+  /**
+   * Page-source override (CPDO-3.3): walk a *persisted* evidence snapshot instead of the live
+   * rebuild endpoint. Every integrity/truncation/drawer behaviour applies unchanged; evidence
+   * for a different snapshot than the walk started on is still refused.
+   */
+  evidenceSource?: ConversionEvidencePageSource;
 }
 
 export function ConversionProjectionGraphPanel({
@@ -149,9 +158,10 @@ export function ConversionProjectionGraphPanel({
   defaults,
   onApplyDefaults,
   recomputing,
+  evidenceSource,
 }: ConversionProjectionGraphPanelProps) {
   const { summary, nodes, edges, loading, error, integrityIssues, complete, loadMore, retry } =
-    useConversionProjection(enabled, itemId, pageLimit, defaults);
+    useConversionProjection(enabled, itemId, pageLimit, defaults, evidenceSource);
 
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [focusIndex, setFocusIndex] = useState(0);

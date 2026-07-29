@@ -675,3 +675,70 @@ describe('ConversionProjectionGraphPanel — evidence drawer (CPDO-3.2)', () => 
     expect(onApplyDefaults).toHaveBeenCalledWith({ version: '2.0.0' });
   });
 });
+
+// ---------------------------------------------------------------------------
+// 9. Persisted-snapshot page source (CPDO-3.3, #4803)
+// ---------------------------------------------------------------------------
+
+describe('ConversionProjectionGraphPanel — evidenceSource override', () => {
+  it('walks an injected page source instead of the projection endpoint', async () => {
+    const { nodes, edges, summary } = defaultFixture();
+    const pages = paginate(nodes, edges, 10, summary);
+    const source = jest.fn(async ({ cursor }: { cursor: string | null; limit: number }) => {
+      const payload = pages[cursor == null ? 'start' : cursor] as { page: unknown; summary: unknown };
+      return payload as never;
+    });
+    const fetchMock = jest.fn();
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(
+      <ConversionProjectionGraphPanel
+        itemId="item-1"
+        enabled
+        envelopeSummary={null}
+        evidenceSource={source as never}
+      />,
+    );
+    await waitForLoaded();
+
+    // The stored evidence rendered through the same table; the network was never touched.
+    expect(screen.getAllByTestId(/^conversion-projection-table-row-/)).toHaveLength(3);
+    expect(source).toHaveBeenCalledWith(expect.objectContaining({ cursor: null }));
+    expect(fetchMock).not.toHaveBeenCalled();
+    // No dry-run envelope in historic mode → no mismatch banner.
+    expect(screen.queryByTestId('conversion-projection-mismatch')).not.toBeInTheDocument();
+  });
+
+  it('applies the walk integrity discipline to overridden sources too', async () => {
+    const { nodes, edges, summary } = defaultFixture();
+    const pages = paginate(nodes, edges, 2, summary) as Record<
+      string,
+      { page: { manifest_hash: string }; summary: unknown }
+    >;
+    // The second page silently switches snapshots — the whole view must be refused.
+    pages['cursor-1'] = {
+      ...pages['cursor-1'],
+      page: { ...pages['cursor-1'].page, manifest_hash: 'f'.repeat(64) },
+    };
+    const source = jest.fn(async ({ cursor }: { cursor: string | null; limit: number }) => {
+      return pages[cursor == null ? 'start' : cursor] as never;
+    });
+
+    render(
+      <ConversionProjectionGraphPanel
+        itemId="item-1"
+        enabled
+        envelopeSummary={null}
+        evidenceSource={source as never}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId('conversion-projection-integrity-error')).toBeInTheDocument(),
+    );
+    expect(screen.getByTestId('conversion-projection-integrity-error')).toHaveTextContent(
+      'failed its integrity check',
+    );
+    expect(screen.queryByTestId('conversion-projection-table')).not.toBeInTheDocument();
+  });
+});

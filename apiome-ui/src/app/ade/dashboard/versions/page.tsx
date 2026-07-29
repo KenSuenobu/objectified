@@ -35,6 +35,7 @@ import {
   ArrowUpDown,
   FileOutput,
   FlaskConical,
+  History,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import {
@@ -101,6 +102,8 @@ import { sanitizeFilenameSegment } from '../../../utils/filename-utils';
 import RelationshipGraphDialog from './RelationshipGraphDialog';
 import VersionLineageSnippet from './VersionLineageSnippet';
 import VersionHistoryGraphPanel from './VersionHistoryGraphPanel';
+import ProjectConversionPanel from './ProjectConversionPanel';
+import { useConversionHistory } from '../../../components/ade/dashboard/catalog/useConversionHistory';
 import { DEFAULT_HISTORY_WINDOW } from './version-history-dag';
 import { toast } from 'sonner';
 import { localDatetimeLocalToUtcIso, utcIsoToDatetimeLocalValue } from '../../../utils/revision-deprecation';
@@ -458,7 +461,7 @@ const Versions = () => {
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   /** Timeline vs publication change report (CR-05, #2703; gated by `NEXT_PUBLIC_CHANGE_REPORT_UI`) vs stored changelog (CTG-3.2, #4476) vs the Schema Test Bench (IXH-5.3, #5115). */
   const [versionsMainTab, setVersionsMainTab] = useState<
-    'timeline' | 'change-report' | 'changes' | 'test-bench'
+    'timeline' | 'change-report' | 'changes' | 'test-bench' | 'conversion'
   >('timeline');
   /* Change reports are part of the git-like publication flow, so the UI gate
      is the union of the env opt-out and the master git-like feature flag.
@@ -2961,11 +2964,23 @@ const Versions = () => {
   const showChangesTab = Boolean(selectedProjectId);
   /** Schema Test Bench (IXH-5.3, #5115) — addresses schemas by project slug, so it needs one. */
   const showTestBenchTab = Boolean(selectedProjectId && selectedProject?.slug);
+  /** Conversion provenance history (CPDO-3.3, #4803): the tab exists only when this project was
+      actually produced by a conversion, so the list itself gates visibility. A fetch error hides
+      the tab silently — absence is this page's pre-CPDO-3.3 status quo, not an error state. */
+  const conversionHistory = useConversionHistory(
+    Boolean(selectedProjectId),
+    useMemo(
+      () => (selectedProjectId ? { kind: 'project' as const, projectId: selectedProjectId } : null),
+      [selectedProjectId],
+    ),
+  );
+  const showConversionTab = conversionHistory.rows.length > 0;
   /** The tab actually rendered: falls back to the timeline when the selected tab's surface is unavailable. */
   const effectiveMainTab =
     (versionsMainTab === 'change-report' && !showChangeReportTab) ||
     (versionsMainTab === 'changes' && !showChangesTab) ||
-    (versionsMainTab === 'test-bench' && !showTestBenchTab)
+    (versionsMainTab === 'test-bench' && !showTestBenchTab) ||
+    (versionsMainTab === 'conversion' && !showConversionTab)
       ? 'timeline'
       : versionsMainTab;
 
@@ -3108,7 +3123,7 @@ const Versions = () => {
 
       <main className={dashboardMainClass}>
         <div className={dashboardContentStackClass}>
-      {showChangeReportTab || showChangesTab ? (
+      {showChangeReportTab || showChangesTab || showConversionTab ? (
         <div
           className={`${dashboardPanelClass} px-3 py-2 flex flex-wrap items-center gap-2`}
           data-testid="versions-main-tab"
@@ -3188,7 +3203,39 @@ const Versions = () => {
                 </span>
               </button>
             ) : null}
+            {showConversionTab ? (
+              <button
+                type="button"
+                aria-pressed={effectiveMainTab === 'conversion'}
+                data-testid="versions-tab-conversion"
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  effectiveMainTab === 'conversion'
+                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
+                onClick={() => setVersionsMainTab('conversion')}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <History className="h-4 w-4 shrink-0" aria-hidden />
+                  Conversion
+                </span>
+              </button>
+            ) : null}
           </div>
+        </div>
+      ) : null}
+
+      {showConversionTab && effectiveMainTab === 'conversion' ? (
+        /* Conversion provenance history (CPDO-3.3, #4803): where this project's revisions came
+           from. Evidence replay lives on the catalog item's Conversions tab. */
+        <div className={`${dashboardPanelPaddedClass}`}>
+          <ProjectConversionPanel
+            rows={conversionHistory.rows}
+            loading={conversionHistory.loading}
+            error={conversionHistory.error}
+            retry={conversionHistory.retry}
+            onSelectVersion={() => setVersionsMainTab('timeline')}
+          />
         </div>
       ) : null}
 

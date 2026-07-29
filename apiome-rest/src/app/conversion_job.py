@@ -60,7 +60,7 @@ from .conversion_projection import (
 from .emitter import EmitResult
 from .export_service import ExportError, emit_canonical, resolve_emit_format
 from .fidelity import FidelityReport, analyze_fidelity
-from .payload_analysis import PayloadAnalysisDocument
+from .payload_analysis import PayloadAnalysisDocument, source_digest
 
 logger = logging.getLogger(__name__)
 
@@ -305,8 +305,15 @@ class ProvenanceStore(Protocol):
         converter_tool_versions: Dict[str, Any],
         reconverted: bool,
         projection: ConversionManifestSummary,
+        manifest: ConversionManifest,
+        source_hash: Optional[str],
     ) -> Dict[str, Any]:
-        """Append one provenance row; return it (must include ``id``)."""
+        """Append one provenance row; return it (must include ``id``).
+
+        ``manifest`` is the full projection graph the conversion was approved under, for the
+        content-addressed evidence snapshot (CPDO-3.3); ``source_hash`` is the ``sha256:``-prefixed
+        digest of the exact source text converted, or ``None`` when no source text was captured.
+        """
         ...
 
 
@@ -588,7 +595,8 @@ async def run_conversion(
         tenant_slug=tenant_slug, tenant_id=tenant_id, version_record_id=commit.version_record_id
     )
 
-    # 5. Persist provenance so the converted spec links back to its origin.
+    # 5. Persist provenance so the converted spec links back to its origin, alongside the
+    #    content-addressed evidence snapshot and the digest of the exact source converted (CPDO-3.3).
     prov = store.record(
         tenant_id=tenant_id,
         created_by=user_id,
@@ -599,6 +607,8 @@ async def run_conversion(
         converter_tool_versions=converter_tool_versions(conversion_mode=conversion_mode),
         reconverted=reconverted,
         projection=projection,
+        manifest=preview.manifest,
+        source_hash=source_digest(source.source_text) if source.source_text else None,
     )
 
     # 6. Auto-link source catalog item ↔ converted publishable Project (MFI-6.4, #4410).
@@ -807,8 +817,45 @@ class DbConversionProvenanceStore:
         converter_tool_versions: Dict[str, Any],
         reconverted: bool,
         projection: ConversionManifestSummary,
+        manifest: ConversionManifest,
+        source_hash: Optional[str],
     ) -> Dict[str, Any]:
         from .database import db
+
+        # Snapshot first, ledger second: a provenance row must never name a hash whose storage was
+        # never even attempted. The write is best-effort — the Project/version already exists by
+        # step 5, and a missing snapshot is a truthful degrade state the evidence reads report.
+        # The stored manifest nulls the two hash-excluded source ids: under content-addressed
+        # dedupe they would otherwise record whichever catalog item happened to write first.
+        try:
+            stored = manifest.model_copy(
+                update={
+                    "source": manifest.source.model_copy(
+                        update={"project_id": None, "version_record_id": None}
+                    )
+                }
+            )
+            db.upsert_conversion_evidence_snapshot(
+                tenant_id=tenant_id,
+                manifest_hash=manifest.manifest_hash,
+                schema_version=manifest.schema_version,
+                conversion_mode=manifest.conversion_mode,
+                source_format=manifest.source.source_format,
+                target_format=manifest.target_format,
+                tool_versions=manifest.tool_versions,
+                defaults=manifest.defaults,
+                manifest=stored.model_dump(mode="json"),
+                node_count=len(manifest.nodes),
+                edge_count=len(manifest.edges),
+                truncated=manifest.truncated,
+                created_by=created_by,
+            )
+        except Exception:  # noqa: BLE001 - snapshot capture is strictly best-effort
+            logger.warning(
+                "Failed to store conversion evidence snapshot %s",
+                manifest.manifest_hash,
+                exc_info=True,
+            )
 
         return db.create_conversion_provenance(
             tenant_id=tenant_id,
@@ -832,6 +879,7 @@ class DbConversionProvenanceStore:
             reconverted=reconverted,
             projection_manifest_hash=projection.manifest_hash,
             projection_manifest=projection.model_dump(mode="json"),
+            source_hash=source_hash,
         )
 
 

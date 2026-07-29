@@ -179,7 +179,7 @@ Remaining open leftovers intentionally **not** closed: MTG-EPIC-5 #4764, GOV-1.5
 | 2.7 | COBOL copybook inspector — **Done** | **#4799** CPDO-2.3 | Y with 2.6 |
 | 2.8 | Projection graph renderer + a11y fallback — **Done** | **#4801** CPDO-3.1 | After 2.3 |
 | 2.9 | Conversion evidence drawer + remediation — **Done** | **#4802** CPDO-3.2 | After 2.8 |
-| 2.10 | Conversion provenance history | **#4803** CPDO-3.3 | Y late |
+| 2.10 | Conversion provenance history — **Done** | **#4803** CPDO-3.3 | Y late |
 | 2.11 | Fixture/contract corpus | **#4804** CPDO-4.1 | Growing from 2.2 |
 | 2.12 | Perf / redaction / observability | **#4805** CPDO-4.2 | Before RC4 freeze |
 | 2.13 | User guide | **#4806** CPDO-4.3 | Docs track |
@@ -370,7 +370,6 @@ Filter: [`milestone:RC4 is:open`](https://github.com/apiome/apiome/milestone/1).
 | 4221 | OLO-6.4 Multi-tenant e2e fixtures & tests |
 | 4225 | OLO-7.3 Auth threat-model checklist review |
 | 4794 | CPDO-1.1 Revision-scoped payload analysis contract |
-| 4803 | CPDO-3.3 Conversion provenance evidence history |
 | 4804 | CPDO-4.1 Cross-format fixture and contract corpus |
 | 4805 | CPDO-4.2 Performance, redaction, and observability guardrails |
 | 4806 | CPDO-4.3 User guide and format-detail documentation |
