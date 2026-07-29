@@ -55,6 +55,10 @@ function mockTransport(analysis: AnalysisRecord | { status: number; error: strin
     if (url.includes('/format-capabilities')) {
       return { ok: true, status: 200, json: async () => ({ success: true, ...REGISTRY_SNAPSHOT }) };
     }
+    if (url.includes('/analysis-metrics')) {
+      // The CPDO-4.2 latency report is fire-and-forget; acknowledge and ignore it.
+      return { ok: true, status: 200, json: async () => ({ success: true }) };
+    }
     if (url.includes('/analysis')) {
       if ('status' in analysis) {
         return {
@@ -143,7 +147,7 @@ describe('lazy loading', () => {
 
     await waitFor(() => expect(screen.getByRole('tree')).toBeInTheDocument());
     expect(
-      fetchMock.mock.calls.filter(([url]) => String(url).includes('/analysis')),
+      fetchMock.mock.calls.filter(([url]) => String(url).endsWith('/analysis')),
     ).toHaveLength(1);
   });
 
@@ -161,7 +165,7 @@ describe('lazy loading', () => {
     rerender(<CatalogFormatDetailPanel {...props} active />);
 
     expect(
-      fetchMock.mock.calls.filter(([url]) => String(url).includes('/analysis')),
+      fetchMock.mock.calls.filter(([url]) => String(url).endsWith('/analysis')),
     ).toHaveLength(1);
   });
 
@@ -198,7 +202,7 @@ describe('lazy loading', () => {
 
     await waitFor(() => expect(screen.getByRole('tree')).toBeInTheDocument());
     expect(
-      fetchMock.mock.calls.filter(([url]) => String(url).includes('/analysis')),
+      fetchMock.mock.calls.filter(([url]) => String(url).endsWith('/analysis')),
     ).toHaveLength(1);
   });
 
@@ -207,7 +211,7 @@ describe('lazy loading', () => {
 
     // The registry loads (it is what carries the reviewed wording); the record does not.
     await waitFor(() => expect(screen.getByTestId('catalog-format-detail-status')).toHaveTextContent('Unavailable'));
-    expect(fetchMock.mock.calls.filter(([url]) => String(url).includes('/analysis'))).toHaveLength(0);
+    expect(fetchMock.mock.calls.filter(([url]) => String(url).endsWith('/analysis'))).toHaveLength(0);
     expect(screen.queryByRole('tree')).not.toBeInTheDocument();
 
     // …and the absence is the reviewed one for `no_source_captured`, which is the single category

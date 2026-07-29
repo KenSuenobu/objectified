@@ -184,7 +184,11 @@ function paginate(
 
 /** Install a fetch mock that serves the given cursor pages. */
 function installFetch(pages: Record<string, unknown>) {
-  const fn = jest.fn(async (_url: unknown, init?: { body?: unknown }) => {
+  const fn = jest.fn(async (url: unknown, init?: { body?: unknown }) => {
+    // The CPDO-4.2 latency report is fire-and-forget; acknowledge it outside the page fixtures.
+    if (String(url).includes('/analysis-metrics')) {
+      return { ok: true, status: 200, json: async () => ({ success: true }) };
+    }
     const body = JSON.parse((init?.body as string) ?? '{}');
     const key = body.cursor == null ? 'start' : body.cursor;
     const payload = pages[key];
@@ -487,7 +491,9 @@ describe('ConversionProjectionGraphPanel — paging', () => {
     await waitFor(() =>
       expect(screen.getAllByTestId(/^conversion-projection-table-row-/)).toHaveLength(3),
     );
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(
+      fetchMock.mock.calls.filter(([url]) => !String(url).includes('/analysis-metrics')),
+    ).toHaveLength(3);
     expect(screen.queryByTestId('conversion-projection-partial')).not.toBeInTheDocument();
     expect(screen.queryByTestId('conversion-projection-reconciliation')).not.toBeInTheDocument();
   });
@@ -701,10 +707,13 @@ describe('ConversionProjectionGraphPanel — evidenceSource override', () => {
     );
     await waitForLoaded();
 
-    // The stored evidence rendered through the same table; the network was never touched.
+    // The stored evidence rendered through the same table; the network was never touched
+    // for page data (the fire-and-forget CPDO-4.2 latency report is not evidence traffic).
     expect(screen.getAllByTestId(/^conversion-projection-table-row-/)).toHaveLength(3);
     expect(source).toHaveBeenCalledWith(expect.objectContaining({ cursor: null }));
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(
+      fetchMock.mock.calls.filter(([url]) => !String(url).includes('/analysis-metrics')),
+    ).toHaveLength(0);
     // No dry-run envelope in historic mode → no mismatch banner.
     expect(screen.queryByTestId('conversion-projection-mismatch')).not.toBeInTheDocument();
   });

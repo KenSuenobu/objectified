@@ -69,6 +69,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
+from .analysis_telemetry import analysis_telemetry
 from .archive_intake import ArchiveIntakeError, is_archive_payload, unpack_archive
 from .canonical_model import CanonicalApi
 from .config import settings
@@ -882,11 +883,11 @@ def run_import_analysis(
     Returns:
         The analysis document; never ``None``.
     """
+    source = analysed_source(intake, remote_refs)
+    started = time.monotonic()
     try:
         with stage_wall_clock("analyze", limits=profile, source_label=source_label):
-            return analyze_import(
-                adapter, native_ast, source=analysed_source(intake, remote_refs)
-            )
+            document = analyze_import(adapter, native_ast, source=source)
     except Exception as exc:  # noqa: BLE001 - an analysis must never fail an import
         logger.warning(
             "payload analysis aborted for adapter %r: %s",
@@ -894,7 +895,7 @@ def run_import_analysis(
             type(exc).__name__,
             exc_info=True,
         )
-        return unavailable_document(
+        document = unavailable_document(
             REASON_ANALYZER_FAILED,
             source_format=adapter.key,
             message=(
@@ -905,6 +906,68 @@ def run_import_analysis(
             capabilities=adapter.analysis_capabilities(),
             failed=True,
         )
+    _record_analysis_telemetry(
+        document,
+        latency_ms=(time.monotonic() - started) * 1000.0,
+        payload_bytes=_source_byte_length(source),
+    )
+    return document
+
+
+def _source_byte_length(source: Any) -> Optional[int]:
+    """Return the analysed source's size in bytes, or ``None`` when there was no source.
+
+    A size is the only thing telemetry may know about the source — never its content.
+
+    Args:
+        source: What :func:`analysed_source` returned (text, bytes, or ``None``).
+
+    Returns:
+        The byte length, or ``None`` when it cannot be stated.
+    """
+    if isinstance(source, (bytes, bytearray)):
+        return len(source)
+    if isinstance(source, str):
+        return len(source.encode("utf-8", errors="ignore"))
+    return None
+
+
+def _record_analysis_telemetry(
+    document: PayloadAnalysisDocument,
+    *,
+    latency_ms: float,
+    payload_bytes: Optional[int],
+) -> None:
+    """Record one privacy-safe telemetry event for an import-time analysis (CPDO-4.2).
+
+    A ``failed`` document counts as ``analysis_failure`` under its reason category; anything else
+    counts as ``analysis_completed`` under its status. Only durations, counts, and whitelisted
+    categories leave this function — never a node, a value, or a source fragment. Best-effort:
+    telemetry must never fail an import, so any recording error is swallowed.
+
+    Args:
+        document: The analysis the stage produced.
+        latency_ms: Wall-clock duration of the analysis stage.
+        payload_bytes: Size of the analysed source, when known.
+    """
+    try:
+        if document.status == STATUS_FAILED:
+            analysis_telemetry.record(
+                "analysis_failure",
+                reason_category=document.status_reason or "unknown",
+                latency_ms=latency_ms,
+                payload_bytes=payload_bytes,
+            )
+        else:
+            analysis_telemetry.record(
+                "analysis_completed",
+                status=document.status,
+                latency_ms=latency_ms,
+                node_count=document.metrics.node_count,
+                payload_bytes=payload_bytes,
+            )
+    except Exception:  # pragma: no cover - telemetry is strictly best-effort
+        logger.debug("analysis telemetry recording failed", exc_info=True)
 
 
 def store_import_analysis(

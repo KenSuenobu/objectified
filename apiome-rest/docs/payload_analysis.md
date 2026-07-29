@@ -151,6 +151,18 @@ id in another tenant 404s rather than 403ing in a way that confirms it exists.
 It can only narrow what the stored record carries; an unrecognised level is a
 `422` rather than a silently-ignored parameter.
 
+**`?maxNodes=&maxDepth=`** (CPDO-4.2) — an optional read-time node/depth budget
+for a lazy fetch of an oversized tree. `bound_document` keeps the same
+breadth-first prefix write-time bounding keeps, adds read-time drops to the
+stored drop count, and demotes an `available` record to
+`partial`/`bounds_exceeded`. Like `valueVisibility`, it can only narrow.
+
+**Audit** (CPDO-4.2) — every successful serve of the record (and of the raw
+source, which this ticket also gated on `imports:view`) writes a content-free
+row to `apiome.access_audit`. Budgets, telemetry, and retention for the whole
+surface are documented in
+[catalog_analysis_guardrails.md](./catalog_analysis_guardrails.md).
+
 A revision imported before this contract existed returns
 `status: "unavailable"`, an empty tree, and a reason code. It never returns a
 fabricated tree.

@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.79.1
+  version: 1.80.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -4381,8 +4381,10 @@ paths:
         \ 404 — and authenticated via JWT token or API key.\n\nArgs:\n    tenant_slug:\
         \ The tenant slug.\n    item_id: The catalog item ID (a project id).\n   \
         \ value_visibility: Optional read-time value-visibility restriction.\n   \
-        \ auth_data: Authentication data (injected by dependency).\n\nReturns:\n \
-        \   The :class:`~app.payload_analysis.PayloadAnalysisRecord` for the item's\
+        \ max_nodes: Optional read-time node budget for a lazy fetch of an oversized\
+        \ tree.\n    max_depth: Optional read-time depth budget, applied with ``max_nodes``.\n\
+        \    auth_data: Authentication data (injected by dependency).\n\nReturns:\n\
+        \    The :class:`~app.payload_analysis.PayloadAnalysisRecord` for the item's\
         \ latest revision."
       operationId: get_catalog_item_analysis_v1_catalog__tenant_slug___item_id__analysis_get
       parameters:
@@ -4418,6 +4420,38 @@ paths:
         description: 'Optional read-time restriction on observed payload values: none
           | structural | full. It can only narrow what the stored record carries,
           never widen it.'
+      - name: maxNodes
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            maximum: 5000
+            minimum: 1
+            description: Get Catalog Item Analysismax Nodes schema.
+          - type: 'null'
+            description: Get Catalog Item Analysismax Nodes schema.
+          description: Optional read-time node budget for a lazy first fetch of an
+            oversized tree. Keeps the same breadth-first prefix write-time bounding
+            keeps; truncation is reported on the record's metrics, never silent (CPDO-4.2).
+          title: Maxnodes
+        description: Optional read-time node budget for a lazy first fetch of an oversized
+          tree. Keeps the same breadth-first prefix write-time bounding keeps; truncation
+          is reported on the record's metrics, never silent (CPDO-4.2).
+      - name: maxDepth
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            maximum: 32
+            minimum: 1
+            description: Get Catalog Item Analysismax Depth schema.
+          - type: 'null'
+            description: Get Catalog Item Analysismax Depth schema.
+          description: Optional read-time depth budget, applied with maxNodes (CPDO-4.2).
+          title: Maxdepth
+        description: Optional read-time depth budget, applied with maxNodes (CPDO-4.2).
       - name: authorization
         in: header
         required: false
@@ -4969,11 +5003,18 @@ paths:
         \n* **inline content** — streamed back as a downloadable attachment (typed\
         \ by source format);\n* **a source URL** (when no content was captured) —\
         \ answered with a redirect to that URL;\n* **neither** — ``404``, since the\
-        \ raw source has not (yet) been captured for this item.\n\nLike the other\
-        \ catalog reads this is restricted to the non-publishable slice (a Project's\
-        \ id, or\nan unknown id, yields 404) and authenticated via JWT token or API\
-        \ key.\n\nArgs:\n    tenant_slug: The tenant slug.\n    item_id: The catalog\
-        \ item ID.\n    auth_data: Authentication data (injected by dependency).\n\
+        \ raw source has not (yet) been captured for this item.\n\n**Authorization\
+        \ and audit (CPDO-4.2).** The raw source is the most sensitive read on the\n\
+        catalog surface — it is the payload itself, not a description of it — so it\
+        \ is gated on the\nsame ``imports:view`` permission as the analysis tree and\
+        \ the projection graph, checked after\nthe item lookup so a cross-tenant id\
+        \ 404s rather than confirming its existence with a 403.\nEvery successful\
+        \ serve writes an ``access_audit`` row (``catalog.source.view``) recording\
+        \ who\nread it and how it was answered; the row carries no source content.\n\
+        \nLike the other catalog reads this is restricted to the non-publishable slice\
+        \ (a Project's id, or\nan unknown id, yields 404) and authenticated via JWT\
+        \ token or API key.\n\nArgs:\n    tenant_slug: The tenant slug.\n    item_id:\
+        \ The catalog item ID.\n    auth_data: Authentication data (injected by dependency).\n\
         \nReturns:\n    A StreamingResponse of the captured source, or a RedirectResponse\
         \ to the source URL."
       operationId: get_catalog_item_source_v1_catalog__tenant_slug___item_id__source_get
@@ -5033,6 +5074,74 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for get catalog item sourceresponse422.
+  /v1/catalog/{tenant_slug}/analysis-metrics:
+    post:
+      tags:
+      - catalog
+      summary: Record a privacy-safe catalog analysis metric
+      description: Increment an in-process counter and emit a structured ``catalog.analysis``
+        log line for UI/ops telemetry (CPDO-4.2). Payload is a strict whitelist of
+        kinds, controlled surface names, and integer/duration fields — never node
+        names, values, or source content.
+      operationId: record_catalog_analysis_metric_v1_catalog__tenant_slug__analysis_metrics_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Recordaprivacysafecataloganalysismetricauthorization schema.
+          - type: 'null'
+            description: Recordaprivacysafecataloganalysismetricauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Recordaprivacysafecataloganalysismetric Xapikey schema.
+          - type: 'null'
+            description: Recordaprivacysafecataloganalysismetric Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogAnalysisMetricRequest'
+              description: Request body for recordaprivacysafecataloganalysismetricrequest.
+        description: Request body for record a privacy-safe catalog analysis metric.
+      responses:
+        '200':
+          description: Successful response for record a privacy-safe catalog analysis
+            metric.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogAnalysisMetricResponse'
+                description: Response payload for recordaprivacysafecataloganalysismetricresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for recordaprivacysafecataloganalysismetricresponse422.
   /v1/identity/{tenant_slug}/projects/{project_id}/related:
     get:
       tags:
@@ -47830,6 +47939,72 @@ components:
         yield an
 
         identical snapshot — safe to cache and to mirror in a TypeScript contract.'
+    CatalogAnalysisMetricRequest:
+      properties:
+        kind:
+          type: string
+          const: ui_latency
+          title: Kind
+          description: Privacy-safe metric kind (whitelist).
+          example: ui_latency
+        surface:
+          type: string
+          title: Surface
+          description: Which UI surface is reporting (controlled vocabulary, e.g.
+            format_tab).
+          example: example
+        latency_ms:
+          anyOf:
+          - type: number
+            minimum: 0.0
+            description: Request body for catalog analysis metric.
+          - type: 'null'
+            description: Request body for catalog analysis metric.
+          title: Latency Ms
+          description: Wall-clock latency the surface measured.
+        page_total:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Request body for catalog analysis metric.
+          - type: 'null'
+            description: Request body for catalog analysis metric.
+          title: Page Total
+          description: Optional integer row/edge total (no labels).
+      additionalProperties: false
+      type: object
+      required:
+      - kind
+      - surface
+      title: CatalogAnalysisMetricRequest
+      description: 'A privacy-safe UI latency report for a catalog analysis surface
+        (CPDO-4.2).
+
+
+        A strict whitelist: one kind, a controlled surface name, and numbers. Unknown
+        fields are
+
+        rejected (``extra="forbid"``) so a client cannot smuggle payload material
+        into telemetry.'
+    CatalogAnalysisMetricResponse:
+      properties:
+        recorded:
+          type: boolean
+          title: Recorded
+          default: true
+          description: Recorded.
+          example: false
+        kind:
+          type: string
+          title: Kind
+          description: Kind.
+          example: example
+      additionalProperties: false
+      type: object
+      required:
+      - kind
+      title: CatalogAnalysisMetricResponse
+      description: Acknowledgement that a privacy-safe metric was recorded.
     CatalogConversionHistoryResponse:
       properties:
         itemId:
@@ -75409,7 +75584,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-07-29T02:42:59Z'
+          example: '2026-07-29T03:24:48Z'
       additionalProperties: false
       type: object
       required:
@@ -84816,13 +84991,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-07-29T02:42:59Z'
+          example: '2026-07-29T03:24:48Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-07-29T02:42:59Z'
+          example: '2026-07-29T03:24:48Z'
         outcome:
           anyOf:
           - type: string

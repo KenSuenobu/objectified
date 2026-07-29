@@ -60,6 +60,7 @@ __all__ = [
     "MAX_TREE_NODES",
     "MAX_VALUE_PREVIEW_CHARS",
     "PAYLOAD_ANALYSIS_SCHEMA_VERSION",
+    "READ_BOUND_SOFT_BUDGET_SECONDS",
     "PayloadAnalysisDocument",
     "PayloadAnalysisRecord",
     "PayloadAnalysisSummary",
@@ -80,6 +81,7 @@ __all__ = [
     "ValueVisibility",
     "analysis_content_fingerprint",
     "analyzer_capabilities",
+    "bound_document",
     "bound_tree",
     "apply_value_visibility",
     "document_from_row",
@@ -195,6 +197,12 @@ MAX_TREE_NODES = 5000
 MAX_TREE_DEPTH = 32
 #: Maximum characters of an observed value kept under :data:`ValueVisibility.FULL`.
 MAX_VALUE_PREVIEW_CHARS = 120
+
+#: Soft CI wall-clock budget for serving a maximally sized stored tree — re-bounding plus
+#: read-time redaction over a :data:`MAX_TREE_NODES`-node document (CPDO-4.2). Enforced as a
+#: pytest assertion, not a runtime limit, mirroring the export surface's
+#: ``EVIDENCE_BUILD_SOFT_BUDGET_SECONDS``.
+READ_BOUND_SOFT_BUDGET_SECONDS = 2.0
 
 
 # ---------------------------------------------------------------------------
@@ -793,6 +801,53 @@ def bound_tree(
         kind_counts=_kind_counts(bounded),
     )
     return bounded, metrics
+
+
+def bound_document(
+    document: PayloadAnalysisDocument,
+    *,
+    max_nodes: int = MAX_TREE_NODES,
+    max_depth: int = MAX_TREE_DEPTH,
+) -> PayloadAnalysisDocument:
+    """Return a copy of ``document`` with its tree re-bounded to a *smaller* budget (CPDO-4.2).
+
+    The read-time half of :func:`bound_tree`: a client that wants only the top of a large stored
+    tree (a lazy first render, a constrained device) asks for a tighter node/depth budget and gets
+    the same breadth-first prefix the write-time bounding would have kept. Like value visibility,
+    this is monotonic — a budget wider than the stored tree is a no-op, because nodes the store
+    never held cannot be re-materialised.
+
+    Truncation stays *reported*, never silent: dropped nodes are added to the stored
+    ``dropped_node_count``, ``truncated`` is set, and an ``available`` record is demoted to
+    :data:`STATUS_PARTIAL` with :data:`REASON_BOUNDS_EXCEEDED` so the result still satisfies
+    :meth:`PayloadAnalysisDocument.contract_violations`.
+
+    Args:
+        document: The stored document. Not mutated.
+        max_nodes: Maximum nodes to return, across the whole tree.
+        max_depth: Maximum depth to return; nodes below it are dropped with their subtrees.
+
+    Returns:
+        The document, re-bounded when the budget is narrower than the stored tree; the document
+        itself when the budget drops nothing.
+    """
+    bounded, metrics = bound_tree(document.tree, max_nodes=max_nodes, max_depth=max_depth)
+    if not metrics.truncated:
+        return document
+
+    merged_metrics = metrics.model_copy(
+        update={
+            "truncated": True,
+            "dropped_node_count": metrics.dropped_node_count
+            + document.metrics.dropped_node_count,
+            "warning_count": document.metrics.warning_count,
+        }
+    )
+    update: Dict[str, Any] = {"tree": bounded, "metrics": merged_metrics}
+    if document.status == STATUS_AVAILABLE:
+        update["status"] = STATUS_PARTIAL
+        update["status_reason"] = REASON_BOUNDS_EXCEEDED
+    return document.model_copy(update=update)
 
 
 def _tree_depth(nodes: List[AnalysisNode]) -> int:
