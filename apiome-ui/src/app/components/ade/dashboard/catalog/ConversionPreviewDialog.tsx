@@ -6,12 +6,18 @@
  * A *reviewed*-conversion surface for a catalog item: converting a non-OpenAPI source to OpenAPI is
  * lossy, so this dialog makes the trade-off explicit before anything is committed. It reuses the
  * lazy-fetch pattern of {@link CatalogLintReportDialog} (fetch only when open, abortable, with a
- * retry affordance) and renders the server's fidelity report (MFI-22.3) as **two columns** —
- * "What the source provides" (the constructs that will reach the spec, and how each was derived) and
- * "What OpenAPI favors but is missing" (the gaps, grouped, with reasons and the enumerated
- * projection losses). A header shows the fidelity grade + tier, and a **mandatory warning banner**
- * whose strength scales with the tier: a `low`-tier conversion is acknowledgement-gated — Convert
- * stays disabled until the user explicitly acknowledges.
+ * retry affordance). The fidelity grade + tier header and the **mandatory warning banner** (whose
+ * strength scales with the tier: a `low`-tier conversion is acknowledgement-gated — Convert stays
+ * disabled until the user explicitly acknowledges) sit above **three tabs**:
+ *
+ *  - **Summary** — the server's fidelity report (MFI-22.3) as two columns: "What the source
+ *    provides" (the constructs that will reach the spec, and how each was derived) and "What
+ *    OpenAPI favors but is missing" (the gaps, grouped, with reasons and the enumerated
+ *    projection losses), plus the gap-filling defaults form;
+ *  - **Projection graph** — the CPDO-3.1 evidence graph with its drawer (CPDO-3.2), fetched
+ *    lazily the first time the tab is opened and kept mounted after so the loaded walk and
+ *    selection survive tab switches;
+ *  - **Conversion** — the raw OpenAPI document the conversion would emit.
  *
  * Optional inline **defaults** (info title/version, servers) let the user close cheap gaps before
  * committing; they flow into the commit request. Approving a defaults change — from the inline
@@ -25,7 +31,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { ChevronDown, ChevronRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +39,7 @@ import {
   DialogDescription,
 } from '../../../ui/Dialog';
 import { Button } from '../../../ui/Button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../ui/Tabs';
 import {
   cleanDefaults,
   commitConversion,
@@ -163,8 +169,14 @@ export function ConversionPreviewDialog({
   const [appliedDefaults, setAppliedDefaults] = useState<ConversionDefaults>({});
   const [recomputing, setRecomputing] = useState(false);
   const [recomputeError, setRecomputeError] = useState<string | null>(null);
-  const [showRaw, setShowRaw] = useState(false);
-  const [showProjection, setShowProjection] = useState(false);
+  /** The active tab: the summary, the projection graph, or the raw conversion. */
+  const [activeTab, setActiveTab] = useState<'summary' | 'projection' | 'conversion'>('summary');
+  /**
+   * True once the projection tab has been opened. The graph fetches lazily on first open,
+   * then stays mounted (hidden) across tab switches so the loaded cursor walk, selection,
+   * and drawer survive — switching tabs must not throw evidence away or refetch it.
+   */
+  const [projectionActivated, setProjectionActivated] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [committing, setCommitting] = useState(false);
   const [commitError, setCommitError] = useState<string | null>(null);
@@ -369,8 +381,31 @@ export function ConversionPreviewDialog({
               </div>
             )}
 
-            {/* Scrollable body: two columns + defaults + raw preview */}
-            <div className="mt-3 flex-1 overflow-y-auto pr-1">
+            {/* Tabbed body: summary / projection graph / conversion. The list stays put;
+                each tab's content scrolls. */}
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => {
+                setActiveTab(value as 'summary' | 'projection' | 'conversion');
+                if (value === 'projection') setProjectionActivated(true);
+              }}
+              className="mt-3 flex min-h-0 flex-1 flex-col"
+            >
+              <TabsList className="self-start">
+                <TabsTrigger value="summary" data-testid="conversion-tab-summary">
+                  Summary
+                </TabsTrigger>
+                <TabsTrigger value="projection" data-testid="conversion-tab-projection">
+                  Projection graph
+                </TabsTrigger>
+                <TabsTrigger value="conversion" data-testid="conversion-tab-conversion">
+                  Conversion
+                </TabsTrigger>
+              </TabsList>
+
+              <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+                {/* Summary: the fidelity report's two columns + the gap-filling defaults. */}
+                <TabsContent value="summary" data-testid="conversion-summary-tab-content">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <section data-testid="conversion-provided-column">
                   <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -413,40 +448,6 @@ export function ConversionPreviewDialog({
                   )}
                 </section>
               </div>
-
-              {/* Collapsible projection graph: which construct became which, and why not
-                  (CPDO-3.1). Lazily fetched — the manifest pages load only on expand. */}
-              {itemId && (
-                <section className="mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowProjection((v) => !v)}
-                    className="flex items-center gap-1 text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-                    data-testid="conversion-projection-toggle"
-                    aria-expanded={showProjection}
-                  >
-                    {showProjection ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                    {showProjection ? 'Hide' : 'Show'} projection graph
-                  </button>
-                  {showProjection && (
-                    <div className="mt-2">
-                      <ConversionProjectionGraphPanel
-                        itemId={itemId}
-                        enabled={showProjection}
-                        envelopeSummary={result?.projection ?? null}
-                        report={report}
-                        defaults={appliedDefaults}
-                        onApplyDefaults={(next) => void recompute(next)}
-                        recomputing={recomputing}
-                      />
-                    </div>
-                  )}
-                </section>
-              )}
 
               {/* Optional inline defaults to close cheap gaps before committing */}
               <section className="mt-4 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
@@ -519,23 +520,35 @@ export function ConversionPreviewDialog({
                   </p>
                 )}
               </section>
+                </TabsContent>
 
-              {/* Collapsible raw OpenAPI preview */}
-              {result?.openapi != null && (
-                <section className="mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowRaw((v) => !v)}
-                    className="flex items-center gap-1 text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-                    data-testid="conversion-raw-toggle"
-                    aria-expanded={showRaw}
+                {/* Projection graph (CPDO-3.1/3.2): fetched lazily the first time the tab
+                    opens, then kept mounted (hidden) so the loaded cursor walk, selection,
+                    and evidence drawer survive tab switches. */}
+                {itemId && projectionActivated && (
+                  <TabsContent
+                    value="projection"
+                    forceMount
+                    className="data-[state=inactive]:hidden"
+                    data-testid="conversion-projection-tab-content"
                   >
-                    {showRaw ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    {showRaw ? 'Hide' : 'Show'} raw OpenAPI preview
-                  </button>
-                  {showRaw && (
+                    <ConversionProjectionGraphPanel
+                      itemId={itemId}
+                      enabled={projectionActivated}
+                      envelopeSummary={result?.projection ?? null}
+                      report={report}
+                      defaults={appliedDefaults}
+                      onApplyDefaults={(next) => void recompute(next)}
+                      recomputing={recomputing}
+                    />
+                  </TabsContent>
+                )}
+
+                {/* The conversion: the raw OpenAPI document the dry run would emit. */}
+                <TabsContent value="conversion" data-testid="conversion-raw-tab-content">
+                  {result?.openapi != null ? (
                     <div
-                      className="mt-2 h-64 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
+                      className="h-64 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#1e1e1e]"
                       data-testid="conversion-raw-preview"
                     >
                       <MonacoEditor
@@ -563,10 +576,17 @@ export function ConversionPreviewDialog({
                         }}
                       />
                     </div>
+                  ) : (
+                    <p
+                      className="rounded-lg border border-dashed border-gray-200 px-3 py-4 text-xs text-gray-400 dark:border-gray-700 dark:text-gray-500"
+                      data-testid="conversion-raw-empty"
+                    >
+                      The dry run returned no OpenAPI document to preview.
+                    </p>
                   )}
-                </section>
-              )}
-            </div>
+                </TabsContent>
+              </div>
+            </Tabs>
 
             {/* Footer: acknowledgement (low tier) + commit error + actions */}
             <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
