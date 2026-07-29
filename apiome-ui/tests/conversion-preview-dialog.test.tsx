@@ -207,4 +207,113 @@ describe('ConversionPreviewDialog', () => {
     );
     expect(screen.getByTestId('conversion-raw-content')).toHaveAttribute('data-language', 'json');
   });
+
+  it('lazily loads the projection graph section on expand (CPDO-3.1)', async () => {
+    // One retained construct edge, server-shaped (CPDO-1.3).
+    const projectionPage = {
+      success: true,
+      itemId: 'cat-1',
+      versionRecordId: 'v1',
+      target: 'openapi',
+      summary: {
+        schema_version: '1.0.0',
+        manifest_hash: 'a'.repeat(64),
+        source: {
+          project_id: 'p1',
+          version_record_id: 'v1',
+          source_format: 'asyncapi',
+          source_protocol: null,
+          source_version_label: null,
+          paradigm: 'pubsub',
+          analysis: {
+            available: false,
+            status: 'unavailable',
+            status_reason: 'not_analyzed',
+            analyzer_key: null,
+            analyzer_version: null,
+            node_count: 0,
+            truncated: false,
+            unsupported_constructs: [],
+          },
+        },
+        target_format: 'openapi-3.1',
+        conversion_mode: 'lossy',
+        tool_versions: {},
+        defaults: {},
+        status_counts: { retained: 1, transformed: 0, inferred: 0, dropped: 0, unavailable: 0, 'not-applicable': 0 },
+        reason_counts: {},
+        scope_counts: {},
+        node_count: 2,
+        edge_count: 1,
+        total_constructs: 1,
+        is_lossless: true,
+        worst_severity: null,
+        truncated: false,
+        dropped_edge_count: 0,
+      },
+      page: {
+        manifest_hash: 'a'.repeat(64),
+        edges: [
+          {
+            id: 'construct:operation:op:send',
+            scope: 'construct',
+            source: 'source:construct:op:send',
+            target: 'target:/paths/~1send/post',
+            status: 'retained',
+            reason: null,
+            severity: 'info',
+            detail: 'carried onto the document',
+            remediation: null,
+            evidence: [],
+            count: 1,
+          },
+        ],
+        nodes: [
+          {
+            id: 'source:construct:op:send',
+            kind: 'source',
+            label: 'send',
+            construct_key: 'op:send',
+            source: { native_id: null, native_name: null, source_location: null, construct_kind: 'operation' },
+            target: null,
+          },
+          {
+            id: 'target:/paths/~1send/post',
+            kind: 'target',
+            label: '/paths/~1send/post',
+            construct_key: null,
+            source: null,
+            target: { json_pointer: '/paths/~1send/post', native_path: null },
+          },
+        ],
+        next_cursor: null,
+        total: 1,
+      },
+    };
+    const fetchMock = jest.fn((url: unknown) =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve(
+            String(url).includes('/projection') ? projectionPage : LOW_TIER,
+          ),
+      }),
+    );
+    global.fetch = fetchMock as unknown as typeof fetch;
+    render(<ConversionPreviewDialog itemId="cat-1" itemName="Orders" open onOpenChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByTestId('conversion-projection-toggle')).toBeInTheDocument());
+    // Collapsed by default: only the dry-run has been fetched.
+    expect(screen.queryByTestId('conversion-projection-panel')).not.toBeInTheDocument();
+    expect(fetchMock.mock.calls.every(([url]) => !String(url).includes('/projection'))).toBe(true);
+
+    fireEvent.click(screen.getByTestId('conversion-projection-toggle'));
+    await waitFor(() =>
+      expect(screen.getByTestId('conversion-projection-table')).toBeInTheDocument(),
+    );
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url) === '/api/catalog/cat-1/projection'),
+    ).toBe(true);
+    expect(screen.getByTestId('conversion-projection-node-construct:operation:op:send')).toBeInTheDocument();
+  });
 });
