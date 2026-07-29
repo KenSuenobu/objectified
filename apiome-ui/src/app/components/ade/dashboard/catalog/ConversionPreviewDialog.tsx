@@ -14,9 +14,13 @@
  * stays disabled until the user explicitly acknowledges.
  *
  * Optional inline **defaults** (info title/version, servers) let the user close cheap gaps before
- * committing; they flow into the commit request. A collapsible **raw OpenAPI preview** shows the
- * document the conversion would emit. The dry-run itself has no side effects; nothing is created
- * until the user confirms, so Cancel makes no changes.
+ * committing; they flow into the commit request. Approving a defaults change — from the inline
+ * form's "Apply & recompute preview" or from the projection evidence drawer's safe-default form
+ * (CPDO-3.2, #4802) — re-runs the dry-run and the projection graph **together** with the same
+ * defaults (one snapshot, one story) and resets the acknowledgement so its severity is judged
+ * against the recomputed report. A collapsible **raw OpenAPI preview** shows the document the
+ * conversion would emit. The dry-run itself has no side effects; nothing is created until the
+ * user confirms, so Cancel makes no changes.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -155,6 +159,10 @@ export function ConversionPreviewDialog({
   const [acknowledged, setAcknowledged] = useState(false);
   const [defaults, setDefaults] = useState<ConversionDefaults>({ title: '', version: '', servers: [] });
   const [serversText, setServersText] = useState('');
+  /** The defaults the previewed report/graph were computed with (CPDO-3.2); {} initially. */
+  const [appliedDefaults, setAppliedDefaults] = useState<ConversionDefaults>({});
+  const [recomputing, setRecomputing] = useState(false);
+  const [recomputeError, setRecomputeError] = useState<string | null>(null);
   const [showRaw, setShowRaw] = useState(false);
   const [showProjection, setShowProjection] = useState(false);
   const [isDark, setIsDark] = useState(false);
@@ -196,8 +204,48 @@ export function ConversionPreviewDialog({
     setLoading(true);
     setError(null);
     setResult(null);
+    setAppliedDefaults({});
+    setRecomputeError(null);
     void load(controller);
   }, [itemId, load]);
+
+  /**
+   * Recompute the preview with approved defaults (CPDO-3.2): one dry-run whose report,
+   * OpenAPI document, and embedded projection summary all describe the same defaults, then
+   * — on success only — swap the result in, record the defaults (which restarts the
+   * projection graph walk with the same snapshot inputs), sync the inline form, and reset
+   * the acknowledgement so its severity is judged against the recomputed report. A failure
+   * keeps the previous report/graph/defaults untouched. Nothing persists server-side.
+   */
+  const recompute = useCallback(
+    async (next: ConversionDefaults) => {
+      if (!itemId) return;
+      const cleaned = cleanDefaults(next);
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setRecomputing(true);
+      setRecomputeError(null);
+      try {
+        const r = await fetchConversionDryRun(itemId, {
+          defaults: cleaned,
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted) return;
+        setResult(r);
+        setAppliedDefaults(cleaned);
+        setDefaults({ title: cleaned.title ?? '', version: cleaned.version ?? '', servers: [] });
+        setServersText((cleaned.servers ?? []).join(', '));
+        setAcknowledged(false);
+      } catch (e: unknown) {
+        if (controller.signal.aborted) return;
+        setRecomputeError(e instanceof Error ? e.message : 'Failed to recompute the preview');
+      } finally {
+        if (!controller.signal.aborted) setRecomputing(false);
+      }
+    },
+    [itemId]
+  );
 
   useEffect(() => {
     const sync = () => setIsDark(document.documentElement.classList.contains('dark'));
@@ -218,10 +266,22 @@ export function ConversionPreviewDialog({
     [report]
   );
 
-  // Convert is blocked while loading/committing, on error, and — for a low-tier conversion — until
-  // the user acknowledges the incomplete result.
+  // Convert is blocked while loading/recomputing/committing, on error, and — for a low-tier
+  // conversion — until the user acknowledges the incomplete result.
   const ackNeeded = warning?.requiresAck ?? false;
-  const convertDisabled = loading || committing || !report || (ackNeeded && !acknowledged);
+  const convertDisabled =
+    loading || recomputing || committing || !report || (ackNeeded && !acknowledged);
+
+  // Whether the inline defaults differ from what the previewed report was computed with —
+  // when they do, the truthful next step is recomputing the preview, so the affordance shows.
+  const draftDefaults = useMemo(
+    () => cleanDefaults({ ...defaults, servers: serversText.split(',') }),
+    [defaults, serversText]
+  );
+  const defaultsDirty = useMemo(
+    () => JSON.stringify(draftDefaults) !== JSON.stringify(appliedDefaults),
+    [draftDefaults, appliedDefaults]
+  );
 
   const handleConvert = useCallback(async () => {
     if (!itemId) return;
@@ -378,6 +438,10 @@ export function ConversionPreviewDialog({
                         itemId={itemId}
                         enabled={showProjection}
                         envelopeSummary={result?.projection ?? null}
+                        report={report}
+                        defaults={appliedDefaults}
+                        onApplyDefaults={(next) => void recompute(next)}
+                        recomputing={recomputing}
                       />
                     </div>
                   )}
@@ -427,6 +491,33 @@ export function ConversionPreviewDialog({
                     />
                   </label>
                 </div>
+                {/* Approving changed defaults recomputes report + graph together (CPDO-3.2). */}
+                {defaultsDirty && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void recompute({ ...defaults, servers: serversText.split(',') })}
+                      disabled={recomputing}
+                      data-testid="conversion-defaults-recompute"
+                      className="rounded-md border border-indigo-300 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+                    >
+                      {recomputing ? 'Recomputing…' : 'Apply & recompute preview'}
+                    </button>
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                      Recomputes the fidelity report and the projection graph together, and asks
+                      for acknowledgement again.
+                    </span>
+                  </div>
+                )}
+                {recomputeError && (
+                  <p
+                    className="mt-2 text-xs text-rose-600 dark:text-rose-400"
+                    data-testid="conversion-recompute-error"
+                  >
+                    The preview could not be recomputed — it still shows the previous defaults.{' '}
+                    {recomputeError}
+                  </p>
+                )}
               </section>
 
               {/* Collapsible raw OpenAPI preview */}

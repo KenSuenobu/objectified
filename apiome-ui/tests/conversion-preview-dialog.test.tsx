@@ -317,3 +317,231 @@ describe('ConversionPreviewDialog', () => {
     expect(screen.getByTestId('conversion-projection-node-construct:operation:op:send')).toBeInTheDocument();
   });
 });
+
+// ---------------------------------------------------------------------------
+// CPDO-3.2 — evidence drawer remediation: approved defaults recompute atomically
+// ---------------------------------------------------------------------------
+
+describe('ConversionPreviewDialog — approved defaults recompute (CPDO-3.2)', () => {
+  /** A low-tier report whose one gap (missing API version) a safe default can close. */
+  const VERSION_GAP_TIER = {
+    ...LOW_TIER,
+    report: {
+      ...LOW_TIER.report,
+      items: [
+        {
+          key: 'info.version',
+          title: 'API version',
+          coverage: 'missing',
+          weight: 3,
+          count: 1,
+          examples: ['/info/version'],
+          reason: 'source declares no API version; a placeholder was emitted',
+        },
+      ],
+      losses: [],
+    },
+  };
+
+  /** The recomputed report once the version default is applied: medium tier, no ack gate. */
+  const RECOMPUTED_TIER = {
+    ...VERSION_GAP_TIER,
+    report: { ...VERSION_GAP_TIER.report, score: 82, grade: 'B', tier: 'medium', penalty: 18 },
+  };
+
+  /** One default-fixable checklist edge, server-shaped, hash varying with the defaults. */
+  function projectionPayload(hash: string, defaults: Record<string, unknown>) {
+    return {
+      success: true,
+      itemId: 'cat-1',
+      versionRecordId: 'v1',
+      target: 'openapi',
+      summary: {
+        schema_version: '1.0.0',
+        manifest_hash: hash,
+        source: {
+          project_id: 'p1',
+          version_record_id: 'v1',
+          source_format: 'graphql',
+          source_protocol: null,
+          source_version_label: null,
+          paradigm: 'graphql',
+          analysis: {
+            available: false,
+            status: 'unavailable',
+            status_reason: 'not_analyzed',
+            analyzer_key: null,
+            analyzer_version: null,
+            node_count: 0,
+            truncated: false,
+            unsupported_constructs: [],
+          },
+        },
+        target_format: 'openapi-3.1',
+        conversion_mode: 'lossy',
+        tool_versions: { converter: '2.0' },
+        defaults,
+        status_counts: { retained: 0, transformed: 0, inferred: 0, dropped: 0, unavailable: 1, 'not-applicable': 0 },
+        reason_counts: {},
+        scope_counts: {},
+        node_count: 1,
+        edge_count: 1,
+        total_constructs: 1,
+        is_lossless: false,
+        worst_severity: 'warn',
+        truncated: false,
+        dropped_edge_count: 0,
+      },
+      page: {
+        manifest_hash: hash,
+        edges: [
+          {
+            id: 'checklist:info.version',
+            scope: 'checklist',
+            source: 'source:checklist:info.version',
+            target: null,
+            status: 'unavailable',
+            reason: 'source_incomplete',
+            severity: 'warn',
+            detail: 'the source never declared an API version',
+            remediation: 'Supply a version default before converting.',
+            evidence: [],
+            count: 1,
+          },
+        ],
+        nodes: [
+          {
+            id: 'source:checklist:info.version',
+            kind: 'source',
+            label: 'API version',
+            construct_key: 'info.version',
+            source: { native_id: null, native_name: 'API version', source_location: null, construct_kind: 'checklist' },
+            target: null,
+          },
+        ],
+        next_cursor: null,
+        total: 1,
+      },
+    };
+  }
+
+  /** Route the mock by URL and body: dry-runs by call order, projections by their defaults. */
+  function installRecomputeFetch() {
+    let dryRuns = 0;
+    const fn = jest.fn((url: unknown, init?: { body?: string }) => {
+      const body = JSON.parse(init?.body ?? '{}') as { defaults?: Record<string, unknown> };
+      const payload = String(url).includes('/projection')
+        ? body.defaults?.version != null
+          ? projectionPayload('b'.repeat(64), body.defaults)
+          : projectionPayload('a'.repeat(64), {})
+        : (dryRuns += 1) === 1
+          ? VERSION_GAP_TIER
+          : RECOMPUTED_TIER;
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(payload) });
+    });
+    global.fetch = fn as unknown as typeof fetch;
+    return fn;
+  }
+
+  it('applying a safe default from the drawer recomputes report + graph together and re-asks acknowledgement', async () => {
+    const fetchMock = installRecomputeFetch();
+    render(<ConversionPreviewDialog itemId="cat-1" itemName="Orders" open onOpenChange={() => {}} />);
+
+    // Low tier: acknowledge, so the reset is observable.
+    await waitFor(() => expect(screen.getByTestId('conversion-ack')).toBeInTheDocument());
+    fireEvent.click(screen.getByTestId('conversion-ack'));
+    expect(screen.getByTestId('conversion-convert-btn')).toBeEnabled();
+
+    // Open the projection section and the evidence drawer from its graph node.
+    fireEvent.click(screen.getByTestId('conversion-projection-toggle'));
+    await waitFor(() =>
+      expect(screen.getByTestId('conversion-projection-node-checklist:info.version')).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByTestId('conversion-projection-node-checklist:info.version'));
+
+    // Approve the safe default.
+    fireEvent.change(screen.getByTestId('conversion-projection-safe-default-input'), {
+      target: { value: '2.0.0' },
+    });
+    fireEvent.click(screen.getByTestId('conversion-projection-safe-default-apply'));
+
+    // The report recomputes with the approved defaults…
+    await waitFor(() => expect(screen.getByTestId('conversion-tier-pill')).toHaveTextContent('medium'));
+    const dryRunCalls = fetchMock.mock.calls.filter(([url]) => String(url).includes('/convert'));
+    expect(dryRunCalls).toHaveLength(2);
+    expect(JSON.parse((dryRunCalls[1][1] as { body: string }).body).defaults).toEqual({
+      version: '2.0.0',
+    });
+
+    // …and the graph re-walks with the SAME defaults (one snapshot, no mismatch banner).
+    await waitFor(() => {
+      const projectionCalls = fetchMock.mock.calls.filter(([url]) =>
+        String(url).includes('/projection'),
+      );
+      const last = projectionCalls[projectionCalls.length - 1];
+      expect(JSON.parse((last[1] as { body: string }).body).defaults).toEqual({ version: '2.0.0' });
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId('conversion-projection-snapshot')).toHaveTextContent('bbbbbbbbbbbb'),
+    );
+    expect(screen.queryByTestId('conversion-projection-mismatch')).not.toBeInTheDocument();
+
+    // Acknowledgement severity was recomputed: medium tier no longer gates Convert.
+    expect(screen.queryByTestId('conversion-ack')).not.toBeInTheDocument();
+    expect(screen.getByTestId('conversion-warning-banner')).toHaveAttribute('data-severity', 'warning');
+    // The inline defaults form now reflects the applied default.
+    expect(screen.getByTestId('conversion-default-version')).toHaveValue('2.0.0');
+  });
+
+  it('the inline defaults form offers Apply & recompute and resets a given acknowledgement', async () => {
+    let dryRuns = 0;
+    const fetchMock = jest.fn(() => {
+      dryRuns += 1;
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(VERSION_GAP_TIER) });
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    render(<ConversionPreviewDialog itemId="cat-1" itemName="Orders" open onOpenChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByTestId('conversion-ack')).toBeInTheDocument());
+    fireEvent.click(screen.getByTestId('conversion-ack'));
+
+    // No recompute affordance until the defaults differ from the previewed snapshot.
+    expect(screen.queryByTestId('conversion-defaults-recompute')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByTestId('conversion-default-version'), { target: { value: '2.0.0' } });
+    fireEvent.click(screen.getByTestId('conversion-defaults-recompute'));
+
+    await waitFor(() => expect(dryRuns).toBe(2));
+    // Still low tier — but the acknowledgement was reset and gates Convert again.
+    await waitFor(() => expect(screen.getByTestId('conversion-ack')).not.toBeChecked());
+    expect(screen.getByTestId('conversion-convert-btn')).toBeDisabled();
+    // In-sync defaults hide the affordance again.
+    expect(screen.queryByTestId('conversion-defaults-recompute')).not.toBeInTheDocument();
+  });
+
+  it('a failed recompute keeps the previous report and defaults, and says so', async () => {
+    let dryRuns = 0;
+    const fetchMock = jest.fn(() => {
+      dryRuns += 1;
+      return dryRuns === 1
+        ? Promise.resolve({ ok: true, json: () => Promise.resolve(VERSION_GAP_TIER) })
+        : Promise.resolve({
+            ok: false,
+            status: 500,
+            json: () => Promise.resolve({ success: false, error: 'recompute exploded' }),
+          });
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    render(<ConversionPreviewDialog itemId="cat-1" itemName="Orders" open onOpenChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByTestId('conversion-tier-pill')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('conversion-default-version'), { target: { value: '2.0.0' } });
+    fireEvent.click(screen.getByTestId('conversion-defaults-recompute'));
+
+    const error = await screen.findByTestId('conversion-recompute-error');
+    expect(error).toHaveTextContent('recompute exploded');
+    expect(error).toHaveTextContent('still shows the previous defaults');
+    // The previous report is untouched and the affordance remains for another try.
+    expect(screen.getByTestId('conversion-tier-pill')).toHaveTextContent('low');
+    expect(screen.getByTestId('conversion-defaults-recompute')).toBeInTheDocument();
+  });
+});

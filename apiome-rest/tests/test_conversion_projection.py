@@ -357,6 +357,29 @@ def test_every_non_retained_edge_names_a_cause_and_a_remedy(factory) -> None:
             assert edge.remediation, edge.id
 
 
+@pytest.mark.parametrize("factory", [_rest_api, _rpc_api, _event_api], ids=["rest", "rpc", "event"])
+def test_every_drop_and_inference_joins_displayable_evidence(factory) -> None:
+    """CPDO-3.2 (#4802): every drop/inference the drawer can show has evidence behind it.
+
+    Each ``dropped`` / ``unavailable`` / ``inferred`` edge must join a bundled source node
+    with a non-empty label, and that node must carry source-native evidence (or the edge its
+    own references) — so the drawer never presents an outcome it cannot substantiate.
+    """
+    manifest, _, _ = _build(factory())
+    nodes = {node.id: node for node in manifest.nodes}
+    displayed = {ConversionStatus.DROPPED, ConversionStatus.UNAVAILABLE, ConversionStatus.INFERRED}
+    checked = 0
+    for edge in manifest.edges:
+        if edge.status not in displayed:
+            continue
+        checked += 1
+        source = nodes[edge.source]
+        assert source.label.strip(), edge.id
+        assert edge.detail.strip(), edge.id
+        assert source.source is not None or edge.evidence, edge.id
+    assert checked, "the fixture must produce at least one drop/inference"
+
+
 def test_the_model_itself_refuses_an_unexplained_outcome() -> None:
     """Enforced on the model, so storage round-trips cannot smuggle one in either."""
     with pytest.raises(ValueError, match="requires a reason code"):

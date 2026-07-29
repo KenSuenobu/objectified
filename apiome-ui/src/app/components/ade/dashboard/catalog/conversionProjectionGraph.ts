@@ -46,12 +46,18 @@ import {
 } from '../export/projectionGraph';
 import type {
   ConversionEdgeScope,
+  ConversionEvidenceRef,
   ConversionManifestSummary,
   ConversionProjectionEdge,
   ConversionProjectionNode,
   ConversionProjectionStatus,
 } from '@/app/utils/conversion-projection';
 import { CONVERSION_PROJECTION_STATUSES } from '@/app/utils/conversion-projection';
+import {
+  coverageLabel,
+  type ConversionDefaults,
+  type FidelityReport,
+} from '@/app/utils/conversion-fidelity';
 
 // The shared primitives, re-exported so consumers (and the sharing-assertion test) reach
 // them through this module while the objects stay the export module's own.
@@ -348,6 +354,206 @@ export function reconcileConversionCounts(
     }
   }
   return mismatches;
+}
+
+// ---------------------------------------------------------------------------
+// Evidence drawer helpers (CPDO-3.2)
+// ---------------------------------------------------------------------------
+
+/** The conversion default a drawer remediation can safely supply. */
+export type SafeDefaultField = 'title' | 'version' | 'servers';
+
+/** One offerable safe-default remediation: which field, and how to present the form. */
+export interface SafeDefaultRemediation {
+  /** The {@link ConversionDefaults} field the row's gap is closed by. */
+  field: SafeDefaultField;
+  /** The form input's label. */
+  label: string;
+  /** Why supplying this default helps, printed with the form. */
+  description: string;
+  /** Placeholder for the input. */
+  placeholder: string;
+}
+
+/** Checklist keys / emitted pointers → the safe default that closes them. */
+const SAFE_DEFAULT_BY_KEY: Record<string, SafeDefaultField> = {
+  'info.title': 'title',
+  '/info/title': 'title',
+  'info.version': 'version',
+  '/info/version': 'version',
+  servers: 'servers',
+  '/servers': 'servers',
+};
+
+const SAFE_DEFAULT_PRESENTATION: Record<SafeDefaultField, SafeDefaultRemediation> = {
+  title: {
+    field: 'title',
+    label: 'API title',
+    description: 'Supplying a title fills /info/title instead of a derived name.',
+    placeholder: 'My API',
+  },
+  version: {
+    field: 'version',
+    label: 'API version',
+    description: 'Supplying a version fills /info/version instead of a placeholder.',
+    placeholder: '1.0.0',
+  },
+  servers: {
+    field: 'servers',
+    label: 'Server URLs (comma-separated)',
+    description: 'Supplying server URLs fills the /servers list the source did not declare.',
+    placeholder: 'https://api.example.com',
+  },
+};
+
+/**
+ * The safe-default remediation for a row, or null when no user-suppliable default can close
+ * its gap. Only the gap-filling defaults the conversion API accepts (info title/version,
+ * servers) are offerable, matched by the row's checklist construct key or its emitted
+ * pointer; a `retained` row needs nothing.
+ *
+ * @param row The selected evidence row.
+ * @returns The remediation descriptor, or null when defaults cannot help this row.
+ */
+export function safeDefaultForRow(row: ConversionProjectionRow): SafeDefaultRemediation | null {
+  if (row.conversionStatus === 'retained') return null;
+  const field =
+    (row.constructKey != null ? SAFE_DEFAULT_BY_KEY[row.constructKey] : undefined) ??
+    (row.targetLocation != null ? SAFE_DEFAULT_BY_KEY[row.targetLocation] : undefined);
+  return field ? SAFE_DEFAULT_PRESENTATION[field] : null;
+}
+
+/** The fidelity-report finding a drawer row links back to. */
+export interface ConversionFidelityFinding {
+  /** Which report list the finding came from. */
+  kind: 'checklist' | 'loss';
+  /** The finding's heading: the checklist row title, or the loss subject. */
+  label: string;
+  /** The coverage/loss badge text (e.g. `missing`, `no OpenAPI form`). */
+  badge: string;
+  /** The report's own explanation sentence. */
+  text: string;
+}
+
+/**
+ * Resolve the fidelity-report finding one evidence row reconciles with, so the drawer can
+ * show the report's verdict beside the manifest's evidence (the CPDO-3.2 "fidelity finding").
+ *
+ * A `checklist` edge names its report row by construct key; a `loss` edge's id is
+ * `loss:{index}:{subject}` (CPDO-1.3), so the index recovers the report loss — the subject
+ * is cross-checked, and a mismatch yields null rather than a wrong finding. Other scopes
+ * (construct/analysis) have no single report finding and yield null.
+ *
+ * @param row The selected evidence row.
+ * @param report The dialog's fidelity report, when loaded.
+ * @returns The linked finding, sanitized for display, or null.
+ */
+export function fidelityFindingForRow(
+  row: ConversionProjectionRow,
+  report: FidelityReport | null | undefined,
+): ConversionFidelityFinding | null {
+  if (!report) return null;
+  if (row.scope === 'checklist') {
+    const item = report.items.find((candidate) => candidate.key === row.constructKey);
+    if (!item) return null;
+    return {
+      kind: 'checklist',
+      label: sanitizeProjectionLabel(item.title),
+      badge: coverageLabel(item.coverage),
+      text: sanitizeProjectionLabel(item.reason),
+    };
+  }
+  if (row.scope === 'loss') {
+    const match = /^loss:(\d+):(.*)$/.exec(row.id);
+    if (!match) return null;
+    const loss = report.losses[Number(match[1])];
+    if (!loss || loss.subject !== match[2]) return null;
+    return {
+      kind: 'loss',
+      label: sanitizeProjectionLabel(loss.subject),
+      badge: loss.kind === 'n/a' ? 'no OpenAPI form' : 'inferred',
+      text: sanitizeProjectionLabel(loss.detail),
+    };
+  }
+  return null;
+}
+
+/**
+ * Format one evidence reference's source location — the "source path/range" line the drawer
+ * prints — from the structured location fields the manifest carries (never raw source
+ * content; the wire format only ever names paths and ranges, which is how the drawer obeys
+ * the redaction policy by construction).
+ *
+ * @param location The evidence reference's location record, possibly null.
+ * @returns A display string like `schema.graphql · line 12, col 3 · offset 120 (+34)`, or
+ *   null when the reference carries no location facts.
+ */
+export function formatEvidenceRefLocation(
+  location: ConversionEvidenceRef['location'],
+): string | null {
+  if (!location) return null;
+  const parts: string[] = [];
+  if (location.file) parts.push(sanitizeProjectionLabel(location.file));
+  if (location.line != null) {
+    parts.push(
+      location.column != null ? `line ${location.line}, col ${location.column}` : `line ${location.line}`,
+    );
+  }
+  if (location.offset != null) {
+    parts.push(
+      location.length != null ? `offset ${location.offset} (+${location.length})` : `offset ${location.offset}`,
+    );
+  }
+  if (location.ordinal != null) parts.push(`item ${location.ordinal}`);
+  if (location.path) parts.push(sanitizeProjectionLabel(location.path));
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
+
+/**
+ * Format a manifest summary's tool versions for the drawer's provenance line, sorted by
+ * tool name so the statement is deterministic.
+ *
+ * @param toolVersions The summary's `tool_versions` map.
+ * @returns `converter v1.2 · emitter v3` style text, or null when the map is empty.
+ */
+export function formatToolVersions(toolVersions: Record<string, string>): string | null {
+  const parts = Object.entries(toolVersions)
+    .filter(([name, version]) => name && version)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, version]) => `${sanitizeProjectionLabel(name)} v${sanitizeProjectionLabel(version)}`);
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
+
+/**
+ * Merge one approved safe-default value into the dialog's current defaults, trimming text
+ * fields and splitting the servers text on commas. Pure, so the approval action is testable:
+ * the drawer never mutates state itself — it hands the merged defaults up, and the dialog
+ * recomputes the report and the graph together from them.
+ *
+ * @param current The defaults the preview currently applies.
+ * @param field Which safe default the user approved.
+ * @param value The raw input text.
+ * @returns A new defaults object with the field applied (empty input clears it).
+ */
+export function applySafeDefault(
+  current: ConversionDefaults,
+  field: SafeDefaultField,
+  value: string,
+): ConversionDefaults {
+  const next: ConversionDefaults = { ...current };
+  if (field === 'servers') {
+    const servers = value
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0);
+    if (servers.length > 0) next.servers = servers;
+    else delete next.servers;
+    return next;
+  }
+  const trimmed = value.trim();
+  if (trimmed) next[field] = trimmed;
+  else delete next[field];
+  return next;
 }
 
 // ---------------------------------------------------------------------------

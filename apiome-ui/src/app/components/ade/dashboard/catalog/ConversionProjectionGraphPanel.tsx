@@ -14,8 +14,11 @@
  *    outcome (in the document / omitted / unavailable); nodes are focusable `role="button"`
  *    groups with roving tabindex, pan by the scrollable viewport, zoom in/out, and Escape to
  *    reset the view;
- *  - an **evidence card** for the selected node: wire status, scope, reason code, detail,
- *    native provenance, landing pointer, evidence references, and the server's remediation;
+ *  - an **evidence drawer** for the selected node or fallback row (CPDO-3.2,
+ *    `./ConversionEvidenceDrawer.tsx`): wire status, scope, reason category + code, the
+ *    linked fidelity finding, source path/range, canonical object, OpenAPI JSON Pointers,
+ *    tool-version provenance, the server's remediation, and the safe-default approval that
+ *    recomputes the report and this graph together;
  *  - a synchronized, always-rendered **table** — the accessibility source of truth with
  *    identical content and identical aria labels, whose caption is the graph's accessible
  *    name; aggregate rows expand in place, windowed above the shared budget;
@@ -56,7 +59,6 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { cn } from '@lib/utils';
-import type { StatusPresentation } from '../export/projectionGraph';
 import {
   ProjectionColumnHeading,
   ProjectionEntryConnectors,
@@ -77,16 +79,16 @@ import {
   conversionViewStatusCounts,
   projectionGraphLayout,
   reconcileConversionCounts,
-  sanitizeProjectionLabel,
   selectDrawnGraphEntries,
   type ConversionLaneKey,
   type ConversionProjectionRow,
   type ProjectionTableRow,
-  type ProjectionViewEntry,
 } from './conversionProjectionGraph';
+import { ConversionEvidenceDrawer, StatusText } from './ConversionEvidenceDrawer';
 import { useConversionProjection } from './useConversionProjection';
 import type { ConversionManifestSummary } from '@/app/utils/conversion-projection';
 import { CONVERSION_PROJECTION_STATUSES } from '@/app/utils/conversion-projection';
+import type { ConversionDefaults, FidelityReport } from '@/app/utils/conversion-fidelity';
 import {
   GRAPH_DRAW_BUDGET,
   PROJECTION_TABLE_VIRTUALIZE_ABOVE,
@@ -120,21 +122,18 @@ export interface ConversionProjectionGraphPanelProps {
   tableViewportHeight?: number;
   /** Page-size override; tests pass a small value to exercise the cursor walk. */
   pageLimit?: number;
-}
-
-/** Status symbol + text, the colour-independent pairing used everywhere in this section. */
-function StatusText({ presentation }: { presentation: StatusPresentation }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold',
-        presentation.badgeClass,
-      )}
-    >
-      <span aria-hidden>{presentation.symbol}</span>
-      {presentation.label}
-    </span>
-  );
+  /** The dialog's fidelity report, so the evidence drawer can cite its finding (CPDO-3.2). */
+  report?: FidelityReport | null;
+  /** The approved gap-filling defaults the previewed snapshot was computed with. */
+  defaults?: ConversionDefaults;
+  /**
+   * Approve a safe-default change from the evidence drawer. The owner must recompute the
+   * fidelity report and this graph together (it does so by re-running the dry-run and
+   * passing the new defaults back down via {@link ConversionProjectionGraphPanelProps.defaults}).
+   */
+  onApplyDefaults?: (defaults: ConversionDefaults) => void;
+  /** True while the owner is recomputing the report; the drawer's form waits. */
+  recomputing?: boolean;
 }
 
 export function ConversionProjectionGraphPanel({
@@ -146,9 +145,13 @@ export function ConversionProjectionGraphPanel({
   tableVirtualizeAbove = PROJECTION_TABLE_VIRTUALIZE_ABOVE,
   tableViewportHeight = TABLE_HEIGHT,
   pageLimit,
+  report,
+  defaults,
+  onApplyDefaults,
+  recomputing,
 }: ConversionProjectionGraphPanelProps) {
   const { summary, nodes, edges, loading, error, integrityIssues, complete, loadMore, retry } =
-    useConversionProjection(enabled, itemId, pageLimit);
+    useConversionProjection(enabled, itemId, pageLimit, defaults);
 
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [focusIndex, setFocusIndex] = useState(0);
@@ -799,9 +802,19 @@ export function ConversionProjectionGraphPanel({
                 </svg>
               </div>
 
-              {/* Selection → evidence, announced politely. */}
+              {/* Selection → the evidence drawer (CPDO-3.2), announced politely. */}
               <div aria-live="polite">
-                {selectedEntry && <EvidenceCard entry={selectedEntry} />}
+                {selectedEntry && (
+                  <ConversionEvidenceDrawer
+                    entry={selectedEntry}
+                    summary={summary}
+                    report={report}
+                    currentDefaults={defaults}
+                    recomputing={recomputing}
+                    onClose={() => setSelectedKey(null)}
+                    onApplyDefaults={onApplyDefaults}
+                  />
+                )}
               </div>
 
               {/* The text alternative: identical content, identical aria labels, expandable
@@ -861,102 +874,6 @@ export function ConversionProjectionGraphPanel({
         </>
       )}
     </section>
-  );
-}
-
-/** The selected node's evidence: status, scope, reason, provenance, landing, remediation. */
-function EvidenceCard({ entry }: { entry: ProjectionViewEntry<ConversionLaneKey> }) {
-  if (entry.kind === 'aggregate') {
-    const members = entry.members ?? [];
-    const first = members[0] as ConversionProjectionRow | undefined;
-    const presentation = first
-      ? conversionStatusPresentation(first.conversionStatus)
-      : conversionStatusPresentation('retained');
-    return (
-      <div
-        className="rounded-lg border border-gray-200 p-3 text-xs text-gray-600 dark:border-gray-700 dark:text-gray-300"
-        data-testid="conversion-projection-evidence"
-      >
-        <StatusText presentation={presentation} /> {members.length} constructs, aggregated to
-        keep the graph readable. Expand the aggregate row in the table below to list every
-        member.
-      </div>
-    );
-  }
-
-  const row = entry.row as ConversionProjectionRow;
-  const presentation = conversionStatusPresentation(row.conversionStatus);
-  return (
-    <div
-      className="space-y-2 rounded-lg border border-gray-200 p-3 text-xs text-gray-700 dark:border-gray-700 dark:text-gray-200"
-      data-testid="conversion-projection-evidence"
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono font-semibold">{row.construct}</span>
-        <StatusText presentation={presentation} />
-        <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-          {CONVERSION_SCOPE_LABEL[row.scope]} evidence
-        </span>
-        {row.reason && (
-          <span
-            className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] text-gray-600 dark:bg-gray-800 dark:text-gray-300"
-            data-testid="conversion-projection-reason"
-          >
-            {row.reason}
-          </span>
-        )}
-        {row.edgeCount > 1 && (
-          <span className="text-[10px] text-gray-500 dark:text-gray-400">
-            stands for {row.edgeCount.toLocaleString()} instances
-          </span>
-        )}
-      </div>
-
-      <p>{row.reasonSummary}</p>
-
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500 dark:text-gray-400">
-        {row.sourceLabel && row.sourceLabel !== row.construct && (
-          <span>
-            Source name: <span className="font-mono">{row.sourceLabel}</span>
-          </span>
-        )}
-        {row.sourceLocation && (
-          <span>
-            Source location: <span className="font-mono">{row.sourceLocation}</span>
-          </span>
-        )}
-        {row.targetLocation && (
-          <span>
-            Lands at: <span className="font-mono">{row.targetLocation}</span>
-          </span>
-        )}
-      </div>
-
-      {row.conversionEdge.evidence.length > 0 && (
-        <ul
-          className="space-y-0.5 rounded-md bg-gray-50 p-2 text-[11px] text-gray-600 dark:bg-gray-900/50 dark:text-gray-300"
-          data-testid="conversion-projection-evidence-refs"
-        >
-          {row.conversionEdge.evidence.slice(0, 5).map((ref) => (
-            <li key={`${ref.kind}:${ref.ref}`}>
-              {ref.kind}: <span className="font-mono">{sanitizeProjectionLabel(ref.ref)}</span>
-            </li>
-          ))}
-          {row.conversionEdge.evidence.length > 5 && (
-            <li>… {row.conversionEdge.evidence.length - 5} more references</li>
-          )}
-        </ul>
-      )}
-
-      {row.remediation && (
-        <p
-          className="text-[11px] text-gray-500 dark:text-gray-400"
-          data-testid="conversion-projection-remediation"
-        >
-          {row.remediation}
-        </p>
-      )}
-    </div>
   );
 }
 

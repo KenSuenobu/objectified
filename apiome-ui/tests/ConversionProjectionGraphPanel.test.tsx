@@ -581,3 +581,97 @@ describe('ConversionProjectionGraphPanel — sanitization', () => {
     expect(aria).toContain('<script>');
   });
 });
+
+// ---------------------------------------------------------------------------
+// 9. Evidence drawer + defaults (CPDO-3.2)
+// ---------------------------------------------------------------------------
+
+describe('ConversionProjectionGraphPanel — evidence drawer (CPDO-3.2)', () => {
+  /** A default-fixable checklist gap: the missing API version. */
+  function versionGapFixture() {
+    const versionNode = {
+      ...sourceNode('source:checklist:info.version', 'API version', { kind: 'checklist' }),
+      construct_key: 'info.version',
+    };
+    const nodes = [versionNode, targetNode('target:/info/version', '/info/version')];
+    const edges = [
+      edge('checklist:info.version', 'checklist', 'source:checklist:info.version', 'target:/info/version', 'unavailable', {
+        reason: 'source_incomplete',
+        severity: 'warn',
+        remediation: 'Supply a version default before converting.',
+      }),
+    ];
+    return { nodes, edges, summary: summaryFor(edges) };
+  }
+
+  const REPORT = {
+    score: 55,
+    grade: 'D',
+    tier: 'low' as const,
+    penalty: 45,
+    coverage_counts: {},
+    items: [
+      {
+        key: 'info.version',
+        title: 'API version',
+        coverage: 'missing' as const,
+        weight: 3,
+        count: 1,
+        examples: ['/info/version'],
+        reason: 'source declares no API version; a placeholder was emitted',
+      },
+    ],
+    losses: [],
+  };
+
+  it('sends the approved defaults with every page request', async () => {
+    const { nodes, edges, summary } = versionGapFixture();
+    const fetchMock = renderPanel(paginate(nodes, edges, 10, summary), {
+      defaults: { version: '2.0.0' },
+    });
+    await waitForLoaded();
+    const body = JSON.parse(
+      (fetchMock.mock.calls[0][1] as { body: string }).body,
+    ) as Record<string, unknown>;
+    expect(body.defaults).toEqual({ version: '2.0.0' });
+  });
+
+  it('opens the drawer from a fallback table row with the linked fidelity finding', async () => {
+    const { nodes, edges, summary } = versionGapFixture();
+    renderPanel(paginate(nodes, edges, 10, summary), { report: REPORT });
+    await waitForLoaded();
+
+    const row = screen.getByTestId('conversion-projection-table-row-checklist:info.version');
+    fireEvent.click(within(row).getByRole('button'));
+
+    const drawer = screen.getByTestId('conversion-projection-evidence');
+    expect(within(drawer).getByTestId('conversion-projection-finding')).toHaveTextContent(
+      'API version — missing',
+    );
+    expect(within(drawer).getByTestId('conversion-projection-category')).toHaveTextContent(
+      'Source incomplete',
+    );
+
+    // The close affordance clears the selection only.
+    fireEvent.click(within(drawer).getByTestId('conversion-projection-evidence-close'));
+    expect(screen.queryByTestId('conversion-projection-evidence')).not.toBeInTheDocument();
+  });
+
+  it('hands an approved safe default up for the atomic recompute', async () => {
+    const { nodes, edges, summary } = versionGapFixture();
+    const onApplyDefaults = jest.fn();
+    renderPanel(paginate(nodes, edges, 10, summary), {
+      report: REPORT,
+      defaults: {},
+      onApplyDefaults,
+    });
+    await waitForLoaded();
+
+    fireEvent.click(screen.getByTestId('conversion-projection-node-checklist:info.version'));
+    fireEvent.change(screen.getByTestId('conversion-projection-safe-default-input'), {
+      target: { value: '2.0.0' },
+    });
+    fireEvent.click(screen.getByTestId('conversion-projection-safe-default-apply'));
+    expect(onApplyDefaults).toHaveBeenCalledWith({ version: '2.0.0' });
+  });
+});
