@@ -27,6 +27,8 @@ project in ~10 minutes") and the [Golden Path](../GOLDEN_PATH.md) (the executabl
 | Browse published specs | [browse-published-specs.md](browse-published-specs.md) | `/ade/dashboard/published` | `GET /v1/browse/tenants/{tenant}/projects` |
 | Export / download a spec | [export-a-spec.md](export-a-spec.md) | `/ade/dashboard/published` | `GET /v1/schema/{tenant}/{project}/{version}` |
 | Understand export fidelity (projection map, reasons, acknowledgement) | [export-fidelity.md](export-fidelity.md) | `/ade/dashboard/export/studio` | `POST /v1/export/{tenant}/projection-evidence` |
+| Read a catalog item's format details (X12, COBOL copybooks, statuses, redaction) | [catalog-format-details.md](catalog-format-details.md) | `/ade/dashboard/catalog` | `GET /v1/catalog/{tenant}/{item}/analysis` |
+| Convert a catalog item to OpenAPI (projection graph, reasons, evidence history) | [convert-to-openapi.md](convert-to-openapi.md) | `/ade/dashboard/catalog` | `POST /v1/catalog/{tenant}/{item}/convert` |
 
 ## References & quick-starts
 

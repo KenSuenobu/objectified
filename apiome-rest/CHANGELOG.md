@@ -5,6 +5,24 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.215.1] - 2026-07-28
+
+### Added
+- **CPDO user guide and format-detail documentation (#4806, CPDO-4.3)** — the user-facing
+  guides `docs/guide/catalog-format-details.md` (Format details tab: status vocabulary,
+  value-visibility/redaction, analysis bounds, X12 and copybook inspector boundaries, the
+  absence-category table) and `docs/guide/convert-to-openapi.md` (conversion walkthrough:
+  projection-graph legend, status and reason-code vocabulary with remediations, safe
+  defaults, acknowledgement gating, historical-vs-fresh evidence, CLI/REST surfaces), with
+  authoritative X12 and IBM COBOL references.
+  - **`tests/test_cpdo_docs_guide.py`** couples the prose to the code registries: every
+    analysis status/reason, value-visibility level, conversion status, projection reason
+    code, and absence-category label must appear in the guides, the required primary
+    references must stay linked, and every external link must be `https`. The UI-side twin
+    (`apiome-ui/tests/cpdo-guide-terminology.test.ts`) holds the guides to the exact labels
+    and symbols the UI renders.
+  - OpenAPI 1.80.0 → 1.80.1 (no contract shape changes).
+
 ## [1.212.0] - 2026-07-28
 
 ### Added
