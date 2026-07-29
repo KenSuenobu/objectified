@@ -4,7 +4,7 @@
  * These pin the acceptance criteria: the Catalog entry appears in the
  * Specifications section, links to `/ade/dashboard/catalog`, is tenant-gated
  * like Projects (rendered as a disabled, non-navigable element with no tenant),
- * carries the "Preview" pill, and highlights as active on its own routes.
+ * carries no "Preview" pill, and highlights as active on its own routes.
  */
 import React from 'react';
 import { render, screen, within } from '@testing-library/react';
@@ -51,7 +51,7 @@ beforeEach(() => {
 });
 
 describe('DashboardSideNav — Catalog entry (MFI-23.6)', () => {
-  it('renders a Catalog entry in the Specifications section with a Preview pill', () => {
+  it('renders a Catalog entry in the Specifications section with no Preview pill', () => {
     withTenant();
     render(<DashboardSideNav />);
 
@@ -61,10 +61,10 @@ describe('DashboardSideNav — Catalog entry (MFI-23.6)', () => {
     // The Specifications header and the Catalog entry coexist.
     expect(screen.getByText('Specifications')).toBeInTheDocument();
 
-    // The Preview pill sits alongside the label within the same list item.
+    // Catalog is out of preview — no pill rides alongside the label.
     const item = catalog.closest('li');
     expect(item).not.toBeNull();
-    expect(within(item as HTMLElement).getByText('Preview')).toBeInTheDocument();
+    expect(within(item as HTMLElement).queryByText('Preview')).not.toBeInTheDocument();
   });
 
   it('links to /ade/dashboard/catalog when a tenant is selected', () => {

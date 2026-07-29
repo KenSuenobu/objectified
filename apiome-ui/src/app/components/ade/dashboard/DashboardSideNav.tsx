@@ -114,7 +114,6 @@ const DashboardSideNav: React.FC = () => {
           href: '/ade/dashboard/catalog',
           icon: Library,
           disabled: !hasTenant,
-          pill: 'Preview',
         },
         {
           label: 'MCP Servers',

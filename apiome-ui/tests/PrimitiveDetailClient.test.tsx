@@ -15,6 +15,14 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+// The JSON Schema panel renders through the shared read-only Monaco viewer; Monaco itself needs
+// workers jsdom has no use for, so stub it to a textarea holding the same text (the precedent set
+// by `catalog-item-detail.test.tsx`). The viewer's own container/props are still asserted below.
+jest.mock('@monaco-editor/react', () => ({
+  __esModule: true,
+  default: (props: { value?: string }) => <textarea readOnly value={props.value ?? ''} />,
+}));
+
 import PrimitiveDetailClient from '../src/app/ade/dashboard/primitives/[id]/PrimitiveDetailClient';
 
 const SYSTEM_MONEY = {
@@ -83,6 +91,78 @@ describe('PrimitiveDetailClient', () => {
     // System type → immutable badge + disabled Edit.
     expect(screen.getByText(/immutable \(core\)/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Edit/i })).toBeDisabled();
+  });
+
+  it('renders the JSON Schema in the syntax-highlighted read-only Monaco viewer', async () => {
+    mockFetchOk(SYSTEM_MONEY);
+    render(<PrimitiveDetailClient />);
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'money' })).toBeInTheDocument());
+
+    // The schema panel is a Monaco viewer on the `json` language — that is what buys the
+    // colour syntax highlighting — and not the old plain `<pre>` code block.
+    const editor = await screen.findByTestId('primitive-detail-schema-editor');
+    expect(editor).toHaveAttribute('data-language', 'json');
+    expect(editor).toHaveAccessibleName(/money JSON Schema — read-only json viewer/i);
+
+    // It holds the pretty-printed schema, not a collapsed one-liner.
+    const pretty = JSON.stringify(SYSTEM_MONEY.schema, null, 2);
+    expect(within(editor).getByRole('textbox')).toHaveValue(pretty);
+  });
+
+  it('copies the schema to the clipboard from the card header, acknowledging the write', async () => {
+    mockFetchOk(SYSTEM_MONEY);
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+
+    render(<PrimitiveDetailClient />);
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'money' })).toBeInTheDocument());
+
+    fireEvent.click(screen.getByTestId('primitive-detail-schema-copy'));
+
+    // The clipboard gets the same pretty-printed document the export writes to disk.
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(JSON.stringify(SYSTEM_MONEY.schema, null, 2)));
+    await waitFor(() => expect(screen.getByTestId('primitive-detail-schema-copy')).toHaveTextContent('Copied'));
+  });
+
+  it('reports a failed clipboard write instead of claiming success', async () => {
+    mockFetchOk(SYSTEM_MONEY);
+    // Insecure context / denied permission — the promise rejects.
+    const writeText = jest.fn().mockRejectedValue(new Error('denied'));
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+
+    render(<PrimitiveDetailClient />);
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'money' })).toBeInTheDocument());
+
+    fireEvent.click(screen.getByTestId('primitive-detail-schema-copy'));
+
+    await waitFor(() => expect(screen.getByTestId('primitive-detail-schema-copy')).toHaveTextContent('Copy failed'));
+  });
+
+  it('downloads the schema from the card header button', async () => {
+    mockFetchOk(SYSTEM_MONEY);
+    const createObjectURL = jest.fn().mockReturnValue('blob:mock');
+    const revokeObjectURL = jest.fn();
+    (URL as unknown as { createObjectURL: unknown }).createObjectURL = createObjectURL;
+    (URL as unknown as { revokeObjectURL: unknown }).revokeObjectURL = revokeObjectURL;
+    const clickSpy = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const downloadNames: string[] = [];
+    jest
+      .spyOn(HTMLAnchorElement.prototype, 'download', 'set')
+      .mockImplementation(function (this: HTMLAnchorElement, value: string) {
+        downloadNames.push(value);
+      });
+
+    render(<PrimitiveDetailClient />);
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'money' })).toBeInTheDocument());
+
+    fireEvent.click(screen.getByTestId('primitive-detail-schema-download'));
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock');
+    // Same filename the header's Export action produces — both go through one path.
+    expect(downloadNames).toEqual(['money.schema.json']);
   });
 
   it('exports the schema as a downloadable JSON file', async () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -19,10 +19,15 @@ import {
   Info,
   BarChart3,
   GitCommitVertical,
+  Copy,
+  Check,
+  Download,
 } from 'lucide-react';
 import { Alert } from '@/app/components/ui/Alert';
 import { LoadingState } from '@/app/components/ui/LoadingState';
 import { Button } from '@/app/components/ui/Button';
+import { ReadOnlyCodeViewer } from '@/app/components/ade/dashboard/export/ReadOnlyCodeViewer';
+import { downloadBlob } from '@/app/components/ade/dashboard/export/exportDownload';
 import {
   dashboardMainClass,
   dashboardPanelClass,
@@ -66,6 +71,64 @@ const codeBlockClass =
   'rounded-lg bg-gray-900 dark:bg-black/40 p-4 font-mono text-[11px] leading-relaxed text-gray-200 overflow-x-auto whitespace-pre';
 const sectionHeadClass = 'px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center gap-3';
 
+/**
+ * Height bounds for the JSON Schema editor. Monaco needs a definite pixel viewport (see
+ * `ReadOnlyCodeViewer`), so the box is sized from the document itself: a two-line primitive gets a
+ * short editor instead of a mostly-empty one, and a sprawling object schema stops growing at
+ * {@link SCHEMA_VIEWER_MAX_HEIGHT} and scrolls internally rather than pushing the rest of the page down.
+ */
+const SCHEMA_VIEWER_MIN_HEIGHT = 200;
+const SCHEMA_VIEWER_MAX_HEIGHT = 560;
+/** Monaco's line box at the viewer's 13px font, plus its 14px top/bottom padding. */
+const SCHEMA_VIEWER_LINE_HEIGHT = 19;
+const SCHEMA_VIEWER_PADDING = 28;
+
+/** Size the schema editor to its content, clamped to the bounds above. */
+function schemaViewerHeight(json: string): number {
+  const lines = json.split('\n').length;
+  const natural = lines * SCHEMA_VIEWER_LINE_HEIGHT + SCHEMA_VIEWER_PADDING;
+  return Math.min(SCHEMA_VIEWER_MAX_HEIGHT, Math.max(SCHEMA_VIEWER_MIN_HEIGHT, natural));
+}
+
+/** How long the Copy button holds its "Copied" / "Copy failed" acknowledgement. */
+const COPY_ACK_MS = 1500;
+
+interface SchemaActionButtonProps {
+  testId: string;
+  label: string;
+  title: string;
+  icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
+  onClick: () => void;
+  tone?: 'default' | 'success' | 'danger';
+}
+
+/**
+ * One action in the JSON Schema card header, styled to match the export viewer's toolbar buttons
+ * ({@link ViewerActionsBar}) so the two read as the same control. The visible text is the
+ * accessible name — no `aria-label` — leaving the tooltip free for the longer explanation.
+ */
+function SchemaActionButton({ testId, label, title, icon: Icon, onClick, tone = 'default' }: SchemaActionButtonProps) {
+  const toneClass =
+    tone === 'success'
+      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+      : tone === 'danger'
+        ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300'
+        : 'border-gray-200 bg-white/95 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900/95 dark:text-gray-200 dark:hover:bg-gray-800';
+
+  return (
+    <button
+      type="button"
+      data-testid={testId}
+      onClick={onClick}
+      title={title}
+      className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium shadow-sm transition-colors ${toneClass}`}
+    >
+      <Icon className="h-3.5 w-3.5" aria-hidden />
+      {label}
+    </button>
+  );
+}
+
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   const date = new Date(iso);
@@ -78,6 +141,9 @@ export default function PrimitiveDetailClient() {
   const [primitive, setPrimitive] = useState<PrimitiveDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  /** Transient "Copied" / "Copy failed" acknowledgement on the schema card's Copy button. */
+  const [schemaCopied, setSchemaCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   const loadPrimitive = useCallback(async () => {
     setLoading(true);
@@ -105,17 +171,34 @@ export default function PrimitiveDetailClient() {
     }
   }, [params.id, loadPrimitive]);
 
+  // Let the copy acknowledgement fall back to the idle label after a beat.
+  useEffect(() => {
+    if (!schemaCopied && !copyFailed) return undefined;
+    const timer = setTimeout(() => {
+      setSchemaCopied(false);
+      setCopyFailed(false);
+    }, COPY_ACK_MS);
+    return () => clearTimeout(timer);
+  }, [schemaCopied, copyFailed]);
+
+  // The header's Export action and the schema card's Download button are the same operation, so
+  // both go through here — one filename and one serialization for the file the user ends up with.
   const handleExport = useCallback(() => {
     if (!primitive) return;
     const blob = new Blob([serializeSchemaExport(primitive.schema)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = exportFileName(primitive.name);
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, exportFileName(primitive.name));
+  }, [primitive]);
+
+  const handleCopySchema = useCallback(async () => {
+    if (!primitive) return;
+    try {
+      await navigator.clipboard.writeText(serializeSchemaExport(primitive.schema));
+      setSchemaCopied(true);
+    } catch {
+      // Clipboard unavailable (insecure context / denied permission) — say so rather than
+      // flashing "Copied" for a write that never landed.
+      setCopyFailed(true);
+    }
   }, [primitive]);
 
   const baseChain = useMemo(
@@ -128,6 +211,10 @@ export default function PrimitiveDetailClient() {
   );
   const exampleInstance = useMemo(
     () => (primitive ? buildExampleInstance(primitive.schema) : null),
+    [primitive]
+  );
+  const schemaJson = useMemo(
+    () => (primitive ? JSON.stringify(primitive.schema, null, 2) : ''),
     [primitive]
   );
 
@@ -233,11 +320,42 @@ export default function PrimitiveDetailClient() {
               ) : null}
 
               <section className={`${dashboardPanelClass} p-5`}>
-                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-gray-900 dark:text-white">
-                  <Braces className="w-4 h-4 text-indigo-500" /> JSON Schema{' '}
-                  <span className="font-mono text-gray-400 font-normal">({primitive.draft ?? '2020-12'})</span>
-                </h3>
-                <pre className={codeBlockClass}>{JSON.stringify(primitive.schema, null, 2)}</pre>
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <h3 className="text-sm font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
+                    <Braces className="w-4 h-4 text-indigo-500" /> JSON Schema{' '}
+                    <span className="font-mono text-gray-400 font-normal">({primitive.draft ?? '2020-12'})</span>
+                  </h3>
+                  {/* Card actions, pinned top-right: take the schema away as a file, or as text. */}
+                  <div className="flex shrink-0 items-center gap-1.5" role="group" aria-label="JSON Schema actions">
+                    <SchemaActionButton
+                      testId="primitive-detail-schema-copy"
+                      label={schemaCopied ? 'Copied' : copyFailed ? 'Copy failed' : 'Copy'}
+                      title={copyFailed ? 'Could not write to the clipboard' : 'Copy the JSON Schema to the clipboard'}
+                      icon={schemaCopied ? Check : Copy}
+                      tone={schemaCopied ? 'success' : copyFailed ? 'danger' : 'default'}
+                      onClick={() => void handleCopySchema()}
+                    />
+                    <SchemaActionButton
+                      testId="primitive-detail-schema-download"
+                      label="Download"
+                      title={`Download ${exportFileName(primitive.name)}`}
+                      icon={Download}
+                      onClick={handleExport}
+                    />
+                  </div>
+                </div>
+                {/* The schema renders in the shared read-only Monaco viewer (MFX-43.1) rather than a
+                    plain `<pre>`, so it arrives syntax-highlighted, foldable, and theme-matched —
+                    the same viewer the catalog import dialog and export surfaces use. */}
+                <ReadOnlyCodeViewer
+                  value={schemaJson}
+                  language="json"
+                  height={schemaViewerHeight(schemaJson)}
+                  documentLabel={`${primitive.name} JSON Schema`}
+                  className="rounded-lg border border-gray-200 dark:border-gray-700"
+                  editorTestId="primitive-detail-schema-editor"
+                  fallbackTestId="primitive-detail-schema-fallback"
+                />
               </section>
 
               <section className={`${dashboardPanelClass} overflow-hidden`}>
