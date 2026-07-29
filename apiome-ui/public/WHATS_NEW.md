@@ -15,6 +15,7 @@ We continue to improve the platform based on your feedback with improvements and
 - Primitives: Added $ref lookups during primitive import, warning of unresolved $refs if any exist
 - Primitives: Now shows the JSON Schema using monaco-editor
 - Primitives: Added the ability to test a primitive by presenting a usable form that represents the content of the JSON Schema
+- Primitives: Duplicate names are no longer treated as duplicates unless the namespace is identical
 
 ---
 
