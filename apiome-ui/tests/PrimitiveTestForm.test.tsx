@@ -148,6 +148,63 @@ describe('PrimitiveTestForm — live regular expressions', () => {
   });
 });
 
+describe('PrimitiveTestForm — formats', () => {
+  const TIMESTAMP_SCHEMA = { type: 'string', format: 'date-time' };
+
+  it('opens blank when the format is all the schema says, with the format as guidance not as the value', () => {
+    render(<PrimitiveTestForm schema={TIMESTAMP_SCHEMA} name="timestamp" />);
+
+    // Never the literal `date-time` in the box — that text fails the format it names.
+    expect(input('')).toHaveValue('');
+    expect(input('')).toHaveAttribute('placeholder', 'date-time, e.g. 2024-01-15T09:30:00Z');
+    // Blank is honestly not a date-time yet, so the card says so rather than pretending otherwise.
+    expect(verdict()).toHaveAttribute('data-status', 'invalid');
+  });
+
+  it('turns valid the moment a conforming value is typed', () => {
+    render(<PrimitiveTestForm schema={TIMESTAMP_SCHEMA} name="timestamp" />);
+
+    fireEvent.change(input(''), { target: { value: '2024-01-15T09:30:00Z' } });
+    expect(verdict()).toHaveAttribute('data-status', 'valid');
+
+    fireEvent.change(input(''), { target: { value: '15/01/2024' } });
+    expect(screen.getByTestId('primitive-test-field-findings-')).toHaveTextContent(/must match format/i);
+  });
+
+  it('still seeds a formatted field from a value the schema declares for itself', () => {
+    render(
+      <PrimitiveTestForm
+        schema={{ ...TIMESTAMP_SCHEMA, examples: ['2024-01-15T09:30:00Z'] }}
+        name="timestamp"
+      />,
+    );
+
+    expect(input('')).toHaveValue('2024-01-15T09:30:00Z');
+    expect(verdict()).toHaveAttribute('data-status', 'valid');
+  });
+
+  it('leaves an optional formatted property switched off instead of opening the card invalid', () => {
+    render(
+      <PrimitiveTestForm
+        schema={{
+          type: 'object',
+          properties: { id: { type: 'string' }, occurredAt: TIMESTAMP_SCHEMA },
+          required: ['id'],
+        }}
+        name="event"
+      />,
+    );
+
+    expect(screen.queryByTestId('primitive-test-input-/occurredAt')).not.toBeInTheDocument();
+    expect(verdict()).toHaveAttribute('data-status', 'valid');
+
+    // Switching it on gives an empty input to type into, and the format hint to type by.
+    fireEvent.click(screen.getByTestId('primitive-test-include-/occurredAt'));
+    expect(input('/occurredAt')).toHaveValue('');
+    expect(input('/occurredAt')).toHaveAttribute('placeholder', 'date-time, e.g. 2024-01-15T09:30:00Z');
+  });
+});
+
 describe('PrimitiveTestForm — single items and arrays', () => {
   const DECIMAL_SCHEMA = { type: 'string', pattern: '^[0-9]+$' };
 

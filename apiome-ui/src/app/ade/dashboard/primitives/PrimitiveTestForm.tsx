@@ -31,6 +31,7 @@ import {
   childPointer,
   coerceScalar,
   compileTestValidator,
+  describePlaceholder,
   findingsByPointer,
   isIncluded,
   itemPointer,
@@ -456,7 +457,7 @@ function ScalarInput({ field, pointer, ctx }: { field: TestField; pointer: strin
           aria-invalid={invalid || undefined}
           value={raw}
           inputMode={field.kind === 'number' || field.kind === 'integer' ? 'decimal' : undefined}
-          placeholder={field.kind === 'unknown' ? 'Raw JSON, e.g. {"a": 1}' : field.format ?? field.kind}
+          placeholder={describePlaceholder(field)}
           onChange={(event) => ctx.setValue(pointer, event.target.value)}
           className={`h-9 ${invalidClass}`}
         />

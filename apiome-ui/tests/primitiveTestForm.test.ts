@@ -14,9 +14,12 @@ import {
   coerceScalar,
   compileTestValidator,
   deriveFieldKind,
+  describePlaceholder,
   escapePointerToken,
   findingsByPointer,
+  formatSample,
   isIncluded,
+  opensBlank,
   patternMatches,
   sanitizeForValidation,
   seedStateFromInstance,
@@ -301,9 +304,59 @@ describe('compileTestValidator', () => {
   });
 });
 
+describe('describePlaceholder', () => {
+  it('names the format and shows a sample of it, so an empty input still says what it wants', () => {
+    expect(describePlaceholder(buildTestField({ type: 'string', format: 'date-time' }))).toBe(
+      'date-time, e.g. 2024-01-15T09:30:00Z',
+    );
+    expect(describePlaceholder(buildTestField({ type: 'string', format: 'uuid' }))).toContain('uuid, e.g. ');
+  });
+
+  it('falls back to the bare format name when the format has no well-known shape', () => {
+    expect(describePlaceholder(buildTestField({ type: 'string', format: 'iso-4217' }))).toBe('iso-4217');
+    expect(formatSample('iso-4217')).toBeUndefined();
+  });
+
+  it('describes an unformatted field by kind, and an untyped one as raw JSON', () => {
+    expect(describePlaceholder(buildTestField({ type: 'integer' }))).toBe('integer');
+    expect(describePlaceholder(buildTestField({}))).toBe('Raw JSON, e.g. {"a": 1}');
+  });
+});
+
+describe('opensBlank', () => {
+  it('blanks a constrained string the schema declares no value for', () => {
+    // The generated example for these is the constraint's own name — `date-time`, `string` — which
+    // fails the keyword it came from.
+    expect(opensBlank(buildTestField({ type: 'string', format: 'date-time' }))).toBe(true);
+    expect(opensBlank(buildTestField({ type: 'string', pattern: '^[0-9]+$' }))).toBe(true);
+  });
+
+  it('keeps a value the schema states for itself', () => {
+    expect(opensBlank(buildTestField({ type: 'string', format: 'date-time', default: '2024-01-15T09:30:00Z' }))).toBe(
+      false,
+    );
+    expect(opensBlank(buildTestField({ type: 'string', format: 'date-time', examples: ['2024-01-15T09:30:00Z'] }))).toBe(
+      false,
+    );
+  });
+
+  it('leaves unconstrained strings and non-strings alone', () => {
+    expect(opensBlank(buildTestField({ type: 'string' }))).toBe(false);
+    expect(opensBlank(buildTestField({ type: 'integer' }))).toBe(false);
+    expect(opensBlank(buildTestField({ type: 'string', enum: ['a', 'b'] }))).toBe(false);
+  });
+});
+
 describe('seedStateFromInstance', () => {
   it('fills raw text and inclusions from a generated example', () => {
-    const field = buildTestField(MONEY_SCHEMA);
+    // `amount` declares its own example, so the pattern-constrained field has a value worth seeding.
+    const field = buildTestField({
+      ...MONEY_SCHEMA,
+      properties: {
+        ...MONEY_SCHEMA.properties,
+        amount: { ...MONEY_SCHEMA.properties.amount, examples: ['10.00'] },
+      },
+    });
     const state = seedStateFromInstance(field, { amount: '10.00', currency: 'USD' });
 
     expect(state.values['/amount']).toBe('10.00');
@@ -319,5 +372,38 @@ describe('seedStateFromInstance', () => {
 
     expect(state.arrayLengths['']).toBe(3);
     expect(state.values['/2']).toBe('c');
+  });
+
+  it('opens a constrained string blank rather than seeding the constraint as its value', () => {
+    const field = buildTestField({
+      type: 'object',
+      properties: {
+        occurredAt: { type: 'string', format: 'date-time' },
+        amount: { type: 'string', pattern: '^[0-9]+$' },
+        note: { type: 'string' },
+      },
+      required: ['occurredAt'],
+    });
+    // Exactly what `buildExampleInstance` yields for that schema.
+    const state = seedStateFromInstance(field, { occurredAt: 'date-time', amount: 'string', note: 'string' });
+
+    expect(state.values['/occurredAt']).toBeUndefined();
+    expect(state.values['/amount']).toBeUndefined();
+    // An unconstrained string has nothing to contradict, so it still opens populated.
+    expect(state.values['/note']).toBe('string');
+    // The optional blank field stays switched off; the required one is included by default anyway.
+    expect(state.included['/amount']).toBeUndefined();
+    expect(state.included['/note']).toBe(true);
+  });
+
+  it('seeds a formatted leaf, root or nested, from a value the schema declares', () => {
+    const root = buildTestField({ type: 'string', format: 'date-time', default: '2024-01-15T09:30:00Z' });
+    expect(seedStateFromInstance(root, '2024-01-15T09:30:00Z').values['']).toBe('2024-01-15T09:30:00Z');
+
+    const list = buildTestField({
+      type: 'array',
+      items: { type: 'string', format: 'date-time', examples: ['2024-01-15T09:30:00Z'] },
+    });
+    expect(seedStateFromInstance(list, ['2024-01-15T09:30:00Z']).values['/0']).toBe('2024-01-15T09:30:00Z');
   });
 });

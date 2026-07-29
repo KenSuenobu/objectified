@@ -19,6 +19,12 @@
  *    `$ref` field is fully checked would be the worse failure.
  *  - **Draft 2020-12.** Registry types declare 2020-12, so validation compiles through Ajv's 2020
  *    entry point rather than its draft-07 default.
+ *  - **Synthesized example values.** `buildExampleInstance` names the shape it cannot invent a value
+ *    for — a `date-time` string comes back as the text `"date-time"` — which is useful prose in the
+ *    example panel and a self-contradiction in an input, since it fails the format it names. A
+ *    constrained string is therefore seeded only from a value its schema actually declares
+ *    ({@link opensBlank}), and the format instead becomes the input's placeholder
+ *    ({@link describePlaceholder}).
  */
 
 import Ajv2020 from 'ajv/dist/2020';
@@ -463,7 +469,92 @@ export function patternMatches(pattern: string, value: string): boolean | null {
 }
 
 /**
+ * Sample values for the formats Ajv checks, so an empty input can still say what it wants.
+ *
+ * These are placeholder text, never seeded values: the reader is shown the shape to type without the
+ * form putting words in their mouth.
+ */
+const FORMAT_SAMPLES: Record<string, string> = {
+  'date-time': '2024-01-15T09:30:00Z',
+  date: '2024-01-15',
+  time: '09:30:00Z',
+  duration: 'P1DT6H',
+  email: 'reader@example.com',
+  'idn-email': 'reader@example.com',
+  hostname: 'example.com',
+  'idn-hostname': 'example.com',
+  ipv4: '192.0.2.1',
+  ipv6: '2001:db8::1',
+  uri: 'https://example.com/thing',
+  'uri-reference': '/thing',
+  iri: 'https://example.com/thing',
+  'iri-reference': '/thing',
+  'uri-template': 'https://example.com/{id}',
+  uuid: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+  'json-pointer': '/a/b',
+  'relative-json-pointer': '1/b',
+  regex: '^[0-9]+$',
+};
+
+/**
+ * A conforming sample for `format`, for guidance text.
+ *
+ * @param format - The `format` keyword's value.
+ * @returns A value of that format, or `undefined` for a format with no well-known shape to suggest.
+ */
+export function formatSample(format: string): string | undefined {
+  return FORMAT_SAMPLES[format];
+}
+
+/**
+ * Placeholder text for a scalar input.
+ *
+ * A formatted field carries the format plus a sample of it, which is what makes an empty input
+ * actionable — the reader can see that `date-time` means `2024-01-15T09:30:00Z` without having to
+ * find the format's spec.
+ *
+ * @param field - The field being rendered.
+ * @returns The placeholder to show while the input is empty.
+ */
+export function describePlaceholder(field: TestField): string {
+  if (field.kind === 'unknown') return 'Raw JSON, e.g. {"a": 1}';
+  if (field.format === undefined) return field.kind;
+  const sample = formatSample(field.format);
+  return sample === undefined ? field.format : `${field.format}, e.g. ${sample}`;
+}
+
+/**
+ * Whether a schema states a value of its own, rather than leaving one to be synthesized.
+ *
+ * `enum`/`const` are not consulted: those project as pickers rather than text inputs, so their value
+ * is already the field's own.
+ */
+function declaresValue(schema: Record<string, unknown>): boolean {
+  return (Array.isArray(schema.examples) && schema.examples.length > 0) || 'default' in schema;
+}
+
+/**
+ * Whether a field must open with an empty input.
+ *
+ * A `format`- or `pattern`-constrained string that declares no value of its own has nothing to seed
+ * from: the generated example falls back to naming the constraint (`"date-time"`, `"string"`), and
+ * seeding that opens the form already violating the very keyword it came from. An empty input plus
+ * the format placeholder says the same thing without the contradiction.
+ *
+ * @param field - The projected field.
+ * @returns `true` when the field is left blank rather than seeded.
+ */
+export function opensBlank(field: TestField): boolean {
+  if (field.kind !== 'string') return false;
+  if (field.format === undefined && field.pattern === undefined) return false;
+  return !declaresValue(field.schema);
+}
+
+/**
  * Seed form state from a generated example instance, so the form opens populated rather than blank.
+ *
+ * Fields {@link opensBlank} rejects are left untouched — and, when they are optional properties, left
+ * switched off, since an empty value that cannot satisfy its own constraint is not worth submitting.
  *
  * @param field - The projected field tree.
  * @param example - An example instance (see `buildExampleInstance`); anything unusable is skipped.
@@ -480,7 +571,9 @@ export function seedStateFromInstance(field: TestField, example: unknown): TestF
       if (!record) return;
       for (const child of node.children ?? []) {
         const childPtr = childPointer(pointer, child.key);
-        if (child.key in record) {
+        // A blank-opening property is not force-included: required ones are on by default anyway, and
+        // switching an optional one on with a value it cannot satisfy would open the form invalid.
+        if (child.key in record && !opensBlank(child)) {
           state.included[childPtr] = true;
           walk(child, record[child.key], childPtr);
         }
@@ -497,6 +590,7 @@ export function seedStateFromInstance(field: TestField, example: unknown): TestF
       return;
     }
 
+    if (opensBlank(node)) return;
     state.values[pointer] = value === null ? '' : typeof value === 'object' ? JSON.stringify(value) : String(value);
   };
 

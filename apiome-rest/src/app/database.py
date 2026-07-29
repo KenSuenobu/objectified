@@ -1797,8 +1797,19 @@ class Database:
         tenant) unioned with ``tenant_id = <caller>`` (the tenant's private types). A
         different tenant's private types are never returned, so Tenant A cannot read
         Tenant B's custom types. System-core types are seeded per tenant, so a tenant
-        that already owns a core row would otherwise see it twice; ``DISTINCT ON
-        (category, name)`` collapses those, preferring the caller's own row.
+        that already owns a core row would otherwise see it once per tenant that holds
+        a copy; ``DISTINCT ON (namespace, name)`` collapses those, preferring the
+        caller's own row.
+
+        The dedupe key is a type's *identity*, which is ``(namespace, name)`` — the pair
+        the registry derives ``$id`` from and the pair
+        ``primitives_tenant_namespace_name_unique`` (V216) keys on. Keying on
+        ``(category, name)`` instead — as this did before V216 rescoped the constraint —
+        hid real rows: a tenant's own ``uri`` in ``tenant/acme/v1`` and the seeded core
+        ``std/v0/types/uri`` are two distinct types with two distinct ``$id`` values, but
+        they share a name and a category, so one of them silently vanished from the
+        listing. ``DISTINCT ON`` treats NULLs as equal, matching the constraint's
+        ``NULLS NOT DISTINCT``, so namespace-less rows stay one "unassigned" group.
 
         Args:
             tenant_id: The caller's tenant id (scopes visibility).
@@ -1807,14 +1818,17 @@ class Database:
         Returns:
             The visible primitives, ordered by category then name.
         """
+        # DISTINCT ON forces its keys to lead ORDER BY, so the dedupe runs in a subquery
+        # and the caller-facing (category, name) ordering is applied outside it.
         query = """
-            SELECT DISTINCT ON (category, name)
-                   id, tenant_id, name, description, category, schema, tags,
-                   created_by, is_system, is_public, usage_count, source,
-                   schema_id, draft, namespace, base_uri, refs,
-                   created_at, updated_at
-            FROM apiome.primitives
-            WHERE (tenant_id = %s OR is_system = true)
+            SELECT * FROM (
+                SELECT DISTINCT ON (namespace, name)
+                       id, tenant_id, name, description, category, schema, tags,
+                       created_by, is_system, is_public, usage_count, source,
+                       schema_id, draft, namespace, base_uri, refs,
+                       created_at, updated_at
+                FROM apiome.primitives
+                WHERE (tenant_id = %s OR is_system = true)
         """
         params = [tenant_id]
 
@@ -1822,9 +1836,13 @@ class Database:
             query += " AND category = %s"
             params.append(category)
 
-        # Within each (category, name) group prefer the caller's own row over a
+        # Within each (namespace, name) group prefer the caller's own row over a
         # foreign system-core copy; the leading keys satisfy DISTINCT ON.
-        query += " ORDER BY category, name, (tenant_id = %s) DESC"
+        query += """
+                ORDER BY namespace, name, (tenant_id = %s) DESC
+            ) visible
+            ORDER BY category, name
+        """
         params.append(tenant_id)
         return self.execute_query(query, tuple(params))
 
