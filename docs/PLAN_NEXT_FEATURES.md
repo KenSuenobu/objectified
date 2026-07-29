@@ -181,7 +181,7 @@ Remaining open leftovers intentionally **not** closed: MTG-EPIC-5 #4764, GOV-1.5
 | 2.9 | Conversion evidence drawer + remediation — **Done** | **#4802** CPDO-3.2 | After 2.8 |
 | 2.10 | Conversion provenance history — **Done** | **#4803** CPDO-3.3 | Y late |
 | 2.11 | Fixture/contract corpus — **Done** | **#4804** CPDO-4.1 | Growing from 2.2 |
-| 2.12 | Perf / redaction / observability | **#4805** CPDO-4.2 | Before RC4 freeze |
+| 2.12 | Perf / redaction / observability — **Done** | **#4805** CPDO-4.2 | Before RC4 freeze |
 | 2.13 | User guide | **#4806** CPDO-4.3 | Docs track |
 
 **Epics:** #4790 (foundation) → #4791 (detail) → #4792 (convert UX) → #4793 (rollout).
@@ -370,7 +370,6 @@ Filter: [`milestone:RC4 is:open`](https://github.com/apiome/apiome/milestone/1).
 | 4221 | OLO-6.4 Multi-tenant e2e fixtures & tests |
 | 4225 | OLO-7.3 Auth threat-model checklist review |
 | 4794 | CPDO-1.1 Revision-scoped payload analysis contract |
-| 4805 | CPDO-4.2 Performance, redaction, and observability guardrails |
 | 4806 | CPDO-4.3 User guide and format-detail documentation |
 | 4391 | MFI-29.4 SSRF-guarded remote `$ref` resolver |
 | 4393 | MFI-29.6 Secret scrubbing on intake |

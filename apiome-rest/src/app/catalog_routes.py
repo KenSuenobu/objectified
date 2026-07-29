@@ -16,11 +16,18 @@ API key.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+import time
+from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse, StreamingResponse
+from pydantic import BaseModel, ConfigDict, Field
 
+from .analysis_telemetry import (
+    ALLOWED_UI_SURFACES,
+    LARGE_GRAPH_EDGE_THRESHOLD,
+    analysis_telemetry,
+)
 from .api_identity_service import build_related_artifact_refs
 from .auth import get_authenticated_user_id, validate_authentication
 from .catalog_conversion import build_conversion_source
@@ -65,13 +72,54 @@ from .models import (
     ConvertDryRunResponse,
     LintReportResponse,
 )
-from .payload_analysis import PayloadAnalysisRecord, ValueVisibility
+from .payload_analysis import (
+    MAX_TREE_DEPTH,
+    MAX_TREE_NODES,
+    PayloadAnalysisRecord,
+    ValueVisibility,
+    bound_document,
+)
 from .payload_analysis_store import analysis_summary_for_item, load_analysis_for_item
-from .permissions import Action, Resource, enforce_permission
+from .permissions import Action, Resource, _resolve_actor_id, enforce_permission
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/catalog", tags=["catalog"])
+
+
+def _audit_catalog_access(
+    auth_data: Dict[str, Any],
+    *,
+    action: str,
+    target: str,
+    detail: Optional[Dict[str, Any]] = None,
+) -> None:
+    """Write a best-effort access-audit entry for a sensitive catalog read (CPDO-4.2).
+
+    The raw source and the analysis tree are the two catalog reads that expose payload-derived
+    material, so each successful serve leaves a row in the append-only ``apiome.access_audit``
+    ledger (V120) — who read what, when, through which auth method. ``detail`` may carry counts,
+    statuses, and modes only; never payload content. Best-effort by the same rule as the
+    permission-denied audit: a failed audit insert must never turn a successful read into an error.
+
+    Args:
+        auth_data: The authenticated caller's context.
+        action: Ledger action name (``catalog.analysis.view`` / ``catalog.source.view``).
+        target: What was read (``catalog:{item_id}:analysis`` / ``…:source``).
+        detail: Optional content-free metadata about the read.
+    """
+    try:
+        db.write_access_audit(
+            tenant_id=auth_data.get("tenant_id"),
+            actor_id=_resolve_actor_id(db, auth_data),
+            actor_label=auth_data.get("user_email") or auth_data.get("user_name"),
+            action=action,
+            target=target,
+            source="api_key" if auth_data.get("auth_method") == "api_key" else "web",
+            detail=detail or {},
+        )
+    except Exception:  # pragma: no cover - audit is strictly best-effort
+        logger.debug("catalog access audit write failed", exc_info=True)
 
 
 def _build_conversion_ref(item: Dict[str, Any]) -> Optional[CatalogConversionRef]:
@@ -223,6 +271,24 @@ async def get_catalog_item_analysis(
             "It can only narrow what the stored record carries, never widen it."
         ),
     ),
+    max_nodes: Optional[int] = Query(
+        None,
+        alias="maxNodes",
+        ge=1,
+        le=MAX_TREE_NODES,
+        description=(
+            "Optional read-time node budget for a lazy first fetch of an oversized tree. "
+            "Keeps the same breadth-first prefix write-time bounding keeps; truncation is "
+            "reported on the record's metrics, never silent (CPDO-4.2)."
+        ),
+    ),
+    max_depth: Optional[int] = Query(
+        None,
+        alias="maxDepth",
+        ge=1,
+        le=MAX_TREE_DEPTH,
+        description="Optional read-time depth budget, applied with maxNodes (CPDO-4.2).",
+    ),
     auth_data: Dict[str, Any] = Depends(validate_authentication),
 ) -> PayloadAnalysisRecord:
     """Return the full native payload analysis of a catalog item's latest revision (CPDO-1.1).
@@ -251,6 +317,8 @@ async def get_catalog_item_analysis(
         tenant_slug: The tenant slug.
         item_id: The catalog item ID (a project id).
         value_visibility: Optional read-time value-visibility restriction.
+        max_nodes: Optional read-time node budget for a lazy fetch of an oversized tree.
+        max_depth: Optional read-time depth budget, applied with ``max_nodes``.
         auth_data: Authentication data (injected by dependency).
 
     Returns:
@@ -275,7 +343,41 @@ async def get_catalog_item_analysis(
             ),
         )
 
-    return load_analysis_for_item(tenant_id, item, value_visibility=value_visibility)
+    started = time.monotonic()
+    record = load_analysis_for_item(tenant_id, item, value_visibility=value_visibility)
+
+    # Read-time bounding (CPDO-4.2): a client may ask for only the top of a large stored tree.
+    # Like value visibility this can only narrow the record, and truncation stays declared.
+    if max_nodes is not None or max_depth is not None:
+        record = record.model_copy(
+            update={
+                "analysis": bound_document(
+                    record.analysis,
+                    max_nodes=max_nodes if max_nodes is not None else MAX_TREE_NODES,
+                    max_depth=max_depth if max_depth is not None else MAX_TREE_DEPTH,
+                )
+            }
+        )
+
+    # The tree is payload-derived material, so a successful serve is audited (counts and
+    # statuses only — the audit row carries nothing from the tree itself).
+    _audit_catalog_access(
+        auth_data,
+        action="catalog.analysis.view",
+        target=f"catalog:{item_id}:analysis",
+        detail={
+            "status": record.analysis.status,
+            "nodeCount": record.analysis.metrics.node_count,
+            "valueVisibility": record.analysis.redaction.value_visibility,
+        },
+    )
+    analysis_telemetry.record(
+        "analysis_read",
+        status=record.analysis.status,
+        node_count=record.analysis.metrics.node_count,
+        latency_ms=(time.monotonic() - started) * 1000.0,
+    )
+    return record
 
 
 @router.get(
@@ -549,6 +651,7 @@ async def get_catalog_projection(
         db, auth_data, Resource.IMPORTS, Action.VIEW, target=f"catalog:{item_id}:projection"
     )
 
+    started = time.monotonic()
     try:
         source, source_version_id = _load_conversion_source(tenant_id, item)
         preview = preview_conversion(source, _conversion_defaults(request))
@@ -562,11 +665,21 @@ async def get_catalog_projection(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
+    summary = summarize_conversion_manifest(preview.manifest)
+    # Conversion status distribution + graph size + latency, counts only (CPDO-4.2).
+    analysis_telemetry.record(
+        "projection_page",
+        page_total=page.total,
+        latency_ms=(time.monotonic() - started) * 1000.0,
+        status_counts=summary.status_counts,
+        large_tree=page.total > LARGE_GRAPH_EDGE_THRESHOLD,
+    )
+
     return CatalogProjectionResponse(
         item_id=item_id,
         version_record_id=source_version_id,
         target="openapi",
-        summary=summarize_conversion_manifest(preview.manifest).model_dump(mode="json"),
+        summary=summary.model_dump(mode="json"),
         page=page.model_dump(mode="json"),
     )
 
@@ -692,8 +805,9 @@ async def get_catalog_conversion_evidence(
             tenant_id, row["projection_manifest_hash"]
         )
 
+    started = time.monotonic()
     try:
-        return evidence_response(
+        response = evidence_response(
             row=row,
             snapshot_row=snapshot_row,
             cursor=cursor,
@@ -703,6 +817,15 @@ async def get_catalog_conversion_evidence(
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    page_total = response.page.get("total") if isinstance(response.page, dict) else None
+    analysis_telemetry.record(
+        "evidence_page",
+        page_total=page_total,
+        latency_ms=(time.monotonic() - started) * 1000.0,
+        large_tree=page_total > LARGE_GRAPH_EDGE_THRESHOLD if page_total is not None else None,
+    )
+    return response
 
 
 @router.get("/{tenant_slug}/{item_id}/source")
@@ -719,6 +842,13 @@ async def get_catalog_item_source(
     * **inline content** — streamed back as a downloadable attachment (typed by source format);
     * **a source URL** (when no content was captured) — answered with a redirect to that URL;
     * **neither** — ``404``, since the raw source has not (yet) been captured for this item.
+
+    **Authorization and audit (CPDO-4.2).** The raw source is the most sensitive read on the
+    catalog surface — it is the payload itself, not a description of it — so it is gated on the
+    same ``imports:view`` permission as the analysis tree and the projection graph, checked after
+    the item lookup so a cross-tenant id 404s rather than confirming its existence with a 403.
+    Every successful serve writes an ``access_audit`` row (``catalog.source.view``) recording who
+    read it and how it was answered; the row carries no source content.
 
     Like the other catalog reads this is restricted to the non-publishable slice (a Project's id, or
     an unknown id, yields 404) and authenticated via JWT token or API key.
@@ -739,6 +869,10 @@ async def get_catalog_item_source(
             detail=f"Catalog item not found: {item_id}"
         )
 
+    enforce_permission(
+        db, auth_data, Resource.IMPORTS, Action.VIEW, target=f"catalog:{item_id}:source"
+    )
+
     payload = resolve_source_payload(item)
 
     if payload is None:
@@ -746,6 +880,15 @@ async def get_catalog_item_source(
             status_code=404,
             detail=f"No source material captured for catalog item: {item_id}",
         )
+
+    access_mode = "redirect" if payload["mode"] == "redirect" else "inline"
+    _audit_catalog_access(
+        auth_data,
+        action="catalog.source.view",
+        target=f"catalog:{item_id}:source",
+        detail={"mode": access_mode},
+    )
+    analysis_telemetry.record("source_access", access_mode=access_mode)
 
     if payload["mode"] == "redirect":
         # 307 preserves the method and lets the browser fetch the original source directly.
@@ -758,3 +901,73 @@ async def get_catalog_item_source(
             "Content-Disposition": f'attachment; filename="{payload["filename"]}"',
         },
     )
+
+
+class CatalogAnalysisMetricRequest(BaseModel):
+    """A privacy-safe UI latency report for a catalog analysis surface (CPDO-4.2).
+
+    A strict whitelist: one kind, a controlled surface name, and numbers. Unknown fields are
+    rejected (``extra="forbid"``) so a client cannot smuggle payload material into telemetry.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["ui_latency"] = Field(description="Privacy-safe metric kind (whitelist).")
+    surface: str = Field(
+        description="Which UI surface is reporting (controlled vocabulary, e.g. format_tab)."
+    )
+    latency_ms: Optional[float] = Field(
+        default=None, ge=0, description="Wall-clock latency the surface measured."
+    )
+    page_total: Optional[int] = Field(
+        default=None, ge=0, description="Optional integer row/edge total (no labels)."
+    )
+
+
+class CatalogAnalysisMetricResponse(BaseModel):
+    """Acknowledgement that a privacy-safe metric was recorded."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    recorded: bool = True
+    kind: str
+
+
+@router.post(
+    "/{tenant_slug}/analysis-metrics",
+    response_model=CatalogAnalysisMetricResponse,
+    summary="Record a privacy-safe catalog analysis metric",
+    description=(
+        "Increment an in-process counter and emit a structured ``catalog.analysis`` log line "
+        "for UI/ops telemetry (CPDO-4.2). Payload is a strict whitelist of kinds, controlled "
+        "surface names, and integer/duration fields — never node names, values, or source content."
+    ),
+)
+async def record_catalog_analysis_metric(
+    tenant_slug: str,
+    request: CatalogAnalysisMetricRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> CatalogAnalysisMetricResponse:
+    """Record one privacy-safe UI latency metric for the catalog analysis surface.
+
+    Args:
+        tenant_slug: Tenant slug (scopes the call; unused in the counter key by design).
+        request: Whitelisted metric payload.
+        auth_data: Authenticated tenant context (JWT or API key).
+
+    Returns:
+        ``{"recorded": true, "kind": ...}``.
+
+    Raises:
+        HTTPException: 422 when the surface is not on the allowlist.
+    """
+    _ = tenant_slug, auth_data  # auth required; tenant is not folded into metrics keys
+    if request.surface not in ALLOWED_UI_SURFACES:
+        raise HTTPException(status_code=422, detail="unsupported surface")
+    analysis_telemetry.record(
+        request.kind,
+        surface=request.surface,
+        latency_ms=request.latency_ms,
+        page_total=request.page_total,
+    )
+    return CatalogAnalysisMetricResponse(kind=request.kind)

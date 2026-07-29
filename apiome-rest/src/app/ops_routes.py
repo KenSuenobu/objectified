@@ -26,6 +26,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
+from .analysis_telemetry import analysis_telemetry
 from .auth import validate_authentication
 from .backup_status import collect_backup_status
 from .config import settings
@@ -91,6 +92,10 @@ def _metrics_payload() -> Dict[str, Any]:
         "error_rate": snap.error_rate,
         "in_flight": snap.in_flight,
         "latency_ms": snap.latency_ms,
+        # Catalog analysis guardrail counters (CPDO-4.2): analyzer completions/failures by
+        # reason category, sensitive reads, page serves. Counts only — never payload content —
+        # so the ops dashboard can reveal analyzer failures without seeing what was analysed.
+        "catalog_analysis": analysis_telemetry.snapshot(),
     }
 
 

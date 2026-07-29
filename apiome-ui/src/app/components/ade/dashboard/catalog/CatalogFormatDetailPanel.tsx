@@ -93,6 +93,7 @@ import {
   X12_KIND_REPETITION,
 } from '@/app/utils/catalog-x12-analysis';
 import { isCopybookAnalysis } from '@/app/utils/catalog-copybook-analysis';
+import { metricNow, trackCatalogAnalysisMetric } from './catalogAnalysisMetrics';
 import { CatalogCopybookInspectorPanel } from './CatalogCopybookInspectorPanel';
 import { CatalogX12InspectorPanel } from './CatalogX12InspectorPanel';
 import { FormatCapabilityPanel } from './FormatCapabilityPanel';
@@ -339,6 +340,7 @@ export function CatalogFormatDetailPanel({
     const controller = new AbortController();
     setStatus('loading');
     setErrorMessage(null);
+    const startedAt = metricNow();
     fetchCatalogAnalysis(itemId, controller.signal)
       .then((result) => {
         if (controller.signal.aborted) return;
@@ -346,6 +348,13 @@ export function CatalogFormatDetailPanel({
           setRecord(result.record);
           setExpandedIds(defaultExpandedAnalysisIds(result.record.analysis.tree));
           setStatus('loaded');
+          // Privacy-safe UI latency report (CPDO-4.2): a duration and a node count only.
+          void trackCatalogAnalysisMetric({
+            kind: 'ui_latency',
+            surface: 'format_tab',
+            latency_ms: metricNow() - startedAt,
+            page_total: result.record.analysis.metrics.nodeCount,
+          });
           return;
         }
         setErrorMessage(result.error);

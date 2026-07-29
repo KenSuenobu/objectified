@@ -25,11 +25,15 @@
 
 import { PREVIEW_PAGE_SIZE } from './import-preview-manifest';
 import { GRAPH_AGGREGATION_THRESHOLD } from '../components/ade/dashboard/export/projectionGraph';
+import { CONVERSION_PROJECTION_PAGE_LIMIT } from './conversion-projection';
+import { PROJECTION_PAGES_PER_WINDOW } from '../components/ade/dashboard/catalog/useConversionProjection';
 
 // Re-exported so budget consumers (and the registry test) reach every bound through this
 // module, while the constants stay owned by their contract modules.
 export { PREVIEW_PAGE_SIZE } from './import-preview-manifest';
 export { GRAPH_AGGREGATION_THRESHOLD } from '../components/ade/dashboard/export/projectionGraph';
+export { CONVERSION_PROJECTION_PAGE_LIMIT } from './conversion-projection';
+export { PROJECTION_PAGES_PER_WINDOW } from '../components/ade/dashboard/catalog/useConversionProjection';
 
 /** Entity-tree rows (IXH-3.2 explorer) beyond this count are windowed, not all mounted. */
 export const TREE_VIRTUALIZE_ABOVE = 50;
@@ -245,6 +249,26 @@ export const PREVIEW_BUDGETS: readonly PreviewBudget[] = [
     mechanism: 'truncated',
     aboveBudget: 'The viewer states "… N earlier lines" / "… N later lines" around the mounted window.',
     fullDataPath: 'Follow any source link — the window re-centers on the linked line, so every line is reachable.',
+  },
+  {
+    id: 'CONVERSION_PROJECTION_PAGE_LIMIT',
+    surface: 'Catalog conversion projection graph pages (CPDO-1.3 / CPDO-4.2)',
+    budget: CONVERSION_PROJECTION_PAGE_LIMIT,
+    unit: 'evidence edges per request',
+    mechanism: 'truncated',
+    aboveBudget:
+      'The walk fetches further cursor pages; when a window pauses, the panel states the loaded-of-total edge counts.',
+    fullDataPath: 'Click "Load more evidence" to walk the next pages of the same snapshot.',
+  },
+  {
+    id: 'PROJECTION_PAGES_PER_WINDOW',
+    surface: 'Catalog conversion projection page walk (CPDO-1.3 / CPDO-4.2)',
+    budget: PROJECTION_PAGES_PER_WINDOW,
+    unit: 'pages per load',
+    mechanism: 'truncated',
+    aboveBudget:
+      'The walk pauses after one window; the panel states the loaded-of-total edge counts, so pausing is never silent.',
+    fullDataPath: 'Click "Load more evidence" again to walk the next window.',
   },
   {
     id: 'TEST_BENCH_PAYLOAD_MAX_BYTES',

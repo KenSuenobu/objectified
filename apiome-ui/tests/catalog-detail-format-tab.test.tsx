@@ -174,7 +174,7 @@ function mockTransport() {
 
 /** Requests made to the permission-gated analysis endpoint. */
 function analysisCalls(): unknown[] {
-  return fetchMock.mock.calls.filter(([url]) => String(url).includes('/analysis'));
+  return fetchMock.mock.calls.filter(([url]) => String(url).endsWith('/analysis'));
 }
 
 beforeEach(() => {

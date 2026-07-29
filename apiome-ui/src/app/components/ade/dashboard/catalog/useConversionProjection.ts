@@ -28,6 +28,7 @@ import {
   type ConversionProjectionNode,
 } from '@/app/utils/conversion-projection';
 import { cleanDefaults, type ConversionDefaults } from '@/app/utils/conversion-fidelity';
+import { metricNow, trackCatalogAnalysisMetric } from './catalogAnalysisMetrics';
 
 /** Pages fetched per window — one auto-load walks at most this many cursors. */
 export const PROJECTION_PAGES_PER_WINDOW = 5;
@@ -108,6 +109,7 @@ export function useConversionProjection(
       if (!itemId) return;
       setLoading(true);
       setError(null);
+      const startedAt = metricNow();
       try {
         let cursor = startCursor;
         for (let pageIndex = 0; pageIndex < PROJECTION_PAGES_PER_WINDOW; pageIndex += 1) {
@@ -163,7 +165,16 @@ export function useConversionProjection(
         if (token !== walkToken.current) return;
         setError(e instanceof Error ? e.message : 'Could not load the projection graph.');
       } finally {
-        if (token === walkToken.current) setLoading(false);
+        if (token === walkToken.current) {
+          setLoading(false);
+          // Privacy-safe UI latency report (CPDO-4.2): how long one evidence window took
+          // to fetch and integrate. A duration only — no labels, no source coordinates.
+          void trackCatalogAnalysisMetric({
+            kind: 'ui_latency',
+            surface: 'projection_graph',
+            latency_ms: metricNow() - startedAt,
+          });
+        }
       }
     },
     [itemId, pageLimit, cleanedDefaults, source],
