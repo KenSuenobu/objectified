@@ -1,0 +1,919 @@
+{
+  "adapter": "json-schema",
+  "conversion_mode": "lossy",
+  "corpus_path": "json-schema/01-simple-person.json",
+  "manifest": {
+    "bounds": {
+      "maxAnalysisEdges": 200,
+      "maxConstructEdges": 2000
+    },
+    "conversion_mode": "lossy",
+    "defaults": {},
+    "dropped_edge_count": 0,
+    "edges": [
+      {
+        "count": 1,
+        "detail": "named types carried from the source into components.schemas",
+        "evidence": [],
+        "id": "checklist:components.schemas",
+        "reason": null,
+        "remediation": null,
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:components.schemas",
+        "status": "retained",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no construct is marked deprecated",
+        "evidence": [],
+        "id": "checklist:deprecated",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:deprecated",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain request/response examples",
+        "evidence": [],
+        "id": "checklist:examples",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:examples",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain external-documentation links",
+        "evidence": [],
+        "id": "checklist:externalDocs",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:externalDocs",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain contact information",
+        "evidence": [],
+        "id": "checklist:info.contact",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.contact",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "description carried from the source",
+        "evidence": [
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/info/description"
+          }
+        ],
+        "id": "checklist:info.description",
+        "reason": null,
+        "remediation": null,
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.description",
+        "status": "retained",
+        "target": "target:/info/description"
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain license information",
+        "evidence": [],
+        "id": "checklist:info.license",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.license",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "title carried from the source",
+        "evidence": [
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/info/title"
+          }
+        ],
+        "id": "checklist:info.title",
+        "reason": null,
+        "remediation": null,
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.title",
+        "status": "retained",
+        "target": "target:/info/title"
+      },
+      {
+        "count": 1,
+        "detail": "source declares no API version; a placeholder was emitted",
+        "evidence": [
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/info/version"
+          }
+        ],
+        "id": "checklist:info.version",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:info.version",
+        "status": "dropped",
+        "target": "target:/info/version"
+      },
+      {
+        "count": 0,
+        "detail": "source defines no operations",
+        "evidence": [],
+        "id": "checklist:operation.metadata",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:operation.metadata",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation declares parameters",
+        "evidence": [],
+        "id": "checklist:parameters",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:parameters",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source defines types only; there are no operations to route",
+        "evidence": [],
+        "id": "checklist:paths",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:paths",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation carries a request body",
+        "evidence": [],
+        "id": "checklist:requestBody",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:requestBody",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source defines no operations",
+        "evidence": [],
+        "id": "checklist:responses",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:responses",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain security schemes or requirements",
+        "evidence": [],
+        "id": "checklist:security",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:security",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source declares no servers; the base URL is unknown",
+        "evidence": [],
+        "id": "checklist:servers",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:servers",
+        "status": "dropped",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source is not OpenAPI 3.2",
+        "evidence": [],
+        "id": "checklist:source.openapi-version",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:source.openapi-version",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation declares tags",
+        "evidence": [],
+        "id": "checklist:tags",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:tags",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "Person.age"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/Person/properties/age"
+          }
+        ],
+        "id": "construct:field:Person.age",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:Person.age",
+        "status": "retained",
+        "target": "target:/components/schemas/Person/properties/age"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "Person.email"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/Person/properties/email"
+          }
+        ],
+        "id": "construct:field:Person.email",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:Person.email",
+        "status": "retained",
+        "target": "target:/components/schemas/Person/properties/email"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "Person.firstName"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/Person/properties/firstName"
+          }
+        ],
+        "id": "construct:field:Person.firstName",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:Person.firstName",
+        "status": "retained",
+        "target": "target:/components/schemas/Person/properties/firstName"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "Person.lastName"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/Person/properties/lastName"
+          }
+        ],
+        "id": "construct:field:Person.lastName",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:Person.lastName",
+        "status": "retained",
+        "target": "target:/components/schemas/Person/properties/lastName"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "Person"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/Person"
+          }
+        ],
+        "id": "construct:type:Person",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:Person",
+        "status": "retained",
+        "target": "target:/components/schemas/Person"
+      },
+      {
+        "count": 1,
+        "detail": "no payload analysis exists for this revision, so the manifest cannot say which native source constructs were seen",
+        "evidence": [],
+        "id": "analysis:absent",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:absent",
+        "status": "unavailable",
+        "target": null
+      }
+    ],
+    "manifest_hash": "[volatile]",
+    "nodes": [
+      {
+        "construct_key": null,
+        "id": "source:analysis:absent",
+        "kind": "source",
+        "label": "source analysis",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "source analysis",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "components.schemas",
+        "id": "source:checklist:components.schemas",
+        "kind": "source",
+        "label": "Component schemas",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Component schemas",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "deprecated",
+        "id": "source:checklist:deprecated",
+        "kind": "source",
+        "label": "Deprecation flags",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Deprecation flags",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "examples",
+        "id": "source:checklist:examples",
+        "kind": "source",
+        "label": "Examples",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Examples",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "externalDocs",
+        "id": "source:checklist:externalDocs",
+        "kind": "source",
+        "label": "External docs",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "External docs",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.contact",
+        "id": "source:checklist:info.contact",
+        "kind": "source",
+        "label": "Contact info",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Contact info",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.description",
+        "id": "source:checklist:info.description",
+        "kind": "source",
+        "label": "API description",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API description",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.license",
+        "id": "source:checklist:info.license",
+        "kind": "source",
+        "label": "License",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "License",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.title",
+        "id": "source:checklist:info.title",
+        "kind": "source",
+        "label": "API title",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API title",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.version",
+        "id": "source:checklist:info.version",
+        "kind": "source",
+        "label": "API version",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API version",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "operation.metadata",
+        "id": "source:checklist:operation.metadata",
+        "kind": "source",
+        "label": "Operation id / summary",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Operation id / summary",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "parameters",
+        "id": "source:checklist:parameters",
+        "kind": "source",
+        "label": "Parameters",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Parameters",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "paths",
+        "id": "source:checklist:paths",
+        "kind": "source",
+        "label": "Paths & methods",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Paths & methods",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "requestBody",
+        "id": "source:checklist:requestBody",
+        "kind": "source",
+        "label": "Request body",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Request body",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "responses",
+        "id": "source:checklist:responses",
+        "kind": "source",
+        "label": "Responses",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Responses",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "security",
+        "id": "source:checklist:security",
+        "kind": "source",
+        "label": "Security schemes",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Security schemes",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "servers",
+        "id": "source:checklist:servers",
+        "kind": "source",
+        "label": "Servers",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Servers",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "source.openapi-version",
+        "id": "source:checklist:source.openapi-version",
+        "kind": "source",
+        "label": "Source OpenAPI version",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Source OpenAPI version",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "tags",
+        "id": "source:checklist:tags",
+        "kind": "source",
+        "label": "Tags",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Tags",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "Person",
+        "id": "source:construct:Person",
+        "kind": "source",
+        "label": "Person",
+        "source": {
+          "construct_kind": "type",
+          "native_id": null,
+          "native_name": "Person",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "Person.age",
+        "id": "source:construct:Person.age",
+        "kind": "source",
+        "label": "age",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "age",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "Person.email",
+        "id": "source:construct:Person.email",
+        "kind": "source",
+        "label": "email",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "email",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "Person.firstName",
+        "id": "source:construct:Person.firstName",
+        "kind": "source",
+        "label": "firstName",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "firstName",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "Person.lastName",
+        "id": "source:construct:Person.lastName",
+        "kind": "source",
+        "label": "lastName",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "lastName",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "Person",
+        "id": "target:/components/schemas/Person",
+        "kind": "target",
+        "label": "/components/schemas/Person",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/Person",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "Person.age",
+        "id": "target:/components/schemas/Person/properties/age",
+        "kind": "target",
+        "label": "/components/schemas/Person/properties/age",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/Person/properties/age",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "Person.email",
+        "id": "target:/components/schemas/Person/properties/email",
+        "kind": "target",
+        "label": "/components/schemas/Person/properties/email",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/Person/properties/email",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "Person.firstName",
+        "id": "target:/components/schemas/Person/properties/firstName",
+        "kind": "target",
+        "label": "/components/schemas/Person/properties/firstName",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/Person/properties/firstName",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "Person.lastName",
+        "id": "target:/components/schemas/Person/properties/lastName",
+        "kind": "target",
+        "label": "/components/schemas/Person/properties/lastName",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/Person/properties/lastName",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "info.description",
+        "id": "target:/info/description",
+        "kind": "target",
+        "label": "/info/description",
+        "source": null,
+        "target": {
+          "json_pointer": "/info/description",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "info.title",
+        "id": "target:/info/title",
+        "kind": "target",
+        "label": "/info/title",
+        "source": null,
+        "target": {
+          "json_pointer": "/info/title",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "info.version",
+        "id": "target:/info/version",
+        "kind": "target",
+        "label": "/info/version",
+        "source": null,
+        "target": {
+          "json_pointer": "/info/version",
+          "native_path": null
+        }
+      }
+    ],
+    "reason_counts": {
+      "destination_unsupported": 0,
+      "emitter_unsupported": 5,
+      "not_applicable": 8,
+      "option_excluded": 0,
+      "security_redacted": 0,
+      "source_incomplete": 3,
+      "source_parse_limit": 0,
+      "target_tool_unavailable": 0
+    },
+    "schema_version": "1.0.0",
+    "scope_counts": {
+      "analysis": 1,
+      "checklist": 18,
+      "construct": 5,
+      "loss": 0
+    },
+    "source": {
+      "analysis": {
+        "analyzer_key": null,
+        "analyzer_version": null,
+        "available": false,
+        "node_count": 0,
+        "status": "unavailable",
+        "status_reason": "not_analyzed",
+        "truncated": false,
+        "unsupported_constructs": []
+      },
+      "paradigm": "data_schema",
+      "project_id": "corpus-json-schema-01-simple-person-json",
+      "source_format": "json-schema",
+      "source_protocol": null,
+      "source_version_label": null,
+      "version_record_id": "rev-corpus"
+    },
+    "status_counts": {
+      "dropped": 2,
+      "inferred": 0,
+      "not-applicable": 13,
+      "retained": 8,
+      "transformed": 0,
+      "unavailable": 1
+    },
+    "target_format": "openapi-3.1",
+    "tool_versions": {
+      "apiome-rest": "[volatile]",
+      "conversion-mode": "lossy",
+      "emitter": "openapi-3.1",
+      "fidelity-analyzer": "MFI-22.3"
+    },
+    "total_constructs": 24,
+    "truncated": false
+  },
+  "snapshot_version": 1,
+  "summary": {
+    "conversion_mode": "lossy",
+    "defaults": {},
+    "dropped_edge_count": 0,
+    "edge_count": 24,
+    "is_lossless": false,
+    "manifest_hash": "[volatile]",
+    "node_count": 32,
+    "reason_counts": {
+      "destination_unsupported": 0,
+      "emitter_unsupported": 5,
+      "not_applicable": 8,
+      "option_excluded": 0,
+      "security_redacted": 0,
+      "source_incomplete": 3,
+      "source_parse_limit": 0,
+      "target_tool_unavailable": 0
+    },
+    "schema_version": "1.0.0",
+    "scope_counts": {
+      "analysis": 1,
+      "checklist": 18,
+      "construct": 5,
+      "loss": 0
+    },
+    "source": {
+      "analysis": {
+        "analyzer_key": null,
+        "analyzer_version": null,
+        "available": false,
+        "node_count": 0,
+        "status": "unavailable",
+        "status_reason": "not_analyzed",
+        "truncated": false,
+        "unsupported_constructs": []
+      },
+      "paradigm": "data_schema",
+      "project_id": "corpus-json-schema-01-simple-person-json",
+      "source_format": "json-schema",
+      "source_protocol": null,
+      "source_version_label": null,
+      "version_record_id": "rev-corpus"
+    },
+    "status_counts": {
+      "dropped": 2,
+      "inferred": 0,
+      "not-applicable": 13,
+      "retained": 8,
+      "transformed": 0,
+      "unavailable": 1
+    },
+    "target_format": "openapi-3.1",
+    "tool_versions": {
+      "apiome-rest": "[volatile]",
+      "conversion-mode": "lossy",
+      "emitter": "openapi-3.1",
+      "fidelity-analyzer": "MFI-22.3"
+    },
+    "total_constructs": 24,
+    "truncated": false,
+    "worst_severity": "warn"
+  }
+}

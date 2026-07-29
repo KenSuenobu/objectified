@@ -18,11 +18,11 @@ in isolation. The acceptance criteria they stand for:
 from __future__ import annotations
 
 import base64
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 from unittest.mock import patch
 
 import pytest
+from corpus_loader import unique_corpus_entry
 
 from app.cobolcopybook_import_source import CobolCopybookImportSource
 from app.edix12_import_source import EdiX12ImportSource
@@ -35,10 +35,14 @@ from app.payload_analysis import (
     analysis_content_fingerprint,
 )
 
-_EXAMPLES = Path(__file__).resolve().parents[2] / "apiome-ui/examples"
-_PO_850 = (_EXAMPLES / "edi-x12/01-850-purchase-order.edi").read_text(encoding="utf-8")
-_MULTI_GROUP = (_EXAMPLES / "edi-x12/04-multi-group-po-ack.edi").read_text(encoding="utf-8")
-_CUSTOMER = (_EXAMPLES / "cobol-copybook/01-customer-record.cpy").read_text(encoding="utf-8")
+# Fixtures come from the manifest-tracked corpus, selected by tag (CPDO-4.1).
+_PO_850 = unique_corpus_entry(
+    format="edix12", features=("850-purchase-order", "iea-trailer")
+).read_text()
+_MULTI_GROUP = unique_corpus_entry(
+    format="edix12", features=("multi-functional-group",)
+).read_text()
+_CUSTOMER = unique_corpus_entry(format="cobolcopybook", features=("occurs",)).read_text()
 
 _TENANT = "11111111-1111-4111-8111-111111111111"
 _USER = "44444444-4444-4444-8444-444444444444"

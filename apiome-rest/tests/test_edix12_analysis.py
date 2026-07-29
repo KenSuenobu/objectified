@@ -16,10 +16,10 @@ those new facts is still governed by the value-visibility policy rather than aro
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any, List
 
 import pytest
+from corpus_loader import unique_corpus_entry
 
 from app.edix12_analysis import (
     EDIX12_ANALYZER_KEY,
@@ -52,10 +52,16 @@ from app.payload_analysis import (
     source_digest,
 )
 
-_EXAMPLES = Path(__file__).resolve().parents[2] / "apiome-ui/examples/edi-x12"
-_PO_850 = (_EXAMPLES / "01-850-purchase-order.edi").read_text(encoding="utf-8")
-_MULTI_GROUP = (_EXAMPLES / "04-multi-group-po-ack.edi").read_text(encoding="utf-8")
-_HIERARCHICAL = (_EXAMPLES / "05-856-asn-hierarchical.edi").read_text(encoding="utf-8")
+# Fixtures come from the manifest-tracked corpus, selected by tag (CPDO-4.1): a fixture that
+# leaves the manifest, or stops carrying the construct a test pins, fails loudly here instead of
+# silently reading a stale file.
+_PO_850 = unique_corpus_entry(
+    format="edix12", features=("850-purchase-order", "iea-trailer")
+).read_text()
+_MULTI_GROUP = unique_corpus_entry(
+    format="edix12", features=("multi-functional-group",)
+).read_text()
+_HIERARCHICAL = unique_corpus_entry(format="edix12", features=("hl-loops",)).read_text()
 
 #: A hand-built interchange whose CLM05 is a composite (``11>B>1`` under the ``>`` sub-element
 #: separator declared in ISA16). None of the shipped examples carry one.

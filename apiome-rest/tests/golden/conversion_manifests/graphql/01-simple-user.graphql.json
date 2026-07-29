@@ -1,0 +1,1132 @@
+{
+  "adapter": "graphql",
+  "conversion_mode": "lossy",
+  "corpus_path": "graphql/01-simple-user.graphql",
+  "manifest": {
+    "bounds": {
+      "maxAnalysisEdges": 200,
+      "maxConstructEdges": 2000
+    },
+    "conversion_mode": "lossy",
+    "defaults": {},
+    "dropped_edge_count": 0,
+    "edges": [
+      {
+        "count": 1,
+        "detail": "named types carried from the source into components.schemas",
+        "evidence": [],
+        "id": "checklist:components.schemas",
+        "reason": null,
+        "remediation": null,
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:components.schemas",
+        "status": "retained",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no construct is marked deprecated",
+        "evidence": [],
+        "id": "checklist:deprecated",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:deprecated",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain request/response examples",
+        "evidence": [],
+        "id": "checklist:examples",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:examples",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain external-documentation links",
+        "evidence": [],
+        "id": "checklist:externalDocs",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:externalDocs",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain contact information",
+        "evidence": [],
+        "id": "checklist:info.contact",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.contact",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source carries no top-level API description",
+        "evidence": [],
+        "id": "checklist:info.description",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:info.description",
+        "status": "dropped",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain license information",
+        "evidence": [],
+        "id": "checklist:info.license",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.license",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "source declares no title; derived from the artifact identity name",
+        "evidence": [
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/info/title"
+          }
+        ],
+        "id": "checklist:info.title",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.title",
+        "status": "inferred",
+        "target": "target:/info/title"
+      },
+      {
+        "count": 1,
+        "detail": "source declares no API version; a placeholder was emitted",
+        "evidence": [
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/info/version"
+          }
+        ],
+        "id": "checklist:info.version",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:info.version",
+        "status": "dropped",
+        "target": "target:/info/version"
+      },
+      {
+        "count": 2,
+        "detail": "no operationId in the source; each was synthesized from method+path",
+        "evidence": [],
+        "id": "checklist:operation.metadata",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:operation.metadata",
+        "status": "inferred",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "parameters carried from the source with location, requiredness and schema",
+        "evidence": [],
+        "id": "checklist:parameters",
+        "reason": null,
+        "remediation": null,
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:parameters",
+        "status": "retained",
+        "target": null
+      },
+      {
+        "count": 2,
+        "detail": "no operation carried an HTTP binding; every route was synthesized",
+        "evidence": [],
+        "id": "checklist:paths",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:paths",
+        "status": "inferred",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation carries a request body",
+        "evidence": [],
+        "id": "checklist:requestBody",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:requestBody",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 2,
+        "detail": "status codes and/or media types were inferred, not declared by the source",
+        "evidence": [],
+        "id": "checklist:responses",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:responses",
+        "status": "inferred",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain security schemes or requirements",
+        "evidence": [],
+        "id": "checklist:security",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:security",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source declares no servers; the base URL is unknown",
+        "evidence": [],
+        "id": "checklist:servers",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:servers",
+        "status": "dropped",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source is not OpenAPI 3.2",
+        "evidence": [],
+        "id": "checklist:source.openapi-version",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:source.openapi-version",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation declares tags",
+        "evidence": [],
+        "id": "checklist:tags",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:tags",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "User.age"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/User/properties/age"
+          }
+        ],
+        "id": "construct:field:User.age",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:User.age",
+        "status": "retained",
+        "target": "target:/components/schemas/User/properties/age"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "User.createdAt"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/User/properties/createdAt"
+          }
+        ],
+        "id": "construct:field:User.createdAt",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:User.createdAt",
+        "status": "retained",
+        "target": "target:/components/schemas/User/properties/createdAt"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "User.email"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/User/properties/email"
+          }
+        ],
+        "id": "construct:field:User.email",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:User.email",
+        "status": "retained",
+        "target": "target:/components/schemas/User/properties/email"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "User.id"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/User/properties/id"
+          }
+        ],
+        "id": "construct:field:User.id",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:User.id",
+        "status": "retained",
+        "target": "target:/components/schemas/User/properties/id"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "User.isActive"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/User/properties/isActive"
+          }
+        ],
+        "id": "construct:field:User.isActive",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:User.isActive",
+        "status": "retained",
+        "target": "target:/components/schemas/User/properties/isActive"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "User.name"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/User/properties/name"
+          }
+        ],
+        "id": "construct:field:User.name",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:User.name",
+        "status": "retained",
+        "target": "target:/components/schemas/User/properties/name"
+      },
+      {
+        "count": 1,
+        "detail": "synthesized HTTP binding for a non-REST operation",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "Query.user"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/paths/~1graphql~1user/get"
+          }
+        ],
+        "id": "construct:operation:Query.user",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "construct",
+        "severity": "warn",
+        "source": "source:construct:Query.user",
+        "status": "inferred",
+        "target": "target:/paths/~1graphql~1user/get"
+      },
+      {
+        "count": 1,
+        "detail": "synthesized HTTP binding for a non-REST operation",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "Query.users"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/paths/~1graphql~1users/get"
+          }
+        ],
+        "id": "construct:operation:Query.users",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "construct",
+        "severity": "warn",
+        "source": "source:construct:Query.users",
+        "status": "inferred",
+        "target": "target:/paths/~1graphql~1users/get"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "User"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/User"
+          }
+        ],
+        "id": "construct:type:User",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:User",
+        "status": "retained",
+        "target": "target:/components/schemas/User"
+      },
+      {
+        "count": 1,
+        "detail": "GraphQL query 'Query.user' projected as GET /graphql/user (SOFA-style)",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "Query.user"
+          }
+        ],
+        "id": "loss:0000:synthesized-http-binding",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "loss",
+        "severity": "warn",
+        "source": "source:construct:Query.user",
+        "status": "inferred",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "GraphQL query 'Query.users' projected as GET /graphql/users (SOFA-style)",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "Query.users"
+          }
+        ],
+        "id": "loss:0001:synthesized-http-binding",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "loss",
+        "severity": "warn",
+        "source": "source:construct:Query.users",
+        "status": "inferred",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "no payload analysis exists for this revision, so the manifest cannot say which native source constructs were seen",
+        "evidence": [],
+        "id": "analysis:absent",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:absent",
+        "status": "unavailable",
+        "target": null
+      }
+    ],
+    "manifest_hash": "[volatile]",
+    "nodes": [
+      {
+        "construct_key": null,
+        "id": "source:analysis:absent",
+        "kind": "source",
+        "label": "source analysis",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "source analysis",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "components.schemas",
+        "id": "source:checklist:components.schemas",
+        "kind": "source",
+        "label": "Component schemas",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Component schemas",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "deprecated",
+        "id": "source:checklist:deprecated",
+        "kind": "source",
+        "label": "Deprecation flags",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Deprecation flags",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "examples",
+        "id": "source:checklist:examples",
+        "kind": "source",
+        "label": "Examples",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Examples",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "externalDocs",
+        "id": "source:checklist:externalDocs",
+        "kind": "source",
+        "label": "External docs",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "External docs",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.contact",
+        "id": "source:checklist:info.contact",
+        "kind": "source",
+        "label": "Contact info",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Contact info",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.description",
+        "id": "source:checklist:info.description",
+        "kind": "source",
+        "label": "API description",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API description",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.license",
+        "id": "source:checklist:info.license",
+        "kind": "source",
+        "label": "License",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "License",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.title",
+        "id": "source:checklist:info.title",
+        "kind": "source",
+        "label": "API title",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API title",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.version",
+        "id": "source:checklist:info.version",
+        "kind": "source",
+        "label": "API version",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API version",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "operation.metadata",
+        "id": "source:checklist:operation.metadata",
+        "kind": "source",
+        "label": "Operation id / summary",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Operation id / summary",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "parameters",
+        "id": "source:checklist:parameters",
+        "kind": "source",
+        "label": "Parameters",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Parameters",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "paths",
+        "id": "source:checklist:paths",
+        "kind": "source",
+        "label": "Paths & methods",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Paths & methods",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "requestBody",
+        "id": "source:checklist:requestBody",
+        "kind": "source",
+        "label": "Request body",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Request body",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "responses",
+        "id": "source:checklist:responses",
+        "kind": "source",
+        "label": "Responses",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Responses",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "security",
+        "id": "source:checklist:security",
+        "kind": "source",
+        "label": "Security schemes",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Security schemes",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "servers",
+        "id": "source:checklist:servers",
+        "kind": "source",
+        "label": "Servers",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Servers",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "source.openapi-version",
+        "id": "source:checklist:source.openapi-version",
+        "kind": "source",
+        "label": "Source OpenAPI version",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Source OpenAPI version",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "tags",
+        "id": "source:checklist:tags",
+        "kind": "source",
+        "label": "Tags",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Tags",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "Query.user",
+        "id": "source:construct:Query.user",
+        "kind": "source",
+        "label": "user",
+        "source": {
+          "construct_kind": "operation",
+          "native_id": null,
+          "native_name": "user",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "Query.users",
+        "id": "source:construct:Query.users",
+        "kind": "source",
+        "label": "users",
+        "source": {
+          "construct_kind": "operation",
+          "native_id": null,
+          "native_name": "users",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "User",
+        "id": "source:construct:User",
+        "kind": "source",
+        "label": "User",
+        "source": {
+          "construct_kind": "type",
+          "native_id": null,
+          "native_name": "User",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "User.age",
+        "id": "source:construct:User.age",
+        "kind": "source",
+        "label": "age",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "age",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "User.createdAt",
+        "id": "source:construct:User.createdAt",
+        "kind": "source",
+        "label": "createdAt",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "createdAt",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "User.email",
+        "id": "source:construct:User.email",
+        "kind": "source",
+        "label": "email",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "email",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "User.id",
+        "id": "source:construct:User.id",
+        "kind": "source",
+        "label": "id",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "id",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "User.isActive",
+        "id": "source:construct:User.isActive",
+        "kind": "source",
+        "label": "isActive",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "isActive",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "User.name",
+        "id": "source:construct:User.name",
+        "kind": "source",
+        "label": "name",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "name",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "User",
+        "id": "target:/components/schemas/User",
+        "kind": "target",
+        "label": "/components/schemas/User",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/User",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "User.age",
+        "id": "target:/components/schemas/User/properties/age",
+        "kind": "target",
+        "label": "/components/schemas/User/properties/age",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/User/properties/age",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "User.createdAt",
+        "id": "target:/components/schemas/User/properties/createdAt",
+        "kind": "target",
+        "label": "/components/schemas/User/properties/createdAt",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/User/properties/createdAt",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "User.email",
+        "id": "target:/components/schemas/User/properties/email",
+        "kind": "target",
+        "label": "/components/schemas/User/properties/email",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/User/properties/email",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "User.id",
+        "id": "target:/components/schemas/User/properties/id",
+        "kind": "target",
+        "label": "/components/schemas/User/properties/id",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/User/properties/id",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "User.isActive",
+        "id": "target:/components/schemas/User/properties/isActive",
+        "kind": "target",
+        "label": "/components/schemas/User/properties/isActive",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/User/properties/isActive",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "User.name",
+        "id": "target:/components/schemas/User/properties/name",
+        "kind": "target",
+        "label": "/components/schemas/User/properties/name",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/User/properties/name",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "info.title",
+        "id": "target:/info/title",
+        "kind": "target",
+        "label": "/info/title",
+        "source": null,
+        "target": {
+          "json_pointer": "/info/title",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "info.version",
+        "id": "target:/info/version",
+        "kind": "target",
+        "label": "/info/version",
+        "source": null,
+        "target": {
+          "json_pointer": "/info/version",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "Query.user",
+        "id": "target:/paths/~1graphql~1user/get",
+        "kind": "target",
+        "label": "/paths/~1graphql~1user/get",
+        "source": null,
+        "target": {
+          "json_pointer": "/paths/~1graphql~1user/get",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "Query.users",
+        "id": "target:/paths/~1graphql~1users/get",
+        "kind": "target",
+        "label": "/paths/~1graphql~1users/get",
+        "source": null,
+        "target": {
+          "json_pointer": "/paths/~1graphql~1users/get",
+          "native_path": null
+        }
+      }
+    ],
+    "reason_counts": {
+      "destination_unsupported": 0,
+      "emitter_unsupported": 5,
+      "not_applicable": 4,
+      "option_excluded": 0,
+      "security_redacted": 0,
+      "source_incomplete": 12,
+      "source_parse_limit": 0,
+      "target_tool_unavailable": 0
+    },
+    "schema_version": "1.0.0",
+    "scope_counts": {
+      "analysis": 1,
+      "checklist": 18,
+      "construct": 9,
+      "loss": 2
+    },
+    "source": {
+      "analysis": {
+        "analyzer_key": null,
+        "analyzer_version": null,
+        "available": false,
+        "node_count": 0,
+        "status": "unavailable",
+        "status_reason": "not_analyzed",
+        "truncated": false,
+        "unsupported_constructs": []
+      },
+      "paradigm": "graph",
+      "project_id": "corpus-graphql-01-simple-user-graphql",
+      "source_format": "graphql",
+      "source_protocol": "graphql",
+      "source_version_label": null,
+      "version_record_id": "rev-corpus"
+    },
+    "status_counts": {
+      "dropped": 3,
+      "inferred": 8,
+      "not-applicable": 9,
+      "retained": 9,
+      "transformed": 0,
+      "unavailable": 1
+    },
+    "target_format": "openapi-3.1",
+    "tool_versions": {
+      "apiome-rest": "[volatile]",
+      "conversion-mode": "lossy",
+      "emitter": "openapi-3.1",
+      "fidelity-analyzer": "MFI-22.3"
+    },
+    "total_constructs": 28,
+    "truncated": false
+  },
+  "snapshot_version": 1,
+  "summary": {
+    "conversion_mode": "lossy",
+    "defaults": {},
+    "dropped_edge_count": 0,
+    "edge_count": 30,
+    "is_lossless": false,
+    "manifest_hash": "[volatile]",
+    "node_count": 39,
+    "reason_counts": {
+      "destination_unsupported": 0,
+      "emitter_unsupported": 5,
+      "not_applicable": 4,
+      "option_excluded": 0,
+      "security_redacted": 0,
+      "source_incomplete": 12,
+      "source_parse_limit": 0,
+      "target_tool_unavailable": 0
+    },
+    "schema_version": "1.0.0",
+    "scope_counts": {
+      "analysis": 1,
+      "checklist": 18,
+      "construct": 9,
+      "loss": 2
+    },
+    "source": {
+      "analysis": {
+        "analyzer_key": null,
+        "analyzer_version": null,
+        "available": false,
+        "node_count": 0,
+        "status": "unavailable",
+        "status_reason": "not_analyzed",
+        "truncated": false,
+        "unsupported_constructs": []
+      },
+      "paradigm": "graph",
+      "project_id": "corpus-graphql-01-simple-user-graphql",
+      "source_format": "graphql",
+      "source_protocol": "graphql",
+      "source_version_label": null,
+      "version_record_id": "rev-corpus"
+    },
+    "status_counts": {
+      "dropped": 3,
+      "inferred": 8,
+      "not-applicable": 9,
+      "retained": 9,
+      "transformed": 0,
+      "unavailable": 1
+    },
+    "target_format": "openapi-3.1",
+    "tool_versions": {
+      "apiome-rest": "[volatile]",
+      "conversion-mode": "lossy",
+      "emitter": "openapi-3.1",
+      "fidelity-analyzer": "MFI-22.3"
+    },
+    "total_constructs": 28,
+    "truncated": false,
+    "worst_severity": "warn"
+  }
+}

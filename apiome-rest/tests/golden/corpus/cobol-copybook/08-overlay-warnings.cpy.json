@@ -1,0 +1,302 @@
+{
+  "adapter": "cobolcopybook",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "cobolcopybook_root": "ACCOUNT-SNAPSHOT",
+      "cobolcopybook_tree": {
+        "children": [
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "SNAP-ID",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(6)",
+            "redefines": null,
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "SNAP-BODY",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(10)",
+            "redefines": null,
+            "usage": null
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "SNAP-WIDE-CODE",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(8)",
+                "redefines": null,
+                "usage": null
+              },
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "SNAP-WIDE-EXTRA",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(6)",
+                "redefines": null,
+                "usage": null
+              }
+            ],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "SNAP-WIDE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": null,
+            "redefines": "SNAP-BODY",
+            "usage": null
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "SNAP-ORPHAN-KEY",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "X(4)",
+                "redefines": null,
+                "usage": null
+              }
+            ],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "SNAP-ORPHAN",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": null,
+            "redefines": "SNAP-MISSING",
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "SNAP-POSTED-DATE",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(8)",
+            "redefines": null,
+            "usage": null
+          }
+        ],
+        "conditions": [],
+        "depending_on": null,
+        "level": 1,
+        "name": "ACCOUNT-SNAPSHOT",
+        "occurs_max": null,
+        "occurs_min": null,
+        "picture": null,
+        "redefines": null,
+        "usage": null
+      }
+    },
+    "format": "cobolcopybook",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "ACCOUNT-SNAPSHOT",
+      "namespace": "ACCOUNT-SNAPSHOT"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "ACCOUNT-SNAPSHOT",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cobol_kind": "group",
+          "cobol_level": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(10)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(10)",
+              "cobol_usage": null
+            },
+            "field_number": 2,
+            "key": "ACCOUNT-SNAPSHOT.ACCOUNT-SNAPSHOT.SNAP-BODY",
+            "name": "SNAP-BODY",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(6)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(6)",
+              "cobol_usage": null
+            },
+            "field_number": 1,
+            "key": "ACCOUNT-SNAPSHOT.ACCOUNT-SNAPSHOT.SNAP-ID",
+            "name": "SNAP-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": null,
+              "cobol_usage": null
+            },
+            "field_number": 4,
+            "key": "ACCOUNT-SNAPSHOT.ACCOUNT-SNAPSHOT.SNAP-ORPHAN",
+            "name": "SNAP-ORPHAN",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ACCOUNT-SNAPSHOT.SNAP-ORPHAN",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(8)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(8)",
+              "cobol_usage": null
+            },
+            "field_number": 5,
+            "key": "ACCOUNT-SNAPSHOT.ACCOUNT-SNAPSHOT.SNAP-POSTED-DATE",
+            "name": "SNAP-POSTED-DATE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": null,
+              "cobol_usage": null
+            },
+            "field_number": 3,
+            "key": "ACCOUNT-SNAPSHOT.ACCOUNT-SNAPSHOT.SNAP-WIDE",
+            "name": "SNAP-WIDE",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ACCOUNT-SNAPSHOT.SNAP-WIDE",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ACCOUNT-SNAPSHOT.ACCOUNT-SNAPSHOT",
+        "key_type": null,
+        "kind": "record",
+        "name": "ACCOUNT-SNAPSHOT",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cobol-copybook/08-overlay-warnings.cpy",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cobolcopybook"
+  },
+  "fingerprint": "sha256:399eb31cd90a4799b2bbe7cd9b16092497bbb69b225b24c2fc5f900626bd49a5",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "3b0d1e4a1d9ce39eb5ae7c14f3562703f29da423b31459231a1429b7ca88cc47",
+    "score": 93,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

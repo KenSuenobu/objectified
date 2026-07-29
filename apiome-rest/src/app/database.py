@@ -277,6 +277,27 @@ class Database:
             conn.rollback()
             raise e
 
+    def _execute_write(self, query: str, params: tuple = None) -> int:
+        """Execute a single write statement that returns no rows.
+
+        ``execute_query`` unconditionally ``fetchall()``s, which psycopg2 refuses on a
+        plain INSERT/UPDATE/DELETE ("no results to fetch") — a write without a
+        ``RETURNING`` clause must come through here instead.
+
+        Returns:
+            The statement's affected row count.
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, params)
+                affected = cursor.rowcount
+            conn.commit()
+            return affected
+        except Exception as e:
+            conn.rollback()
+            raise e
+
     def _begin_tx(self, conn) -> bool:
         """Flush any dangling transaction, then enter manual-commit mode.
 
@@ -11385,7 +11406,7 @@ class Database:
             VALUES (%s, %s, %s, %s, %s)
             ON CONFLICT (tenant_id, project_id) DO NOTHING
         """
-        self.execute_query(
+        self._execute_write(
             query, (tenant_id, group_id, project_id, link_source, created_by)
         )
 
@@ -11397,8 +11418,8 @@ class Database:
             SET group_id = %s
             WHERE tenant_id = %s AND group_id = %s
         """
-        self.execute_query(query, (keep_group_id, tenant_id, drop_group_id))
-        self.execute_query(
+        self._execute_write(query, (keep_group_id, tenant_id, drop_group_id))
+        self._execute_write(
             "DELETE FROM apiome.api_identity_groups WHERE id = %s AND tenant_id = %s",
             (drop_group_id, tenant_id),
         )
@@ -11413,11 +11434,11 @@ class Database:
         """
         rows = self.execute_query(count_query, (tenant_id, group_id))
         if rows and int(rows[0]["cnt"]) < 2:
-            self.execute_query(
+            self._execute_write(
                 "DELETE FROM apiome.api_identity_members WHERE tenant_id = %s AND group_id = %s",
                 (tenant_id, group_id),
             )
-            self.execute_query(
+            self._execute_write(
                 "DELETE FROM apiome.api_identity_groups WHERE id = %s AND tenant_id = %s",
                 (group_id, tenant_id),
             )

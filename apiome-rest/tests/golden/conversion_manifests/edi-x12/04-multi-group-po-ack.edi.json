@@ -1,0 +1,1374 @@
+{
+  "adapter": "edix12",
+  "conversion_mode": "lossy",
+  "corpus_path": "edi-x12/04-multi-group-po-ack.edi",
+  "manifest": {
+    "bounds": {
+      "maxAnalysisEdges": 200,
+      "maxConstructEdges": 2000
+    },
+    "conversion_mode": "lossy",
+    "defaults": {},
+    "dropped_edge_count": 0,
+    "edges": [
+      {
+        "count": 1,
+        "detail": "named types carried from the source into components.schemas",
+        "evidence": [],
+        "id": "checklist:components.schemas",
+        "reason": null,
+        "remediation": null,
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:components.schemas",
+        "status": "retained",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no construct is marked deprecated",
+        "evidence": [],
+        "id": "checklist:deprecated",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:deprecated",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain request/response examples",
+        "evidence": [],
+        "id": "checklist:examples",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:examples",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain external-documentation links",
+        "evidence": [],
+        "id": "checklist:externalDocs",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:externalDocs",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain contact information",
+        "evidence": [],
+        "id": "checklist:info.contact",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.contact",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source carries no top-level API description",
+        "evidence": [],
+        "id": "checklist:info.description",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:info.description",
+        "status": "dropped",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain license information",
+        "evidence": [],
+        "id": "checklist:info.license",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.license",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "title carried from the source",
+        "evidence": [
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/info/title"
+          }
+        ],
+        "id": "checklist:info.title",
+        "reason": null,
+        "remediation": null,
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.title",
+        "status": "retained",
+        "target": "target:/info/title"
+      },
+      {
+        "count": 1,
+        "detail": "source declares no API version; a placeholder was emitted",
+        "evidence": [
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/info/version"
+          }
+        ],
+        "id": "checklist:info.version",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:info.version",
+        "status": "dropped",
+        "target": "target:/info/version"
+      },
+      {
+        "count": 0,
+        "detail": "source defines no operations",
+        "evidence": [],
+        "id": "checklist:operation.metadata",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:operation.metadata",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation declares parameters",
+        "evidence": [],
+        "id": "checklist:parameters",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:parameters",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source defines types only; there are no operations to route",
+        "evidence": [],
+        "id": "checklist:paths",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:paths",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation carries a request body",
+        "evidence": [],
+        "id": "checklist:requestBody",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:requestBody",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source defines no operations",
+        "evidence": [],
+        "id": "checklist:responses",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:responses",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain security schemes or requirements",
+        "evidence": [],
+        "id": "checklist:security",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:security",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source declares no servers; the base URL is unknown",
+        "evidence": [],
+        "id": "checklist:servers",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:servers",
+        "status": "dropped",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source is not OpenAPI 3.2",
+        "evidence": [],
+        "id": "checklist:source.openapi-version",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:source.openapi-version",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation declares tags",
+        "evidence": [],
+        "id": "checklist:tags",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:tags",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850.BEG01"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850/properties/BEG01"
+          }
+        ],
+        "id": "construct:field:X12-850.TransactionSet850.BEG01",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850.BEG01",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850/properties/BEG01"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850.BEG02"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850/properties/BEG02"
+          }
+        ],
+        "id": "construct:field:X12-850.TransactionSet850.BEG02",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850.BEG02",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850/properties/BEG02"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850.BEG03"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850/properties/BEG03"
+          }
+        ],
+        "id": "construct:field:X12-850.TransactionSet850.BEG03",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850.BEG03",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850/properties/BEG03"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850.BEG05"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850/properties/BEG05"
+          }
+        ],
+        "id": "construct:field:X12-850.TransactionSet850.BEG05",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850.BEG05",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850/properties/BEG05"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850.CTT01"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850/properties/CTT01"
+          }
+        ],
+        "id": "construct:field:X12-850.TransactionSet850.CTT01",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850.CTT01",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850/properties/CTT01"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850.PO101"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850/properties/PO101"
+          }
+        ],
+        "id": "construct:field:X12-850.TransactionSet850.PO101",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850.PO101",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850/properties/PO101"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850.PO102"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850/properties/PO102"
+          }
+        ],
+        "id": "construct:field:X12-850.TransactionSet850.PO102",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850.PO102",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850/properties/PO102"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850.PO103"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850/properties/PO103"
+          }
+        ],
+        "id": "construct:field:X12-850.TransactionSet850.PO103",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850.PO103",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850/properties/PO103"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850.PO104"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850/properties/PO104"
+          }
+        ],
+        "id": "construct:field:X12-850.TransactionSet850.PO104",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850.PO104",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850/properties/PO104"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850.PO105"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850/properties/PO105"
+          }
+        ],
+        "id": "construct:field:X12-850.TransactionSet850.PO105",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850.PO105",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850/properties/PO105"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850.PO106"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850/properties/PO106"
+          }
+        ],
+        "id": "construct:field:X12-850.TransactionSet850.PO106",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850.PO106",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850/properties/PO106"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850.PO107"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850/properties/PO107"
+          }
+        ],
+        "id": "construct:field:X12-850.TransactionSet850.PO107",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850.PO107",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850/properties/PO107"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-850.TransactionSet850"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-850.TransactionSet850"
+          }
+        ],
+        "id": "construct:type:X12-850.TransactionSet850",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-850.TransactionSet850",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-850.TransactionSet850"
+      },
+      {
+        "count": 1,
+        "detail": "the edix12 analyzer does not model x12.hl_hierarchy, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:x12.hl_hierarchy",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:x12.hl_hierarchy",
+        "status": "unavailable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "the edix12 analyzer does not model x12.iea_trailer, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:x12.iea_trailer",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:x12.iea_trailer",
+        "status": "unavailable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "the edix12 analyzer does not model x12.implementation_guide_validation, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:x12.implementation_guide_validation",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:x12.implementation_guide_validation",
+        "status": "unavailable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "the edix12 analyzer does not model x12.ta1_acknowledgement, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:x12.ta1_acknowledgement",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:x12.ta1_acknowledgement",
+        "status": "unavailable",
+        "target": null
+      }
+    ],
+    "manifest_hash": "[volatile]",
+    "nodes": [
+      {
+        "construct_key": "x12.hl_hierarchy",
+        "id": "source:analysis:x12.hl_hierarchy",
+        "kind": "source",
+        "label": "x12.hl_hierarchy",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "x12.hl_hierarchy",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "x12.iea_trailer",
+        "id": "source:analysis:x12.iea_trailer",
+        "kind": "source",
+        "label": "x12.iea_trailer",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "x12.iea_trailer",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "x12.implementation_guide_validation",
+        "id": "source:analysis:x12.implementation_guide_validation",
+        "kind": "source",
+        "label": "x12.implementation_guide_validation",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "x12.implementation_guide_validation",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "x12.ta1_acknowledgement",
+        "id": "source:analysis:x12.ta1_acknowledgement",
+        "kind": "source",
+        "label": "x12.ta1_acknowledgement",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "x12.ta1_acknowledgement",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "components.schemas",
+        "id": "source:checklist:components.schemas",
+        "kind": "source",
+        "label": "Component schemas",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Component schemas",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "deprecated",
+        "id": "source:checklist:deprecated",
+        "kind": "source",
+        "label": "Deprecation flags",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Deprecation flags",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "examples",
+        "id": "source:checklist:examples",
+        "kind": "source",
+        "label": "Examples",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Examples",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "externalDocs",
+        "id": "source:checklist:externalDocs",
+        "kind": "source",
+        "label": "External docs",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "External docs",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.contact",
+        "id": "source:checklist:info.contact",
+        "kind": "source",
+        "label": "Contact info",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Contact info",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.description",
+        "id": "source:checklist:info.description",
+        "kind": "source",
+        "label": "API description",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API description",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.license",
+        "id": "source:checklist:info.license",
+        "kind": "source",
+        "label": "License",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "License",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.title",
+        "id": "source:checklist:info.title",
+        "kind": "source",
+        "label": "API title",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API title",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.version",
+        "id": "source:checklist:info.version",
+        "kind": "source",
+        "label": "API version",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API version",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "operation.metadata",
+        "id": "source:checklist:operation.metadata",
+        "kind": "source",
+        "label": "Operation id / summary",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Operation id / summary",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "parameters",
+        "id": "source:checklist:parameters",
+        "kind": "source",
+        "label": "Parameters",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Parameters",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "paths",
+        "id": "source:checklist:paths",
+        "kind": "source",
+        "label": "Paths & methods",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Paths & methods",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "requestBody",
+        "id": "source:checklist:requestBody",
+        "kind": "source",
+        "label": "Request body",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Request body",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "responses",
+        "id": "source:checklist:responses",
+        "kind": "source",
+        "label": "Responses",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Responses",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "security",
+        "id": "source:checklist:security",
+        "kind": "source",
+        "label": "Security schemes",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Security schemes",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "servers",
+        "id": "source:checklist:servers",
+        "kind": "source",
+        "label": "Servers",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Servers",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "source.openapi-version",
+        "id": "source:checklist:source.openapi-version",
+        "kind": "source",
+        "label": "Source OpenAPI version",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Source OpenAPI version",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "tags",
+        "id": "source:checklist:tags",
+        "kind": "source",
+        "label": "Tags",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Tags",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850",
+        "id": "source:construct:X12-850.TransactionSet850",
+        "kind": "source",
+        "label": "TransactionSet850",
+        "source": {
+          "construct_kind": "type",
+          "native_id": null,
+          "native_name": "TransactionSet850",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.BEG01",
+        "id": "source:construct:X12-850.TransactionSet850.BEG01",
+        "kind": "source",
+        "label": "BEG01",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "BEG01",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.BEG02",
+        "id": "source:construct:X12-850.TransactionSet850.BEG02",
+        "kind": "source",
+        "label": "BEG02",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "BEG02",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.BEG03",
+        "id": "source:construct:X12-850.TransactionSet850.BEG03",
+        "kind": "source",
+        "label": "BEG03",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "BEG03",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.BEG05",
+        "id": "source:construct:X12-850.TransactionSet850.BEG05",
+        "kind": "source",
+        "label": "BEG05",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "BEG05",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.CTT01",
+        "id": "source:construct:X12-850.TransactionSet850.CTT01",
+        "kind": "source",
+        "label": "CTT01",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "CTT01",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO101",
+        "id": "source:construct:X12-850.TransactionSet850.PO101",
+        "kind": "source",
+        "label": "PO101",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "PO101",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO102",
+        "id": "source:construct:X12-850.TransactionSet850.PO102",
+        "kind": "source",
+        "label": "PO102",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "PO102",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO103",
+        "id": "source:construct:X12-850.TransactionSet850.PO103",
+        "kind": "source",
+        "label": "PO103",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "PO103",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO104",
+        "id": "source:construct:X12-850.TransactionSet850.PO104",
+        "kind": "source",
+        "label": "PO104",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "PO104",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO105",
+        "id": "source:construct:X12-850.TransactionSet850.PO105",
+        "kind": "source",
+        "label": "PO105",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "PO105",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO106",
+        "id": "source:construct:X12-850.TransactionSet850.PO106",
+        "kind": "source",
+        "label": "PO106",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "PO106",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO107",
+        "id": "source:construct:X12-850.TransactionSet850.PO107",
+        "kind": "source",
+        "label": "PO107",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "PO107",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850",
+        "id": "target:/components/schemas/X12-850.TransactionSet850",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.BEG01",
+        "id": "target:/components/schemas/X12-850.TransactionSet850/properties/BEG01",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850/properties/BEG01",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850/properties/BEG01",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.BEG02",
+        "id": "target:/components/schemas/X12-850.TransactionSet850/properties/BEG02",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850/properties/BEG02",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850/properties/BEG02",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.BEG03",
+        "id": "target:/components/schemas/X12-850.TransactionSet850/properties/BEG03",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850/properties/BEG03",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850/properties/BEG03",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.BEG05",
+        "id": "target:/components/schemas/X12-850.TransactionSet850/properties/BEG05",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850/properties/BEG05",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850/properties/BEG05",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.CTT01",
+        "id": "target:/components/schemas/X12-850.TransactionSet850/properties/CTT01",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850/properties/CTT01",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850/properties/CTT01",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO101",
+        "id": "target:/components/schemas/X12-850.TransactionSet850/properties/PO101",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850/properties/PO101",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850/properties/PO101",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO102",
+        "id": "target:/components/schemas/X12-850.TransactionSet850/properties/PO102",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850/properties/PO102",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850/properties/PO102",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO103",
+        "id": "target:/components/schemas/X12-850.TransactionSet850/properties/PO103",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850/properties/PO103",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850/properties/PO103",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO104",
+        "id": "target:/components/schemas/X12-850.TransactionSet850/properties/PO104",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850/properties/PO104",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850/properties/PO104",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO105",
+        "id": "target:/components/schemas/X12-850.TransactionSet850/properties/PO105",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850/properties/PO105",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850/properties/PO105",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO106",
+        "id": "target:/components/schemas/X12-850.TransactionSet850/properties/PO106",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850/properties/PO106",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850/properties/PO106",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-850.TransactionSet850.PO107",
+        "id": "target:/components/schemas/X12-850.TransactionSet850/properties/PO107",
+        "kind": "target",
+        "label": "/components/schemas/X12-850.TransactionSet850/properties/PO107",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-850.TransactionSet850/properties/PO107",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "info.title",
+        "id": "target:/info/title",
+        "kind": "target",
+        "label": "/info/title",
+        "source": null,
+        "target": {
+          "json_pointer": "/info/title",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "info.version",
+        "id": "target:/info/version",
+        "kind": "target",
+        "label": "/info/version",
+        "source": null,
+        "target": {
+          "json_pointer": "/info/version",
+          "native_path": null
+        }
+      }
+    ],
+    "reason_counts": {
+      "destination_unsupported": 0,
+      "emitter_unsupported": 5,
+      "not_applicable": 8,
+      "option_excluded": 0,
+      "security_redacted": 0,
+      "source_incomplete": 3,
+      "source_parse_limit": 4,
+      "target_tool_unavailable": 0
+    },
+    "schema_version": "1.0.0",
+    "scope_counts": {
+      "analysis": 4,
+      "checklist": 18,
+      "construct": 13,
+      "loss": 0
+    },
+    "source": {
+      "analysis": {
+        "analyzer_key": "edix12",
+        "analyzer_version": "1.1.0",
+        "available": true,
+        "node_count": 29,
+        "status": "available",
+        "status_reason": null,
+        "truncated": false,
+        "unsupported_constructs": [
+          "x12.hl_hierarchy",
+          "x12.iea_trailer",
+          "x12.implementation_guide_validation",
+          "x12.ta1_acknowledgement"
+        ]
+      },
+      "paradigm": "data_schema",
+      "project_id": "corpus-edi-x12-04-multi-group-po-ack-edi",
+      "source_format": "edix12",
+      "source_protocol": null,
+      "source_version_label": null,
+      "version_record_id": "rev-corpus"
+    },
+    "status_counts": {
+      "dropped": 3,
+      "inferred": 0,
+      "not-applicable": 13,
+      "retained": 15,
+      "transformed": 0,
+      "unavailable": 4
+    },
+    "target_format": "openapi-3.1",
+    "tool_versions": {
+      "apiome-rest": "[volatile]",
+      "conversion-mode": "lossy",
+      "emitter": "openapi-3.1",
+      "fidelity-analyzer": "MFI-22.3"
+    },
+    "total_constructs": 35,
+    "truncated": false
+  },
+  "snapshot_version": 1,
+  "summary": {
+    "conversion_mode": "lossy",
+    "defaults": {},
+    "dropped_edge_count": 0,
+    "edge_count": 35,
+    "is_lossless": false,
+    "manifest_hash": "[volatile]",
+    "node_count": 50,
+    "reason_counts": {
+      "destination_unsupported": 0,
+      "emitter_unsupported": 5,
+      "not_applicable": 8,
+      "option_excluded": 0,
+      "security_redacted": 0,
+      "source_incomplete": 3,
+      "source_parse_limit": 4,
+      "target_tool_unavailable": 0
+    },
+    "schema_version": "1.0.0",
+    "scope_counts": {
+      "analysis": 4,
+      "checklist": 18,
+      "construct": 13,
+      "loss": 0
+    },
+    "source": {
+      "analysis": {
+        "analyzer_key": "edix12",
+        "analyzer_version": "1.1.0",
+        "available": true,
+        "node_count": 29,
+        "status": "available",
+        "status_reason": null,
+        "truncated": false,
+        "unsupported_constructs": [
+          "x12.hl_hierarchy",
+          "x12.iea_trailer",
+          "x12.implementation_guide_validation",
+          "x12.ta1_acknowledgement"
+        ]
+      },
+      "paradigm": "data_schema",
+      "project_id": "corpus-edi-x12-04-multi-group-po-ack-edi",
+      "source_format": "edix12",
+      "source_protocol": null,
+      "source_version_label": null,
+      "version_record_id": "rev-corpus"
+    },
+    "status_counts": {
+      "dropped": 3,
+      "inferred": 0,
+      "not-applicable": 13,
+      "retained": 15,
+      "transformed": 0,
+      "unavailable": 4
+    },
+    "target_format": "openapi-3.1",
+    "tool_versions": {
+      "apiome-rest": "[volatile]",
+      "conversion-mode": "lossy",
+      "emitter": "openapi-3.1",
+      "fidelity-analyzer": "MFI-22.3"
+    },
+    "total_constructs": 35,
+    "truncated": false,
+    "worst_severity": "warn"
+  }
+}

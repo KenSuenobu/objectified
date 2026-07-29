@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.79.0",
+    "version": "1.79.1",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -100396,7 +100396,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-07-29T01:46:01Z"
+            "example": "2026-07-29T02:42:59Z"
           }
         },
         "additionalProperties": false,
@@ -112521,14 +112521,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-07-29T01:46:01Z"
+            "example": "2026-07-29T02:42:59Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-07-29T01:46:01Z"
+            "example": "2026-07-29T02:42:59Z"
           },
           "outcome": {
             "anyOf": [

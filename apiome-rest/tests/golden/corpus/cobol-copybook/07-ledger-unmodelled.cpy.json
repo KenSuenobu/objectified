@@ -1,0 +1,320 @@
+{
+  "adapter": "cobolcopybook",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "cobolcopybook_root": "LEDGER-RECORD",
+      "cobolcopybook_tree": {
+        "children": [
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "LEDGER-ID",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "9(8)",
+            "redefines": null,
+            "usage": null
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "LEDGER-YEAR",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "9(4)",
+                "redefines": null,
+                "usage": null
+              },
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 10,
+                "name": "LEDGER-MONTH",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": "9(2)",
+                "redefines": null,
+                "usage": null
+              }
+            ],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "LEDGER-PERIOD",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": null,
+            "redefines": null,
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "LEDGER-TITLE-NATIONAL",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "N(20)",
+            "redefines": null,
+            "usage": null
+          },
+          {
+            "children": [],
+            "conditions": [],
+            "depending_on": null,
+            "level": 5,
+            "name": "LEDGER-AMOUNT",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "S9(11)V99",
+            "redefines": null,
+            "usage": "COMP-3"
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "conditions": [],
+                "depending_on": null,
+                "level": 66,
+                "name": "LEDGER-STAMP",
+                "occurs_max": null,
+                "occurs_min": null,
+                "picture": null,
+                "redefines": null,
+                "usage": null
+              }
+            ],
+            "conditions": [
+              {
+                "name": "LEDGER-OPEN",
+                "value": "O"
+              },
+              {
+                "name": "LEDGER-CLOSED",
+                "value": "C"
+              }
+            ],
+            "depending_on": null,
+            "level": 5,
+            "name": "LEDGER-STATUS",
+            "occurs_max": null,
+            "occurs_min": null,
+            "picture": "X(1)",
+            "redefines": null,
+            "usage": null
+          }
+        ],
+        "conditions": [],
+        "depending_on": null,
+        "level": 1,
+        "name": "LEDGER-RECORD",
+        "occurs_max": null,
+        "occurs_min": null,
+        "picture": null,
+        "redefines": null,
+        "usage": null
+      }
+    },
+    "format": "cobolcopybook",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "LEDGER-RECORD",
+      "namespace": "LEDGER-RECORD"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "LEDGER-RECORD",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cobol_kind": "group",
+          "cobol_level": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "S9(11)V99",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "S9(11)V99",
+              "cobol_usage": "COMP-3"
+            },
+            "field_number": 4,
+            "key": "LEDGER-RECORD.LEDGER-RECORD.LEDGER-AMOUNT",
+            "name": "LEDGER-AMOUNT",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "9(8)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "9(8)",
+              "cobol_usage": null
+            },
+            "field_number": 1,
+            "key": "LEDGER-RECORD.LEDGER-RECORD.LEDGER-ID",
+            "name": "LEDGER-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": null,
+              "cobol_usage": null
+            },
+            "field_number": 2,
+            "key": "LEDGER-RECORD.LEDGER-RECORD.LEDGER-PERIOD",
+            "name": "LEDGER-PERIOD",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "LEDGER-RECORD.LEDGER-PERIOD",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "X(1)",
+            "extras": {
+              "cobol_conditions": [
+                {
+                  "name": "LEDGER-OPEN",
+                  "value": "O"
+                },
+                {
+                  "name": "LEDGER-CLOSED",
+                  "value": "C"
+                }
+              ],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "X(1)",
+              "cobol_usage": null
+            },
+            "field_number": 5,
+            "key": "LEDGER-RECORD.LEDGER-RECORD.LEDGER-STATUS",
+            "name": "LEDGER-STATUS",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "LEDGER-RECORD.LEDGER-STATUS",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "N(20)",
+            "extras": {
+              "cobol_conditions": [],
+              "cobol_depending_on": null,
+              "cobol_level": 5,
+              "cobol_occurs_max": null,
+              "cobol_occurs_min": null,
+              "cobol_picture": "N(20)",
+              "cobol_usage": null
+            },
+            "field_number": 3,
+            "key": "LEDGER-RECORD.LEDGER-RECORD.LEDGER-TITLE-NATIONAL",
+            "name": "LEDGER-TITLE-NATIONAL",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "LEDGER-RECORD.LEDGER-RECORD",
+        "key_type": null,
+        "kind": "record",
+        "name": "LEDGER-RECORD",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cobol-copybook/07-ledger-unmodelled.cpy",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "cobolcopybook"
+  },
+  "fingerprint": "sha256:99ad6bb1fda9f854c7725aa515f6bb7aa7374b704a24e5810c66b6f0b6d31ecc",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "ec5f512d39f10f8a77338b176cfe2cc3e86d00917c7ca4b2fbea8fbe68a5a441",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

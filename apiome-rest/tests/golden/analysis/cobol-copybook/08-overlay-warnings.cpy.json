@@ -1,0 +1,362 @@
+{
+  "adapter": "cobolcopybook",
+  "corpus_path": "cobol-copybook/08-overlay-warnings.cpy",
+  "document": {
+    "analyzer": {
+      "key": "cobolcopybook",
+      "toolVersions": {
+        "cobolcopybook_parser": "[volatile]"
+      },
+      "version": "1.1.0"
+    },
+    "capabilities": {
+      "limits": {
+        "maxDepth": 32,
+        "maxNodes": 5000,
+        "maxVisitedNodes": 50000,
+        "valuePreviewChars": 120
+      },
+      "supported": [
+        "copybook.computed_storage_length",
+        "copybook.condition_names_88",
+        "copybook.elementary_items",
+        "copybook.group_items",
+        "copybook.level_numbers",
+        "copybook.multi_line_clauses",
+        "copybook.occurs_bounds",
+        "copybook.occurs_depending_on",
+        "copybook.picture_clauses",
+        "copybook.redefines",
+        "copybook.source_lines",
+        "copybook.storage_offsets",
+        "copybook.usage_clauses",
+        "copybook.variable_length_records"
+      ],
+      "unsupported": [
+        "copybook.character_encoding_detection",
+        "copybook.copy_replacing",
+        "copybook.copy_statement",
+        "copybook.renames_66",
+        "copybook.sign_and_synchronized_clauses",
+        "copybook.value_clauses"
+      ]
+    },
+    "metrics": {
+      "droppedNodeCount": 0,
+      "kindCounts": {
+        "field": 6,
+        "group": 2,
+        "record": 1
+      },
+      "maxDepth": 3,
+      "nodeCount": 9,
+      "truncated": false,
+      "warningCount": 3
+    },
+    "redaction": {
+      "policySource": "default",
+      "redactedNodeCount": 0,
+      "valuePreviewLimit": 120,
+      "valueVisibility": "structural"
+    },
+    "schemaVersion": "1.1.0",
+    "sourceFormat": "cobolcopybook",
+    "sourceHash": "sha256:c38d9039230f47e28001f9d5bd61d1e3895ea61e21f83d633089d24cd9707a9d",
+    "status": "available",
+    "statusReason": null,
+    "tree": [
+      {
+        "attributes": {
+          "childCount": 5,
+          "length": 24,
+          "level": 1,
+          "offset": 1,
+          "totalLength": 24
+        },
+        "children": [
+          {
+            "attributes": {
+              "digits": 6,
+              "length": 6,
+              "level": 5,
+              "offset": 1,
+              "picture": "9(6)",
+              "storageBasis": "display",
+              "totalLength": 6
+            },
+            "children": [],
+            "id": "0.0",
+            "kind": "field",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": 10,
+              "offset": null,
+              "ordinal": 0,
+              "path": "ACCOUNT-SNAPSHOT/SNAP-ID"
+            },
+            "name": "SNAP-ID",
+            "ordinal": 0,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "length": 10,
+              "level": 5,
+              "offset": 7,
+              "picture": "X(10)",
+              "redefinedBy": [
+                "SNAP-WIDE"
+              ],
+              "storageBasis": "display",
+              "totalLength": 10
+            },
+            "children": [],
+            "id": "0.1",
+            "kind": "field",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": 11,
+              "offset": null,
+              "ordinal": 1,
+              "path": "ACCOUNT-SNAPSHOT/SNAP-BODY"
+            },
+            "name": "SNAP-BODY",
+            "ordinal": 1,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "childCount": 2,
+              "length": 14,
+              "level": 5,
+              "offset": 7,
+              "redefines": "SNAP-BODY",
+              "totalLength": 14
+            },
+            "children": [
+              {
+                "attributes": {
+                  "length": 8,
+                  "level": 10,
+                  "offset": 7,
+                  "picture": "X(8)",
+                  "storageBasis": "display",
+                  "totalLength": 8
+                },
+                "children": [],
+                "id": "0.2.0",
+                "kind": "field",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": 13,
+                  "offset": null,
+                  "ordinal": 0,
+                  "path": "ACCOUNT-SNAPSHOT/SNAP-WIDE/SNAP-WIDE-CODE"
+                },
+                "name": "SNAP-WIDE-CODE",
+                "ordinal": 0,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              },
+              {
+                "attributes": {
+                  "length": 6,
+                  "level": 10,
+                  "offset": 15,
+                  "picture": "X(6)",
+                  "storageBasis": "display",
+                  "totalLength": 6
+                },
+                "children": [],
+                "id": "0.2.1",
+                "kind": "field",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": 14,
+                  "offset": null,
+                  "ordinal": 1,
+                  "path": "ACCOUNT-SNAPSHOT/SNAP-WIDE/SNAP-WIDE-EXTRA"
+                },
+                "name": "SNAP-WIDE-EXTRA",
+                "ordinal": 1,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              }
+            ],
+            "id": "0.2",
+            "kind": "group",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": 12,
+              "offset": null,
+              "ordinal": 2,
+              "path": "ACCOUNT-SNAPSHOT/SNAP-WIDE"
+            },
+            "name": "SNAP-WIDE",
+            "ordinal": 2,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "childCount": 1,
+              "length": 4,
+              "level": 5,
+              "offsetVariable": true,
+              "redefines": "SNAP-MISSING",
+              "totalLength": 4
+            },
+            "children": [
+              {
+                "attributes": {
+                  "length": 4,
+                  "level": 10,
+                  "offsetVariable": true,
+                  "picture": "X(4)",
+                  "storageBasis": "display",
+                  "totalLength": 4
+                },
+                "children": [],
+                "id": "0.3.0",
+                "kind": "field",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": 16,
+                  "offset": null,
+                  "ordinal": 0,
+                  "path": "ACCOUNT-SNAPSHOT/SNAP-ORPHAN/SNAP-ORPHAN-KEY"
+                },
+                "name": "SNAP-ORPHAN-KEY",
+                "ordinal": 0,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              }
+            ],
+            "id": "0.3",
+            "kind": "group",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": 15,
+              "offset": null,
+              "ordinal": 3,
+              "path": "ACCOUNT-SNAPSHOT/SNAP-ORPHAN"
+            },
+            "name": "SNAP-ORPHAN",
+            "ordinal": 3,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "digits": 8,
+              "length": 8,
+              "level": 5,
+              "offset": 17,
+              "picture": "9(8)",
+              "storageBasis": "display",
+              "totalLength": 8
+            },
+            "children": [],
+            "id": "0.4",
+            "kind": "field",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": 17,
+              "offset": null,
+              "ordinal": 4,
+              "path": "ACCOUNT-SNAPSHOT/SNAP-POSTED-DATE"
+            },
+            "name": "SNAP-POSTED-DATE",
+            "ordinal": 4,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          }
+        ],
+        "id": "0",
+        "kind": "record",
+        "label": null,
+        "location": {
+          "column": null,
+          "file": null,
+          "length": null,
+          "line": 9,
+          "offset": null,
+          "ordinal": 0,
+          "path": "ACCOUNT-SNAPSHOT"
+        },
+        "name": "ACCOUNT-SNAPSHOT",
+        "ordinal": 0,
+        "redacted": false,
+        "value": null,
+        "valueLength": null,
+        "valuePresent": null
+      }
+    ],
+    "warnings": [
+      {
+        "code": "copybook.redefines_target_missing",
+        "location": null,
+        "message": "REDEFINES names an item not declared before it in the same group (SNAP-ORPHAN REDEFINES SNAP-MISSING). The redefining item is described, and it carries no offset.",
+        "nodeId": null,
+        "severity": "info"
+      },
+      {
+        "code": "copybook.redefines_size_mismatch",
+        "location": null,
+        "message": "A redefining item needs more storage than the item it redefines (SNAP-WIDE needs 14 bytes over SNAP-BODY's 10). Both lengths are recorded as computed; neither is adjusted to fit.",
+        "nodeId": null,
+        "severity": "info"
+      },
+      {
+        "code": "copybook.layout_assumptions",
+        "location": null,
+        "message": "Storage offsets and lengths are computed under assumptions this copybook does not state: One byte per character position — a single-byte encoding (EBCDIC or ASCII). DBCS and national (PIC N / USAGE NATIONAL) items are not sized. COMP-3 items are packed two digits per byte with a trailing sign nibble, so a picture of n digits occupies (n div 2) + 1 bytes whether or not it is signed. COMP / COMP-4 / BINARY items occupy 2, 4 or 8 bytes by digit count, the common IBM representation; a compiler set to allocate by truncation rules may differ. A sign is assumed to be overpunched on the trailing digit rather than held in its own byte, because SIGN IS SEPARATE is not read by the parser. No SYNCHRONIZED alignment is applied, so no slack bytes are inserted between items.",
+        "nodeId": null,
+        "severity": "info"
+      }
+    ]
+  },
+  "snapshot_version": 1
+}
