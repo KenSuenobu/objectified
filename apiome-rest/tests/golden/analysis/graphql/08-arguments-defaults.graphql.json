@@ -1,0 +1,78 @@
+{
+  "adapter": "graphql",
+  "corpus_path": "graphql/08-arguments-defaults.graphql",
+  "document": {
+    "analyzer": {
+      "key": "generic",
+      "toolVersions": {},
+      "version": "1.0.0"
+    },
+    "capabilities": {
+      "limits": {
+        "maxDepth": 32,
+        "maxNodes": 5000,
+        "maxVisitedNodes": 50000,
+        "valuePreviewChars": 120
+      },
+      "supported": [
+        "generic.array",
+        "generic.object",
+        "generic.scalar",
+        "generic.value_presence"
+      ],
+      "unsupported": [
+        "generic.format_semantics",
+        "generic.source_locations"
+      ]
+    },
+    "metrics": {
+      "droppedNodeCount": 0,
+      "kindCounts": {
+        "opaque": 1
+      },
+      "maxDepth": 1,
+      "nodeCount": 1,
+      "truncated": false,
+      "warningCount": 0
+    },
+    "redaction": {
+      "policySource": "default",
+      "redactedNodeCount": 0,
+      "valuePreviewLimit": 120,
+      "valueVisibility": "structural"
+    },
+    "schemaVersion": "1.1.0",
+    "sourceFormat": "graphql",
+    "sourceHash": "sha256:3eaa2f633b4040d78ae98569dd15c85c3cf9271f61cb40f4ddf5f55c8b22d15c",
+    "status": "available",
+    "statusReason": null,
+    "tree": [
+      {
+        "attributes": {
+          "nativeType": "GraphQLSchema"
+        },
+        "children": [],
+        "id": "0",
+        "kind": "opaque",
+        "label": null,
+        "location": {
+          "column": null,
+          "file": null,
+          "length": null,
+          "line": null,
+          "offset": null,
+          "ordinal": null,
+          "path": "$"
+        },
+        "name": null,
+        "ordinal": null,
+        "redacted": false,
+        "value": null,
+        "valueLength": null,
+        "valuePresent": null
+      }
+    ],
+    "warnings": []
+  },
+  "snapshot_version": 1
+}

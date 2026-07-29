@@ -1,0 +1,1025 @@
+{
+  "adapter": "edix12",
+  "corpus_path": "edi-x12/07-837-composite-claim.edi",
+  "document": {
+    "analyzer": {
+      "key": "edix12",
+      "toolVersions": {
+        "pyx12": "[volatile]"
+      },
+      "version": "1.1.0"
+    },
+    "capabilities": {
+      "limits": {
+        "maxDepth": 32,
+        "maxNodes": 5000,
+        "maxVisitedNodes": 50000,
+        "valuePreviewChars": 120
+      },
+      "supported": [
+        "x12.byte_offsets",
+        "x12.composite_elements",
+        "x12.control_numbers",
+        "x12.delimiters",
+        "x12.element",
+        "x12.empty_elements",
+        "x12.envelope_control_totals",
+        "x12.functional_group",
+        "x12.interchange_envelope",
+        "x12.repeating_elements",
+        "x12.segment",
+        "x12.segment_ordinals",
+        "x12.segment_repeat_counts",
+        "x12.transaction_set"
+      ],
+      "unsupported": [
+        "x12.hl_hierarchy",
+        "x12.iea_trailer",
+        "x12.implementation_guide_validation",
+        "x12.ta1_acknowledgement"
+      ]
+    },
+    "metrics": {
+      "droppedNodeCount": 0,
+      "kindCounts": {
+        "component": 11,
+        "composite": 4,
+        "element": 14,
+        "functional_group": 1,
+        "interchange": 1,
+        "segment": 4,
+        "transaction_set": 1
+      },
+      "maxDepth": 6,
+      "nodeCount": 36,
+      "truncated": false,
+      "warningCount": 0
+    },
+    "redaction": {
+      "policySource": "default",
+      "redactedNodeCount": 0,
+      "valuePreviewLimit": 120,
+      "valueVisibility": "structural"
+    },
+    "schemaVersion": "1.1.0",
+    "sourceFormat": "edix12",
+    "sourceHash": "sha256:6489756060a213613df4697379e7143d67a252af586bd18e0c097ff7110f68c7",
+    "status": "available",
+    "statusReason": null,
+    "tree": [
+      {
+        "attributes": {
+          "acknowledgmentRequested": "0",
+          "componentSeparator": ">",
+          "controlNumber": "000000007",
+          "date": "260121",
+          "declaredFunctionalGroupCount": 1,
+          "elementSeparator": "*",
+          "functionalGroupCount": 1,
+          "interchangeVersion": "00401",
+          "receiverId": "RECEIVERID",
+          "repetitionSeparatorDeclared": false,
+          "segmentTerminator": "~",
+          "senderId": "SENDERID",
+          "time": "0915",
+          "usageIndicator": "P",
+          "usageIndicatorLabel": "Production"
+        },
+        "children": [
+          {
+            "attributes": {
+              "controlNumber": "12",
+              "date": "20260121",
+              "declaredTransactionSetCount": 1,
+              "functionalId": "HC",
+              "receiver": "RECEIVERID",
+              "responsibleAgencyCode": "X",
+              "sender": "SENDERID",
+              "time": "0915",
+              "transactionSetCount": 1,
+              "version": "004010"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "controlNumber": "0001",
+                  "declaredSegmentCount": 6,
+                  "envelopeSegmentCount": 6,
+                  "segmentCount": 4,
+                  "setId": "837"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "elementCount": 5,
+                      "elementPositionCount": 5,
+                      "repeatCount": 2,
+                      "repeatIndex": 0,
+                      "segmentId": "CLM"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "position": "01",
+                          "reference": "CLM01"
+                        },
+                        "children": [],
+                        "id": "0.0.0.0.0",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 0,
+                          "path": "ISA/GS[0]/ST[0]/CLM[0]/CLM01"
+                        },
+                        "name": "CLM01",
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": "CLAIM-001",
+                        "valueLength": 9,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "02",
+                          "reference": "CLM02"
+                        },
+                        "children": [],
+                        "id": "0.0.0.0.1",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 1,
+                          "path": "ISA/GS[0]/ST[0]/CLM[0]/CLM02"
+                        },
+                        "name": "CLM02",
+                        "ordinal": 1,
+                        "redacted": false,
+                        "value": "150",
+                        "valueLength": 3,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "03",
+                          "reference": "CLM03"
+                        },
+                        "children": [],
+                        "id": "0.0.0.0.2",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 2,
+                          "path": "ISA/GS[0]/ST[0]/CLM[0]/CLM03"
+                        },
+                        "name": "CLM03",
+                        "ordinal": 2,
+                        "redacted": false,
+                        "value": "",
+                        "valueLength": 0,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "04",
+                          "reference": "CLM04"
+                        },
+                        "children": [],
+                        "id": "0.0.0.0.3",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 3,
+                          "path": "ISA/GS[0]/ST[0]/CLM[0]/CLM04"
+                        },
+                        "name": "CLM04",
+                        "ordinal": 3,
+                        "redacted": false,
+                        "value": "",
+                        "valueLength": 0,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "componentCount": 3,
+                          "position": "05",
+                          "reference": "CLM05"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "position": "01",
+                              "reference": "CLM05-1"
+                            },
+                            "children": [],
+                            "id": "0.0.0.0.4.0",
+                            "kind": "component",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": 0,
+                              "path": "ISA/GS[0]/ST[0]/CLM[0]/CLM05/CLM05-1"
+                            },
+                            "name": "CLM05-1",
+                            "ordinal": 0,
+                            "redacted": false,
+                            "value": "11",
+                            "valueLength": 2,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "position": "02",
+                              "reference": "CLM05-2"
+                            },
+                            "children": [],
+                            "id": "0.0.0.0.4.1",
+                            "kind": "component",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": 1,
+                              "path": "ISA/GS[0]/ST[0]/CLM[0]/CLM05/CLM05-2"
+                            },
+                            "name": "CLM05-2",
+                            "ordinal": 1,
+                            "redacted": false,
+                            "value": "B",
+                            "valueLength": 1,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "position": "03",
+                              "reference": "CLM05-3"
+                            },
+                            "children": [],
+                            "id": "0.0.0.0.4.2",
+                            "kind": "component",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": 2,
+                              "path": "ISA/GS[0]/ST[0]/CLM[0]/CLM05/CLM05-3"
+                            },
+                            "name": "CLM05-3",
+                            "ordinal": 2,
+                            "redacted": false,
+                            "value": "1",
+                            "valueLength": 1,
+                            "valuePresent": true
+                          }
+                        ],
+                        "id": "0.0.0.0.4",
+                        "kind": "composite",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 4,
+                          "path": "ISA/GS[0]/ST[0]/CLM[0]/CLM05"
+                        },
+                        "name": "CLM05",
+                        "ordinal": 4,
+                        "redacted": false,
+                        "value": null,
+                        "valueLength": null,
+                        "valuePresent": null
+                      }
+                    ],
+                    "id": "0.0.0.0",
+                    "kind": "segment",
+                    "label": "CLM (1 of 2)",
+                    "location": {
+                      "column": 1,
+                      "file": null,
+                      "length": 26,
+                      "line": 4,
+                      "offset": 173,
+                      "ordinal": 0,
+                      "path": "ISA/GS[0]/ST[0]/CLM[0]"
+                    },
+                    "name": "CLM",
+                    "ordinal": 0,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "elementCount": 5,
+                      "elementPositionCount": 4,
+                      "repeatCount": 2,
+                      "repeatIndex": 0,
+                      "segmentId": "SV1"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "componentCount": 2,
+                          "position": "01",
+                          "reference": "SV101"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "position": "01",
+                              "reference": "SV101-1"
+                            },
+                            "children": [],
+                            "id": "0.0.0.1.0.0",
+                            "kind": "component",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": 0,
+                              "path": "ISA/GS[0]/ST[0]/SV1[1]/SV101/SV101-1"
+                            },
+                            "name": "SV101-1",
+                            "ordinal": 0,
+                            "redacted": false,
+                            "value": "HC",
+                            "valueLength": 2,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "position": "02",
+                              "reference": "SV101-2"
+                            },
+                            "children": [],
+                            "id": "0.0.0.1.0.1",
+                            "kind": "component",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": 1,
+                              "path": "ISA/GS[0]/ST[0]/SV1[1]/SV101/SV101-2"
+                            },
+                            "name": "SV101-2",
+                            "ordinal": 1,
+                            "redacted": false,
+                            "value": "99213",
+                            "valueLength": 5,
+                            "valuePresent": true
+                          }
+                        ],
+                        "id": "0.0.0.1.0",
+                        "kind": "composite",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 0,
+                          "path": "ISA/GS[0]/ST[0]/SV1[1]/SV101"
+                        },
+                        "name": "SV101",
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": null,
+                        "valueLength": null,
+                        "valuePresent": null
+                      },
+                      {
+                        "attributes": {
+                          "position": "02",
+                          "reference": "SV102"
+                        },
+                        "children": [],
+                        "id": "0.0.0.1.1",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 1,
+                          "path": "ISA/GS[0]/ST[0]/SV1[1]/SV102"
+                        },
+                        "name": "SV102",
+                        "ordinal": 1,
+                        "redacted": false,
+                        "value": "100",
+                        "valueLength": 3,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "03",
+                          "reference": "SV103"
+                        },
+                        "children": [],
+                        "id": "0.0.0.1.2",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 2,
+                          "path": "ISA/GS[0]/ST[0]/SV1[1]/SV103"
+                        },
+                        "name": "SV103",
+                        "ordinal": 2,
+                        "redacted": false,
+                        "value": "UN",
+                        "valueLength": 2,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "04",
+                          "reference": "SV104"
+                        },
+                        "children": [],
+                        "id": "0.0.0.1.3",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 3,
+                          "path": "ISA/GS[0]/ST[0]/SV1[1]/SV104"
+                        },
+                        "name": "SV104",
+                        "ordinal": 3,
+                        "redacted": false,
+                        "value": "1",
+                        "valueLength": 1,
+                        "valuePresent": true
+                      }
+                    ],
+                    "id": "0.0.0.1",
+                    "kind": "segment",
+                    "label": "SV1 (1 of 2)",
+                    "location": {
+                      "column": 1,
+                      "file": null,
+                      "length": 21,
+                      "line": 5,
+                      "offset": 201,
+                      "ordinal": 1,
+                      "path": "ISA/GS[0]/ST[0]/SV1[1]"
+                    },
+                    "name": "SV1",
+                    "ordinal": 1,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "elementCount": 5,
+                      "elementPositionCount": 5,
+                      "repeatCount": 2,
+                      "repeatIndex": 1,
+                      "segmentId": "CLM"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "position": "01",
+                          "reference": "CLM01"
+                        },
+                        "children": [],
+                        "id": "0.0.0.2.0",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 0,
+                          "path": "ISA/GS[0]/ST[0]/CLM[2]/CLM01"
+                        },
+                        "name": "CLM01",
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": "CLAIM-002",
+                        "valueLength": 9,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "02",
+                          "reference": "CLM02"
+                        },
+                        "children": [],
+                        "id": "0.0.0.2.1",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 1,
+                          "path": "ISA/GS[0]/ST[0]/CLM[2]/CLM02"
+                        },
+                        "name": "CLM02",
+                        "ordinal": 1,
+                        "redacted": false,
+                        "value": "90",
+                        "valueLength": 2,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "03",
+                          "reference": "CLM03"
+                        },
+                        "children": [],
+                        "id": "0.0.0.2.2",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 2,
+                          "path": "ISA/GS[0]/ST[0]/CLM[2]/CLM03"
+                        },
+                        "name": "CLM03",
+                        "ordinal": 2,
+                        "redacted": false,
+                        "value": "",
+                        "valueLength": 0,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "04",
+                          "reference": "CLM04"
+                        },
+                        "children": [],
+                        "id": "0.0.0.2.3",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 3,
+                          "path": "ISA/GS[0]/ST[0]/CLM[2]/CLM04"
+                        },
+                        "name": "CLM04",
+                        "ordinal": 3,
+                        "redacted": false,
+                        "value": "",
+                        "valueLength": 0,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "componentCount": 3,
+                          "position": "05",
+                          "reference": "CLM05"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "position": "01",
+                              "reference": "CLM05-1"
+                            },
+                            "children": [],
+                            "id": "0.0.0.2.4.0",
+                            "kind": "component",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": 0,
+                              "path": "ISA/GS[0]/ST[0]/CLM[2]/CLM05/CLM05-1"
+                            },
+                            "name": "CLM05-1",
+                            "ordinal": 0,
+                            "redacted": false,
+                            "value": "11",
+                            "valueLength": 2,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "position": "02",
+                              "reference": "CLM05-2"
+                            },
+                            "children": [],
+                            "id": "0.0.0.2.4.1",
+                            "kind": "component",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": 1,
+                              "path": "ISA/GS[0]/ST[0]/CLM[2]/CLM05/CLM05-2"
+                            },
+                            "name": "CLM05-2",
+                            "ordinal": 1,
+                            "redacted": false,
+                            "value": "B",
+                            "valueLength": 1,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "position": "03",
+                              "reference": "CLM05-3"
+                            },
+                            "children": [],
+                            "id": "0.0.0.2.4.2",
+                            "kind": "component",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": 2,
+                              "path": "ISA/GS[0]/ST[0]/CLM[2]/CLM05/CLM05-3"
+                            },
+                            "name": "CLM05-3",
+                            "ordinal": 2,
+                            "redacted": false,
+                            "value": "1",
+                            "valueLength": 1,
+                            "valuePresent": true
+                          }
+                        ],
+                        "id": "0.0.0.2.4",
+                        "kind": "composite",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 4,
+                          "path": "ISA/GS[0]/ST[0]/CLM[2]/CLM05"
+                        },
+                        "name": "CLM05",
+                        "ordinal": 4,
+                        "redacted": false,
+                        "value": null,
+                        "valueLength": null,
+                        "valuePresent": null
+                      }
+                    ],
+                    "id": "0.0.0.2",
+                    "kind": "segment",
+                    "label": "CLM (2 of 2)",
+                    "location": {
+                      "column": 1,
+                      "file": null,
+                      "length": 25,
+                      "line": 6,
+                      "offset": 224,
+                      "ordinal": 2,
+                      "path": "ISA/GS[0]/ST[0]/CLM[2]"
+                    },
+                    "name": "CLM",
+                    "ordinal": 2,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "elementCount": 6,
+                      "elementPositionCount": 4,
+                      "repeatCount": 2,
+                      "repeatIndex": 1,
+                      "segmentId": "SV1"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "componentCount": 3,
+                          "position": "01",
+                          "reference": "SV101"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "position": "01",
+                              "reference": "SV101-1"
+                            },
+                            "children": [],
+                            "id": "0.0.0.3.0.0",
+                            "kind": "component",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": 0,
+                              "path": "ISA/GS[0]/ST[0]/SV1[3]/SV101/SV101-1"
+                            },
+                            "name": "SV101-1",
+                            "ordinal": 0,
+                            "redacted": false,
+                            "value": "HC",
+                            "valueLength": 2,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "position": "02",
+                              "reference": "SV101-2"
+                            },
+                            "children": [],
+                            "id": "0.0.0.3.0.1",
+                            "kind": "component",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": 1,
+                              "path": "ISA/GS[0]/ST[0]/SV1[3]/SV101/SV101-2"
+                            },
+                            "name": "SV101-2",
+                            "ordinal": 1,
+                            "redacted": false,
+                            "value": "87070",
+                            "valueLength": 5,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "position": "03",
+                              "reference": "SV101-3"
+                            },
+                            "children": [],
+                            "id": "0.0.0.3.0.2",
+                            "kind": "component",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": 2,
+                              "path": "ISA/GS[0]/ST[0]/SV1[3]/SV101/SV101-3"
+                            },
+                            "name": "SV101-3",
+                            "ordinal": 2,
+                            "redacted": false,
+                            "value": "90",
+                            "valueLength": 2,
+                            "valuePresent": true
+                          }
+                        ],
+                        "id": "0.0.0.3.0",
+                        "kind": "composite",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 0,
+                          "path": "ISA/GS[0]/ST[0]/SV1[3]/SV101"
+                        },
+                        "name": "SV101",
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": null,
+                        "valueLength": null,
+                        "valuePresent": null
+                      },
+                      {
+                        "attributes": {
+                          "position": "02",
+                          "reference": "SV102"
+                        },
+                        "children": [],
+                        "id": "0.0.0.3.1",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 1,
+                          "path": "ISA/GS[0]/ST[0]/SV1[3]/SV102"
+                        },
+                        "name": "SV102",
+                        "ordinal": 1,
+                        "redacted": false,
+                        "value": "50",
+                        "valueLength": 2,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "03",
+                          "reference": "SV103"
+                        },
+                        "children": [],
+                        "id": "0.0.0.3.2",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 2,
+                          "path": "ISA/GS[0]/ST[0]/SV1[3]/SV103"
+                        },
+                        "name": "SV103",
+                        "ordinal": 2,
+                        "redacted": false,
+                        "value": "UN",
+                        "valueLength": 2,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "04",
+                          "reference": "SV104"
+                        },
+                        "children": [],
+                        "id": "0.0.0.3.3",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 3,
+                          "path": "ISA/GS[0]/ST[0]/SV1[3]/SV104"
+                        },
+                        "name": "SV104",
+                        "ordinal": 3,
+                        "redacted": false,
+                        "value": "1",
+                        "valueLength": 1,
+                        "valuePresent": true
+                      }
+                    ],
+                    "id": "0.0.0.3",
+                    "kind": "segment",
+                    "label": "SV1 (2 of 2)",
+                    "location": {
+                      "column": 1,
+                      "file": null,
+                      "length": 23,
+                      "line": 7,
+                      "offset": 251,
+                      "ordinal": 3,
+                      "path": "ISA/GS[0]/ST[0]/SV1[3]"
+                    },
+                    "name": "SV1",
+                    "ordinal": 3,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  }
+                ],
+                "id": "0.0.0",
+                "kind": "transaction_set",
+                "label": "Transaction set 837 (0001)",
+                "location": {
+                  "column": 1,
+                  "file": null,
+                  "length": 11,
+                  "line": 3,
+                  "offset": 160,
+                  "ordinal": 0,
+                  "path": "ISA/GS[0]/ST[0]"
+                },
+                "name": "837",
+                "ordinal": 0,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              }
+            ],
+            "id": "0.0",
+            "kind": "functional_group",
+            "label": "Functional group HC (12)",
+            "location": {
+              "column": 1,
+              "file": null,
+              "length": 51,
+              "line": 2,
+              "offset": 107,
+              "ordinal": 0,
+              "path": "ISA/GS[0]"
+            },
+            "name": "HC",
+            "ordinal": 0,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          }
+        ],
+        "id": "0",
+        "kind": "interchange",
+        "label": "Interchange 000000007",
+        "location": {
+          "column": 1,
+          "file": null,
+          "length": 105,
+          "line": 1,
+          "offset": 0,
+          "ordinal": 0,
+          "path": "ISA"
+        },
+        "name": "ISA",
+        "ordinal": 0,
+        "redacted": false,
+        "value": null,
+        "valueLength": null,
+        "valuePresent": null
+      }
+    ],
+    "warnings": []
+  },
+  "snapshot_version": 1
+}

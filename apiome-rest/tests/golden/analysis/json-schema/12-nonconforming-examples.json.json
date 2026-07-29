@@ -1,0 +1,1930 @@
+{
+  "adapter": "json-schema",
+  "corpus_path": "json-schema/12-nonconforming-examples.json",
+  "document": {
+    "analyzer": {
+      "key": "generic",
+      "toolVersions": {},
+      "version": "1.0.0"
+    },
+    "capabilities": {
+      "limits": {
+        "maxDepth": 32,
+        "maxNodes": 5000,
+        "maxVisitedNodes": 50000,
+        "valuePreviewChars": 120
+      },
+      "supported": [
+        "generic.array",
+        "generic.object",
+        "generic.scalar",
+        "generic.value_presence"
+      ],
+      "unsupported": [
+        "generic.format_semantics",
+        "generic.source_locations"
+      ]
+    },
+    "metrics": {
+      "droppedNodeCount": 0,
+      "kindCounts": {
+        "array": 10,
+        "object": 16,
+        "scalar": 51
+      },
+      "maxDepth": 6,
+      "nodeCount": 77,
+      "truncated": false,
+      "warningCount": 0
+    },
+    "redaction": {
+      "policySource": "default",
+      "redactedNodeCount": 0,
+      "valuePreviewLimit": 120,
+      "valueVisibility": "structural"
+    },
+    "schemaVersion": "1.1.0",
+    "sourceFormat": "json-schema",
+    "sourceHash": "sha256:436911fb64abf157674f0521fb36b121a232abff16e0530dfc32626042e784b9",
+    "status": "available",
+    "statusReason": null,
+    "tree": [
+      {
+        "attributes": {
+          "memberCount": 10
+        },
+        "children": [
+          {
+            "attributes": {
+              "scalarType": "string"
+            },
+            "children": [],
+            "id": "0.0",
+            "kind": "scalar",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": null,
+              "offset": null,
+              "ordinal": null,
+              "path": "$.$schema"
+            },
+            "name": "$schema",
+            "ordinal": 0,
+            "redacted": false,
+            "value": "https://json-schema.org/draft/2020-12/schema",
+            "valueLength": 44,
+            "valuePresent": true
+          },
+          {
+            "attributes": {
+              "scalarType": "string"
+            },
+            "children": [],
+            "id": "0.1",
+            "kind": "scalar",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": null,
+              "offset": null,
+              "ordinal": null,
+              "path": "$.$id"
+            },
+            "name": "$id",
+            "ordinal": 1,
+            "redacted": false,
+            "value": "https://example.com/nonconforming-examples.json",
+            "valueLength": 47,
+            "valuePresent": true
+          },
+          {
+            "attributes": {
+              "scalarType": "string"
+            },
+            "children": [],
+            "id": "0.2",
+            "kind": "scalar",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": null,
+              "offset": null,
+              "ordinal": null,
+              "path": "$.title"
+            },
+            "name": "title",
+            "ordinal": 2,
+            "redacted": false,
+            "value": "NonConformingExamples",
+            "valueLength": 21,
+            "valuePresent": true
+          },
+          {
+            "attributes": {
+              "scalarType": "string"
+            },
+            "children": [],
+            "id": "0.3",
+            "kind": "scalar",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": null,
+              "offset": null,
+              "ordinal": null,
+              "path": "$.description"
+            },
+            "name": "description",
+            "ordinal": 3,
+            "redacted": false,
+            "value": "Fixture for the IXH-5.4 example-conformance rule pack: every `examples` entry below deliberately contradicts the schema it sits in, one keyword at a time. The document is a valid JSON Schema and must import cleanly — a bad example is a lint finding, never an import failure. `x-expected-violation` records each site's intent and has no effect on validation.",
+            "valueLength": 357,
+            "valuePresent": true
+          },
+          {
+            "attributes": {
+              "scalarType": "string"
+            },
+            "children": [],
+            "id": "0.4",
+            "kind": "scalar",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": null,
+              "offset": null,
+              "ordinal": null,
+              "path": "$.type"
+            },
+            "name": "type",
+            "ordinal": 4,
+            "redacted": false,
+            "value": "object",
+            "valueLength": 6,
+            "valuePresent": true
+          },
+          {
+            "attributes": {
+              "itemCount": 2
+            },
+            "children": [
+              {
+                "attributes": {
+                  "scalarType": "string"
+                },
+                "children": [],
+                "id": "0.5.0",
+                "kind": "scalar",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": null,
+                  "offset": null,
+                  "ordinal": null,
+                  "path": "$.required[0]"
+                },
+                "name": null,
+                "ordinal": 0,
+                "redacted": false,
+                "value": "id",
+                "valueLength": 2,
+                "valuePresent": true
+              },
+              {
+                "attributes": {
+                  "scalarType": "string"
+                },
+                "children": [],
+                "id": "0.5.1",
+                "kind": "scalar",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": null,
+                  "offset": null,
+                  "ordinal": null,
+                  "path": "$.required[1]"
+                },
+                "name": null,
+                "ordinal": 1,
+                "redacted": false,
+                "value": "email",
+                "valueLength": 5,
+                "valuePresent": true
+              }
+            ],
+            "id": "0.5",
+            "kind": "array",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": null,
+              "offset": null,
+              "ordinal": null,
+              "path": "$.required"
+            },
+            "name": "required",
+            "ordinal": 5,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "memberCount": 5
+            },
+            "children": [
+              {
+                "attributes": {
+                  "memberCount": 5
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.0.0",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.id.type"
+                    },
+                    "name": "type",
+                    "ordinal": 0,
+                    "redacted": false,
+                    "value": "integer",
+                    "valueLength": 7,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.0.1",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.id.description"
+                    },
+                    "name": "description",
+                    "ordinal": 1,
+                    "redacted": false,
+                    "value": "Server-assigned identifier.",
+                    "valueLength": 27,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "number"
+                    },
+                    "children": [],
+                    "id": "0.6.0.2",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.id.minimum"
+                    },
+                    "name": "minimum",
+                    "ordinal": 2,
+                    "redacted": false,
+                    "value": "1",
+                    "valueLength": 1,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "itemCount": 1
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "scalarType": "number"
+                        },
+                        "children": [],
+                        "id": "0.6.0.3.0",
+                        "kind": "scalar",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.properties.id.examples[0]"
+                        },
+                        "name": null,
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": "0",
+                        "valueLength": 1,
+                        "valuePresent": true
+                      }
+                    ],
+                    "id": "0.6.0.3",
+                    "kind": "array",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.id.examples"
+                    },
+                    "name": "examples",
+                    "ordinal": 3,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.0.4",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.id.x-expected-violation"
+                    },
+                    "name": "x-expected-violation",
+                    "ordinal": 4,
+                    "redacted": false,
+                    "value": "minimum",
+                    "valueLength": 7,
+                    "valuePresent": true
+                  }
+                ],
+                "id": "0.6.0",
+                "kind": "object",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": null,
+                  "offset": null,
+                  "ordinal": null,
+                  "path": "$.properties.id"
+                },
+                "name": "id",
+                "ordinal": 0,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              },
+              {
+                "attributes": {
+                  "memberCount": 5
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.1.0",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.email.type"
+                    },
+                    "name": "type",
+                    "ordinal": 0,
+                    "redacted": false,
+                    "value": "string",
+                    "valueLength": 6,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.1.1",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.email.description"
+                    },
+                    "name": "description",
+                    "ordinal": 1,
+                    "redacted": false,
+                    "value": "Contact address.",
+                    "valueLength": 16,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "number"
+                    },
+                    "children": [],
+                    "id": "0.6.1.2",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.email.minLength"
+                    },
+                    "name": "minLength",
+                    "ordinal": 2,
+                    "redacted": false,
+                    "value": "3",
+                    "valueLength": 1,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "itemCount": 1
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "scalarType": "string"
+                        },
+                        "children": [],
+                        "id": "0.6.1.3.0",
+                        "kind": "scalar",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.properties.email.examples[0]"
+                        },
+                        "name": null,
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": "a",
+                        "valueLength": 1,
+                        "valuePresent": true
+                      }
+                    ],
+                    "id": "0.6.1.3",
+                    "kind": "array",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.email.examples"
+                    },
+                    "name": "examples",
+                    "ordinal": 3,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.1.4",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.email.x-expected-violation"
+                    },
+                    "name": "x-expected-violation",
+                    "ordinal": 4,
+                    "redacted": false,
+                    "value": "minLength",
+                    "valueLength": 9,
+                    "valuePresent": true
+                  }
+                ],
+                "id": "0.6.1",
+                "kind": "object",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": null,
+                  "offset": null,
+                  "ordinal": null,
+                  "path": "$.properties.email"
+                },
+                "name": "email",
+                "ordinal": 1,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              },
+              {
+                "attributes": {
+                  "memberCount": 5
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.2.0",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.role.type"
+                    },
+                    "name": "type",
+                    "ordinal": 0,
+                    "redacted": false,
+                    "value": "string",
+                    "valueLength": 6,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.2.1",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.role.description"
+                    },
+                    "name": "description",
+                    "ordinal": 1,
+                    "redacted": false,
+                    "value": "Role the account holds.",
+                    "valueLength": 23,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "itemCount": 3
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "scalarType": "string"
+                        },
+                        "children": [],
+                        "id": "0.6.2.2.0",
+                        "kind": "scalar",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.properties.role.enum[0]"
+                        },
+                        "name": null,
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": "owner",
+                        "valueLength": 5,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "scalarType": "string"
+                        },
+                        "children": [],
+                        "id": "0.6.2.2.1",
+                        "kind": "scalar",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.properties.role.enum[1]"
+                        },
+                        "name": null,
+                        "ordinal": 1,
+                        "redacted": false,
+                        "value": "editor",
+                        "valueLength": 6,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "scalarType": "string"
+                        },
+                        "children": [],
+                        "id": "0.6.2.2.2",
+                        "kind": "scalar",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.properties.role.enum[2]"
+                        },
+                        "name": null,
+                        "ordinal": 2,
+                        "redacted": false,
+                        "value": "viewer",
+                        "valueLength": 6,
+                        "valuePresent": true
+                      }
+                    ],
+                    "id": "0.6.2.2",
+                    "kind": "array",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.role.enum"
+                    },
+                    "name": "enum",
+                    "ordinal": 2,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "itemCount": 2
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "scalarType": "string"
+                        },
+                        "children": [],
+                        "id": "0.6.2.3.0",
+                        "kind": "scalar",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.properties.role.examples[0]"
+                        },
+                        "name": null,
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": "viewer",
+                        "valueLength": 6,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "scalarType": "string"
+                        },
+                        "children": [],
+                        "id": "0.6.2.3.1",
+                        "kind": "scalar",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.properties.role.examples[1]"
+                        },
+                        "name": null,
+                        "ordinal": 1,
+                        "redacted": false,
+                        "value": "superuser",
+                        "valueLength": 9,
+                        "valuePresent": true
+                      }
+                    ],
+                    "id": "0.6.2.3",
+                    "kind": "array",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.role.examples"
+                    },
+                    "name": "examples",
+                    "ordinal": 3,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.2.4",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.role.x-expected-violation"
+                    },
+                    "name": "x-expected-violation",
+                    "ordinal": 4,
+                    "redacted": false,
+                    "value": "enum",
+                    "valueLength": 4,
+                    "valuePresent": true
+                  }
+                ],
+                "id": "0.6.2",
+                "kind": "object",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": null,
+                  "offset": null,
+                  "ordinal": null,
+                  "path": "$.properties.role"
+                },
+                "name": "role",
+                "ordinal": 2,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              },
+              {
+                "attributes": {
+                  "memberCount": 6
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.3.0",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.tags.type"
+                    },
+                    "name": "type",
+                    "ordinal": 0,
+                    "redacted": false,
+                    "value": "array",
+                    "valueLength": 5,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.3.1",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.tags.description"
+                    },
+                    "name": "description",
+                    "ordinal": 1,
+                    "redacted": false,
+                    "value": "Free-form labels.",
+                    "valueLength": 17,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "memberCount": 1
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "scalarType": "string"
+                        },
+                        "children": [],
+                        "id": "0.6.3.2.0",
+                        "kind": "scalar",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.properties.tags.items.type"
+                        },
+                        "name": "type",
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": "string",
+                        "valueLength": 6,
+                        "valuePresent": true
+                      }
+                    ],
+                    "id": "0.6.3.2",
+                    "kind": "object",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.tags.items"
+                    },
+                    "name": "items",
+                    "ordinal": 2,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "number"
+                    },
+                    "children": [],
+                    "id": "0.6.3.3",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.tags.maxItems"
+                    },
+                    "name": "maxItems",
+                    "ordinal": 3,
+                    "redacted": false,
+                    "value": "2",
+                    "valueLength": 1,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "itemCount": 1
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "itemCount": 3
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "scalarType": "string"
+                            },
+                            "children": [],
+                            "id": "0.6.3.4.0.0",
+                            "kind": "scalar",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": null,
+                              "path": "$.properties.tags.examples[0][0]"
+                            },
+                            "name": null,
+                            "ordinal": 0,
+                            "redacted": false,
+                            "value": "a",
+                            "valueLength": 1,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "scalarType": "string"
+                            },
+                            "children": [],
+                            "id": "0.6.3.4.0.1",
+                            "kind": "scalar",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": null,
+                              "path": "$.properties.tags.examples[0][1]"
+                            },
+                            "name": null,
+                            "ordinal": 1,
+                            "redacted": false,
+                            "value": "b",
+                            "valueLength": 1,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "scalarType": "string"
+                            },
+                            "children": [],
+                            "id": "0.6.3.4.0.2",
+                            "kind": "scalar",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": null,
+                              "path": "$.properties.tags.examples[0][2]"
+                            },
+                            "name": null,
+                            "ordinal": 2,
+                            "redacted": false,
+                            "value": "c",
+                            "valueLength": 1,
+                            "valuePresent": true
+                          }
+                        ],
+                        "id": "0.6.3.4.0",
+                        "kind": "array",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.properties.tags.examples[0]"
+                        },
+                        "name": null,
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": null,
+                        "valueLength": null,
+                        "valuePresent": null
+                      }
+                    ],
+                    "id": "0.6.3.4",
+                    "kind": "array",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.tags.examples"
+                    },
+                    "name": "examples",
+                    "ordinal": 4,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.3.5",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.tags.x-expected-violation"
+                    },
+                    "name": "x-expected-violation",
+                    "ordinal": 5,
+                    "redacted": false,
+                    "value": "maxItems",
+                    "valueLength": 8,
+                    "valuePresent": true
+                  }
+                ],
+                "id": "0.6.3",
+                "kind": "object",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": null,
+                  "offset": null,
+                  "ordinal": null,
+                  "path": "$.properties.tags"
+                },
+                "name": "tags",
+                "ordinal": 3,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              },
+              {
+                "attributes": {
+                  "memberCount": 1
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.6.4.0",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.properties.address.$ref"
+                    },
+                    "name": "$ref",
+                    "ordinal": 0,
+                    "redacted": false,
+                    "value": "#/$defs/Address",
+                    "valueLength": 15,
+                    "valuePresent": true
+                  }
+                ],
+                "id": "0.6.4",
+                "kind": "object",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": null,
+                  "offset": null,
+                  "ordinal": null,
+                  "path": "$.properties.address"
+                },
+                "name": "address",
+                "ordinal": 4,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              }
+            ],
+            "id": "0.6",
+            "kind": "object",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": null,
+              "offset": null,
+              "ordinal": null,
+              "path": "$.properties"
+            },
+            "name": "properties",
+            "ordinal": 6,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "itemCount": 2
+            },
+            "children": [
+              {
+                "attributes": {
+                  "memberCount": 3
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "scalarType": "number"
+                    },
+                    "children": [],
+                    "id": "0.7.0.0",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.examples[0].id"
+                    },
+                    "name": "id",
+                    "ordinal": 0,
+                    "redacted": false,
+                    "value": "1",
+                    "valueLength": 1,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.7.0.1",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.examples[0].email"
+                    },
+                    "name": "email",
+                    "ordinal": 1,
+                    "redacted": false,
+                    "value": "ada@example.com",
+                    "valueLength": 15,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.7.0.2",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.examples[0].role"
+                    },
+                    "name": "role",
+                    "ordinal": 2,
+                    "redacted": false,
+                    "value": "owner",
+                    "valueLength": 5,
+                    "valuePresent": true
+                  }
+                ],
+                "id": "0.7.0",
+                "kind": "object",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": null,
+                  "offset": null,
+                  "ordinal": null,
+                  "path": "$.examples[0]"
+                },
+                "name": null,
+                "ordinal": 0,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              },
+              {
+                "attributes": {
+                  "memberCount": 1
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.7.1.0",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.examples[1].email"
+                    },
+                    "name": "email",
+                    "ordinal": 0,
+                    "redacted": false,
+                    "value": "ada@example.com",
+                    "valueLength": 15,
+                    "valuePresent": true
+                  }
+                ],
+                "id": "0.7.1",
+                "kind": "object",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": null,
+                  "offset": null,
+                  "ordinal": null,
+                  "path": "$.examples[1]"
+                },
+                "name": null,
+                "ordinal": 1,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              }
+            ],
+            "id": "0.7",
+            "kind": "array",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": null,
+              "offset": null,
+              "ordinal": null,
+              "path": "$.examples"
+            },
+            "name": "examples",
+            "ordinal": 7,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "scalarType": "string"
+            },
+            "children": [],
+            "id": "0.8",
+            "kind": "scalar",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": null,
+              "offset": null,
+              "ordinal": null,
+              "path": "$.x-expected-violation"
+            },
+            "name": "x-expected-violation",
+            "ordinal": 8,
+            "redacted": false,
+            "value": "required",
+            "valueLength": 8,
+            "valuePresent": true
+          },
+          {
+            "attributes": {
+              "memberCount": 1
+            },
+            "children": [
+              {
+                "attributes": {
+                  "memberCount": 6
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.9.0.0",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.$defs.Address.type"
+                    },
+                    "name": "type",
+                    "ordinal": 0,
+                    "redacted": false,
+                    "value": "object",
+                    "valueLength": 6,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.9.0.1",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.$defs.Address.description"
+                    },
+                    "name": "description",
+                    "ordinal": 1,
+                    "redacted": false,
+                    "value": "A postal address.",
+                    "valueLength": 17,
+                    "valuePresent": true
+                  },
+                  {
+                    "attributes": {
+                      "itemCount": 2
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "scalarType": "string"
+                        },
+                        "children": [],
+                        "id": "0.9.0.2.0",
+                        "kind": "scalar",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.$defs.Address.required[0]"
+                        },
+                        "name": null,
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": "city",
+                        "valueLength": 4,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "scalarType": "string"
+                        },
+                        "children": [],
+                        "id": "0.9.0.2.1",
+                        "kind": "scalar",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.$defs.Address.required[1]"
+                        },
+                        "name": null,
+                        "ordinal": 1,
+                        "redacted": false,
+                        "value": "postalCode",
+                        "valueLength": 10,
+                        "valuePresent": true
+                      }
+                    ],
+                    "id": "0.9.0.2",
+                    "kind": "array",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.$defs.Address.required"
+                    },
+                    "name": "required",
+                    "ordinal": 2,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "memberCount": 2
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "memberCount": 2
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "scalarType": "string"
+                            },
+                            "children": [],
+                            "id": "0.9.0.3.0.0",
+                            "kind": "scalar",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": null,
+                              "path": "$.$defs.Address.properties.city.type"
+                            },
+                            "name": "type",
+                            "ordinal": 0,
+                            "redacted": false,
+                            "value": "string",
+                            "valueLength": 6,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "scalarType": "string"
+                            },
+                            "children": [],
+                            "id": "0.9.0.3.0.1",
+                            "kind": "scalar",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": null,
+                              "path": "$.$defs.Address.properties.city.description"
+                            },
+                            "name": "description",
+                            "ordinal": 1,
+                            "redacted": false,
+                            "value": "City name.",
+                            "valueLength": 10,
+                            "valuePresent": true
+                          }
+                        ],
+                        "id": "0.9.0.3.0",
+                        "kind": "object",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.$defs.Address.properties.city"
+                        },
+                        "name": "city",
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": null,
+                        "valueLength": null,
+                        "valuePresent": null
+                      },
+                      {
+                        "attributes": {
+                          "memberCount": 3
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "scalarType": "string"
+                            },
+                            "children": [],
+                            "id": "0.9.0.3.1.0",
+                            "kind": "scalar",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": null,
+                              "path": "$.$defs.Address.properties.postalCode.type"
+                            },
+                            "name": "type",
+                            "ordinal": 0,
+                            "redacted": false,
+                            "value": "string",
+                            "valueLength": 6,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "scalarType": "string"
+                            },
+                            "children": [],
+                            "id": "0.9.0.3.1.1",
+                            "kind": "scalar",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": null,
+                              "path": "$.$defs.Address.properties.postalCode.description"
+                            },
+                            "name": "description",
+                            "ordinal": 1,
+                            "redacted": false,
+                            "value": "Five-digit postal code.",
+                            "valueLength": 23,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "scalarType": "string"
+                            },
+                            "children": [],
+                            "id": "0.9.0.3.1.2",
+                            "kind": "scalar",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": null,
+                              "path": "$.$defs.Address.properties.postalCode.pattern"
+                            },
+                            "name": "pattern",
+                            "ordinal": 2,
+                            "redacted": false,
+                            "value": "^[0-9]{5}$",
+                            "valueLength": 10,
+                            "valuePresent": true
+                          }
+                        ],
+                        "id": "0.9.0.3.1",
+                        "kind": "object",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.$defs.Address.properties.postalCode"
+                        },
+                        "name": "postalCode",
+                        "ordinal": 1,
+                        "redacted": false,
+                        "value": null,
+                        "valueLength": null,
+                        "valuePresent": null
+                      }
+                    ],
+                    "id": "0.9.0.3",
+                    "kind": "object",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.$defs.Address.properties"
+                    },
+                    "name": "properties",
+                    "ordinal": 3,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "itemCount": 1
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "memberCount": 2
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "scalarType": "string"
+                            },
+                            "children": [],
+                            "id": "0.9.0.4.0.0",
+                            "kind": "scalar",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": null,
+                              "path": "$.$defs.Address.examples[0].city"
+                            },
+                            "name": "city",
+                            "ordinal": 0,
+                            "redacted": false,
+                            "value": "Springfield",
+                            "valueLength": 11,
+                            "valuePresent": true
+                          },
+                          {
+                            "attributes": {
+                              "scalarType": "string"
+                            },
+                            "children": [],
+                            "id": "0.9.0.4.0.1",
+                            "kind": "scalar",
+                            "label": null,
+                            "location": {
+                              "column": null,
+                              "file": null,
+                              "length": null,
+                              "line": null,
+                              "offset": null,
+                              "ordinal": null,
+                              "path": "$.$defs.Address.examples[0].postalCode"
+                            },
+                            "name": "postalCode",
+                            "ordinal": 1,
+                            "redacted": false,
+                            "value": "not-a-zip",
+                            "valueLength": 9,
+                            "valuePresent": true
+                          }
+                        ],
+                        "id": "0.9.0.4.0",
+                        "kind": "object",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": null,
+                          "path": "$.$defs.Address.examples[0]"
+                        },
+                        "name": null,
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": null,
+                        "valueLength": null,
+                        "valuePresent": null
+                      }
+                    ],
+                    "id": "0.9.0.4",
+                    "kind": "array",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.$defs.Address.examples"
+                    },
+                    "name": "examples",
+                    "ordinal": 4,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "scalarType": "string"
+                    },
+                    "children": [],
+                    "id": "0.9.0.5",
+                    "kind": "scalar",
+                    "label": null,
+                    "location": {
+                      "column": null,
+                      "file": null,
+                      "length": null,
+                      "line": null,
+                      "offset": null,
+                      "ordinal": null,
+                      "path": "$.$defs.Address.x-expected-violation"
+                    },
+                    "name": "x-expected-violation",
+                    "ordinal": 5,
+                    "redacted": false,
+                    "value": "pattern",
+                    "valueLength": 7,
+                    "valuePresent": true
+                  }
+                ],
+                "id": "0.9.0",
+                "kind": "object",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": null,
+                  "offset": null,
+                  "ordinal": null,
+                  "path": "$.$defs.Address"
+                },
+                "name": "Address",
+                "ordinal": 0,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              }
+            ],
+            "id": "0.9",
+            "kind": "object",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": null,
+              "offset": null,
+              "ordinal": null,
+              "path": "$.$defs"
+            },
+            "name": "$defs",
+            "ordinal": 9,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          }
+        ],
+        "id": "0",
+        "kind": "object",
+        "label": null,
+        "location": {
+          "column": null,
+          "file": null,
+          "length": null,
+          "line": null,
+          "offset": null,
+          "ordinal": null,
+          "path": "$"
+        },
+        "name": null,
+        "ordinal": null,
+        "redacted": false,
+        "value": null,
+        "valueLength": null,
+        "valuePresent": null
+      }
+    ],
+    "warnings": []
+  },
+  "snapshot_version": 1
+}

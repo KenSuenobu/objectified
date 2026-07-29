@@ -4,7 +4,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Generated file — do not edit.** This README is the human index of [`corpus.manifest.json`](corpus.manifest.json) (schema: [`corpus.schema.json`](corpus.schema.json)). Edit the manifest, then run `python3 scripts/generate_examples_readme.py` from the repo root; CI fails on drift.
 
-The corpus holds **488 files** across **40 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **491 files** across **40 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -65,7 +65,7 @@ The corpus holds **488 files** across **40 format directories**. Every file has 
 | `asn1/` | ASN.1 | data_schema | `DEFINITIONS ::= BEGIN … END` | 12 |
 | `avro/` | Avro schema | data_schema | `type: record` + `fields` | 11 |
 | `capnproto/` | Cap'n Proto | data_schema | `@0x…` file id + `struct` | 11 |
-| `cobol-copybook/` | COBOL copybook | data_schema | level numbers + `PIC` clauses | 11 |
+| `cobol-copybook/` | COBOL copybook | data_schema | level numbers + `PIC` clauses | 13 |
 | `flatbuffers/` | FlatBuffers | data_schema | `table`/`struct` + `root_type` | 11 |
 | `json-schema/` | JSON Schema | data_schema | `$schema` / `type` + `properties` | 17 |
 | `jtd/` | JSON Type Definition | data_schema | `properties`/`optionalProperties` | 11 |
@@ -76,7 +76,7 @@ The corpus holds **488 files** across **40 format directories**. Every file has 
 
 | Directory | Format | Paradigm | Marker / shape | Files |
 | --- | --- | --- | --- | --- |
-| `edi-x12/` | EDI ASC X12 | message | `ISA`/`GS`/`ST` envelopes | 11 |
+| `edi-x12/` | EDI ASC X12 | message | `ISA`/`GS`/`ST` envelopes | 12 |
 | `fhir/` | FHIR R4 | data_schema | `resourceType` (+ StructureDefinition) | 11 |
 | `fix/` | FIX / FIX Orchestra | message | `8=FIX.` tags / `<fixr:repository>` | 11 |
 | `hl7v2/` | HL7 v2.x | message | `MSH\|^~\&\|` message header | 11 |
@@ -245,13 +245,19 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `02-order-line.cpy` | minimal | `cobolcopybook` ≥ 0.95 | valid | `comp-3`, `pic` |
 | `03-payment-redefines.cpy` | composition | `cobolcopybook` ≥ 0.95 | valid | `redefines`, `level-88`, `comp-3`, `pic`, `filler` |
 | `04-warehouse-stress.cpy` | stress | `cobolcopybook` ≥ 0.95 | valid | `occurs-depending-on`, `comp-3`, `comp`, `binary`, `filler`, `level-88` |
-| `05-ach-entry-detail.cpy` | real-world | `cobolcopybook` ≥ 0.95 | valid | `pic`, `level-88`, `values` |
+| `05-ach-entry-detail.cpy` | real-world | `cobolcopybook` ≥ 0.95 | valid | `pic`, `level-88`, `values`, `fixed-length-record` |
 | `06-account-master.cpy` | typical | `cobolcopybook` ≥ 0.95 | valid | `pic`, `comp-3`, `level-88`, `nested-groups` |
+| `07-ledger-unmodelled.cpy` ⚠ | composition | `cobolcopybook` ≥ 0.95 | valid | `renames-66`, `copy-statement`, `copy-replacing`, `national-pic`, `comp-3`, `pic`, `level-88` |
+| `08-overlay-warnings.cpy` ⚠ | composition | `cobolcopybook` ≥ 0.95 | valid | `redefines`, `redefines-target-missing`, `redefines-size-mismatch`, `pic` |
 | `negative/01-syntactic-garbled-level.cpy` | — | `cobolcopybook` (no guarantee) | invalid | `negative`, `syntactic`, `garbled-level-number` |
 | `negative/02-semantic-level-05-before-01.cpy` | — | `cobolcopybook` (no guarantee) | invalid | `negative`, `semantic`, `level-05-before-01` |
 | `negative/03-truncated-order-line.cpy` ⚠ | — | `cobolcopybook` (no guarantee) | invalid | `negative`, `truncated`, `mid-token-cut` |
 | `negative/04-wrong-format-inventory.idl` | — | `cobolcopybook` (no guarantee) | invalid | `negative`, `wrong-format`, `corba-idl-document` |
 | `negative/05-encoding-utf16-order-line.cpy` | — | `cobolcopybook` (no guarantee) | invalid | `negative`, `encoding`, `utf-16-bytes` |
+
+> ⚠ **`07-ledger-unmodelled.cpy`** — Carries the documented-unmodelled clauses (level-66 regrouping, nested member inclusion with substitution, PIC N). CPDO-4.1 pins the analysis warnings copybook.renames_66 / copybook.copy_statement / copybook.copy_replacing / copybook.unsized_item and the resulting partial status.
+
+> ⚠ **`08-overlay-warnings.cpy`** — REDEFINES overlays that are deliberately imperfect: one redefining item outgrows its target, one names a target declared in a surrounding copybook. CPDO-4.1 pins copybook.redefines_target_missing / copybook.redefines_size_mismatch as evidence, not errors.
 
 > ⚠ **`negative/03-truncated-order-line.cpy`** — The parser accepts any prefix containing a level-01 item plus one PIC clause, so the cut lands just before the first PIC completes (~54%) to defeat the lenient line-by-line parser.
 
@@ -318,11 +324,14 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `04-multi-group-po-ack.edi` | composition | `edix12` ≥ 0.9 | valid | `multi-functional-group`, `850-purchase-order`, `997-acknowledgment`, `isa-envelope` |
 | `05-856-asn-hierarchical.edi` | stress | `edix12` ≥ 0.9 | valid | `856-ship-notice`, `hl-loops`, `ta1-acknowledgment`, `multi-transaction-set` |
 | `06-834-benefit-enrollment.edi` | real-world | `edix12` ≥ 0.9 | valid | `834-benefit-enrollment`, `hipaa-5010`, `isa-envelope`, `iea-trailer` |
+| `07-837-composite-claim.edi` ⚠ | composition | `edix12` ≥ 0.9 | valid | `composite-elements`, `repeated-segments`, `837-claim`, `isa-envelope` |
 | `negative/01-syntactic-missing-se.edi` ⚠ | — | `edix12` (no guarantee) | invalid | `negative`, `syntactic`, `missing-se-trailer` |
 | `negative/02-semantic-nested-gs.edi` ⚠ | — | `edix12` (no guarantee) | invalid | `negative`, `semantic`, `nested-gs-groups` |
 | `negative/03-truncated-850-purchase-order.edi` | — | `edix12` (no guarantee) | invalid | `negative`, `truncated`, `mid-token-cut` |
 | `negative/04-wrong-format-adt-admit.hl7` | — | `edix12` (no guarantee) | invalid | `negative`, `wrong-format`, `hl7v2-message` |
 | `negative/05-encoding-utf16-invoice.edi` | — | `edix12` (no guarantee) | invalid | `negative`, `encoding`, `utf-16-bytes` |
+
+> ⚠ **`07-837-composite-claim.edi`** — The only corpus interchange whose elements carry composites (CLM05 11>B>1, SV1 HC>code>modifier under the ISA16 sub-element separator). CPDO-4.1 pins composite/component analysis nodes from a shipped fixture instead of an inline test literal.
 
 > ⚠ **`negative/01-syntactic-missing-se.edi`** — ISA-level syntactic faults were avoided on purpose: pyx12 raises X12Error/IndexError out of X12Reader iteration for a short or reordered ISA envelope and the exception escapes parse_edix12 unwrapped (UNHANDLED in the pipeline); the missing-SE variant fails cleanly via the adapter's own EdiX12ParseError.
 

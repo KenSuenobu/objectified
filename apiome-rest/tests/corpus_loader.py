@@ -27,7 +27,7 @@ import json
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Literal, Optional, Sequence
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -329,6 +329,37 @@ def load_corpus(
         and (wanted_failure is None or entry.failure_class is wanted_failure)
         and (wanted_guard is None or entry.guard is wanted_guard)
     ]
+
+
+def unique_corpus_entry(*, format: str, features: Sequence[str]) -> CorpusEntry:
+    """Return the single valid entry of ``format`` carrying every tag in ``features``.
+
+    The selector for tests that pin facts about one *specific* fixture (its group layout, its
+    warning set) rather than a class of them: selection stays by manifest tag — the corpus rule
+    since IXH-1.1 — while ambiguity is an error instead of a silent first-match, so growing the
+    corpus can never quietly re-point an assertion at a different fixture.
+
+    Args:
+        format: Format family key (e.g. ``"edix12"``).
+        features: Feature tags the entry must all carry; together they must be unique.
+
+    Returns:
+        The matching entry.
+
+    Raises:
+        LookupError: When no valid entry, or more than one, carries all the tags.
+    """
+    matches = [
+        entry
+        for entry in load_corpus(format=format, validity_class=ValidityClass.VALID)
+        if all(tag in entry.features for tag in features)
+    ]
+    if len(matches) != 1:
+        raise LookupError(
+            f"features {list(features)!r} select {len(matches)} valid {format!r} entries "
+            f"({[entry.path for entry in matches]}); a unique-fixture selector must select one"
+        )
+    return matches[0]
 
 
 def corpus_files() -> List[Path]:

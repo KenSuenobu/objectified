@@ -1,0 +1,1238 @@
+{
+  "adapter": "cobolcopybook",
+  "conversion_mode": "lossy",
+  "corpus_path": "cobol-copybook/04-warehouse-stress.cpy",
+  "manifest": {
+    "bounds": {
+      "maxAnalysisEdges": 200,
+      "maxConstructEdges": 2000
+    },
+    "conversion_mode": "lossy",
+    "defaults": {},
+    "dropped_edge_count": 0,
+    "edges": [
+      {
+        "count": 1,
+        "detail": "named types carried from the source into components.schemas",
+        "evidence": [],
+        "id": "checklist:components.schemas",
+        "reason": null,
+        "remediation": null,
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:components.schemas",
+        "status": "retained",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no construct is marked deprecated",
+        "evidence": [],
+        "id": "checklist:deprecated",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:deprecated",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain request/response examples",
+        "evidence": [],
+        "id": "checklist:examples",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:examples",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain external-documentation links",
+        "evidence": [],
+        "id": "checklist:externalDocs",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:externalDocs",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain contact information",
+        "evidence": [],
+        "id": "checklist:info.contact",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.contact",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source carries no top-level API description",
+        "evidence": [],
+        "id": "checklist:info.description",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:info.description",
+        "status": "dropped",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain license information",
+        "evidence": [],
+        "id": "checklist:info.license",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.license",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "title carried from the source",
+        "evidence": [
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/info/title"
+          }
+        ],
+        "id": "checklist:info.title",
+        "reason": null,
+        "remediation": null,
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.title",
+        "status": "retained",
+        "target": "target:/info/title"
+      },
+      {
+        "count": 1,
+        "detail": "source declares no API version; a placeholder was emitted",
+        "evidence": [
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/info/version"
+          }
+        ],
+        "id": "checklist:info.version",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:info.version",
+        "status": "dropped",
+        "target": "target:/info/version"
+      },
+      {
+        "count": 0,
+        "detail": "source defines no operations",
+        "evidence": [],
+        "id": "checklist:operation.metadata",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:operation.metadata",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation declares parameters",
+        "evidence": [],
+        "id": "checklist:parameters",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:parameters",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source defines types only; there are no operations to route",
+        "evidence": [],
+        "id": "checklist:paths",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:paths",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation carries a request body",
+        "evidence": [],
+        "id": "checklist:requestBody",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:requestBody",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source defines no operations",
+        "evidence": [],
+        "id": "checklist:responses",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:responses",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain security schemes or requirements",
+        "evidence": [],
+        "id": "checklist:security",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:security",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source declares no servers; the base URL is unknown",
+        "evidence": [],
+        "id": "checklist:servers",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:servers",
+        "status": "dropped",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source is not OpenAPI 3.2",
+        "evidence": [],
+        "id": "checklist:source.openapi-version",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:source.openapi-version",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation declares tags",
+        "evidence": [],
+        "id": "checklist:tags",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:tags",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.FILLER"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/FILLER"
+          }
+        ],
+        "id": "construct:field:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.FILLER",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.FILLER",
+        "status": "retained",
+        "target": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/FILLER"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-AUDIT"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-AUDIT"
+          }
+        ],
+        "id": "construct:field:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-AUDIT",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-AUDIT",
+        "status": "retained",
+        "target": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-AUDIT"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BIN-COUNT"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-BIN-COUNT"
+          }
+        ],
+        "id": "construct:field:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BIN-COUNT",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BIN-COUNT",
+        "status": "retained",
+        "target": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-BIN-COUNT"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BINS"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-BINS"
+          }
+        ],
+        "id": "construct:field:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BINS",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BINS",
+        "status": "retained",
+        "target": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-BINS"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-CAPACITY-UNITS"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-CAPACITY-UNITS"
+          }
+        ],
+        "id": "construct:field:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-CAPACITY-UNITS",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-CAPACITY-UNITS",
+        "status": "retained",
+        "target": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-CAPACITY-UNITS"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-ID"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-ID"
+          }
+        ],
+        "id": "construct:field:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-ID",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-ID",
+        "status": "retained",
+        "target": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-ID"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-REGION-CODE"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-REGION-CODE"
+          }
+        ],
+        "id": "construct:field:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-REGION-CODE",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-REGION-CODE",
+        "status": "retained",
+        "target": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-REGION-CODE"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-UTILIZATION-PCT"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-UTILIZATION-PCT"
+          }
+        ],
+        "id": "construct:field:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-UTILIZATION-PCT",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-UTILIZATION-PCT",
+        "status": "retained",
+        "target": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-UTILIZATION-PCT"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT"
+          }
+        ],
+        "id": "construct:type:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT",
+        "status": "retained",
+        "target": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT"
+      },
+      {
+        "count": 1,
+        "detail": "the cobolcopybook analyzer does not model copybook.character_encoding_detection, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:copybook.character_encoding_detection",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:copybook.character_encoding_detection",
+        "status": "unavailable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "the cobolcopybook analyzer does not model copybook.copy_replacing, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:copybook.copy_replacing",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:copybook.copy_replacing",
+        "status": "unavailable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "the cobolcopybook analyzer does not model copybook.copy_statement, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:copybook.copy_statement",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:copybook.copy_statement",
+        "status": "unavailable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "the cobolcopybook analyzer does not model copybook.renames_66, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:copybook.renames_66",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:copybook.renames_66",
+        "status": "unavailable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "the cobolcopybook analyzer does not model copybook.sign_and_synchronized_clauses, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:copybook.sign_and_synchronized_clauses",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:copybook.sign_and_synchronized_clauses",
+        "status": "unavailable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "the cobolcopybook analyzer does not model copybook.value_clauses, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:copybook.value_clauses",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:copybook.value_clauses",
+        "status": "unavailable",
+        "target": null
+      }
+    ],
+    "manifest_hash": "[volatile]",
+    "nodes": [
+      {
+        "construct_key": "copybook.character_encoding_detection",
+        "id": "source:analysis:copybook.character_encoding_detection",
+        "kind": "source",
+        "label": "copybook.character_encoding_detection",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "copybook.character_encoding_detection",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "copybook.copy_replacing",
+        "id": "source:analysis:copybook.copy_replacing",
+        "kind": "source",
+        "label": "copybook.copy_replacing",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "copybook.copy_replacing",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "copybook.copy_statement",
+        "id": "source:analysis:copybook.copy_statement",
+        "kind": "source",
+        "label": "copybook.copy_statement",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "copybook.copy_statement",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "copybook.renames_66",
+        "id": "source:analysis:copybook.renames_66",
+        "kind": "source",
+        "label": "copybook.renames_66",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "copybook.renames_66",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "copybook.sign_and_synchronized_clauses",
+        "id": "source:analysis:copybook.sign_and_synchronized_clauses",
+        "kind": "source",
+        "label": "copybook.sign_and_synchronized_clauses",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "copybook.sign_and_synchronized_clauses",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "copybook.value_clauses",
+        "id": "source:analysis:copybook.value_clauses",
+        "kind": "source",
+        "label": "copybook.value_clauses",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "copybook.value_clauses",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "components.schemas",
+        "id": "source:checklist:components.schemas",
+        "kind": "source",
+        "label": "Component schemas",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Component schemas",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "deprecated",
+        "id": "source:checklist:deprecated",
+        "kind": "source",
+        "label": "Deprecation flags",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Deprecation flags",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "examples",
+        "id": "source:checklist:examples",
+        "kind": "source",
+        "label": "Examples",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Examples",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "externalDocs",
+        "id": "source:checklist:externalDocs",
+        "kind": "source",
+        "label": "External docs",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "External docs",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.contact",
+        "id": "source:checklist:info.contact",
+        "kind": "source",
+        "label": "Contact info",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Contact info",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.description",
+        "id": "source:checklist:info.description",
+        "kind": "source",
+        "label": "API description",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API description",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.license",
+        "id": "source:checklist:info.license",
+        "kind": "source",
+        "label": "License",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "License",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.title",
+        "id": "source:checklist:info.title",
+        "kind": "source",
+        "label": "API title",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API title",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.version",
+        "id": "source:checklist:info.version",
+        "kind": "source",
+        "label": "API version",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API version",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "operation.metadata",
+        "id": "source:checklist:operation.metadata",
+        "kind": "source",
+        "label": "Operation id / summary",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Operation id / summary",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "parameters",
+        "id": "source:checklist:parameters",
+        "kind": "source",
+        "label": "Parameters",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Parameters",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "paths",
+        "id": "source:checklist:paths",
+        "kind": "source",
+        "label": "Paths & methods",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Paths & methods",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "requestBody",
+        "id": "source:checklist:requestBody",
+        "kind": "source",
+        "label": "Request body",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Request body",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "responses",
+        "id": "source:checklist:responses",
+        "kind": "source",
+        "label": "Responses",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Responses",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "security",
+        "id": "source:checklist:security",
+        "kind": "source",
+        "label": "Security schemes",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Security schemes",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "servers",
+        "id": "source:checklist:servers",
+        "kind": "source",
+        "label": "Servers",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Servers",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "source.openapi-version",
+        "id": "source:checklist:source.openapi-version",
+        "kind": "source",
+        "label": "Source OpenAPI version",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Source OpenAPI version",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "tags",
+        "id": "source:checklist:tags",
+        "kind": "source",
+        "label": "Tags",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Tags",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT",
+        "id": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT",
+        "kind": "source",
+        "label": "WAREHOUSE-SNAPSHOT",
+        "source": {
+          "construct_kind": "type",
+          "native_id": null,
+          "native_name": "WAREHOUSE-SNAPSHOT",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.FILLER",
+        "id": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.FILLER",
+        "kind": "source",
+        "label": "FILLER",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "FILLER",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-AUDIT",
+        "id": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-AUDIT",
+        "kind": "source",
+        "label": "WH-AUDIT",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "WH-AUDIT",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BIN-COUNT",
+        "id": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BIN-COUNT",
+        "kind": "source",
+        "label": "WH-BIN-COUNT",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "WH-BIN-COUNT",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BINS",
+        "id": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BINS",
+        "kind": "source",
+        "label": "WH-BINS",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "WH-BINS",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-CAPACITY-UNITS",
+        "id": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-CAPACITY-UNITS",
+        "kind": "source",
+        "label": "WH-CAPACITY-UNITS",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "WH-CAPACITY-UNITS",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-ID",
+        "id": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-ID",
+        "kind": "source",
+        "label": "WH-ID",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "WH-ID",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-REGION-CODE",
+        "id": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-REGION-CODE",
+        "kind": "source",
+        "label": "WH-REGION-CODE",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "WH-REGION-CODE",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-UTILIZATION-PCT",
+        "id": "source:construct:WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-UTILIZATION-PCT",
+        "kind": "source",
+        "label": "WH-UTILIZATION-PCT",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "WH-UTILIZATION-PCT",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT",
+        "id": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT",
+        "kind": "target",
+        "label": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.FILLER",
+        "id": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/FILLER",
+        "kind": "target",
+        "label": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/FILLER",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/FILLER",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-AUDIT",
+        "id": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-AUDIT",
+        "kind": "target",
+        "label": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-AUDIT",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-AUDIT",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BIN-COUNT",
+        "id": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-BIN-COUNT",
+        "kind": "target",
+        "label": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-BIN-COUNT",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-BIN-COUNT",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-BINS",
+        "id": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-BINS",
+        "kind": "target",
+        "label": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-BINS",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-BINS",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-CAPACITY-UNITS",
+        "id": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-CAPACITY-UNITS",
+        "kind": "target",
+        "label": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-CAPACITY-UNITS",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-CAPACITY-UNITS",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-ID",
+        "id": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-ID",
+        "kind": "target",
+        "label": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-ID",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-ID",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-REGION-CODE",
+        "id": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-REGION-CODE",
+        "kind": "target",
+        "label": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-REGION-CODE",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-REGION-CODE",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT.WH-UTILIZATION-PCT",
+        "id": "target:/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-UTILIZATION-PCT",
+        "kind": "target",
+        "label": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-UTILIZATION-PCT",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/WAREHOUSE-SNAPSHOT.WAREHOUSE-SNAPSHOT/properties/WH-UTILIZATION-PCT",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "info.title",
+        "id": "target:/info/title",
+        "kind": "target",
+        "label": "/info/title",
+        "source": null,
+        "target": {
+          "json_pointer": "/info/title",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "info.version",
+        "id": "target:/info/version",
+        "kind": "target",
+        "label": "/info/version",
+        "source": null,
+        "target": {
+          "json_pointer": "/info/version",
+          "native_path": null
+        }
+      }
+    ],
+    "reason_counts": {
+      "destination_unsupported": 0,
+      "emitter_unsupported": 5,
+      "not_applicable": 8,
+      "option_excluded": 0,
+      "security_redacted": 0,
+      "source_incomplete": 3,
+      "source_parse_limit": 6,
+      "target_tool_unavailable": 0
+    },
+    "schema_version": "1.0.0",
+    "scope_counts": {
+      "analysis": 6,
+      "checklist": 18,
+      "construct": 9,
+      "loss": 0
+    },
+    "source": {
+      "analysis": {
+        "analyzer_key": "cobolcopybook",
+        "analyzer_version": "1.1.0",
+        "available": true,
+        "node_count": 19,
+        "status": "available",
+        "status_reason": null,
+        "truncated": false,
+        "unsupported_constructs": [
+          "copybook.character_encoding_detection",
+          "copybook.copy_replacing",
+          "copybook.copy_statement",
+          "copybook.renames_66",
+          "copybook.sign_and_synchronized_clauses",
+          "copybook.value_clauses"
+        ]
+      },
+      "paradigm": "data_schema",
+      "project_id": "corpus-cobol-copybook-04-warehouse-stress-cpy",
+      "source_format": "cobolcopybook",
+      "source_protocol": null,
+      "source_version_label": null,
+      "version_record_id": "rev-corpus"
+    },
+    "status_counts": {
+      "dropped": 3,
+      "inferred": 0,
+      "not-applicable": 13,
+      "retained": 11,
+      "transformed": 0,
+      "unavailable": 6
+    },
+    "target_format": "openapi-3.1",
+    "tool_versions": {
+      "apiome-rest": "[volatile]",
+      "conversion-mode": "lossy",
+      "emitter": "openapi-3.1",
+      "fidelity-analyzer": "MFI-22.3"
+    },
+    "total_constructs": 33,
+    "truncated": false
+  },
+  "snapshot_version": 1,
+  "summary": {
+    "conversion_mode": "lossy",
+    "defaults": {},
+    "dropped_edge_count": 0,
+    "edge_count": 33,
+    "is_lossless": false,
+    "manifest_hash": "[volatile]",
+    "node_count": 44,
+    "reason_counts": {
+      "destination_unsupported": 0,
+      "emitter_unsupported": 5,
+      "not_applicable": 8,
+      "option_excluded": 0,
+      "security_redacted": 0,
+      "source_incomplete": 3,
+      "source_parse_limit": 6,
+      "target_tool_unavailable": 0
+    },
+    "schema_version": "1.0.0",
+    "scope_counts": {
+      "analysis": 6,
+      "checklist": 18,
+      "construct": 9,
+      "loss": 0
+    },
+    "source": {
+      "analysis": {
+        "analyzer_key": "cobolcopybook",
+        "analyzer_version": "1.1.0",
+        "available": true,
+        "node_count": 19,
+        "status": "available",
+        "status_reason": null,
+        "truncated": false,
+        "unsupported_constructs": [
+          "copybook.character_encoding_detection",
+          "copybook.copy_replacing",
+          "copybook.copy_statement",
+          "copybook.renames_66",
+          "copybook.sign_and_synchronized_clauses",
+          "copybook.value_clauses"
+        ]
+      },
+      "paradigm": "data_schema",
+      "project_id": "corpus-cobol-copybook-04-warehouse-stress-cpy",
+      "source_format": "cobolcopybook",
+      "source_protocol": null,
+      "source_version_label": null,
+      "version_record_id": "rev-corpus"
+    },
+    "status_counts": {
+      "dropped": 3,
+      "inferred": 0,
+      "not-applicable": 13,
+      "retained": 11,
+      "transformed": 0,
+      "unavailable": 6
+    },
+    "target_format": "openapi-3.1",
+    "tool_versions": {
+      "apiome-rest": "[volatile]",
+      "conversion-mode": "lossy",
+      "emitter": "openapi-3.1",
+      "fidelity-analyzer": "MFI-22.3"
+    },
+    "total_constructs": 33,
+    "truncated": false,
+    "worst_severity": "warn"
+  }
+}

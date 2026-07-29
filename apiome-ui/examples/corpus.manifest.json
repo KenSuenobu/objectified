@@ -2095,7 +2095,8 @@
       "features": [
         "pic",
         "level-88",
-        "values"
+        "values",
+        "fixed-length-record"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -2123,6 +2124,53 @@
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "rung": "typical"
+    },
+    {
+      "path": "cobol-copybook/07-ledger-unmodelled.cpy",
+      "format": "cobolcopybook",
+      "adapter_key": "cobolcopybook",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "cobolcopybook",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "renames-66",
+        "copy-statement",
+        "copy-replacing",
+        "national-pic",
+        "comp-3",
+        "pic",
+        "level-88"
+      ],
+      "expected_outcome": "imports",
+      "notes": "Carries the documented-unmodelled clauses (level-66 regrouping, nested member inclusion with substitution, PIC N). CPDO-4.1 pins the analysis warnings copybook.renames_66 / copybook.copy_statement / copybook.copy_replacing / copybook.unsized_item and the resulting partial status.",
+      "rung": "composition",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
+    },
+    {
+      "path": "cobol-copybook/08-overlay-warnings.cpy",
+      "format": "cobolcopybook",
+      "adapter_key": "cobolcopybook",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "cobolcopybook",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "redefines",
+        "redefines-target-missing",
+        "redefines-size-mismatch",
+        "pic"
+      ],
+      "expected_outcome": "imports",
+      "notes": "REDEFINES overlays that are deliberately imperfect: one redefining item outgrows its target, one names a target declared in a surrounding copybook. CPDO-4.1 pins copybook.redefines_target_missing / copybook.redefines_size_mismatch as evidence, not errors.",
+      "rung": "composition",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
     },
     {
       "path": "cobol-copybook/negative/01-syntactic-garbled-level.cpy",
@@ -3091,6 +3139,28 @@
       "license": "Apache-2.0",
       "provenance": "Hand-authored faithful reconstruction of the shape of a HIPAA 005010X220A1 834 benefit-enrollment transaction; no third-party text copied.",
       "rung": "real-world"
+    },
+    {
+      "path": "edi-x12/07-837-composite-claim.edi",
+      "format": "edix12",
+      "adapter_key": "edix12",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "edix12",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "composite-elements",
+        "repeated-segments",
+        "837-claim",
+        "isa-envelope"
+      ],
+      "expected_outcome": "imports",
+      "notes": "The only corpus interchange whose elements carry composites (CLM05 11>B>1, SV1 HC>code>modifier under the ISA16 sub-element separator). CPDO-4.1 pins composite/component analysis nodes from a shipped fixture instead of an inline test literal.",
+      "rung": "composition",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Authored in-repo for the apiome catalog import examples."
     },
     {
       "path": "edi-x12/negative/01-syntactic-missing-se.edi",

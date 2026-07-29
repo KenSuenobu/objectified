@@ -1,0 +1,450 @@
+{
+  "adapter": "edix12",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "x12_envelope": {
+        "element_separator": "*",
+        "functional_id": "HC",
+        "group_control_number": "12",
+        "group_receiver": "RECEIVERID",
+        "group_sender": "SENDERID",
+        "interchange_control_number": "000000007",
+        "interchange_version": "00401",
+        "receiver_id": "RECEIVERID",
+        "segment_terminator": "~",
+        "sender_id": "SENDERID"
+      },
+      "x12_set_id": "837",
+      "x12_transactions": [
+        {
+          "control_number": "0001",
+          "segments": [
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "CLM01",
+                  "value": "CLAIM-001"
+                },
+                {
+                  "position": "02",
+                  "ref": "CLM02",
+                  "value": "150"
+                },
+                {
+                  "position": "05",
+                  "ref": "CLM05-1",
+                  "value": "11"
+                },
+                {
+                  "position": "05",
+                  "ref": "CLM05-2",
+                  "value": "B"
+                },
+                {
+                  "position": "05",
+                  "ref": "CLM05-3",
+                  "value": "1"
+                }
+              ],
+              "id": "CLM"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "SV101-1",
+                  "value": "HC"
+                },
+                {
+                  "position": "01",
+                  "ref": "SV101-2",
+                  "value": "99213"
+                },
+                {
+                  "position": "02",
+                  "ref": "SV102",
+                  "value": "100"
+                },
+                {
+                  "position": "03",
+                  "ref": "SV103",
+                  "value": "UN"
+                },
+                {
+                  "position": "04",
+                  "ref": "SV104",
+                  "value": "1"
+                }
+              ],
+              "id": "SV1"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "CLM01",
+                  "value": "CLAIM-002"
+                },
+                {
+                  "position": "02",
+                  "ref": "CLM02",
+                  "value": "90"
+                },
+                {
+                  "position": "05",
+                  "ref": "CLM05-1",
+                  "value": "11"
+                },
+                {
+                  "position": "05",
+                  "ref": "CLM05-2",
+                  "value": "B"
+                },
+                {
+                  "position": "05",
+                  "ref": "CLM05-3",
+                  "value": "1"
+                }
+              ],
+              "id": "CLM"
+            },
+            {
+              "elements": [
+                {
+                  "position": "01",
+                  "ref": "SV101-1",
+                  "value": "HC"
+                },
+                {
+                  "position": "01",
+                  "ref": "SV101-2",
+                  "value": "87070"
+                },
+                {
+                  "position": "01",
+                  "ref": "SV101-3",
+                  "value": "90"
+                },
+                {
+                  "position": "02",
+                  "ref": "SV102",
+                  "value": "50"
+                },
+                {
+                  "position": "03",
+                  "ref": "SV103",
+                  "value": "UN"
+                },
+                {
+                  "position": "04",
+                  "ref": "SV104",
+                  "value": "1"
+                }
+              ],
+              "id": "SV1"
+            }
+          ],
+          "set_id": "837"
+        }
+      ],
+      "x12_version": "004010"
+    },
+    "format": "edix12",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "X12 837",
+      "namespace": "X12-837"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "X12 837",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "CLAIM-001",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-837.CLM.CLM01",
+            "name": "CLM01",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "150",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-837.CLM.CLM02",
+            "name": "CLM02",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "11",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-837.CLM.CLM05-1",
+            "name": "CLM05-1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "B",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "X12-837.CLM.CLM05-2",
+            "name": "CLM05-2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "X12-837.CLM.CLM05-3",
+            "name": "CLM05-3",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-837.CLM",
+        "key_type": null,
+        "kind": "record",
+        "name": "CLM",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": "HC",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-837.SV1.SV101-1",
+            "name": "SV101-1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "99213",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-837.SV1.SV101-2",
+            "name": "SV101-2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "100",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "X12-837.SV1.SV102",
+            "name": "SV102",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "UN",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "X12-837.SV1.SV103",
+            "name": "SV103",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "X12-837.SV1.SV104",
+            "name": "SV104",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-837.SV1",
+        "key_type": null,
+        "kind": "record",
+        "name": "SV1",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "X12-837.TransactionSet837.CLM",
+            "name": "CLM",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "X12-837.CLM",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "X12-837.TransactionSet837.SV1",
+            "name": "SV1",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "X12-837.SV1",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "X12-837.TransactionSet837",
+        "key_type": null,
+        "kind": "record",
+        "name": "TransactionSet837",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "edi-x12/07-837-composite-claim.edi",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "edix12"
+  },
+  "fingerprint": "sha256:4e8550ee8bee01b1e302e3ed67d6a5c3345d0b521ef0e59eeaaad83d4b152f9f",
+  "lint": {
+    "findings": 16,
+    "grade": "C",
+    "report_fingerprint": "6de1cd1790bfd62d26157fb6d8fc37b9c5f36fd804f2d2b6a0de4be23c9eb020",
+    "score": 75,
+    "severity_counts": {
+      "error": 0,
+      "info": 13,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

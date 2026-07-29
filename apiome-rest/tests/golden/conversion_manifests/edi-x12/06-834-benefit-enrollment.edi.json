@@ -1,0 +1,3006 @@
+{
+  "adapter": "edix12",
+  "conversion_mode": "lossy",
+  "corpus_path": "edi-x12/06-834-benefit-enrollment.edi",
+  "manifest": {
+    "bounds": {
+      "maxAnalysisEdges": 200,
+      "maxConstructEdges": 2000
+    },
+    "conversion_mode": "lossy",
+    "defaults": {},
+    "dropped_edge_count": 0,
+    "edges": [
+      {
+        "count": 4,
+        "detail": "named types carried from the source into components.schemas",
+        "evidence": [],
+        "id": "checklist:components.schemas",
+        "reason": null,
+        "remediation": null,
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:components.schemas",
+        "status": "retained",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no construct is marked deprecated",
+        "evidence": [],
+        "id": "checklist:deprecated",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:deprecated",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain request/response examples",
+        "evidence": [],
+        "id": "checklist:examples",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:examples",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain external-documentation links",
+        "evidence": [],
+        "id": "checklist:externalDocs",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:externalDocs",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain contact information",
+        "evidence": [],
+        "id": "checklist:info.contact",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.contact",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source carries no top-level API description",
+        "evidence": [],
+        "id": "checklist:info.description",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:info.description",
+        "status": "dropped",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain license information",
+        "evidence": [],
+        "id": "checklist:info.license",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.license",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "title carried from the source",
+        "evidence": [
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/info/title"
+          }
+        ],
+        "id": "checklist:info.title",
+        "reason": null,
+        "remediation": null,
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:info.title",
+        "status": "retained",
+        "target": "target:/info/title"
+      },
+      {
+        "count": 1,
+        "detail": "source declares no API version; a placeholder was emitted",
+        "evidence": [
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/info/version"
+          }
+        ],
+        "id": "checklist:info.version",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:info.version",
+        "status": "dropped",
+        "target": "target:/info/version"
+      },
+      {
+        "count": 0,
+        "detail": "source defines no operations",
+        "evidence": [],
+        "id": "checklist:operation.metadata",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:operation.metadata",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation declares parameters",
+        "evidence": [],
+        "id": "checklist:parameters",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:parameters",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source defines types only; there are no operations to route",
+        "evidence": [],
+        "id": "checklist:paths",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:paths",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation carries a request body",
+        "evidence": [],
+        "id": "checklist:requestBody",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:requestBody",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source defines no operations",
+        "evidence": [],
+        "id": "checklist:responses",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:responses",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "the canonical model does not retain security schemes or requirements",
+        "evidence": [],
+        "id": "checklist:security",
+        "reason": "emitter_unsupported",
+        "remediation": "apiome's converter does not yet place this construct in the OpenAPI document; the source detail is intact and a later converter version can carry it.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:security",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source declares no servers; the base URL is unknown",
+        "evidence": [],
+        "id": "checklist:servers",
+        "reason": "source_incomplete",
+        "remediation": "Supply the missing detail — re-convert with --title / --api-version / --server, or complete the source artifact and re-import it.",
+        "scope": "checklist",
+        "severity": "warn",
+        "source": "source:checklist:servers",
+        "status": "dropped",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "source is not OpenAPI 3.2",
+        "evidence": [],
+        "id": "checklist:source.openapi-version",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:source.openapi-version",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 0,
+        "detail": "no operation declares tags",
+        "evidence": [],
+        "id": "checklist:tags",
+        "reason": "not_applicable",
+        "remediation": "No action needed — the source has no such construct.",
+        "scope": "checklist",
+        "severity": "info",
+        "source": "source:checklist:tags",
+        "status": "not-applicable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.DTP.DTP01"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.DTP/properties/DTP01"
+          }
+        ],
+        "id": "construct:field:X12-834.DTP.DTP01",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.DTP.DTP01",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.DTP/properties/DTP01"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.DTP.DTP02"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.DTP/properties/DTP02"
+          }
+        ],
+        "id": "construct:field:X12-834.DTP.DTP02",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.DTP.DTP02",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.DTP/properties/DTP02"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.DTP.DTP03"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.DTP/properties/DTP03"
+          }
+        ],
+        "id": "construct:field:X12-834.DTP.DTP03",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.DTP.DTP03",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.DTP/properties/DTP03"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.N1.N101"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.N1/properties/N101"
+          }
+        ],
+        "id": "construct:field:X12-834.N1.N101",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.N1.N101",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.N1/properties/N101"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.N1.N102"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.N1/properties/N102"
+          }
+        ],
+        "id": "construct:field:X12-834.N1.N102",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.N1.N102",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.N1/properties/N102"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.N1.N103"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.N1/properties/N103"
+          }
+        ],
+        "id": "construct:field:X12-834.N1.N103",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.N1.N103",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.N1/properties/N103"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.N1.N104"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.N1/properties/N104"
+          }
+        ],
+        "id": "construct:field:X12-834.N1.N104",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.N1.N104",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.N1/properties/N104"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.REF.REF01"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.REF/properties/REF01"
+          }
+        ],
+        "id": "construct:field:X12-834.REF.REF01",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.REF.REF01",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.REF/properties/REF01"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.REF.REF02"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.REF/properties/REF02"
+          }
+        ],
+        "id": "construct:field:X12-834.REF.REF02",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.REF.REF02",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.REF/properties/REF02"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.BGN01"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/BGN01"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.BGN01",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.BGN01",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/BGN01"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.BGN02"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/BGN02"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.BGN02",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.BGN02",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/BGN02"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.BGN03"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/BGN03"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.BGN03",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.BGN03",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/BGN03"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.BGN04"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/BGN04"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.BGN04",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.BGN04",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/BGN04"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.BGN08"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/BGN08"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.BGN08",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.BGN08",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/BGN08"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.DMG01"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/DMG01"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.DMG01",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.DMG01",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/DMG01"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.DMG02"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/DMG02"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.DMG02",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.DMG02",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/DMG02"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.DMG03"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/DMG03"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.DMG03",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.DMG03",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/DMG03"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.DTP"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/DTP"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.DTP",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.DTP",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/DTP"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.HD01"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/HD01"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.HD01",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.HD01",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/HD01"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.HD03"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/HD03"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.HD03",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.HD03",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/HD03"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.HD04"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/HD04"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.HD04",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.HD04",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/HD04"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.INS01"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/INS01"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.INS01",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.INS01",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/INS01"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.INS02"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/INS02"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.INS02",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.INS02",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/INS02"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.INS03"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/INS03"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.INS03",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.INS03",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/INS03"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.INS04"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/INS04"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.INS04",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.INS04",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/INS04"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.INS05"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/INS05"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.INS05",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.INS05",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/INS05"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.INS06"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/INS06"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.INS06",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.INS06",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/INS06"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.INS08"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/INS08"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.INS08",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.INS08",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/INS08"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.N1"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/N1"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.N1",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.N1",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/N1"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.N301"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/N301"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.N301",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.N301",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/N301"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.N401"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/N401"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.N401",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.N401",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/N401"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.N402"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/N402"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.N402",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.N402",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/N402"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.N403"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/N403"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.N403",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.N403",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/N403"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.NM101"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/NM101"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.NM101",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.NM101",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/NM101"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.NM102"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/NM102"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.NM102",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.NM102",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/NM102"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.NM103"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/NM103"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.NM103",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.NM103",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/NM103"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.NM104"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/NM104"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.NM104",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.NM104",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/NM104"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.NM108"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/NM108"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.NM108",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.NM108",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/NM108"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.NM109"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/NM109"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.NM109",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.NM109",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/NM109"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.PER01"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/PER01"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.PER01",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.PER01",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/PER01"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.PER03"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/PER03"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.PER03",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.PER03",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/PER03"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.PER04"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/PER04"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.PER04",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.PER04",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/PER04"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834.REF"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834/properties/REF"
+          }
+        ],
+        "id": "construct:field:X12-834.TransactionSet834.REF",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834.REF",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834/properties/REF"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.DTP"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.DTP"
+          }
+        ],
+        "id": "construct:type:X12-834.DTP",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.DTP",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.DTP"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.N1"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.N1"
+          }
+        ],
+        "id": "construct:type:X12-834.N1",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.N1",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.N1"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.REF"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.REF"
+          }
+        ],
+        "id": "construct:type:X12-834.REF",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.REF",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.REF"
+      },
+      {
+        "count": 1,
+        "detail": "carried from the source into the emitted document",
+        "evidence": [
+          {
+            "kind": "source-construct",
+            "location": null,
+            "ref": "X12-834.TransactionSet834"
+          },
+          {
+            "kind": "document-pointer",
+            "location": null,
+            "ref": "/components/schemas/X12-834.TransactionSet834"
+          }
+        ],
+        "id": "construct:type:X12-834.TransactionSet834",
+        "reason": null,
+        "remediation": null,
+        "scope": "construct",
+        "severity": "info",
+        "source": "source:construct:X12-834.TransactionSet834",
+        "status": "retained",
+        "target": "target:/components/schemas/X12-834.TransactionSet834"
+      },
+      {
+        "count": 1,
+        "detail": "the edix12 analyzer does not model x12.hl_hierarchy, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:x12.hl_hierarchy",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:x12.hl_hierarchy",
+        "status": "unavailable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "the edix12 analyzer does not model x12.iea_trailer, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:x12.iea_trailer",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:x12.iea_trailer",
+        "status": "unavailable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "the edix12 analyzer does not model x12.implementation_guide_validation, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:x12.implementation_guide_validation",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:x12.implementation_guide_validation",
+        "status": "unavailable",
+        "target": null
+      },
+      {
+        "count": 1,
+        "detail": "the edix12 analyzer does not model x12.ta1_acknowledgement, so the conversion could not have carried it even if the source declared it",
+        "evidence": [],
+        "id": "analysis:unsupported:x12.ta1_acknowledgement",
+        "reason": "source_parse_limit",
+        "remediation": "apiome's analyzer could not fully read this from the source; the source data itself may be intact. Re-import once analyzer support lands.",
+        "scope": "analysis",
+        "severity": "info",
+        "source": "source:analysis:x12.ta1_acknowledgement",
+        "status": "unavailable",
+        "target": null
+      }
+    ],
+    "manifest_hash": "[volatile]",
+    "nodes": [
+      {
+        "construct_key": "x12.hl_hierarchy",
+        "id": "source:analysis:x12.hl_hierarchy",
+        "kind": "source",
+        "label": "x12.hl_hierarchy",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "x12.hl_hierarchy",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "x12.iea_trailer",
+        "id": "source:analysis:x12.iea_trailer",
+        "kind": "source",
+        "label": "x12.iea_trailer",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "x12.iea_trailer",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "x12.implementation_guide_validation",
+        "id": "source:analysis:x12.implementation_guide_validation",
+        "kind": "source",
+        "label": "x12.implementation_guide_validation",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "x12.implementation_guide_validation",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "x12.ta1_acknowledgement",
+        "id": "source:analysis:x12.ta1_acknowledgement",
+        "kind": "source",
+        "label": "x12.ta1_acknowledgement",
+        "source": {
+          "construct_kind": "analysis",
+          "native_id": null,
+          "native_name": "x12.ta1_acknowledgement",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "components.schemas",
+        "id": "source:checklist:components.schemas",
+        "kind": "source",
+        "label": "Component schemas",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Component schemas",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "deprecated",
+        "id": "source:checklist:deprecated",
+        "kind": "source",
+        "label": "Deprecation flags",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Deprecation flags",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "examples",
+        "id": "source:checklist:examples",
+        "kind": "source",
+        "label": "Examples",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Examples",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "externalDocs",
+        "id": "source:checklist:externalDocs",
+        "kind": "source",
+        "label": "External docs",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "External docs",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.contact",
+        "id": "source:checklist:info.contact",
+        "kind": "source",
+        "label": "Contact info",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Contact info",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.description",
+        "id": "source:checklist:info.description",
+        "kind": "source",
+        "label": "API description",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API description",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.license",
+        "id": "source:checklist:info.license",
+        "kind": "source",
+        "label": "License",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "License",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.title",
+        "id": "source:checklist:info.title",
+        "kind": "source",
+        "label": "API title",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API title",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "info.version",
+        "id": "source:checklist:info.version",
+        "kind": "source",
+        "label": "API version",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "API version",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "operation.metadata",
+        "id": "source:checklist:operation.metadata",
+        "kind": "source",
+        "label": "Operation id / summary",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Operation id / summary",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "parameters",
+        "id": "source:checklist:parameters",
+        "kind": "source",
+        "label": "Parameters",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Parameters",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "paths",
+        "id": "source:checklist:paths",
+        "kind": "source",
+        "label": "Paths & methods",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Paths & methods",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "requestBody",
+        "id": "source:checklist:requestBody",
+        "kind": "source",
+        "label": "Request body",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Request body",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "responses",
+        "id": "source:checklist:responses",
+        "kind": "source",
+        "label": "Responses",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Responses",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "security",
+        "id": "source:checklist:security",
+        "kind": "source",
+        "label": "Security schemes",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Security schemes",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "servers",
+        "id": "source:checklist:servers",
+        "kind": "source",
+        "label": "Servers",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Servers",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "source.openapi-version",
+        "id": "source:checklist:source.openapi-version",
+        "kind": "source",
+        "label": "Source OpenAPI version",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Source OpenAPI version",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "tags",
+        "id": "source:checklist:tags",
+        "kind": "source",
+        "label": "Tags",
+        "source": {
+          "construct_kind": "checklist",
+          "native_id": null,
+          "native_name": "Tags",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.DTP",
+        "id": "source:construct:X12-834.DTP",
+        "kind": "source",
+        "label": "DTP",
+        "source": {
+          "construct_kind": "type",
+          "native_id": null,
+          "native_name": "DTP",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.DTP.DTP01",
+        "id": "source:construct:X12-834.DTP.DTP01",
+        "kind": "source",
+        "label": "DTP01",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "DTP01",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.DTP.DTP02",
+        "id": "source:construct:X12-834.DTP.DTP02",
+        "kind": "source",
+        "label": "DTP02",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "DTP02",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.DTP.DTP03",
+        "id": "source:construct:X12-834.DTP.DTP03",
+        "kind": "source",
+        "label": "DTP03",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "DTP03",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.N1",
+        "id": "source:construct:X12-834.N1",
+        "kind": "source",
+        "label": "N1",
+        "source": {
+          "construct_kind": "type",
+          "native_id": null,
+          "native_name": "N1",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.N1.N101",
+        "id": "source:construct:X12-834.N1.N101",
+        "kind": "source",
+        "label": "N101",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "N101",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.N1.N102",
+        "id": "source:construct:X12-834.N1.N102",
+        "kind": "source",
+        "label": "N102",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "N102",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.N1.N103",
+        "id": "source:construct:X12-834.N1.N103",
+        "kind": "source",
+        "label": "N103",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "N103",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.N1.N104",
+        "id": "source:construct:X12-834.N1.N104",
+        "kind": "source",
+        "label": "N104",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "N104",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.REF",
+        "id": "source:construct:X12-834.REF",
+        "kind": "source",
+        "label": "REF",
+        "source": {
+          "construct_kind": "type",
+          "native_id": null,
+          "native_name": "REF",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.REF.REF01",
+        "id": "source:construct:X12-834.REF.REF01",
+        "kind": "source",
+        "label": "REF01",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "REF01",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.REF.REF02",
+        "id": "source:construct:X12-834.REF.REF02",
+        "kind": "source",
+        "label": "REF02",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "REF02",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834",
+        "id": "source:construct:X12-834.TransactionSet834",
+        "kind": "source",
+        "label": "TransactionSet834",
+        "source": {
+          "construct_kind": "type",
+          "native_id": null,
+          "native_name": "TransactionSet834",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.BGN01",
+        "id": "source:construct:X12-834.TransactionSet834.BGN01",
+        "kind": "source",
+        "label": "BGN01",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "BGN01",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.BGN02",
+        "id": "source:construct:X12-834.TransactionSet834.BGN02",
+        "kind": "source",
+        "label": "BGN02",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "BGN02",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.BGN03",
+        "id": "source:construct:X12-834.TransactionSet834.BGN03",
+        "kind": "source",
+        "label": "BGN03",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "BGN03",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.BGN04",
+        "id": "source:construct:X12-834.TransactionSet834.BGN04",
+        "kind": "source",
+        "label": "BGN04",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "BGN04",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.BGN08",
+        "id": "source:construct:X12-834.TransactionSet834.BGN08",
+        "kind": "source",
+        "label": "BGN08",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "BGN08",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.DMG01",
+        "id": "source:construct:X12-834.TransactionSet834.DMG01",
+        "kind": "source",
+        "label": "DMG01",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "DMG01",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.DMG02",
+        "id": "source:construct:X12-834.TransactionSet834.DMG02",
+        "kind": "source",
+        "label": "DMG02",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "DMG02",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.DMG03",
+        "id": "source:construct:X12-834.TransactionSet834.DMG03",
+        "kind": "source",
+        "label": "DMG03",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "DMG03",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.DTP",
+        "id": "source:construct:X12-834.TransactionSet834.DTP",
+        "kind": "source",
+        "label": "DTP",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "DTP",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.HD01",
+        "id": "source:construct:X12-834.TransactionSet834.HD01",
+        "kind": "source",
+        "label": "HD01",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "HD01",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.HD03",
+        "id": "source:construct:X12-834.TransactionSet834.HD03",
+        "kind": "source",
+        "label": "HD03",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "HD03",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.HD04",
+        "id": "source:construct:X12-834.TransactionSet834.HD04",
+        "kind": "source",
+        "label": "HD04",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "HD04",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS01",
+        "id": "source:construct:X12-834.TransactionSet834.INS01",
+        "kind": "source",
+        "label": "INS01",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "INS01",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS02",
+        "id": "source:construct:X12-834.TransactionSet834.INS02",
+        "kind": "source",
+        "label": "INS02",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "INS02",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS03",
+        "id": "source:construct:X12-834.TransactionSet834.INS03",
+        "kind": "source",
+        "label": "INS03",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "INS03",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS04",
+        "id": "source:construct:X12-834.TransactionSet834.INS04",
+        "kind": "source",
+        "label": "INS04",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "INS04",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS05",
+        "id": "source:construct:X12-834.TransactionSet834.INS05",
+        "kind": "source",
+        "label": "INS05",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "INS05",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS06",
+        "id": "source:construct:X12-834.TransactionSet834.INS06",
+        "kind": "source",
+        "label": "INS06",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "INS06",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS08",
+        "id": "source:construct:X12-834.TransactionSet834.INS08",
+        "kind": "source",
+        "label": "INS08",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "INS08",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.N1",
+        "id": "source:construct:X12-834.TransactionSet834.N1",
+        "kind": "source",
+        "label": "N1",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "N1",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.N301",
+        "id": "source:construct:X12-834.TransactionSet834.N301",
+        "kind": "source",
+        "label": "N301",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "N301",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.N401",
+        "id": "source:construct:X12-834.TransactionSet834.N401",
+        "kind": "source",
+        "label": "N401",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "N401",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.N402",
+        "id": "source:construct:X12-834.TransactionSet834.N402",
+        "kind": "source",
+        "label": "N402",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "N402",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.N403",
+        "id": "source:construct:X12-834.TransactionSet834.N403",
+        "kind": "source",
+        "label": "N403",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "N403",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.NM101",
+        "id": "source:construct:X12-834.TransactionSet834.NM101",
+        "kind": "source",
+        "label": "NM101",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "NM101",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.NM102",
+        "id": "source:construct:X12-834.TransactionSet834.NM102",
+        "kind": "source",
+        "label": "NM102",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "NM102",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.NM103",
+        "id": "source:construct:X12-834.TransactionSet834.NM103",
+        "kind": "source",
+        "label": "NM103",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "NM103",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.NM104",
+        "id": "source:construct:X12-834.TransactionSet834.NM104",
+        "kind": "source",
+        "label": "NM104",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "NM104",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.NM108",
+        "id": "source:construct:X12-834.TransactionSet834.NM108",
+        "kind": "source",
+        "label": "NM108",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "NM108",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.NM109",
+        "id": "source:construct:X12-834.TransactionSet834.NM109",
+        "kind": "source",
+        "label": "NM109",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "NM109",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.PER01",
+        "id": "source:construct:X12-834.TransactionSet834.PER01",
+        "kind": "source",
+        "label": "PER01",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "PER01",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.PER03",
+        "id": "source:construct:X12-834.TransactionSet834.PER03",
+        "kind": "source",
+        "label": "PER03",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "PER03",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.PER04",
+        "id": "source:construct:X12-834.TransactionSet834.PER04",
+        "kind": "source",
+        "label": "PER04",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "PER04",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.REF",
+        "id": "source:construct:X12-834.TransactionSet834.REF",
+        "kind": "source",
+        "label": "REF",
+        "source": {
+          "construct_kind": "field",
+          "native_id": null,
+          "native_name": "REF",
+          "source_location": null
+        },
+        "target": null
+      },
+      {
+        "construct_key": "X12-834.DTP",
+        "id": "target:/components/schemas/X12-834.DTP",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.DTP",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.DTP",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.DTP.DTP01",
+        "id": "target:/components/schemas/X12-834.DTP/properties/DTP01",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.DTP/properties/DTP01",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.DTP/properties/DTP01",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.DTP.DTP02",
+        "id": "target:/components/schemas/X12-834.DTP/properties/DTP02",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.DTP/properties/DTP02",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.DTP/properties/DTP02",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.DTP.DTP03",
+        "id": "target:/components/schemas/X12-834.DTP/properties/DTP03",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.DTP/properties/DTP03",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.DTP/properties/DTP03",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.N1",
+        "id": "target:/components/schemas/X12-834.N1",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.N1",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.N1",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.N1.N101",
+        "id": "target:/components/schemas/X12-834.N1/properties/N101",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.N1/properties/N101",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.N1/properties/N101",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.N1.N102",
+        "id": "target:/components/schemas/X12-834.N1/properties/N102",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.N1/properties/N102",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.N1/properties/N102",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.N1.N103",
+        "id": "target:/components/schemas/X12-834.N1/properties/N103",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.N1/properties/N103",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.N1/properties/N103",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.N1.N104",
+        "id": "target:/components/schemas/X12-834.N1/properties/N104",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.N1/properties/N104",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.N1/properties/N104",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.REF",
+        "id": "target:/components/schemas/X12-834.REF",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.REF",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.REF",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.REF.REF01",
+        "id": "target:/components/schemas/X12-834.REF/properties/REF01",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.REF/properties/REF01",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.REF/properties/REF01",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.REF.REF02",
+        "id": "target:/components/schemas/X12-834.REF/properties/REF02",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.REF/properties/REF02",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.REF/properties/REF02",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834",
+        "id": "target:/components/schemas/X12-834.TransactionSet834",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.BGN01",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/BGN01",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/BGN01",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/BGN01",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.BGN02",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/BGN02",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/BGN02",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/BGN02",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.BGN03",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/BGN03",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/BGN03",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/BGN03",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.BGN04",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/BGN04",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/BGN04",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/BGN04",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.BGN08",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/BGN08",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/BGN08",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/BGN08",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.DMG01",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/DMG01",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/DMG01",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/DMG01",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.DMG02",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/DMG02",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/DMG02",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/DMG02",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.DMG03",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/DMG03",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/DMG03",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/DMG03",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.DTP",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/DTP",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/DTP",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/DTP",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.HD01",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/HD01",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/HD01",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/HD01",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.HD03",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/HD03",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/HD03",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/HD03",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.HD04",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/HD04",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/HD04",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/HD04",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS01",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/INS01",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/INS01",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/INS01",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS02",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/INS02",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/INS02",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/INS02",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS03",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/INS03",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/INS03",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/INS03",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS04",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/INS04",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/INS04",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/INS04",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS05",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/INS05",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/INS05",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/INS05",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS06",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/INS06",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/INS06",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/INS06",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.INS08",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/INS08",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/INS08",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/INS08",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.N1",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/N1",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/N1",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/N1",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.N301",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/N301",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/N301",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/N301",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.N401",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/N401",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/N401",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/N401",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.N402",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/N402",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/N402",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/N402",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.N403",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/N403",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/N403",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/N403",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.NM101",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/NM101",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/NM101",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/NM101",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.NM102",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/NM102",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/NM102",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/NM102",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.NM103",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/NM103",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/NM103",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/NM103",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.NM104",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/NM104",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/NM104",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/NM104",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.NM108",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/NM108",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/NM108",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/NM108",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.NM109",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/NM109",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/NM109",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/NM109",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.PER01",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/PER01",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/PER01",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/PER01",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.PER03",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/PER03",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/PER03",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/PER03",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.PER04",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/PER04",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/PER04",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/PER04",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "X12-834.TransactionSet834.REF",
+        "id": "target:/components/schemas/X12-834.TransactionSet834/properties/REF",
+        "kind": "target",
+        "label": "/components/schemas/X12-834.TransactionSet834/properties/REF",
+        "source": null,
+        "target": {
+          "json_pointer": "/components/schemas/X12-834.TransactionSet834/properties/REF",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "info.title",
+        "id": "target:/info/title",
+        "kind": "target",
+        "label": "/info/title",
+        "source": null,
+        "target": {
+          "json_pointer": "/info/title",
+          "native_path": null
+        }
+      },
+      {
+        "construct_key": "info.version",
+        "id": "target:/info/version",
+        "kind": "target",
+        "label": "/info/version",
+        "source": null,
+        "target": {
+          "json_pointer": "/info/version",
+          "native_path": null
+        }
+      }
+    ],
+    "reason_counts": {
+      "destination_unsupported": 0,
+      "emitter_unsupported": 5,
+      "not_applicable": 8,
+      "option_excluded": 0,
+      "security_redacted": 0,
+      "source_incomplete": 3,
+      "source_parse_limit": 4,
+      "target_tool_unavailable": 0
+    },
+    "schema_version": "1.0.0",
+    "scope_counts": {
+      "analysis": 4,
+      "checklist": 18,
+      "construct": 47,
+      "loss": 0
+    },
+    "source": {
+      "analysis": {
+        "analyzer_key": "edix12",
+        "analyzer_version": "1.1.0",
+        "available": true,
+        "node_count": 82,
+        "status": "available",
+        "status_reason": null,
+        "truncated": false,
+        "unsupported_constructs": [
+          "x12.hl_hierarchy",
+          "x12.iea_trailer",
+          "x12.implementation_guide_validation",
+          "x12.ta1_acknowledgement"
+        ]
+      },
+      "paradigm": "data_schema",
+      "project_id": "corpus-edi-x12-06-834-benefit-enrollment-edi",
+      "source_format": "edix12",
+      "source_protocol": null,
+      "source_version_label": null,
+      "version_record_id": "rev-corpus"
+    },
+    "status_counts": {
+      "dropped": 3,
+      "inferred": 0,
+      "not-applicable": 13,
+      "retained": 49,
+      "transformed": 0,
+      "unavailable": 4
+    },
+    "target_format": "openapi-3.1",
+    "tool_versions": {
+      "apiome-rest": "[volatile]",
+      "conversion-mode": "lossy",
+      "emitter": "openapi-3.1",
+      "fidelity-analyzer": "MFI-22.3"
+    },
+    "total_constructs": 69,
+    "truncated": false
+  },
+  "snapshot_version": 1,
+  "summary": {
+    "conversion_mode": "lossy",
+    "defaults": {},
+    "dropped_edge_count": 0,
+    "edge_count": 69,
+    "is_lossless": false,
+    "manifest_hash": "[volatile]",
+    "node_count": 118,
+    "reason_counts": {
+      "destination_unsupported": 0,
+      "emitter_unsupported": 5,
+      "not_applicable": 8,
+      "option_excluded": 0,
+      "security_redacted": 0,
+      "source_incomplete": 3,
+      "source_parse_limit": 4,
+      "target_tool_unavailable": 0
+    },
+    "schema_version": "1.0.0",
+    "scope_counts": {
+      "analysis": 4,
+      "checklist": 18,
+      "construct": 47,
+      "loss": 0
+    },
+    "source": {
+      "analysis": {
+        "analyzer_key": "edix12",
+        "analyzer_version": "1.1.0",
+        "available": true,
+        "node_count": 82,
+        "status": "available",
+        "status_reason": null,
+        "truncated": false,
+        "unsupported_constructs": [
+          "x12.hl_hierarchy",
+          "x12.iea_trailer",
+          "x12.implementation_guide_validation",
+          "x12.ta1_acknowledgement"
+        ]
+      },
+      "paradigm": "data_schema",
+      "project_id": "corpus-edi-x12-06-834-benefit-enrollment-edi",
+      "source_format": "edix12",
+      "source_protocol": null,
+      "source_version_label": null,
+      "version_record_id": "rev-corpus"
+    },
+    "status_counts": {
+      "dropped": 3,
+      "inferred": 0,
+      "not-applicable": 13,
+      "retained": 49,
+      "transformed": 0,
+      "unavailable": 4
+    },
+    "target_format": "openapi-3.1",
+    "tool_versions": {
+      "apiome-rest": "[volatile]",
+      "conversion-mode": "lossy",
+      "emitter": "openapi-3.1",
+      "fidelity-analyzer": "MFI-22.3"
+    },
+    "total_constructs": 69,
+    "truncated": false,
+    "worst_severity": "warn"
+  }
+}

@@ -5,18 +5,18 @@ and roughly half of what the copybook said. These tests pin the other half survi
 level numbers, PICTURE and USAGE clauses, OCCURS bounds, 88-level condition names, and the source
 line each was declared on.
 
-They also pin the honesty rule the ticket asks for. The parser behind this extractor does not read
-``REDEFINES`` or ``COPY … REPLACING``; a copybook that uses them is analysed as far as the parser
-understands it, and the record says so with a warning and a ``partial`` status rather than presenting
-a partial tree as a complete one.
+They also pin the honesty rule the ticket asks for. The parser behind this extractor reads
+``REDEFINES`` (CPDO-2.3, #4799) but not ``COPY … REPLACING`` or level-66 renames; a copybook that
+uses an unmodelled clause is analysed as far as the parser understands it, and the record says so
+with a warning and a ``partial`` status rather than presenting a partial tree as a complete one.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any, List
 
 import pytest
+from corpus_loader import unique_corpus_entry
 
 from app.cobolcopybook_analysis import (
     COBOL_ANALYZER_KEY,
@@ -48,10 +48,14 @@ from app.payload_analysis import (
     source_digest,
 )
 
-_EXAMPLES = Path(__file__).resolve().parents[2] / "apiome-ui/examples/cobol-copybook"
-_CUSTOMER = (_EXAMPLES / "01-customer-record.cpy").read_text(encoding="utf-8")
-_REDEFINES = (_EXAMPLES / "03-payment-redefines.cpy").read_text(encoding="utf-8")
-_WAREHOUSE = (_EXAMPLES / "04-warehouse-stress.cpy").read_text(encoding="utf-8")
+# Fixtures come from the manifest-tracked corpus, selected by tag (CPDO-4.1): a fixture that
+# leaves the manifest, or stops carrying the construct a test pins, fails loudly here instead of
+# silently reading a stale file.
+_CUSTOMER = unique_corpus_entry(format="cobolcopybook", features=("occurs",)).read_text()
+_REDEFINES = unique_corpus_entry(
+    format="cobolcopybook", features=("redefines", "level-88")
+).read_text()
+_WAREHOUSE = unique_corpus_entry(format="cobolcopybook", features=("binary",)).read_text()
 
 
 def _walk(nodes) -> List[Any]:
@@ -333,7 +337,9 @@ def test_binary_and_display_bases_are_distinguished() -> None:
 
 
 def test_a_fixed_length_record_records_one_length_and_no_range() -> None:
-    ach = (_EXAMPLES / "05-ach-entry-detail.cpy").read_text(encoding="utf-8")
+    ach = unique_corpus_entry(
+        format="cobolcopybook", features=("fixed-length-record",)
+    ).read_text()
     document = analyze_cobolcopybook(parse_cobolcopybook(ach), source=ach)
     record = _by_name(document, "ACH-ENTRY-DETAIL")
 

@@ -1,0 +1,515 @@
+{
+  "adapter": "edix12",
+  "corpus_path": "edi-x12/03-997-acknowledgment.edi",
+  "document": {
+    "analyzer": {
+      "key": "edix12",
+      "toolVersions": {
+        "pyx12": "[volatile]"
+      },
+      "version": "1.1.0"
+    },
+    "capabilities": {
+      "limits": {
+        "maxDepth": 32,
+        "maxNodes": 5000,
+        "maxVisitedNodes": 50000,
+        "valuePreviewChars": 120
+      },
+      "supported": [
+        "x12.byte_offsets",
+        "x12.composite_elements",
+        "x12.control_numbers",
+        "x12.delimiters",
+        "x12.element",
+        "x12.empty_elements",
+        "x12.envelope_control_totals",
+        "x12.functional_group",
+        "x12.interchange_envelope",
+        "x12.repeating_elements",
+        "x12.segment",
+        "x12.segment_ordinals",
+        "x12.segment_repeat_counts",
+        "x12.transaction_set"
+      ],
+      "unsupported": [
+        "x12.hl_hierarchy",
+        "x12.iea_trailer",
+        "x12.implementation_guide_validation",
+        "x12.ta1_acknowledgement"
+      ]
+    },
+    "metrics": {
+      "droppedNodeCount": 0,
+      "kindCounts": {
+        "element": 9,
+        "functional_group": 1,
+        "interchange": 1,
+        "segment": 4,
+        "transaction_set": 1
+      },
+      "maxDepth": 5,
+      "nodeCount": 16,
+      "truncated": false,
+      "warningCount": 0
+    },
+    "redaction": {
+      "policySource": "default",
+      "redactedNodeCount": 0,
+      "valuePreviewLimit": 120,
+      "valueVisibility": "structural"
+    },
+    "schemaVersion": "1.1.0",
+    "sourceFormat": "edix12",
+    "sourceHash": "sha256:17bc39d3715703c01b5bbc4f45d4def45f24b7f71ba7673d117bf3393b3dc4f5",
+    "status": "available",
+    "statusReason": null,
+    "tree": [
+      {
+        "attributes": {
+          "acknowledgmentRequested": "0",
+          "componentSeparator": ">",
+          "controlNumber": "000000003",
+          "date": "260116",
+          "declaredFunctionalGroupCount": 1,
+          "elementSeparator": "*",
+          "functionalGroupCount": 1,
+          "interchangeVersion": "00401",
+          "receiverId": "SENDERID",
+          "repetitionSeparatorDeclared": false,
+          "segmentTerminator": "~",
+          "senderId": "BUYER01",
+          "time": "0900",
+          "usageIndicator": "P",
+          "usageIndicatorLabel": "Production"
+        },
+        "children": [
+          {
+            "attributes": {
+              "controlNumber": "3",
+              "date": "20260116",
+              "declaredTransactionSetCount": 1,
+              "functionalId": "FA",
+              "receiver": "SENDERID",
+              "responsibleAgencyCode": "X",
+              "sender": "BUYER01",
+              "time": "0900",
+              "transactionSetCount": 1,
+              "version": "004010"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "controlNumber": "0001",
+                  "declaredSegmentCount": 6,
+                  "envelopeSegmentCount": 6,
+                  "segmentCount": 4,
+                  "setId": "997"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "elementCount": 2,
+                      "elementPositionCount": 2,
+                      "repeatCount": 1,
+                      "repeatIndex": 0,
+                      "segmentId": "AK1"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "position": "01",
+                          "reference": "AK101"
+                        },
+                        "children": [],
+                        "id": "0.0.0.0.0",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 0,
+                          "path": "ISA/GS[0]/ST[0]/AK1[0]/AK101"
+                        },
+                        "name": "AK101",
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": "PO",
+                        "valueLength": 2,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "02",
+                          "reference": "AK102"
+                        },
+                        "children": [],
+                        "id": "0.0.0.0.1",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 1,
+                          "path": "ISA/GS[0]/ST[0]/AK1[0]/AK102"
+                        },
+                        "name": "AK102",
+                        "ordinal": 1,
+                        "redacted": false,
+                        "value": "1",
+                        "valueLength": 1,
+                        "valuePresent": true
+                      }
+                    ],
+                    "id": "0.0.0.0",
+                    "kind": "segment",
+                    "label": null,
+                    "location": {
+                      "column": 1,
+                      "file": null,
+                      "length": 8,
+                      "line": 4,
+                      "offset": 169,
+                      "ordinal": 0,
+                      "path": "ISA/GS[0]/ST[0]/AK1[0]"
+                    },
+                    "name": "AK1",
+                    "ordinal": 0,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "elementCount": 2,
+                      "elementPositionCount": 2,
+                      "repeatCount": 1,
+                      "repeatIndex": 0,
+                      "segmentId": "AK2"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "position": "01",
+                          "reference": "AK201"
+                        },
+                        "children": [],
+                        "id": "0.0.0.1.0",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 0,
+                          "path": "ISA/GS[0]/ST[0]/AK2[1]/AK201"
+                        },
+                        "name": "AK201",
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": "850",
+                        "valueLength": 3,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "02",
+                          "reference": "AK202"
+                        },
+                        "children": [],
+                        "id": "0.0.0.1.1",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 1,
+                          "path": "ISA/GS[0]/ST[0]/AK2[1]/AK202"
+                        },
+                        "name": "AK202",
+                        "ordinal": 1,
+                        "redacted": false,
+                        "value": "0001",
+                        "valueLength": 4,
+                        "valuePresent": true
+                      }
+                    ],
+                    "id": "0.0.0.1",
+                    "kind": "segment",
+                    "label": null,
+                    "location": {
+                      "column": 1,
+                      "file": null,
+                      "length": 12,
+                      "line": 5,
+                      "offset": 179,
+                      "ordinal": 1,
+                      "path": "ISA/GS[0]/ST[0]/AK2[1]"
+                    },
+                    "name": "AK2",
+                    "ordinal": 1,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "elementCount": 1,
+                      "elementPositionCount": 1,
+                      "repeatCount": 1,
+                      "repeatIndex": 0,
+                      "segmentId": "AK5"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "position": "01",
+                          "reference": "AK501"
+                        },
+                        "children": [],
+                        "id": "0.0.0.2.0",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 0,
+                          "path": "ISA/GS[0]/ST[0]/AK5[2]/AK501"
+                        },
+                        "name": "AK501",
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": "A",
+                        "valueLength": 1,
+                        "valuePresent": true
+                      }
+                    ],
+                    "id": "0.0.0.2",
+                    "kind": "segment",
+                    "label": null,
+                    "location": {
+                      "column": 1,
+                      "file": null,
+                      "length": 5,
+                      "line": 6,
+                      "offset": 193,
+                      "ordinal": 2,
+                      "path": "ISA/GS[0]/ST[0]/AK5[2]"
+                    },
+                    "name": "AK5",
+                    "ordinal": 2,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  },
+                  {
+                    "attributes": {
+                      "elementCount": 4,
+                      "elementPositionCount": 4,
+                      "repeatCount": 1,
+                      "repeatIndex": 0,
+                      "segmentId": "AK9"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "position": "01",
+                          "reference": "AK901"
+                        },
+                        "children": [],
+                        "id": "0.0.0.3.0",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 0,
+                          "path": "ISA/GS[0]/ST[0]/AK9[3]/AK901"
+                        },
+                        "name": "AK901",
+                        "ordinal": 0,
+                        "redacted": false,
+                        "value": "A",
+                        "valueLength": 1,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "02",
+                          "reference": "AK902"
+                        },
+                        "children": [],
+                        "id": "0.0.0.3.1",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 1,
+                          "path": "ISA/GS[0]/ST[0]/AK9[3]/AK902"
+                        },
+                        "name": "AK902",
+                        "ordinal": 1,
+                        "redacted": false,
+                        "value": "1",
+                        "valueLength": 1,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "03",
+                          "reference": "AK903"
+                        },
+                        "children": [],
+                        "id": "0.0.0.3.2",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 2,
+                          "path": "ISA/GS[0]/ST[0]/AK9[3]/AK903"
+                        },
+                        "name": "AK903",
+                        "ordinal": 2,
+                        "redacted": false,
+                        "value": "1",
+                        "valueLength": 1,
+                        "valuePresent": true
+                      },
+                      {
+                        "attributes": {
+                          "position": "04",
+                          "reference": "AK904"
+                        },
+                        "children": [],
+                        "id": "0.0.0.3.3",
+                        "kind": "element",
+                        "label": null,
+                        "location": {
+                          "column": null,
+                          "file": null,
+                          "length": null,
+                          "line": null,
+                          "offset": null,
+                          "ordinal": 3,
+                          "path": "ISA/GS[0]/ST[0]/AK9[3]/AK904"
+                        },
+                        "name": "AK904",
+                        "ordinal": 3,
+                        "redacted": false,
+                        "value": "1",
+                        "valueLength": 1,
+                        "valuePresent": true
+                      }
+                    ],
+                    "id": "0.0.0.3",
+                    "kind": "segment",
+                    "label": null,
+                    "location": {
+                      "column": 1,
+                      "file": null,
+                      "length": 11,
+                      "line": 7,
+                      "offset": 200,
+                      "ordinal": 3,
+                      "path": "ISA/GS[0]/ST[0]/AK9[3]"
+                    },
+                    "name": "AK9",
+                    "ordinal": 3,
+                    "redacted": false,
+                    "value": null,
+                    "valueLength": null,
+                    "valuePresent": null
+                  }
+                ],
+                "id": "0.0.0",
+                "kind": "transaction_set",
+                "label": "Transaction set 997 (0001)",
+                "location": {
+                  "column": 1,
+                  "file": null,
+                  "length": 11,
+                  "line": 3,
+                  "offset": 156,
+                  "ordinal": 0,
+                  "path": "ISA/GS[0]/ST[0]"
+                },
+                "name": "997",
+                "ordinal": 0,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              }
+            ],
+            "id": "0.0",
+            "kind": "functional_group",
+            "label": "Functional group FA (3)",
+            "location": {
+              "column": 1,
+              "file": null,
+              "length": 47,
+              "line": 2,
+              "offset": 107,
+              "ordinal": 0,
+              "path": "ISA/GS[0]"
+            },
+            "name": "FA",
+            "ordinal": 0,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          }
+        ],
+        "id": "0",
+        "kind": "interchange",
+        "label": "Interchange 000000003",
+        "location": {
+          "column": 1,
+          "file": null,
+          "length": 105,
+          "line": 1,
+          "offset": 0,
+          "ordinal": 0,
+          "path": "ISA"
+        },
+        "name": "ISA",
+        "ordinal": 0,
+        "redacted": false,
+        "value": null,
+        "valueLength": null,
+        "valuePresent": null
+      }
+    ],
+    "warnings": []
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,527 @@
+{
+  "adapter": "cobolcopybook",
+  "corpus_path": "cobol-copybook/01-customer-record.cpy",
+  "document": {
+    "analyzer": {
+      "key": "cobolcopybook",
+      "toolVersions": {
+        "cobolcopybook_parser": "[volatile]"
+      },
+      "version": "1.1.0"
+    },
+    "capabilities": {
+      "limits": {
+        "maxDepth": 32,
+        "maxNodes": 5000,
+        "maxVisitedNodes": 50000,
+        "valuePreviewChars": 120
+      },
+      "supported": [
+        "copybook.computed_storage_length",
+        "copybook.condition_names_88",
+        "copybook.elementary_items",
+        "copybook.group_items",
+        "copybook.level_numbers",
+        "copybook.multi_line_clauses",
+        "copybook.occurs_bounds",
+        "copybook.occurs_depending_on",
+        "copybook.picture_clauses",
+        "copybook.redefines",
+        "copybook.source_lines",
+        "copybook.storage_offsets",
+        "copybook.usage_clauses",
+        "copybook.variable_length_records"
+      ],
+      "unsupported": [
+        "copybook.character_encoding_detection",
+        "copybook.copy_replacing",
+        "copybook.copy_statement",
+        "copybook.renames_66",
+        "copybook.sign_and_synchronized_clauses",
+        "copybook.value_clauses"
+      ]
+    },
+    "metrics": {
+      "droppedNodeCount": 0,
+      "kindCounts": {
+        "condition": 3,
+        "field": 9,
+        "group": 2,
+        "record": 1
+      },
+      "maxDepth": 3,
+      "nodeCount": 15,
+      "truncated": false,
+      "warningCount": 2
+    },
+    "redaction": {
+      "policySource": "default",
+      "redactedNodeCount": 0,
+      "valuePreviewLimit": 120,
+      "valueVisibility": "structural"
+    },
+    "schemaVersion": "1.1.0",
+    "sourceFormat": "cobolcopybook",
+    "sourceHash": "sha256:567a0ab47d86edce236b97256d3d35b231d989be122ba3483d5ab39af31a68f3",
+    "status": "available",
+    "statusReason": null,
+    "tree": [
+      {
+        "attributes": {
+          "childCount": 7,
+          "length": 145,
+          "level": 1,
+          "minTotalLength": 81,
+          "offset": 1,
+          "totalLength": 145,
+          "variableLength": true
+        },
+        "children": [
+          {
+            "attributes": {
+              "digits": 8,
+              "length": 8,
+              "level": 5,
+              "offset": 1,
+              "picture": "9(8)",
+              "storageBasis": "display",
+              "totalLength": 8
+            },
+            "children": [],
+            "id": "0.0",
+            "kind": "field",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": 14,
+              "offset": null,
+              "ordinal": 0,
+              "path": "CUSTOMER-RECORD/CUST-ID"
+            },
+            "name": "CUST-ID",
+            "ordinal": 0,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "childCount": 2,
+              "length": 40,
+              "level": 5,
+              "offset": 9,
+              "totalLength": 40
+            },
+            "children": [
+              {
+                "attributes": {
+                  "length": 20,
+                  "level": 10,
+                  "offset": 9,
+                  "picture": "X(20)",
+                  "storageBasis": "display",
+                  "totalLength": 20
+                },
+                "children": [],
+                "id": "0.1.0",
+                "kind": "field",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": 16,
+                  "offset": null,
+                  "ordinal": 0,
+                  "path": "CUSTOMER-RECORD/CUST-NAME/CUST-FIRST-NAME"
+                },
+                "name": "CUST-FIRST-NAME",
+                "ordinal": 0,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              },
+              {
+                "attributes": {
+                  "length": 20,
+                  "level": 10,
+                  "offset": 29,
+                  "picture": "X(20)",
+                  "storageBasis": "display",
+                  "totalLength": 20
+                },
+                "children": [],
+                "id": "0.1.1",
+                "kind": "field",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": 17,
+                  "offset": null,
+                  "ordinal": 1,
+                  "path": "CUSTOMER-RECORD/CUST-NAME/CUST-LAST-NAME"
+                },
+                "name": "CUST-LAST-NAME",
+                "ordinal": 1,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              }
+            ],
+            "id": "0.1",
+            "kind": "group",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": 15,
+              "offset": null,
+              "ordinal": 1,
+              "path": "CUSTOMER-RECORD/CUST-NAME"
+            },
+            "name": "CUST-NAME",
+            "ordinal": 1,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "conditionCount": 3,
+              "length": 1,
+              "level": 5,
+              "offset": 49,
+              "picture": "X(1)",
+              "storageBasis": "display",
+              "totalLength": 1
+            },
+            "children": [
+              {
+                "attributes": {
+                  "conditionValue": "A",
+                  "level": 88
+                },
+                "children": [],
+                "id": "0.2.0",
+                "kind": "condition",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": 19,
+                  "offset": null,
+                  "ordinal": 0,
+                  "path": "CUSTOMER-RECORD/CUST-STATUS/CUST-ACTIVE"
+                },
+                "name": "CUST-ACTIVE",
+                "ordinal": 0,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              },
+              {
+                "attributes": {
+                  "conditionValue": "S",
+                  "level": 88
+                },
+                "children": [],
+                "id": "0.2.1",
+                "kind": "condition",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": 20,
+                  "offset": null,
+                  "ordinal": 2,
+                  "path": "CUSTOMER-RECORD/CUST-STATUS/CUST-SUSPENDED"
+                },
+                "name": "CUST-SUSPENDED",
+                "ordinal": 2,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              },
+              {
+                "attributes": {
+                  "conditionValue": "C",
+                  "level": 88
+                },
+                "children": [],
+                "id": "0.2.2",
+                "kind": "condition",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": 21,
+                  "offset": null,
+                  "ordinal": 4,
+                  "path": "CUSTOMER-RECORD/CUST-STATUS/CUST-CLOSED"
+                },
+                "name": "CUST-CLOSED",
+                "ordinal": 4,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              }
+            ],
+            "id": "0.2",
+            "kind": "field",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": 18,
+              "offset": null,
+              "ordinal": 2,
+              "path": "CUSTOMER-RECORD/CUST-STATUS"
+            },
+            "name": "CUST-STATUS",
+            "ordinal": 2,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "decimals": 2,
+              "digits": 11,
+              "length": 6,
+              "level": 5,
+              "offset": 50,
+              "picture": "S9(9)V99",
+              "signed": true,
+              "storageBasis": "packed",
+              "totalLength": 6,
+              "usage": "COMP-3"
+            },
+            "children": [],
+            "id": "0.3",
+            "kind": "field",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": 22,
+              "offset": null,
+              "ordinal": 3,
+              "path": "CUSTOMER-RECORD/CUST-BALANCE"
+            },
+            "name": "CUST-BALANCE",
+            "ordinal": 3,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "digits": 2,
+              "length": 2,
+              "level": 5,
+              "offset": 56,
+              "picture": "9(2)",
+              "storageBasis": "display",
+              "totalLength": 2
+            },
+            "children": [],
+            "id": "0.4",
+            "kind": "field",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": 23,
+              "offset": null,
+              "ordinal": 4,
+              "path": "CUSTOMER-RECORD/CUST-PHONE-COUNT"
+            },
+            "name": "CUST-PHONE-COUNT",
+            "ordinal": 4,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "childCount": 2,
+              "dependingOn": "CUST-PHONE-COUNT",
+              "length": 16,
+              "level": 5,
+              "minTotalLength": 16,
+              "occursMax": 5,
+              "occursMin": 1,
+              "offset": 58,
+              "totalLength": 80,
+              "variableLength": true
+            },
+            "children": [
+              {
+                "attributes": {
+                  "length": 1,
+                  "level": 10,
+                  "offset": 58,
+                  "picture": "X(1)",
+                  "storageBasis": "display",
+                  "totalLength": 1
+                },
+                "children": [],
+                "id": "0.5.0",
+                "kind": "field",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": 26,
+                  "offset": null,
+                  "ordinal": 0,
+                  "path": "CUSTOMER-RECORD/CUST-PHONES/CUST-PHONE-TYPE"
+                },
+                "name": "CUST-PHONE-TYPE",
+                "ordinal": 0,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              },
+              {
+                "attributes": {
+                  "length": 15,
+                  "level": 10,
+                  "offset": 59,
+                  "picture": "X(15)",
+                  "storageBasis": "display",
+                  "totalLength": 15
+                },
+                "children": [],
+                "id": "0.5.1",
+                "kind": "field",
+                "label": null,
+                "location": {
+                  "column": null,
+                  "file": null,
+                  "length": null,
+                  "line": 27,
+                  "offset": null,
+                  "ordinal": 1,
+                  "path": "CUSTOMER-RECORD/CUST-PHONES/CUST-PHONE-NUMBER"
+                },
+                "name": "CUST-PHONE-NUMBER",
+                "ordinal": 1,
+                "redacted": false,
+                "value": null,
+                "valueLength": null,
+                "valuePresent": null
+              }
+            ],
+            "id": "0.5",
+            "kind": "group",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": 24,
+              "offset": null,
+              "ordinal": 5,
+              "path": "CUSTOMER-RECORD/CUST-PHONES"
+            },
+            "name": "CUST-PHONES",
+            "ordinal": 5,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          },
+          {
+            "attributes": {
+              "digits": 8,
+              "length": 8,
+              "level": 5,
+              "offsetVariable": true,
+              "picture": "9(8)",
+              "storageBasis": "display",
+              "totalLength": 8
+            },
+            "children": [],
+            "id": "0.6",
+            "kind": "field",
+            "label": null,
+            "location": {
+              "column": null,
+              "file": null,
+              "length": null,
+              "line": 28,
+              "offset": null,
+              "ordinal": 6,
+              "path": "CUSTOMER-RECORD/CUST-CREATED-DATE"
+            },
+            "name": "CUST-CREATED-DATE",
+            "ordinal": 6,
+            "redacted": false,
+            "value": null,
+            "valueLength": null,
+            "valuePresent": null
+          }
+        ],
+        "id": "0",
+        "kind": "record",
+        "label": null,
+        "location": {
+          "column": null,
+          "file": null,
+          "length": null,
+          "line": 13,
+          "offset": null,
+          "ordinal": 0,
+          "path": "CUSTOMER-RECORD"
+        },
+        "name": "CUSTOMER-RECORD",
+        "ordinal": 0,
+        "redacted": false,
+        "value": null,
+        "valueLength": null,
+        "valuePresent": null
+      }
+    ],
+    "warnings": [
+      {
+        "code": "copybook.variable_length_record",
+        "location": null,
+        "message": "This record carries a variable-length table, so one record occupies 81–145 bytes rather than a fixed size. Items after that table have a range of offsets rather than an offset, and are recorded with none.",
+        "nodeId": null,
+        "severity": "info"
+      },
+      {
+        "code": "copybook.layout_assumptions",
+        "location": null,
+        "message": "Storage offsets and lengths are computed under assumptions this copybook does not state: One byte per character position — a single-byte encoding (EBCDIC or ASCII). DBCS and national (PIC N / USAGE NATIONAL) items are not sized. COMP-3 items are packed two digits per byte with a trailing sign nibble, so a picture of n digits occupies (n div 2) + 1 bytes whether or not it is signed. COMP / COMP-4 / BINARY items occupy 2, 4 or 8 bytes by digit count, the common IBM representation; a compiler set to allocate by truncation rules may differ. A sign is assumed to be overpunched on the trailing digit rather than held in its own byte, because SIGN IS SEPARATE is not read by the parser. No SYNCHRONIZED alignment is applied, so no slack bytes are inserted between items.",
+        "nodeId": null,
+        "severity": "info"
+      }
+    ]
+  },
+  "snapshot_version": 1
+}
