@@ -47,6 +47,7 @@ import {
   type Loss,
 } from '../../../../utils/conversion-fidelity';
 import { convertPreviewDialogTitle } from '../../../../utils/catalog-conversion';
+import { ConversionProjectionGraphPanel } from './ConversionProjectionGraphPanel';
 
 /** Offline fallback when Monaco cannot load — keeps the raw OpenAPI JSON visible.
  * `value` is optional to stay prop-compatible with Monaco's `EditorProps` in the
@@ -155,6 +156,7 @@ export function ConversionPreviewDialog({
   const [defaults, setDefaults] = useState<ConversionDefaults>({ title: '', version: '', servers: [] });
   const [serversText, setServersText] = useState('');
   const [showRaw, setShowRaw] = useState(false);
+  const [showProjection, setShowProjection] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [committing, setCommitting] = useState(false);
   const [commitError, setCommitError] = useState<string | null>(null);
@@ -351,6 +353,36 @@ export function ConversionPreviewDialog({
                   )}
                 </section>
               </div>
+
+              {/* Collapsible projection graph: which construct became which, and why not
+                  (CPDO-3.1). Lazily fetched — the manifest pages load only on expand. */}
+              {itemId && (
+                <section className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowProjection((v) => !v)}
+                    className="flex items-center gap-1 text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                    data-testid="conversion-projection-toggle"
+                    aria-expanded={showProjection}
+                  >
+                    {showProjection ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                    {showProjection ? 'Hide' : 'Show'} projection graph
+                  </button>
+                  {showProjection && (
+                    <div className="mt-2">
+                      <ConversionProjectionGraphPanel
+                        itemId={itemId}
+                        enabled={showProjection}
+                        envelopeSummary={result?.projection ?? null}
+                      />
+                    </div>
+                  )}
+                </section>
+              )}
 
               {/* Optional inline defaults to close cheap gaps before committing */}
               <section className="mt-4 rounded-lg border border-gray-200 p-3 dark:border-gray-700">

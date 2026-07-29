@@ -17,6 +17,10 @@
  */
 
 import { gradeChipClass } from './version-lint-report';
+// Type-only: the projection summary the dry-run response embeds (CPDO-1.3). Type imports
+// are erased at build time, so the value-level dependency stays one-way
+// (conversion-projection.ts imports `cleanDefaults` from this module).
+import type { ConversionManifestSummary } from './conversion-projection';
 
 export { gradeChipClass };
 
@@ -99,6 +103,11 @@ export interface ConversionDryRunResult {
   sourceFormat?: string | null;
   /** The conversion target (only `openapi` today; the verb is target-generic, MFI-22.6). */
   target?: string;
+  /**
+   * The bounded projection-manifest summary for this conversion (CPDO-1.3): snapshot hash and
+   * per-status/reason/scope tallies. The graph itself is paged separately (CPDO-3.1).
+   */
+  projection?: ConversionManifestSummary | null;
 }
 
 /** The commit response: the id of the project/version the conversion created (MFI-22.5). */
