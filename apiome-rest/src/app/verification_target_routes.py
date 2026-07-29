@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from .auth import validate_authentication
@@ -346,7 +346,7 @@ async def delete_verification_target(
     tenant_slug: str,
     target_ref: str,
     auth_data: Dict[str, Any] = Depends(validate_authentication),
-) -> None:
+) -> Response:
     """Retire a target.
 
     Args:
@@ -354,9 +354,15 @@ async def delete_verification_target(
         target_ref: The target's slug or id.
         auth_data: The authenticated principal.
 
+    Returns:
+        An empty 204 response.
+
     Raises:
         HTTPException: 404 when nothing matches, 403 without ``verification_targets:delete``.
     """
+    # NB: return a Response (not `-> None`) — under `from __future__ import annotations`
+    # FastAPI evaluates a `None` return annotation to NoneType and asserts that a 204
+    # cannot carry a body. Mirrors the spec-import and export-job cancel routes.
     user_id = enforce_permission(
         db, auth_data, Resource.VERIFICATION_TARGETS, Action.DELETE, target=target_ref
     )
@@ -367,6 +373,7 @@ async def delete_verification_target(
     except TargetValidationError as exc:
         raise _http_error(exc) from exc
     delete_target(tenant_id, record, actor=actor_from_auth(auth_data, user_id))
+    return Response(status_code=204)
 
 
 @router.post(
