@@ -1,12 +1,15 @@
 /**
  * Tests for the catalog → OpenAPI conversion preview dialog (MFI-22.4, #4005).
  *
- * The dialog dry-runs the conversion lazily on open, renders the fidelity report as two columns with
- * a tier-scaled warning banner, gates Convert behind an acknowledgement on low-tier sources, flows
- * user-supplied defaults into the commit, and makes no changes on cancel.
+ * The dialog dry-runs the conversion lazily on open and presents three tabs — Summary
+ * (fidelity report columns + defaults), Projection graph (CPDO-3.1/3.2), and Conversion
+ * (the raw OpenAPI document) — under a tier-scaled warning banner. It gates Convert behind
+ * an acknowledgement on low-tier sources, flows user-supplied defaults into the commit, and
+ * makes no changes on cancel.
  */
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 jest.mock('@monaco-editor/react', () => ({
@@ -194,13 +197,15 @@ describe('ConversionPreviewDialog', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('toggles the collapsible raw OpenAPI preview when a document is present', async () => {
+  it('shows the raw OpenAPI document on the Conversion tab', async () => {
     global.fetch = okFetch(LOW_TIER) as unknown as typeof fetch;
     render(<ConversionPreviewDialog itemId="cat-1" itemName="Orders" open onOpenChange={() => {}} />);
 
-    await waitFor(() => expect(screen.getByTestId('conversion-raw-toggle')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('conversion-tab-conversion')).toBeInTheDocument());
+    // The summary tab is active by default; the document renders only on its own tab.
+    expect(screen.getByTestId('conversion-provided-column')).toBeInTheDocument();
     expect(screen.queryByTestId('conversion-raw-preview')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('conversion-raw-toggle'));
+    await userEvent.click(screen.getByTestId('conversion-tab-conversion'));
     expect(screen.getByTestId('conversion-raw-preview')).toBeInTheDocument();
     await waitFor(() =>
       expect(screen.getByTestId('conversion-raw-content')).toHaveTextContent('3.1.0'),
@@ -208,7 +213,7 @@ describe('ConversionPreviewDialog', () => {
     expect(screen.getByTestId('conversion-raw-content')).toHaveAttribute('data-language', 'json');
   });
 
-  it('lazily loads the projection graph section on expand (CPDO-3.1)', async () => {
+  it('lazily loads the projection graph on its tab (CPDO-3.1)', async () => {
     // One retained construct edge, server-shaped (CPDO-1.3).
     const projectionPage = {
       success: true,
@@ -302,12 +307,12 @@ describe('ConversionPreviewDialog', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
     render(<ConversionPreviewDialog itemId="cat-1" itemName="Orders" open onOpenChange={() => {}} />);
 
-    await waitFor(() => expect(screen.getByTestId('conversion-projection-toggle')).toBeInTheDocument());
-    // Collapsed by default: only the dry-run has been fetched.
+    await waitFor(() => expect(screen.getByTestId('conversion-tab-projection')).toBeInTheDocument());
+    // The summary tab is active by default: only the dry-run has been fetched.
     expect(screen.queryByTestId('conversion-projection-panel')).not.toBeInTheDocument();
     expect(fetchMock.mock.calls.every(([url]) => !String(url).includes('/projection'))).toBe(true);
 
-    fireEvent.click(screen.getByTestId('conversion-projection-toggle'));
+    await userEvent.click(screen.getByTestId('conversion-tab-projection'));
     await waitFor(() =>
       expect(screen.getByTestId('conversion-projection-table')).toBeInTheDocument(),
     );
@@ -452,8 +457,8 @@ describe('ConversionPreviewDialog — approved defaults recompute (CPDO-3.2)', (
     fireEvent.click(screen.getByTestId('conversion-ack'));
     expect(screen.getByTestId('conversion-convert-btn')).toBeEnabled();
 
-    // Open the projection section and the evidence drawer from its graph node.
-    fireEvent.click(screen.getByTestId('conversion-projection-toggle'));
+    // Open the projection tab and the evidence drawer from its graph node.
+    await userEvent.click(screen.getByTestId('conversion-tab-projection'));
     await waitFor(() =>
       expect(screen.getByTestId('conversion-projection-node-checklist:info.version')).toBeInTheDocument(),
     );
@@ -489,8 +494,34 @@ describe('ConversionPreviewDialog — approved defaults recompute (CPDO-3.2)', (
     // Acknowledgement severity was recomputed: medium tier no longer gates Convert.
     expect(screen.queryByTestId('conversion-ack')).not.toBeInTheDocument();
     expect(screen.getByTestId('conversion-warning-banner')).toHaveAttribute('data-severity', 'warning');
-    // The inline defaults form now reflects the applied default.
+    // The summary tab's inline defaults form now reflects the applied default.
+    await userEvent.click(screen.getByTestId('conversion-tab-summary'));
     expect(screen.getByTestId('conversion-default-version')).toHaveValue('2.0.0');
+  });
+
+  it('keeps the loaded projection graph mounted across tab switches without refetching', async () => {
+    const fetchMock = installRecomputeFetch();
+    render(<ConversionPreviewDialog itemId="cat-1" itemName="Orders" open onOpenChange={() => {}} />);
+    await waitFor(() => expect(screen.getByTestId('conversion-tab-projection')).toBeInTheDocument());
+
+    await userEvent.click(screen.getByTestId('conversion-tab-projection'));
+    await waitFor(() =>
+      expect(screen.getByTestId('conversion-projection-table')).toBeInTheDocument(),
+    );
+    const loadedCalls = fetchMock.mock.calls.filter(([url]) => String(url).includes('/projection'))
+      .length;
+
+    // Switching away hides the graph but keeps it mounted with its loaded walk…
+    await userEvent.click(screen.getByTestId('conversion-tab-summary'));
+    expect(screen.getByTestId('conversion-provided-column')).toBeInTheDocument();
+    expect(screen.getByTestId('conversion-projection-panel')).toBeInTheDocument();
+
+    // …so coming back neither refetches nor rebuilds.
+    await userEvent.click(screen.getByTestId('conversion-tab-projection'));
+    expect(screen.getByTestId('conversion-projection-table')).toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.filter(([url]) => String(url).includes('/projection')).length,
+    ).toBe(loadedCalls);
   });
 
   it('the inline defaults form offers Apply & recompute and resets a given acknowledgement', async () => {
