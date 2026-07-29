@@ -30,7 +30,10 @@ import { useDialog } from '@/app/components/providers/DialogProvider';
 import PrimitiveEditorDialog from './PrimitiveEditorDialog';
 import PrimitiveImportDialog from './PrimitiveImportDialog';
 import PrimitivesRegistryKpiStrip from './PrimitivesRegistryKpiStrip';
-import PrimitivesNamespaceCollections from './PrimitivesNamespaceCollections';
+import PrimitivesNamespaceCollections, {
+  type NamespaceSelectOptions,
+} from './PrimitivesNamespaceCollections';
+import { isWithinNamespace } from '@/app/utils/primitives-namespace-groups';
 import PrimitivesRecentActivity from './PrimitivesRecentActivity';
 import PrimitivesResolverView from './PrimitivesResolverView';
 import PrimitivesNamespacesView from './PrimitivesNamespacesView';
@@ -75,6 +78,15 @@ interface Primitive {
   updated_at: string;
 }
 
+/**
+ * A namespace filter coming from the Type collections panel: one namespace, or a whole family when
+ * the panel's grouped row for a parent path was clicked.
+ */
+interface NamespaceSelection {
+  value: string;
+  includeDescendants: boolean;
+}
+
 export default function PrimitivesManagementClient() {
   const router = useRouter();
   const { data: session } = useAuthSession();
@@ -95,7 +107,12 @@ export default function PrimitivesManagementClient() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showSystemPrimitives, setShowSystemPrimitives] = useState(true);
   const [namespaceScopeFilter, setNamespaceScopeFilter] = useState<NamespaceScopeFilter>('all');
-  const [selectedNamespace, setSelectedNamespace] = useState<string | null>(null);
+  /**
+   * The namespace the Type collections panel selected, and whether the selection covers the whole
+   * family beneath it. A group row stands for many namespaces, so an exact-match filter would show
+   * nothing for it.
+   */
+  const [selectedNamespace, setSelectedNamespace] = useState<NamespaceSelection | null>(null);
 
   const [activeView, setActiveView] = useState<
     'registry' | 'namespaces' | 'resolver' | 'settings'
@@ -204,7 +221,11 @@ export default function PrimitivesManagementClient() {
     }
 
     if (selectedNamespace !== null) {
-      filtered = filtered.filter((p) => (p.namespace ?? '').trim() === selectedNamespace);
+      const { value, includeDescendants } = selectedNamespace;
+      filtered = filtered.filter((p) => {
+        const namespace = (p.namespace ?? '').trim();
+        return includeDescendants ? isWithinNamespace(namespace, value) : namespace === value;
+      });
     }
 
     if (searchQuery.trim()) {
@@ -295,8 +316,15 @@ export default function PrimitivesManagementClient() {
     router.push(`/ade/dashboard/primitives/${primitive.id}`);
   };
 
-  const handleNamespaceSelect = (namespace: string) => {
-    setSelectedNamespace((current) => (current === namespace ? null : namespace));
+  const handleNamespaceSelect = (namespace: string, options?: NamespaceSelectOptions) => {
+    const includeDescendants = options?.includeDescendants ?? false;
+    setSelectedNamespace((current) =>
+      // Re-clicking the same selection clears it; a group and its root namespace share a path but
+      // are different selections, so the descendants flag is part of the identity.
+      current && current.value === namespace && current.includeDescendants === includeDescendants
+        ? null
+        : { value: namespace, includeDescendants },
+    );
   };
 
   // Type collections lists `apiome.type_namespaces` rows, but a type's namespace is just a string on
@@ -478,7 +506,13 @@ export default function PrimitivesManagementClient() {
                     onClick={() => setSelectedNamespace(null)}
                     className="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
                   >
-                    Namespace: {selectedNamespace === '' ? 'Unassigned' : selectedNamespace} ×
+                    Namespace:{' '}
+                    {selectedNamespace.value === ''
+                      ? 'Unassigned'
+                      : selectedNamespace.includeDescendants
+                        ? `${selectedNamespace.value}/*`
+                        : selectedNamespace.value}{' '}
+                    ×
                   </button>
                 ) : null}
 
