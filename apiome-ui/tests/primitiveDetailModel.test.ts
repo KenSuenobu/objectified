@@ -3,7 +3,10 @@ import {
   buildExampleInstance,
   deriveOwner,
   deriveVersionRoot,
+  effectiveNamespace,
   exportFileName,
+  namespaceFromSchemaId,
+  parseSchemaIdNamespace,
   scopeLabel,
   serializeSchemaExport,
   summarizeUsage,
@@ -31,6 +34,85 @@ describe('primitiveDetailModel helpers', () => {
       const chain = buildBaseChain('money', [{ resolved_target: 'x' }, { relative_ref: './ok' }]);
       expect(chain).toHaveLength(2);
       expect(chain[1].label).toBe('./ok');
+    });
+  });
+
+  describe('namespaceFromSchemaId', () => {
+    it('extracts the namespace between the registry mount and the type-name slug', () => {
+      expect(namespaceFromSchemaId('https://api.apiome.app/types/std/v0/types/money')).toBe('std/v0/types');
+      expect(namespaceFromSchemaId('https://api.apiome.app/types/tenant/acme/v1/payments/charge')).toBe(
+        'tenant/acme/v1/payments'
+      );
+    });
+
+    it('is host-agnostic, so a self-hosted registry parses the same way', () => {
+      expect(namespaceFromSchemaId('https://schemas.acme.internal/types/tenant/acme/v1/types/money')).toBe(
+        'tenant/acme/v1/types'
+      );
+    });
+
+    it('reads a bare path as well as an absolute URL', () => {
+      expect(namespaceFromSchemaId('/types/std/v0/types/money')).toBe('std/v0/types');
+    });
+
+    it('decodes percent-encoded segments', () => {
+      expect(namespaceFromSchemaId('https://api.apiome.app/types/tenant/a%20b/v1/types/money')).toBe(
+        'tenant/a b/v1/types'
+      );
+    });
+
+    it('keeps every path segment for a foreign id, where nothing is a mount', () => {
+      expect(
+        namespaceFromSchemaId('https://schemas.sourcemeta.com/self/v1/schemas/api/schemas/position')
+      ).toBe('self/v1/schemas/api/schemas');
+      expect(namespaceFromSchemaId('https://x.example/base/charge')).toBe('base');
+    });
+
+    it('returns null when the id carries a name but no namespace above it', () => {
+      expect(namespaceFromSchemaId('https://api.apiome.app/types/money')).toBeNull();
+      expect(namespaceFromSchemaId('https://x.example/position')).toBeNull();
+    });
+
+    it('returns null for missing or empty ids', () => {
+      expect(namespaceFromSchemaId(null)).toBeNull();
+      expect(namespaceFromSchemaId(undefined)).toBeNull();
+      expect(namespaceFromSchemaId('   ')).toBeNull();
+    });
+  });
+
+  describe('effectiveNamespace', () => {
+    it('prefers a registry-mounted $id over the stored column', () => {
+      expect(
+        effectiveNamespace('https://api.apiome.app/types/std/v0/types/money', 'stale/from/column')
+      ).toBe('std/v0/types');
+    });
+
+    it('prefers the stored column over a foreign id, which describes someone else’s layout', () => {
+      // An explicit `base_uri`: `base` is not this type's registry placement, the column is.
+      expect(effectiveNamespace('https://x.example/base/charge', 'tenant/acme/v1/payments')).toBe(
+        'tenant/acme/v1/payments'
+      );
+      expect(effectiveNamespace(null, 'std/v0/types')).toBe('std/v0/types');
+    });
+
+    it('falls back to a foreign id’s namespace when there is no stored column', () => {
+      expect(effectiveNamespace('https://x.example/base/charge', null)).toBe('base');
+    });
+
+    it('returns null when neither source has a namespace', () => {
+      expect(effectiveNamespace(null, null)).toBeNull();
+    });
+  });
+
+  describe('parseSchemaIdNamespace', () => {
+    it('reports whether the namespace came from under the registry mount', () => {
+      expect(parseSchemaIdNamespace('https://api.apiome.app/types/std/v0/types/money')).toEqual({
+        namespace: 'std/v0/types',
+        registryMounted: true,
+      });
+      expect(
+        parseSchemaIdNamespace('https://schemas.sourcemeta.com/self/v1/schemas/api/schemas/position')
+      ).toEqual({ namespace: 'self/v1/schemas/api/schemas', registryMounted: false });
     });
   });
 

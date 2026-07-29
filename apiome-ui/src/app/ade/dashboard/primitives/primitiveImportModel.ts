@@ -10,6 +10,12 @@
  */
 
 import yaml from 'yaml';
+import Ajv2020 from 'ajv/dist/2020';
+import type { ErrorObject } from 'ajv';
+// The `$id` → namespace rule is registry identity, not detail-page presentation: it mirrors the API's
+// `derive_base_uri` / `derive_schema_id` pair, so the import wizard reads it from the same helper the
+// type-detail screen does rather than re-deriving the parse.
+import { namespaceFromSchemaId } from './primitiveDetailModel';
 
 /** Source-kind cards offered by the wizard — mirrors the REST `source_kind` values. */
 export type SourceKind = 'json-schema' | 'type-def-bundle' | 'openapi';
@@ -263,6 +269,134 @@ export function extractDefinitions(
     }
   }
   return defs;
+}
+
+/** One detected definition, with the client-side verdict shown beside its name. */
+export interface DetectedType {
+  /** The definition's key in the source container — the name it will be imported under. */
+  name: string;
+  /** Whether it is a well-formed draft 2020-12 schema. */
+  valid: boolean;
+  /** The first metaschema error, when invalid — enough to say *why* without opening the review. */
+  error?: string;
+}
+
+/**
+ * Classify each detected definition as a valid or invalid draft 2020-12 schema.
+ *
+ * This is the same question the review endpoint's `valid` flag answers (``primitives_routes.py``:
+ * a malformed draft 2020-12 fragment is `valid: false` with field-level `validation_errors`), asked
+ * locally so the source step can show it before the round-trip. It is a *metaschema* check only —
+ * `$ref`s are not resolved and scope is not considered, both of which remain the server's call, so a
+ * type marked valid here can still come back from review as a conflict or a scope violation.
+ *
+ * @param definitions The `name -> schema` map from {@link extractDefinitions}.
+ * @returns One entry per definition, in the container's declaration order.
+ */
+export function describeDetectedTypes(
+  definitions: Record<string, Record<string, unknown>>
+): DetectedType[] {
+  const ajv = new Ajv2020({ strictSchema: false, allErrors: true });
+
+  return Object.entries(definitions).map(([name, schema]) => {
+    // `validateSchema` throws on a non-object, and reports rather than throws for a bad schema.
+    if (schema === null || typeof schema !== 'object' || Array.isArray(schema)) {
+      return { name, valid: false, error: 'Not a JSON Schema object' };
+    }
+    try {
+      if (ajv.validateSchema(schema) === true) {
+        return { name, valid: true };
+      }
+      return { name, valid: false, error: firstSchemaError(ajv.errors) };
+    } catch (err) {
+      return { name, valid: false, error: err instanceof Error ? err.message : 'Invalid schema' };
+    }
+  });
+}
+
+/** Render the first metaschema error as `"<path> <message>"`, e.g. `/type must be equal to …`. */
+function firstSchemaError(errors: ErrorObject[] | null | undefined): string {
+  const first = (errors ?? [])[0];
+  if (!first) return 'Not a valid draft 2020-12 schema';
+  return [first.instancePath, first.message].filter(Boolean).join(' ').trim() || 'Not a valid draft 2020-12 schema';
+}
+
+/** The outcome of pulling a target namespace out of the document being imported. */
+export interface TargetNamespaceExtraction {
+  /** The namespace to fill the field with, or `null` when the document declares none. */
+  namespace: string | null;
+  /** Every distinct namespace the document's `$id`s point at, most frequent first. */
+  candidates: string[];
+  /** A short sentence for the UI explaining what was (or was not) found. */
+  detail: string;
+}
+
+/**
+ * Derive the target namespace from the `$id`s declared in the source document.
+ *
+ * The registry encodes a type's namespace in its `$id` (`…/types/<namespace>/<name>`), so a document
+ * that was exported from a registry already states where its types belong — this reads that back so
+ * the reader does not have to retype it.
+ *
+ * Both the document root and every extracted definition are considered, and the most frequently
+ * declared namespace wins. A bundle whose types span several namespaces cannot be expressed in one
+ * field, so the runners-up are still reported in {@link TargetNamespaceExtraction.candidates} and
+ * named in `detail` — the choice is stated rather than silently made.
+ *
+ * @param doc The parsed source document.
+ * @param sourceKind The selected source kind, which decides the definition containers.
+ * @param sourceLabel Filename / URL used when naming a standalone schema.
+ * @returns The chosen namespace, the full candidate list, and a sentence describing the outcome.
+ */
+export function extractTargetNamespace(
+  doc: Record<string, unknown> | null,
+  sourceKind: SourceKind,
+  sourceLabel?: string
+): TargetNamespaceExtraction {
+  if (!doc) {
+    return { namespace: null, candidates: [], detail: 'Load a document first.' };
+  }
+
+  // The root id first, so a document that names itself is weighted ahead of its members on a tie.
+  const ids: string[] = [];
+  if (typeof doc.$id === 'string') {
+    ids.push(doc.$id);
+  }
+  for (const schema of Object.values(extractDefinitions(doc, sourceKind, sourceLabel))) {
+    if (typeof schema.$id === 'string') {
+      ids.push(schema.$id);
+    }
+  }
+
+  const counts = new Map<string, number>();
+  for (const id of ids) {
+    const namespace = namespaceFromSchemaId(id);
+    if (namespace) {
+      counts.set(namespace, (counts.get(namespace) ?? 0) + 1);
+    }
+  }
+
+  if (counts.size === 0) {
+    return {
+      namespace: null,
+      candidates: [],
+      detail: ids.length
+        ? 'The $id values in this document carry no namespace above the type name.'
+        : 'This document declares no $id to read a namespace from.',
+    };
+  }
+
+  // Most frequent wins; ties keep encounter order, which puts the root id ahead of its members.
+  const candidates = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([namespace]) => namespace);
+  const [chosen, ...rest] = candidates;
+
+  return {
+    namespace: chosen,
+    candidates,
+    detail: rest.length
+      ? `Using ${chosen}; this document also declares ${rest.join(', ')}.`
+      : `Extracted ${chosen} from the document's $id.`,
+  };
 }
 
 /**

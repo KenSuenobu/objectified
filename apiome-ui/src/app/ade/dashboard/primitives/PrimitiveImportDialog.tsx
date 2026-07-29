@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Upload,
   AlertCircle,
@@ -11,6 +11,8 @@ import {
   Boxes,
   FileText,
   ArrowRight,
+  Wand2,
+  XCircle,
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/Button';
 import { Label } from '@/app/components/ui/Label';
@@ -40,7 +42,14 @@ import {
   summarizeImportResult,
   describeImportResult,
   sourceKindLabel,
+  extractTargetNamespace,
+  describeDetectedTypes,
+  type DetectedType,
 } from './primitiveImportModel';
+import {
+  persistPrimitiveImportPreferences,
+  readPrimitiveImportPreferences,
+} from '@/app/utils/primitive-import-preferences';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -126,10 +135,55 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResultSummary | null>(null);
 
+  // What "Extract from Target" reported last time it ran, shown under the field.
+  const [namespaceNotice, setNamespaceNotice] = useState<string | null>(null);
+  /** Standing preference: run the extraction on every document instead of on demand. */
+  const [autoExtractNamespace, setAutoExtractNamespace] = useState(false);
+
+  // Read on mount rather than in the initial state so the server render and the first client render
+  // agree (localStorage is unreadable during SSR).
+  useEffect(() => {
+    setAutoExtractNamespace(readPrimitiveImportPreferences().autoExtractNamespace);
+  }, []);
+
+  const handleAutoExtractChange = useCallback((value: boolean) => {
+    setAutoExtractNamespace(value);
+    persistPrimitiveImportPreferences({ autoExtractNamespace: value });
+  }, []);
+
   const options: ImportOptions = useMemo(
     () => ({ sourceKind, targetNamespace, mapCoreFormats, dedupe }),
     [sourceKind, targetNamespace, mapCoreFormats, dedupe]
   );
+
+  /**
+   * Fill the target namespace from the loaded document's `$id`s. Nothing is overwritten silently:
+   * when the document declares no namespace the field is left as-is and the reason is shown.
+   */
+  const handleExtractNamespace = useCallback(() => {
+    const extraction = extractTargetNamespace(parsedDoc, sourceKind, sourceLabel ?? undefined);
+    if (extraction.namespace) {
+      setTargetNamespace(extraction.namespace);
+    }
+    setNamespaceNotice(extraction.detail);
+  }, [parsedDoc, sourceKind, sourceLabel]);
+
+  /**
+   * With the preference on, extract as each document arrives (and the moment the preference itself
+   * is switched on with one already loaded).
+   *
+   * Deliberately keyed on the document and source kind rather than on the field: a namespace typed
+   * by hand afterwards stands until a *different* document is loaded, so "automatic" never means
+   * "overwrites what you just typed".
+   */
+  useEffect(() => {
+    if (!autoExtractNamespace || !parsedDoc) return;
+    const extraction = extractTargetNamespace(parsedDoc, sourceKind, sourceLabel ?? undefined);
+    if (extraction.namespace) {
+      setTargetNamespace(extraction.namespace);
+    }
+    setNamespaceNotice(extraction.detail);
+  }, [autoExtractNamespace, parsedDoc, sourceKind, sourceLabel]);
 
   // Client-side preview of detected definitions (the server review is authoritative).
   const previewDefinitions = useMemo(() => {
@@ -144,6 +198,8 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
     setParseError(null);
     setReview(null);
     setResult(null);
+    // The previous extraction described a document that is no longer loaded.
+    setNamespaceNotice(null);
   }, []);
 
   const clearDocument = useCallback(() => {
@@ -151,6 +207,7 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
     setSourceLabel(null);
     setReview(null);
     setResult(null);
+    setNamespaceNotice(null);
   }, []);
 
   const handleFileSelect = useCallback(
@@ -392,7 +449,9 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
     }
   }, [parsedDoc, review, selectedNames, resolutions, options, sourceLabel, onMessage]);
 
-  const detectedCount = Object.keys(previewDefinitions).length;
+  // Memoized on the definitions: the draft 2020-12 check compiles a metaschema validator, which is
+  // not work to repeat on every keystroke elsewhere in the step.
+  const detectedTypes = useMemo(() => describeDetectedTypes(previewDefinitions), [previewDefinitions]);
   const canReview = Boolean(parsedDoc) || (sourceMethod === 'paste' && schemaText.trim().length > 0);
 
   return (
@@ -422,6 +481,10 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
               }}
               targetNamespace={targetNamespace}
               onTargetNamespaceChange={setTargetNamespace}
+              onExtractNamespace={handleExtractNamespace}
+              namespaceNotice={namespaceNotice}
+              autoExtractNamespace={autoExtractNamespace}
+              onAutoExtractNamespaceChange={handleAutoExtractChange}
               mapCoreFormats={mapCoreFormats}
               onMapCoreFormatsChange={setMapCoreFormats}
               dedupe={dedupe}
@@ -444,7 +507,7 @@ export default function PrimitiveImportDialog({ onClose, onComplete, onMessage, 
               onParsePasted={handleParsePasted}
               parseError={parseError}
               reviewError={reviewError}
-              detectedCount={detectedCount}
+              detectedTypes={detectedTypes}
               hasDocument={Boolean(parsedDoc)}
             />
           )}
@@ -541,6 +604,77 @@ function WizardSteps({ step }: { step: WizardStep }) {
   );
 }
 
+/**
+ * How many detected types are listed by name before the panel summarizes the remainder. An OpenAPI
+ * document can carry hundreds of component schemas, and the source step is not the review table.
+ */
+const DETECTED_TYPES_LIST_CAP = 12;
+
+/**
+ * The detected-types panel under the source input: every type found, by name, each marked valid or
+ * invalid against draft 2020-12.
+ *
+ * The verdict is the local metaschema check (see `describeDetectedTypes`) — it says whether the
+ * fragment is a well-formed schema, which is knowable here. Conflicts and scope are the review
+ * step's answer, so nothing in this panel claims the import will succeed.
+ */
+function DetectedTypesPanel({ types, sourceKind }: { types: DetectedType[]; sourceKind: SourceKind }) {
+  const invalidCount = types.filter((type) => !type.valid).length;
+  const shown = types.slice(0, DETECTED_TYPES_LIST_CAP);
+  const remaining = types.length - shown.length;
+
+  return (
+    <div
+      data-testid="detected-types"
+      className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-gray-50 dark:bg-gray-900/40 px-3 py-2">
+        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+          Detected {types.length} {sourceKindLabel(sourceKind)} type{types.length === 1 ? '' : 's'}
+        </span>
+        {invalidCount > 0 ? (
+          <span className="text-xs font-medium text-red-600 dark:text-red-400" data-testid="detected-invalid-count">
+            {invalidCount} invalid
+          </span>
+        ) : (
+          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">All valid</span>
+        )}
+      </div>
+      <ul className="divide-y divide-gray-100 dark:divide-gray-700/60">
+        {shown.map((type) => (
+          <li
+            key={type.name}
+            data-testid={`detected-type-${type.name}`}
+            data-valid={String(type.valid)}
+            className="flex items-start gap-2 px-3 py-2"
+          >
+            {type.valid ? (
+              <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden />
+            ) : (
+              <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" aria-hidden />
+            )}
+            <div className="min-w-0">
+              <span className="font-mono text-sm text-gray-900 dark:text-gray-100 break-all">{type.name}</span>
+              <span className="sr-only">{type.valid ? ' — valid' : ' — invalid'}</span>
+              {type.error ? (
+                <p className="text-xs text-red-600 dark:text-red-400 break-words">{type.error}</p>
+              ) : null}
+            </div>
+          </li>
+        ))}
+      </ul>
+      {remaining > 0 ? (
+        <p
+          className="border-t border-gray-100 dark:border-gray-700/60 px-3 py-2 text-xs text-gray-500 dark:text-gray-400"
+          data-testid="detected-types-truncated"
+        >
+          +{remaining} more not listed here — all {types.length} are imported and reviewed.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 interface SourceStepProps {
   sourceKind: SourceKind;
   onSourceKindChange: (kind: SourceKind) => void;
@@ -548,6 +682,10 @@ interface SourceStepProps {
   onSourceMethodChange: (method: SourceMethod) => void;
   targetNamespace: string;
   onTargetNamespaceChange: (value: string) => void;
+  onExtractNamespace: () => void;
+  namespaceNotice: string | null;
+  autoExtractNamespace: boolean;
+  onAutoExtractNamespaceChange: (value: boolean) => void;
   mapCoreFormats: boolean;
   onMapCoreFormatsChange: (value: boolean) => void;
   dedupe: boolean;
@@ -570,7 +708,7 @@ interface SourceStepProps {
   onParsePasted: () => boolean;
   parseError: string | null;
   reviewError: string | null;
-  detectedCount: number;
+  detectedTypes: DetectedType[];
   hasDocument: boolean;
 }
 
@@ -581,13 +719,17 @@ function SourceStep(props: SourceStepProps) {
     onSourceKindChange,
     targetNamespace,
     onTargetNamespaceChange,
+    onExtractNamespace,
+    namespaceNotice,
+    autoExtractNamespace,
+    onAutoExtractNamespaceChange,
     mapCoreFormats,
     onMapCoreFormatsChange,
     dedupe,
     onDedupeChange,
     parseError,
     reviewError,
-    detectedCount,
+    detectedTypes,
     hasDocument,
   } = props;
 
@@ -623,15 +765,7 @@ function SourceStep(props: SourceStepProps) {
 
       <SourceMethodInput {...props} />
 
-      {detectedCount > 0 && (
-        <Alert variant="default">
-          <CheckCircle className="h-4 w-4" />
-          <span>
-            Detected {detectedCount} {sourceKindLabel(sourceKind)} type{detectedCount === 1 ? '' : 's'}. Continue to
-            review conflicts before importing.
-          </span>
-        </Alert>
-      )}
+      {detectedTypes.length > 0 && <DetectedTypesPanel types={detectedTypes} sourceKind={sourceKind} />}
 
       {!hasDocument && parseError && (
         <Alert variant="error">
@@ -644,12 +778,50 @@ function SourceStep(props: SourceStepProps) {
         <Label className="text-base">Options</Label>
         <div className="space-y-2">
           <Label htmlFor="target-namespace">Target namespace (optional)</Label>
-          <Input
-            id="target-namespace"
-            placeholder="e.g. acme/v1/types"
-            value={targetNamespace}
-            onChange={(e) => onTargetNamespaceChange(e.target.value)}
-          />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input
+              id="target-namespace"
+              placeholder="e.g. acme/v1/types"
+              value={targetNamespace}
+              onChange={(e) => onTargetNamespaceChange(e.target.value)}
+            />
+            {/* Documents exported from a registry already state their namespace in each `$id`;
+                this reads it back so the reader does not retype it. Disabled until a document is
+                loaded, since there is nothing to read from before then. */}
+            <Button
+              type="button"
+              variant="secondary"
+              data-testid="extract-target-namespace"
+              onClick={onExtractNamespace}
+              disabled={!hasDocument}
+              title={
+                hasDocument
+                  ? 'Read the namespace from the $id declared in this document'
+                  : 'Load a document first'
+              }
+              className="shrink-0 gap-1.5"
+            >
+              <Wand2 className="h-4 w-4" aria-hidden />
+              Extract from Target
+            </Button>
+          </div>
+          {namespaceNotice ? (
+            <p className="text-xs text-gray-500 dark:text-gray-400" data-testid="target-namespace-notice">
+              {namespaceNotice}
+            </p>
+          ) : null}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              data-testid="auto-extract-target-namespace"
+              checked={autoExtractNamespace}
+              onChange={(e) => onAutoExtractNamespaceChange(e.target.checked)}
+              className="w-4 h-4 text-indigo-600 rounded"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Always extract namespace automatically
+            </span>
+          </label>
         </div>
         <label className="flex items-center gap-2 cursor-pointer">
           <input

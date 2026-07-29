@@ -110,6 +110,35 @@ describe('PrimitiveDetailClient', () => {
     expect(within(editor).getByRole('textbox')).toHaveValue(pretty);
   });
 
+  it('shows the namespace its $id asserts, not a disagreeing stored column', async () => {
+    // The column is stale/wrong; the schema's own `$id` is the authority.
+    mockFetchOk({ ...SYSTEM_MONEY, namespace: 'stale/from/column' });
+    render(<PrimitiveDetailClient />);
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'money' })).toBeInTheDocument());
+
+    // Breadcrumb and the metadata panel both read from the derived namespace.
+    expect(screen.getAllByText('std/v0/types').length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByText('stale/from/column')).not.toBeInTheDocument();
+    // The version root follows the same source, so the two rows cannot disagree.
+    expect(screen.getByText('v0')).toBeInTheDocument();
+  });
+
+  it('falls back to the stored namespace when the $id is outside the registry mount', async () => {
+    mockFetchOk({
+      ...SYSTEM_MONEY,
+      namespace: 'tenant/acme/v1/payments',
+      schema_id: 'https://x.example/base/charge',
+      schema: { $id: 'https://x.example/base/charge', type: 'object' },
+    });
+    render(<PrimitiveDetailClient />);
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'money' })).toBeInTheDocument());
+
+    // An explicit `base_uri` makes the id → namespace mapping lossy, so the column stands in.
+    expect(screen.getAllByText('tenant/acme/v1/payments').length).toBeGreaterThanOrEqual(1);
+  });
+
   it('copies the schema to the clipboard from the card header, acknowledging the write', async () => {
     mockFetchOk(SYSTEM_MONEY);
     const writeText = jest.fn().mockResolvedValue(undefined);

@@ -28,6 +28,7 @@ import { LoadingState } from '@/app/components/ui/LoadingState';
 import { Button } from '@/app/components/ui/Button';
 import { ReadOnlyCodeViewer } from '@/app/components/ade/dashboard/export/ReadOnlyCodeViewer';
 import { downloadBlob } from '@/app/components/ade/dashboard/export/exportDownload';
+import { PrimitiveTestForm } from '../PrimitiveTestForm';
 import {
   dashboardMainClass,
   dashboardPanelClass,
@@ -38,6 +39,7 @@ import {
   buildExampleInstance,
   deriveOwner,
   deriveVersionRoot,
+  effectiveNamespace,
   exportFileName,
   scopeLabel,
   serializeSchemaExport,
@@ -218,8 +220,14 @@ export default function PrimitiveDetailClient() {
     [primitive]
   );
 
-  const namespacePath = primitive?.namespace ?? null;
-  const versionRoot = primitive ? deriveVersionRoot(primitive.namespace, primitive.base_uri) : null;
+  // The schema's own `$id` is the authority for where the type lives, so the namespace is read back
+  // out of it; the stored column only stands in when the id carries no recoverable namespace (an
+  // explicit `base_uri`, or an author-declared `$id` outside the registry mount). Preferring the
+  // document's `$id` over the `schema_id` column keeps the display tied to the schema on screen.
+  const schemaIdentity =
+    (typeof primitive?.schema?.$id === 'string' ? primitive.schema.$id : null) ?? primitive?.schema_id ?? null;
+  const namespacePath = primitive ? effectiveNamespace(schemaIdentity, primitive.namespace) : null;
+  const versionRoot = primitive ? deriveVersionRoot(namespacePath, primitive.base_uri) : null;
   const dependents = primitive?.dependents ?? [];
 
   return (
@@ -357,6 +365,8 @@ export default function PrimitiveDetailClient() {
                   fallbackTestId="primitive-detail-schema-fallback"
                 />
               </section>
+
+              <PrimitiveTestForm schema={primitive.schema} name={primitive.name} />
 
               <section className={`${dashboardPanelClass} overflow-hidden`}>
                 <div className={sectionHeadClass}>
@@ -510,7 +520,7 @@ export default function PrimitiveDetailClient() {
                   <div className="flex items-center justify-between">
                     <dt className="text-gray-500 dark:text-gray-400">Owner</dt>
                     <dd className="font-mono text-gray-700 dark:text-gray-300">
-                      {deriveOwner(primitive.is_system, primitive.namespace)}
+                      {deriveOwner(primitive.is_system, namespacePath)}
                     </dd>
                   </div>
                   <div className="flex items-center justify-between">

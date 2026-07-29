@@ -6,6 +6,9 @@ We continue to improve the platform based on your feedback with improvements and
 
 ## Features
 
+- Primitives now shows the JSON Schema using monaco-editor
+- Added the ability to test a primitive by presenting a usable form that represents the content of the JSON Schema
+- Major UX improvements in the import functionality in primitives
 
 ## Bug Fixes
 

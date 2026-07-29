@@ -72,6 +72,115 @@ export function buildBaseChain(typeName: string, refs?: RefEdge[]): BaseChainNod
 }
 
 /**
+ * The registry mount segment every derived `$id` hangs off.
+ *
+ * The API builds identity as `{REGISTRY_BASE_URL}{namespace}/{name-slug}` where `REGISTRY_BASE_URL`
+ * is `https://api.apiome.app/types/` (``schema_validation.derive_base_uri`` / ``derive_schema_id``).
+ * Matching on the path segment rather than the whole base URL keeps this working for self-hosted
+ * deployments serving the same registry layout from a different host.
+ */
+const REGISTRY_MOUNT_SEGMENT = 'types';
+
+/** What a `$id` says about where its schema lives. */
+export interface SchemaIdNamespace {
+  /** The namespace path, or `null` when the id has no path above the type name. */
+  namespace: string | null;
+  /**
+   * Whether the id sits under the registry mount, which makes {@link namespace} this deployment's
+   * registry placement rather than a foreign document's own namespace. Callers that care about
+   * registry placement (the type-detail screen) weigh the two differently.
+   */
+  registryMounted: boolean;
+}
+
+/**
+ * Read the target namespace a JSON Schema `$id` declares.
+ *
+ * The namespace is the id's path with the trailing type-name segment removed — the same shape any
+ * `$id`-addressed schema collection uses, not just this registry's:
+ *
+ * - `https://api.apiome.app/types/std/v0/types/money` → `std/v0/types`
+ * - `https://schemas.sourcemeta.com/self/v1/schemas/api/schemas/position` → `self/v1/schemas/api/schemas`
+ *
+ * The one special case is this registry's own mount: the API roots ids at
+ * `{REGISTRY_BASE_URL}{namespace}/{name-slug}` (``schema_validation.derive_base_uri`` /
+ * ``derive_schema_id``), so a leading `types` segment is the mount rather than part of the
+ * namespace and is dropped. Foreign ids keep every segment, since nothing there is a mount.
+ *
+ * The result carries no leading slash, matching the namespace grammar the API accepts
+ * (``_NAMESPACE_RE`` in ``type_namespaces_routes.py``).
+ *
+ * @param schemaId - The `$id` to read (from a schema document or the `schema_id` column).
+ * @returns The namespace and whether it came from under the registry mount.
+ */
+export function parseSchemaIdNamespace(schemaId?: string | null): SchemaIdNamespace {
+  const id = (schemaId ?? '').trim();
+  if (!id) {
+    return { namespace: null, registryMounted: false };
+  }
+
+  let path = id;
+  try {
+    path = new URL(id).pathname;
+  } catch {
+    // Not an absolute URL — read the value as a bare path.
+  }
+
+  const segments = path
+    .split('/')
+    .filter((segment) => segment.length > 0)
+    .map((segment) => {
+      try {
+        return decodeURIComponent(segment);
+      } catch {
+        return segment;
+      }
+    });
+
+  const registryMounted = segments[0] === REGISTRY_MOUNT_SEGMENT;
+  // Drop the mount (when present) and the trailing type-name segment; the rest is the namespace.
+  const namespaceSegments = (registryMounted ? segments.slice(1) : segments).slice(0, -1);
+
+  return {
+    namespace: namespaceSegments.length > 0 ? namespaceSegments.join('/') : null,
+    registryMounted,
+  };
+}
+
+/**
+ * Extract a JSON Schema's target namespace from its `$id`.
+ *
+ * @param schemaId - The `$id` to read.
+ * @returns The namespace path, or `null` when the id is just a bare type name.
+ */
+export function namespaceFromSchemaId(schemaId?: string | null): string | null {
+  return parseSchemaIdNamespace(schemaId).namespace;
+}
+
+/**
+ * The namespace to display for a registry type.
+ *
+ * An `$id` under the registry mount states this deployment's own placement, so it wins outright.
+ * Otherwise the type was given an explicit `base_uri` or an author-declared `$id` pointing outside
+ * the registry, and the stored `namespace` column describes where it actually sits better than the
+ * foreign id's path does — so the column is preferred, with the id's own namespace as a last resort.
+ *
+ * @param schemaId - The primitive's `$id`.
+ * @param storedNamespace - The `namespace` column.
+ * @returns The effective namespace path, or `null` when neither source has one.
+ */
+export function effectiveNamespace(
+  schemaId?: string | null,
+  storedNamespace?: string | null
+): string | null {
+  const { namespace, registryMounted } = parseSchemaIdNamespace(schemaId);
+  if (namespace && registryMounted) {
+    return namespace;
+  }
+  return storedNamespace ?? namespace ?? null;
+}
+
+/**
  * Derive the version-root segment (e.g. `v0`, `v1`) from a namespace path or base
  * URI. The registry organizes types under a version root; this reads the first
  * `v<digits>` path segment it finds.

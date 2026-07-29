@@ -11,6 +11,8 @@ import {
   extractPrimitiveNameFromSchema,
   determineCategoryFromSchema,
   extractDefinitions,
+  describeDetectedTypes,
+  extractTargetNamespace,
   buildImportRequestBody,
   filterResolutions,
   defaultResolutions,
@@ -142,6 +144,159 @@ describe('extractDefinitions', () => {
   it('does not treat a standalone document as a bundle member', () => {
     // A bundle is expected to be a container; a bare type yields no definitions.
     expect(extractDefinitions({ type: 'string' }, 'type-def-bundle')).toEqual({});
+  });
+});
+
+describe('describeDetectedTypes', () => {
+  it('names every definition and marks well-formed schemas valid, in declaration order', () => {
+    const result = describeDetectedTypes({
+      money: { type: 'object', properties: { amount: { type: 'string' } } },
+      decimal: { type: 'string', pattern: '^[0-9]+$' },
+    });
+
+    expect(result).toEqual([
+      { name: 'money', valid: true },
+      { name: 'decimal', valid: true },
+    ]);
+  });
+
+  it('marks a malformed draft 2020-12 schema invalid and says why', () => {
+    const [entry] = describeDetectedTypes({ broken: { type: 'not-a-type' } });
+
+    expect(entry.name).toBe('broken');
+    expect(entry.valid).toBe(false);
+    expect(entry.error).toMatch(/\/type/);
+  });
+
+  it('catches a keyword of the wrong type', () => {
+    const [entry] = describeDetectedTypes({ broken: { type: 'string', minLength: 'three' } });
+
+    expect(entry.valid).toBe(false);
+    expect(entry.error).toMatch(/minLength/);
+  });
+
+  it('keeps an unresolved $ref valid — resolution is not a metaschema question', () => {
+    const [entry] = describeDetectedTypes({
+      money: { type: 'object', properties: { amount: { $ref: './decimal' } } },
+    });
+
+    expect(entry.valid).toBe(true);
+  });
+
+  it('reports a non-object definition rather than throwing', () => {
+    const result = describeDetectedTypes({
+      nope: null as unknown as Record<string, unknown>,
+      alsoNope: [] as unknown as Record<string, unknown>,
+    });
+
+    expect(result.every((entry) => !entry.valid)).toBe(true);
+    expect(result[0].error).toMatch(/not a json schema object/i);
+  });
+
+  it('returns nothing for an empty container', () => {
+    expect(describeDetectedTypes({})).toEqual([]);
+  });
+});
+
+describe('extractTargetNamespace', () => {
+  it('reads the namespace from the $id of a standalone schema', () => {
+    const result = extractTargetNamespace(
+      { $id: 'https://api.apiome.app/types/tenant/acme/v1/types/money', type: 'object' },
+      'json-schema'
+    );
+
+    expect(result.namespace).toBe('tenant/acme/v1/types');
+    expect(result.detail).toMatch(/extracted tenant\/acme\/v1\/types/i);
+  });
+
+  it('reads it from the definitions of a container document', () => {
+    const result = extractTargetNamespace(
+      {
+        $defs: {
+          money: { $id: 'https://api.apiome.app/types/std/v0/types/money', type: 'object' },
+          decimal: { $id: 'https://api.apiome.app/types/std/v0/types/decimal', type: 'string' },
+        },
+      },
+      'json-schema'
+    );
+
+    expect(result.namespace).toBe('std/v0/types');
+    expect(result.candidates).toEqual(['std/v0/types']);
+  });
+
+  it('reads a type-def bundle through its `types` container', () => {
+    const result = extractTargetNamespace(
+      { types: { charge: { $id: 'https://api.apiome.app/types/tenant/acme/v2/payments/charge' } } },
+      'type-def-bundle'
+    );
+
+    expect(result.namespace).toBe('tenant/acme/v2/payments');
+  });
+
+  it('picks the most frequent namespace and names the runners-up rather than hiding them', () => {
+    const result = extractTargetNamespace(
+      {
+        $defs: {
+          a: { $id: 'https://api.apiome.app/types/std/v0/types/a' },
+          b: { $id: 'https://api.apiome.app/types/std/v0/types/b' },
+          c: { $id: 'https://api.apiome.app/types/tenant/acme/v1/types/c' },
+        },
+      },
+      'json-schema'
+    );
+
+    expect(result.namespace).toBe('std/v0/types');
+    expect(result.candidates).toEqual(['std/v0/types', 'tenant/acme/v1/types']);
+    expect(result.detail).toMatch(/also declares tenant\/acme\/v1\/types/i);
+  });
+
+  it('prefers the document root id on a tie', () => {
+    const result = extractTargetNamespace(
+      {
+        $id: 'https://api.apiome.app/types/std/v0/types/bundle',
+        $defs: { a: { $id: 'https://api.apiome.app/types/tenant/acme/v1/types/a' } },
+      },
+      'json-schema'
+    );
+
+    expect(result.namespace).toBe('std/v0/types');
+  });
+
+  it('reads a foreign document’s own namespace, keeping every path segment', () => {
+    const result = extractTargetNamespace(
+      {
+        $defs: {
+          position: { $id: 'https://schemas.sourcemeta.com/self/v1/schemas/api/schemas/position' },
+        },
+      },
+      'json-schema'
+    );
+
+    expect(result.namespace).toBe('self/v1/schemas/api/schemas');
+  });
+
+  it('reports that nothing was found when the ids are bare type names', () => {
+    const result = extractTargetNamespace(
+      { $defs: { a: { $id: 'https://x.example/a' } } },
+      'json-schema'
+    );
+
+    expect(result.namespace).toBeNull();
+    expect(result.detail).toMatch(/no namespace above the type name/i);
+  });
+
+  it('reports a document that declares no $id at all', () => {
+    const result = extractTargetNamespace({ $defs: { a: { type: 'string' } } }, 'json-schema');
+
+    expect(result.namespace).toBeNull();
+    expect(result.detail).toMatch(/declares no \$id/i);
+  });
+
+  it('asks for a document when none is loaded', () => {
+    const result = extractTargetNamespace(null, 'json-schema');
+
+    expect(result.namespace).toBeNull();
+    expect(result.detail).toMatch(/load a document first/i);
   });
 });
 
