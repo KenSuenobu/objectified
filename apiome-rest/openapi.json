@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.78.0",
+    "version": "1.79.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -5339,6 +5339,267 @@
         }
       }
     },
+    "/v1/projects/{tenant_slug}/{project_id}/conversions": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "List the conversions that produced a Project",
+        "description": "Return the conversion-provenance rows that produced this Project, newest first (CPDO-3.3).\n\nThe converted-project side of the conversion history: each entry links a target revision of this\nProject back to the catalog item + source revision it was converted from, with the fidelity\noutcome, the content-addressed evidence snapshot id, and whether that snapshot is replayable.\nEmpty for projects that were never a conversion target. Requires authentication + tenant\nscoping only, like every other project read.\n\nArgs:\n    tenant_slug: The tenant slug.\n    project_id: The (target) project ID.\n    auth_data: Authentication data (injected by dependency).\n\nReturns:\n    The :class:`~app.models.ProjectConversionHistoryResponse`, newest first.",
+        "operationId": "get_project_conversion_history_v1_projects__tenant_slug___project_id__conversions_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id",
+              "description": "Project Id schema."
+            },
+            "description": "Project identifier that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listtheconversionsthatproduceda Projectauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listtheconversionsthatproduceda Projectauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listtheconversionsthatproduceda Project Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listtheconversionsthatproduceda Project Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for list the conversions that produced a project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectConversionHistoryResponse",
+                  "description": "Response payload for listtheconversionsthatproduceda projectresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for listtheconversionsthatproduceda projectresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{tenant_slug}/{project_id}/conversions/{provenance_id}/evidence": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Page through the stored evidence snapshot of one conversion of this Project",
+        "description": "Return one page of the exact evidence graph a conversion of this Project was approved with.\n\nThe project-side twin of the catalog evidence read, and deliberately reachable even when the\nsource catalog item has been deleted (``source_project_id`` is ``SET NULL`` on the ledger): the\nconverted artifact must keep its approved evidence readable regardless of what happened to the\nsource. Served from the content-addressed snapshot store (CPDO-3.3, V215), never rebuilt; an\nunservable snapshot degrades to an explicit HTTP 200 state, never an error.\n\nCarries source-native coordinates, so it is gated on the same ``imports:view`` permission as the\ncatalog-side reads, checked **after** the project lookup so a cross-tenant id 404s rather than\nconfirming its existence with a 403. A provenance row that did not target this Project 404s.\n\nArgs:\n    tenant_slug: The tenant slug.\n    project_id: The (target) project ID.\n    provenance_id: The ``conversion_provenance`` row whose snapshot to page.\n    scope: Restrict the page to one edge scope; omit to page every scope.\n    cursor: Opaque page cursor.\n    limit: Maximum edges per page.\n    auth_data: Authentication data (injected by dependency).\n\nReturns:\n    The :class:`~app.models.ConversionEvidenceResponse` \u2014 snapshot state, summary, and one page.\n\nRaises:\n    HTTPException: 400 for an unknown scope, 404 for an unknown project/provenance row, 422 for\n        a malformed cursor.",
+        "operationId": "get_project_conversion_evidence_v1_projects__tenant_slug___project_id__conversions__provenance_id__evidence_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id",
+              "description": "Project Id schema."
+            },
+            "description": "Project identifier that scopes the request."
+          },
+          {
+            "name": "provenance_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provenance Id",
+              "description": "Provenance Id schema."
+            },
+            "description": "Path parameter identifying the provenance id segment."
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Pagethroughthestoredevidencesnapshotofonscope schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Pagethroughthestoredevidencesnapshotofonscope schema."
+                }
+              ],
+              "description": "Restrict the page to one edge scope: checklist / construct / loss / analysis.",
+              "title": "Scope"
+            },
+            "description": "Restrict the page to one edge scope: checklist / construct / loss / analysis."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Pagethroughthestoredevidencesnapshotofoncursor schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Pagethroughthestoredevidencesnapshotofoncursor schema."
+                }
+              ],
+              "description": "Opaque cursor from a previous page; omit to start at the beginning.",
+              "title": "Cursor"
+            },
+            "description": "Opaque cursor from a previous page; omit to start at the beginning."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum edges per page; clamped server-side.",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum edges per page; clamped server-side."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Pagethroughthestoredevidencesnapshotofonauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Pagethroughthestoredevidencesnapshotofonauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Pagethroughthestoredevidencesnapshotofon Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Pagethroughthestoredevidencesnapshotofon Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for page through the stored evidence snapshot of one conversion of this project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionEvidenceResponse",
+                  "description": "Response payload for pagethroughthestoredevidencesnapshotofonresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for pagethroughthestoredevidencesnapshotofonresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{tenant_slug}/by-slug/{project_slug}": {
       "get": {
         "tags": [
@@ -6210,6 +6471,267 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for pagethroughacatalogitemsconversionprojecresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/catalog/{tenant_slug}/{item_id}/conversions": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "List a catalog item's conversion provenance history",
+        "description": "Return a catalog item's full conversion history, newest first (CPDO-3.3).\n\nOne entry per convert/re-convert from the append-only ``conversion_provenance`` ledger: the\ntarget Project + revision it produced, the fidelity outcome, the converter tool versions, the\ncontent-addressed evidence snapshot id (and whether that snapshot is actually stored and\nreplayable), and the digest of the exact source text converted. ``currentSourceHash`` digests\nthe item's *currently captured* source so a client can mark rows whose ``sourceHash`` differs\nas historic \u2014 \"the source has changed since this conversion was approved\".\n\nExposes the same class of metadata the unguarded catalog list/detail already carry on their\n``conversion`` back-link, so like them it requires authentication + tenant scoping only; the\nper-conversion *evidence graph* read is the gated one. Restricted to the non-publishable slice\n(a Project's id, or an unknown id, yields 404).\n\nArgs:\n    tenant_slug: The tenant slug.\n    item_id: The catalog item ID (a project id).\n    auth_data: Authentication data (injected by dependency).\n\nReturns:\n    The :class:`~app.models.CatalogConversionHistoryResponse`, newest first.",
+        "operationId": "get_catalog_conversion_history_v1_catalog__tenant_slug___item_id__conversions_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id",
+              "description": "Item Id schema."
+            },
+            "description": "Catalog item identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listacatalogitemsconversionprovenancehisauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listacatalogitemsconversionprovenancehisauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listacatalogitemsconversionprovenancehis Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listacatalogitemsconversionprovenancehis Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for list a catalog item's conversion provenance history.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogConversionHistoryResponse",
+                  "description": "Response payload for listacatalogitemsconversionprovenancehisresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for listacatalogitemsconversionprovenancehisresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/catalog/{tenant_slug}/{item_id}/conversions/{provenance_id}/evidence": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Page through the stored evidence snapshot of one historical conversion",
+        "description": "Return one page of the exact evidence graph a historical conversion was approved with.\n\nServed from the content-addressed snapshot store (CPDO-3.3, V215) \u2014 **never rebuilt** \u2014 so the\ngraph is the one the user reviewed at commit time, regardless of how the source or the\nconverter changed since. A GET, unlike the projection's POST: the stored snapshot already fixed\nits defaults, so there is no body to agree on. A snapshot that cannot be served degrades to an\nexplicit HTTP 200 state (``predates_snapshots`` / ``snapshot_missing`` / ``unreadable``), never\nan error \u2014 pre-CPDO-3.3 conversions are a normal part of any history.\n\nCarries the same class of source-native coordinates as the projection read, so it is gated on\nthe same ``imports:view`` permission, checked **after** the item lookup so a cross-tenant id\n404s rather than confirming its existence with a 403. A provenance row that does not belong to\nthis item also 404s, so one item's evidence cannot be probed through another's URL.\n\nArgs:\n    tenant_slug: The tenant slug.\n    item_id: The catalog item ID (a project id).\n    provenance_id: The ``conversion_provenance`` row whose snapshot to page.\n    scope: Restrict the page to one edge scope; omit to page every scope.\n    cursor: Opaque page cursor.\n    limit: Maximum edges per page.\n    auth_data: Authentication data (injected by dependency).\n\nReturns:\n    The :class:`~app.models.ConversionEvidenceResponse` \u2014 snapshot state, summary, and one page.\n\nRaises:\n    HTTPException: 400 for an unknown scope, 404 for an unknown item/provenance row, 422 for a\n        malformed cursor.",
+        "operationId": "get_catalog_conversion_evidence_v1_catalog__tenant_slug___item_id__conversions__provenance_id__evidence_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id",
+              "description": "Item Id schema."
+            },
+            "description": "Catalog item identifier."
+          },
+          {
+            "name": "provenance_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provenance Id",
+              "description": "Provenance Id schema."
+            },
+            "description": "Path parameter identifying the provenance id segment."
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Pagethroughthestoredevidencesnapshotofonscope schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Pagethroughthestoredevidencesnapshotofonscope schema."
+                }
+              ],
+              "description": "Restrict the page to one edge scope: checklist / construct / loss / analysis.",
+              "title": "Scope"
+            },
+            "description": "Restrict the page to one edge scope: checklist / construct / loss / analysis."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Pagethroughthestoredevidencesnapshotofoncursor schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Pagethroughthestoredevidencesnapshotofoncursor schema."
+                }
+              ],
+              "description": "Opaque cursor from a previous page; omit to start at the beginning.",
+              "title": "Cursor"
+            },
+            "description": "Opaque cursor from a previous page; omit to start at the beginning."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum edges per page; clamped server-side.",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum edges per page; clamped server-side."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Pagethroughthestoredevidencesnapshotofonauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Pagethroughthestoredevidencesnapshotofonauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Pagethroughthestoredevidencesnapshotofon Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Pagethroughthestoredevidencesnapshotofon Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for page through the stored evidence snapshot of one historical conversion.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionEvidenceResponse",
+                  "description": "Response payload for pagethroughthestoredevidencesnapshotofonresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for pagethroughthestoredevidencesnapshotofonresponse422."
                 }
               }
             }
@@ -64996,6 +65518,45 @@
         "title": "CapabilityRegistrySnapshot",
         "description": "The full, deterministic registry view exposed to the REST contract + UI (EFP-1.2).\n\nCarries the :attr:`version`, the reviewed :class:`ReasonExplanation` for every reason\ncode (the drawer's honest wording), and a :class:`DestinationCapability` for every\nruntime-available emitter, all in a stable order. Because it is derived from the\nstatic registry and the (deterministic) emitter registry, identical inputs yield an\nidentical snapshot \u2014 safe to cache and to mirror in a TypeScript contract."
       },
+      "CatalogConversionHistoryResponse": {
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "title": "Itemid",
+            "description": "The catalog item id.",
+            "example": "example"
+          },
+          "currentSourceHash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for catalog conversion history."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for catalog conversion history."
+              }
+            ],
+            "title": "Currentsourcehash",
+            "description": "Digest of the item's currently captured source text, or null."
+          },
+          "conversions": {
+            "items": {
+              "$ref": "#/components/schemas/ConversionProvenanceEntry"
+            },
+            "type": "array",
+            "title": "Conversions",
+            "description": "Provenance rows, newest first.",
+            "maxItems": 1000
+          }
+        },
+        "type": "object",
+        "required": [
+          "itemId"
+        ],
+        "title": "CatalogConversionHistoryResponse",
+        "description": "``GET /v1/catalog/{tenant_slug}/{item_id}/conversions`` \u2014 a catalog item's conversion\nhistory, newest first (CPDO-3.3).\n\n``currentSourceHash`` is the digest of the item's *currently captured* source, so a client can\nmark rows whose ``sourceHash`` differs as historic (\"the source has changed since\"); ``null``\nwhen no source is captured or the digest could not be computed."
+      },
       "CatalogConversionRef": {
         "properties": {
           "projectId": {
@@ -65120,6 +65681,34 @@
             ],
             "title": "Fidelitytier",
             "description": "Coarse fidelity tier (high/medium/low) of the conversion."
+          },
+          "provenanceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Catalog Conversion Ref schema."
+              },
+              {
+                "type": "null",
+                "description": "Catalog Conversion Ref schema."
+              }
+            ],
+            "title": "Provenanceid",
+            "description": "Id of the latest conversion_provenance row, so catalog surfaces can link to its evidence history (CPDO-3.3)."
+          },
+          "manifestHash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Catalog Conversion Ref schema."
+              },
+              {
+                "type": "null",
+                "description": "Catalog Conversion Ref schema."
+              }
+            ],
+            "title": "Manifesthash",
+            "description": "Content-addressed projection-manifest hash of the latest conversion; None on conversions committed before manifests existed (CPDO-1.3)."
           }
         },
         "type": "object",
@@ -68287,6 +68876,452 @@
         "type": "object",
         "title": "ConversionDefaultsRequest",
         "description": "User-supplied defaults that close cheap gaps *before* a catalog \u2192 OpenAPI conversion commits\n(MFI-22.6).\n\nAll optional; each is applied to the emitted document only where the source model left the\ncorresponding construct empty (a default never overwrites a value the source declared). Mirrors\nthe inline defaults the preview screen (MFI-22.4) collects and the ``ConversionDefaults`` the job\n(MFI-22.5) consumes."
+      },
+      "ConversionEvidenceResponse": {
+        "properties": {
+          "provenanceId": {
+            "type": "string",
+            "title": "Provenanceid",
+            "description": "The conversion_provenance row served.",
+            "example": "example"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for conversion evidence."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for conversion evidence."
+              }
+            ],
+            "title": "Itemid",
+            "description": "Catalog item id, on the catalog surface."
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for conversion evidence."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for conversion evidence."
+              }
+            ],
+            "title": "Projectid",
+            "description": "Target Project id, on the project surface."
+          },
+          "manifestHash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for conversion evidence."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for conversion evidence."
+              }
+            ],
+            "title": "Manifesthash",
+            "description": "Content-addressed snapshot id, or null."
+          },
+          "sourceHash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for conversion evidence."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for conversion evidence."
+              }
+            ],
+            "title": "Sourcehash",
+            "description": "Digest of the source text converted, or null."
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/ConversionSnapshotState",
+            "description": "Snapshot availability + degrade reason."
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object",
+                "description": "Response payload for conversion evidence."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for conversion evidence."
+              }
+            ],
+            "title": "Summary",
+            "description": "The bounded manifest summary of the stored snapshot; null when unavailable."
+          },
+          "page": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object",
+                "description": "Response payload for conversion evidence."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for conversion evidence."
+              }
+            ],
+            "title": "Page",
+            "description": "One page of the stored graph's edges + nodes; null when unavailable."
+          }
+        },
+        "type": "object",
+        "required": [
+          "provenanceId",
+          "snapshot"
+        ],
+        "title": "ConversionEvidenceResponse",
+        "description": "One page of a historical conversion's stored evidence graph (CPDO-3.3).\n\nServes the exact approved manifest from the content-addressed snapshot store \u2014 never a rebuild \u2014\nso the evidence shown is the evidence the conversion was committed with, regardless of how the\nsource or the converter changed since. ``summary``/``page`` are ``null`` exactly when\n``snapshot.status`` is ``unavailable``; degrade is HTTP 200, never a 5xx."
+      },
+      "ConversionProvenanceEntry": {
+        "properties": {
+          "provenanceId": {
+            "type": "string",
+            "title": "Provenanceid",
+            "description": "Id of the conversion_provenance row.",
+            "example": "example"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Createdat",
+            "description": "When the conversion was committed."
+          },
+          "createdBy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Createdby",
+            "description": "User id that ran the conversion."
+          },
+          "reconverted": {
+            "type": "boolean",
+            "title": "Reconverted",
+            "description": "True when this conversion superseded a prior conversion of the source.",
+            "default": false,
+            "example": false
+          },
+          "conversionMode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Conversionmode",
+            "description": "passthrough / typespec_native / lossy, from the converter tool versions."
+          },
+          "sourceProjectId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Sourceprojectid",
+            "description": "Catalog item id the conversion ran from; None when the item was hard-deleted."
+          },
+          "sourceProjectName": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Sourceprojectname",
+            "description": "Display name of the source catalog item."
+          },
+          "sourceFormat": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Sourceformat",
+            "description": "Source format key (e.g. 'graphql')."
+          },
+          "sourceVersionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Sourceversionid",
+            "description": "Source revision row id (versions.id) that was converted."
+          },
+          "targetProjectId": {
+            "type": "string",
+            "title": "Targetprojectid",
+            "description": "Publishable Project the conversion produced.",
+            "example": "example"
+          },
+          "targetProjectName": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Targetprojectname",
+            "description": "Name of the target Project."
+          },
+          "targetProjectSlug": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Targetprojectslug",
+            "description": "Slug of the target Project."
+          },
+          "targetProjectDeleted": {
+            "type": "boolean",
+            "title": "Targetprojectdeleted",
+            "description": "True when the target Project has since been (soft-)deleted.",
+            "default": false,
+            "example": false
+          },
+          "targetVersionLabel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Targetversionlabel",
+            "description": "Semantic version label of the produced revision (e.g. '1.0.1')."
+          },
+          "targetVersionRecordId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Targetversionrecordid",
+            "description": "Row id (versions.id) of the produced revision \u2014 the target revision this snapshot is linked to."
+          },
+          "fidelityScore": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Fidelityscore",
+            "description": "0-100 fidelity score (MFI-22.3)."
+          },
+          "fidelityGrade": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Fidelitygrade",
+            "description": "A-F fidelity grade."
+          },
+          "fidelityTier": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Fidelitytier",
+            "description": "Coarse fidelity tier (high/medium/low)."
+          },
+          "toolVersions": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Toolversions",
+            "description": "Converter tool versions that produced the conversion."
+          },
+          "defaults": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Defaults",
+            "description": "Normalized gap-filling defaults the conversion was committed with, from the stored manifest summary."
+          },
+          "schemaVersion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Schemaversion",
+            "description": "Manifest contract version the stored summary was built under."
+          },
+          "manifestHash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Manifesthash",
+            "description": "Content-addressed evidence snapshot id; None on rows recorded before manifests existed (CPDO-1.3)."
+          },
+          "sourceHash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conversion Provenance Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Provenance Entry schema."
+              }
+            ],
+            "title": "Sourcehash",
+            "description": "sha256:-prefixed digest of the exact source text converted; None on rows recorded before CPDO-3.3. Differing from currentSourceHash marks the evidence historic."
+          },
+          "snapshotAvailable": {
+            "type": "boolean",
+            "title": "Snapshotavailable",
+            "description": "True when the full evidence snapshot is stored and its graph can be replayed.",
+            "default": false,
+            "example": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "provenanceId",
+          "targetProjectId"
+        ],
+        "title": "ConversionProvenanceEntry",
+        "description": "One row of a conversion's provenance history (CPDO-3.3, #4803).\n\nProjected from the append-only ``apiome.conversion_provenance`` ledger with the V215 history\nenrichment: whether the content-addressed evidence snapshot for this conversion actually exists\n(``snapshotAvailable``), and the display coordinates of both the source catalog item and the\ntarget Project. Empty-string ledger sentinels (``projection_manifest_hash``, ``source_hash``)\nserialize as ``null`` \u2014 \"recorded before snapshots existed\" \u2014 rather than leaking storage\ndefaults into the wire contract."
+      },
+      "ConversionSnapshotState": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status",
+            "description": "Whether the stored evidence graph is being served.",
+            "example": "available"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "predates_snapshots",
+                  "snapshot_missing",
+                  "unreadable"
+                ],
+                "description": "Conversion Snapshot State schema."
+              },
+              {
+                "type": "null",
+                "description": "Conversion Snapshot State schema."
+              }
+            ],
+            "title": "Reason",
+            "description": "Why the snapshot is unavailable; null when available."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ConversionSnapshotState",
+        "description": "Whether a historical conversion's evidence snapshot could be served, and why not (CPDO-3.3).\n\nA missing snapshot is a truthful, expected state \u2014 never an error: ``predates_snapshots`` for\nrows committed before manifests were persisted, ``snapshot_missing`` when the row names a hash\nwith no stored snapshot (a best-effort write that failed), ``unreadable`` when the stored\nmanifest no longer validates against this reader's contract version."
       },
       "ConversionSupport": {
         "type": "string",
@@ -94289,6 +95324,31 @@
         "title": "PrimitiveUpdateRequest",
         "description": "Partial update payload for an existing primitive type definition."
       },
+      "ProjectConversionHistoryResponse": {
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "title": "Projectid",
+            "description": "The target Project id.",
+            "example": "example"
+          },
+          "conversions": {
+            "items": {
+              "$ref": "#/components/schemas/ConversionProvenanceEntry"
+            },
+            "type": "array",
+            "title": "Conversions",
+            "description": "Provenance rows targeting this Project, newest first.",
+            "maxItems": 1000
+          }
+        },
+        "type": "object",
+        "required": [
+          "projectId"
+        ],
+        "title": "ProjectConversionHistoryResponse",
+        "description": "``GET /v1/projects/{tenant_slug}/{project_id}/conversions`` \u2014 the conversions that produced a\nProject, newest first (CPDO-3.3). Empty for projects that were never a conversion target."
+      },
       "ProjectCreateRequest": {
         "properties": {
           "name": {
@@ -99336,7 +100396,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-07-28T23:26:43Z"
+            "example": "2026-07-29T01:46:01Z"
           }
         },
         "additionalProperties": false,
@@ -111461,14 +112521,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-07-28T23:26:43Z"
+            "example": "2026-07-29T01:46:01Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-07-28T23:26:43Z"
+            "example": "2026-07-29T01:46:01Z"
           },
           "outcome": {
             "anyOf": [

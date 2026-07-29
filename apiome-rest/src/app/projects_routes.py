@@ -10,7 +10,10 @@ from typing import Optional, List, Dict, Any
 
 from .database import db
 from .api_identity_service import build_related_artifact_refs
+from .conversion_evidence import evidence_response, parse_evidence_scope, provenance_entry
 from .models import (
+    ConversionEvidenceResponse,
+    ProjectConversionHistoryResponse,
     ProjectSchema,
     ProjectCreateRequest,
     ProjectUpdateRequest
@@ -129,6 +132,135 @@ async def get_project(
         identity_group_id=group_id,
         related_artifacts=related,
     )
+
+
+@router.get(
+    "/{tenant_slug}/{project_id}/conversions",
+    response_model=ProjectConversionHistoryResponse,
+    summary="List the conversions that produced a Project",
+)
+async def get_project_conversion_history(
+    tenant_slug: str,
+    project_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> ProjectConversionHistoryResponse:
+    """Return the conversion-provenance rows that produced this Project, newest first (CPDO-3.3).
+
+    The converted-project side of the conversion history: each entry links a target revision of this
+    Project back to the catalog item + source revision it was converted from, with the fidelity
+    outcome, the content-addressed evidence snapshot id, and whether that snapshot is replayable.
+    Empty for projects that were never a conversion target. Requires authentication + tenant
+    scoping only, like every other project read.
+
+    Args:
+        tenant_slug: The tenant slug.
+        project_id: The (target) project ID.
+        auth_data: Authentication data (injected by dependency).
+
+    Returns:
+        The :class:`~app.models.ProjectConversionHistoryResponse`, newest first.
+    """
+    _ = tenant_slug
+    tenant_id = auth_data["tenant_id"]
+
+    project = db.get_project_by_id(project_id, tenant_id)
+    if not project:
+        raise HTTPException(status_code=404, detail=f"Project not found: {project_id}")
+
+    rows = db.get_conversions_for_project(tenant_id, project_id)
+    return ProjectConversionHistoryResponse(
+        project_id=project_id,
+        conversions=[provenance_entry(row) for row in rows],
+    )
+
+
+@router.get(
+    "/{tenant_slug}/{project_id}/conversions/{provenance_id}/evidence",
+    response_model=ConversionEvidenceResponse,
+    summary="Page through the stored evidence snapshot of one conversion of this Project",
+)
+async def get_project_conversion_evidence(
+    tenant_slug: str,
+    project_id: str,
+    provenance_id: str,
+    scope: Optional[str] = Query(
+        None,
+        description="Restrict the page to one edge scope: checklist / construct / loss / analysis.",
+    ),
+    cursor: Optional[str] = Query(
+        None, description="Opaque cursor from a previous page; omit to start at the beginning."
+    ),
+    limit: int = Query(
+        50, ge=1, le=500, description="Maximum edges per page; clamped server-side."
+    ),
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> ConversionEvidenceResponse:
+    """Return one page of the exact evidence graph a conversion of this Project was approved with.
+
+    The project-side twin of the catalog evidence read, and deliberately reachable even when the
+    source catalog item has been deleted (``source_project_id`` is ``SET NULL`` on the ledger): the
+    converted artifact must keep its approved evidence readable regardless of what happened to the
+    source. Served from the content-addressed snapshot store (CPDO-3.3, V215), never rebuilt; an
+    unservable snapshot degrades to an explicit HTTP 200 state, never an error.
+
+    Carries source-native coordinates, so it is gated on the same ``imports:view`` permission as the
+    catalog-side reads, checked **after** the project lookup so a cross-tenant id 404s rather than
+    confirming its existence with a 403. A provenance row that did not target this Project 404s.
+
+    Args:
+        tenant_slug: The tenant slug.
+        project_id: The (target) project ID.
+        provenance_id: The ``conversion_provenance`` row whose snapshot to page.
+        scope: Restrict the page to one edge scope; omit to page every scope.
+        cursor: Opaque page cursor.
+        limit: Maximum edges per page.
+        auth_data: Authentication data (injected by dependency).
+
+    Returns:
+        The :class:`~app.models.ConversionEvidenceResponse` — snapshot state, summary, and one page.
+
+    Raises:
+        HTTPException: 400 for an unknown scope, 404 for an unknown project/provenance row, 422 for
+            a malformed cursor.
+    """
+    _ = tenant_slug
+    tenant_id = auth_data["tenant_id"]
+
+    parsed_scope = parse_evidence_scope(scope)
+
+    project = db.get_project_by_id(project_id, tenant_id)
+    if not project:
+        raise HTTPException(status_code=404, detail=f"Project not found: {project_id}")
+
+    enforce_permission(
+        db,
+        auth_data,
+        Resource.IMPORTS,
+        Action.VIEW,
+        target=f"project:{project_id}:conversion-evidence",
+    )
+
+    row = db.get_conversion_provenance_by_id(tenant_id, provenance_id)
+    if not row or str(row.get("target_project_id")) != str(project_id):
+        raise HTTPException(status_code=404, detail=f"Conversion not found: {provenance_id}")
+
+    snapshot_row = None
+    if row.get("projection_manifest_hash"):
+        snapshot_row = db.get_conversion_evidence_snapshot(
+            tenant_id, row["projection_manifest_hash"]
+        )
+
+    try:
+        return evidence_response(
+            row=row,
+            snapshot_row=snapshot_row,
+            cursor=cursor,
+            limit=limit,
+            scope=parsed_scope,
+            project_id=project_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get("/{tenant_slug}/by-slug/{project_slug}")

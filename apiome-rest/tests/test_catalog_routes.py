@@ -255,6 +255,8 @@ _CATALOG_CONVERTED = {
     "conv_fidelity_grade": "B",
     "conv_fidelity_tier": "medium",
     "conv_converted_at": "2026-03-01T00:00:00",
+    "conv_provenance_id": "prov-latest",
+    "conv_manifest_hash": "ab" * 32,
 }
 
 
@@ -289,8 +291,27 @@ def test_list_catalog_serializes_conversion_backlink():
         assert conversion["reconverted"] is True
         assert conversion["fidelityGrade"] == "B"
         assert conversion["fidelityTier"] == "medium"
+        # CPDO-3.3: the latest row's provenance id + snapshot hash link to the evidence history.
+        assert conversion["provenanceId"] == "prov-latest"
+        assert conversion["manifestHash"] == "ab" * 32
         # The conv_* projection columns are internal and must not leak onto the envelope.
         assert "conv_target_project_id" not in response.json()[0]
+    finally:
+        app.dependency_overrides.pop(validate_authentication, None)
+
+
+def test_list_catalog_conversion_backlink_pre_manifest_rows_serialize_null():
+    """A latest conversion recorded before CPDO-1.3 carries null provenance linkage, not ''."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        legacy = {**_CATALOG_CONVERTED, "conv_manifest_hash": "", "conv_provenance_id": None}
+        with patch("app.catalog_routes.db") as mock_db:
+            mock_db.get_catalog_items_for_tenant.return_value = [legacy]
+            response = client.get("/v1/catalog/test-tenant")
+        assert response.status_code == 200
+        conversion = response.json()[0]["conversion"]
+        assert conversion["provenanceId"] is None
+        assert conversion["manifestHash"] is None
     finally:
         app.dependency_overrides.pop(validate_authentication, None)
 

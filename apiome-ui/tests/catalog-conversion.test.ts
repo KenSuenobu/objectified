@@ -120,3 +120,21 @@ describe('convertPreviewDialogTitle', () => {
     expect(convertPreviewDialogTitle('Acme API', 'arazzo')).toBe('Convert to Project — Acme API');
   });
 });
+
+describe('CPDO-3.3 provenance linkage fields', () => {
+  it('carrying provenanceId/manifestHash leaves the href/live helpers untouched', () => {
+    const conversion = makeConversion({
+      provenanceId: 'prov-1',
+      manifestHash: 'a'.repeat(64),
+    });
+    expect(isConvertedLinkLive(conversion)).toBe(true);
+    expect(convertedProjectHref(conversion)).toBe(
+      '/ade/dashboard/versions?projectId=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+    );
+  });
+
+  it('pre-manifest conversions carry null linkage without breaking anything', () => {
+    const conversion = makeConversion({ provenanceId: null, manifestHash: null });
+    expect(isConvertedLinkLive(conversion)).toBe(true);
+  });
+});

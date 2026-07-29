@@ -116,6 +116,7 @@ import { CatalogLintPanel } from '@/app/components/ade/dashboard/catalog/Catalog
 import { SchemaTestBench } from '@/app/components/ade/dashboard/test-bench/SchemaTestBench';
 import { useAuthSession } from '@lib/auth/session-client';
 import { CatalogVersionsPanel } from '@/app/components/ade/dashboard/catalog/CatalogVersionsPanel';
+import { CatalogConversionHistoryPanel } from '@/app/components/ade/dashboard/catalog/CatalogConversionHistoryPanel';
 import { CatalogRelatedArtifactsPanel } from '@/app/components/ade/dashboard/catalog/CatalogRelatedArtifactsPanel';
 import { CatalogFormatDetailPanel } from '@/app/components/ade/dashboard/catalog/CatalogFormatDetailPanel';
 import type { AnalysisSummary } from '@/app/utils/catalog-payload-analysis';
@@ -186,6 +187,7 @@ const DETAIL_TABS = [
   { id: 'format', label: 'Format details' },
   { id: 'source', label: 'Source & Code' },
   { id: 'provenance', label: 'Provenance' },
+  { id: 'conversions', label: 'Conversions' },
   { id: 'lint', label: 'Lint & Score' },
   { id: 'test-bench', label: 'Test Bench' },
   { id: 'versions', label: 'Versions' },
@@ -881,6 +883,15 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
                   {convertedProjectLabel(item.conversion)}
                 </span>
               )}
+              {/* The evidence history behind this conversion lives in the Conversions tab (CPDO-3.3). */}
+              <button
+                type="button"
+                data-testid="catalog-detail-converted-history-link"
+                onClick={() => setActiveTab('conversions')}
+                className="ml-auto text-xs font-medium text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-300"
+              >
+                View conversion history
+              </button>
             </div>
           ) : null}
 
@@ -1331,6 +1342,16 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
               </PipelineStage>
             </ol>
           </section>
+        </TabPanel>
+
+        {/* CONVERSIONS — the provenance evidence history (CPDO-3.3): every conversion of this item,
+            newest first, each replaying the exact stored evidence it was approved with. */}
+        <TabPanel tabId="conversions" active={activeTab} testId="catalog-detail-pane-conversions">
+          <CatalogConversionHistoryPanel
+            itemId={item.id}
+            active={activeTab === 'conversions'}
+            onOpenConvertPreview={() => setConvertOpen(true)}
+          />
         </TabPanel>
 
         {/* LINT & SCORE — the inline gauge + category bars + findings (MFI-25.5); the full itemized

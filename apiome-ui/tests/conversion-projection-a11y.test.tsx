@@ -223,3 +223,64 @@ describe('conversion projection graph — reduced motion', () => {
     expect(offenders).toEqual([]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Conversion history panel (CPDO-3.3, #4803)
+// ---------------------------------------------------------------------------
+
+import { CatalogConversionHistoryPanel } from '../src/app/components/ade/dashboard/catalog/CatalogConversionHistoryPanel';
+
+describe('conversion history panel — axe', () => {
+  it('is axe-clean with the loaded history and a replayed stored snapshot', async () => {
+    const evidence = fixture(3);
+    const history = {
+      success: true,
+      itemId: 'item-1',
+      currentSourceHash: 'sha256:' + '11'.repeat(32),
+      conversions: [
+        {
+          provenanceId: 'prov-1',
+          createdAt: '2026-07-01T00:00:00Z',
+          createdBy: 'user-1',
+          reconverted: true,
+          conversionMode: 'lossy',
+          sourceProjectId: 'item-1',
+          sourceProjectName: 'Ping API',
+          sourceFormat: 'graphql',
+          sourceVersionId: 'rev-1',
+          targetProjectId: 'proj-9',
+          targetProjectName: 'Ping API (OpenAPI)',
+          targetProjectSlug: 'ping-api-openapi',
+          targetProjectDeleted: false,
+          targetVersionLabel: '1.0.0',
+          targetVersionRecordId: 'ver-9',
+          fidelityScore: 74,
+          fidelityGrade: 'C',
+          fidelityTier: 'medium',
+          toolVersions: { 'apiome-rest': '1.79.0' },
+          defaults: {},
+          schemaVersion: '1.0.0',
+          manifestHash: HASH,
+          // Differs from currentSourceHash so the amber stale note is in the axe run too.
+          sourceHash: 'sha256:' + '22'.repeat(32),
+          snapshotAvailable: true,
+        },
+      ],
+    };
+    global.fetch = jest.fn(async (url: unknown) => ({
+      ok: true,
+      status: 200,
+      json: async () =>
+        String(url).endsWith('/conversions')
+          ? history
+          : { ...evidence, snapshot: { status: 'available', reason: null } },
+    })) as unknown as typeof fetch;
+
+    const { container } = render(<CatalogConversionHistoryPanel itemId="item-1" active />);
+    await waitFor(() =>
+      expect(screen.getByTestId('conversion-projection-table')).toBeInTheDocument(),
+    );
+    expect(screen.getByTestId('conversion-history-stale-note')).toBeInTheDocument();
+    expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
+  });
+});

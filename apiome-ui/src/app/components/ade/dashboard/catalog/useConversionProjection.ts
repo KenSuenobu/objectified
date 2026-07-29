@@ -22,6 +22,7 @@ import {
   CONVERSION_PROJECTION_PAGE_LIMIT,
   conversionEvidencePageIssues,
   fetchConversionProjection,
+  type ConversionEvidencePageSource,
   type ConversionManifestSummary,
   type ConversionProjectionEdge,
   type ConversionProjectionNode,
@@ -64,12 +65,17 @@ export interface UseConversionProjectionResult {
  * @param defaults Approved gap-filling defaults (CPDO-3.2). They fold into the snapshot
  *   hash, so a change is a new snapshot: the walk restarts from scratch, which is what keeps
  *   the graph and the recomputed fidelity report describing the same manifest.
+ * @param source Optional page source override (CPDO-3.3): the conversion-history reader walks
+ *   a persisted evidence snapshot through this instead of the live rebuild endpoint, under the
+ *   same integrity discipline. When set, `defaults` no longer affect the fetch (a stored
+ *   snapshot fixed its defaults at commit time).
  */
 export function useConversionProjection(
   enabled: boolean,
   itemId: string | null,
   pageLimit: number = CONVERSION_PROJECTION_PAGE_LIMIT,
   defaults?: ConversionDefaults,
+  source?: ConversionEvidencePageSource,
 ): UseConversionProjectionResult {
   const [summary, setSummary] = useState<ConversionManifestSummary | null>(null);
   const [nodes, setNodes] = useState<ConversionProjectionNode[]>([]);
@@ -105,11 +111,13 @@ export function useConversionProjection(
       try {
         let cursor = startCursor;
         for (let pageIndex = 0; pageIndex < PROJECTION_PAGES_PER_WINDOW; pageIndex += 1) {
-          const response = await fetchConversionProjection(itemId, {
-            defaults: cleanedDefaults,
-            cursor,
-            limit: pageLimit,
-          });
+          const response = source
+            ? await source({ cursor, limit: pageLimit })
+            : await fetchConversionProjection(itemId, {
+                defaults: cleanedDefaults,
+                cursor,
+                limit: pageLimit,
+              });
           if (token !== walkToken.current) return;
 
           const issues = conversionEvidencePageIssues(response.page);
@@ -158,7 +166,7 @@ export function useConversionProjection(
         if (token === walkToken.current) setLoading(false);
       }
     },
-    [itemId, pageLimit, cleanedDefaults],
+    [itemId, pageLimit, cleanedDefaults, source],
   );
 
   useEffect(() => {

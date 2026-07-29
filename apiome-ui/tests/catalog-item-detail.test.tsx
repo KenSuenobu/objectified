@@ -19,9 +19,10 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 const mockPush = jest.fn();
+let mockSearch = '';
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(mockSearch),
 }));
 
 // The Test Bench tab (IXH-5.3) reads the tenant id off the session for saved-payload scoping.
@@ -109,6 +110,7 @@ describe('CatalogItemDetailClient', () => {
   afterEach(() => {
     jest.restoreAllMocks();
     mockPush.mockReset();
+    mockSearch = '';
   });
 
   it('renders the header with name, format/protocol/source pills', async () => {
@@ -328,6 +330,54 @@ describe('CatalogItemDetailClient', () => {
     expect(screen.getByTestId('catalog-detail-convert')).toHaveTextContent('Re-convert to OpenAPI Project');
   });
 
+  it('jumps from the converted banner into the Conversions tab (CPDO-3.3)', async () => {
+    mockFetchItem({
+      ...RICH_ITEM,
+      conversion: {
+        projectId: 'proj-openapi',
+        projectName: 'Acme OpenAPI',
+        projectSlug: 'acme-openapi',
+        projectDeleted: false,
+        versionId: '1.0.1',
+        versionRecordId: 'ver-1',
+        reconverted: false,
+        convertedAt: '2026-06-25T00:00:00.000Z',
+        fidelityGrade: 'B',
+        fidelityTier: 'medium',
+        provenanceId: 'prov-1',
+        manifestHash: 'a'.repeat(64),
+      },
+    });
+    render(<CatalogItemDetailClient itemId={RICH_ITEM.id} />);
+
+    fireEvent.click(await screen.findByTestId('catalog-detail-converted-history-link'));
+
+    expect(screen.getByTestId('catalog-detail-tab-conversions')).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByTestId('catalog-detail-pane-conversions')).toBeVisible();
+    // The history panel mounted inside the pane (its own behaviour is covered in
+    // CatalogConversionHistoryPanel.test.tsx).
+    await waitFor(() =>
+      expect(screen.getByTestId('conversion-history-panel')).toBeInTheDocument(),
+    );
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('opens the Conversions tab from a ?tab=conversions deep link (CPDO-3.3)', async () => {
+    mockSearch = 'tab=conversions';
+    mockFetchItem(RICH_ITEM);
+    render(<CatalogItemDetailClient itemId={RICH_ITEM.id} />);
+
+    await screen.findByTestId('catalog-detail-tabs');
+    expect(screen.getByTestId('catalog-detail-tab-conversions')).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByTestId('catalog-detail-pane-conversions')).toBeVisible();
+  });
+
   // ── Tabbed detail shell (MFI-25.1, #4086) ──────────────────────────────────────────────────
 
   it('renders the five-tab shell with Overview active by default', async () => {
@@ -341,6 +391,8 @@ describe('CatalogItemDetailClient', () => {
       ['format', 'Format details'],
       ['source', 'Source & Code'],
       ['provenance', 'Provenance'],
+      // Conversions (CPDO-3.3, #4803) — the provenance evidence history.
+      ['conversions', 'Conversions'],
       ['lint', 'Lint & Score'],
       ['versions', 'Versions'],
     ] as const) {

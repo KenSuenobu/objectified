@@ -1775,6 +1775,18 @@ class CatalogConversionRef(BaseModel):
     fidelity_tier: Optional[str] = Field(
         None, serialization_alias="fidelityTier", description="Coarse fidelity tier (high/medium/low) of the conversion."
     )
+    provenance_id: Optional[str] = Field(
+        None,
+        serialization_alias="provenanceId",
+        description="Id of the latest conversion_provenance row, so catalog surfaces can link to "
+        "its evidence history (CPDO-3.3).",
+    )
+    manifest_hash: Optional[str] = Field(
+        None,
+        serialization_alias="manifestHash",
+        description="Content-addressed projection-manifest hash of the latest conversion; None on "
+        "conversions committed before manifests existed (CPDO-1.3).",
+    )
 
     class Config:
         from_attributes = True
@@ -2185,6 +2197,208 @@ class CatalogProjectionResponse(BaseModel):
     target: str = Field(default="openapi", description="The conversion target.")
     summary: Dict[str, Any] = Field(description="The bounded projection-manifest summary.")
     page: Dict[str, Any] = Field(description="This page of edges + the nodes they reference.")
+
+
+class ConversionProvenanceEntry(BaseModel):
+    """One row of a conversion's provenance history (CPDO-3.3, #4803).
+
+    Projected from the append-only ``apiome.conversion_provenance`` ledger with the V215 history
+    enrichment: whether the content-addressed evidence snapshot for this conversion actually exists
+    (``snapshotAvailable``), and the display coordinates of both the source catalog item and the
+    target Project. Empty-string ledger sentinels (``projection_manifest_hash``, ``source_hash``)
+    serialize as ``null`` — "recorded before snapshots existed" — rather than leaking storage
+    defaults into the wire contract.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    provenance_id: str = Field(
+        serialization_alias="provenanceId", description="Id of the conversion_provenance row."
+    )
+    created_at: Optional[Union[datetime, str]] = Field(
+        None, serialization_alias="createdAt", description="When the conversion was committed."
+    )
+    created_by: Optional[str] = Field(
+        None, serialization_alias="createdBy", description="User id that ran the conversion."
+    )
+    reconverted: bool = Field(
+        False, description="True when this conversion superseded a prior conversion of the source."
+    )
+    conversion_mode: Optional[str] = Field(
+        None,
+        serialization_alias="conversionMode",
+        description="passthrough / typespec_native / lossy, from the converter tool versions.",
+    )
+    source_project_id: Optional[str] = Field(
+        None,
+        serialization_alias="sourceProjectId",
+        description="Catalog item id the conversion ran from; None when the item was hard-deleted.",
+    )
+    source_project_name: Optional[str] = Field(
+        None, serialization_alias="sourceProjectName", description="Display name of the source catalog item."
+    )
+    source_format: Optional[str] = Field(
+        None, serialization_alias="sourceFormat", description="Source format key (e.g. 'graphql')."
+    )
+    source_version_id: Optional[str] = Field(
+        None,
+        serialization_alias="sourceVersionId",
+        description="Source revision row id (versions.id) that was converted.",
+    )
+    target_project_id: str = Field(
+        serialization_alias="targetProjectId", description="Publishable Project the conversion produced."
+    )
+    target_project_name: Optional[str] = Field(
+        None, serialization_alias="targetProjectName", description="Name of the target Project."
+    )
+    target_project_slug: Optional[str] = Field(
+        None, serialization_alias="targetProjectSlug", description="Slug of the target Project."
+    )
+    target_project_deleted: bool = Field(
+        False,
+        serialization_alias="targetProjectDeleted",
+        description="True when the target Project has since been (soft-)deleted.",
+    )
+    target_version_label: Optional[str] = Field(
+        None,
+        serialization_alias="targetVersionLabel",
+        description="Semantic version label of the produced revision (e.g. '1.0.1').",
+    )
+    target_version_record_id: Optional[str] = Field(
+        None,
+        serialization_alias="targetVersionRecordId",
+        description="Row id (versions.id) of the produced revision — the target revision this "
+        "snapshot is linked to.",
+    )
+    fidelity_score: Optional[int] = Field(
+        None, serialization_alias="fidelityScore", description="0-100 fidelity score (MFI-22.3)."
+    )
+    fidelity_grade: Optional[str] = Field(
+        None, serialization_alias="fidelityGrade", description="A-F fidelity grade."
+    )
+    fidelity_tier: Optional[str] = Field(
+        None, serialization_alias="fidelityTier", description="Coarse fidelity tier (high/medium/low)."
+    )
+    tool_versions: Dict[str, Any] = Field(
+        default_factory=dict,
+        serialization_alias="toolVersions",
+        description="Converter tool versions that produced the conversion.",
+    )
+    defaults: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Normalized gap-filling defaults the conversion was committed with, from the "
+        "stored manifest summary.",
+    )
+    schema_version: Optional[str] = Field(
+        None,
+        serialization_alias="schemaVersion",
+        description="Manifest contract version the stored summary was built under.",
+    )
+    manifest_hash: Optional[str] = Field(
+        None,
+        serialization_alias="manifestHash",
+        description="Content-addressed evidence snapshot id; None on rows recorded before "
+        "manifests existed (CPDO-1.3).",
+    )
+    source_hash: Optional[str] = Field(
+        None,
+        serialization_alias="sourceHash",
+        description="sha256:-prefixed digest of the exact source text converted; None on rows "
+        "recorded before CPDO-3.3. Differing from currentSourceHash marks the evidence historic.",
+    )
+    snapshot_available: bool = Field(
+        False,
+        serialization_alias="snapshotAvailable",
+        description="True when the full evidence snapshot is stored and its graph can be replayed.",
+    )
+
+
+class CatalogConversionHistoryResponse(BaseModel):
+    """``GET /v1/catalog/{tenant_slug}/{item_id}/conversions`` — a catalog item's conversion
+    history, newest first (CPDO-3.3).
+
+    ``currentSourceHash`` is the digest of the item's *currently captured* source, so a client can
+    mark rows whose ``sourceHash`` differs as historic ("the source has changed since"); ``null``
+    when no source is captured or the digest could not be computed.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    item_id: str = Field(serialization_alias="itemId", description="The catalog item id.")
+    current_source_hash: Optional[str] = Field(
+        None,
+        serialization_alias="currentSourceHash",
+        description="Digest of the item's currently captured source text, or null.",
+    )
+    conversions: List[ConversionProvenanceEntry] = Field(
+        default_factory=list, description="Provenance rows, newest first."
+    )
+
+
+class ProjectConversionHistoryResponse(BaseModel):
+    """``GET /v1/projects/{tenant_slug}/{project_id}/conversions`` — the conversions that produced a
+    Project, newest first (CPDO-3.3). Empty for projects that were never a conversion target."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    project_id: str = Field(serialization_alias="projectId", description="The target Project id.")
+    conversions: List[ConversionProvenanceEntry] = Field(
+        default_factory=list, description="Provenance rows targeting this Project, newest first."
+    )
+
+
+class ConversionSnapshotState(BaseModel):
+    """Whether a historical conversion's evidence snapshot could be served, and why not (CPDO-3.3).
+
+    A missing snapshot is a truthful, expected state — never an error: ``predates_snapshots`` for
+    rows committed before manifests were persisted, ``snapshot_missing`` when the row names a hash
+    with no stored snapshot (a best-effort write that failed), ``unreadable`` when the stored
+    manifest no longer validates against this reader's contract version.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["available", "unavailable"] = Field(
+        description="Whether the stored evidence graph is being served."
+    )
+    reason: Optional[Literal["predates_snapshots", "snapshot_missing", "unreadable"]] = Field(
+        default=None, description="Why the snapshot is unavailable; null when available."
+    )
+
+
+class ConversionEvidenceResponse(BaseModel):
+    """One page of a historical conversion's stored evidence graph (CPDO-3.3).
+
+    Serves the exact approved manifest from the content-addressed snapshot store — never a rebuild —
+    so the evidence shown is the evidence the conversion was committed with, regardless of how the
+    source or the converter changed since. ``summary``/``page`` are ``null`` exactly when
+    ``snapshot.status`` is ``unavailable``; degrade is HTTP 200, never a 5xx.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    provenance_id: str = Field(
+        serialization_alias="provenanceId", description="The conversion_provenance row served."
+    )
+    item_id: Optional[str] = Field(
+        None, serialization_alias="itemId", description="Catalog item id, on the catalog surface."
+    )
+    project_id: Optional[str] = Field(
+        None, serialization_alias="projectId", description="Target Project id, on the project surface."
+    )
+    manifest_hash: Optional[str] = Field(
+        None, serialization_alias="manifestHash", description="Content-addressed snapshot id, or null."
+    )
+    source_hash: Optional[str] = Field(
+        None, serialization_alias="sourceHash", description="Digest of the source text converted, or null."
+    )
+    snapshot: ConversionSnapshotState = Field(description="Snapshot availability + degrade reason.")
+    summary: Optional[Dict[str, Any]] = Field(
+        None, description="The bounded manifest summary of the stored snapshot; null when unavailable."
+    )
+    page: Optional[Dict[str, Any]] = Field(
+        None, description="One page of the stored graph's edges + nodes; null when unavailable."
+    )
 
 
 class ProjectCreateRequest(BaseModel):

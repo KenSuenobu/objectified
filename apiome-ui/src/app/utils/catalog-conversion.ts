@@ -37,6 +37,10 @@ export interface CatalogConversion {
   fidelityGrade?: string | null;
   /** Coarse fidelity tier (high/medium/low) of the conversion. */
   fidelityTier?: string | null;
+  /** Id of the latest conversion_provenance row — the evidence history anchor (CPDO-3.3). */
+  provenanceId?: string | null;
+  /** Content-addressed snapshot hash of the latest conversion; null on pre-manifest rows. */
+  manifestHash?: string | null;
 }
 
 /**
