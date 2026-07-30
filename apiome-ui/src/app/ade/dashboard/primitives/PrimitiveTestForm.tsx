@@ -48,9 +48,12 @@ import {
   coerceScalar,
   compileTestValidator,
   describePlaceholder,
+  extraKeyIssue,
+  extraNamesAt,
   findingsByPointer,
   isIncluded,
   itemPointer,
+  moveStateSubtree,
   patternMatches,
   seedStateFromInstance,
   type TestField,
@@ -68,7 +71,7 @@ export interface PrimitiveTestFormProps {
 /** Single-value mode vs. array-of-values mode. */
 type TestMode = 'single' | 'array';
 
-const EMPTY_STATE: TestFormState = { values: {}, arrayLengths: {}, included: {} };
+const EMPTY_STATE: TestFormState = { values: {}, arrayLengths: {}, included: {}, extraNames: {} };
 
 const labelClass = 'text-xs font-medium text-gray-700 dark:text-gray-300';
 const hintClass = 'text-[11px] text-gray-500 dark:text-gray-400';
@@ -172,6 +175,41 @@ function PrimitiveTestFormBody({ schema, name }: PrimitiveTestFormProps) {
     setState((prev) => ({ ...prev, arrayLengths: { ...prev.arrayLengths, [pointer]: Math.max(0, length) } }));
   }, []);
 
+  const addExtra = useCallback((pointer: string) => {
+    setState((prev) => ({
+      ...prev,
+      extraNames: {
+        ...(prev.extraNames ?? {}),
+        [pointer]: [...(prev.extraNames?.[pointer] ?? []), ''],
+      },
+    }));
+  }, []);
+
+  const removeExtra = useCallback((pointer: string, index: number) => {
+    setState((prev) => ({
+      ...prev,
+      extraNames: {
+        ...(prev.extraNames ?? {}),
+        [pointer]: (prev.extraNames?.[pointer] ?? []).filter((_unused, i) => i !== index),
+      },
+    }));
+  }, []);
+
+  // Renaming an entry moves what was typed under it: values are keyed by the entry's name, so
+  // the subtree is re-keyed from the old name's pointer to the new one's.
+  const renameExtra = useCallback((pointer: string, index: number, nextKey: string) => {
+    setState((prev) => {
+      const names = [...(prev.extraNames?.[pointer] ?? [])];
+      const prevKey = names[index] ?? '';
+      names[index] = nextKey;
+      const moved =
+        prevKey !== '' && nextKey !== '' && prevKey !== nextKey
+          ? moveStateSubtree(prev, childPointer(pointer, prevKey), childPointer(pointer, nextKey))
+          : prev;
+      return { ...moved, extraNames: { ...(moved.extraNames ?? {}), [pointer]: names } };
+    });
+  }, []);
+
   const ctx: FieldContext = {
     state,
     findings,
@@ -179,6 +217,9 @@ function PrimitiveTestFormBody({ schema, name }: PrimitiveTestFormProps) {
     setValue,
     setIncluded,
     setArrayLength,
+    addExtra,
+    removeExtra,
+    renameExtra,
   };
 
   return (
@@ -316,6 +357,12 @@ interface FieldContext {
   setValue: (pointer: string, value: string) => void;
   setIncluded: (pointer: string, included: boolean) => void;
   setArrayLength: (pointer: string, length: number) => void;
+  /** Append a blank dynamic entry to an `additionalProperties` object. */
+  addExtra: (pointer: string) => void;
+  /** Remove one dynamic entry row. */
+  removeExtra: (pointer: string, index: number) => void;
+  /** Rename one dynamic entry, migrating the state typed under its old name. */
+  renameExtra: (pointer: string, index: number, key: string) => void;
 }
 
 /** Render one node of the form tree: object fieldset, array list, or scalar input. */
@@ -332,7 +379,7 @@ function FieldNode({
 }) {
   if (field.kind === 'object') {
     const children = field.children ?? [];
-    if (children.length === 0) {
+    if (children.length === 0 && !field.additional) {
       return <p className={hintClass}>This object declares no properties, so there is nothing to fill in.</p>;
     }
     return (
@@ -344,6 +391,9 @@ function FieldNode({
             <PropertyRow key={child.key} field={child} pointer={childPtr} ctx={ctx} depth={depth} included={included} />
           );
         })}
+        {field.additional ? (
+          <AdditionalPropertiesSection field={field} pointer={pointer} ctx={ctx} depth={depth} />
+        ) : null}
       </div>
     );
   }
@@ -404,6 +454,96 @@ function PropertyRow({
       ) : (
         <p className={`pl-5 ${hintClass}`}>Omitted from the instance.</p>
       )}
+    </div>
+  );
+}
+
+/**
+ * The dynamic entries of an `additionalProperties` object: named rows the reader adds.
+ *
+ * Each row is a name input plus a value editor built from the `additionalProperties` schema.
+ * The value lives at the ordinary child pointer of the typed name, so Ajv findings for
+ * `/static/myKey` anchor onto the row exactly as they would for a declared property. A row
+ * whose name is empty or duplicates an existing property is kept out of the instance and
+ * says so in place of its editor.
+ */
+function AdditionalPropertiesSection({
+  field,
+  pointer,
+  ctx,
+  depth,
+}: {
+  field: TestField;
+  pointer: string;
+  ctx: FieldContext;
+  depth: number;
+}) {
+  const template = field.additional as TestField;
+  const names = extraNamesAt(ctx.state, pointer);
+  const hasDeclared = (field.children ?? []).length > 0;
+
+  return (
+    <div className="space-y-2" data-testid={`primitive-test-extras-${pointer}`}>
+      {hasDeclared ? (
+        <p className={hintClass}>
+          Additional properties <span className="font-mono">({describeType(template)})</span>
+        </p>
+      ) : (
+        <p className={hintClass}>
+          This object takes dynamic property names, each with a{' '}
+          <span className="font-mono">{describeType(template)}</span> value.
+        </p>
+      )}
+
+      {names.map((name, index) => {
+        const issue = extraKeyIssue(field, names, index);
+        const valuePtr = childPointer(pointer, name);
+        return (
+          // Rows are keyed by position: the name is the value being edited, so it cannot key
+          // the row without remounting (and losing focus in) the input on every keystroke.
+          <div key={index} className="rounded-md border border-gray-200 p-3 dark:border-gray-700">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <Input
+                data-testid={`primitive-test-extra-key-${pointer}/${index}`}
+                aria-label="Property name"
+                value={name}
+                placeholder="property name"
+                onChange={(event) => ctx.renameExtra(pointer, index, event.target.value)}
+                className="h-8 w-48 font-mono text-xs"
+              />
+              <button
+                type="button"
+                data-testid={`primitive-test-extra-remove-${pointer}/${index}`}
+                aria-label={`Remove property ${name || index}`}
+                onClick={() => ctx.removeExtra(pointer, index)}
+                className="inline-flex items-center gap-1 rounded border border-gray-200 px-1.5 py-0.5 text-[11px] text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                <Trash2 className="h-3 w-3" aria-hidden />
+                Remove
+              </button>
+            </div>
+            {issue === null ? (
+              <FieldNode field={template} pointer={valuePtr} ctx={ctx} depth={depth + 1} />
+            ) : (
+              <p className={hintClass} data-testid={`primitive-test-extra-issue-${pointer}/${index}`}>
+                {issue === 'empty'
+                  ? 'Name this property to include it in the instance.'
+                  : `"${name}" is already a property of this object — rename or remove this row.`}
+              </p>
+            )}
+          </div>
+        );
+      })}
+
+      <button
+        type="button"
+        data-testid={`primitive-test-extra-add-${pointer}`}
+        onClick={() => ctx.addExtra(pointer)}
+        className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white/95 px-2 py-1 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900/95 dark:text-gray-200 dark:hover:bg-gray-800"
+      >
+        <Plus className="h-3.5 w-3.5" aria-hidden />
+        Add property
+      </button>
     </div>
   );
 }
@@ -614,6 +754,15 @@ function collectCoercionErrors(field: TestField, state: TestFormState, pointer =
       for (const child of node.children ?? []) {
         const childPtr = childPointer(nodePointer, child.key);
         if (isIncluded(state, childPtr, child)) walk(child, childPtr);
+      }
+      // Dynamic entries that reach the instance are checked like declared properties.
+      if (node.additional) {
+        const names = extraNamesAt(state, nodePointer);
+        names.forEach((name, index) => {
+          if (extraKeyIssue(node, names, index) === null) {
+            walk(node.additional as TestField, childPointer(nodePointer, name));
+          }
+        });
       }
       return;
     }

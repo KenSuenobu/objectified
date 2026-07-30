@@ -365,3 +365,129 @@ describe('PrimitiveTestForm — collapse', () => {
     expect(document.getElementById(controlled as string)).toContainElement(input('/amount'));
   });
 });
+
+describe('PrimitiveTestForm — additionalProperties', () => {
+  // A map object: every property is dynamic, values constrained by the additionalProperties schema.
+  const MAP_SCHEMA = {
+    type: 'object',
+    additionalProperties: { type: 'string', minLength: 3 },
+  };
+
+  it('offers Add property instead of "declares no properties" for a map object', () => {
+    renderOpen(<PrimitiveTestForm schema={MAP_SCHEMA} name="labels" />);
+
+    expect(screen.queryByText(/declares no properties/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId('primitive-test-extra-add-')).toBeInTheDocument();
+    expect(screen.getByText(/dynamic property names/i)).toBeInTheDocument();
+  });
+
+  it('adds a named entry and validates its value live against the entry schema', () => {
+    renderOpen(<PrimitiveTestForm schema={MAP_SCHEMA} name="labels" />);
+
+    fireEvent.click(screen.getByTestId('primitive-test-extra-add-'));
+    fireEvent.change(screen.getByTestId('primitive-test-extra-key-/0'), { target: { value: 'env' } });
+    fireEvent.change(input('/env'), { target: { value: 'ab' } });
+
+    // Too short — the finding lands on the entry's own row.
+    expect(verdict()).toHaveAttribute('data-status', 'invalid');
+    expect(screen.getByTestId('primitive-test-field-findings-/env')).toHaveTextContent(/fewer than 3/i);
+
+    fireEvent.change(input('/env'), { target: { value: 'production' } });
+    expect(verdict()).toHaveAttribute('data-status', 'valid');
+  });
+
+  it('keeps an unnamed row out of the instance and says why', () => {
+    renderOpen(<PrimitiveTestForm schema={MAP_SCHEMA} name="labels" />);
+
+    fireEvent.click(screen.getByTestId('primitive-test-extra-add-'));
+
+    expect(screen.getByTestId('primitive-test-extra-issue-/0')).toHaveTextContent(/name this property/i);
+    // An empty map is valid against this schema — the unnamed row contributes nothing.
+    expect(verdict()).toHaveAttribute('data-status', 'valid');
+  });
+
+  it('flags a name that duplicates a declared property instead of overwriting it', () => {
+    renderOpen(
+      <PrimitiveTestForm
+        schema={{
+          type: 'object',
+          properties: { name: { type: 'string' } },
+          required: ['name'],
+          additionalProperties: { type: 'string' },
+        }}
+        name="labelled"
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId('primitive-test-extra-add-'));
+    fireEvent.change(screen.getByTestId('primitive-test-extra-key-/0'), { target: { value: 'name' } });
+
+    expect(screen.getByTestId('primitive-test-extra-issue-/0')).toHaveTextContent(/already a property/i);
+  });
+
+  it('keeps the typed value when the entry is renamed', () => {
+    renderOpen(<PrimitiveTestForm schema={MAP_SCHEMA} name="labels" />);
+
+    fireEvent.click(screen.getByTestId('primitive-test-extra-add-'));
+    fireEvent.change(screen.getByTestId('primitive-test-extra-key-/0'), { target: { value: 'env' } });
+    fireEvent.change(input('/env'), { target: { value: 'production' } });
+
+    fireEvent.change(screen.getByTestId('primitive-test-extra-key-/0'), { target: { value: 'envx' } });
+    expect(input('/envx')).toHaveValue('production');
+  });
+
+  it('removes an entry, and the instance loses it', () => {
+    renderOpen(<PrimitiveTestForm schema={MAP_SCHEMA} name="labels" />);
+
+    fireEvent.click(screen.getByTestId('primitive-test-extra-add-'));
+    fireEvent.change(screen.getByTestId('primitive-test-extra-key-/0'), { target: { value: 'env' } });
+    fireEvent.change(input('/env'), { target: { value: 'ab' } });
+    expect(verdict()).toHaveAttribute('data-status', 'invalid');
+
+    fireEvent.click(screen.getByTestId('primitive-test-extra-remove-/0'));
+    expect(verdict()).toHaveAttribute('data-status', 'valid');
+    expect(screen.queryByTestId('primitive-test-input-/env')).not.toBeInTheDocument();
+  });
+
+  it('offers no add control when additionalProperties is false or undeclared', () => {
+    renderOpen(
+      <PrimitiveTestForm
+        schema={{ type: 'object', properties: { a: { type: 'string' } }, additionalProperties: false }}
+        name="closed"
+      />,
+    );
+    expect(screen.queryByTestId('primitive-test-extra-add-')).not.toBeInTheDocument();
+  });
+
+  it('seeds dynamic entries from the schema example — the locations/response shape', () => {
+    renderOpen(
+      <PrimitiveTestForm
+        schema={{
+          type: 'object',
+          properties: {
+            static: { type: 'object', additionalProperties: { type: 'string', minLength: 3 } },
+          },
+          required: ['static'],
+          examples: [{ static: { root: 'resource' } }],
+        }}
+        name="locations"
+      />,
+    );
+
+    // The example's dynamic key arrives as a populated row.
+    expect(screen.getByTestId('primitive-test-extra-key-/static/0')).toHaveValue('root');
+    expect(input('/static/root')).toHaveValue('resource');
+    expect(verdict()).toHaveAttribute('data-status', 'valid');
+  });
+
+  it('works inside array mode like every other pointer-addressed node', () => {
+    renderOpen(<PrimitiveTestForm schema={MAP_SCHEMA} name="labels" />);
+    fireEvent.click(screen.getByTestId('primitive-test-mode-array'));
+
+    fireEvent.click(screen.getByTestId('primitive-test-extra-add-/0'));
+    fireEvent.change(screen.getByTestId('primitive-test-extra-key-/0/0'), { target: { value: 'env' } });
+    fireEvent.change(input('/0/env'), { target: { value: 'production' } });
+
+    expect(verdict()).toHaveAttribute('data-status', 'valid');
+  });
+});

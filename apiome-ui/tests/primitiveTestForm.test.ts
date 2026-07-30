@@ -15,6 +15,9 @@ import {
   compileTestValidator,
   deriveFieldKind,
   describePlaceholder,
+  extraKeyIssue,
+  extraNamesAt,
+  moveStateSubtree,
   escapePointerToken,
   findingsByPointer,
   formatSample,
@@ -405,5 +408,177 @@ describe('seedStateFromInstance', () => {
       items: { type: 'string', format: 'date-time', examples: ['2024-01-15T09:30:00Z'] },
     });
     expect(seedStateFromInstance(list, ['2024-01-15T09:30:00Z']).values['/0']).toBe('2024-01-15T09:30:00Z');
+  });
+});
+
+describe('additionalProperties — map objects with dynamic keys', () => {
+  // The shape that motivated this: locations/response's `static`/`dynamic` are objects whose
+  // every property is dynamic, each value an object of the `additionalProperties` schema.
+  const MAP_SCHEMA = {
+    type: 'object',
+    additionalProperties: { type: 'string', minLength: 3 },
+  };
+
+  const state = (over: Partial<TestFormState>): TestFormState => ({
+    values: {},
+    arrayLengths: {},
+    included: {},
+    extraNames: {},
+    ...over,
+  });
+
+  describe('projection', () => {
+    it('projects a schema-valued additionalProperties as the entry template', () => {
+      const field = buildTestField(MAP_SCHEMA);
+      expect(field.kind).toBe('object');
+      expect(field.additional?.kind).toBe('string');
+    });
+
+    it('infers the object kind from additionalProperties alone, with no type keyword', () => {
+      const field = buildTestField({ additionalProperties: { type: 'number' } });
+      expect(field.kind).toBe('object');
+      expect(field.additional?.kind).toBe('number');
+    });
+
+    it('projects additionalProperties: true as a raw-JSON entry template', () => {
+      const field = buildTestField({ type: 'object', additionalProperties: true });
+      expect(field.additional?.kind).toBe('unknown');
+    });
+
+    it('offers no template for false or absent additionalProperties', () => {
+      expect(buildTestField({ type: 'object', additionalProperties: false }).additional).toBeUndefined();
+      expect(buildTestField({ type: 'object', properties: {} }).additional).toBeUndefined();
+    });
+  });
+
+  describe('extraKeyIssue', () => {
+    const field = buildTestField({
+      type: 'object',
+      properties: { declared: { type: 'string' } },
+      additionalProperties: { type: 'string' },
+    });
+
+    it('flags an unnamed row and a name clashing with a declared property or earlier row', () => {
+      expect(extraKeyIssue(field, [''], 0)).toBe('empty');
+      expect(extraKeyIssue(field, ['declared'], 0)).toBe('duplicate');
+      expect(extraKeyIssue(field, ['a', 'a'], 1)).toBe('duplicate');
+      expect(extraKeyIssue(field, ['a', 'a'], 0)).toBeNull();
+      expect(extraKeyIssue(field, ['fresh'], 0)).toBeNull();
+    });
+  });
+
+  describe('buildInstance', () => {
+    it('builds dynamic entries keyed by their typed names', () => {
+      const field = buildTestField(MAP_SCHEMA);
+      const instance = buildInstance(
+        field,
+        state({
+          extraNames: { '': ['first', 'second'] },
+          values: { '/first': 'abc', '/second': 'def' },
+        }),
+      );
+      expect(instance).toEqual({ first: 'abc', second: 'def' });
+    });
+
+    it('skips unnamed and duplicate rows instead of silently overwriting', () => {
+      const field = buildTestField({
+        type: 'object',
+        properties: { declared: { type: 'string' } },
+        additionalProperties: { type: 'string' },
+      });
+      const instance = buildInstance(
+        field,
+        state({
+          included: { '/declared': true },
+          extraNames: { '': ['', 'declared', 'ok', 'ok'] },
+          values: { '/declared': 'keep', '/ok': 'extra' },
+        }),
+      );
+      expect(instance).toEqual({ declared: 'keep', ok: 'extra' });
+    });
+
+    it('nests: a dynamic entry whose value is itself an object of declared properties', () => {
+      const field = buildTestField({
+        type: 'object',
+        additionalProperties: {
+          type: 'object',
+          properties: { x: { type: 'number' } },
+          required: ['x'],
+        },
+      });
+      const instance = buildInstance(
+        field,
+        state({ extraNames: { '': ['point'] }, values: { '/point/x': '4' } }),
+      );
+      expect(instance).toEqual({ point: { x: 4 } });
+    });
+  });
+
+  describe('seedStateFromInstance', () => {
+    it('seeds dynamic entries from example keys beyond the declared properties', () => {
+      const field = buildTestField({
+        type: 'object',
+        properties: { declared: { type: 'string' } },
+        additionalProperties: { type: 'string' },
+      });
+      const seeded = seedStateFromInstance(field, { declared: 'a', dyn1: 'abc', dyn2: 'def' });
+
+      expect(extraNamesAt(seeded, '')).toEqual(['dyn1', 'dyn2']);
+      expect(seeded.values['/dyn1']).toBe('abc');
+      expect(seeded.values['/dyn2']).toBe('def');
+      expect(seeded.included['/declared']).toBe(true);
+    });
+
+    it('seeds a pure map object — the locations/response shape — end to end', () => {
+      const field = buildTestField({
+        type: 'object',
+        properties: {
+          static: { type: 'object', additionalProperties: { type: 'string' } },
+        },
+        required: ['static'],
+      });
+      const seeded = seedStateFromInstance(field, { static: { '/': 'resource' } });
+
+      expect(extraNamesAt(seeded, '/static')).toEqual(['/']);
+      expect(seeded.values[childPointer('/static', '/')]).toBe('resource');
+      // And the instance round-trips.
+      expect(buildInstance(field, seeded)).toEqual({ static: { '/': 'resource' } });
+    });
+  });
+
+  describe('moveStateSubtree', () => {
+    it('moves everything typed under the old name to the new one', () => {
+      const moved = moveStateSubtree(
+        state({
+          values: { '/old/x': '1', '/older': 'untouched' },
+          included: { '/old/x': true },
+          arrayLengths: { '/old/list': 2 },
+          extraNames: { '/old/map': ['k'] },
+        }),
+        '/old',
+        '/new',
+      );
+      expect(moved.values).toEqual({ '/new/x': '1', '/older': 'untouched' });
+      expect(moved.included).toEqual({ '/new/x': true });
+      expect(moved.arrayLengths).toEqual({ '/new/list': 2 });
+      expect(moved.extraNames).toEqual({ '/new/map': ['k'] });
+    });
+
+    it('refuses to clobber a target that already holds state', () => {
+      const before = state({ values: { '/old': 'mine', '/new': 'theirs' } });
+      expect(moveStateSubtree(before, '/old', '/new')).toBe(before);
+    });
+  });
+
+  describe('validation wiring', () => {
+    it('anchors a violation onto the dynamic entry that caused it', () => {
+      const field = buildTestField(MAP_SCHEMA);
+      const formState = state({ extraNames: { '': ['shorty'] }, values: { '/shorty': 'ab' } });
+      const validator = compileTestValidator(MAP_SCHEMA);
+
+      const result = validator.validate(buildInstance(field, formState));
+      expect(result.status).toBe('invalid');
+      expect(findingsByPointer(result.findings).has('/shorty')).toBe(true);
+    });
   });
 });

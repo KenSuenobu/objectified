@@ -63,6 +63,13 @@ export interface TestField {
   enumValues?: unknown[];
   /** Object properties, in declaration order (`kind === 'object'`). */
   children?: TestField[];
+  /**
+   * The value template for dynamic entries (`kind === 'object'` with `additionalProperties`
+   * present and not `false`) — a map object's analogue of {@link item}. The reader adds
+   * named entries whose values are edited with this projection; `additionalProperties: true`
+   * projects as an unconstrained raw-JSON value.
+   */
+  additional?: TestField;
   /** The item schema projection (`kind === 'array'`). */
   item?: TestField;
   /** A `$ref` that could not be resolved client-side; the node is validated loosely. */
@@ -79,6 +86,13 @@ export interface TestFormState {
   arrayLengths: Record<string, number>;
   /** Explicit include/exclude per property pointer; absent means "use the field default". */
   included: Record<string, boolean>;
+  /**
+   * Dynamic entry names per object pointer, in row order (`additionalProperties` objects).
+   * Values live at the ordinary child pointer of each name, so instance building and error
+   * anchoring treat a dynamic entry exactly like a declared property. Optional so states
+   * built before this field existed remain valid.
+   */
+  extraNames?: Record<string, string[]>;
 }
 
 /** One validation problem, anchored to the instance node it concerns. */
@@ -158,8 +172,10 @@ export function deriveFieldKind(schema: Record<string, unknown>): FieldKind {
       break;
   }
 
-  // No declared `type` — infer from the shape-defining keywords before giving up.
+  // No declared `type` — infer from the shape-defining keywords before giving up. A
+  // schema-valued `additionalProperties` is an object shape too: a map with dynamic keys.
   if (asRecord(schema.properties)) return 'object';
+  if (asRecord(schema.additionalProperties)) return 'object';
   if (schema.items !== undefined) return 'array';
   return 'unknown';
 }
@@ -222,6 +238,18 @@ export function buildTestField(
         depth: depth + 1,
       }),
     );
+
+    // `additionalProperties` present and not `false` → the reader may add named entries.
+    // A schema-valued keyword projects as that schema; a bare `true` means "any value",
+    // which the unknown kind's raw-JSON editor already expresses.
+    const additional = node.additionalProperties;
+    if (asRecord(additional) || additional === true) {
+      base.additional = buildTestField(asRecord(additional) ?? {}, {
+        key: '',
+        label: 'value',
+        depth: depth + 1,
+      });
+    }
   }
 
   if (base.kind === 'array') {
@@ -419,6 +447,79 @@ export function arrayLength(state: TestFormState, pointer: string): number {
   return length === undefined ? 1 : Math.max(0, length);
 }
 
+/** The dynamic entry names an object node currently holds, in row order. */
+export function extraNamesAt(state: TestFormState, pointer: string): string[] {
+  return state.extraNames?.[pointer] ?? [];
+}
+
+/**
+ * Why a dynamic entry's name keeps it out of the instance, or `null` when it is usable.
+ *
+ * An unnamed row has nowhere to put its value; a name that repeats a declared property or an
+ * earlier row would silently overwrite it in the built object, so it is skipped and the UI
+ * says why instead.
+ *
+ * @param field - The object field the entries belong to.
+ * @param names - The object's dynamic entry names, in row order.
+ * @param index - The row being judged.
+ * @returns `'empty'`, `'duplicate'`, or `null` when the name is usable.
+ */
+export function extraKeyIssue(
+  field: TestField,
+  names: string[],
+  index: number,
+): 'empty' | 'duplicate' | null {
+  const key = names[index] ?? '';
+  if (key === '') return 'empty';
+  if ((field.children ?? []).some((child) => child.key === key)) return 'duplicate';
+  if (names.slice(0, index).includes(key)) return 'duplicate';
+  return null;
+}
+
+/**
+ * Re-key one node's state subtree from `from` to `to` (a dynamic entry rename).
+ *
+ * Values live at pointers derived from the entry's *name*, so renaming an entry moves its
+ * whole subtree — raw texts, array lengths, inclusions, nested entry names — to the new
+ * pointer prefix. When the target prefix already holds state (the new name collides with
+ * something), nothing is moved: the instance skips the duplicate anyway, and clobbering the
+ * collided-with entry's values would turn a typo into data loss.
+ *
+ * @param state - The current form state.
+ * @param from - The subtree's current pointer.
+ * @param to - The pointer it should live at.
+ * @returns A new state with the subtree moved; the input is not mutated.
+ */
+export function moveStateSubtree(state: TestFormState, from: string, to: string): TestFormState {
+  if (from === to || from === '' || to === '') return state;
+
+  const covers = (key: string, prefix: string): boolean =>
+    key === prefix || key.startsWith(`${prefix}/`);
+
+  const rekey = <T,>(record: Record<string, T>): Record<string, T> => {
+    const output: Record<string, T> = {};
+    for (const [key, value] of Object.entries(record)) {
+      output[covers(key, from) ? to + key.slice(from.length) : key] = value;
+    }
+    return output;
+  };
+
+  const occupied = [
+    ...Object.keys(state.values),
+    ...Object.keys(state.arrayLengths),
+    ...Object.keys(state.included),
+    ...Object.keys(state.extraNames ?? {}),
+  ].some((key) => covers(key, to));
+  if (occupied) return state;
+
+  return {
+    values: rekey(state.values),
+    arrayLengths: rekey(state.arrayLengths),
+    included: rekey(state.included),
+    extraNames: rekey(state.extraNames ?? {}),
+  };
+}
+
 /**
  * Build the JSON instance the form currently describes.
  *
@@ -435,6 +536,16 @@ export function buildInstance(field: TestField, state: TestFormState, pointer = 
         const childPtr = childPointer(pointer, child.key);
         if (!isIncluded(state, childPtr, child)) continue;
         output[child.key] = buildInstance(child, state, childPtr);
+      }
+      // Dynamic entries: a row with a usable name contributes like a declared property —
+      // its value keyed by the name, built with the `additionalProperties` template.
+      const template = field.additional;
+      if (template) {
+        const names = extraNamesAt(state, pointer);
+        names.forEach((name, index) => {
+          if (extraKeyIssue(field, names, index) !== null) return;
+          output[name] = buildInstance(template, state, childPointer(pointer, name));
+        });
       }
       return output;
     }
@@ -569,6 +680,7 @@ export function seedStateFromInstance(field: TestField, example: unknown): TestF
     if (node.kind === 'object') {
       const record = asRecord(value);
       if (!record) return;
+      const declared = new Set((node.children ?? []).map((child) => child.key));
       for (const child of node.children ?? []) {
         const childPtr = childPointer(pointer, child.key);
         // A blank-opening property is not force-included: required ones are on by default anyway, and
@@ -576,6 +688,17 @@ export function seedStateFromInstance(field: TestField, example: unknown): TestF
         if (child.key in record && !opensBlank(child)) {
           state.included[childPtr] = true;
           walk(child, record[child.key], childPtr);
+        }
+      }
+      // Example keys beyond the declared properties seed dynamic entries — this is how a map
+      // object (only `additionalProperties`) opens populated instead of empty.
+      if (node.additional) {
+        const extras = Object.keys(record).filter((name) => !declared.has(name));
+        if (extras.length > 0) {
+          state.extraNames = { ...(state.extraNames ?? {}), [pointer]: extras };
+          for (const name of extras) {
+            walk(node.additional, record[name], childPointer(pointer, name));
+          }
         }
       }
       return;
