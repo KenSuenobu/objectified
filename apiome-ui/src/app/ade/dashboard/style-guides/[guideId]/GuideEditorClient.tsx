@@ -30,6 +30,8 @@ import {
   Search,
 } from 'lucide-react';
 import { Switch } from '@/app/components/ui/Switch';
+import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
+import { cn } from '@lib/utils';
 import { useDialog } from '@/app/components/providers/DialogProvider';
 import {
   fetchMyPermissions,
@@ -270,17 +272,13 @@ export default function GuideEditorClient({ guideId }: { guideId: string }) {
             )}
           </div>
           {/* Tab strip: rule catalog (GOV-2.2) and custom rules (GOV-2.3). */}
-          <nav aria-label="Guide editor tabs" className="mt-4 flex gap-6">
+          <nav role="tablist" aria-label="Guide editor tabs" className={cn(TAB_LIST_CLASS, 'mt-4')}>
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === 'catalog'}
               onClick={() => setActiveTab('catalog')}
-              className={
-                activeTab === 'catalog'
-                  ? 'border-b-2 border-indigo-600 pb-2 text-sm font-semibold text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
-                  : 'border-b-2 border-transparent pb-2 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }
+              className={tabTriggerClass({ active: activeTab === 'catalog' })}
             >
               Rule catalog
             </button>
@@ -289,11 +287,7 @@ export default function GuideEditorClient({ guideId }: { guideId: string }) {
               role="tab"
               aria-selected={activeTab === 'custom'}
               onClick={() => setActiveTab('custom')}
-              className={
-                activeTab === 'custom'
-                  ? 'border-b-2 border-indigo-600 pb-2 text-sm font-semibold text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
-                  : 'border-b-2 border-transparent pb-2 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }
+              className={tabTriggerClass({ active: activeTab === 'custom' })}
             >
               Custom rules
             </button>
@@ -302,11 +296,7 @@ export default function GuideEditorClient({ guideId }: { guideId: string }) {
               role="tab"
               aria-selected={activeTab === 'policy'}
               onClick={() => setActiveTab('policy')}
-              className={
-                activeTab === 'policy'
-                  ? 'border-b-2 border-indigo-600 pb-2 text-sm font-semibold text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
-                  : 'border-b-2 border-transparent pb-2 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }
+              className={tabTriggerClass({ active: activeTab === 'policy' })}
             >
               Policy
             </button>

@@ -19,6 +19,7 @@ import {
   type StoredQualityIssue,
 } from '../../../utils/project-quality-score-history';
 import { getNumericScoreTier } from '../../../utils/numeric-score-tier';
+import { TAB_LIST_CLASS, tabTriggerClass } from '../../ui/tabStyles';
 import { cn } from '@lib/utils';
 
 interface ProjectQualityHistoryDialogProps {
@@ -256,23 +257,14 @@ export function ProjectQualityHistoryDialog({
             <DialogTitle className="truncate">Project scores — {projectName}</DialogTitle>
           </DialogHeader>
 
-          <div
-            className="flex flex-wrap gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-700"
-            role="tablist"
-            aria-label="Project score views"
-          >
+          <div className={TAB_LIST_CLASS} role="tablist" aria-label="Project score views">
             {SECTIONS.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 role="tab"
                 aria-selected={section === item.id}
-                className={cn(
-                  'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                  section === item.id
-                    ? 'bg-white text-indigo-600 shadow-sm dark:bg-gray-600 dark:text-indigo-400'
-                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
-                )}
+                className={tabTriggerClass({ active: section === item.id })}
                 onClick={() => setSection(item.id)}
               >
                 {item.label}

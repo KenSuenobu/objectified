@@ -35,6 +35,7 @@ import PrimitivesNamespaceCollections, {
 } from './PrimitivesNamespaceCollections';
 import { isWithinNamespace } from '@/app/utils/primitives-namespace-groups';
 import SortableTh from '@/app/components/ade/dashboard/SortableTh';
+import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
 import {
   DEFAULT_PRIMITIVES_TABLE_SORT,
   nextPrimitivesTableSort,
@@ -417,66 +418,48 @@ export default function PrimitivesManagementClient() {
 
           <PrimitivesRegistryKpiStrip stats={stats} loading={registryLoading} />
 
-          <div className="border-b border-gray-200 dark:border-gray-700" role="tablist" aria-label="Primitives views">
-            <nav className="flex gap-6 -mb-px">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeView === 'registry'}
-                onClick={() => setActiveView('registry')}
-                className={`flex items-center gap-2 px-1 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeView === 'registry'
-                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-500'
-                }`}
-              >
-                <Library className="w-4 h-4" />
-                Registry
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeView === 'namespaces'}
-                onClick={() => setActiveView('namespaces')}
-                className={`flex items-center gap-2 px-1 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeView === 'namespaces'
-                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-500'
-                }`}
-              >
-                <FolderTree className="w-4 h-4" />
-                Namespaces &amp; Scopes
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeView === 'resolver'}
-                onClick={() => setActiveView('resolver')}
-                className={`flex items-center gap-2 px-1 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeView === 'resolver'
-                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-500'
-                }`}
-              >
-                <GitFork className="w-4 h-4" />
-                Resolver
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeView === 'settings'}
-                onClick={() => setActiveView('settings')}
-                className={`flex items-center gap-2 px-1 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeView === 'settings'
-                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-500'
-                }`}
-              >
-                <Settings className="w-4 h-4" />
-                Settings
-              </button>
-            </nav>
-          </div>
+          <nav role="tablist" aria-label="Primitives views" className={TAB_LIST_CLASS}>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'registry'}
+              onClick={() => setActiveView('registry')}
+              className={tabTriggerClass({ active: activeView === 'registry' })}
+            >
+              <Library className="w-4 h-4" />
+              Registry
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'namespaces'}
+              onClick={() => setActiveView('namespaces')}
+              className={tabTriggerClass({ active: activeView === 'namespaces' })}
+            >
+              <FolderTree className="w-4 h-4" />
+              Namespaces &amp; Scopes
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'resolver'}
+              onClick={() => setActiveView('resolver')}
+              className={tabTriggerClass({ active: activeView === 'resolver' })}
+            >
+              <GitFork className="w-4 h-4" />
+              Resolver
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'settings'}
+              onClick={() => setActiveView('settings')}
+              className={tabTriggerClass({ active: activeView === 'settings' })}
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </button>
+          </nav>
 
           {activeView === 'settings' ? (
             <PrimitivesSettingsView onMessage={showMessage} />

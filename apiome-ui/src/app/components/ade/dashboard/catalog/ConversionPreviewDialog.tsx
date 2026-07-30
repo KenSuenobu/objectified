@@ -73,19 +73,6 @@ function OfflineOpenApiFallback({ value }: { value?: string }) {
   );
 }
 
-/**
- * The app-wide underline tab style (cf. CatalogDetailTabs, ImportSourceTabBar), applied over the
- * segmented `ui/Tabs` defaults so this dialog's tabs match the rest of the application.
- */
-const UNDERLINE_TAB_LIST_CLASS =
-  'h-auto w-full justify-start gap-1 rounded-none border-b border-gray-200 bg-transparent p-0 dark:border-gray-700 dark:bg-transparent';
-const UNDERLINE_TAB_TRIGGER_CLASS =
-  '-mb-px rounded-none rounded-t-md border-b-2 border-transparent px-3 py-2 text-gray-600 ' +
-  'data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent data-[state=active]:text-indigo-600 data-[state=active]:shadow-none ' +
-  'data-[state=inactive]:hover:border-gray-300 data-[state=inactive]:hover:text-gray-900 ' +
-  'dark:text-gray-400 dark:data-[state=active]:bg-transparent dark:data-[state=active]:text-indigo-400 ' +
-  'dark:data-[state=inactive]:hover:border-gray-600 dark:data-[state=inactive]:hover:text-gray-200';
-
 const MonacoEditor = dynamic(
   () =>
     import('@monaco-editor/react')
@@ -404,26 +391,14 @@ export function ConversionPreviewDialog({
               }}
               className="mt-3 flex min-h-0 flex-1 flex-col"
             >
-              <TabsList className={UNDERLINE_TAB_LIST_CLASS}>
-                <TabsTrigger
-                  value="summary"
-                  className={UNDERLINE_TAB_TRIGGER_CLASS}
-                  data-testid="conversion-tab-summary"
-                >
+              <TabsList className="w-full">
+                <TabsTrigger value="summary" data-testid="conversion-tab-summary">
                   Summary
                 </TabsTrigger>
-                <TabsTrigger
-                  value="projection"
-                  className={UNDERLINE_TAB_TRIGGER_CLASS}
-                  data-testid="conversion-tab-projection"
-                >
+                <TabsTrigger value="projection" data-testid="conversion-tab-projection">
                   Projection graph
                 </TabsTrigger>
-                <TabsTrigger
-                  value="conversion"
-                  className={UNDERLINE_TAB_TRIGGER_CLASS}
-                  data-testid="conversion-tab-conversion"
-                >
+                <TabsTrigger value="conversion" data-testid="conversion-tab-conversion">
                   Conversion
                 </TabsTrigger>
               </TabsList>

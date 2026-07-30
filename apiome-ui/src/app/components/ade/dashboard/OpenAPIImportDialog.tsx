@@ -5,6 +5,8 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as Tabs from '@radix-ui/react-tabs';
 import { Upload, FileJson, AlertCircle, CheckCircle2, Link2, Globe, FolderOpen, File, ArrowLeft, Lock, Search } from 'lucide-react';
 import { SiGithub, SiGitlab, SiGoogle, SiAmazon } from 'react-icons/si';
+import { TAB_LIST_CLASS, tabTriggerRadixClass } from '../../ui/tabStyles';
+import { cn } from '@lib/utils';
 
 const spacing = (n: number) => (typeof n === 'number' ? n * 8 : 0);
 const sxToStyle = (sx: any): React.CSSProperties => {
@@ -526,14 +528,14 @@ const OpenAPIImportDialog: React.FC<OpenAPIImportDialogProps> = ({
             </p>
 
             <Tabs.Root value={importMethod} onValueChange={(v) => { setImportMethod(v as any); setErrorMessage(''); }} className="mb-6">
-              <Tabs.List className="flex border-b border-slate-200 dark:border-slate-700 mb-4">
-                <Tabs.Trigger value="file" className="flex items-center gap-2 px-4 py-2 data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:font-medium">
+              <Tabs.List className={cn(TAB_LIST_CLASS, 'mb-4')}>
+                <Tabs.Trigger value="file" className={tabTriggerRadixClass()}>
                   <Upload size={20} /> File Upload
                 </Tabs.Trigger>
-                <Tabs.Trigger value="url" className="flex items-center gap-2 px-4 py-2 data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:font-medium">
+                <Tabs.Trigger value="url" className={tabTriggerRadixClass()}>
                   <Link2 size={20} /> From URL
                 </Tabs.Trigger>
-                <Tabs.Trigger value="sso" className="flex items-center gap-2 px-4 py-2 data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:font-medium disabled:opacity-50" disabled={linkedAccounts.length === 0}>
+                <Tabs.Trigger value="sso" className={tabTriggerRadixClass()} disabled={linkedAccounts.length === 0}>
                   <Globe size={20} /> From SSO
                 </Tabs.Trigger>
               </Tabs.List>

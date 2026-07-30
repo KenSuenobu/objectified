@@ -426,8 +426,10 @@ truth in `mcpLintUi` so styling never drifts.
 
 ### `<DetailTabs>`
 
-The mockup's underline detail strip (vs. the segmented `Tabs` primitive). Built on Radix tabs, so
-it stays keyboard-accessible and controllable. The canonical seven-tab set is `MCP_DETAIL_TABS`
+The MCP detail strip. It renders the app-wide underline tab look from
+`src/app/components/ui/tabStyles.ts` — the same look the base `Tabs` primitive and every hand-rolled
+strip use — and adds the MCP tab-set plumbing on top. Built on Radix tabs, so it stays
+keyboard-accessible and controllable. The canonical seven-tab set is `MCP_DETAIL_TABS`
 (Overview · Capabilities · Versions · Lint & Score · Test · Credentials · Settings); a screen may
 auto-render the full set or any subset.
 

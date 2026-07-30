@@ -21,6 +21,8 @@ import { SiGithub, SiGitlab, SiGoogle, SiAmazon } from 'react-icons/si';
 import { getLinkedAccountsForUser } from '../../../../../lib/db/helper';
 import { extractFileMetadata, FileMetadataPreview } from '../../../utils/openapi-analyzer';
 import { parseGitHubRepoUrl } from '../../../utils/git-repo-url';
+import { TAB_LIST_SCROLL_CLASS, tabTriggerClass } from '../../ui/tabStyles';
+import { cn } from '@lib/utils';
 import {
   addGitImportSavedRepo,
   GitImportSavedRepo,
@@ -965,7 +967,7 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
               </span>
               {selectedAccount ? (
                 <div
-                  className="flex shrink-0 rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-0.5"
+                  className={cn(TAB_LIST_SCROLL_CLASS, 'border-b-0')}
                   role="tablist"
                   aria-label="Repository list mode"
                 >
@@ -975,11 +977,11 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                     aria-selected={repositoryListTab === 'all'}
                     onClick={() => setRepositoryListTab('all')}
                     disabled={isLoading}
-                    className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                      repositoryListTab === 'all'
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/80'
-                    } disabled:opacity-50`}
+                    className={tabTriggerClass({
+                      active: repositoryListTab === 'all',
+                      disabled: isLoading,
+                      size: 'sm',
+                    })}
                   >
                     All
                   </button>
@@ -989,11 +991,11 @@ export const GitImportPanel: React.FC<GitImportPanelProps> = ({
                     aria-selected={repositoryListTab === 'history'}
                     onClick={() => setRepositoryListTab('history')}
                     disabled={isLoading}
-                    className={`flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                      repositoryListTab === 'history'
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/80'
-                    } disabled:opacity-50`}
+                    className={tabTriggerClass({
+                      active: repositoryListTab === 'history',
+                      disabled: isLoading,
+                      size: 'sm',
+                    })}
                   >
                     <History className="h-3 w-3" aria-hidden />
                     History

@@ -16,6 +16,8 @@ import { useDarkMode } from '../../hooks/useDarkMode';
 import BetaBackground from '../BetaBackground';
 import { getAuthErrorCopy } from '../auth-error-copy';
 import styles from '../login.module.css';
+import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
+import { cn } from '@lib/utils';
 
 const inputClasses =
   'block w-full pl-11 pr-4 py-3 rounded-2xl outline-none transition-all duration-200 ' +
@@ -31,10 +33,6 @@ const iconWrapClasses = 'absolute inset-y-0 left-0 pl-3.5 flex items-center poin
 const fieldIconClasses =
   'text-slate-400 group-focus-within:text-indigo-500 transition-colors dark:text-slate-500 dark:group-focus-within:text-indigo-300';
 
-const methodTabActive =
-  'bg-indigo-600 text-white shadow-sm dark:bg-indigo-500';
-const methodTabIdle =
-  'bg-white/70 text-slate-600 hover:bg-white dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/[0.07]';
 
 interface TwoFactorClientProps {
   /** Validated by the page (resolveCallbackUrl) before being passed in. */
@@ -193,7 +191,7 @@ const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
 
               {showMethodSwitcher && (
                 <div
-                  className="mb-6 grid grid-cols-2 gap-2 rounded-2xl border border-slate-200/80 p-1 dark:border-white/10"
+                  className={cn(TAB_LIST_CLASS, 'mb-6')}
                   role="tablist"
                   aria-label="Verification method"
                   data-testid="two-factor-method-switcher"
@@ -203,9 +201,7 @@ const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
                     role="tab"
                     aria-selected={activeMethod === 'totp'}
                     data-testid="two-factor-method-totp"
-                    className={`rounded-xl px-3 py-2 text-sm font-medium transition ${
-                      activeMethod === 'totp' ? methodTabActive : methodTabIdle
-                    }`}
+                    className={tabTriggerClass({ active: activeMethod === 'totp' })}
                     onClick={() => selectMethod('totp')}
                   >
                     Authenticator
@@ -215,9 +211,7 @@ const TwoFactorClient: React.FC<TwoFactorClientProps> = ({
                     role="tab"
                     aria-selected={activeMethod === 'otp'}
                     data-testid="two-factor-method-otp"
-                    className={`rounded-xl px-3 py-2 text-sm font-medium transition ${
-                      activeMethod === 'otp' ? methodTabActive : methodTabIdle
-                    }`}
+                    className={tabTriggerClass({ active: activeMethod === 'otp' })}
                     onClick={() => selectMethod('otp')}
                   >
                     Email code

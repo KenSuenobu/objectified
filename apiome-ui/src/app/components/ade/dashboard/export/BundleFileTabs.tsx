@@ -2,7 +2,7 @@
 
 import { useRef, type KeyboardEvent } from 'react';
 import { X } from 'lucide-react';
-import { cn } from '@lib/utils';
+import { TAB_LIST_SCROLL_CLASS, tabTriggerClass } from '../../../ui/tabStyles';
 import { bundleFileName, type FileFindingCounts } from './exportBundle';
 import { BundleFindingBadge } from './BundleFindingBadge';
 
@@ -93,7 +93,7 @@ export function BundleFileTabs({
       aria-label="Open bundle files"
       data-testid="bundle-file-tabs"
       onKeyDown={handleKeyDown}
-      className="flex shrink-0 items-stretch gap-1 overflow-x-auto border-b border-gray-200 pb-px dark:border-gray-700"
+      className={TAB_LIST_SCROLL_CLASS}
     >
       {openPaths.map((path) => {
         const active = path === activePath;
@@ -106,12 +106,7 @@ export function BundleFileTabs({
             role="presentation"
             data-testid={`bundle-tab-${path}`}
             data-active={active}
-            className={cn(
-              'group flex shrink-0 items-center gap-1.5 rounded-t-md border border-b-0 px-2.5 py-1.5 text-xs',
-              active
-                ? 'border-gray-200 bg-white font-medium text-indigo-700 dark:border-gray-700 dark:bg-[#1e1e1e] dark:text-indigo-300'
-                : 'border-transparent text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800',
-            )}
+            className={tabTriggerClass({ active, size: 'sm', className: 'group gap-1.5' })}
           >
             <button
               type="button"

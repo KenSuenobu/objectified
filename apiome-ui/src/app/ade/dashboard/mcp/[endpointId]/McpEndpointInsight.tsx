@@ -25,6 +25,11 @@ import {
   Trophy,
 } from "lucide-react";
 import { Badge } from "@/app/components/ui/Badge";
+import {
+  TAB_LIST_SCROLL_CLASS,
+  tabRailTriggerRadixClass,
+} from "@/app/components/ui/tabStyles";
+import { cn } from "@lib/utils";
 import { LoadingState } from "@/app/components/ui/LoadingState";
 import { EmptyState } from "@/app/components/ui/EmptyState";
 import { ServerProfileCard } from "@/app/components/ui/mcp/ServerProfileCard";
@@ -1408,7 +1413,11 @@ export default function McpEndpointInsight({
       >
         <TabsPrimitive.List
           aria-label="Insight sections"
-          className="flex shrink-0 gap-1 overflow-x-auto pb-1 lg:sticky lg:top-0 lg:w-60 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:pb-0"
+          className={cn(
+            TAB_LIST_SCROLL_CLASS,
+            'lg:sticky lg:top-0 lg:w-60 lg:flex-col lg:items-stretch lg:gap-0.5 lg:overflow-visible',
+            'lg:border-b-0 lg:border-l lg:border-gray-200 dark:lg:border-gray-700',
+          )}
         >
           {INSIGHT_GROUPS.map((group) => {
             const groupViews = views.filter((view) => view.group === group.key);
@@ -1428,10 +1437,10 @@ export default function McpEndpointInsight({
                     <TabsPrimitive.Trigger
                       key={view.key}
                       value={view.key}
-                      className="group flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-left text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white dark:data-[state=active]:bg-indigo-950/50 dark:data-[state=active]:text-indigo-300 lg:w-full"
+                      className={tabRailTriggerRadixClass({ className: 'group' })}
                     >
                       <Icon
-                        className="h-4 w-4 shrink-0 text-gray-400 transition-colors group-hover:text-gray-500 group-data-[state=active]:text-indigo-500"
+                        className="h-4 w-4 shrink-0 text-gray-400 transition-colors group-hover:text-gray-500 group-data-[state=active]:text-indigo-600 dark:group-data-[state=active]:text-indigo-400"
                         aria-hidden
                       />
                       {view.label}

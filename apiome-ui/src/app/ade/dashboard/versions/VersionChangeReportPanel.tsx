@@ -524,7 +524,7 @@ export function VersionChangeReportPanel({
           ) : null}
 
           <Tabs defaultValue="view" className="w-full">
-            <TabsList className="flex flex-wrap h-auto min-h-9" aria-label="Change report view or edit">
+            <TabsList aria-label="Change report view or edit">
               <TabsTrigger value="view" data-testid="change-report-tab-view">
                 View
               </TabsTrigger>

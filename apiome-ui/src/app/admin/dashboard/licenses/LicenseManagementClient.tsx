@@ -40,6 +40,7 @@ import {
 } from '../../../../../lib/db/admin-helper';
 import { isCommercialProductFlag } from '../../../../../lib/commercial-products';
 import { FeatureFlagUserOverridesPanel } from '../components/FeatureFlagUserOverridesPanel';
+import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1012,24 +1013,32 @@ export default function LicenseManagementClient({
         )}
 
         {/* Tabs */}
-        <div className="flex gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-900">
-          {TABS.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors flex-1 justify-center ${
-                activeTab === tab.id
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800/60'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-indigo-500' : 'bg-slate-200 dark:bg-slate-800'}`}>
-                {tab.count}
-              </span>
-            </button>
-          ))}
+        <div className={TAB_LIST_CLASS} role="tablist" aria-label="License management views">
+          {TABS.map(tab => {
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setActiveTab(tab.id)}
+                className={tabTriggerClass({ active })}
+              >
+                {tab.icon}
+                {tab.label}
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-xs ${
+                    active
+                      ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
+                      : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* ── Licenses tab ─────────────────────────────────────────────────── */}

@@ -27,6 +27,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../ui/Collapsible';
 import { ImportOptionsForm } from './ImportOptionsForm';
+import { TAB_LIST_CLASS, tabTriggerClass } from '../../ui/tabStyles';
 
 interface PreviewPanelProps {
   analysis: AnalysisResult;
@@ -804,36 +805,33 @@ export function PreviewPanel({ analysis, onImportOptionsChange }: PreviewPanelPr
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           {/* View Mode Tabs */}
-          <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+          <div role="tablist" aria-label="Schema view" className={TAB_LIST_CLASS}>
             <button
+              type="button"
+              role="tab"
+              aria-selected={panelView === 'list'}
               onClick={() => setPanelView('list')}
-              className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                panelView === 'list'
-                  ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
+              className={tabTriggerClass({ active: panelView === 'list' })}
             >
               <LayoutGrid className="h-4 w-4" />
               List View
             </button>
             <button
+              type="button"
+              role="tab"
+              aria-selected={panelView === 'chart'}
               onClick={() => setPanelView('chart')}
-              className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                panelView === 'chart'
-                  ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
+              className={tabTriggerClass({ active: panelView === 'chart' })}
             >
               <Network className="h-4 w-4" />
               Relationship Diagram
             </button>
             <button
+              type="button"
+              role="tab"
+              aria-selected={panelView === 'tree'}
               onClick={() => setPanelView('tree')}
-              className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                panelView === 'tree'
-                  ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
+              className={tabTriggerClass({ active: panelView === 'tree' })}
             >
               <FolderTree className="h-4 w-4" />
               Tree View

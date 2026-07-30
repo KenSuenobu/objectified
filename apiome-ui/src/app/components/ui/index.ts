@@ -12,6 +12,7 @@ export * from './Textarea';
 export * from './Switch';
 export * from './Tooltip';
 export * from './Tabs';
+export * from './tabStyles';
 export * from './Select';
 export * from './Collapsible';
 export * from './RadioGroup';

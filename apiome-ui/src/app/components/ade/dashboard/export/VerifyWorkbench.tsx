@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../../ui/Button';
 import { Alert } from '../../../ui/Alert';
+import { TAB_LIST_CLASS, tabTriggerClass } from '../../../ui/tabStyles';
 import { FidelityWarningPanel } from './FidelityWarningPanel';
 import { ValidationResultsLens } from './ValidationResultsLens';
 import { EmittedLintLens, type EmittedLintSourceReport } from './EmittedLintLens';
@@ -314,7 +315,7 @@ export function VerifyWorkbench({
           role="tablist"
           aria-label="Verification lenses"
           onKeyDown={handleTabKeyDown}
-          className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700"
+          className={TAB_LIST_CLASS}
         >
           {LENSES.map((lens) => {
             const selected = lens.key === activeLens;
@@ -332,11 +333,7 @@ export function VerifyWorkbench({
                 tabIndex={selected ? 0 : -1}
                 data-testid={`verify-tab-${lens.key}`}
                 onClick={() => setActiveLens(lens.key)}
-                className={`-mb-px flex items-center gap-2 border-b-2 px-3 py-2 text-sm font-medium ${
-                  selected
-                    ? 'border-indigo-500 text-indigo-700 dark:text-indigo-300'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                }`}
+                className={tabTriggerClass({ active: selected })}
               >
                 {lens.label}
                 <LensBadge lens={lens.key} result={result} />

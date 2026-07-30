@@ -34,6 +34,7 @@ import {
   removeUserLicense,
 } from '../../../../../lib/db/admin-helper';
 import { FeatureFlagUserOverridesPanel } from '../components/FeatureFlagUserOverridesPanel';
+import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
 
 interface User {
   id: string;
@@ -449,37 +450,29 @@ export default function UserManagementClient() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800">
+      <div className={TAB_LIST_CLASS} role="tablist" aria-label="User management views">
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'signups'}
           onClick={() => setActiveTab('signups')}
-          className={`px-4 py-2 font-medium text-sm transition-colors relative ${
-            activeTab === 'signups'
-              ? 'text-red-400'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-          }`}
+          className={tabTriggerClass({ active: activeTab === 'signups' })}
         >
           Pending Signups
           {signups.length > 0 && (
-            <span className="ml-2 px-2 py-0.5 text-xs bg-red-600 text-white rounded-full">
+            <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs text-white">
               {signups.length}
             </span>
           )}
-          {activeTab === 'signups' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />
-          )}
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'users'}
           onClick={() => setActiveTab('users')}
-          className={`px-4 py-2 font-medium text-sm transition-colors relative ${
-            activeTab === 'users'
-              ? 'text-red-400'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-          }`}
+          className={tabTriggerClass({ active: activeTab === 'users' })}
         >
           Active Users
-          {activeTab === 'users' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />
-          )}
         </button>
       </div>
 

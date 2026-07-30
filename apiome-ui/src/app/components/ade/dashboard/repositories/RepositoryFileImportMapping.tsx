@@ -41,6 +41,7 @@ import {
 } from '@/app/components/ui/Select';
 import { Skeleton } from '@/app/components/ui/Skeleton';
 import { cn } from '@lib/utils';
+import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
 import {
   getRepositoryFileImportableVerdict,
   parseRepositoryFileSpecMetadata,
@@ -1290,7 +1291,7 @@ export function RepositoryFileImportMapping({
                 </DialogDescription>
               </div>
               <div
-                className="flex shrink-0 items-center gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-700"
+                className={cn(TAB_LIST_CLASS, 'shrink-0 flex-nowrap')}
                 role="tablist"
                 aria-label="Create project view"
               >
@@ -1298,12 +1299,7 @@ export function RepositoryFileImportMapping({
                   type="button"
                   role="tab"
                   aria-selected={newProjectDialogView === 'form'}
-                  className={cn(
-                    'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                    newProjectDialogView === 'form'
-                      ? 'bg-white text-indigo-600 shadow-sm dark:bg-gray-600 dark:text-indigo-400'
-                      : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
-                  )}
+                  className={tabTriggerClass({ active: newProjectDialogView === 'form' })}
                   onClick={() => setNewProjectDialogView('form')}
                 >
                   Form
@@ -1312,12 +1308,7 @@ export function RepositoryFileImportMapping({
                   type="button"
                   role="tab"
                   aria-selected={newProjectDialogView === 'metadata'}
-                  className={cn(
-                    'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                    newProjectDialogView === 'metadata'
-                      ? 'bg-white text-indigo-600 shadow-sm dark:bg-gray-600 dark:text-indigo-400'
-                      : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
-                  )}
+                  className={tabTriggerClass({ active: newProjectDialogView === 'metadata' })}
                   onClick={() => setNewProjectDialogView('metadata')}
                 >
                   Metadata

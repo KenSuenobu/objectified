@@ -1420,18 +1420,12 @@ const Projects = () => {
             </DialogTitle>
           </DialogHeader>
           <Tabs value={createDialogTab} onValueChange={(v) => setCreateDialogTab(v as 'manual' | 'ai')} className="flex-1 flex flex-col min-h-0 mt-0">
-            <TabsList className="w-full h-auto p-0 rounded-none bg-transparent border-b border-gray-200 dark:border-gray-700 justify-start gap-0">
-              <TabsTrigger
-                value="manual"
-                className="flex items-center gap-2 rounded-none border-b-2 border-transparent bg-transparent px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 data-[state=active]:border-indigo-600 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none -mb-px"
-              >
+            <TabsList className="w-full">
+              <TabsTrigger value="manual">
                 <FileEdit className="h-4 w-4" />
                 Create manually
               </TabsTrigger>
-              <TabsTrigger
-                value="ai"
-                className="flex items-center gap-2 rounded-none border-b-2 border-transparent bg-transparent px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 data-[state=active]:border-indigo-600 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none -mb-px"
-              >
+              <TabsTrigger value="ai">
                 <Bot className="h-4 w-4" />
                 Design with AI
               </TabsTrigger>

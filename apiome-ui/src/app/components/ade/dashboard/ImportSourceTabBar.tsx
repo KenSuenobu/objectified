@@ -1,5 +1,8 @@
 'use client';
 
+import { cn } from '@lib/utils';
+import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
+
 export type ImportSourceTabId =
   | 'file'
   | 'url'
@@ -39,7 +42,7 @@ export function ImportSourceTabBar({ active, onSelect, className = '', disabledI
     <div
       role="tablist"
       aria-label="Import source"
-      className={`flex flex-wrap gap-1 border-b border-gray-200 dark:border-gray-700 ${className}`}
+      className={cn(TAB_LIST_CLASS, className)}
     >
       {TABS.map(({ id, label, disabled }) => {
         const isDisabled = Boolean(disabled) || Boolean(disabledIds?.includes(id));
@@ -55,15 +58,10 @@ export function ImportSourceTabBar({ active, onSelect, className = '', disabledI
             disabled={isDisabled}
             onClick={() => !isDisabled && onSelect(id)}
             title={isDisabled ? 'Coming soon' : undefined}
-            className={`px-3 py-2 text-sm font-medium transition-colors rounded-t-md border-b-2 -mb-px ${
-              isDisabled
-                ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50 border-transparent'
-                : isActive
-                  ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
-            }`}
+            className={tabTriggerClass({ active: isActive, disabled: isDisabled })}
           >
-            <span aria-hidden="true">{icon}</span>{' '}{label}
+            <span aria-hidden="true">{icon}</span>
+            {label}
           </button>
         );
       })}

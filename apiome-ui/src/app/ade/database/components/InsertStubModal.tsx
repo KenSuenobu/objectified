@@ -302,7 +302,7 @@ export default function InsertStubModal({
             {schema && !schemaLoading && (
               <>
                 <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'form' | 'json')} className="flex-1 flex flex-col min-h-[280px]">
-                  <TabsList className="w-full grid grid-cols-2 max-w-[240px]">
+                  <TabsList className="w-full">
                     <TabsTrigger value="form">Form</TabsTrigger>
                     <TabsTrigger value="json">JSON</TabsTrigger>
                   </TabsList>

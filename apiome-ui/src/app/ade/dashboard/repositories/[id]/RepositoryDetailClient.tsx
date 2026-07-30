@@ -34,6 +34,7 @@ import {
 } from '@/app/components/ui/Select';
 import { toast } from 'sonner';
 import { cn } from '@lib/utils';
+import { tabTriggerClass } from '@/app/components/ui/tabStyles';
 import {
   type DashboardRepository,
   type RepositoryStatus,
@@ -171,19 +172,16 @@ function TabBtn({
   return (
     <button
       type="button"
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
-      className={cn(
-        'border-b-2 py-3 text-sm font-medium transition-colors',
-        active
-          ? 'border-indigo-500 text-indigo-600 dark:border-indigo-500 dark:text-indigo-400'
-          : 'border-transparent text-gray-600 dark:text-gray-300'
-      )}
+      className={tabTriggerClass({ active })}
     >
       {children}
       {badge !== undefined ? (
         <span
           className={cn(
-            'ml-1 rounded-full px-1.5 py-0.5 text-[10px]',
+            'rounded-full px-1.5 py-0.5 text-[10px]',
             active
               ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
               : 'bg-gray-200 dark:bg-gray-700'
@@ -585,7 +583,13 @@ export function RepositoryDetailClient() {
               />
             </div>
 
-            <div className="-mx-6 flex gap-6 border-t border-gray-200 px-6 text-sm dark:border-gray-700">
+            {/* The header card's own bottom rule is this strip's tab underline, so the list carries
+                only the separator above it (cf. TAB_LIST_CLASS, which supplies its own rule). */}
+            <div
+              role="tablist"
+              aria-label="Repository sections"
+              className="-mx-6 flex flex-wrap items-center gap-1 border-t border-gray-200 px-6 dark:border-gray-700"
+            >
               <TabBtn active={tab === 'preview'} onClick={() => setTab('preview')}>
                 Preview
               </TabBtn>

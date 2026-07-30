@@ -5,6 +5,7 @@ import { Upload, FileCode, CheckCircle2, AlertTriangle, Loader2, FileJson, Exter
 import { Button } from '../../../components/ui/Button';
 import { convertPostmanJsonToOpenAPIString } from '../../../utils/postman-to-openapi';
 import { extractFileMetadata, FileMetadataPreview } from '../../../utils/openapi-analyzer';
+import { TAB_LIST_CLASS, tabTriggerClass } from '../../ui/tabStyles';
 
 interface PostmanImportPanelProps {
   onSpecificationFetched: (content: string, filename: string, metadata?: FileMetadataPreview) => void;
@@ -122,23 +123,23 @@ export const PostmanImportPanel: React.FC<PostmanImportPanelProps> = ({
   return (
     <div className="space-y-6">
       {/* Source Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
-        <button disabled className="px-4 py-2 text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50">
+      <div role="tablist" aria-label="Import source" className={TAB_LIST_CLASS}>
+        <button type="button" role="tab" aria-selected={false} disabled className={tabTriggerClass({ disabled: true })}>
           📁 File
         </button>
-        <button disabled className="px-4 py-2 text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50">
+        <button type="button" role="tab" aria-selected={false} disabled className={tabTriggerClass({ disabled: true })}>
           🔗 URL
         </button>
-        <button disabled className="px-4 py-2 text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50">
+        <button type="button" role="tab" aria-selected={false} disabled className={tabTriggerClass({ disabled: true })}>
           📋 Clipboard
         </button>
-        <button disabled className="px-4 py-2 text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50">
+        <button type="button" role="tab" aria-selected={false} disabled className={tabTriggerClass({ disabled: true })}>
           🐙 Git
         </button>
-        <button disabled className="px-4 py-2 text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50">
+        <button type="button" role="tab" aria-selected={false} disabled className={tabTriggerClass({ disabled: true })}>
           ☁️ SwaggerHub
         </button>
-        <button className="px-4 py-2 text-sm font-medium border-b-2 border-orange-600 text-orange-600 dark:text-orange-400">
+        <button type="button" role="tab" aria-selected className={tabTriggerClass({ active: true })}>
           📮 Postman
         </button>
       </div>

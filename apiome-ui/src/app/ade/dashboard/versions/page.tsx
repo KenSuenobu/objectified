@@ -63,6 +63,8 @@ import { LoadingState } from '../../../components/ui/LoadingState';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { Textarea } from '../../../components/ui/Textarea';
 import { Badge } from '../../../components/ui/Badge';
+import { TAB_LIST_CLASS, tabTriggerClass } from '../../../components/ui/tabStyles';
+import { cn } from '@lib/utils';
 import { VersionLintBadge } from '../../../components/ade/dashboard/VersionLintBadge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/Select';
 import { useDialog } from '../../../components/providers/DialogProvider';
@@ -3125,100 +3127,77 @@ const Versions = () => {
         <div className={dashboardContentStackClass}>
       {showChangeReportTab || showChangesTab || showConversionTab ? (
         <div
-          className={`${dashboardPanelClass} px-3 py-2 flex flex-wrap items-center gap-2`}
+          className={`${dashboardPanelClass} px-3 pt-2`}
           data-testid="versions-main-tab"
         >
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400 sr-only">Versions main view</span>
+          {/* The card's own bottom border is this strip's tab rule, so the list drops its own. */}
           <div
-            className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 p-0.5 bg-gray-50 dark:bg-gray-900/50"
+            role="tablist"
             aria-label="Versions main view"
+            className={cn(TAB_LIST_CLASS, 'border-b-0')}
           >
             <button
               type="button"
-              aria-pressed={effectiveMainTab === 'timeline'}
+              role="tab"
+              aria-selected={effectiveMainTab === 'timeline'}
               data-testid="versions-tab-timeline"
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                effectiveMainTab === 'timeline'
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
+              className={tabTriggerClass({ active: effectiveMainTab === 'timeline' })}
               onClick={() => setVersionsMainTab('timeline')}
             >
-              <span className="inline-flex items-center gap-1.5">
-                <ScrollText className="h-4 w-4 shrink-0" aria-hidden />
-                Timeline
-              </span>
+              <ScrollText className="h-4 w-4 shrink-0" aria-hidden />
+              Timeline
             </button>
             {showChangesTab ? (
               <button
                 type="button"
-                aria-pressed={effectiveMainTab === 'changes'}
+                role="tab"
+                aria-selected={effectiveMainTab === 'changes'}
                 data-testid="versions-tab-changes"
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  effectiveMainTab === 'changes'
-                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
+                className={tabTriggerClass({ active: effectiveMainTab === 'changes' })}
                 onClick={() => setVersionsMainTab('changes')}
               >
-                <span className="inline-flex items-center gap-1.5">
-                  <GitCompareArrows className="h-4 w-4 shrink-0" aria-hidden />
-                  Changes
-                </span>
+                <GitCompareArrows className="h-4 w-4 shrink-0" aria-hidden />
+                Changes
               </button>
             ) : null}
             {showChangeReportTab ? (
               <button
                 type="button"
-                aria-pressed={effectiveMainTab === 'change-report'}
+                role="tab"
+                aria-selected={effectiveMainTab === 'change-report'}
                 data-testid="versions-tab-change-report"
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  effectiveMainTab === 'change-report'
-                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
+                className={tabTriggerClass({ active: effectiveMainTab === 'change-report' })}
                 onClick={() => setVersionsMainTab('change-report')}
               >
-                <span className="inline-flex items-center gap-1.5">
-                  <FileText className="h-4 w-4 shrink-0" aria-hidden />
-                  Change report
-                </span>
+                <FileText className="h-4 w-4 shrink-0" aria-hidden />
+                Change report
               </button>
             ) : null}
             {showTestBenchTab ? (
               <button
                 type="button"
-                aria-pressed={effectiveMainTab === 'test-bench'}
+                role="tab"
+                aria-selected={effectiveMainTab === 'test-bench'}
                 data-testid="versions-tab-test-bench"
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  effectiveMainTab === 'test-bench'
-                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
+                className={tabTriggerClass({ active: effectiveMainTab === 'test-bench' })}
                 onClick={() => setVersionsMainTab('test-bench')}
               >
-                <span className="inline-flex items-center gap-1.5">
-                  <FlaskConical className="h-4 w-4 shrink-0" aria-hidden />
-                  Test Bench
-                </span>
+                <FlaskConical className="h-4 w-4 shrink-0" aria-hidden />
+                Test Bench
               </button>
             ) : null}
             {showConversionTab ? (
               <button
                 type="button"
-                aria-pressed={effectiveMainTab === 'conversion'}
+                role="tab"
+                aria-selected={effectiveMainTab === 'conversion'}
                 data-testid="versions-tab-conversion"
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  effectiveMainTab === 'conversion'
-                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
+                className={tabTriggerClass({ active: effectiveMainTab === 'conversion' })}
                 onClick={() => setVersionsMainTab('conversion')}
               >
-                <span className="inline-flex items-center gap-1.5">
-                  <History className="h-4 w-4 shrink-0" aria-hidden />
-                  Conversion
-                </span>
+                <History className="h-4 w-4 shrink-0" aria-hidden />
+                Conversion
               </button>
             ) : null}
           </div>
@@ -4909,14 +4888,13 @@ const Versions = () => {
                   );
                 })()}
                 {/* Tab Navigation */}
-                <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4">
+                <div role="tablist" aria-label="Comparison views" className={cn(TAB_LIST_CLASS, 'mb-4')}>
                   <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeCompareTab === 'diff'}
                     onClick={() => setActiveCompareTab('diff')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeCompareTab === 'diff'
-                        ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
+                    className={tabTriggerClass({ active: activeCompareTab === 'diff' })}
                   >
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4926,12 +4904,11 @@ const Versions = () => {
                     </div>
                   </button>
                   <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeCompareTab === 'summary'}
                     onClick={() => setActiveCompareTab('summary')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeCompareTab === 'summary'
-                        ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
+                    className={tabTriggerClass({ active: activeCompareTab === 'summary' })}
                   >
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4951,12 +4928,10 @@ const Versions = () => {
                   </button>
                   <button
                     type="button"
+                    role="tab"
+                    aria-selected={activeCompareTab === 'breaking'}
                     onClick={() => setActiveCompareTab('breaking')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeCompareTab === 'breaking'
-                        ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
+                    className={tabTriggerClass({ active: activeCompareTab === 'breaking' })}
                   >
                     <div className="flex items-center gap-2">
                       <ScrollText className="h-4 w-4" aria-hidden />
@@ -4965,12 +4940,10 @@ const Versions = () => {
                   </button>
                   <button
                     type="button"
+                    role="tab"
+                    aria-selected={activeCompareTab === 'migration'}
                     onClick={() => setActiveCompareTab('migration')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeCompareTab === 'migration'
-                        ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
+                    className={tabTriggerClass({ active: activeCompareTab === 'migration' })}
                   >
                     <div className="flex items-center gap-2">
                       <ListOrdered className="h-4 w-4" aria-hidden />
@@ -4979,12 +4952,10 @@ const Versions = () => {
                   </button>
                   <button
                     type="button"
+                    role="tab"
+                    aria-selected={activeCompareTab === 'canvas'}
                     onClick={() => setActiveCompareTab('canvas')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeCompareTab === 'canvas'
-                        ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
+                    className={tabTriggerClass({ active: activeCompareTab === 'canvas' })}
                   >
                     <div className="flex items-center gap-2">
                       <LayoutGrid className="h-4 w-4" aria-hidden />

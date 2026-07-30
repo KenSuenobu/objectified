@@ -1108,21 +1108,18 @@ function SourceMethodInput(props: SourceStepProps) {
     parseError,
   } = props;
 
-  const tabClass =
-    'flex items-center gap-2 rounded-none border-b-2 border-transparent bg-transparent px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 data-[state=active]:border-indigo-600 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none -mb-px';
-
   return (
     <Tabs value={sourceMethod} onValueChange={(v) => onSourceMethodChange(v as SourceMethod)}>
-      <TabsList className="w-full h-auto p-0 rounded-none bg-transparent border-b border-gray-200 dark:border-gray-700 justify-start gap-0 mb-4">
-        <TabsTrigger value="file" className={tabClass}>
+      <TabsList className="mb-4 w-full">
+        <TabsTrigger value="file">
           <Upload className="w-4 h-4" />
           File
         </TabsTrigger>
-        <TabsTrigger value="url" className={tabClass}>
+        <TabsTrigger value="url">
           <FileCode className="w-4 h-4" />
           URL
         </TabsTrigger>
-        <TabsTrigger value="paste" className={tabClass}>
+        <TabsTrigger value="paste">
           <FileText className="w-4 h-4" />
           Paste
         </TabsTrigger>

@@ -5,6 +5,7 @@ import { Cloud, Eye, EyeOff, CheckCircle2, AlertTriangle, Loader2, FileCode, Sea
 import { Button } from '../../../components/ui/Button';
 import { fetchFromSwaggerHub, validateSwaggerHubOptions, SwaggerHubImportOptions, SwaggerHubImportResult } from '../../../utils/swaggerhub-import';
 import { extractFileMetadata, FileMetadataPreview } from '../../../utils/openapi-analyzer';
+import { TAB_LIST_CLASS, tabTriggerClass } from '../../ui/tabStyles';
 
 interface SwaggerHubImportPanelProps {
   onSpecificationFetched: (content: string, filename: string, metadata?: FileMetadataPreview) => void;
@@ -116,39 +117,52 @@ export const SwaggerHubImportPanel: React.FC<SwaggerHubImportPanelProps> = ({
   return (
     <div className="space-y-6">
       {/* Source Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+      <div role="tablist" aria-label="Import source" className={TAB_LIST_CLASS}>
         <button
+          type="button"
+          role="tab"
+          aria-selected={false}
           disabled
-          className="px-4 py-2 text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+          className={tabTriggerClass({ disabled: true })}
         >
           📁 File
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={false}
           disabled
-          className="px-4 py-2 text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+          className={tabTriggerClass({ disabled: true })}
         >
           🔗 URL
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={false}
           disabled
-          className="px-4 py-2 text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+          className={tabTriggerClass({ disabled: true })}
         >
           📋 Clipboard
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={false}
           disabled
-          className="px-4 py-2 text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+          className={tabTriggerClass({ disabled: true })}
         >
           🐙 Git
         </button>
-        <button
-          className="px-4 py-2 text-sm font-medium border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400"
-        >
+        <button type="button" role="tab" aria-selected className={tabTriggerClass({ active: true })}>
           ☁️ SwaggerHub
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={false}
           disabled
-          className="px-4 py-2 text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+          className={tabTriggerClass({ disabled: true })}
           title="Coming soon"
         >
           📦 Registry

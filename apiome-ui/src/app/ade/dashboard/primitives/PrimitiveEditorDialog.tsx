@@ -9,6 +9,8 @@ import { Textarea } from '@/app/components/ui/Textarea';
 import { Alert } from '@/app/components/ui/Alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/app/components/ui/Dialog';
 import { Checkbox } from '@/app/components/ui/Checkbox';
+import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
+import { cn } from '@lib/utils';
 import dynamic from 'next/dynamic';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
@@ -664,27 +666,25 @@ export default function PrimitiveEditorDialog({ primitive, onClose, onSave, onMe
         </DialogHeader>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 shrink-0">
+        <div role="tablist" aria-label="Primitive editor views" className={cn(TAB_LIST_CLASS, 'shrink-0')}>
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'form'}
             onClick={() => setActiveTab('form')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'form'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
+            className={tabTriggerClass({ active: activeTab === 'form' })}
           >
-            <Settings className="w-4 h-4 inline mr-2" />
+            <Settings className="w-4 h-4" />
             Form
           </button>
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'advanced'}
             onClick={() => setActiveTab('advanced')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'advanced'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
+            className={tabTriggerClass({ active: activeTab === 'advanced' })}
           >
-            <Code className="w-4 h-4 inline mr-2" />
+            <Code className="w-4 h-4" />
             Advanced JSON
           </button>
         </div>

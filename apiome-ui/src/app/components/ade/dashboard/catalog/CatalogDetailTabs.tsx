@@ -18,6 +18,7 @@
 
 import { useRef, type KeyboardEvent } from 'react';
 import { cn } from '@lib/utils';
+import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
 
 /** A single tab: its stable `id` (also used to derive element ids) and visible `label`. */
 export interface DetailTab {
@@ -104,7 +105,7 @@ export function CatalogDetailTabs({
       role="tablist"
       aria-label={ariaLabel}
       data-testid="catalog-detail-tabs"
-      className={cn('flex flex-wrap gap-1 border-b border-gray-200 dark:border-gray-700', className)}
+      className={cn(TAB_LIST_CLASS, className)}
     >
       {tabs.map((tab, index) => {
         const isActive = tab.id === active;
@@ -123,12 +124,7 @@ export function CatalogDetailTabs({
             data-testid={`catalog-detail-tab-${tab.id}`}
             onClick={() => onSelect(tab.id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
-            className={cn(
-              'rounded-t-md border-b-2 -mb-px px-3 py-2 text-sm font-medium transition-colors',
-              isActive
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-200',
-            )}
+            className={tabTriggerClass({ active: isActive })}
           >
             {tab.label}
           </button>

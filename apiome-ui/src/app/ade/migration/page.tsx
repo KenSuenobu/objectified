@@ -20,26 +20,17 @@ export default function MigrationPage() {
   if (showCanvas) {
     return (
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'designer' | 'explorer' | 'scheduler')} className="h-full flex flex-col min-h-0">
-        <TabsList className="w-full justify-start rounded-none border-b border-gray-200 dark:border-gray-700 bg-transparent p-0 h-11 gap-0 shrink-0">
-          <TabsTrigger
-            value="designer"
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5"
-          >
-            <Palette className="h-4 w-4 mr-2" />
+        <TabsList className="w-full shrink-0 flex-nowrap">
+          <TabsTrigger value="designer">
+            <Palette className="h-4 w-4" />
             Designer
           </TabsTrigger>
-          <TabsTrigger
-            value="explorer"
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5"
-          >
-            <ClipboardList className="h-4 w-4 mr-2" />
+          <TabsTrigger value="explorer">
+            <ClipboardList className="h-4 w-4" />
             Explorer
           </TabsTrigger>
-          <TabsTrigger
-            value="scheduler"
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5"
-          >
-            <CalendarClock className="h-4 w-4 mr-2" />
+          <TabsTrigger value="scheduler">
+            <CalendarClock className="h-4 w-4" />
             Scheduler
           </TabsTrigger>
         </TabsList>

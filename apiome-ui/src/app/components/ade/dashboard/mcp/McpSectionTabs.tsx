@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 import { BarChart3, GitCompareArrows, Layers, Server } from 'lucide-react';
 import { useAuthSession } from '@lib/auth/session-client';
 import { cn } from '@lib/utils';
+import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
 import { mcpBrowseGroupsFromPayload } from './mcpBrowseUi';
 
 interface McpSectionTab {
@@ -102,7 +103,7 @@ export function McpSectionTabs({
   return (
     <nav
       aria-label="MCP Servers sections"
-      className={cn('flex flex-wrap gap-1 border-b border-gray-200 dark:border-gray-700', className)}
+      className={cn(TAB_LIST_CLASS, className)}
     >
       {MCP_SECTION_TABS.map((tab) => {
         const Icon = tab.icon;
@@ -112,12 +113,7 @@ export function McpSectionTabs({
             key={tab.href}
             href={tab.href}
             aria-current={active ? 'page' : undefined}
-            className={cn(
-              'flex items-center gap-1.5 rounded-t-md border-b-2 -mb-px px-3.5 py-2.5 text-sm font-medium transition-colors',
-              active
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-200',
-            )}
+            className={tabTriggerClass({ active })}
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden />
             {tab.label}
