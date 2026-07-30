@@ -35,6 +35,9 @@ ALTER TABLE apiome.primitives
   DROP CONSTRAINT IF EXISTS primitives_name_category_unique;
 
 ALTER TABLE apiome.primitives
+  DROP CONSTRAINT IF EXISTS primitives_tenant_namespace_name_unique;
+
+ALTER TABLE apiome.primitives
   ADD CONSTRAINT primitives_tenant_namespace_name_unique
   UNIQUE NULLS NOT DISTINCT (tenant_id, namespace, name);
 
