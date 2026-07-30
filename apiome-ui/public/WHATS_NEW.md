@@ -18,6 +18,7 @@ We continue to improve the platform based on your feedback with improvements and
   - Clarifies language when importing and creating $ref for a system type based on "format" in a property
   - Documentation-only schemas that contain no type still get imported, but are treated as warnings
   - Review section of import for primitives now classifies unresolved $ref as a warning, so now shows warning counts
+  - Changed "Test this type" to be expand/collapse with a chevron for testing
 
 ## Bug Fixes
 

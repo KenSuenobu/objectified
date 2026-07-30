@@ -27,9 +27,22 @@ const MONEY_SCHEMA = {
 const verdict = () => screen.getByTestId('primitive-test-verdict');
 const input = (pointer: string) => screen.getByTestId(`primitive-test-input-${pointer}`);
 
+/**
+ * Render the card and open it.
+ *
+ * The card ships collapsed — the form is tall enough to bury the rest of the detail page — and its
+ * body is not mounted until the first open, so every test about the form itself starts by expanding
+ * it. The collapse behaviour has its own describe block below.
+ */
+function renderOpen(ui: React.ReactElement) {
+  const result = render(ui);
+  fireEvent.click(screen.getByTestId('primitive-test-toggle'));
+  return result;
+}
+
 describe('PrimitiveTestForm — object schemas', () => {
   it('renders the full object: one row per property, with type and required hints', () => {
-    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+    renderOpen(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
 
     // Every declared property gets its own input, not a single JSON blob.
     expect(input('/amount')).toBeInTheDocument();
@@ -41,14 +54,14 @@ describe('PrimitiveTestForm — object schemas', () => {
   });
 
   it('has no check/validate button — validation is not something you press', () => {
-    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+    renderOpen(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
 
     const card = screen.getByTestId('primitive-test-form');
     expect(within(card).queryByRole('button', { name: /check|validate|run|submit/i })).not.toBeInTheDocument();
   });
 
   it('revalidates on every keystroke, with no interaction other than typing', () => {
-    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+    renderOpen(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
 
     // The seeded example does not satisfy the pattern, so the card opens invalid.
     expect(verdict()).toHaveAttribute('data-status', 'invalid');
@@ -65,7 +78,7 @@ describe('PrimitiveTestForm — object schemas', () => {
   });
 
   it('anchors each violation to its own field', () => {
-    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+    renderOpen(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
 
     fireEvent.change(input('/amount'), { target: { value: '10.00' } });
     fireEvent.change(input('/currency'), { target: { value: 'US' } });
@@ -77,7 +90,7 @@ describe('PrimitiveTestForm — object schemas', () => {
   });
 
   it('lets a required property be excluded so the `required` error can be seen live', () => {
-    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+    renderOpen(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
 
     fireEvent.change(input('/amount'), { target: { value: '10.00' } });
     fireEvent.change(input('/currency'), { target: { value: 'USD' } });
@@ -90,7 +103,7 @@ describe('PrimitiveTestForm — object schemas', () => {
   });
 
   it('toggles an optional property in and out of the instance', () => {
-    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+    renderOpen(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
 
     // The generated example covers every property, so `note` opens included and editable.
     expect(input('/note')).toBeInTheDocument();
@@ -105,7 +118,7 @@ describe('PrimitiveTestForm — object schemas', () => {
 
   it('leaves a property the example could not populate switched off', () => {
     // `note` is optional and only a `$ref`, so no example value exists for it.
-    render(
+    renderOpen(
       <PrimitiveTestForm
         schema={{
           type: 'object',
@@ -123,7 +136,7 @@ describe('PrimitiveTestForm — object schemas', () => {
 
 describe('PrimitiveTestForm — live regular expressions', () => {
   it('applies the pattern as the reader types, with no check step', () => {
-    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+    renderOpen(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
 
     const indicator = () => screen.getByTestId('primitive-test-pattern-/amount');
 
@@ -141,7 +154,7 @@ describe('PrimitiveTestForm — live regular expressions', () => {
   });
 
   it('reports a pattern the browser cannot compile instead of failing silently', () => {
-    render(<PrimitiveTestForm schema={{ type: 'string', pattern: '(unclosed' }} name="broken" />);
+    renderOpen(<PrimitiveTestForm schema={{ type: 'string', pattern: '(unclosed' }} name="broken" />);
 
     const indicator = screen.getByTestId('primitive-test-pattern-');
     expect(indicator).toHaveAttribute('data-matches', 'invalid-pattern');
@@ -152,7 +165,7 @@ describe('PrimitiveTestForm — formats', () => {
   const TIMESTAMP_SCHEMA = { type: 'string', format: 'date-time' };
 
   it('opens blank when the format is all the schema says, with the format as guidance not as the value', () => {
-    render(<PrimitiveTestForm schema={TIMESTAMP_SCHEMA} name="timestamp" />);
+    renderOpen(<PrimitiveTestForm schema={TIMESTAMP_SCHEMA} name="timestamp" />);
 
     // Never the literal `date-time` in the box — that text fails the format it names.
     expect(input('')).toHaveValue('');
@@ -162,7 +175,7 @@ describe('PrimitiveTestForm — formats', () => {
   });
 
   it('turns valid the moment a conforming value is typed', () => {
-    render(<PrimitiveTestForm schema={TIMESTAMP_SCHEMA} name="timestamp" />);
+    renderOpen(<PrimitiveTestForm schema={TIMESTAMP_SCHEMA} name="timestamp" />);
 
     fireEvent.change(input(''), { target: { value: '2024-01-15T09:30:00Z' } });
     expect(verdict()).toHaveAttribute('data-status', 'valid');
@@ -172,7 +185,7 @@ describe('PrimitiveTestForm — formats', () => {
   });
 
   it('still seeds a formatted field from a value the schema declares for itself', () => {
-    render(
+    renderOpen(
       <PrimitiveTestForm
         schema={{ ...TIMESTAMP_SCHEMA, examples: ['2024-01-15T09:30:00Z'] }}
         name="timestamp"
@@ -184,7 +197,7 @@ describe('PrimitiveTestForm — formats', () => {
   });
 
   it('leaves an optional formatted property switched off instead of opening the card invalid', () => {
-    render(
+    renderOpen(
       <PrimitiveTestForm
         schema={{
           type: 'object',
@@ -209,7 +222,7 @@ describe('PrimitiveTestForm — single items and arrays', () => {
   const DECIMAL_SCHEMA = { type: 'string', pattern: '^[0-9]+$' };
 
   it('renders a scalar type as one input', () => {
-    render(<PrimitiveTestForm schema={DECIMAL_SCHEMA} name="decimal" />);
+    renderOpen(<PrimitiveTestForm schema={DECIMAL_SCHEMA} name="decimal" />);
 
     expect(input('')).toBeInTheDocument();
     fireEvent.change(input(''), { target: { value: '42' } });
@@ -217,7 +230,7 @@ describe('PrimitiveTestForm — single items and arrays', () => {
   });
 
   it('tests the same type as an array, validating each element in place', () => {
-    render(<PrimitiveTestForm schema={DECIMAL_SCHEMA} name="decimal" />);
+    renderOpen(<PrimitiveTestForm schema={DECIMAL_SCHEMA} name="decimal" />);
 
     fireEvent.click(screen.getByTestId('primitive-test-mode-array'));
 
@@ -237,7 +250,7 @@ describe('PrimitiveTestForm — single items and arrays', () => {
   });
 
   it('tests an object type as an array of objects', () => {
-    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+    renderOpen(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
 
     fireEvent.click(screen.getByTestId('primitive-test-mode-array'));
 
@@ -247,7 +260,7 @@ describe('PrimitiveTestForm — single items and arrays', () => {
   });
 
   it('renders a natively-array schema as a repeatable list', () => {
-    render(<PrimitiveTestForm schema={{ type: 'array', items: { type: 'integer' } }} name="counts" />);
+    renderOpen(<PrimitiveTestForm schema={{ type: 'array', items: { type: 'integer' } }} name="counts" />);
 
     fireEvent.change(input('/0'), { target: { value: '1' } });
     fireEvent.click(screen.getByTestId('primitive-test-array-add-'));
@@ -259,7 +272,7 @@ describe('PrimitiveTestForm — single items and arrays', () => {
 
 describe('PrimitiveTestForm — degraded inputs', () => {
   it('reports a value that is not readable as the field type, before Ajv is involved', () => {
-    render(<PrimitiveTestForm schema={{ type: 'object', properties: { n: { type: 'number' } }, required: ['n'] }} name="n" />);
+    renderOpen(<PrimitiveTestForm schema={{ type: 'object', properties: { n: { type: 'number' } }, required: ['n'] }} name="n" />);
 
     fireEvent.change(input('/n'), { target: { value: 'abc' } });
 
@@ -268,7 +281,7 @@ describe('PrimitiveTestForm — degraded inputs', () => {
   });
 
   it('states which references it could not resolve rather than failing closed', () => {
-    render(
+    renderOpen(
       <PrimitiveTestForm
         schema={{ type: 'object', properties: { amount: { $ref: './decimal' } }, required: ['amount'] }}
         name="money"
@@ -279,10 +292,76 @@ describe('PrimitiveTestForm — degraded inputs', () => {
   });
 
   it('keeps the form usable when the schema itself will not compile', () => {
-    render(<PrimitiveTestForm schema={{ type: 'string', pattern: '(' }} name="broken" />);
+    renderOpen(<PrimitiveTestForm schema={{ type: 'string', pattern: '(' }} name="broken" />);
 
     expect(verdict()).toHaveAttribute('data-status', 'unavailable');
     expect(verdict()).toHaveTextContent(/could not be compiled/i);
     expect(input('')).toBeInTheDocument();
+  });
+});
+
+describe('PrimitiveTestForm — collapse', () => {
+  it('starts collapsed, showing only the heading and what the card is for', () => {
+    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+
+    expect(screen.getByTestId('primitive-test-form')).toBeInTheDocument();
+    expect(screen.getByText('Test this type')).toBeInTheDocument();
+    expect(screen.getByText(/validated as you type/i)).toBeInTheDocument();
+    expect(screen.getByTestId('primitive-test-toggle')).toHaveAttribute('aria-expanded', 'false');
+
+    // Nothing of the form is built yet — not the fields, not the verdict, not the controls.
+    expect(screen.queryByTestId('primitive-test-verdict')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('primitive-test-input-/amount')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('primitive-test-reset')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('primitive-test-mode-single')).not.toBeInTheDocument();
+  });
+
+  it('builds and shows the form on the first open', () => {
+    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+
+    fireEvent.click(screen.getByTestId('primitive-test-toggle'));
+
+    expect(screen.getByTestId('primitive-test-toggle')).toHaveAttribute('aria-expanded', 'true');
+    expect(input('/amount')).toBeVisible();
+    expect(verdict()).toBeVisible();
+    expect(screen.getByTestId('primitive-test-reset')).toBeVisible();
+  });
+
+  it('hides the form again on collapse', () => {
+    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+    const toggle = screen.getByTestId('primitive-test-toggle');
+
+    fireEvent.click(toggle);
+    fireEvent.click(toggle);
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(input('/amount')).not.toBeVisible();
+  });
+
+  it('keeps what was typed across a collapse and re-open', () => {
+    // The body stays mounted after the first open, so collapsing is not a reset.
+    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+    const toggle = screen.getByTestId('primitive-test-toggle');
+
+    fireEvent.click(toggle);
+    fireEvent.change(input('/amount'), { target: { value: '10.00' } });
+    fireEvent.change(input('/currency'), { target: { value: 'USD' } });
+    expect(verdict()).toHaveAttribute('data-status', 'valid');
+
+    fireEvent.click(toggle);
+    fireEvent.click(toggle);
+
+    expect(input('/amount')).toHaveValue('10.00');
+    expect(verdict()).toHaveAttribute('data-status', 'valid');
+  });
+
+  it('points the toggle at the region it controls', () => {
+    render(<PrimitiveTestForm schema={MONEY_SCHEMA} name="money" />);
+    const toggle = screen.getByTestId('primitive-test-toggle');
+    fireEvent.click(toggle);
+
+    const controlled = toggle.getAttribute('aria-controls');
+    expect(controlled).toBeTruthy();
+    expect(document.getElementById(controlled as string)).toContainElement(input('/amount'));
   });
 });

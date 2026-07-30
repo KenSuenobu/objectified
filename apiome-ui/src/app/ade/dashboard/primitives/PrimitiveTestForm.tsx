@@ -17,10 +17,26 @@
  *
  * String fields carrying a `pattern` show the regex and a live match indicator next to the input —
  * the specific case where a click-to-check button would be pure friction.
+ *
+ * The card is **collapsed until asked for**: an object schema with many properties (or array mode,
+ * which repeats the whole form per element) produces a form tall enough to bury the rest of the
+ * detail page. The body is also not mounted until first opened, so a reader who never tests pays
+ * for neither the Ajv compile nor the example generation; once opened it stays mounted, so
+ * collapsing does not discard what was typed into it.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Check, FlaskConical, Plus, RotateCcw, Trash2, X } from 'lucide-react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import {
+  AlertCircle,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  FlaskConical,
+  Plus,
+  RotateCcw,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { dashboardPanelClass } from '@/app/components/ade/dashboard/dashboardScreenClasses';
 import { Input } from '@/app/components/ui/Input';
 import { buildExampleInstance } from './primitiveDetailModel';
@@ -59,6 +75,52 @@ const hintClass = 'text-[11px] text-gray-500 dark:text-gray-400';
 const monoHintClass = 'font-mono text-[11px] text-gray-500 dark:text-gray-400';
 
 export function PrimitiveTestForm({ schema, name }: PrimitiveTestFormProps) {
+  const [open, setOpen] = useState(false);
+  // Sticky: the body mounts on first open and stays mounted, so a collapse keeps whatever the
+  // reader typed. Until then nothing below is built at all.
+  const [mounted, setMounted] = useState(false);
+  const bodyId = useId();
+  const Chevron = open ? ChevronDown : ChevronRight;
+
+  return (
+    <section className={`${dashboardPanelClass} p-5`} data-testid="primitive-test-form">
+      {/* The button lives *inside* the heading (the WAI-ARIA accordion shape) rather than wrapping
+          it: a `button` may only contain phrasing content, so a heading nested in one is invalid. */}
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+        <button
+          type="button"
+          data-testid="primitive-test-toggle"
+          aria-expanded={open}
+          aria-controls={bodyId}
+          onClick={() => {
+            setOpen((previous) => !previous);
+            setMounted(true);
+          }}
+          className="-m-1 flex items-center gap-2 rounded-md p-1 text-left transition-colors hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:hover:text-indigo-400"
+        >
+          <Chevron className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
+          <FlaskConical className="h-4 w-4 shrink-0 text-indigo-500" aria-hidden />
+          Test this type
+        </button>
+      </h3>
+      <p className={`mt-1 ${hintClass}`}>Validated as you type — no need to press anything.</p>
+
+      {mounted ? (
+        <div id={bodyId} hidden={!open}>
+          <PrimitiveTestFormBody schema={schema} name={name} />
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+/**
+ * The form itself: mode, seeded state, live validation, findings.
+ *
+ * Split from the card shell so none of it — the Ajv compile, the example generation, the field
+ * projection — runs until the reader actually opens the card.
+ */
+function PrimitiveTestFormBody({ schema, name }: PrimitiveTestFormProps) {
   const [mode, setMode] = useState<TestMode>('single');
   const [state, setState] = useState<TestFormState>(EMPTY_STATE);
 
@@ -120,27 +182,21 @@ export function PrimitiveTestForm({ schema, name }: PrimitiveTestFormProps) {
   };
 
   return (
-    <section className={`${dashboardPanelClass} p-5`} data-testid="primitive-test-form">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-            <FlaskConical className="h-4 w-4 text-indigo-500" /> Test this type
-          </h3>
-          <p className={`mt-1 ${hintClass}`}>Validated as you type — no need to press anything.</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <ModeToggle mode={mode} onChange={setMode} />
-          <button
-            type="button"
-            data-testid="primitive-test-reset"
-            onClick={() => setState(seedState(formField, mode))}
-            title="Reset the form to the generated example"
-            className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white/95 px-2 py-1 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900/95 dark:text-gray-200 dark:hover:bg-gray-800"
-          >
-            <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-            Reset
-          </button>
-        </div>
+    <div className="mt-4">
+      {/* Mode and Reset act on the form, so they live with it rather than on the card header —
+          which keeps them out of sight (and out of reach) while the card is collapsed. */}
+      <div className="mb-3 flex flex-wrap items-center justify-end gap-1.5">
+        <ModeToggle mode={mode} onChange={setMode} />
+        <button
+          type="button"
+          data-testid="primitive-test-reset"
+          onClick={() => setState(seedState(formField, mode))}
+          title="Reset the form to the generated example"
+          className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white/95 px-2 py-1 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900/95 dark:text-gray-200 dark:hover:bg-gray-800"
+        >
+          <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+          Reset
+        </button>
       </div>
 
       <VerdictBar result={result} hasCoercionError={hasCoercionError} unresolvedRefs={validator.unresolvedRefs} />
@@ -167,7 +223,7 @@ export function PrimitiveTestForm({ schema, name }: PrimitiveTestFormProps) {
           </ul>
         </div>
       ) : null}
-    </section>
+    </div>
   );
 }
 
