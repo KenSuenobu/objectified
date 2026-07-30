@@ -66,11 +66,32 @@ def detected_kind_from_path(path: str) -> Optional[str]:
     return None
 
 
-def _importable_hint(kind: Optional[str]) -> bool:
+def json_schema_shaped_path(path: str) -> bool:
+    """Whether a ``.json`` path carries a JSON-Schema-shaped *name*.
+
+    ``detected_kind_from_path`` collapses every ``.json`` file to ``json-candidate``,
+    so the kind alone cannot tell a schema from a ``package.json``. This is the
+    filename-only tiebreak used to decide importability: the same two shapes the
+    ``json_schema`` browser preset advertises — a ``*.schema.json`` basename, or a
+    ``.json`` under a ``schemas/`` directory (at any depth, including the root).
+
+    Kept in lockstep with the SQL mirror in
+    ``Database.tenant_repository_files_stats_and_page`` (``importable_sql``) so the
+    stored per-file counts and the live browser filter agree.
+    """
+    lower = (path or "").strip().lower().replace("\\", "/")
+    if not lower.endswith(".json"):
+        return False
+    if lower.rsplit("/", 1)[-1].endswith(".schema.json"):
+        return True
+    return "/schemas/" in lower or lower.startswith("schemas/")
+
+
+def _importable_hint(kind: Optional[str], path: str = "") -> bool:
     if not kind:
         return False
     k = kind.lower()
-    return any(
+    if any(
         k.startswith(p)
         for p in (
             "openapi",
@@ -84,7 +105,12 @@ def _importable_hint(kind: Optional[str]) -> bool:
             "avro",
             "dbml",
         )
-    )
+    ):
+        return True
+    # JSON Schema is a first-class import source (``json-schema`` in
+    # ``import_pipeline._DETECTORS``), but it shares the generic ``json-candidate``
+    # kind with config/lockfiles — so admit it on the filename shape only.
+    return k.startswith("json") and json_schema_shaped_path(path)
 
 
 def _github_owner_repo(repo_row: Dict[str, Any]) -> Tuple[str, str]:
@@ -299,7 +325,9 @@ def scan_repository_branch_into_index(
         raise ValueError("private repository requires a linked account token")
 
     blobs = fetch_github_tree_blobs(owner, repo, branch, token)
-    importable = sum(1 for b in blobs if _importable_hint(b.get("detected_kind")))
+    importable = sum(
+        1 for b in blobs if _importable_hint(b.get("detected_kind"), str(b.get("path") or ""))
+    )
 
     db.replace_tenant_repository_files(repository_id, branch, blobs)
     db.update_tenant_repository_after_file_scan(

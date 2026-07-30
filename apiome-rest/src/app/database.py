@@ -14034,13 +14034,23 @@ class Database:
         if not self.get_tenant_repository(tenant_id, repository_id):
             return None
 
+        # Mirror of ``repository_file_scan._importable_hint`` — keep the two in lockstep.
+        # The ``json%%`` arm resolves JSON Schema by *filename shape* rather than by kind:
+        # the scanner labels every ``.json`` blob ``json-candidate``, so admitting the kind
+        # wholesale would count ``package.json`` and friends. Deriving it from the stored
+        # ``f.path`` also means already-indexed repositories gain their importable rows
+        # without a re-scan.
         importable_sql = """(
           f.detected_kind IS NOT NULL AND (
             f.detected_kind ILIKE 'openapi%%' OR f.detected_kind ILIKE 'arazzo%%' OR
             f.detected_kind ILIKE 'asyncapi%%' OR f.detected_kind ILIKE 'graphql%%' OR
             f.detected_kind ILIKE 'protobuf%%' OR f.detected_kind ILIKE 'postman%%' OR
             f.detected_kind ILIKE 'prisma%%' OR f.detected_kind ILIKE 'sql-ddl%%' OR
-            f.detected_kind ILIKE 'avro%%' OR f.detected_kind ILIKE 'dbml%%'
+            f.detected_kind ILIKE 'avro%%' OR f.detected_kind ILIKE 'dbml%%' OR
+            (f.detected_kind ILIKE 'json%%' AND (
+              f.path ILIKE '%%.schema.json' OR
+              f.path ILIKE '%%/schemas/%%.json' OR f.path ILIKE 'schemas/%%.json'
+            ))
           )
         )"""
 
