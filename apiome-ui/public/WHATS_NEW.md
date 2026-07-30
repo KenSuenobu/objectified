@@ -22,6 +22,7 @@ We continue to improve the platform based on your feedback with improvements and
 - Primitives: Duplicate names are no longer treated as duplicates unless the namespace is identical
 - Primitives: Removed invalid previously created primitives
 - Primitives: Corrected resolution for $ref values in native system types
+- Primitives: Updated import so that names with dashes are imported properly
 
 ---
 
