@@ -24,6 +24,15 @@ The URL resolution itself (``./``, ``../``, cross-scope ``../../std/...``, fragm
 external-ref handling) is delegated to :func:`app.primitives_scope.resolve_registry_uri`,
 the single resolver shared with scope classification. Fragment (``#/...``) and external
 (non-registry) refs are intentionally *not* recorded as registry edges.
+
+**Resolution is local-only.** Every ``resolved_target`` this module emits is an absolute URI
+under :data:`app.schema_validation.REGISTRY_BASE_URL` — a reference into *this* registry's
+namespace tree. A ``$ref`` that resolves anywhere else (a vendor URL, a foreign schema host)
+is not a registry reference and never becomes an edge, whatever ``$id`` the source document
+declared for itself. Whether a target *exists* is equally a local question: the injected
+``target_exists`` predicate is expected to dereference the local URI by **placement**
+(namespace + leaf, see :mod:`app.primitives_lookup`), so a type imported with a foreign
+author-declared ``$id`` is still found at the local address its namespace and name give it.
 """
 
 from __future__ import annotations
@@ -49,17 +58,19 @@ def build_ref_edges(
     """Resolve a schema's relative ``$ref`` values into persisted registry edges (#3456).
 
     Walks every ``$ref`` in ``schema``, resolves each relative reference against
-    ``base_uri`` to an absolute registry URI, and records an edge with its resolution
-    status. Same-document fragment refs and external (non-registry) refs are skipped —
-    only cross-type registry references become edges. Duplicate ``$ref`` values are
-    recorded once, in first-seen document order.
+    ``base_uri`` to an absolute **local** registry URI, and records an edge with its
+    resolution status. Same-document fragment refs and external (non-registry) refs are
+    skipped — only references into this registry's namespace tree become edges. Duplicate
+    ``$ref`` values are recorded once, in first-seen document order.
 
     Args:
         schema: The (identity-stamped) JSON Schema document of the source primitive.
-        base_uri: The source primitive's base URI; relative refs resolve against it.
-        target_exists: Predicate mapping an absolute registry URI to whether a
-            primitive with that ``$id`` exists within the source's read scope. The
-            route backs this with a tenant-scoped lookup so scope (#3453) is honored.
+        base_uri: The source primitive's namespace base URI; relative refs resolve
+            against it.
+        target_exists: Predicate mapping an absolute local registry URI to whether a
+            visible type sits at that placement. The routes back this with the
+            tenant-scoped placement lookup (:mod:`app.primitives_lookup`) so scope
+            (#3453) is honored and resolution never leaves the registry.
 
     Returns:
         The list of ``{"relative_ref", "resolved_target", "status"}`` edges, suitable

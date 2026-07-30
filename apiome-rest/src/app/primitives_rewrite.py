@@ -23,6 +23,11 @@ committed under, it produces the schema actually persisted, with two rewrites ap
   "format": "email"}`` shape). This is the "map external known refs → core types where
   recognized" half of the ticket.
 
+Everything this module writes into a schema is **local**: rewritten refs are relative
+registry refs that resolve within this registry's namespace tree. No rewrite ever produces
+an absolute foreign URI — the registry is the whole type system, and its references stay
+inside it.
+
 Both rewrites turn import-local structure into ordinary registry-relative ``$ref`` values, so
 the **existing** resolver (#3456, :func:`app.primitives_resolver.build_ref_edges`) — run by the
 commit path right after this — resolves them against the base URI into persisted

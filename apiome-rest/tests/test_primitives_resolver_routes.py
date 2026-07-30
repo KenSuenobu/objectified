@@ -93,6 +93,8 @@ def test_create_persists_resolved_ref_edge():
 def test_create_persists_unresolved_ref_edge_when_target_missing():
     with patch("app.primitives_routes.db") as mdb:
         mdb.get_primitive_by_schema_id.return_value = None  # target not present
+        mdb.get_primitive_by_namespace_name.return_value = None
+        mdb.get_primitive_by_namespace_name.return_value = None
         mdb.create_primitive.return_value = _row()
         r = client.post(
             "/v1/primitives/std",
@@ -167,6 +169,7 @@ def test_import_persists_refs_per_definition():
     with patch("app.primitives_routes.db") as mdb:
         mdb.create_primitive.side_effect = _create
         mdb.get_primitive_by_schema_id.return_value = None  # unresolved
+        mdb.get_primitive_by_namespace_name.return_value = None
         mdb.create_primitive_import.return_value = {"id": "imp1"}
         r = client.post(
             "/v1/primitives/std/import",

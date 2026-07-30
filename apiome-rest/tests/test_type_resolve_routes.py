@@ -129,6 +129,7 @@ def test_reresolve_marks_dangling_when_target_missing():
     with patch("app.type_namespaces_routes.db") as mdb:
         mdb.get_primitives_for_tenant.return_value = [prim]
         mdb.get_primitive_by_schema_id.return_value = None  # target no longer exists
+        mdb.get_primitive_by_namespace_name.return_value = None
         r = client.post("/v1/types/acme/resolve")
 
     body = r.json()
@@ -190,6 +191,7 @@ def test_mixed_edges_aggregate_counts():
     with patch("app.type_namespaces_routes.db") as mdb:
         mdb.get_primitives_for_tenant.return_value = [prim]
         mdb.get_primitive_by_schema_id.side_effect = _by_schema_id
+        mdb.get_primitive_by_namespace_name.return_value = None
         r = client.post("/v1/types/acme/resolve")
 
     body = r.json()

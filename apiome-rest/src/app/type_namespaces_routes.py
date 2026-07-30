@@ -33,6 +33,7 @@ from .models import (
     TypeRegistrySettingsSchema,
     TypeRegistrySettingsUpdateRequest,
 )
+from .primitives_lookup import find_primitive_by_registry_uri
 from .type_resolver import STATUS_RESOLVED, STATUS_UNRESOLVED, reresolve_edges
 
 router = APIRouter(prefix="/v1/types", tags=["type-registry"])
@@ -466,8 +467,11 @@ async def resolve_refs(
     target_cache: Dict[str, Optional[Dict[str, Any]]] = {}
 
     def _target_lookup(schema_id: str) -> Optional[Dict[str, Any]]:
+        # Placement-aware (local-only): a stored edge's target is a local registry URI, and
+        # the type answering to it may carry a foreign author-declared ``$id`` — it is still
+        # found at its namespace + name.
         if schema_id not in target_cache:
-            target_cache[schema_id] = db.get_primitive_by_schema_id(schema_id, tenant_id)
+            target_cache[schema_id] = find_primitive_by_registry_uri(db, schema_id, tenant_id)
         return target_cache[schema_id]
 
     listing: List[ResolvedPrimitiveRefs] = []

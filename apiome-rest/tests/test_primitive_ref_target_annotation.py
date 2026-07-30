@@ -75,6 +75,7 @@ class TestAnnotateRefTargets:
     def test_attaches_target_identity_to_a_resolved_edge(self):
         with patch("app.primitives_routes.db") as mdb:
             mdb.get_primitive_by_schema_id.side_effect = _target_row
+            mdb.get_primitive_by_namespace_name.return_value = None
             edges = annotate_ref_targets(_MONEY_ROW["refs"], tenant_id=_TENANT_ID)
 
         assert edges[0]["target_id"] == _DECIMAL_ID
@@ -83,6 +84,7 @@ class TestAnnotateRefTargets:
     def test_leaves_an_unresolvable_edge_without_a_target(self):
         with patch("app.primitives_routes.db") as mdb:
             mdb.get_primitive_by_schema_id.side_effect = _target_row
+            mdb.get_primitive_by_namespace_name.return_value = None
             edges = annotate_ref_targets(_MONEY_ROW["refs"], tenant_id=_TENANT_ID)
 
         assert edges[1]["target_id"] is None
@@ -91,6 +93,7 @@ class TestAnnotateRefTargets:
     def test_preserves_the_stored_fields_and_their_order(self):
         with patch("app.primitives_routes.db") as mdb:
             mdb.get_primitive_by_schema_id.side_effect = _target_row
+            mdb.get_primitive_by_namespace_name.return_value = None
             edges = annotate_ref_targets(_MONEY_ROW["refs"], tenant_id=_TENANT_ID)
 
         # Order is load-bearing: the UI keys ref rows by index.
@@ -102,6 +105,7 @@ class TestAnnotateRefTargets:
         original = [dict(edge) for edge in _MONEY_ROW["refs"]]
         with patch("app.primitives_routes.db") as mdb:
             mdb.get_primitive_by_schema_id.side_effect = _target_row
+            mdb.get_primitive_by_namespace_name.return_value = None
             annotate_ref_targets(_MONEY_ROW["refs"], tenant_id=_TENANT_ID)
 
         assert _MONEY_ROW["refs"] == original
@@ -115,6 +119,7 @@ class TestAnnotateRefTargets:
         ]
         with patch("app.primitives_routes.db") as mdb:
             mdb.get_primitive_by_schema_id.side_effect = _target_row
+            mdb.get_primitive_by_namespace_name.return_value = None
             annotate_ref_targets(shared, tenant_id=_TENANT_ID)
 
         # Two distinct targets, four edges — misses are cached too.
@@ -124,6 +129,7 @@ class TestAnnotateRefTargets:
     def test_tolerates_absent_empty_and_targetless_edges(self, edges):
         with patch("app.primitives_routes.db") as mdb:
             mdb.get_primitive_by_schema_id.side_effect = _target_row
+            mdb.get_primitive_by_namespace_name.return_value = None
             result = annotate_ref_targets(edges, tenant_id=_TENANT_ID)
 
         assert len(result) == len(edges or [])
@@ -138,6 +144,7 @@ class TestGetPrimitiveEndpoint:
         with patch("app.primitives_routes.db") as mdb:
             mdb.get_primitive_by_id.return_value = _MONEY_ROW
             mdb.get_primitive_by_schema_id.side_effect = _target_row
+            mdb.get_primitive_by_namespace_name.return_value = None
             response = client.get(f"/v1/primitives/acme/{_MONEY_ROW['id']}")
 
         assert response.status_code == 200
@@ -150,6 +157,7 @@ class TestGetPrimitiveEndpoint:
         with patch("app.primitives_routes.db") as mdb:
             mdb.get_primitive_by_id.return_value = _MONEY_ROW
             mdb.get_primitive_by_schema_id.side_effect = _target_row
+            mdb.get_primitive_by_namespace_name.return_value = None
             client.get(f"/v1/primitives/acme/{_MONEY_ROW['id']}")
 
         mdb.update_primitive.assert_not_called()
@@ -159,6 +167,7 @@ class TestGetPrimitiveEndpoint:
         with patch("app.primitives_routes.db") as mdb:
             mdb.get_primitive_by_id.return_value = _MONEY_ROW
             mdb.get_primitive_by_schema_id.side_effect = _target_row
+            mdb.get_primitive_by_namespace_name.return_value = None
             client.get(f"/v1/primitives/acme/{_MONEY_ROW['id']}")
 
         for call in mdb.get_primitive_by_schema_id.call_args_list:

@@ -161,3 +161,34 @@ def test_target_exists_called_with_absolute_uri():
         {"$ref": "../primitives/string"}, base_uri=STD_TYPES_BASE, target_exists=_spy
     )
     assert seen == [STD_PRIMS + "string"]
+
+
+# =========================================================================== #
+# Local-only guarantee
+# =========================================================================== #
+
+
+def test_a_foreign_absolute_ref_is_never_an_edge_even_if_claimed_to_exist():
+    """Resolution never leaves the registry: a remote URI is not a registry reference,
+    so it produces no edge regardless of what the existence predicate would say."""
+    schema = {
+        "$id": "https://schemas.sourcemeta.com/self/v1/schemas/api/schemas/evaluate/response",
+        "$ref": "https://schemas.sourcemeta.com/self/v1/schemas/api/schemas/output-error",
+    }
+
+    assert build_ref_edges(schema, base_uri=ACME_BASE, target_exists=_always(True)) == []
+
+
+def test_every_emitted_target_is_a_local_registry_uri():
+    schema = {
+        "properties": {
+            "a": {"$ref": "../primitives/string"},
+            "b": {"$ref": "./missing"},
+            "c": {"$ref": "https://json-schema.org/draft/2020-12/schema"},
+        }
+    }
+
+    edges = build_ref_edges(schema, base_uri=STD_TYPES_BASE, target_exists=_always(False))
+
+    assert len(edges) == 2  # the external ref produced nothing
+    assert all(e["resolved_target"].startswith(BASE) for e in edges)

@@ -7,7 +7,7 @@ All endpoints are tenant-scoped and require authentication via JWT token or API 
 
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 from urllib.parse import unquote
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -60,10 +60,12 @@ from .primitives_scope import (
     iter_ref_locations,
     tenant_segment_of,
 )
+from .primitives_lookup import find_primitive_by_registry_uri, local_registry_uri
 from .schema_validation import (
     IMPORT_CONTAINER_KEYS,
     REGISTRY_BASE_URL,
     SchemaValidationError,
+    _slug,
     derive_base_uri,
     derive_draft,
     derive_schema_id,
@@ -120,27 +122,72 @@ def _scope_violation_http_error(error: ScopeViolationError) -> HTTPException:
 
 
 def resolve_primitive_refs(
-    schema: Dict[str, Any], *, base_uri: str, tenant_id: str
+    schema: Dict[str, Any],
+    *,
+    base_uri: str,
+    tenant_id: str,
+    incoming_ids: Optional[Set[str]] = None,
 ) -> List[Dict[str, str]]:
-    """Resolve a primitive's relative ``$ref`` edges against the registry (#3456).
+    """Resolve a primitive's relative ``$ref`` edges against the **local** registry (#3456).
 
-    Walks the schema's ``$ref`` values, resolves each against ``base_uri``, and marks
-    each edge ``resolved`` / ``unresolved`` by looking the target ``$id`` up in the
-    tenant's read scope (system-core ∪ tenant), so resolution honors scope (#3453).
+    Walks the schema's ``$ref`` values, resolves each against ``base_uri`` to an absolute
+    local registry URI, and marks each edge ``resolved`` / ``unresolved`` by dereferencing
+    that URI **by placement** — namespace + name, via
+    :func:`app.primitives_lookup.find_primitive_by_registry_uri` — within the tenant's read
+    scope (system-core ∪ tenant, #3453). Resolution never consults, matches, or produces a
+    foreign URI: whatever ``$id`` an imported document declared, the type is addressed by
+    where it sits in this registry.
 
     Args:
         schema: The identity-stamped JSON Schema document of the source primitive.
-        base_uri: The source primitive's base URI (relative refs resolve against it).
+        base_uri: The source primitive's namespace base URI.
         tenant_id: The caller's tenant id, scoping target lookups.
+        incoming_ids: Local registry URIs that do not exist yet but *will* by the end of the
+            operation in flight — the other definitions of the same import. Supplied by the
+            review, which is asked what the import will produce; omitted on commit, where an
+            edge must describe the registry as it is at the moment the row is written (and
+            :func:`reconcile_dependents_for_target` flips it as each sibling lands).
 
     Returns:
         The ``{relative_ref, resolved_target, status}`` edge list to persist on
         ``apiome.primitives.refs``.
     """
+    known = incoming_ids or frozenset()
+
     def _target_exists(absolute_uri: str) -> bool:
-        return db.get_primitive_by_schema_id(absolute_uri, tenant_id) is not None
+        if absolute_uri in known:
+            return True
+        return find_primitive_by_registry_uri(db, absolute_uri, tenant_id) is not None
 
     return build_ref_edges(schema, base_uri=base_uri, target_exists=_target_exists)
+
+
+def incoming_schema_ids(
+    definitions: Dict[str, Any], *, target_namespace: Optional[str], tenant_slug: str
+) -> Set[str]:
+    """The **local registry URIs** an import's definitions will answer to once committed.
+
+    Each definition lands at the target namespace under its slugged name — that placement is
+    the local address sibling references resolve to, so it is what the review's forecast must
+    recognize. The derived ``$id`` is included as well for the exact-match path; when the
+    author declared no ``$id`` the two collapse to the same URI.
+
+    Args:
+        definitions: The ``name -> schema fragment`` map being imported.
+        target_namespace: The registry namespace the import targets.
+        tenant_slug: The tenant slug, for the default base URI.
+
+    Returns:
+        The set of local URIs (and derived ``$id``s) the import will produce.
+    """
+    base_uri = derive_base_uri(target_namespace, None, tenant_slug)
+    incoming: Set[str] = set()
+    for name, schema in definitions.items():
+        if not isinstance(schema, dict):
+            continue
+        incoming.add(local_registry_uri(base_uri, _slug(name)))
+        incoming.add(derive_schema_id(schema, name=name, base_uri=base_uri))
+    return incoming
 
 
 def annotate_ref_targets(
@@ -176,7 +223,7 @@ def annotate_ref_targets(
         row: Optional[Dict[str, Any]] = None
         if target:
             if target not in target_cache:
-                target_cache[target] = db.get_primitive_by_schema_id(target, tenant_id)
+                target_cache[target] = find_primitive_by_registry_uri(db, target, tenant_id)
             row = target_cache[target]
         annotated.append(
             {
@@ -282,28 +329,35 @@ def build_dependents(
     return dependents
 
 
-def reconcile_dependents_for_target(schema_id: Optional[str], *, tenant_id: str) -> None:
+def reconcile_dependents_for_target(
+    schema_id: Optional[str], *, tenant_id: str, local_uri: Optional[str] = None
+) -> None:
     """Re-resolve the tenant's dangling edges that point at a now-existing target (#3457).
 
     The "fixing target clears on re-resolve" half of the acceptance criteria. When a
     primitive is created/imported (or repinned to a new ``$id``), any of the tenant's
-    other primitives that held an *unresolved* edge aimed at that ``$id`` are cleared to
+    other primitives that held an *unresolved* edge aimed at it are cleared to
     ``resolved`` in place — no manual re-save of the dependent is required. Resolution is
     best-effort: a failure here must not fail the create/update that triggered it (the
     primitive is already persisted), so it is swallowed rather than surfaced.
 
+    Edges store **local** registry URIs as their targets, so the reconcile always runs for
+    the type's local placement address (``local_uri``). The derived ``$id`` is reconciled
+    too when it differs — a locally-created type's ``$id`` *is* its local URI, so the two
+    usually collapse to one pass.
+
     Args:
-        schema_id: The ``$id`` of the just-persisted primitive (no-op when ``None``).
+        schema_id: The ``$id`` of the just-persisted primitive.
         tenant_id: The tenant whose dependents may reference the target.
+        local_uri: The primitive's local registry URI (its namespace base + slug leaf).
     """
-    if not schema_id:
-        return
-    try:
-        db.mark_refs_resolved_to_target(tenant_id, schema_id)
-    except Exception:
-        # Reconciliation is a convenience pass over already-correct data; the dependent's
-        # edge will also re-resolve the next time it is saved or re-resolved explicitly.
-        pass
+    for target in dict.fromkeys(uri for uri in (local_uri, schema_id) if uri):
+        try:
+            db.mark_refs_resolved_to_target(tenant_id, target)
+        except Exception:
+            # Reconciliation is a convenience pass over already-correct data; the dependent's
+            # edge will also re-resolve the next time it is saved or re-resolved explicitly.
+            pass
 
 
 def load_publish_gate(tenant_id: str) -> tuple[bool, bool]:
@@ -769,7 +823,9 @@ async def create_primitive(
         # This new type may be the target of other primitives' dangling refs — clear
         # their unresolved flag now that it exists (#3457).
         reconcile_dependents_for_target(
-            identity['schema_id'], tenant_id=auth_data['tenant_id']
+            identity['schema_id'],
+            tenant_id=auth_data['tenant_id'],
+            local_uri=local_registry_uri(identity['base_uri'], _slug(request.name)),
         )
 
         # Record the governed create in the registry audit log (#3481).
@@ -913,11 +969,19 @@ async def update_primitive(
                 detail=f"Primitive not found: {primitive_id}"
             )
 
-        # If the schema/placement changed, the (possibly new) $id may now satisfy other
+        # If the schema/placement changed, the (possibly new) placement may now satisfy other
         # primitives' dangling refs — clear their unresolved flag (#3457).
         if identity_touched:
+            updated_base = primitive.get('base_uri')
+            updated_name = primitive.get('name')
             reconcile_dependents_for_target(
-                updates.get('schema_id'), tenant_id=auth_data['tenant_id']
+                updates.get('schema_id'),
+                tenant_id=auth_data['tenant_id'],
+                local_uri=(
+                    local_registry_uri(updated_base, _slug(updated_name))
+                    if updated_base and updated_name
+                    else None
+                ),
             )
 
         # Record the governed update in the registry audit log (#3481). The changed-field
@@ -1072,6 +1136,7 @@ def _prepare_imported_definition(
     tenant_slug: str,
     target_namespace: Optional[str],
     map_core_formats: bool,
+    incoming_ids: Optional[Set[str]] = None,
 ) -> _PreparedDefinition:
     """Rewrite, validate, resolve, and classify one imported definition (#3464).
 
@@ -1091,6 +1156,9 @@ def _prepare_imported_definition(
         tenant_slug: The tenant slug (used for the default base URI).
         target_namespace: Optional registry namespace the definition is imported into.
         map_core_formats: Whether to map recognized formats to core types (#3463).
+        incoming_ids: The local registry URIs the rest of this import will create, so a
+            reference to a sibling arriving alongside this definition is not reported as
+            dangling. Review only — see :func:`resolve_primitive_refs`.
 
     Returns:
         The :class:`_PreparedDefinition` for this definition.
@@ -1145,7 +1213,10 @@ def _prepare_imported_definition(
     # The rewrite turned every intra-source/core ref into an ordinary registry-relative ref,
     # so the standard resolver (#3456) produces the full edge set — no internal-edge appending.
     refs = resolve_primitive_refs(
-        identity['schema'], base_uri=identity['base_uri'], tenant_id=tenant_id
+        identity['schema'],
+        base_uri=identity['base_uri'],
+        tenant_id=tenant_id,
+        incoming_ids=incoming_ids,
     )
 
     # Classify against the registry: does a visible type already hold this $id, and if so is
@@ -1203,7 +1274,11 @@ def _create_primitive_from_prepared(
         base_uri=identity['base_uri'],
         refs=prep.refs,
     )
-    reconcile_dependents_for_target(identity['schema_id'], tenant_id=tenant_id)
+    reconcile_dependents_for_target(
+        identity['schema_id'],
+        tenant_id=tenant_id,
+        local_uri=local_registry_uri(identity['base_uri'], _slug(name)),
+    )
 
 
 def _commit_imported_definitions(
@@ -1329,7 +1404,13 @@ def _commit_imported_definitions(
                             "refs": prep.refs,
                         },
                     )
-                    reconcile_dependents_for_target(prep.schema_id, tenant_id=tenant_id)
+                    reconcile_dependents_for_target(
+                        prep.schema_id,
+                        tenant_id=tenant_id,
+                        local_uri=local_registry_uri(
+                            prep.identity['base_uri'], _slug(def_name)
+                        ),
+                    )
                     overwritten.append(def_name)
                     if prep.rewrites:
                         rewrites[def_name] = prep.rewrites
@@ -1437,6 +1518,14 @@ def _review_imported_definitions(
     # *types worth a second look* rather than partitioning the set — as ``total`` does too.
     summary = {"new": 0, "identical": 0, "conflict": 0, "invalid": 0, "warnings": 0}
 
+    # A review answers "what will this import produce?", so a reference to a type arriving in
+    # the same import is not dangling — it is satisfied a moment later by that very import.
+    # Reporting it as unresolved contradicted the wizard's own source-step preview, which has
+    # always counted siblings, and warned about a reference that was never going to be missing.
+    incoming = incoming_schema_ids(
+        definitions, target_namespace=target_namespace, tenant_slug=tenant_slug
+    )
+
     for def_name, def_schema in definitions.items():
         prep = _prepare_imported_definition(
             def_name,
@@ -1445,6 +1534,7 @@ def _review_imported_definitions(
             tenant_slug=tenant_slug,
             target_namespace=target_namespace,
             map_core_formats=map_core_formats,
+            incoming_ids=incoming,
         )
         summary[prep.status] = summary.get(prep.status, 0) + 1
 

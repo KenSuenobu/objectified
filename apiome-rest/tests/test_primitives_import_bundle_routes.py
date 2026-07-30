@@ -42,6 +42,7 @@ def test_bundle_of_n_types_imports_n_rows_with_refs_intact():
     with patch("app.primitives_routes.db") as mdb:
         mdb.create_primitive.side_effect = _create
         mdb.get_primitive_by_schema_id.return_value = None  # registry refs unresolved
+        mdb.get_primitive_by_namespace_name.return_value = None
         mdb.create_primitive_import.return_value = {"id": "imp-b1"}
         r = _post_bundle(
             {
@@ -94,6 +95,7 @@ def test_bundle_selected_definitions_filter():
     with patch("app.primitives_routes.db") as mdb:
         mdb.create_primitive.side_effect = lambda **k: created.append(k) or {"name": k["name"]}
         mdb.get_primitive_by_schema_id.return_value = None
+        mdb.get_primitive_by_namespace_name.return_value = None
         mdb.create_primitive_import.return_value = {"id": "imp-b2"}
         r = client.post(
             "/v1/primitives/std/import",
@@ -128,6 +130,7 @@ def test_bundle_invalid_type_recorded_as_error_not_blocking():
     with patch("app.primitives_routes.db") as mdb:
         mdb.create_primitive.side_effect = lambda **k: created.append(k) or {"name": k["name"]}
         mdb.get_primitive_by_schema_id.return_value = None
+        mdb.get_primitive_by_namespace_name.return_value = None
         mdb.create_primitive_import.return_value = {"id": "imp-b3"}
         r = _post_bundle(
             {"types": {"Good": {"type": "object"}, "Bad": {"type": "stringg"}}}

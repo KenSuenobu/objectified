@@ -34,6 +34,7 @@ We continue to improve the platform based on your feedback with improvements and
   - Schemas that carry only documentation now import as the empty object type it describes instead of being rejected
   - Dependents card now shows properly
   - Added clarifying verbiage on unresolved $refs at import
+  - $ref resolution is now local-only: references resolve to types by their place in this registry (namespace + name), never to a remote URL — imported documents' foreign $ids are ignored for resolution, and the review agrees with the import screen's preview
 
 ---
 

@@ -193,6 +193,7 @@ def test_import_rejects_invalid_definition_but_imports_valid():
         mdb.create_primitive.side_effect = _create
         mdb.create_primitive_import.return_value = {"id": "imp1"}
         mdb.get_primitive_by_schema_id.return_value = None  # clean registry — all New (#3464)
+        mdb.get_primitive_by_namespace_name.return_value = None
         r = client.post(
             "/v1/primitives/acme/import",
             json={
@@ -232,6 +233,7 @@ def test_import_rewrites_internal_defs_refs_to_relative_registry_edges():
         mdb.create_primitive.side_effect = _create
         mdb.create_primitive_import.return_value = {"id": "imp1"}
         mdb.get_primitive_by_schema_id.return_value = None  # no cross-type targets exist
+        mdb.get_primitive_by_namespace_name.return_value = None
         r = client.post(
             "/v1/primitives/acme/import",
             json={
@@ -264,6 +266,7 @@ def test_import_stamps_identity_using_target_namespace():
         mdb.create_primitive.return_value = {"name": "Good"}
         mdb.create_primitive_import.return_value = {"id": "imp1"}
         mdb.get_primitive_by_schema_id.return_value = None  # clean registry — all New (#3464)
+        mdb.get_primitive_by_namespace_name.return_value = None
         r = client.post(
             "/v1/primitives/acme/import",
             json={

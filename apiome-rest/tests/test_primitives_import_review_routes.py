@@ -112,6 +112,7 @@ def test_review_classifies_new_identical_and_conflict():
 def test_review_reports_validation_errors_for_invalid_definition():
     with patch("app.primitives_routes.db") as mdb:
         mdb.get_primitive_by_schema_id.return_value = None
+        mdb.get_primitive_by_namespace_name.return_value = None
         r = _review({"$defs": {"Bad": {"type": "stringg"}}})
 
     assert r.status_code == 200
@@ -288,6 +289,7 @@ def test_commit_invalid_resolution_action_is_400():
 def test_commit_rename_without_new_name_is_400():
     with patch("app.primitives_routes.db") as mdb:
         mdb.get_primitive_by_schema_id.return_value = None
+        mdb.get_primitive_by_namespace_name.return_value = None
         r = _import(
             {"$defs": {"Money": {"type": "object"}}},
             resolutions={"Money": {"action": "rename"}},
@@ -365,6 +367,7 @@ def _review_names(schema, **extra):
     """Review a document with an empty registry and return the reported type names."""
     with patch("app.primitives_routes.db") as mdb:
         mdb.get_primitive_by_schema_id.return_value = None
+        mdb.get_primitive_by_namespace_name.return_value = None
         r = _review(schema, **extra)
     assert r.status_code == 200, r.text
     return r.json()
@@ -392,6 +395,7 @@ def test_root_schema_drops_its_own_defs_container():
     created = {}
     with patch("app.primitives_routes.db") as mdb:
         mdb.get_primitive_by_schema_id.return_value = None
+        mdb.get_primitive_by_namespace_name.return_value = None
         mdb.create_primitive.side_effect = (
             lambda **k: created.setdefault(k["name"], k) or {"name": k["name"]}
         )
@@ -437,6 +441,7 @@ def test_a_document_that_is_neither_schema_nor_container_is_400():
     """Arbitrary JSON that merely parses as an object carries no JSON Schema keyword."""
     with patch("app.primitives_routes.db") as mdb:
         mdb.get_primitive_by_schema_id.return_value = None
+        mdb.get_primitive_by_namespace_name.return_value = None
         r = _review({"name": "acme-tools", "version": "1.4.0", "scripts": {"build": "tsc"}})
     assert r.status_code == 400
     assert "No definitions found" in r.json()["detail"]
@@ -446,6 +451,7 @@ def test_an_empty_defs_box_is_400():
     """A document whose only content is an empty container declares no type at all."""
     with patch("app.primitives_routes.db") as mdb:
         mdb.get_primitive_by_schema_id.return_value = None
+        mdb.get_primitive_by_namespace_name.return_value = None
         r = _review({"$defs": {}})
     assert r.status_code == 400
     assert "No definitions found" in r.json()["detail"]
@@ -484,6 +490,7 @@ def test_annotation_only_schema_imports_as_an_empty_object_type():
     created = {}
     with patch("app.primitives_routes.db") as mdb:
         mdb.get_primitive_by_schema_id.return_value = None
+        mdb.get_primitive_by_namespace_name.return_value = None
         mdb.create_primitive.side_effect = (
             lambda **k: created.setdefault(k["name"], k) or {"name": k["name"]}
         )
@@ -529,6 +536,7 @@ def test_the_advisory_reaches_the_commit_report_too():
     """The commit's per-type review block mirrors the review endpoint, advisories included."""
     with patch("app.primitives_routes.db") as mdb:
         mdb.get_primitive_by_schema_id.return_value = None
+        mdb.get_primitive_by_namespace_name.return_value = None
         mdb.create_primitive.side_effect = lambda **k: {"name": k["name"]}
         mdb.create_primitive_import.return_value = {"id": "imp1"}
         r = _import(_ANNOTATION_ONLY)
@@ -537,6 +545,181 @@ def test_the_advisory_reaches_the_commit_report_too():
     reviews = r.json()["reviews"]
     assert [rev["name"] for rev in reviews] == ["request"]
     assert reviews[0]["warnings"] == [UNTYPED_SCHEMA_WARNING]
+
+
+# =========================================================================== #
+# The review agrees with the wizard's own $ref preview
+# =========================================================================== #
+
+# Reported from the interface: importing sourcemeta's evaluate/response.json, the source step
+# showed its one `$ref` resolved and the review then reported it unresolved. The type it names
+# *is* in the registry — but stored under the author-declared `$id` it was imported with, while
+# the review resolved the ref against the registry namespace base. Two different URI spaces for
+# the same reference, so the lookup could never hit.
+_SM = "https://schemas.sourcemeta.com/self/v1/schemas/api/schemas/"
+
+_EVALUATE_RESPONSE = {
+    "$schema": DRAFT_2020_12_META_URI,
+    "$id": _SM + "evaluate/response",
+    "title": "Sourcemeta One Schema Evaluate API Response",
+    "anyOf": [
+        {"type": "object", "properties": {"valid": {"const": True}}},
+        {
+            "type": "object",
+            "properties": {"errors": {"type": "array", "items": {"$ref": "../output-error"}}},
+        },
+    ],
+}
+
+# The row a previous import of sourcemeta's output-error.json produced.
+_STORED_OUTPUT_ERROR = {
+    "id": "row-oe",
+    "name": "output-error",
+    "namespace": "self/v1/schemas/api/schemas",
+    "schema_id": _SM + "output-error",
+    "schema": {"$id": _SM + "output-error", "type": "object"},
+}
+
+
+def _review_with_registry(schema, rows, **extra):
+    """Review against a registry holding the given rows.
+
+    Rows answer by exact ``schema_id`` and — the local-only path — by placement
+    (namespace + name), mirroring ``find_primitive_by_registry_uri``.
+    """
+    by_id = {row["schema_id"]: row for row in rows}
+    by_placement = {(row["namespace"], row["name"]): row for row in rows}
+    with patch("app.primitives_routes.db") as mdb:
+        mdb.get_primitive_by_schema_id.side_effect = lambda sid, tid: by_id.get(sid)
+        mdb.get_primitive_by_namespace_name.side_effect = (
+            lambda ns, leaf, tid: by_placement.get((ns, leaf))
+        )
+        r = _review(schema, **extra)
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+def test_a_ref_resolves_locally_to_a_type_whose_authored_id_is_foreign():
+    """The reported bug: resolved in the wizard, unresolved in the review.
+
+    The ref resolves to the **local** address (namespace + name). The row's foreign
+    authored ``$id`` plays no part — resolution never leaves the registry."""
+    body = _review_with_registry(
+        _EVALUATE_RESPONSE,
+        [_STORED_OUTPUT_ERROR],
+        target_namespace="self/v1/schemas/api/schemas/evaluate",
+    )
+    reviewed = body["types"][0]
+    assert reviewed["ref_count"] == 1
+    assert reviewed["unresolved_refs"] == []
+    assert body["summary"]["warnings"] == 0
+
+
+def test_that_same_ref_is_still_unresolved_when_the_type_is_absent():
+    """The fix must not resolve a reference to a type nobody has imported."""
+    body = _review_with_registry(
+        _EVALUATE_RESPONSE, [], target_namespace="self/v1/schemas/api/schemas/evaluate"
+    )
+    reviewed = body["types"][0]
+    assert [u["relative_ref"] for u in reviewed["unresolved_refs"]] == ["../output-error"]
+    assert body["summary"]["warnings"] == 1
+
+
+def test_a_ref_to_a_sibling_arriving_in_the_same_import_is_not_dangling():
+    """A root that refs its own $defs is satisfied by the very import being reviewed."""
+    doc = {
+        "$schema": DRAFT_2020_12_META_URI,
+        "$id": "https://schemas.sourcemeta.com/self/v1/schemas/api/list/response",
+        "type": "object",
+        "properties": {"policies": {"$ref": "#/$defs/policies"}},
+        "$defs": {"policies": {"type": "array"}},
+    }
+    body = _review_with_registry(doc, [], target_namespace="self/v1/schemas/api/list")
+
+    assert [t["name"] for t in body["types"]] == ["response", "policies"]
+    root = body["types"][0]
+    assert root["ref_count"] == 1
+    assert root["unresolved_refs"] == []
+    assert body["summary"]["warnings"] == 0
+
+
+def test_a_defs_members_ref_resolves_by_local_placement():
+    """Reported second: sourcemeta's locations/response.json.
+
+    Its ``../position`` lives inside ``$defs.entry``, extracted as a type of its own and filed
+    at ``…/locations/entry``. From there ``../position`` names the **local** placement
+    ``self/v1/schemas/api/schemas / position`` — where the type actually sits — so it resolves,
+    locally, with no foreign ``$id`` involved.
+    """
+    doc = {
+        "$schema": DRAFT_2020_12_META_URI,
+        "$id": _SM + "locations/response",
+        "type": "object",
+        "properties": {"static": {"additionalProperties": {"$ref": "#/$defs/entry"}}},
+        "$defs": {
+            "entry": {
+                "type": "object",
+                "properties": {"position": {"$ref": "../position"}},
+            }
+        },
+    }
+    stored_position = {
+        "id": "row-pos",
+        "name": "position",
+        "namespace": "self/v1/schemas/api/schemas",
+        "schema_id": _SM + "position",
+        "schema": {"$id": _SM + "position", "type": "array"},
+    }
+
+    body = _review_with_registry(
+        doc, [stored_position], target_namespace="self/v1/schemas/api/schemas/locations"
+    )
+
+    by_name = {t["name"]: t for t in body["types"]}
+    assert by_name["entry"]["ref_count"] == 1
+    assert by_name["entry"]["unresolved_refs"] == []
+    assert body["summary"]["warnings"] == 0
+
+
+def test_a_ref_to_a_type_in_no_import_and_no_registry_is_still_reported():
+    doc = {
+        "$defs": {
+            "position": {"type": "object", "properties": {"x": {"$ref": "./missing"}}},
+        }
+    }
+    body = _review_with_registry(doc, [], target_namespace="acme/v1/types")
+
+    assert [u["relative_ref"] for u in body["types"][0]["unresolved_refs"]] == ["./missing"]
+    assert body["summary"]["warnings"] == 1
+
+
+def test_commit_records_a_sibling_edge_as_it_stands_when_the_row_is_written():
+    """The commit's stored edges describe the registry as it is, not as it will be.
+
+    A forecast belongs in the review; a persisted edge must be true when written, and
+    ``reconcile_dependents_for_target`` flips it the moment the sibling lands (#3457).
+    """
+    doc = {
+        "$id": "https://acme.test/response",
+        "type": "object",
+        "properties": {"policies": {"$ref": "#/$defs/policies"}},
+        "$defs": {"policies": {"type": "array"}},
+    }
+    created = {}
+    with patch("app.primitives_routes.db") as mdb:
+        mdb.get_primitive_by_schema_id.return_value = None
+        mdb.get_primitive_by_namespace_name.return_value = None
+        mdb.create_primitive.side_effect = (
+            lambda **k: created.setdefault(k["name"], k) or {"name": k["name"]}
+        )
+        mdb.create_primitive_import.return_value = {"id": "imp1"}
+        r = _import(doc, target_namespace="acme/v1/types")
+
+    assert r.status_code == 200, r.text
+    assert created["response"]["refs"][0]["status"] == "unresolved"
+    # …and the reconcile pass that clears it ran for the sibling that was just created.
+    targets = {c.args[1] for c in mdb.mark_refs_resolved_to_target.call_args_list}
+    assert "https://api.apiome.dev/types/acme/v1/types/policies" in targets
 
 
 # =========================================================================== #

@@ -1903,6 +1903,49 @@ class Database:
         results = self.execute_query(query, (schema_id, tenant_id, tenant_id))
         return results[0] if results else None
 
+    def get_primitive_by_namespace_name(
+        self, namespace: str, name: str, tenant_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Resolve a primitive by its **local registry placement** — namespace + name.
+
+        Backs local-only ``$ref`` resolution: a reference names a type by where it sits in
+        this registry's namespace tree, so the lookup is by the ``namespace`` column and the
+        type's name — never by whatever foreign ``$id`` the imported document happened to
+        declare. The name is matched exactly or by its url-safe slug (the leaf
+        :func:`app.schema_validation.derive_schema_id` derives), so ``Output Error`` and
+        ``output-error`` both answer to the leaf ``output-error``.
+
+        Scope matches :meth:`get_primitive_by_schema_id`: system-core ∪ the caller's own,
+        with the caller's own row preferred.
+
+        Args:
+            namespace: The registry namespace path (no leading/trailing slash).
+            name: The placement leaf — a type name or its slug.
+            tenant_id: The caller's tenant id (scopes visibility).
+
+        Returns:
+            The matching primitive row, or None when no visible type sits there.
+        """
+        query = """
+            SELECT id, tenant_id, name, description, category, schema, tags,
+                   created_by, is_system, is_public, usage_count, source,
+                   schema_id, draft, namespace, base_uri, refs,
+                   created_at, updated_at
+            FROM apiome.primitives
+            WHERE namespace = %s
+              AND (
+                  name = %s
+                  OR trim(both '-' from regexp_replace(lower(name), '[^a-z0-9]+', '-', 'g')) = %s
+              )
+              AND (tenant_id = %s OR is_system = true)
+            ORDER BY (tenant_id = %s) DESC, (name = %s) DESC
+            LIMIT 1
+        """
+        results = self.execute_query(
+            query, (namespace, name, name, tenant_id, tenant_id, name)
+        )
+        return results[0] if results else None
+
     def get_public_type_by_schema_id(self, schema_id: str) -> Optional[Dict[str, Any]]:
         """Resolve a **publicly servable** type by its ``$id``, with no tenant scope.
 
