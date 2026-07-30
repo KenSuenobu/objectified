@@ -1266,14 +1266,14 @@ function ReviewStep(props: ReviewStepProps) {
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="success">{summary.new} new</Badge>
         <Badge variant="warning">{summary.conflict} conflict</Badge>
-        {/* Only when there is something to warn about. Amber is shared with `conflict`, so the
-            icon is what tells the two apart at a glance. */}
-        {cautioned > 0 && (
-          <Badge variant="warning" data-testid="review-warning-count">
-            <AlertTriangle className="mr-1 h-3 w-3" aria-hidden />
-            {cautioned} warning{cautioned === 1 ? '' : 's'}
-          </Badge>
-        )}
+        {/* Always shown, zero included: a count that only appears when it is non-zero leaves a
+            reader unsure whether the review checks for this at all. The icon (amber is shared with
+            `conflict`) marks which badge is the warnings one; the colour is what carries urgency,
+            so at zero it drops to neutral rather than crying wolf in amber. */}
+        <Badge variant={cautioned > 0 ? 'warning' : 'secondary'} data-testid="review-warning-count">
+          <AlertTriangle className="mr-1 h-3 w-3" aria-hidden />
+          {cautioned} warning{cautioned === 1 ? '' : 's'}
+        </Badge>
         <Badge variant="secondary">{summary.identical} identical</Badge>
         {summary.invalid > 0 && <Badge variant="error">{summary.invalid} invalid</Badge>}
         <span className="text-sm text-gray-500 dark:text-gray-400">· {summary.total} total</span>

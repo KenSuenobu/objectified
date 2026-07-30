@@ -19,6 +19,7 @@ We continue to improve the platform based on your feedback with improvements and
   - Documentation-only schemas that contain no type still get imported, but are treated as warnings
   - Review section of import for primitives now classifies unresolved $ref as a warning, so now shows warning counts
   - Changed "Test this type" to be expand/collapse with a chevron for testing
+  - Now shows any warnings generated during import
 
 ## Bug Fixes
 

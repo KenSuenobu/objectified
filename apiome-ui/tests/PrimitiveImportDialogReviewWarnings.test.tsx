@@ -152,11 +152,11 @@ describe('PrimitiveImportDialog — review step advisories', () => {
       expect(screen.getByTestId('review-warning-count')).toHaveTextContent('1 warning');
     });
 
-    it('is absent entirely when nothing is cautioned', async () => {
+    it('still reads zero when nothing is cautioned, so the count is never a surprise', async () => {
       mockReview([reviewType('money')]);
       await renderReview({ $defs: { money: { type: 'object' } } });
 
-      expect(screen.queryByTestId('review-warning-count')).not.toBeInTheDocument();
+      expect(screen.getByTestId('review-warning-count')).toHaveTextContent('0 warnings');
     });
 
     it('falls back to the reviewed types when the summary omits the count', async () => {
