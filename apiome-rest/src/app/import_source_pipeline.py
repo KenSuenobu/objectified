@@ -118,6 +118,11 @@ from .payload_analysis import (
     unavailable_document,
 )
 from .payload_analyzer import analyze_import
+from .schema_validation import (
+    IMPORT_CONTAINER_KEYS,
+    is_root_type_document,
+    merge_definition_containers,
+)
 from .secure_xml import SecureXmlError
 from .style_guide_engine import (
     FALLBACK_GUIDE_SOURCE,
@@ -1269,9 +1274,11 @@ def _extract_schema_definitions(document: Dict[str, Any]) -> Dict[str, Any]:
     Reads the document's ``$defs`` (2020-12) and ``definitions`` (older drafts) containers —
     the same extraction the primitives ``/import`` endpoint performs
     (:func:`app.primitives_routes._resolve_import_definitions`) so an "as current" import lands
-    the same types. When the document declares no such container it is itself a single
-    (bare) type schema, named from ``title`` / ``$id`` (falling back to ``Schema``), so a
-    single-type JSON Schema still imports rather than failing with "no definitions".
+    the same types. A document that also asserts something about *itself* (a ``type``,
+    ``properties``, a combinator, …), or that holds no definitions for its types to live in,
+    is a type in its own right, so its root is imported alongside its container members —
+    named from ``title`` / ``$id`` (falling back to ``Schema``) — rather than being dropped in
+    favour of its parts. :func:`app.schema_validation.is_root_type_document` is the shared rule.
 
     Args:
         document: The parsed JSON Schema document (a mapping).
@@ -1279,23 +1286,27 @@ def _extract_schema_definitions(document: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         A ``name -> schema fragment`` map ready for the type-registry commit helper.
     """
-    definitions: Dict[str, Any] = {}
-    defs = document.get("$defs")
-    if isinstance(defs, dict):
-        definitions.update(defs)
-    older = document.get("definitions")
-    if isinstance(older, dict):
-        definitions.update(older)
+    container = merge_definition_containers(document)
 
-    if not definitions:
+    definitions: Dict[str, Any] = {}
+    if is_root_type_document(document, has_definitions=bool(container)):
         title = document.get("title")
-        root_name = (
+        root_name = str(
             title
             if isinstance(title, str) and title.strip()
             else _name_from_schema_id(document.get("$id")) or "Schema"
         )
-        definitions[str(root_name)] = document
+        # A root sharing a name with one of its own definitions describes a different type;
+        # suffix it rather than letting the container silently overwrite it below.
+        if root_name in container:
+            root_name = f"{root_name}-root"
+        # Root first — the containers hold its parts. Its ``#/$defs/X`` pointers are rewritten
+        # to registry-relative refs at those parts, so an inline copy would be dead weight.
+        definitions[root_name] = {
+            k: v for k, v in document.items() if k not in IMPORT_CONTAINER_KEYS
+        }
 
+    definitions.update(container)
     return definitions
 
 

@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 
 from app.auth import validate_authentication
 from app.main import app
-from app.schema_validation import DRAFT_2020_12_META_URI
+from app.schema_validation import DRAFT_2020_12_META_URI, UNTYPED_SCHEMA_WARNING
 
 client = TestClient(app)
 
@@ -104,6 +104,7 @@ def test_review_classifies_new_identical_and_conflict():
         "identical": 1,
         "conflict": 1,
         "invalid": 0,
+        "warnings": 0,
         "total": 3,
     }
 
@@ -339,3 +340,254 @@ def test_commit_report_counts_match_mixed_outcome():
     _, kwargs = mdb.create_primitive_import.call_args
     assert kwargs["imported_count"] == 2
     assert kwargs["skipped_count"] == 1
+
+
+# =========================================================================== #
+# Root-schema resolution — a document is not only its $defs
+# =========================================================================== #
+
+
+# A schema like https://schemas.sourcemeta.com/self/v1/schemas/api/list/response.json: it
+# declares an $id, a type, and properties of its own *and* carries $defs of the sub-schemas
+# it refs. Reading only the container imported `policies` and silently dropped `response`.
+_ROOT_AND_DEFS = {
+    "$schema": DRAFT_2020_12_META_URI,
+    "$id": "https://schemas.sourcemeta.com/self/v1/schemas/api/list/response",
+    "title": "Sourcemeta One List API Response",
+    "type": "object",
+    "required": ["policies"],
+    "properties": {"policies": {"$ref": "#/$defs/policies"}},
+    "$defs": {"policies": {"type": "array", "items": {"type": "object"}}},
+}
+
+
+def _review_names(schema, **extra):
+    """Review a document with an empty registry and return the reported type names."""
+    with patch("app.primitives_routes.db") as mdb:
+        mdb.get_primitive_by_schema_id.return_value = None
+        r = _review(schema, **extra)
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+def test_review_imports_the_root_schema_alongside_its_defs():
+    """A document that is itself a schema is a type too — not just a bag of $defs."""
+    body = _review_names(_ROOT_AND_DEFS)
+    # Root first: it is the document's headline type, its $defs hold its parts.
+    assert [t["name"] for t in body["types"]] == ["response", "policies"]
+    assert body["summary"]["total"] == 2
+
+
+def test_root_schema_is_named_from_its_id():
+    """The $id's last segment is the name the registry already serves the document under."""
+    body = _review_names(_ROOT_AND_DEFS)
+    root = body["types"][0]
+    assert root["name"] == "response"
+    assert root["schema_id"] == "https://schemas.sourcemeta.com/self/v1/schemas/api/list/response"
+
+
+def test_root_schema_drops_its_own_defs_container():
+    """The root's $defs members are imported as their own types, so the inline copy would be dead
+    weight — its `#/$defs/...` pointers are rewritten to relative registry refs instead."""
+    created = {}
+    with patch("app.primitives_routes.db") as mdb:
+        mdb.get_primitive_by_schema_id.return_value = None
+        mdb.create_primitive.side_effect = (
+            lambda **k: created.setdefault(k["name"], k) or {"name": k["name"]}
+        )
+        mdb.create_primitive_import.return_value = {"id": "imp1"}
+        r = _import(_ROOT_AND_DEFS)
+
+    assert r.status_code == 200, r.text
+    assert r.json()["imported"] == ["response", "policies"]
+    root_schema = created["response"]["schema"]
+    assert "$defs" not in root_schema
+    assert root_schema["properties"]["policies"]["$ref"] == "./policies"
+
+
+def test_root_schema_falls_back_to_title_then_source_label():
+    """With no $id the title names the root; with neither, the source label's last segment does."""
+    titled = {k: v for k, v in _ROOT_AND_DEFS.items() if k != "$id"}
+    assert _review_names(titled)["types"][0]["name"] == "sourcemeta-one-list-api-response"
+
+    bare = {k: v for k, v in titled.items() if k != "title"}
+    body = _review_names(bare, source_label="https://acme.test/schemas/list-response.json")
+    assert body["types"][0]["name"] == "list-response"
+
+
+def test_root_name_colliding_with_a_def_is_suffixed_not_dropped():
+    """A root sharing a name with one of its own definitions describes a different type."""
+    doc = {
+        "$id": "https://acme.test/policies",
+        "type": "object",
+        "$defs": {"policies": {"type": "array"}},
+    }
+    body = _review_names(doc)
+    assert [t["name"] for t in body["types"]] == ["policies-root", "policies"]
+    assert any("policies-root" in w for w in body["warnings"])
+
+
+def test_a_pure_container_document_still_imports_only_its_defs():
+    """A document that asserts nothing about itself contributes no root type."""
+    body = _review_names({"$defs": {"Money": {"type": "object"}}})
+    assert [t["name"] for t in body["types"]] == ["Money"]
+
+
+def test_a_document_that_is_neither_schema_nor_container_is_400():
+    """Arbitrary JSON that merely parses as an object carries no JSON Schema keyword."""
+    with patch("app.primitives_routes.db") as mdb:
+        mdb.get_primitive_by_schema_id.return_value = None
+        r = _review({"name": "acme-tools", "version": "1.4.0", "scripts": {"build": "tsc"}})
+    assert r.status_code == 400
+    assert "No definitions found" in r.json()["detail"]
+
+
+def test_an_empty_defs_box_is_400():
+    """A document whose only content is an empty container declares no type at all."""
+    with patch("app.primitives_routes.db") as mdb:
+        mdb.get_primitive_by_schema_id.return_value = None
+        r = _review({"$defs": {}})
+    assert r.status_code == 400
+    assert "No definitions found" in r.json()["detail"]
+
+
+# =========================================================================== #
+# Annotation-only schemas — a type need not constrain anything
+# =========================================================================== #
+
+
+# https://schemas.sourcemeta.com/self/v1/schemas/api/schemas/evaluate/request.json: a schema that
+# accepts *any* JSON instance, so it declares no `type` and no `properties` — only its identity
+# and documentation. It is the empty schema, and it is the only type the document describes.
+_ANNOTATION_ONLY = {
+    "$schema": DRAFT_2020_12_META_URI,
+    "$id": "https://schemas.sourcemeta.com/self/v1/schemas/api/schemas/evaluate/request",
+    "title": "Sourcemeta One Schema Evaluate API Request",
+    "description": "The JSON instance to validate against a schema in the catalog",
+    "examples": [{"name": "Alice", "age": 30}, "hello world", 42, True, None, [1, 2, 3]],
+}
+
+
+def test_annotation_only_schema_is_reviewed_as_one_valid_type():
+    """A document carrying only `$schema`/`$id`/title/description/examples is still a type."""
+    body = _review_names(_ANNOTATION_ONLY)
+    assert [t["name"] for t in body["types"]] == ["request"]
+    root = body["types"][0]
+    assert root["valid"] is True
+    assert root["validation_errors"] == []
+    assert root["status"] == "new"
+    assert root["schema_id"] == _ANNOTATION_ONLY["$id"]
+
+
+def test_annotation_only_schema_imports_as_an_empty_object_type():
+    """Committing it creates one primitive: no type / no properties files under 'object'."""
+    created = {}
+    with patch("app.primitives_routes.db") as mdb:
+        mdb.get_primitive_by_schema_id.return_value = None
+        mdb.create_primitive.side_effect = (
+            lambda **k: created.setdefault(k["name"], k) or {"name": k["name"]}
+        )
+        mdb.create_primitive_import.return_value = {"id": "imp1"}
+        r = _import(_ANNOTATION_ONLY)
+
+    assert r.status_code == 200, r.text
+    assert r.json()["imported"] == ["request"]
+    row = created["request"]
+    assert row["category"] == "object"
+    assert row["description"] == _ANNOTATION_ONLY["description"]
+    # The examples survive verbatim: they are the only thing the schema says about instances.
+    assert row["schema"]["examples"] == _ANNOTATION_ONLY["examples"]
+    # Nothing was invented on the author's behalf — no `type` was stamped in.
+    assert "type" not in row["schema"]
+
+
+def test_annotation_only_schema_is_reviewed_with_the_untyped_advisory():
+    """It imports, and the review says what the author left out — a caution, not an error."""
+    root = _review_names(_ANNOTATION_ONLY)["types"][0]
+    assert root["warnings"] == [UNTYPED_SCHEMA_WARNING]
+    # An advisory is not a verdict: the type is still valid and still importable.
+    assert root["valid"] is True
+    assert root["status"] == "new"
+
+
+def test_a_definition_whose_shape_can_be_read_gets_no_advisory():
+    """`properties`, an `enum`, a `$ref` — the type follows from those, so nothing is guessed."""
+    body = _review_names(
+        {
+            "$defs": {
+                "typed": {"type": "string"},
+                "from-properties": {"properties": {"a": {"type": "string"}}},
+                "from-enum": {"enum": ["a", "b"]},
+                "from-ref": {"$ref": "./money"},
+            }
+        }
+    )
+    assert all(t["warnings"] == [] for t in body["types"])
+
+
+def test_the_advisory_reaches_the_commit_report_too():
+    """The commit's per-type review block mirrors the review endpoint, advisories included."""
+    with patch("app.primitives_routes.db") as mdb:
+        mdb.get_primitive_by_schema_id.return_value = None
+        mdb.create_primitive.side_effect = lambda **k: {"name": k["name"]}
+        mdb.create_primitive_import.return_value = {"id": "imp1"}
+        r = _import(_ANNOTATION_ONLY)
+
+    assert r.status_code == 200, r.text
+    reviews = r.json()["reviews"]
+    assert [rev["name"] for rev in reviews] == ["request"]
+    assert reviews[0]["warnings"] == [UNTYPED_SCHEMA_WARNING]
+
+
+# =========================================================================== #
+# Summary — the cautioned-type count
+# =========================================================================== #
+
+
+def test_summary_counts_a_type_with_an_unresolved_ref_as_a_warning():
+    body = _review_names(
+        {
+            "$defs": {
+                "position": {"type": "object", "properties": {"x": {"$ref": "./missing"}}},
+                "money": {"type": "object"},
+            }
+        },
+        target_namespace="acme/v1/types",
+    )
+    assert body["summary"]["warnings"] == 1
+    # It is still New — a caution cuts across the classification rather than replacing it.
+    assert body["summary"]["new"] == 2
+    assert body["summary"]["total"] == 2
+
+
+def test_summary_counts_an_advisory_as_a_warning_too():
+    """The untyped-schema notice is a caution on the same axis as an unresolved ref."""
+    assert _review_names(_ANNOTATION_ONLY)["summary"]["warnings"] == 1
+
+
+def test_summary_counts_a_type_once_however_many_cautions_it_carries():
+    body = _review_names(
+        {
+            "$defs": {
+                "both": {"title": "Untyped", "$ref": "./missing"},
+            }
+        },
+        target_namespace="acme/v1/types",
+    )
+    assert body["summary"]["warnings"] == 1
+
+
+def test_summary_reports_zero_warnings_when_everything_is_clean():
+    body = _review_names({"$defs": {"money": {"type": "object"}}})
+    assert body["summary"]["warnings"] == 0
+
+
+def test_annotation_only_schema_beside_defs_contributes_no_root_type():
+    """A titled bundle is still a bundle: its members are the types, the root is not one."""
+    doc = {
+        "$schema": DRAFT_2020_12_META_URI,
+        "$id": "https://acme.test/schemas/bundle",
+        "title": "Acme type bundle",
+        "$defs": {"Money": {"type": "object"}},
+    }
+    assert [t["name"] for t in _review_names(doc)["types"]] == ["Money"]

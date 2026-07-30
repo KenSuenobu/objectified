@@ -22,7 +22,7 @@ from app.import_source import (
     LintFinding,
     LintReport,
 )
-from app.import_source_pipeline import run_adapter_import_job
+from app.import_source_pipeline import _extract_schema_definitions, run_adapter_import_job
 from app.models import SpecImportJobResult, SpecImportJobStatus
 from app.sample_import_source import SAMPLE_FORMAT, SampleImportSource
 
@@ -321,3 +321,64 @@ async def test_cancel_between_phases_stops_run() -> None:
     )
     assert final.state == "canceled"
     assert final.percent < 100
+
+
+# =========================================================================== #
+# JSON Schema definition resolution for an "as current" type import
+# =========================================================================== #
+
+
+def test_extract_schema_definitions_keeps_the_root_alongside_its_defs() -> None:
+    """A document that is itself a schema is a type too, not just a bag of $defs.
+
+    Mirrors :func:`app.primitives_routes._resolve_import_definitions` so an "as current"
+    import lands the same types the primitives ``/import`` endpoint would.
+    """
+    document = {
+        "$id": "https://acme.test/list/response.json",
+        "title": "Response",
+        "type": "object",
+        "properties": {"policies": {"$ref": "#/$defs/policies"}},
+        "$defs": {"policies": {"type": "array"}},
+    }
+
+    definitions = _extract_schema_definitions(document)
+
+    # Root first, and its container stripped — each member is imported as its own type.
+    assert list(definitions) == ["Response", "policies"]
+    assert "$defs" not in definitions["Response"]
+    assert definitions["Response"]["properties"] == {"policies": {"$ref": "#/$defs/policies"}}
+
+
+def test_extract_schema_definitions_suffixes_a_root_colliding_with_a_def() -> None:
+    document = {"title": "policies", "type": "object", "$defs": {"policies": {"type": "array"}}}
+    assert list(_extract_schema_definitions(document)) == ["policies-root", "policies"]
+
+
+def test_extract_schema_definitions_adds_no_root_for_a_pure_container() -> None:
+    """A document that asserts nothing about itself contributes no root type."""
+    document = {"$defs": {"Money": {"type": "object"}}}
+    assert list(_extract_schema_definitions(document)) == ["Money"]
+
+
+def test_extract_schema_definitions_keeps_a_bare_schema_whole() -> None:
+    """With no container there is nothing to strip, so the document is its own single type."""
+    document = {"$id": "https://acme.test/money", "type": "object"}
+    assert _extract_schema_definitions(document) == {"money": document}
+
+
+def test_extract_schema_definitions_keeps_an_annotation_only_schema() -> None:
+    """A schema that constrains nothing is the empty schema — still the document's one type."""
+    document = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://acme.test/api/evaluate/request",
+        "title": "Evaluate API Request",
+        "description": "The JSON instance to validate.",
+        "examples": ["hello world", 42, None],
+    }
+    assert _extract_schema_definitions(document) == {"Evaluate API Request": document}
+
+
+def test_extract_schema_definitions_ignores_arbitrary_json() -> None:
+    """Object-shaped JSON carrying no JSON Schema keyword describes no type."""
+    assert _extract_schema_definitions({"name": "acme-tools", "version": "1.4.0"}) == {}

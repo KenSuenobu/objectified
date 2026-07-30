@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Upload,
   AlertCircle,
+  AlertTriangle,
   CheckCircle,
   FileCode,
   FileJson,
@@ -44,6 +45,7 @@ import {
   sourceKindLabel,
   extractTargetNamespace,
   describeDetectedTypes,
+  countCautionedTypes,
   type DetectedType,
 } from './primitiveImportModel';
 import {
@@ -690,6 +692,7 @@ function DetectedTypesPanel({
   refSummary: { resolved: number; repaired: number; unresolved: number; external: number };
 }) {
   const invalidCount = types.filter((type) => !type.valid).length;
+  const warningCount = types.filter((type) => type.warning).length;
   const shown = types.slice(0, DETECTED_TYPES_LIST_CAP);
   const remaining = types.length - shown.length;
 
@@ -702,13 +705,25 @@ function DetectedTypesPanel({
         <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
           Detected {types.length} {sourceKindLabel(sourceKind)} type{types.length === 1 ? '' : 's'}
         </span>
-        {invalidCount > 0 ? (
-          <span className="text-xs font-medium text-red-600 dark:text-red-400" data-testid="detected-invalid-count">
-            {invalidCount} invalid
-          </span>
-        ) : (
-          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">All valid</span>
-        )}
+        <span className="flex items-center gap-2">
+          {/* An advisory is not a verdict: a type can be valid *and* worth a second look, so the
+              warning count sits beside the valid/invalid state rather than replacing it. */}
+          {warningCount > 0 ? (
+            <span
+              className="text-xs font-medium text-amber-600 dark:text-amber-400"
+              data-testid="detected-warning-count"
+            >
+              {warningCount} without a declared type
+            </span>
+          ) : null}
+          {invalidCount > 0 ? (
+            <span className="text-xs font-medium text-red-600 dark:text-red-400" data-testid="detected-invalid-count">
+              {invalidCount} invalid
+            </span>
+          ) : (
+            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">All valid</span>
+          )}
+        </span>
       </div>
       <ul className="divide-y divide-gray-100 dark:divide-gray-700/60">
         {shown.map((type) => (
@@ -728,6 +743,15 @@ function DetectedTypesPanel({
               <span className="sr-only">{type.valid ? ' — valid' : ' — invalid'}</span>
               {type.error ? (
                 <p className="text-xs text-red-600 dark:text-red-400 break-words">{type.error}</p>
+              ) : null}
+              {type.warning ? (
+                <p
+                  className="flex items-start gap-1 text-xs text-amber-600 dark:text-amber-400 break-words"
+                  data-testid={`detected-type-warning-${type.name}`}
+                >
+                  <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
+                  {type.warning}
+                </p>
               ) : null}
             </div>
           </li>
@@ -828,8 +852,10 @@ function RefResolutionSection({
             <p className="text-xs">
               {unresolved.length} $ref{unresolved.length === 1 ? '' : 's'} could not be resolved. The
               referenced schemas were looked up in the registry and in this document — they either do not
-              exist, or their names did not resolve. Importing will leave these references dangling.
+              exist, or their names did not resolve.
             </p>
+            {/* Each row is just the ref and where it came from. The per-edge diagnosis said the same
+                thing on every line, so what it means for the import is stated once, under the list. */}
             <ul className="space-y-0.5">
               {unresolved.slice(0, REF_LIST_CAP).map((entry) => (
                 <li
@@ -840,7 +866,6 @@ function RefResolutionSection({
                   <span className="font-mono break-all">{entry.ref}</span>
                   <span className="text-gray-500 dark:text-gray-400"> in </span>
                   <span className="font-mono">{entry.typeName}</span>
-                  {entry.reason ? <span className="block text-gray-600 dark:text-gray-400">{entry.reason}</span> : null}
                 </li>
               ))}
               {unresolved.length > REF_LIST_CAP ? (
@@ -849,8 +874,16 @@ function RefResolutionSection({
                 </li>
               ) : null}
             </ul>
+            {/* The consequence first, then the remedy. */}
+            <p className="text-xs" data-testid="ref-unresolved-consequence">
+              Importing these schemas will leave these references dangling until the schema is found or
+              imported.
+            </p>
             <p className="text-xs font-medium" data-testid="ref-unresolved-recommendation">
-              Recommendation: import these refs into the namespace before importing this schema.
+              Recommendation: import these refs into the namespace{' '}
+              {/* Explicit weight: the paragraph is already font-medium, so `strong` alone reads
+                  as barely heavier than the sentence around it. */}
+              <strong className="font-bold">before</strong> importing this schema.
             </p>
           </div>
         </Alert>
@@ -1026,7 +1059,7 @@ function SourceStep(props: SourceStepProps) {
             className="w-4 h-4 text-indigo-600 rounded"
           />
           <span className="text-sm text-gray-700 dark:text-gray-300">
-            Map recognized formats to core types ($ref rewrite)
+            Map recognized formats to core JSON System types ($ref rewrite if absent)
           </span>
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
@@ -1224,12 +1257,23 @@ function ReviewStep(props: ReviewStepProps) {
   } = props;
 
   const { summary } = review;
+  // Prefer the server's count; derive it when the response predates the field, so the badge can
+  // never disagree with the cautions rendered on the rows below.
+  const cautioned = summary.warnings ?? countCautionedTypes(review.types);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="success">{summary.new} new</Badge>
         <Badge variant="warning">{summary.conflict} conflict</Badge>
+        {/* Only when there is something to warn about. Amber is shared with `conflict`, so the
+            icon is what tells the two apart at a glance. */}
+        {cautioned > 0 && (
+          <Badge variant="warning" data-testid="review-warning-count">
+            <AlertTriangle className="mr-1 h-3 w-3" aria-hidden />
+            {cautioned} warning{cautioned === 1 ? '' : 's'}
+          </Badge>
+        )}
         <Badge variant="secondary">{summary.identical} identical</Badge>
         {summary.invalid > 0 && <Badge variant="error">{summary.invalid} invalid</Badge>}
         <span className="text-sm text-gray-500 dark:text-gray-400">· {summary.total} total</span>
@@ -1325,6 +1369,19 @@ function ReviewTypeRow(props: ReviewTypeRowProps) {
               )}
             </div>
           )}
+
+          {/* Advisories, not errors: the type imports either way, so this reads as a caution
+              beside the row rather than blocking its checkbox. */}
+          {(type.warnings ?? []).map((warning) => (
+            <p
+              key={warning}
+              data-testid={`review-type-warning-${type.name}`}
+              className="flex items-start gap-1.5 text-sm text-amber-600 dark:text-amber-400 mb-2"
+            >
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              {warning}
+            </p>
+          ))}
 
           {type.status === 'conflict' && (
             <div className="flex flex-wrap items-center gap-2 mt-2">

@@ -104,4 +104,38 @@ describe('PrimitiveImportDialog — detected types', () => {
 
     expect(screen.queryByTestId('detected-types')).not.toBeInTheDocument();
   });
+
+  describe('untyped-schema advisory', () => {
+    it('cautions a type that declares no type, without marking it invalid', () => {
+      renderWith({ $defs: { anything: { title: 'Anything', examples: [1, 'two'] } } });
+
+      const row = screen.getByTestId('detected-type-anything');
+      expect(row).toHaveAttribute('data-valid', 'true');
+      expect(screen.getByTestId('detected-type-warning-anything')).toHaveTextContent(
+        'No type was specified in the JSON Schema: this might lead to erroneous behavior',
+      );
+      // An advisory is not a verdict — the panel still reports the type as well-formed.
+      expect(screen.getByText('All valid')).toBeInTheDocument();
+      expect(screen.getByTestId('detected-warning-count')).toHaveTextContent(
+        '1 without a declared type',
+      );
+    });
+
+    it('stays quiet when the shape can be read without a declared type', () => {
+      // `properties` is an object, an `enum` carries its values' type, a `$ref` names another
+      // type — none of these are a guess, so none of them earn a caution.
+      renderWith({
+        $defs: {
+          fromProperties: { properties: { a: { type: 'string' } } },
+          fromEnum: { enum: ['a', 'b'] },
+          fromRef: { $ref: './money' },
+        },
+      });
+
+      expect(screen.queryByTestId('detected-type-warning-fromProperties')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('detected-type-warning-fromEnum')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('detected-type-warning-fromRef')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('detected-warning-count')).not.toBeInTheDocument();
+    });
+  });
 });

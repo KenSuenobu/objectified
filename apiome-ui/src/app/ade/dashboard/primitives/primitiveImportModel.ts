@@ -42,6 +42,8 @@ export interface ReviewType {
   status: ReviewStatus;
   valid: boolean;
   validation_errors: ValidationError[];
+  /** Non-blocking advisories about the definition — e.g. {@link UNTYPED_SCHEMA_WARNING}. */
+  warnings?: string[];
   error?: { error?: string; details?: unknown } | null;
   schema_id?: string | null;
   existing_id?: string | null;
@@ -56,7 +58,31 @@ export interface ReviewSummary {
   identical: number;
   conflict: number;
   invalid: number;
+  /**
+   * Types worth a second look — an unresolved `$ref` or an advisory. Cuts *across* the
+   * classifications above rather than partitioning them: a New type can be cautioned, and so
+   * can a Conflict. Optional so a service that predates the field still renders (see
+   * {@link countCautionedTypes}).
+   */
+  warnings?: number;
   total: number;
+}
+
+/**
+ * Count the reviewed types worth a second look — those carrying an unresolved `$ref` or an
+ * advisory such as the untyped-schema notice.
+ *
+ * Counts *types*, not individual cautions, so it reads on the same axis as the new / conflict /
+ * identical badges beside it. Mirrors the server's `summary.warnings` and stands in for it when a
+ * response does not carry one.
+ *
+ * @param types The reviewed types.
+ * @returns How many of them are cautioned.
+ */
+export function countCautionedTypes(types: ReviewType[]): number {
+  return types.filter(
+    (type) => (type.unresolved_refs?.length ?? 0) > 0 || (type.warnings?.length ?? 0) > 0
+  ).length;
 }
 
 /** Full review report returned by `POST .../import/review`. */
@@ -125,11 +151,122 @@ export function parseSchemaContent(content: string): Record<string, unknown> | n
 }
 
 /**
+ * Keywords whose presence means a document *asserts* something about itself — it constrains
+ * instances, rather than merely holding sub-definitions.
+ *
+ * A document carrying any of these is a type in its own right *even when it also declares
+ * `$defs`*: `.../api/list/response.json` has an `$id`, a `type`, and `properties` of its own and
+ * *also* carries `$defs` of the sub-schemas it refs. Reading only the containers imported the
+ * parts and dropped the whole — see {@link extractDefinitions}.
+ *
+ * This is only the *alongside-its-definitions* test; a document with no definitions to be read
+ * instead of is a type whenever it is a schema at all — see {@link isSchemaDocument}.
+ *
+ * Mirrors `ROOT_SCHEMA_KEYWORDS` in apiome-rest/src/app/schema_validation.py so this preview and
+ * the server's review report the same set of types.
+ */
+const ROOT_SCHEMA_KEYWORDS = [
+  'type',
+  'properties',
+  'anyOf',
+  'oneOf',
+  'allOf',
+  'not',
+  'enum',
+  'const',
+  'items',
+  'prefixItems',
+  'patternProperties',
+  '$ref',
+] as const;
+
+/**
+ * The full draft 2020-12 keyword vocabulary, plus the pre-2020 spellings and the OpenAPI 3.0
+ * dialect's extras — the set that answers "is this mapping a JSON Schema at all?".
+ *
+ * A schema need not constrain anything: a document carrying only a `$schema`, an `$id`, a title
+ * and an `examples` array is the *empty* schema — it accepts any instance, and its category is
+ * therefore `object`. It has to import as a type, because it is the only type the document
+ * describes. What this set still excludes is arbitrary JSON that happens to be an object (a
+ * `package.json`, a config file), which carries no JSON Schema keyword and describes no type.
+ *
+ * Mirrors `JSON_SCHEMA_KEYWORDS` in apiome-rest/src/app/schema_validation.py.
+ */
+const JSON_SCHEMA_KEYWORDS: ReadonlySet<string> = new Set([
+  // Core
+  '$schema', '$id', '$ref', '$anchor', '$dynamicRef', '$dynamicAnchor',
+  '$vocabulary', '$comment', '$defs',
+  // Applicator
+  'allOf', 'anyOf', 'oneOf', 'not', 'if', 'then', 'else', 'dependentSchemas',
+  'prefixItems', 'items', 'contains', 'properties', 'patternProperties',
+  'additionalProperties', 'propertyNames',
+  // Unevaluated
+  'unevaluatedItems', 'unevaluatedProperties',
+  // Validation
+  'type', 'const', 'enum', 'multipleOf', 'maximum', 'exclusiveMaximum', 'minimum',
+  'exclusiveMinimum', 'maxLength', 'minLength', 'pattern', 'maxItems', 'minItems',
+  'uniqueItems', 'maxContains', 'minContains', 'maxProperties', 'minProperties',
+  'required', 'dependentRequired',
+  // Meta-data
+  'title', 'description', 'default', 'deprecated', 'readOnly', 'writeOnly', 'examples',
+  // Format & content
+  'format', 'contentEncoding', 'contentMediaType', 'contentSchema',
+  // Pre-2020 drafts and the OpenAPI 3.0 dialect
+  'definitions', 'dependencies', '$recursiveRef', '$recursiveAnchor',
+  'example', 'nullable', 'discriminator',
+]);
+
+/** Containers of named sub-definitions, stripped from a root schema imported as its own type. */
+const DEFINITION_CONTAINER_KEYS = ['$defs', 'definitions', 'types'] as const;
+
+/**
+ * Whether a parsed document is itself a schema (as opposed to a bare container of definitions).
+ *
+ * Asserting nothing is what the empty schema does, not a reason to refuse a document: when there
+ * are no definitions to be read instead of the root, any JSON Schema keyword makes the document a
+ * type — an annotation-only schema (`$schema` / `$id` / `title` / `examples`) included. A document
+ * whose definitions *are* its types contributes a root type only when it asserts something of its
+ * own ({@link ROOT_SCHEMA_KEYWORDS}), so a bundle does not gain a junk empty type.
+ *
+ * Mirrors `is_root_type_document` in apiome-rest/src/app/schema_validation.py.
+ *
+ * @param schema The parsed document.
+ * @param hasDefinitions Whether the document's definition containers hold members; computed from
+ *   the document's own `$defs` / `definitions` when omitted.
+ * @returns True when the document's root should be imported as a type of its own.
+ */
+export function isSchemaDocument(
+  schema: Record<string, unknown>,
+  hasDefinitions: boolean = hasDefinitionMembers(schema)
+): boolean {
+  if (ROOT_SCHEMA_KEYWORDS.some((keyword) => keyword in schema)) return true;
+  if (hasDefinitions) return false;
+  return Object.keys(schema).some(
+    (key) => JSON_SCHEMA_KEYWORDS.has(key) && !DEFINITION_CONTAINER_KEYS.includes(key as never)
+  );
+}
+
+/** Whether a document's `$defs` / `definitions` containers hold any members. */
+function hasDefinitionMembers(schema: Record<string, unknown>): boolean {
+  return ['$defs', 'definitions'].some((key) => {
+    const container = schema[key];
+    return (
+      Boolean(container) &&
+      typeof container === 'object' &&
+      Object.keys(container as Record<string, unknown>).length > 0
+    );
+  });
+}
+
+/**
  * Whether a parsed document is a standalone primitive schema rather than a container.
  *
  * A document carrying `$defs`, `definitions`, or (for bundles) `types` is a container;
  * otherwise a `type` / `anyOf` / `oneOf` / `allOf` / `enum` / `const` keyword marks a
  * single standalone type definition (e.g. an ISO primitive).
+ *
+ * This is narrower than {@link isSchemaDocument} on purpose: it answers "may the whole document be
+ * sent as one definition?", which a container document can never be — its members are types too.
  *
  * @param schema The parsed document.
  * @returns True when the document is a single standalone type.
@@ -173,11 +310,12 @@ export function extractPrimitiveNameFromSchema(
 ): string {
   if (typeof schema.$id === 'string' && schema.$id) {
     // The last segment of an `$id` is already the canonical name the registry serves this schema
-    // under, so it is taken verbatim (only percent-decoded). Rewriting it would make the imported
-    // name disagree with the document's own identity.
-    const lastSegment = schema.$id.split('/').filter(Boolean).pop();
+    // under, so it is taken verbatim (only percent-decoded and de-suffixed). Rewriting it would
+    // make the imported name disagree with the document's own identity.
+    const lastSegment = schema.$id.split('#')[0].split('/').filter(Boolean).pop();
     if (lastSegment) {
-      return decodeUriSegment(lastSegment);
+      const leaf = stripSchemaSuffix(decodeUriSegment(lastSegment));
+      if (leaf) return leaf;
     }
   }
 
@@ -187,7 +325,10 @@ export function extractPrimitiveNameFromSchema(
   }
 
   if (filename) {
-    const fromFilename = slugifyLeaf(filename.replace(/\.(json|yaml|yml)$/i, ''));
+    // A source label is a filename for an upload but a full URL for a URL import, so the last
+    // path segment (minus any query) is the part that reads as a name.
+    const leaf = filename.split('?')[0].split('/').filter(Boolean).pop() ?? '';
+    const fromFilename = slugifyLeaf(stripSchemaSuffix(leaf));
     if (fromFilename) return fromFilename;
   }
 
@@ -201,6 +342,11 @@ function decodeUriSegment(segment: string): string {
   } catch {
     return segment;
   }
+}
+
+/** Drop a `.schema.json` / `.json` / `.yaml` / `.yml` suffix from a name leaf. */
+function stripSchemaSuffix(leaf: string): string {
+  return leaf.replace(/\.(schema\.json|json|yaml|yml)$/i, '');
 }
 
 /**
@@ -218,6 +364,9 @@ function slugifyLeaf(value: string): string {
 
 /**
  * Determine a display category (JSON Schema type) for a definition.
+ *
+ * A schema that names no `type` and no `properties` — the empty schema, e.g. one carrying only
+ * annotations — is categorized `object`, matching `determine_category_from_schema` on the server.
  *
  * @param schema The definition schema.
  * @returns The resolved type label, defaulting to `object`.
@@ -265,13 +414,20 @@ const CONTAINER_KEYS: Record<SourceKind, string[]> = {
 /**
  * Extract the `name -> schema` definitions from a parsed source document for local preview.
  *
- * A standalone schema (no container) is wrapped under a derived name so the wizard can
- * preview it the same way it previews container members. The authoritative classification
- * still comes from the server review; this is only for the source-step preview.
+ * A document is not only its `$defs`, and it need not constrain anything to be a type. When the
+ * root is a schema in its own right ({@link isSchemaDocument}) it is listed *first*, under a name
+ * derived by {@link extractPrimitiveNameFromSchema} — whether or not the document also carries
+ * containers. The root's own `$defs` / `definitions` are stripped from it, because every member
+ * is imported as its own primitive and the server rewrites the root's `#/$defs/X` pointers into
+ * registry-relative refs at those siblings.
+ *
+ * The authoritative classification still comes from the server review; this mirrors
+ * `_resolve_import_definitions` (apiome-rest/src/app/primitives_routes.py) so the source-step
+ * preview names the same types the review will.
  *
  * @param doc The parsed source document.
  * @param sourceKind The selected source kind (selects which containers are read).
- * @param filename Optional filename used when naming a standalone schema.
+ * @param filename Optional filename / URL used when naming the root schema.
  * @returns A `name -> schema` map (possibly empty when no definitions are found).
  */
 export function extractDefinitions(
@@ -279,13 +435,29 @@ export function extractDefinitions(
   sourceKind: SourceKind,
   filename?: string
 ): Record<string, Record<string, unknown>> {
-  // A standalone (non-container) schema is only meaningful for JSON Schema / OpenAPI;
-  // a bundle is expected to be a container.
-  if (sourceKind !== 'type-def-bundle' && isStandalonePrimitiveSchema(doc)) {
-    const name = extractPrimitiveNameFromSchema(doc, filename);
-    return { [name]: doc };
+  const container = containerDefinitions(doc, sourceKind);
+
+  // A root type is only meaningful for JSON Schema / OpenAPI; a bundle is purely a container.
+  if (
+    sourceKind === 'type-def-bundle' ||
+    !isSchemaDocument(doc, Object.keys(container).length > 0)
+  ) {
+    return container;
   }
 
+  const rootName = uniqueRootName(extractPrimitiveNameFromSchema(doc, filename), container);
+  const root = Object.fromEntries(
+    Object.entries(doc).filter(([key]) => !DEFINITION_CONTAINER_KEYS.includes(key as never))
+  );
+  // Root first: it is the document's headline type and the containers hold its parts.
+  return { [rootName]: root, ...container };
+}
+
+/** Read just the `$defs` / `definitions` / `types` members of a document, in declaration order. */
+function containerDefinitions(
+  doc: Record<string, unknown>,
+  sourceKind: SourceKind
+): Record<string, Record<string, unknown>> {
   const defs: Record<string, Record<string, unknown>> = {};
   for (const key of CONTAINER_KEYS[sourceKind]) {
     const container = doc[key];
@@ -300,6 +472,23 @@ export function extractDefinitions(
   return defs;
 }
 
+/**
+ * Disambiguate a root name that collides with one of the document's own definitions.
+ *
+ * The two describe different types, so the root is suffixed rather than dropped or silently
+ * overwritten. Mirrors `_unique_root_name` in apiome-rest/src/app/primitives_routes.py.
+ */
+function uniqueRootName(name: string, container: Record<string, unknown>): string {
+  if (!(name in container)) return name;
+  let candidate = `${name}-root`;
+  let suffix = 2;
+  while (candidate in container) {
+    candidate = `${name}-root-${suffix}`;
+    suffix += 1;
+  }
+  return candidate;
+}
+
 /** One detected definition, with the client-side verdict shown beside its name. */
 export interface DetectedType {
   /** The definition's key in the source container — the name it will be imported under. */
@@ -308,6 +497,38 @@ export interface DetectedType {
   valid: boolean;
   /** The first metaschema error, when invalid — enough to say *why* without opening the review. */
   error?: string;
+  /** A non-blocking advisory: the type imports, but something about it is worth reading first. */
+  warning?: string;
+}
+
+/**
+ * Advisory for a definition that constrains nothing at all.
+ *
+ * Mirrors `UNTYPED_SCHEMA_WARNING` in apiome-rest/src/app/schema_validation.py, so the preview
+ * and the server's review say the same sentence.
+ */
+export const UNTYPED_SCHEMA_WARNING =
+  'No type was specified in the JSON Schema: this might lead to erroneous behavior';
+
+/**
+ * Return the untyped-schema advisory for a definition, or `undefined` when it has a shape.
+ *
+ * Fires only when the definition asserts *nothing* — no `type` and none of the other
+ * {@link ROOT_SCHEMA_KEYWORDS} a shape can be read from. A schema that omits `type` beside
+ * `properties` (an object), an `enum` (its values' type), or a `$ref`/combinator (the referenced
+ * type) is not guessed at and is not warned about; warning on those would fire on most real-world
+ * documents and teach readers to ignore the advisory.
+ *
+ * Mirrors `untyped_schema_warning` in apiome-rest/src/app/schema_validation.py.
+ *
+ * @param schema The definition fragment.
+ * @returns The advisory when the definition is the empty schema, else `undefined`.
+ */
+export function untypedSchemaWarning(schema: unknown): string | undefined {
+  if (schema === null || typeof schema !== 'object' || Array.isArray(schema)) return undefined;
+  const node = schema as Record<string, unknown>;
+  if (ROOT_SCHEMA_KEYWORDS.some((keyword) => keyword in node)) return undefined;
+  return UNTYPED_SCHEMA_WARNING;
 }
 
 /**
@@ -332,13 +553,21 @@ export function describeDetectedTypes(
     if (schema === null || typeof schema !== 'object' || Array.isArray(schema)) {
       return { name, valid: false, error: 'Not a JSON Schema object' };
     }
+    // Carried whatever the verdict: an advisory says what the author left out, which is worth
+    // reading whether or not the definition also fails the metaschema.
+    const warning = untypedSchemaWarning(schema);
     try {
       if (ajv.validateSchema(schema) === true) {
-        return { name, valid: true };
+        return { name, valid: true, ...(warning ? { warning } : {}) };
       }
-      return { name, valid: false, error: firstSchemaError(ajv.errors) };
+      return { name, valid: false, error: firstSchemaError(ajv.errors), ...(warning ? { warning } : {}) };
     } catch (err) {
-      return { name, valid: false, error: err instanceof Error ? err.message : 'Invalid schema' };
+      return {
+        name,
+        valid: false,
+        error: err instanceof Error ? err.message : 'Invalid schema',
+        ...(warning ? { warning } : {}),
+      };
     }
   });
 }
@@ -387,11 +616,14 @@ export function extractTargetNamespace(
   }
 
   // The root id first, so a document that names itself is weighted ahead of its members on a tie.
+  // Only the *container* members are counted after it: the root is now also a definition in its
+  // own right (see extractDefinitions), and counting its `$id` twice would let it outvote a
+  // namespace the members actually agree on rather than merely breaking a tie.
   const ids: string[] = [];
   if (typeof doc.$id === 'string') {
     ids.push(doc.$id);
   }
-  for (const schema of Object.values(extractDefinitions(doc, sourceKind, sourceLabel))) {
+  for (const schema of Object.values(containerDefinitions(doc, sourceKind))) {
     if (typeof schema.$id === 'string') {
       ids.push(schema.$id);
     }
@@ -432,7 +664,9 @@ export function extractTargetNamespace(
  * Build the request body shared by the review and commit endpoints.
  *
  * For a standalone JSON Schema / OpenAPI document the single schema is wrapped under a
- * `$defs` container so the server resolves it uniformly; a bundle document is sent as-is.
+ * `$defs` container so the server resolves it uniformly; every other document (a bundle, or a
+ * root schema that also carries `$defs`) is sent as-is, and the server resolves its root the
+ * same way {@link extractDefinitions} previewed it.
  *
  * @param doc The parsed source document.
  * @param options The selected source kind, namespace, and import options.

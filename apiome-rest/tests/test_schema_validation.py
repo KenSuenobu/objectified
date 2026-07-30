@@ -182,3 +182,88 @@ def test_stamp_identity_preserves_existing_schema_uri():
         draft="2020-12",
     )
     assert out["$schema"] == "https://example.com/custom"
+
+
+# ===========================================================================
+# merge_definition_containers / is_root_type_document
+# ===========================================================================
+
+
+def test_merge_definition_containers_reads_both_spellings():
+    document = {"$defs": {"A": {"type": "string"}}, "definitions": {"B": {"type": "number"}}}
+    assert list(sv.merge_definition_containers(document)) == ["A", "B"]
+
+
+def test_merge_definition_containers_ignores_non_mappings():
+    assert sv.merge_definition_containers({"$defs": ["A"]}) == {}
+    assert sv.merge_definition_containers("not a document") == {}
+
+
+def test_root_asserting_something_is_a_type_beside_its_defs():
+    document = {"type": "object", "properties": {}, "$defs": {"A": {"type": "string"}}}
+    assert sv.is_root_type_document(document, has_definitions=True) is True
+
+
+def test_pure_container_root_is_not_a_type():
+    """A titled bundle is still a bundle — its members are the types."""
+    document = {"$id": "https://acme.test/bundle", "title": "Bundle"}
+    assert sv.is_root_type_document(document, has_definitions=True) is False
+
+
+def test_annotation_only_schema_is_a_type_when_it_holds_no_definitions():
+    """The empty schema constrains nothing, which is not a reason to refuse it."""
+    document = {
+        "$schema": sv.DRAFT_2020_12_META_URI,
+        "$id": "https://acme.test/api/evaluate/request",
+        "title": "Evaluate API Request",
+        "examples": ["hello world", 42],
+    }
+    assert sv.is_root_type_document(document, has_definitions=False) is True
+
+
+def test_a_lone_annotation_is_enough():
+    assert sv.is_root_type_document({"description": "anything"}, has_definitions=False) is True
+
+
+def test_arbitrary_json_object_is_not_a_type():
+    """No JSON Schema keyword at all — a package.json describes no type."""
+    document = {"name": "acme-tools", "version": "1.4.0", "scripts": {"build": "tsc"}}
+    assert sv.is_root_type_document(document, has_definitions=False) is False
+
+
+def test_an_empty_defs_box_is_not_a_type():
+    """The container keys are stripped from a root, so a bare empty box describes nothing."""
+    assert sv.is_root_type_document({"$defs": {}}, has_definitions=False) is False
+
+
+def test_non_mapping_is_not_a_type():
+    assert sv.is_root_type_document(["type", "string"], has_definitions=False) is False
+
+
+# ===========================================================================
+# untyped_schema_warning
+# ===========================================================================
+
+
+def test_untyped_warning_fires_for_a_definition_that_asserts_nothing():
+    assert sv.untyped_schema_warning({}) == sv.UNTYPED_SCHEMA_WARNING
+    assert sv.untyped_schema_warning({"title": "A"}) == sv.UNTYPED_SCHEMA_WARNING
+
+
+def test_untyped_warning_is_quiet_when_the_shape_can_be_read():
+    """Not a guess: properties -> object, enum -> its values' type, $ref/combinator -> elsewhere."""
+    for schema in (
+        {"type": "string"},
+        {"properties": {}},
+        {"enum": ["a"]},
+        {"const": 1},
+        {"$ref": "./money"},
+        {"allOf": [{"type": "string"}]},
+        {"items": {"type": "string"}},
+    ):
+        assert sv.untyped_schema_warning(schema) is None, schema
+
+
+def test_untyped_warning_ignores_a_non_mapping_definition():
+    assert sv.untyped_schema_warning(["type", "string"]) is None
+    assert sv.untyped_schema_warning(None) is None

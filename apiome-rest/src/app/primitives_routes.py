@@ -5,8 +5,10 @@ Provides CRUD endpoints for managing primitive type definitions.
 All endpoints are tenant-scoped and require authentication via JWT token or API key.
 """
 
+import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+from urllib.parse import unquote
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -59,12 +61,16 @@ from .primitives_scope import (
     tenant_segment_of,
 )
 from .schema_validation import (
+    IMPORT_CONTAINER_KEYS,
     REGISTRY_BASE_URL,
     SchemaValidationError,
     derive_base_uri,
     derive_draft,
     derive_schema_id,
+    is_root_type_document,
+    merge_definition_containers,
     stamp_identity,
+    untyped_schema_warning,
     validate_schema_document,
 )
 
@@ -518,7 +524,8 @@ def determine_category_from_schema(schema: Dict[str, Any]) -> str:
         elif isinstance(const_value, float):
             return 'number'
 
-    # Default to object
+    # Default to object: a schema that specifies no type and no properties is the empty
+    # schema, and the registry files an unconstrained type under 'object'.
     return 'object'
 
 
@@ -1038,6 +1045,9 @@ class _PreparedDefinition:
         refs: The resolved relative-``$ref`` edges to persist, or ``None`` when invalid.
         rewrites: The applied ``{"from", "to", "kind"}`` ref rewrites for the report.
         existing: The existing primitive row sharing this ``$id`` (Identical/Conflict), else ``None``.
+        warnings: Non-blocking advisories about the definition itself — currently the
+            untyped-schema notice. Distinct from ``validation_errors``: the definition imports
+            either way, so these describe what the author may not have meant to leave out.
     """
 
     name: str
@@ -1051,6 +1061,7 @@ class _PreparedDefinition:
     refs: Optional[List[Dict[str, str]]] = None
     rewrites: List[Dict[str, str]] = field(default_factory=list)
     existing: Optional[Dict[str, Any]] = None
+    warnings: List[str] = field(default_factory=list)
 
 
 def _prepare_imported_definition(
@@ -1096,6 +1107,11 @@ def _prepare_imported_definition(
         # A non-object definition cannot be rewritten; let validation reject it below.
         rewritten_schema, applied = def_schema, []
 
+    # Advisories about the definition as written, carried on every outcome: they describe what
+    # the author left out, which is worth saying whether or not the definition also fails.
+    advisory = untyped_schema_warning(rewritten_schema)
+    warnings = [advisory] if advisory else []
+
     try:
         identity = resolve_primitive_identity(
             rewritten_schema,
@@ -1113,6 +1129,7 @@ def _prepare_imported_definition(
             validation_errors=e.errors,
             error={"error": "invalid_schema", "details": e.errors},
             rewritten=rewritten_schema if isinstance(rewritten_schema, dict) else None,
+            warnings=warnings,
         )
     except ScopeViolationError as e:
         # A valid schema that crosses a forbidden scope boundary — valid stays True.
@@ -1122,6 +1139,7 @@ def _prepare_imported_definition(
             valid=True,
             error={"error": "scope_violation", "details": e.violations},
             rewritten=rewritten_schema if isinstance(rewritten_schema, dict) else None,
+            warnings=warnings,
         )
 
     # The rewrite turned every intra-source/core ref into an ordinary registry-relative ref,
@@ -1145,6 +1163,7 @@ def _prepare_imported_definition(
         refs=refs,
         rewrites=applied,
         existing=existing,
+        warnings=warnings,
     )
 
 
@@ -1256,6 +1275,7 @@ def _commit_imported_definitions(
             "status": prep.status,
             "valid": prep.valid,
             "validation_errors": prep.validation_errors,
+            "warnings": prep.warnings,
             "existing_id": str(prep.existing["id"]) if prep.existing else None,
         })
 
@@ -1392,8 +1412,9 @@ def _review_imported_definitions(
     """Build a dry-run review of a ``name -> schema`` map without writing anything (#3464).
 
     Classifies each definition New / Identical / Conflict, attaches its draft 2020-12
-    validation report and unresolved-ref mapping, and lists the resolution choices a
-    Conflict offers — the report the import UI (#3469) renders before the user commits.
+    validation report, its non-blocking ``warnings`` (advisories the type still imports
+    despite), and its unresolved-ref mapping, and lists the resolution choices a Conflict
+    offers — the report the import UI (#3469) renders before the user commits.
 
     Args:
         definitions: The ``name -> schema fragment`` map to review.
@@ -1405,11 +1426,16 @@ def _review_imported_definitions(
 
     Returns:
         A ``{"status", "summary", "types"}`` review report (plus echoed source context added
-        by the caller). Each ``types`` entry carries name, status, validation report,
-        rewrites, ref counts, the existing row's id, and the allowed resolutions.
+        by the caller). ``summary`` counts each classification, plus ``warnings`` — the number of
+        types carrying an unresolved ref or an advisory — and ``total``. Each ``types`` entry
+        carries name, status, validation report, advisory warnings, rewrites, ref counts, the
+        existing row's id, and the allowed resolutions.
     """
     types: List[Dict[str, Any]] = []
-    summary = {"new": 0, "identical": 0, "conflict": 0, "invalid": 0}
+    # new/identical/conflict/invalid are mutually exclusive classifications; ``warnings`` cuts
+    # across them (a New type can carry an unresolved ref, and so can a Conflict), so it counts
+    # *types worth a second look* rather than partitioning the set — as ``total`` does too.
+    summary = {"new": 0, "identical": 0, "conflict": 0, "invalid": 0, "warnings": 0}
 
     for def_name, def_schema in definitions.items():
         prep = _prepare_imported_definition(
@@ -1423,11 +1449,16 @@ def _review_imported_definitions(
         summary[prep.status] = summary.get(prep.status, 0) + 1
 
         unresolved = [e for e in (prep.refs or []) if e.get("status") == "unresolved"]
+        # A type is cautioned when it imports but something about it should be read first: a
+        # reference that lands nowhere yet, or an advisory such as the untyped-schema notice.
+        if unresolved or prep.warnings:
+            summary["warnings"] += 1
         types.append({
             "name": def_name,
             "status": prep.status,
             "valid": prep.valid,
             "validation_errors": prep.validation_errors,
+            "warnings": prep.warnings,
             "error": prep.error,
             "schema_id": prep.schema_id,
             "existing_id": str(prep.existing["id"]) if prep.existing else None,
@@ -1445,6 +1476,131 @@ def _review_imported_definitions(
     }
 
 
+def _root_schema_definition(
+    document: Any,
+    *,
+    source_label: Optional[str] = None,
+    has_definitions: bool = False,
+) -> Optional[tuple[str, Dict[str, Any]]]:
+    """Return the source document's own root schema as a ``(name, schema)`` definition.
+
+    A JSON Schema document that asserts anything about *itself* — a ``type``, a combinator,
+    an ``enum``/``const``, or ``properties`` — is a type definition, whether or not it also
+    carries ``$defs``. This returns that root type so the import reads the whole document
+    rather than only its parts; a pure container (``{"$defs": {...}}`` and nothing else)
+    holds its types in that container and yields ``None``.
+
+    A document that asserts nothing *and* holds no definitions is still a type: the empty
+    schema, categorized as ``object``. So a documentation-style schema carrying only a
+    ``$schema``, an ``$id``, a title and ``examples`` imports as the one type it describes —
+    see :func:`app.schema_validation.is_root_type_document` for the full rule.
+
+    The returned fragment has its ``$defs`` / ``definitions`` containers stripped: every member
+    is imported as its own primitive, and :func:`app.primitives_rewrite.rewrite_import_schema`
+    turns the root's ``#/$defs/X`` pointers into registry-relative refs at those siblings — so
+    keeping the containers inline would persist a dead, duplicated copy of each one.
+
+    The name mirrors the import wizard's ``extractPrimitiveNameFromSchema`` so the client's
+    preview and the server's review agree: the ``$id``'s last segment wins (it is the identity
+    the registry already serves the document under), then a slugged ``title``, then the source
+    label's filename stem, then a stable default.
+
+    Args:
+        document: The parsed source document.
+        source_label: The filename / URL recorded as provenance, used as a name fallback.
+        has_definitions: Whether the document's ``$defs`` / ``definitions`` containers hold
+            members that are the types instead.
+
+    Returns:
+        ``(name, schema)`` for the root type, or ``None`` when the document is not itself
+        a schema.
+    """
+    if not is_root_type_document(document, has_definitions=has_definitions):
+        return None
+
+    schema = {k: v for k, v in document.items() if k not in IMPORT_CONTAINER_KEYS}
+    return _root_definition_name(document, source_label), schema
+
+
+def _root_definition_name(document: Dict[str, Any], source_label: Optional[str]) -> str:
+    """Derive the name a document's root schema is imported under.
+
+    Args:
+        document: The parsed source document.
+        source_label: The filename / URL recorded as provenance.
+
+    Returns:
+        A url-safe leaf name (``$id`` leaf > slugged ``title`` > source-label stem > default).
+    """
+    declared_id = document.get("$id")
+    if isinstance(declared_id, str) and declared_id.strip():
+        # An `$id`'s last segment is already the canonical leaf the registry serves this
+        # schema under, so it is taken verbatim (only percent-decoded and de-suffixed).
+        leaf = declared_id.split("#", 1)[0].strip().rstrip("/").rsplit("/", 1)[-1]
+        leaf = _strip_schema_suffix(unquote(leaf))
+        if leaf:
+            return leaf
+
+    title = document.get("title")
+    if isinstance(title, str):
+        from_title = _name_slug(title)
+        if from_title:
+            return from_title
+
+    if source_label:
+        # A source label is a filename for an upload but a full URL for a URL import, so the
+        # last path segment (minus any query) is the part that reads as a name.
+        stem = _strip_schema_suffix(source_label.split("?", 1)[0].rstrip("/").rsplit("/", 1)[-1])
+        from_label = _name_slug(stem)
+        if from_label:
+            return from_label
+
+    return "imported-primitive"
+
+
+def _strip_schema_suffix(leaf: str) -> str:
+    """Drop a ``.schema.json`` / ``.json`` / ``.yaml`` / ``.yml`` suffix from a name leaf."""
+    for suffix in (".schema.json", ".json", ".yaml", ".yml"):
+        if leaf.lower().endswith(suffix):
+            return leaf[: -len(suffix)]
+    return leaf
+
+
+def _name_slug(value: str) -> str:
+    """Lowercase a human string into a url-safe, hyphen-separated leaf, or ``""``.
+
+    Same rule as :func:`app.schema_validation._slug` (and the wizard's ``slugifyLeaf``) so a
+    name derived here survives the server's own slugging unchanged, but empty-tolerant: a
+    value with nothing url-safe in it yields ``""`` and lets the caller fall through to the
+    next naming source rather than collapsing to ``_slug``'s ``"type"`` placeholder.
+    """
+    return re.sub(r"[^a-z0-9]+", "-", value.strip().lower()).strip("-")
+
+
+def _unique_root_name(name: str, container: Dict[str, Any]) -> str:
+    """Return a root name that does not collide with a ``$defs`` / ``definitions`` member.
+
+    A document whose root shares a name with one of its own definitions describes two distinct
+    types; the root is suffixed rather than dropped or silently overwritten, and the caller
+    warns about the rename.
+
+    Args:
+        name: The derived root name.
+        container: The document's merged definition container.
+
+    Returns:
+        ``name`` when it is free, else ``<name>-root`` (further numbered if that is taken too).
+    """
+    if name not in container:
+        return name
+    candidate = f"{name}-root"
+    suffix = 2
+    while candidate in container:
+        candidate = f"{name}-root-{suffix}"
+        suffix += 1
+    return candidate
+
+
 def _resolve_import_definitions(
     request: PrimitiveImportRequest,
 ) -> tuple[Dict[str, Any], List[str]]:
@@ -1452,20 +1608,27 @@ def _resolve_import_definitions(
 
     Shared by the commit (``/import``) and review (``/import/review``) endpoints so both
     interpret the source identically. A type-def bundle is expanded by the bundle importer
-    (#3462) — a malformed bundle is a clear 400 — while JSON Schema / OpenAPI documents
-    extract their ``$defs`` / ``definitions``. The ``selected_definitions`` filter is applied
-    here when ``import_all`` is false.
+    (#3462) — a malformed bundle is a clear 400 — while a JSON Schema / OpenAPI document
+    yields its own root schema (when it declares one) *plus* every member of its ``$defs`` /
+    ``definitions`` containers. The ``selected_definitions`` filter is applied here when
+    ``import_all`` is false.
+
+    A document is not only its ``$defs``: ``.../api/list/response.json`` declares an ``$id``,
+    a ``type``, and ``properties`` of its own and *also* carries ``$defs`` of sub-schemas it
+    refs. Reading only the containers imported the parts and silently dropped the whole — so
+    :func:`_root_schema_definition` recovers the root as a definition in its own right, listed
+    first because it is the document's headline type.
 
     Args:
         request: The import request carrying the source document and selection options.
 
     Returns:
         ``(definitions, warnings)`` — the resolved definitions and any non-fatal warnings
-        (e.g. from bundle expansion).
+        (e.g. from bundle expansion, or a root renamed around a ``$defs`` collision).
 
     Raises:
-        HTTPException: 400 for an invalid source kind, a malformed bundle, a document with no
-            definitions, or a selection that matches nothing.
+        HTTPException: 400 for an invalid source kind, a malformed bundle, a document that is
+            neither a schema nor a container, or a selection that matches nothing.
     """
     if request.source_kind not in VALID_IMPORT_SOURCE_KINDS:
         raise HTTPException(
@@ -1486,18 +1649,34 @@ def _resolve_import_definitions(
             raise HTTPException(status_code=400, detail=e.message)
         definitions: Dict[str, Any] = {p.name: p.schema for p in parsed_types}
     else:
+        # $defs is the draft 2020-12 container; definitions the pre-2020 equivalent.
+        container = merge_definition_containers(request.schema)
+
         definitions = {}
-        # Check for $defs (JSON Schema 2020-12)
-        if '$defs' in request.schema:
-            definitions.update(request.schema['$defs'])
-        # Check for definitions (older JSON Schema versions)
-        if 'definitions' in request.schema:
-            definitions.update(request.schema['definitions'])
+        root = _root_schema_definition(
+            request.schema,
+            source_label=request.source_label,
+            has_definitions=bool(container),
+        )
+        if root is not None:
+            root_name, root_schema = root
+            unique_name = _unique_root_name(root_name, container)
+            if unique_name != root_name:
+                warnings.append(
+                    f"The document's root schema was imported as '{unique_name}' because "
+                    f"'{root_name}' is already the name of one of its definitions."
+                )
+            # Root first: it is the document's own type, and the containers are its parts.
+            definitions[unique_name] = root_schema
+        definitions.update(container)
 
         if not definitions:
             raise HTTPException(
                 status_code=400,
-                detail="No definitions found in JSON Schema. Schema must contain $defs or definitions."
+                detail=(
+                    "No definitions found in JSON Schema. The document must carry at least "
+                    "one JSON Schema keyword of its own, or contain $defs or definitions."
+                )
             )
 
     # Filter definitions if specific ones are requested.

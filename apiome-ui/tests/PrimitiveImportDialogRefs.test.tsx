@@ -112,9 +112,61 @@ describe('PrimitiveImportDialog — $ref resolution', () => {
     expect(warning).toHaveTextContent(/could not be resolved/i);
     expect(warning).toHaveTextContent(/looked up in the registry and in this document/i);
     expect(warning).toHaveTextContent(/either do not exist/i);
+    // The row names the ref and the type it came from — nothing more.
     expect(screen.getByTestId('ref-unresolved-../../../../std/v0/types/missing')).toHaveTextContent(
-      /no type matching "std\/v0\/types\/missing"/i,
+      '../../../../std/v0/types/missing in position',
     );
+  });
+
+  describe('what an unresolved ref means for the import', () => {
+    it('states the consequence once, under the list', async () => {
+      renderWith({
+        $defs: { position: { properties: { x: { $ref: '../../../../std/v0/types/missing' } } } },
+      });
+      setNamespace('tenant/acme/v1/types');
+
+      await waitFor(() => expect(screen.getByTestId('ref-unresolved')).toBeInTheDocument());
+
+      expect(screen.getByTestId('ref-unresolved-consequence')).toHaveTextContent(
+        'Importing these schemas will leave these references dangling until the schema is found or imported.',
+      );
+    });
+
+    it('does not repeat it on each row', async () => {
+      renderWith({
+        $defs: {
+          position: { properties: { x: { $ref: '../../../../std/v0/types/missing' } } },
+          shape: { properties: { y: { $ref: '../../../../std/v0/types/absent' } } },
+        },
+      });
+      setNamespace('tenant/acme/v1/types');
+
+      await waitFor(() => expect(screen.getByTestId('ref-unresolved')).toBeInTheDocument());
+
+      // Two unresolved refs, one statement of what that means.
+      expect(screen.getAllByTestId('ref-unresolved-consequence')).toHaveLength(1);
+      expect(
+        screen.getByTestId('ref-unresolved-../../../../std/v0/types/missing'),
+      ).not.toHaveTextContent(/dangling|no type matching/i);
+      expect(
+        screen.getByTestId('ref-unresolved-../../../../std/v0/types/absent'),
+      ).not.toHaveTextContent(/dangling|no type matching/i);
+    });
+
+    it('says nothing at all when every ref resolves', async () => {
+      renderWith({
+        $defs: {
+          money: { properties: { amount: { $ref: './decimal' } } },
+          decimal: { type: 'string' },
+        },
+      });
+      setNamespace('tenant/acme/v1/types');
+
+      await waitFor(() => expect(screen.getByTestId('ref-resolution')).toBeInTheDocument());
+
+      expect(screen.queryByTestId('ref-unresolved')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('ref-unresolved-consequence')).not.toBeInTheDocument();
+    });
   });
 
   it('recommends importing the missing refs first', async () => {

@@ -7,11 +7,15 @@
 
 import {
   parseSchemaContent,
+  isSchemaDocument,
   isStandalonePrimitiveSchema,
   extractPrimitiveNameFromSchema,
   determineCategoryFromSchema,
   extractDefinitions,
   describeDetectedTypes,
+  untypedSchemaWarning,
+  countCautionedTypes,
+  UNTYPED_SCHEMA_WARNING,
   extractTargetNamespace,
   buildImportRequestBody,
   filterResolutions,
@@ -148,6 +152,35 @@ describe('extractPrimitiveNameFromSchema', () => {
       );
     });
   });
+
+  describe('agrees with the server, which derives the same name for the same document', () => {
+    // Mirrors `_root_definition_name` in apiome-rest/src/app/primitives_routes.py: when the
+    // wizard sends a root-plus-$defs document as-is, the name shown in the preview has to be
+    // the one the review comes back with, or the user's selection cannot be matched to it.
+    it('drops a .json / .schema.json suffix from an $id leaf', () => {
+      expect(extractPrimitiveNameFromSchema({ $id: 'https://acme.test/user.schema.json' })).toBe(
+        'user'
+      );
+      expect(extractPrimitiveNameFromSchema({ $id: 'https://acme.test/list/response.json' })).toBe(
+        'response'
+      );
+    });
+
+    it('ignores a fragment on the $id', () => {
+      expect(extractPrimitiveNameFromSchema({ $id: 'https://x/types/money#/$defs/a' })).toBe(
+        'money'
+      );
+    });
+
+    it('reads the last path segment when the source label is a URL, not a filename', () => {
+      expect(
+        extractPrimitiveNameFromSchema(
+          { type: 'object' },
+          'https://schemas.sourcemeta.com/self/v1/schemas/api/list/response.json?v=2'
+        )
+      ).toBe('response');
+    });
+  });
 });
 
 describe('determineCategoryFromSchema', () => {
@@ -192,6 +225,110 @@ describe('extractDefinitions', () => {
   it('does not treat a standalone document as a bundle member', () => {
     // A bundle is expected to be a container; a bare type yields no definitions.
     expect(extractDefinitions({ type: 'string' }, 'type-def-bundle')).toEqual({});
+  });
+
+  describe('a document is not only its $defs', () => {
+    // The reported bug, reproducing
+    // https://schemas.sourcemeta.com/self/v1/schemas/api/list/response.json: the document
+    // declares an `$id`, a `type`, and `properties` of its own *and* carries `$defs` of the
+    // sub-schemas it refs. Only `policies` was imported; `response` was silently dropped.
+    const rootAndDefs = {
+      $id: 'https://schemas.sourcemeta.com/self/v1/schemas/api/list/response',
+      title: 'Sourcemeta One List API Response',
+      type: 'object',
+      properties: { policies: { $ref: '#/$defs/policies' } },
+      $defs: { policies: { type: 'array' } },
+    };
+
+    it('reads the root schema alongside its $defs, root first', () => {
+      expect(Object.keys(extractDefinitions(rootAndDefs, 'json-schema'))).toEqual([
+        'response',
+        'policies',
+      ]);
+    });
+
+    it('strips the containers from the root, whose refs the API rewrites to siblings', () => {
+      const root = extractDefinitions(rootAndDefs, 'json-schema').response;
+      expect(root).not.toHaveProperty('$defs');
+      expect(root.properties).toEqual({ policies: { $ref: '#/$defs/policies' } });
+    });
+
+    it('suffixes a root name that collides with one of its own definitions', () => {
+      const defs = extractDefinitions(
+        { $id: 'https://x/policies', type: 'object', $defs: { policies: { type: 'array' } } },
+        'json-schema'
+      );
+      expect(Object.keys(defs)).toEqual(['policies-root', 'policies']);
+    });
+
+    it('adds no root for a document that asserts nothing about itself', () => {
+      expect(Object.keys(extractDefinitions({ $defs: { A: { type: 'string' } } }, 'json-schema')))
+        .toEqual(['A']);
+    });
+
+    it('reads only the container for a bundle, which is a container by definition', () => {
+      expect(Object.keys(extractDefinitions(rootAndDefs, 'type-def-bundle'))).toEqual(['policies']);
+    });
+  });
+
+  describe('a type need not constrain anything', () => {
+    // https://schemas.sourcemeta.com/self/v1/schemas/api/schemas/evaluate/request.json: it
+    // accepts *any* JSON instance, so it declares no `type` and no `properties` — only its
+    // identity and documentation. It is the empty schema, and the document's only type.
+    const annotationOnly = {
+      $schema: 'https://json-schema.org/draft/2020-12/schema',
+      $id: 'https://schemas.sourcemeta.com/self/v1/schemas/api/schemas/evaluate/request',
+      title: 'Sourcemeta One Schema Evaluate API Request',
+      description: 'The JSON instance to validate against a schema in the catalog',
+      examples: [{ name: 'Alice' }, 'hello world', 42, true, null, [1, 2, 3]],
+    };
+
+    it('detects an annotation-only schema as one type, named from its $id', () => {
+      const defs = extractDefinitions(annotationOnly, 'json-schema');
+      expect(Object.keys(defs)).toEqual(['request']);
+      expect(defs.request).toEqual(annotationOnly);
+    });
+
+    it('reports it as a valid draft 2020-12 schema, categorized object, with a caution', () => {
+      const [detected] = describeDetectedTypes(extractDefinitions(annotationOnly, 'json-schema'));
+      expect(detected).toEqual({
+        name: 'request',
+        valid: true,
+        warning: UNTYPED_SCHEMA_WARNING,
+      });
+      expect(determineCategoryFromSchema(annotationOnly)).toBe('object');
+    });
+
+    it('detects nothing in arbitrary JSON that carries no JSON Schema keyword', () => {
+      expect(extractDefinitions({ name: 'acme-tools', version: '1.4.0' }, 'json-schema')).toEqual(
+        {}
+      );
+    });
+  });
+});
+
+describe('isSchemaDocument', () => {
+  it('is true for a document that asserts something about itself, container or not', () => {
+    expect(isSchemaDocument({ type: 'object', $defs: { A: {} } })).toBe(true);
+    expect(isSchemaDocument({ properties: {} })).toBe(true);
+    expect(isSchemaDocument({ enum: ['a'] })).toBe(true);
+  });
+
+  it('is false for a container whose members are the types', () => {
+    expect(isSchemaDocument({ $defs: { A: {} } })).toBe(false);
+    // A titled, identified bundle is still a bundle — no junk empty root type.
+    expect(isSchemaDocument({ $id: 'https://x/a', title: 'A', $defs: { A: {} } })).toBe(false);
+  });
+
+  it('is true for an annotation-only schema with no definitions to read instead', () => {
+    // The empty schema constrains nothing; that is not a reason to refuse it.
+    expect(isSchemaDocument({ $id: 'https://x/a', title: 'A' })).toBe(true);
+    expect(isSchemaDocument({ description: 'anything' })).toBe(true);
+  });
+
+  it('is false for arbitrary JSON carrying no JSON Schema keyword', () => {
+    expect(isSchemaDocument({ name: 'acme-tools', version: '1.4.0' })).toBe(false);
+    expect(isSchemaDocument({ $defs: {} })).toBe(false);
   });
 });
 
@@ -239,6 +376,86 @@ describe('describeDetectedTypes', () => {
 
     expect(result.every((entry) => !entry.valid)).toBe(true);
     expect(result[0].error).toMatch(/not a json schema object/i);
+  });
+
+  it('cautions an untyped definition while still calling it valid', () => {
+    const [entry] = describeDetectedTypes({ request: { title: 'Request', examples: [42] } });
+
+    expect(entry).toEqual({
+      name: 'request',
+      valid: true,
+      warning: 'No type was specified in the JSON Schema: this might lead to erroneous behavior',
+    });
+  });
+
+  it('carries the caution alongside a metaschema error', () => {
+    // `required` must be an array; the definition still declares no type of its own.
+    const [entry] = describeDetectedTypes({ broken: { required: 'name' } });
+
+    expect(entry.valid).toBe(false);
+    expect(entry.error).toMatch(/required/);
+    expect(entry.warning).toBe(UNTYPED_SCHEMA_WARNING);
+  });
+});
+
+describe('countCautionedTypes', () => {
+  it('counts a type carrying an unresolved $ref', () => {
+    expect(
+      countCautionedTypes([
+        reviewType({ name: 'position', unresolved_refs: [{ relative_ref: './missing' }] }),
+        reviewType({ name: 'money' }),
+      ]),
+    ).toBe(1);
+  });
+
+  it('counts an advisory on the same axis as an unresolved ref', () => {
+    expect(
+      countCautionedTypes([reviewType({ name: 'request', warnings: [UNTYPED_SCHEMA_WARNING] })]),
+    ).toBe(1);
+  });
+
+  it('counts a type once however many cautions it carries', () => {
+    expect(
+      countCautionedTypes([
+        reviewType({
+          name: 'both',
+          warnings: [UNTYPED_SCHEMA_WARNING],
+          unresolved_refs: [{ relative_ref: './a' }, { relative_ref: './b' }],
+        }),
+      ]),
+    ).toBe(1);
+  });
+
+  it('is zero when nothing is cautioned, and tolerates a response missing the fields', () => {
+    expect(countCautionedTypes([reviewType({ name: 'money' })])).toBe(0);
+    const legacy = reviewType({ name: 'money' });
+    delete (legacy as Partial<ReviewType>).warnings;
+    delete (legacy as Partial<ReviewType>).unresolved_refs;
+    expect(countCautionedTypes([legacy])).toBe(0);
+  });
+});
+
+describe('untypedSchemaWarning', () => {
+  it('fires for a definition that asserts nothing', () => {
+    expect(untypedSchemaWarning({})).toBe(UNTYPED_SCHEMA_WARNING);
+    expect(untypedSchemaWarning({ title: 'A', description: 'B' })).toBe(UNTYPED_SCHEMA_WARNING);
+  });
+
+  it('stays quiet whenever the shape can be read without a declared type', () => {
+    // Not a guess: properties → object, enum → its values' type, $ref/combinator → elsewhere.
+    expect(untypedSchemaWarning({ type: 'string' })).toBeUndefined();
+    expect(untypedSchemaWarning({ properties: {} })).toBeUndefined();
+    expect(untypedSchemaWarning({ enum: ['a'] })).toBeUndefined();
+    expect(untypedSchemaWarning({ const: 1 })).toBeUndefined();
+    expect(untypedSchemaWarning({ $ref: './money' })).toBeUndefined();
+    expect(untypedSchemaWarning({ allOf: [{ type: 'string' }] })).toBeUndefined();
+    expect(untypedSchemaWarning({ items: { type: 'string' } })).toBeUndefined();
+  });
+
+  it('returns nothing for a non-object definition', () => {
+    expect(untypedSchemaWarning(null)).toBeUndefined();
+    expect(untypedSchemaWarning([])).toBeUndefined();
+    expect(untypedSchemaWarning('string')).toBeUndefined();
   });
 
   it('returns nothing for an empty container', () => {

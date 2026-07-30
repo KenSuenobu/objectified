@@ -61,7 +61,15 @@ export interface RefResolution {
   origin?: 'registry' | 'import';
   /** The replacement `$ref` value, set only when `status` is `repaired`. */
   rewrittenTo?: string;
-  /** Why nothing could be matched, set only when `status` is `unresolved`. */
+  /**
+   * Why nothing could be matched, set only when `status` is `unresolved`.
+   *
+   * The per-edge diagnosis — "no type of that name" versus "not a registry reference at all". The
+   * import panel does not render it per row: every unresolved row in a given document tends to
+   * carry the same sentence, so the panel states the consequence once under the list instead. Kept
+   * on the model because the distinction is real and a caller that wants to explain one specific
+   * edge (a tooltip, a detail view) has nowhere else to get it.
+   */
   reason?: string;
 }
 
@@ -278,7 +286,7 @@ export function resolveImportRefs(
         ref,
         status: 'unresolved',
         reason: tail
-          ? `No type matching "${tail}" exists in the registry or in this import.`
+          ? `No type matching "${tail}" currently exists in the registry or in this import.`
           : 'The reference does not name a registry type.',
       });
     }
