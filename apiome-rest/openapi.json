@@ -359,6 +359,51 @@
         }
       }
     },
+    "/types/{schema_path}": {
+      "get": {
+        "tags": [
+          "types-public"
+        ],
+        "summary": "Get a public registry type by its $id path",
+        "description": "Serve the JSON Schema document a registry ``$id`` names.\n\n``schema_path`` is everything after ``/types/`` \u2014 namespace plus type-name slug, e.g.\n``std/v0/primitives/array``. It is re-joined onto :data:`REGISTRY_BASE_URL` to rebuild the exact\n``$id`` the registry derived, then matched against the stored column, so this endpoint agrees\nwith ``$ref`` resolution by construction rather than by a second parsing rule.\n\nArgs:\n    schema_path: The ``$id`` path below the registry mount.\n\nReturns:\n    The stored schema document with the JSON Schema media type.\n\nRaises:\n    HTTPException: 404 when no ``is_system``/``is_public`` type carries that ``$id``.",
+        "operationId": "get_public_type_types__schema_path__get",
+        "parameters": [
+          {
+            "name": "schema_path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Schema Path",
+              "description": "Schema Path schema."
+            },
+            "description": "Path parameter identifying the schema path segment."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The type's JSON Schema document, as stored (its `$id` included).",
+            "content": {
+              "application/schema+json": {}
+            }
+          },
+          "404": {
+            "description": "No publicly servable type at this path."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for getapublicregistrytypebyitsidpathresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mcp/badge/{tenant}/{slug}.svg": {
       "get": {
         "tags": [
@@ -100716,7 +100761,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-07-30T00:25:26Z"
+            "example": "2026-07-30T01:13:52Z"
           }
         },
         "additionalProperties": false,
@@ -112841,14 +112886,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-07-30T00:25:26Z"
+            "example": "2026-07-30T01:13:52Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-07-30T00:25:26Z"
+            "example": "2026-07-30T01:13:52Z"
           },
           "outcome": {
             "anyOf": [

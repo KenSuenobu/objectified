@@ -87,3 +87,53 @@ def test_mark_refs_resolved_to_target_rolls_back_on_error():
 
     mock_conn.rollback.assert_called_once()
     mock_conn.commit.assert_not_called()
+
+
+# --- Public $id dereference lookup (GET /types/{path}) -------------------------------------------
+#
+# The WHERE clause of this accessor IS the security boundary of the unauthenticated public types
+# route, so it is asserted directly rather than only through the endpoint.
+
+
+def test_public_type_lookup_requires_both_system_and_public():
+    db = Database()
+    with patch.object(db, "execute_query", return_value=[]) as mq:
+        db.get_public_type_by_schema_id(_TARGET)
+
+    sql = " ".join(mq.call_args.args[0].split())
+    assert "is_system = true" in sql
+    assert "is_public = true" in sql
+    # No tenant predicate: there is no caller tenant, so the row's own flags must decide.
+    assert "tenant_id = %s" not in sql
+
+
+def test_public_type_lookup_matches_on_the_schema_id_only():
+    db = Database()
+    with patch.object(db, "execute_query", return_value=[]) as mq:
+        db.get_public_type_by_schema_id(_TARGET)
+
+    assert mq.call_args.args[1] == (_TARGET,)
+
+
+def test_public_type_lookup_is_deterministic_across_per_tenant_seed_copies():
+    db = Database()
+    with patch.object(db, "execute_query", return_value=[]) as mq:
+        db.get_public_type_by_schema_id(_TARGET)
+
+    sql = " ".join(mq.call_args.args[0].split())
+    # V113 seeds core types per tenant, so several rows share one $id; ordering picks one stably.
+    assert "ORDER BY created_at ASC, id ASC" in sql
+    assert "LIMIT 1" in sql
+
+
+def test_public_type_lookup_returns_none_when_nothing_is_public():
+    db = Database()
+    with patch.object(db, "execute_query", return_value=[]):
+        assert db.get_public_type_by_schema_id(_TARGET) is None
+
+
+def test_public_type_lookup_returns_the_row_when_public():
+    db = Database()
+    row = {"id": "p-1", "schema_id": _TARGET, "schema": {"type": "array"}}
+    with patch.object(db, "execute_query", return_value=[row]):
+        assert db.get_public_type_by_schema_id(_TARGET) == row

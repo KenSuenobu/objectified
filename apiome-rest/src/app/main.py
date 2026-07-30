@@ -72,6 +72,7 @@ from .primitives_routes import router as primitives_router
 from .project_tags_routes import router as project_tags_router
 from .projects_routes import router as projects_router
 from .properties_routes import router as properties_router
+from .public_types_routes import router as public_types_router
 from .push_webhook_crypto import validate_webhook_signing_key
 from .push_webhook_delivery import process_due_push_webhook_deliveries
 from .push_webhook_subscriptions_routes import router as push_webhook_subscriptions_router
@@ -245,6 +246,9 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 # Include routers (browse_public_router first for unauthenticated /v1/browse/* routes;
 # data_router next so /v1/data/* is matched before any generic patterns)
 app.include_router(browse_public_router)
+# public_types_router: anonymous dereference of a registry $id at /types/* (unauthenticated). Serves
+# only is_system AND is_public rows, so the std/* core set and nothing a tenant owns.
+app.include_router(public_types_router)
 # mcp_badge_router: anonymous public SVG status badges at /mcp/badge/* (unauthenticated, like browse).
 app.include_router(mcp_badge_router)
 # mcp_feed_router: anonymous public RSS/Atom/JSON change feeds at /mcp/feed/* (unauthenticated, like browse).

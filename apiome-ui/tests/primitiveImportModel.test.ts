@@ -89,16 +89,64 @@ describe('extractPrimitiveNameFromSchema', () => {
     expect(extractPrimitiveNameFromSchema({ $id: 'https://x/iso/percentage', title: 'P' })).toBe('percentage');
   });
 
-  it('slugifies the title when there is no $id', () => {
-    expect(extractPrimitiveNameFromSchema({ title: 'ISO 80000-1:2022 Percentage' })).toBe('iso_8000012022_percentage');
+  it('slugifies the title when there is no $id, keeping its structure', () => {
+    // Hyphen-separated like the registry's own slug, and the digit groups stay separated rather
+    // than being jammed together as `8000012022`.
+    expect(extractPrimitiveNameFromSchema({ title: 'ISO 80000-1:2022 Percentage' })).toBe(
+      'iso-80000-1-2022-percentage'
+    );
   });
 
-  it('falls back to the filename', () => {
-    expect(extractPrimitiveNameFromSchema({ type: 'string' }, 'my-type.json')).toBe('my_type');
+  it('falls back to the filename, preserving its hyphens', () => {
+    expect(extractPrimitiveNameFromSchema({ type: 'string' }, 'my-type.json')).toBe('my-type');
   });
 
   it('uses a stable default', () => {
-    expect(extractPrimitiveNameFromSchema({ type: 'object' })).toBe('imported_primitive');
+    expect(extractPrimitiveNameFromSchema({ type: 'object' })).toBe('imported-primitive');
+  });
+
+  describe('a hyphen in the name is preserved — it is url-safe', () => {
+    it('keeps the hyphen in an $id leaf', () => {
+      // The reported bug: `output-error` was imported as `output_error`, so the stored name no
+      // longer matched the `$id` the registry serves the schema under.
+      expect(
+        extractPrimitiveNameFromSchema({ $id: 'https://api.apiome.dev/types/std/v0/types/output-error' })
+      ).toBe('output-error');
+    });
+
+    it('keeps the hyphen in a filename', () => {
+      expect(extractPrimitiveNameFromSchema({ type: 'object' }, 'output-error.json')).toBe(
+        'output-error'
+      );
+    });
+
+    it('keeps the hyphen coming from a title', () => {
+      expect(extractPrimitiveNameFromSchema({ title: 'output-error' })).toBe('output-error');
+    });
+
+    it('never emits an underscore separator for a hyphenated source', () => {
+      for (const schema of [
+        { $id: 'https://x/output-error' },
+        { title: 'Output-Error' },
+      ]) {
+        expect(extractPrimitiveNameFromSchema(schema)).not.toContain('_');
+      }
+    });
+
+    it('takes an $id leaf verbatim rather than re-slugging it', () => {
+      // An `$id` leaf is already canonical; an underscore an author chose is theirs to keep.
+      expect(extractPrimitiveNameFromSchema({ $id: 'https://x/legacy_name' })).toBe('legacy_name');
+    });
+
+    it('percent-decodes an $id leaf', () => {
+      expect(extractPrimitiveNameFromSchema({ $id: 'https://x/output%2Derror' })).toBe('output-error');
+    });
+
+    it('ignores a trailing slash on the $id', () => {
+      expect(extractPrimitiveNameFromSchema({ $id: 'https://x/types/output-error/' })).toBe(
+        'output-error'
+      );
+    });
   });
 });
 

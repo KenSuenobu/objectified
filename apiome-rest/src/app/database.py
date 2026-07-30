@@ -1903,6 +1903,41 @@ class Database:
         results = self.execute_query(query, (schema_id, tenant_id, tenant_id))
         return results[0] if results else None
 
+    def get_public_type_by_schema_id(self, schema_id: str) -> Optional[Dict[str, Any]]:
+        """Resolve a **publicly servable** type by its ``$id``, with no tenant scope.
+
+        Backs the unauthenticated ``GET /types/{path}`` dereference of a registry ``$id``. Unlike
+        :meth:`get_primitive_by_schema_id` there is no caller tenant to scope by, so visibility comes
+        entirely from the row itself: ``is_system AND is_public`` — the platform-curated ``std/*``
+        core set, which V113 seeds as visible to every tenant.
+
+        Both flags are required, and that is the whole security boundary of the public endpoint: a
+        tenant's own type is never ``is_system``, so it can never be reached here regardless of what
+        ``$id`` a caller guesses.
+
+        System-core types are seeded per tenant, so several rows can carry the same ``$id`` with the
+        same document; the ordering picks one deterministically rather than returning an arbitrary
+        row per request.
+
+        Args:
+            schema_id: The absolute ``$id`` to resolve.
+
+        Returns:
+            The matching public system row, or None when no such type is publicly servable.
+        """
+        query = """
+            SELECT id, tenant_id, name, description, category, schema, tags,
+                   created_by, is_system, is_public, usage_count, source,
+                   schema_id, draft, namespace, base_uri, refs,
+                   created_at, updated_at
+            FROM apiome.primitives
+            WHERE schema_id = %s AND is_system = true AND is_public = true
+            ORDER BY created_at ASC, id ASC
+            LIMIT 1
+        """
+        results = self.execute_query(query, (schema_id,))
+        return results[0] if results else None
+
     def create_primitive(
         self,
         tenant_id: str,

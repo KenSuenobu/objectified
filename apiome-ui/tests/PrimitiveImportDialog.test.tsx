@@ -7,6 +7,8 @@
 
 import yaml from 'yaml';
 
+import { extractPrimitiveNameFromSchema } from '../src/app/ade/dashboard/primitives/primitiveImportModel';
+
 // Test the parseSchemaContent logic
 const parseSchemaContent = (content: string): Record<string, unknown> | null => {
   // First try to parse as JSON
@@ -89,38 +91,8 @@ const determineCategoryFromSchema = (schema: Record<string, unknown>): string =>
   return 'object';
 };
 
-// Extract a primitive name from a standalone JSON Schema
-const extractPrimitiveNameFromSchema = (
-  schema: Record<string, unknown>,
-  filename?: string
-): string => {
-  // Try to extract from $id
-  if (schema.$id && typeof schema.$id === 'string') {
-    const idPath = schema.$id.split('/');
-    const lastSegment = idPath[idPath.length - 1];
-    if (lastSegment) {
-      return lastSegment.replace(/-/g, '_');
-    }
-  }
-
-  // Try to extract from title
-  if (schema.title && typeof schema.title === 'string') {
-    return schema.title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .replace(/\s+/g, '_')
-      .replace(/^_+|_+$/g, '');
-  }
-
-  // Fall back to filename
-  if (filename) {
-    const baseName = filename.replace(/\.(json|yaml|yml)$/i, '');
-    return baseName.replace(/-/g, '_').replace(/\s+/g, '_');
-  }
-
-  return 'imported_primitive';
-};
-
+// The real implementation, not a copy: this file previously duplicated it, so the `-` -> `_`
+// bug it contained could never be caught here. The other helpers above are still local copies.
 describe('PrimitiveImportDialog Parsing Logic', () => {
   describe('parseSchemaContent', () => {
     it('should parse valid JSON content', () => {
@@ -417,14 +389,14 @@ $defs:
       expect(name).toBe('percentage');
     });
 
-    it('should convert hyphens to underscores in $id', () => {
+    it('preserves hyphens in an $id, which are url-safe', () => {
       const schema = {
         $id: 'https://example.com/my-custom-type',
         type: 'string'
       };
 
       const name = extractPrimitiveNameFromSchema(schema);
-      expect(name).toBe('my_custom_type');
+      expect(name).toBe('my-custom-type');
     });
 
     it('should extract name from title if no $id', () => {
@@ -435,7 +407,7 @@ $defs:
 
       const name = extractPrimitiveNameFromSchema(schema);
       // The regex removes non-alphanumeric characters, so "80000-1:2022" becomes "8000012022"
-      expect(name).toBe('iso_8000012022_percentage');
+      expect(name).toBe('iso-80000-1-2022-percentage');
     });
 
     it('should extract name from filename as fallback', () => {
@@ -444,7 +416,7 @@ $defs:
       };
 
       const name = extractPrimitiveNameFromSchema(schema, 'my-custom-schema.json');
-      expect(name).toBe('my_custom_schema');
+      expect(name).toBe('my-custom-schema');
     });
 
     it('should return default name if no other source available', () => {
@@ -453,7 +425,7 @@ $defs:
       };
 
       const name = extractPrimitiveNameFromSchema(schema);
-      expect(name).toBe('imported_primitive');
+      expect(name).toBe('imported-primitive');
     });
 
     it('should handle the ISO percentage schema example', () => {
@@ -498,16 +470,16 @@ $defs:
       expect(isStandalonePrimitiveSchema(parsed!)).toBe(true);
 
       const primitiveName = extractPrimitiveNameFromSchema(parsed!);
-      expect(primitiveName).toBe('email_address');
+      expect(primitiveName).toBe('email-address');
 
       // Simulating what the dialog does - wrap in $defs for API
       const defsForApi = {
         [primitiveName]: parsed
       };
 
-      expect(defsForApi['email_address']).toBeDefined();
-      expect((defsForApi['email_address'] as any).type).toBe('string');
-      expect((defsForApi['email_address'] as any).format).toBe('email');
+      expect(defsForApi['email-address']).toBeDefined();
+      expect((defsForApi['email-address'] as any).type).toBe('string');
+      expect((defsForApi['email-address'] as any).format).toBe('email');
     });
 
     it('should detect schema with anyOf as standalone', () => {
@@ -607,7 +579,7 @@ $defs:
 
       // Should extract name from $id
       const name = extractPrimitiveNameFromSchema(isoLanguageFamilySchema);
-      expect(name).toBe('set_5');
+      expect(name).toBe('set-5');
 
       // Should determine category as string (from anyOf with string consts)
       const category = determineCategoryFromSchema(isoLanguageFamilySchema);
@@ -630,7 +602,7 @@ $defs:
     const extractNameFromUrl = (url: string, schema: Record<string, unknown>): string => {
       // First try to extract from schema
       const schemaName = extractPrimitiveNameFromSchema(schema);
-      if (schemaName !== 'imported_primitive') {
+      if (schemaName !== 'imported-primitive') {
         return schemaName;
       }
 
@@ -640,7 +612,7 @@ $defs:
         const urlFilename = urlPath.split('/').pop() || '';
         return extractPrimitiveNameFromSchema(schema, urlFilename);
       } catch {
-        return 'imported_primitive';
+        return 'imported-primitive';
       }
     };
 
@@ -673,7 +645,7 @@ $defs:
       const url = 'https://example.com/schemas/email-address.json';
 
       const name = extractNameFromUrl(url, schema);
-      expect(name).toBe('email_address');
+      expect(name).toBe('email-address');
     });
 
     it('should prefer schema $id over URL path for name extraction', () => {
@@ -694,7 +666,7 @@ $defs:
       const url = 'https://api.example.com/schemas/phone-number';
 
       const name = extractNameFromUrl(url, schema);
-      expect(name).toBe('phone_number');
+      expect(name).toBe('phone-number');
     });
 
     it('should handle URL response parsing for JSON', () => {

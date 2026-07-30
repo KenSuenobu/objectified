@@ -154,37 +154,66 @@ export function isStandalonePrimitiveSchema(schema: Record<string, unknown>): bo
  * Priority: `$id` (last path segment) > `title` (slugified) > filename (without
  * extension) > a stable default.
  *
+ * A hyphen is preserved everywhere, because a type name is a URL-safe leaf, not an identifier: the
+ * registry derives `$id` as `{base_uri}{slug(name)}` and `schema_validation._slug` emits hyphens, so
+ * the seeded core types are `date-time` and `currency-code`. This function used to rewrite `-` to
+ * `_`, which renamed `output-error` to `output_error` — and worse, when the document declared its own
+ * `$id`, the stored name no longer matched the `$id` the registry served it under.
+ *
+ * Separators this function *introduces* (for spaces and punctuation) are hyphens for the same
+ * reason, so a derived name round-trips through the server's slug unchanged.
+ *
  * @param schema The standalone schema.
  * @param filename Optional source filename used as a fallback.
- * @returns A snake_case identifier for the primitive.
+ * @returns A url-safe, hyphen-separated leaf name for the primitive.
  */
 export function extractPrimitiveNameFromSchema(
   schema: Record<string, unknown>,
   filename?: string
 ): string {
   if (typeof schema.$id === 'string' && schema.$id) {
-    const lastSegment = schema.$id.split('/').pop();
+    // The last segment of an `$id` is already the canonical name the registry serves this schema
+    // under, so it is taken verbatim (only percent-decoded). Rewriting it would make the imported
+    // name disagree with the document's own identity.
+    const lastSegment = schema.$id.split('/').filter(Boolean).pop();
     if (lastSegment) {
-      return lastSegment.replace(/-/g, '_');
+      return decodeUriSegment(lastSegment);
     }
   }
 
   if (typeof schema.title === 'string' && schema.title) {
-    return schema.title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .replace(/\s+/g, '_')
-      .replace(/^_+|_+$/g, '');
+    const fromTitle = slugifyLeaf(schema.title);
+    if (fromTitle) return fromTitle;
   }
 
   if (filename) {
-    return filename
-      .replace(/\.(json|yaml|yml)$/i, '')
-      .replace(/-/g, '_')
-      .replace(/\s+/g, '_');
+    const fromFilename = slugifyLeaf(filename.replace(/\.(json|yaml|yml)$/i, ''));
+    if (fromFilename) return fromFilename;
   }
 
-  return 'imported_primitive';
+  return 'imported-primitive';
+}
+
+/** Percent-decode an `$id` path segment, leaving it alone when it is not valid encoding. */
+function decodeUriSegment(segment: string): string {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}
+
+/**
+ * Lowercase a human string into a url-safe, hyphen-separated leaf.
+ *
+ * Mirrors `schema_validation._slug` (`[^a-z0-9]+` → `-`) so a name derived here survives the
+ * server's own slugging unchanged — including hyphens the source already had.
+ */
+function slugifyLeaf(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 /**
