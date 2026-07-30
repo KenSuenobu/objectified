@@ -49,17 +49,25 @@ export function baseChainNodeLabel(node: Pick<BaseChainNode, 'targetName' | 'tar
 }
 
 /**
- * A type that references this primitive. Populated by the reverse-index endpoint
- * once #3477 ("Used by properties" dependents/impact) lands; until then the detail
- * page renders an empty-state and these helpers degrade to zero/empty results.
+ * A type that references this primitive, from the reverse index the single-type GET
+ * computes (#3477). One entry per referencing `$ref` edge, so a type that references
+ * this one from two properties appears twice.
  */
 export interface DependentRef {
+  /** The referencing type's id, for linking to its detail page. */
+  id?: string | null;
   schema_id?: string | null;
   namespace?: string | null;
   name?: string | null;
+  /** The property carrying the reference; `null` when the whole type is the reference. */
   property?: string | null;
   scope?: 'system' | 'tenant';
   tenant_label?: string | null;
+}
+
+/** The dashboard route for a dependent type, or `null` when it carries no id. */
+export function dependentHref(dep: Pick<DependentRef, 'id'>): string | null {
+  return refEdgeTargetHref({ target_id: dep.id });
 }
 
 /** One node in the base chain: the type itself, then each of its ref edges. */
@@ -269,8 +277,8 @@ export function deriveOwner(isSystem: boolean, namespace?: string | null): strin
 /**
  * Aggregate the "used in" counters from the dependents list and binding count.
  *
- * Dependents come from the reverse-index endpoint (#3477); until it lands the list
- * is empty and only `properties` (from `usage_count`) is non-zero.
+ * Dependents arrive one entry per referencing `$ref` edge (#3477), so the type counter
+ * de-duplicates: a type that references this one twice is one dependent type, not two.
  *
  * @param dependents - Types referencing this primitive (may be undefined/empty).
  * @param usageCount - The primitive's property-binding `usage_count`.
@@ -281,6 +289,7 @@ export function summarizeUsage(
   usageCount: number
 ): UsageSummary {
   const list = dependents ?? [];
+  const types = new Set(list.map((dep, index) => dep.id || dep.schema_id || `${dep.name}-${index}`));
   const tenants = new Set(
     list
       .filter((dep) => dep.scope !== 'system')
@@ -288,7 +297,7 @@ export function summarizeUsage(
       .filter((label) => label.length > 0)
   );
   return {
-    dependentTypes: list.length,
+    dependentTypes: types.size,
     properties: Math.max(0, usageCount),
     tenants: tenants.size,
   };

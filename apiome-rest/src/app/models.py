@@ -189,6 +189,11 @@ class PrimitiveSchema(BaseModel):
     # Resolved relative-`$ref` edges for this primitive's schema (#3456). Each edge is
     # {relative_ref, resolved_target, status} with status resolved|unresolved|circular.
     refs: List[Dict[str, Any]] = []
+    # The reverse index of `refs` (#3477): the visible types that reference *this* one,
+    # one entry per referencing edge as {id, schema_id, namespace, name, property,
+    # scope, tenant_label}. Only the single-primitive GET computes it; the list
+    # endpoints leave it empty rather than run a reverse scan per row.
+    dependents: List[Dict[str, Any]] = []
     created_at: Optional[Union[datetime, str]] = None
     updated_at: Optional[Union[datetime, str]] = None
     enabled: bool = True

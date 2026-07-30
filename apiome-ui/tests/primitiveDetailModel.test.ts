@@ -167,6 +167,18 @@ describe('primitiveDetailModel helpers', () => {
       expect(summarizeUsage(undefined, 3)).toEqual({ dependentTypes: 0, properties: 3, tenants: 0 });
       expect(summarizeUsage([], -5)).toEqual({ dependentTypes: 0, properties: 0, tenants: 0 });
     });
+
+    it('counts a type that references this one twice as one dependent type', () => {
+      // The reverse index emits one entry per referencing edge, so the counter dedupes.
+      const summary = summarizeUsage(
+        [
+          { id: 'p-invoice', scope: 'tenant', tenant_label: 'acme', property: 'total' },
+          { id: 'p-invoice', scope: 'tenant', tenant_label: 'acme', property: 'lines[]' },
+        ],
+        2
+      );
+      expect(summary).toEqual({ dependentTypes: 1, properties: 2, tenants: 1 });
+    });
   });
 
   describe('exportFileName / serializeSchemaExport', () => {

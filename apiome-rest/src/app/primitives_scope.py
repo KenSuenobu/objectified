@@ -33,6 +33,7 @@ from .schema_validation import REGISTRY_BASE_URL
 __all__ = [
     "ScopeViolationError",
     "iter_refs",
+    "iter_ref_locations",
     "registry_namespace_of_ref",
     "tenant_segment_of",
     "resolve_registry_uri",
@@ -70,15 +71,39 @@ def iter_refs(node: Any) -> Iterator[str]:
     Yields:
         Each ``$ref`` value found, in document order.
     """
+    for ref, _path in iter_ref_locations(node):
+        yield ref
+
+
+def iter_ref_locations(
+    node: Any, path: tuple = ()
+) -> Iterator[tuple]:
+    """Yield every ``$ref`` string with the document path it was found at.
+
+    The path-aware form of :func:`iter_refs`: each result is a
+    ``(ref, path)`` pair where ``path`` is the tuple of object keys and array
+    indices walked to reach the ``$ref`` keyword's owning schema — ``()`` for a
+    ``$ref`` at the document root, ``("properties", "amount")`` for one on the
+    ``amount`` property. Callers turn that into a human-readable location (see
+    :func:`app.primitives_routes.ref_location_label`, which labels a dependent's
+    reference on the type-detail page).
+
+    Args:
+        node: Any node of a parsed JSON Schema document (object, array, or scalar).
+        path: The path walked so far; callers start at the default root.
+
+    Yields:
+        ``(ref, path)`` for each ``$ref`` value found, in document order.
+    """
     if isinstance(node, dict):
         for key, value in node.items():
             if key == "$ref" and isinstance(value, str):
-                yield value
+                yield value, path
             else:
-                yield from iter_refs(value)
+                yield from iter_ref_locations(value, path + (key,))
     elif isinstance(node, list):
-        for item in node:
-            yield from iter_refs(item)
+        for index, item in enumerate(node):
+            yield from iter_ref_locations(item, path + (index,))
 
 
 def resolve_registry_uri(ref: str, base_uri: Optional[str]) -> Optional[str]:

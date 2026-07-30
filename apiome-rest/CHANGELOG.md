@@ -5,6 +5,27 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.216.0] - 2026-07-29
+
+### Fixed
+- **Dependents of a registry type (#3477)** — opening `number` from `decimal`'s base chain
+  showed "No types reference this primitive yet" while `decimal` plainly referenced it.
+  `apiome.primitives.refs` records only a type's *outgoing* edges, so nothing ever answered
+  the reverse question; the field was declared on the detail page and never populated.
+  `GET /v1/primitives/{tenant}/{id}` now returns `dependents`, the reverse index built by
+  scanning the visible types' edge lists for the viewed type's `$id`
+  (`Database.get_dependent_primitives`).
+  - Matching is on the stored absolute `resolved_target` (the form V218 normalized to), so a
+    dependent is found however its relative `$ref` was written, and an edge still flagged
+    `unresolved` by a stale resolver run is still listed — the target exists, so the
+    dependency is real.
+  - One entry per referencing *edge*, each labelled with the property carrying it
+    (`ref_location_label` over the new `iter_ref_locations` walk): `money` shows up under
+    `decimal` as `amount`, while `decimal` under `number` carries no property because the
+    `$ref` is the whole type. Read scope is unchanged — system-core ∪ the caller's own
+    (#3453) — and per-tenant seeded copies of a core dependent collapse to one row.
+  - OpenAPI 1.80.1 → 1.81.0 (`PrimitiveSchema.dependents` added; existing fields unchanged).
+
 ## [1.215.1] - 2026-07-28
 
 ### Added

@@ -2240,6 +2240,55 @@ class Database:
         """
         return self.execute_query(query, (tenant_id,))
 
+    def get_dependent_primitives(
+        self, target_schema_id: str, tenant_id: str
+    ) -> List[Dict[str, Any]]:
+        """List the visible types whose ``$ref`` edges point at ``target_schema_id`` (#3477).
+
+        The reverse of :meth:`get_primitive_by_schema_id`: instead of "what does this
+        ``$ref`` resolve to", this answers "who references *me*" — the dependents /
+        impact list on the type-detail page. Edges are matched on their stored
+        ``resolved_target``, the absolute ``$id`` the resolver writes (V218), so a
+        dependent is found regardless of how its relative ``$ref`` was written.
+
+        Both resolved and unresolved edges match: an edge is unresolved only until the
+        target is created, and once it exists the dependent is a real dependent whether
+        or not its stored status has been re-resolved yet — status is recomputed by the
+        resolver endpoint, and this read must not depend on that having run.
+
+        Scope is the same read scope as every other primitive read — system-core ∪ the
+        caller's own (#3453) — so a tenant never learns that another tenant's private
+        type references a shared core type. System-core types are seeded per tenant, so
+        rows are deduplicated by ``$id`` with the caller's own copy preferred; the same
+        core dependent is listed once, not once per tenant.
+
+        Args:
+            target_schema_id: The ``$id`` of the type being viewed.
+            tenant_id: The caller's tenant id (scopes visibility).
+
+        Returns:
+            The dependent rows (id, tenant_id, name, namespace, schema_id, is_system,
+            schema, refs), ordered by namespace then name. Empty when nothing
+            references the target.
+        """
+        query = """
+            SELECT * FROM (
+                SELECT DISTINCT ON (COALESCE(p.schema_id, p.id::text))
+                       p.id, p.tenant_id, p.name, p.namespace, p.schema_id,
+                       p.is_system, p.schema, p.refs
+                FROM apiome.primitives p
+                WHERE (p.tenant_id = %s OR p.is_system = true)
+                  AND jsonb_typeof(p.refs) = 'array'
+                  AND EXISTS (
+                      SELECT 1 FROM jsonb_array_elements(p.refs) AS e
+                      WHERE e->>'resolved_target' = %s
+                  )
+                ORDER BY COALESCE(p.schema_id, p.id::text), (p.tenant_id = %s) DESC
+            ) dependents
+            ORDER BY namespace NULLS FIRST, name
+        """
+        return self.execute_query(query, (tenant_id, target_schema_id, tenant_id))
+
     def mark_refs_resolved_to_target(self, tenant_id: str, target_schema_id: str) -> int:
         """Clear the unresolved flag on edges that point at a now-existing target (#3457).
 

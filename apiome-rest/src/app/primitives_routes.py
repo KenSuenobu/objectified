@@ -55,6 +55,7 @@ from .primitives_scope import (
     ScopeViolationError,
     enforce_ref_scope,
     is_core_namespace,
+    iter_ref_locations,
     tenant_segment_of,
 )
 from .schema_validation import (
@@ -179,6 +180,100 @@ def annotate_ref_targets(
             }
         )
     return annotated
+
+
+# Schema keywords whose *next* path segment names a subschema slot rather than a
+# property: the name is worth showing, the keyword itself is not.
+_NAMED_SLOT_KEYWORDS = ("properties", "patternProperties", "$defs", "definitions")
+
+
+def ref_location_label(path: tuple) -> Optional[str]:
+    """Describe where in a document a ``$ref`` sits, for the dependents table's Property column.
+
+    Turns the walk produced by :func:`app.primitives_scope.iter_ref_locations` into the
+    property path a reader recognizes: ``("properties", "amount")`` → ``amount``,
+    ``("properties", "lines", "items")`` → ``lines[]``, ``("$defs", "Row", "properties",
+    "id")`` → ``$defs.Row.id``. Applicator keywords that only wrap a subschema
+    (``allOf``, ``items``' index, ``then`` …) contribute nothing on their own.
+
+    Args:
+        path: The document path of the ``$ref``'s owning schema.
+
+    Returns:
+        The property path, or ``None`` for a ``$ref`` at the document root — a type
+        that *is* another type (``decimal`` → ``number``) references it as a whole
+        rather than through any one property.
+    """
+    parts: List[str] = []
+    index = 0
+    while index < len(path):
+        segment = path[index]
+        if segment in _NAMED_SLOT_KEYWORDS and index + 1 < len(path):
+            name = path[index + 1]
+            prefix = f"{segment}." if segment in ("$defs", "definitions") else ""
+            parts.append(f"{prefix}{name}")
+            index += 2
+            continue
+        if segment == "items" and parts:
+            # An array element under the property that holds the array.
+            parts[-1] = f"{parts[-1]}[]"
+        index += 1
+    return ".".join(parts) if parts else None
+
+
+def build_dependents(
+    target_schema_id: Optional[str], *, tenant_id: str, tenant_slug: str
+) -> List[Dict[str, Any]]:
+    """List the types that reference ``target_schema_id`` — the reverse index (#3477).
+
+    The type-detail page's Dependents card. ``apiome.primitives.refs`` records only the
+    *outgoing* edges of each type, so "who references me" is answered by scanning the
+    visible types' edge lists for one whose ``resolved_target`` is this type's ``$id``
+    (:meth:`app.database.Database.get_dependent_primitives`).
+
+    One entry per referencing *edge*, not per type: a type that references the target
+    from two places is listed twice, each row naming the property the reference sits on,
+    so the card reads as an impact list rather than a set of names.
+
+    Args:
+        target_schema_id: The ``$id`` of the type being viewed. A type with no ``$id``
+            (a legacy flat primitive) can never be a ``$ref`` target, so that yields
+            an empty list without a query.
+        tenant_id: The caller's tenant id (scopes visibility to system-core ∪ own).
+        tenant_slug: The caller's tenant slug, used as the label on tenant-scoped rows.
+
+    Returns:
+        Dependent entries as ``{id, schema_id, namespace, name, property, scope,
+        tenant_label}``. Empty when nothing references the target.
+    """
+    if not target_schema_id:
+        return []
+
+    dependents: List[Dict[str, Any]] = []
+    for row in db.get_dependent_primitives(target_schema_id, tenant_id):
+        is_system = bool(row.get("is_system"))
+        # Where each of this dependent's `$ref` values sits in its document, so the
+        # matching edges can be labelled with the property that carries them.
+        locations: Dict[str, tuple] = {}
+        for ref, path in iter_ref_locations(row.get("schema") or {}):
+            locations.setdefault(ref, path)
+
+        for edge in row.get("refs") or []:
+            if edge.get("resolved_target") != target_schema_id:
+                continue
+            path = locations.get(edge.get("relative_ref"))
+            dependents.append(
+                {
+                    "id": str(row["id"]),
+                    "schema_id": row.get("schema_id"),
+                    "namespace": row.get("namespace"),
+                    "name": row.get("name"),
+                    "property": ref_location_label(path) if path is not None else None,
+                    "scope": "system" if is_system else "tenant",
+                    "tenant_label": None if is_system else tenant_slug,
+                }
+            )
+    return dependents
 
 
 def reconcile_dependents_for_target(schema_id: Optional[str], *, tenant_id: str) -> None:
@@ -575,7 +670,8 @@ async def get_primitive(
 
     Returns:
         The primitive details, its ``refs`` edges each carrying the target type's
-        ``target_id`` / ``target_name`` so the detail view can link through to it.
+        ``target_id`` / ``target_name`` so the detail view can link through to it, and
+        its ``dependents`` — the reverse index of types referencing it (#3477).
     """
     # Get primitive
     primitive = db.get_primitive_by_id(primitive_id, auth_data['tenant_id'])
@@ -589,6 +685,11 @@ async def get_primitive(
     primitive = {
         **primitive,
         "refs": annotate_ref_targets(primitive.get("refs"), tenant_id=auth_data['tenant_id']),
+        "dependents": build_dependents(
+            primitive.get("schema_id"),
+            tenant_id=auth_data['tenant_id'],
+            tenant_slug=tenant_slug,
+        ),
     }
 
     return PrimitiveSchema(**primitive)

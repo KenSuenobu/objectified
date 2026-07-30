@@ -129,6 +129,7 @@ PROPERTY_DESCRIPTIONS: Dict[str, str] = {
     "namespace": "Registry namespace segment for the primitive.",
     "base_uri": "Base URI used to resolve relative ``$ref`` values.",
     "refs": "Resolved and unresolved ``$ref`` edges for the primitive schema.",
+    "dependents": "Reverse index of ``refs``: the visible types that reference this one, one entry per referencing edge.",
     "pathname": "HTTP path template (for example ``/pets/{petId}``).",
     "operation": "HTTP method name (GET, POST, PUT, PATCH, DELETE, …).",
     "version_path_id": "Identifier of the parent path row for this operation.",

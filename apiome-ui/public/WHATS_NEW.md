@@ -23,6 +23,7 @@ We continue to improve the platform based on your feedback with improvements and
 - Primitives: Removed invalid previously created primitives
 - Primitives: Corrected resolution for $ref values in native system types
 - Primitives: Updated import so that names with dashes are imported properly
+- Primitives: Dependents card now shows properly
 
 ---
 

@@ -85,8 +85,8 @@ describe('PrimitiveDetailClient', () => {
     expect(screen.getByText('v0')).toBeInTheDocument();
     expect(screen.getAllByText('system').length).toBeGreaterThanOrEqual(1);
 
-    // Dependents empty-state (reverse index #3477 not yet populated).
-    expect(screen.getByText(/No types reference this primitive yet/i)).toBeInTheDocument();
+    // Dependents empty-state — nothing in the caller's read scope references `money`.
+    expect(screen.getByText(/No type in view references this one/i)).toBeInTheDocument();
 
     // System type → immutable badge + disabled Edit.
     expect(screen.getByText(/immutable \(core\)/i)).toBeInTheDocument();
@@ -215,7 +215,7 @@ describe('PrimitiveDetailClient', () => {
     mockFetchOk({
       ...SYSTEM_MONEY,
       dependents: [
-        { schema_id: 'a', namespace: 'tenant/acme/v1/payments', name: 'charge', property: 'amount', scope: 'tenant', tenant_label: 'acme' },
+        { id: 'p-charge', schema_id: 'a', namespace: 'tenant/acme/v1/payments', name: 'charge', property: 'amount', scope: 'tenant', tenant_label: 'acme' },
       ],
     });
     render(<PrimitiveDetailClient />);
@@ -225,6 +225,35 @@ describe('PrimitiveDetailClient', () => {
     expect(dependentsTable).not.toBeNull();
     expect(within(dependentsTable as HTMLElement).getByText('amount')).toBeInTheDocument();
     expect(within(dependentsTable as HTMLElement).getByText(/Tenant · acme/i)).toBeInTheDocument();
+  });
+
+  it('links a dependent to its own detail page', async () => {
+    mockFetchOk({
+      ...SYSTEM_MONEY,
+      dependents: [
+        // A whole-type reference (`decimal` *is* a `number`) carries no property.
+        { id: 'p-decimal', schema_id: 'b', namespace: 'std/v0/types', name: 'decimal', property: null, scope: 'system' },
+      ],
+    });
+    render(<PrimitiveDetailClient />);
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'money' })).toBeInTheDocument());
+    const link = screen.getByTestId('dependent-link-0');
+    expect(link).toHaveAttribute('href', '/ade/dashboard/primitives/p-decimal');
+    expect(link).toHaveTextContent('std/v0/types/decimal');
+    expect(link).toHaveAccessibleName('View details for decimal');
+  });
+
+  it('renders a dependent without an id as plain text', async () => {
+    mockFetchOk({
+      ...SYSTEM_MONEY,
+      dependents: [{ schema_id: 'c', name: 'legacy', scope: 'system' }],
+    });
+    render(<PrimitiveDetailClient />);
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'money' })).toBeInTheDocument());
+    expect(screen.queryByTestId('dependent-link-0')).not.toBeInTheDocument();
+    expect(screen.getByText('legacy')).toBeInTheDocument();
   });
 
   it('shows an error alert when the primitive fails to load', async () => {

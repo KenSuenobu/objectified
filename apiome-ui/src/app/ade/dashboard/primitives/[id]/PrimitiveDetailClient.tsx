@@ -39,6 +39,7 @@ import {
   baseChainNodeLabel,
   buildBaseChain,
   buildExampleInstance,
+  dependentHref,
   deriveOwner,
   deriveVersionRoot,
   effectiveNamespace,
@@ -478,10 +479,27 @@ export default function PrimitiveDetailClient() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-700/60">
-                      {dependents.map((dep, index) => (
+                      {dependents.map((dep, index) => {
+                        const label = dep.namespace
+                          ? `${dep.namespace}/${dep.name ?? ''}`
+                          : dep.name ?? dep.schema_id ?? '—';
+                        const href = dependentHref(dep);
+                        return (
                         <tr key={`${dep.schema_id ?? dep.name}-${index}`} className="hover:bg-gray-50/60 dark:hover:bg-gray-900/30">
                           <td className="px-5 py-3 font-mono text-xs text-gray-600 dark:text-gray-300">
-                            {dep.namespace ? `${dep.namespace}/${dep.name ?? ''}` : dep.name ?? dep.schema_id ?? '—'}
+                            {href ? (
+                              <Link
+                                href={href}
+                                data-testid={`dependent-link-${index}`}
+                                title={`View details for ${dep.name ?? label}`}
+                                aria-label={`View details for ${dep.name ?? label}`}
+                                className="underline decoration-dotted underline-offset-2 hover:decoration-solid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+                              >
+                                {label}
+                              </Link>
+                            ) : (
+                              label
+                            )}
                           </td>
                           <td className="px-3 py-3 font-mono text-xs text-gray-500">{dep.property ?? '—'}</td>
                           <td className="px-5 py-3 text-right">
@@ -496,13 +514,14 @@ export default function PrimitiveDetailClient() {
                             </span>
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 ) : (
                   <p className="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    No types reference this primitive yet. The reverse index (used-by properties) populates this list
-                    as bindings are added.
+                    No type in view references this one. A <span className="font-mono">$ref</span> from another type
+                    lists it here.
                   </p>
                 )}
               </section>
