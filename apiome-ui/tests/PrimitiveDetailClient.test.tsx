@@ -32,8 +32,8 @@ const SYSTEM_MONEY = {
   category: 'object',
   is_system: true,
   namespace: 'std/v0/types',
-  schema_id: 'https://api.apiome.app/types/std/v0/types/money',
-  base_uri: 'https://api.apiome.app/types/std/v0/types/',
+  schema_id: 'https://api.apiome.dev/types/std/v0/types/money',
+  base_uri: 'https://api.apiome.dev/types/std/v0/types/',
   draft: '2020-12',
   source: 'system',
   usage_count: 11,
@@ -43,7 +43,7 @@ const SYSTEM_MONEY = {
     { relative_ref: './currency-code', resolved_target: 'std/v0/types/currency-code', status: 'unresolved' },
   ],
   schema: {
-    $id: 'https://api.apiome.app/types/std/v0/types/money',
+    $id: 'https://api.apiome.dev/types/std/v0/types/money',
     type: 'object',
     properties: {
       amount: { $ref: './decimal' },
@@ -235,5 +235,84 @@ describe('PrimitiveDetailClient', () => {
     render(<PrimitiveDetailClient />);
 
     await waitFor(() => expect(screen.getByText('Primitive not found')).toBeInTheDocument());
+  });
+});
+
+describe('PrimitiveDetailClient — following a reference', () => {
+  /**
+   * `money` references `./decimal` (resolved, so the API annotated it with the target's identity)
+   * and `./currency-code` (unresolved, so there is no target to open).
+   */
+  const MONEY_WITH_TARGETS = {
+    ...SYSTEM_MONEY,
+    refs: [
+      {
+        relative_ref: './decimal',
+        resolved_target: 'https://api.apiome.dev/types/std/v0/types/decimal',
+        status: 'resolved',
+        target_id: 'p-decimal',
+        target_name: 'decimal',
+      },
+      {
+        relative_ref: './currency-code',
+        resolved_target: 'https://api.apiome.dev/types/std/v0/types/currency-code',
+        status: 'unresolved',
+        target_id: null,
+        target_name: null,
+      },
+    ],
+  };
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    mockPush.mockReset();
+  });
+
+  async function renderDetail(primitive: unknown = MONEY_WITH_TARGETS) {
+    mockFetchOk(primitive);
+    render(<PrimitiveDetailClient />);
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'money' })).toBeInTheDocument());
+  }
+
+  it('links a resolved $ref in Reference resolution to the type it points at', async () => {
+    await renderDetail();
+
+    const link = screen.getByTestId('ref-edge-link-0');
+    expect(link).toHaveAttribute('href', '/ade/dashboard/primitives/p-decimal');
+    expect(link).toHaveTextContent('./decimal');
+    expect(link).toHaveAccessibleName('View details for decimal');
+  });
+
+  it('leaves an unresolved $ref as plain text', async () => {
+    await renderDetail();
+
+    // Edge 1 is unresolved — no target row exists, so there is nothing to open.
+    expect(screen.queryByTestId('ref-edge-link-1')).not.toBeInTheDocument();
+    // The $ref is still shown, just not linked.
+    expect(screen.getAllByText('./currency-code').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('links the matching step in the base chain rail', async () => {
+    await renderDetail();
+
+    // Index 0 is the chain head (the type itself); the first ref step is index 1.
+    expect(screen.queryByTestId('base-chain-link-0')).not.toBeInTheDocument();
+    const step = screen.getByTestId('base-chain-link-1');
+    expect(step).toHaveAttribute('href', '/ade/dashboard/primitives/p-decimal');
+    expect(step).toHaveTextContent('./decimal');
+  });
+
+  it('does not link the unresolved step in the base chain', async () => {
+    await renderDetail();
+    expect(screen.queryByTestId('base-chain-link-2')).not.toBeInTheDocument();
+  });
+
+  it('degrades to plain text when the API sends edges without target identity', async () => {
+    // An older payload (or a response predating target annotation) must still render.
+    await renderDetail(SYSTEM_MONEY);
+
+    expect(screen.queryByTestId('ref-edge-link-0')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('base-chain-link-1')).not.toBeInTheDocument();
+    expect(screen.getAllByText('./decimal').length).toBeGreaterThanOrEqual(1);
   });
 });

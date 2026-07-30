@@ -31,7 +31,7 @@ const tenantNs: TypeNamespaceCollection = {
   id: 'ns-1',
   tenant_id: 'tenant-1',
   namespace: 'tenant/acme/v1/types',
-  base_uri: 'https://api.apiome.app/types/tenant/acme/v1/',
+  base_uri: 'https://api.apiome.dev/types/tenant/acme/v1/',
   version_root: 'v1',
   description: 'Acme core types',
   scope: 'tenant',
@@ -45,7 +45,7 @@ const systemNs: TypeNamespaceCollection = {
   id: 'ns-sys',
   tenant_id: null,
   namespace: 'std/v0/types',
-  base_uri: 'https://api.apiome.app/types/std/v0/',
+  base_uri: 'https://api.apiome.dev/types/std/v0/',
   version_root: 'v0',
   description: null,
   scope: 'system',
@@ -100,7 +100,7 @@ describe('formFromNamespace', () => {
   it('maps a namespace row onto editable form fields', () => {
     expect(formFromNamespace(tenantNs)).toEqual({
       namespace: 'tenant/acme/v1/types',
-      baseUri: 'https://api.apiome.app/types/tenant/acme/v1/',
+      baseUri: 'https://api.apiome.dev/types/tenant/acme/v1/',
       versionRoot: 'v1',
       description: 'Acme core types',
       isDefault: true,
@@ -151,7 +151,7 @@ describe('validateNamespaceForm (create)', () => {
   it('accepts a well-formed tenant namespace', () => {
     const valid = form({
       namespace: 'tenant/acme/v1/types',
-      baseUri: 'https://api.apiome.app/types/tenant/acme/v1/',
+      baseUri: 'https://api.apiome.dev/types/tenant/acme/v1/',
       versionRoot: 'v1',
     });
     expect(validateNamespaceForm(valid, false)).toEqual({});

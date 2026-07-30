@@ -65,7 +65,7 @@ export const DEFAULT_SETTINGS: TypeRegistrySettings = {
   strict_validation: true,
   allow_annotation_keywords: true,
   coerce_imported_drafts: true,
-  resolution_base_url: 'https://api.apiome.app/types/',
+  resolution_base_url: 'https://api.apiome.dev/types/',
   ref_style: 'relative',
   allow_remote_refs: false,
   remote_host_allowlist: ['json-schema.org', 'spec.openapis.org'],

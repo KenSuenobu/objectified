@@ -18,7 +18,7 @@ from app.primitives_scope import (
     tenant_segment_of,
 )
 
-BASE = "https://api.apiome.app/types/"
+BASE = "https://api.apiome.dev/types/"
 STD_BASE = BASE + "std/v0/primitives/"
 ACME_BASE = BASE + "tenant/acme/v1/types/"
 

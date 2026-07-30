@@ -86,7 +86,7 @@ def _rest_api() -> CanonicalApi:
 def _ctx(*, indexable: bool = True, access: str = "public") -> PortalContext:
     """A portal context for the pet store portal."""
     return PortalContext(
-        base_url="https://portal.apiome.app/pet-store",
+        base_url="https://portal.apiome.dev/pet-store",
         project_name="Pet Store",
         project_slug="pet-store",
         version_label="1.0.65",
@@ -124,8 +124,8 @@ def test_bundle_media_types_and_paths() -> None:
         assert out.media_type == AGENT_OUTPUT_MEDIA_TYPES[name]
         assert out.etag == output_etag(out.body)
     # robots.txt is served from the portal root, not the version scope.
-    assert bundle.get("robots.txt").path == "https://portal.apiome.app/pet-store/robots.txt"
-    assert bundle.get("llms.txt").path == "https://portal.apiome.app/pet-store/v/1.0.65/llms.txt"
+    assert bundle.get("robots.txt").path == "https://portal.apiome.dev/pet-store/robots.txt"
+    assert bundle.get("llms.txt").path == "https://portal.apiome.dev/pet-store/v/1.0.65/llms.txt"
 
 
 # -------------------------------------------------------------------------- llms.txt
@@ -141,7 +141,7 @@ def test_llms_txt_structure_and_links() -> None:
     assert "## Changelog" in lines
     # Operations render as METHOD /path with canonical version-scoped URLs.
     assert (
-        "- [GET /pets](https://portal.apiome.app/pet-store/v/1.0.65/reference/operations/"
+        "- [GET /pets](https://portal.apiome.dev/pet-store/v/1.0.65/reference/operations/"
         "operation-get-pets): List all pets." in body
     )
     # Deprecated operation is flagged.
@@ -195,7 +195,7 @@ def test_catalog_manifest_withheld_when_not_indexable() -> None:
     # Capabilities are product state (not content) and may still be advertised.
     assert manifest["capabilities"]["tryIt"] is True
     # No content names leak beyond the shareable base URL.
-    assert manifest["portal"] == {"baseUrl": "https://portal.apiome.app/pet-store"}
+    assert manifest["portal"] == {"baseUrl": "https://portal.apiome.dev/pet-store"}
 
 
 def test_capabilities_are_rest_only_for_execution() -> None:
@@ -229,8 +229,8 @@ def test_release_manifest_fields() -> None:
     assert release["versionLabel"] == "1.0.65"
     assert release["apiVersion"] == "1.4.0"
     assert release["latest"] is True
-    assert release["canonicalUrl"] == "https://portal.apiome.app/pet-store/v/1.0.65"
-    assert release["changelogUrl"] == "https://portal.apiome.app/pet-store/v/1.0.65/changelog"
+    assert release["canonicalUrl"] == "https://portal.apiome.dev/pet-store/v/1.0.65"
+    assert release["changelogUrl"] == "https://portal.apiome.dev/pet-store/v/1.0.65/changelog"
     assert release["changes"] == {"breaking": 1, "nonBreaking": 2, "docsOnly": 3}
     assert manifest["format"]["supportTier"] == "native"
 
@@ -253,7 +253,7 @@ def test_robots_public_allows_and_advertises() -> None:
     body = build_robots_txt(_ctx())
     assert "User-agent: *" in body
     assert "Allow: /" in body
-    assert "Sitemap: https://portal.apiome.app/pet-store/sitemap.xml" in body
+    assert "Sitemap: https://portal.apiome.dev/pet-store/sitemap.xml" in body
     assert "llms.txt" in body
 
 

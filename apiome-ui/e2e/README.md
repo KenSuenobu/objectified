@@ -185,7 +185,7 @@ For local E2E testing, the following credentials are used:
 
 | Type | Email | Password |
 |------|-------|----------|
-| Valid User | `admin@apiome.app` | `1234` |
+| Valid User | `admin@apiome.dev` | `1234` |
 | Invalid User | `invalid@example.com` | `wrongpassword` |
 
 These credentials are defined in `fixtures/test-fixtures.ts`.

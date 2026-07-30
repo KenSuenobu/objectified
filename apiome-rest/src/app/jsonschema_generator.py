@@ -49,7 +49,7 @@ def generate_jsonschema_spec(
     # Build the complete JSON Schema document
     jsonschema_doc = {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": f"https://apiome.app/{tenant_slug}/{project_slug}/{version_id}/schema.json",
+        "$id": f"https://apiome.dev/{tenant_slug}/{project_slug}/{version_id}/schema.json",
         "title": f"{project_slug} Schema",
         "description": description,
         "version": version_id,
@@ -88,7 +88,7 @@ def generate_class_jsonschema_spec(
     # Build the JSON Schema document with just this class
     jsonschema_doc = {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": f"https://apiome.app/{tenant_slug}/{project_slug}/{version_id}/{class_name}.json",
+        "$id": f"https://apiome.dev/{tenant_slug}/{project_slug}/{version_id}/{class_name}.json",
         "title": f"{class_name} Schema",
         "description": f"JSON Schema specification for {tenant_slug}/{project_slug}/{version_id}/{class_name}",
         "version": version_id,

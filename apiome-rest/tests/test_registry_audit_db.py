@@ -40,7 +40,7 @@ def test_search_registry_audit_offset_mode_builds_filters():
         actions=["primitive.create", "primitive.update"],
         actor_id="u1",
         outcome="success",
-        schema_id="https://api.apiome.app/types/tenant/acme/my-type",
+        schema_id="https://api.apiome.dev/types/tenant/acme/my-type",
         limit=25,
         offset=50,
     )

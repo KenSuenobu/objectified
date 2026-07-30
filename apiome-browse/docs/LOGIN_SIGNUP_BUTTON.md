@@ -1,7 +1,7 @@
 # Login/Signup Button Feature
 
 ## Overview
-Added a prominent "Login / Sign Up" button to the browse app home page that links to the main Apiome application at https://app.apiome.app/. This encourages users browsing the API specifications to sign up and use the full platform.
+Added a prominent "Login / Sign Up" button to the browse app home page that links to the main Apiome application at https://app.apiome.dev/. This encourages users browsing the API specifications to sign up and use the full platform.
 
 ## Implementation Details
 
@@ -19,7 +19,7 @@ The button is positioned in a hero action bar at the top of the home page, along
 - **Hover Effect**: Light blue background (`hover:bg-blue-50`)
 
 ### User Experience
-- **Link Target**: https://app.apiome.app/
+- **Link Target**: https://app.apiome.dev/
 - **Navigation**: Links directly to the main app (no new tab, seamless transition)
 - **Responsive**: Buttons stack on mobile, side-by-side on larger screens
 - **Visibility**: White button on gradient background makes it highly visible
@@ -48,7 +48,7 @@ The button is positioned in a hero action bar at the top of the home page, along
         Watch Tutorials
       </a>
       {/* Login / Sign Up */}
-      <a href="https://app.apiome.app/" ...>
+      <a href="https://app.apiome.dev/" ...>
         Login / Sign Up
       </a>
     </div>
@@ -100,7 +100,7 @@ To test the feature:
 1. Navigate to the browse app home page
 2. Locate the blue gradient banner at the top
 3. Verify "Watch Tutorials" button opens YouTube in new tab
-4. Verify "Login / Sign Up" button navigates to https://app.apiome.app/
+4. Verify "Login / Sign Up" button navigates to https://app.apiome.dev/
 5. Test responsive layout on different screen sizes
 6. Verify buttons are visible and accessible in both light and dark modes
 

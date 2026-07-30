@@ -39,7 +39,7 @@ def _sample_row():
         "id": "aaaaaaaa-bbbb-cccc-dddd-000000000001",
         "tenant_id": _MOCK_AUTH["tenant_id"],
         "primitive_id": _PRIMITIVE_ID,
-        "schema_id": "https://api.apiome.app/types/tenant/acme/my-type",
+        "schema_id": "https://api.apiome.dev/types/tenant/acme/my-type",
         "namespace": "tenant/acme",
         "action": "primitive.create",
         "outcome": "success",
@@ -68,7 +68,7 @@ def test_registry_audit_offset_mode():
     assert item["action"] == "primitive.create"
     assert item["tenantId"] == _MOCK_AUTH["tenant_id"]
     assert item["primitiveId"] == _PRIMITIVE_ID
-    assert item["schemaId"] == "https://api.apiome.app/types/tenant/acme/my-type"
+    assert item["schemaId"] == "https://api.apiome.dev/types/tenant/acme/my-type"
     assert item["namespace"] == "tenant/acme"
     # Filters are threaded through to the DB layer.
     mdb.search_registry_audit.assert_called_once()

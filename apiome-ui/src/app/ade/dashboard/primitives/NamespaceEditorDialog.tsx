@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { AlertCircle, FolderTree } from 'lucide-react';
+import { FolderTree } from 'lucide-react';
 import { Button } from '@/app/components/ui/Button';
 import { Input } from '@/app/components/ui/Input';
 import { Textarea } from '@/app/components/ui/Textarea';
@@ -66,7 +66,7 @@ export default function NamespaceEditorDialog({
   const hasErrors = Object.keys(errors).length > 0;
 
   // Show the API-derived defaults as placeholder hints so the user knows what blank fields become.
-  const baseUriPlaceholder = defaultBaseUri(form.namespace) || 'https://api.apiome.app/types/…/';
+  const baseUriPlaceholder = defaultBaseUri(form.namespace) || 'https://api.apiome.dev/types/…/';
   const versionRootPlaceholder = deriveVersionRoot(form.namespace) ?? '(none)';
 
   const update = <K extends keyof NamespaceFormData>(key: K, value: NamespaceFormData[K]) => {
@@ -220,9 +220,9 @@ export default function NamespaceEditorDialog({
             />
           </div>
 
+          {/* `Alert` renders the variant's own icon, so passing one as a child double-stamps it. */}
           {hasErrors && (
             <Alert variant="error">
-              <AlertCircle className="h-4 w-4" />
               <span>Fix the highlighted fields before saving.</span>
             </Alert>
           )}

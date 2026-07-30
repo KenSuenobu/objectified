@@ -76,7 +76,7 @@ def _common_file() -> descriptor_pb2.FileDescriptorProto:
     """A dependency file with only a message (a stand-in for a pulled-in import)."""
     fdp = descriptor_pb2.FileDescriptorProto()
     fdp.name = "apiome/common.proto"
-    fdp.package = "apiome.appmon"
+    fdp.package = "apiome.devmon"
     fdp.syntax = "proto3"
     msg = fdp.message_type.add()
     msg.name = "Money"

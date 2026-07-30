@@ -167,7 +167,7 @@ export function buildRegistryRef(namespace: string, name: string): string {
  * `app.schema_validation.REGISTRY_BASE_URL`. A `registry/{path}` reference is exactly the
  * `$id` with this prefix stripped.
  */
-export const REGISTRY_BASE_URL = 'https://api.apiome.app/types/';
+export const REGISTRY_BASE_URL = 'https://api.apiome.dev/types/';
 
 /** The primitive-row fields a registry reference derives from. */
 export interface RegistryPrimitiveLike {

@@ -110,7 +110,7 @@ Set AUTH_PROVIDER_VALIDATION=warn to log instead and leave the provider(s) disab
    **Settings → Developer settings**) and click **New OAuth App**.
 2. Fill in:
    - **Application name:** `Apiome` (or your deployment's name)
-   - **Homepage URL:** your `BETTER_AUTH_URL`, e.g. `https://app.apiome.app`
+   - **Homepage URL:** your `BETTER_AUTH_URL`, e.g. `https://app.apiome.dev`
    - **Authorization callback URL:** `{BETTER_AUTH_URL}/api/auth/oauth2/callback/github`
      (e.g. `http://localhost:3000/api/auth/oauth2/callback/github` for local dev)
 3. Click **Register application**, then **Generate a new client secret**. Copy the secret

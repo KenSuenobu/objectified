@@ -23,7 +23,7 @@ def test_valid_string_schema_has_no_errors():
 def test_valid_full_schema_has_no_errors():
     schema = {
         "$schema": sv.DRAFT_2020_12_META_URI,
-        "$id": "https://api.apiome.app/types/std/v0/primitives/string",
+        "$id": "https://api.apiome.dev/types/std/v0/primitives/string",
         "type": "string",
         "maxLength": 5,
     }
@@ -115,14 +115,14 @@ def test_base_uri_explicit_gets_trailing_slash():
 def test_base_uri_from_namespace():
     assert (
         sv.derive_base_uri("tenant/acme/v1/types", None, "acme")
-        == "https://api.apiome.app/types/tenant/acme/v1/types/"
+        == "https://api.apiome.dev/types/tenant/acme/v1/types/"
     )
 
 
 def test_base_uri_tenant_default_when_unplaced():
     assert (
         sv.derive_base_uri(None, None, "acme")
-        == "https://api.apiome.app/types/tenant/acme/"
+        == "https://api.apiome.dev/types/tenant/acme/"
     )
 
 
@@ -132,10 +132,10 @@ def test_base_uri_tenant_default_when_unplaced():
 
 
 def test_schema_id_honors_explicit_id():
-    schema = {"$id": "https://api.apiome.app/types/std/v0/primitives/string", "type": "string"}
+    schema = {"$id": "https://api.apiome.dev/types/std/v0/primitives/string", "type": "string"}
     assert (
         sv.derive_schema_id(schema, name="Anything", base_uri="https://x/")
-        == "https://api.apiome.app/types/std/v0/primitives/string"
+        == "https://api.apiome.dev/types/std/v0/primitives/string"
     )
 
 

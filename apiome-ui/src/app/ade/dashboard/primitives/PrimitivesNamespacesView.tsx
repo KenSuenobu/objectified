@@ -13,8 +13,10 @@ import {
   Lock,
   Download,
   Pencil,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/Button';
+import { useDialog } from '@/app/components/providers/DialogProvider';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { LoadingState } from '@/app/components/ui/LoadingState';
 import {
@@ -35,9 +37,37 @@ interface Props {
    */
   detectedNamespaces: DetectedNamespace[];
   loading: boolean;
-  /** Reload the registry overview after a namespace is created or edited. */
+  /** Reload the registry overview after a namespace is created, edited, or removed. */
   onRefresh: () => void | Promise<void>;
   onMessage: (type: 'success' | 'error', message: string) => void;
+}
+
+/**
+ * What removing a namespace registration actually does, spelled out for the confirm dialog.
+ *
+ * This list is referential: `apiome.primitives.namespace` is a string column with no foreign key to
+ * `apiome.type_namespaces`. Removing a row therefore deletes no types — a reader who assumes
+ * otherwise would never click the button, so the count and the consequence are both stated.
+ */
+export function describeNamespaceRemoval(namespace: TypeNamespaceCollection): string {
+  const parts = [`Remove the namespace registration “${namespace.namespace}”?`];
+
+  if (namespace.type_count > 0) {
+    const one = namespace.type_count === 1;
+    parts.push(
+      `Its ${namespace.type_count} ${one ? 'type' : 'types'} ${one ? 'is' : 'are'} not deleted — ` +
+        `${one ? 'it keeps' : 'they keep'} this namespace path and will show as unregistered ` +
+        'until it is registered again.'
+    );
+  } else {
+    parts.push('No types use it.');
+  }
+
+  if (namespace.is_default) {
+    parts.push('It is currently the default namespace for this tenant.');
+  }
+
+  return parts.join(' ');
 }
 
 function ScopeBadge({ scope }: { scope: 'system' | 'tenant' }) {
@@ -81,8 +111,10 @@ export default function PrimitivesNamespacesView({
   onRefresh,
   onMessage,
 }: Props) {
+  const { confirm } = useDialog();
   const [showDialog, setShowDialog] = useState(false);
   const [editing, setEditing] = useState<TypeNamespaceCollection | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const handleCreate = () => {
     setEditing(null);
@@ -92,6 +124,42 @@ export default function PrimitivesNamespacesView({
   const handleEdit = (ns: TypeNamespaceCollection) => {
     setEditing(ns);
     setShowDialog(true);
+  };
+
+  const handleRemove = async (ns: TypeNamespaceCollection) => {
+    const confirmed = await confirm({
+      title: 'Remove namespace',
+      message: describeNamespaceRemoval(ns),
+      confirmLabel: 'Remove',
+      cancelLabel: 'Cancel',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
+
+    setRemovingId(ns.id);
+    try {
+      const response = await fetch(`/api/types/namespaces/${ns.id}`, { method: 'DELETE' });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        onMessage('error', data.error || 'Failed to remove namespace');
+        return;
+      }
+
+      const orphaned = Number(data.unregisteredTypeCount ?? 0);
+      onMessage(
+        'success',
+        orphaned > 0
+          ? `Namespace “${ns.namespace}” removed — ${orphaned} type${orphaned === 1 ? '' : 's'} are now unregistered`
+          : `Namespace “${ns.namespace}” removed`
+      );
+      await onRefresh();
+    } catch (error) {
+      console.error('Error removing namespace:', error);
+      onMessage('error', 'Failed to remove namespace');
+    } finally {
+      setRemovingId(null);
+    }
   };
 
   const handleSaved = async () => {
@@ -117,7 +185,7 @@ export default function PrimitivesNamespacesView({
             all tenants; immutable except by platform governance.
           </p>
           <div className="mt-3 rounded-md bg-white/70 dark:bg-black/30 border border-teal-200/60 dark:border-teal-800/40 px-2.5 py-1.5 font-mono text-[11px] text-teal-700 dark:text-teal-300">
-            api.apiome.app/types/std/
+            api.apiome.dev/types/std/
           </div>
         </div>
         <div className="rounded-lg border border-indigo-200 dark:border-indigo-800/50 bg-indigo-50 dark:bg-indigo-900/15 p-5">
@@ -132,7 +200,7 @@ export default function PrimitivesNamespacesView({
             reference core types but are isolated from other tenants.
           </p>
           <div className="mt-3 rounded-md bg-white/70 dark:bg-black/30 border border-indigo-200/60 dark:border-indigo-800/40 px-2.5 py-1.5 font-mono text-[11px] text-indigo-700 dark:text-indigo-300">
-            api.apiome.app/types/tenant/&lt;slug&gt;/
+            api.apiome.dev/types/tenant/&lt;slug&gt;/
           </div>
         </div>
       </section>
@@ -234,14 +302,27 @@ export default function PrimitivesNamespacesView({
                             Read-only
                           </span>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleEdit(ns)}
-                            className="inline-flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300"
-                          >
-                            <Pencil className="w-3 h-3" />
-                            Edit
-                          </button>
+                          <div className="inline-flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => handleEdit(ns)}
+                              className="inline-flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300"
+                            >
+                              <Pencil className="w-3 h-3" />
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              data-testid={`remove-namespace-${ns.namespace}`}
+                              onClick={() => void handleRemove(ns)}
+                              disabled={removingId === ns.id}
+                              title="Remove this namespace registration; its types are kept"
+                              className="inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              {removingId === ns.id ? 'Removing…' : 'Remove'}
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>

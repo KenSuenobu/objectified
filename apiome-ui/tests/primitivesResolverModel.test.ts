@@ -6,6 +6,8 @@ import {
   filterResolverRows,
   flattenResolverEdges,
   isCrossScope,
+  resolverTargetHref,
+  resolverTargetLinkLabel,
   shortenTarget,
   sourceLabel,
   statusBadgeClass,
@@ -19,14 +21,14 @@ const PRIMITIVES: ResolvedPrimitiveRefs[] = [
     id: 'p-date',
     name: 'date',
     namespace: 'std/v0/types',
-    base_uri: 'https://api.apiome.app/types/std/v0/types/',
+    base_uri: 'https://api.apiome.dev/types/std/v0/types/',
     ref_count: 1,
     resolved_count: 1,
     unresolved_count: 0,
     refs: [
       {
         relative_ref: '../primitives/string',
-        resolved_target: 'https://api.apiome.app/types/std/v0/primitives/string',
+        resolved_target: 'https://api.apiome.dev/types/std/v0/primitives/string',
         status: 'resolved',
         target_id: 'p-string',
         target_name: 'string',
@@ -37,21 +39,21 @@ const PRIMITIVES: ResolvedPrimitiveRefs[] = [
     id: 'p-charge',
     name: 'charge',
     namespace: 'tenant/acme/v1/payments',
-    base_uri: 'https://api.apiome.app/types/tenant/acme/v1/payments/',
+    base_uri: 'https://api.apiome.dev/types/tenant/acme/v1/payments/',
     ref_count: 2,
     resolved_count: 1,
     unresolved_count: 1,
     refs: [
       {
         relative_ref: '../../../std/v0/types/money',
-        resolved_target: 'https://api.apiome.app/types/std/v0/types/money',
+        resolved_target: 'https://api.apiome.dev/types/std/v0/types/money',
         status: 'resolved',
         target_id: 'p-money',
         target_name: 'money',
       },
       {
         relative_ref: './discount',
-        resolved_target: 'https://api.apiome.app/types/tenant/acme/v1/payments/discount',
+        resolved_target: 'https://api.apiome.dev/types/tenant/acme/v1/payments/discount',
         status: 'unresolved',
         target_id: null,
         target_name: null,
@@ -150,5 +152,64 @@ describe('primitivesResolverModel', () => {
     expect(empty.primitives).toEqual([]);
     expect(empty.ref_count).toBe(0);
     expect(empty.reresolved_primitive_count).toBe(0);
+  });
+});
+
+describe('resolved-target links', () => {
+  const rows = flattenResolverEdges([
+    {
+      id: 'p-charge',
+      name: 'charge',
+      namespace: 'tenant/acme/v1/payments',
+      base_uri: 'https://api.apiome.dev/types/tenant/acme/v1/payments/',
+      ref_count: 2,
+      resolved_count: 1,
+      unresolved_count: 1,
+      refs: [
+        {
+          relative_ref: '../../../std/v0/types/money',
+          resolved_target: 'https://api.apiome.dev/types/std/v0/types/money',
+          status: 'resolved',
+          target_id: 'p-money',
+          target_name: 'money',
+        },
+        {
+          relative_ref: './discount',
+          resolved_target: 'https://api.apiome.dev/types/tenant/acme/v1/payments/discount',
+          status: 'unresolved',
+          target_id: null,
+          target_name: null,
+        },
+      ],
+    },
+  ]);
+
+  it('carries the resolver’s target id onto the row', () => {
+    expect(rows[0].targetId).toBe('p-money');
+    expect(rows[1].targetId).toBeNull();
+  });
+
+  it('links a known target to the type-detail screen', () => {
+    expect(resolverTargetHref(rows[0])).toBe('/ade/dashboard/primitives/p-money');
+  });
+
+  it('offers no link when the edge resolved to nothing', () => {
+    expect(resolverTargetHref(rows[1])).toBeNull();
+  });
+
+  it('links a circular edge, which does name a real type', () => {
+    // Cycles are the case a reader most wants to open, so the link keys off the target id and not
+    // the status.
+    expect(resolverTargetHref({ targetId: 'p-edge' })).toBe('/ade/dashboard/primitives/p-edge');
+  });
+
+  it('labels the link with the target path', () => {
+    expect(resolverTargetLinkLabel(rows[0])).toBe('View details for std/v0/types/money');
+  });
+
+  it('falls back to the target name when there is no shortened path', () => {
+    expect(resolverTargetLinkLabel({ resolvedTarget: '', targetName: 'money' })).toBe(
+      'View details for money'
+    );
   });
 });

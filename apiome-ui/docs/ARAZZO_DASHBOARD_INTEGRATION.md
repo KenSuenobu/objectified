@@ -240,7 +240,7 @@ NEXT_PUBLIC_REST_API_BASE_URL=http://localhost:8000/v1
 
 **Production Example:**
 ```env
-NEXT_PUBLIC_REST_API_BASE_URL=https://api.apiome.app/v1
+NEXT_PUBLIC_REST_API_BASE_URL=https://api.apiome.dev/v1
 ```
 
 ---

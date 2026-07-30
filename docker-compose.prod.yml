@@ -107,7 +107,7 @@ services:
       # so they must be passed here as build args — the runtime environment
       # copies below do not affect the compiled client code.
       args:
-        NEXT_PUBLIC_MAIN_APP_URL: https://${DEPLOY_APP_DOMAIN:-app.apiome.app}
+        NEXT_PUBLIC_MAIN_APP_URL: https://${DEPLOY_APP_DOMAIN:-app.apiome.dev}
         NEXT_PUBLIC_STUDIO_URL: https://${DEPLOY_STUDIO_DOMAIN:?set DEPLOY_STUDIO_DOMAIN}
         NEXT_PUBLIC_API_URL: https://${DEPLOY_API_DOMAIN}
         NEXT_PUBLIC_REST_API_BASE_URL: http://rest:8000/v1
@@ -116,7 +116,7 @@ services:
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in your .env}
       BETTER_AUTH_URL: https://${DEPLOY_STUDIO_DOMAIN:?set DEPLOY_STUDIO_DOMAIN}
       BETTER_AUTH_COOKIE_DOMAIN: ${BETTER_AUTH_COOKIE_DOMAIN:-}
-      NEXT_PUBLIC_MAIN_APP_URL: https://${DEPLOY_APP_DOMAIN:-app.apiome.app}
+      NEXT_PUBLIC_MAIN_APP_URL: https://${DEPLOY_APP_DOMAIN:-app.apiome.dev}
       NEXT_PUBLIC_STUDIO_URL: https://${DEPLOY_STUDIO_DOMAIN}
       NEXT_PUBLIC_API_URL: https://${DEPLOY_API_DOMAIN}
       NEXT_PUBLIC_REST_API_BASE_URL: http://rest:8000/v1

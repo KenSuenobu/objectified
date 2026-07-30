@@ -160,7 +160,7 @@ app.add_middleware(RateLimitMiddleware)
 
 # CORS allow-list is configuration-driven (APIOME_CORS_ALLOWED_ORIGINS /
 # APIOME_CORS_ALLOWED_ORIGIN_REGEX) so production can lock origins down without a code
-# change; defaults preserve local dev ports + *.apiome.app. See app/config.py.
+# change; defaults preserve local dev ports + *.apiome.dev. See app/config.py.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_allowed_origins_list,

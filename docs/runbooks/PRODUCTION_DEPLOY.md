@@ -141,8 +141,8 @@ curl -fsS -o /dev/null -w "%{http_code}\n" https://$DEPLOY_STUDIO_DOMAIN/  # Stu
 have not been applied (re-check §4.4). The deploy is "working" when REST, MCP, and Studio respond over HTTPS.
 
 Set `APIOME_CORS_ALLOWED_ORIGINS` to include both the main app and Studio origins (e.g.
-`https://app.apiome.app,https://studio.apiome.app`). The default regex also allows
-`https://*.apiome.app` when `APIOME_CORS_ALLOWED_ORIGIN_REGEX` is unset. Credentials are
+`https://app.apiome.dev,https://studio.apiome.dev`). The default regex also allows
+`https://*.apiome.dev` when `APIOME_CORS_ALLOWED_ORIGIN_REGEX` is unset. Credentials are
 enabled (`allow_credentials=True`) for session cookies from Studio.
 
 ---

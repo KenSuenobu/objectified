@@ -19,8 +19,8 @@ import PrimitiveImportDialog from '../src/app/ade/dashboard/primitives/Primitive
 
 const REGISTRY_DOC = {
   $defs: {
-    money: { $id: 'https://api.apiome.app/types/tenant/acme/v1/types/money', type: 'object' },
-    decimal: { $id: 'https://api.apiome.app/types/tenant/acme/v1/types/decimal', type: 'string' },
+    money: { $id: 'https://api.apiome.dev/types/tenant/acme/v1/types/money', type: 'object' },
+    decimal: { $id: 'https://api.apiome.dev/types/tenant/acme/v1/types/decimal', type: 'string' },
   },
 };
 
@@ -97,9 +97,9 @@ describe('PrimitiveImportDialog — Extract from Target', () => {
   it('states when a document spans several namespaces instead of silently picking one', () => {
     renderDialog({
       $defs: {
-        a: { $id: 'https://api.apiome.app/types/std/v0/types/a' },
-        b: { $id: 'https://api.apiome.app/types/std/v0/types/b' },
-        c: { $id: 'https://api.apiome.app/types/tenant/acme/v1/types/c' },
+        a: { $id: 'https://api.apiome.dev/types/std/v0/types/a' },
+        b: { $id: 'https://api.apiome.dev/types/std/v0/types/b' },
+        c: { $id: 'https://api.apiome.dev/types/tenant/acme/v1/types/c' },
       },
     });
 

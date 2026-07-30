@@ -186,7 +186,7 @@ test.describe('Publication change report (mocked APIs)', () => {
     await page.waitForTimeout(3000);
 
     if (page.url().includes('/login')) {
-      test.skip(true, 'Login failed — skip E2E (seed admin@apiome.app / 1234)');
+      test.skip(true, 'Login failed — skip E2E (seed admin@apiome.dev / 1234)');
       return;
     }
 

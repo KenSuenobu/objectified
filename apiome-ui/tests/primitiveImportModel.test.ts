@@ -201,7 +201,7 @@ describe('describeDetectedTypes', () => {
 describe('extractTargetNamespace', () => {
   it('reads the namespace from the $id of a standalone schema', () => {
     const result = extractTargetNamespace(
-      { $id: 'https://api.apiome.app/types/tenant/acme/v1/types/money', type: 'object' },
+      { $id: 'https://api.apiome.dev/types/tenant/acme/v1/types/money', type: 'object' },
       'json-schema'
     );
 
@@ -213,8 +213,8 @@ describe('extractTargetNamespace', () => {
     const result = extractTargetNamespace(
       {
         $defs: {
-          money: { $id: 'https://api.apiome.app/types/std/v0/types/money', type: 'object' },
-          decimal: { $id: 'https://api.apiome.app/types/std/v0/types/decimal', type: 'string' },
+          money: { $id: 'https://api.apiome.dev/types/std/v0/types/money', type: 'object' },
+          decimal: { $id: 'https://api.apiome.dev/types/std/v0/types/decimal', type: 'string' },
         },
       },
       'json-schema'
@@ -226,7 +226,7 @@ describe('extractTargetNamespace', () => {
 
   it('reads a type-def bundle through its `types` container', () => {
     const result = extractTargetNamespace(
-      { types: { charge: { $id: 'https://api.apiome.app/types/tenant/acme/v2/payments/charge' } } },
+      { types: { charge: { $id: 'https://api.apiome.dev/types/tenant/acme/v2/payments/charge' } } },
       'type-def-bundle'
     );
 
@@ -237,9 +237,9 @@ describe('extractTargetNamespace', () => {
     const result = extractTargetNamespace(
       {
         $defs: {
-          a: { $id: 'https://api.apiome.app/types/std/v0/types/a' },
-          b: { $id: 'https://api.apiome.app/types/std/v0/types/b' },
-          c: { $id: 'https://api.apiome.app/types/tenant/acme/v1/types/c' },
+          a: { $id: 'https://api.apiome.dev/types/std/v0/types/a' },
+          b: { $id: 'https://api.apiome.dev/types/std/v0/types/b' },
+          c: { $id: 'https://api.apiome.dev/types/tenant/acme/v1/types/c' },
         },
       },
       'json-schema'
@@ -253,8 +253,8 @@ describe('extractTargetNamespace', () => {
   it('prefers the document root id on a tie', () => {
     const result = extractTargetNamespace(
       {
-        $id: 'https://api.apiome.app/types/std/v0/types/bundle',
-        $defs: { a: { $id: 'https://api.apiome.app/types/tenant/acme/v1/types/a' } },
+        $id: 'https://api.apiome.dev/types/std/v0/types/bundle',
+        $defs: { a: { $id: 'https://api.apiome.dev/types/tenant/acme/v1/types/a' } },
       },
       'json-schema'
     );

@@ -37,7 +37,7 @@ const resolveOne = (schema: Record<string, unknown>, knownTargets: KnownTarget[]
 describe('path helpers', () => {
   it('derives the base URI for a namespace', () => {
     expect(baseUriForNamespace('tenant/acme/v1/types')).toBe(
-      'https://api.apiome.app/types/tenant/acme/v1/types/'
+      'https://api.apiome.dev/types/tenant/acme/v1/types/'
     );
     expect(baseUriForNamespace('')).toBeNull();
     expect(baseUriForNamespace(null)).toBeNull();
@@ -113,7 +113,7 @@ describe('resolveImportRefs', () => {
   });
 
   it('repairs a ref that walks up too far — the reported motivating case', () => {
-    // As written this lands on https://api.apiome.app/std/v0/types/uri, outside the registry root,
+    // As written this lands on https://api.apiome.dev/std/v0/types/uri, outside the registry root,
     // which the API drops silently. The path it names is still unambiguous.
     const result = resolveOne({ $ref: '../../../../../std/v0/types/uri' });
 

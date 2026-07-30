@@ -114,7 +114,7 @@ const PRIMITIVES_PAYLOAD = {
       id: 'prim-1',
       name: 'email',
       namespace: 'std/v0/primitives',
-      schema_id: 'https://api.apiome.app/types/std/v0/primitives/email',
+      schema_id: 'https://api.apiome.dev/types/std/v0/primitives/email',
     },
   ],
 };

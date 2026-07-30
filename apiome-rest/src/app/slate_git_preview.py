@@ -199,7 +199,7 @@ def derive_immutable_url(preview_host: str, site_slug: str, commit: str) -> str:
     """Derive the immutable commit URL — keyed on the commit, so it never moves.
 
     Args:
-        preview_host: The connection's preview host (e.g. ``previews.apiome.app``).
+        preview_host: The connection's preview host (e.g. ``previews.apiome.dev``).
         site_slug: The site's slug.
         commit: The full commit sha.
 

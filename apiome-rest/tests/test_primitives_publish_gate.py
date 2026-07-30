@@ -45,10 +45,10 @@ def _row(**overrides):
         "is_public": False,
         "usage_count": 0,
         "source": "human",
-        "schema_id": "https://api.apiome.app/types/tenant/acme/my-type",
+        "schema_id": "https://api.apiome.dev/types/tenant/acme/my-type",
         "draft": "2020-12",
         "namespace": None,
-        "base_uri": "https://api.apiome.app/types/tenant/acme/",
+        "base_uri": "https://api.apiome.dev/types/tenant/acme/",
         "created_at": _NOW,
         "updated_at": _NOW,
         "enabled": True,
@@ -138,7 +138,7 @@ def test_create_allows_invalid_when_block_disabled():
     mdb.create_primitive.assert_called_once()
     kwargs = mdb.create_primitive.call_args.kwargs
     assert kwargs["schema"]["type"] == "stringg"
-    assert kwargs["schema_id"] == "https://api.apiome.app/types/tenant/acme/my-type"
+    assert kwargs["schema_id"] == "https://api.apiome.dev/types/tenant/acme/my-type"
 
 
 def test_create_allows_invalid_when_validate_disabled():

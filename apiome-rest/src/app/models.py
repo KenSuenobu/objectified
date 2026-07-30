@@ -584,7 +584,7 @@ class TypeRegistrySettingsSchema(BaseModel):
     coerce_imported_drafts: bool = True
 
     # Reference resolution
-    resolution_base_url: str = "https://api.apiome.app/types/"
+    resolution_base_url: str = "https://api.apiome.dev/types/"
     ref_style: RefStyle = "relative"
     allow_remote_refs: bool = False
     remote_host_allowlist: List[str] = ["json-schema.org", "spec.openapis.org"]

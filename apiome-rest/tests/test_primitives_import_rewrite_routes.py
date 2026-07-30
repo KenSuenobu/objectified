@@ -20,7 +20,7 @@ client = TestClient(app)
 _JWT = {"tenant_id": "t1", "user_id": "u1", "auth_method": "jwt"}
 
 # Absolute $id of the seeded core email type — what a recognized `format: email` maps to.
-CORE_EMAIL = "https://api.apiome.app/types/std/v0/types/email"
+CORE_EMAIL = "https://api.apiome.dev/types/std/v0/types/email"
 
 
 @pytest.fixture(autouse=True)
@@ -45,7 +45,7 @@ def test_internal_defs_ref_is_rewritten_relative_and_resolved():
         return {"name": kwargs["name"], "refs": kwargs.get("refs", [])}
 
     # The Money target resolves; Decimal does not (kept unresolved).
-    money_id = "https://api.apiome.app/types/tenant/acme/money"
+    money_id = "https://api.apiome.dev/types/tenant/acme/money"
 
     with patch("app.primitives_routes.db") as mdb:
         mdb.create_primitive.side_effect = _create

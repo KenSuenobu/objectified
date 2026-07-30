@@ -29,7 +29,7 @@ _SYSTEM_NS_ROW = {
     "id": "ns-sys",
     "tenant_id": None,
     "namespace": "std/v0/types",
-    "base_uri": "https://api.apiome.app/types/std/v0/types/",
+    "base_uri": "https://api.apiome.dev/types/std/v0/types/",
     "version_root": "v0",
     "description": "std types",
     "is_system": True,
@@ -45,7 +45,7 @@ _TENANT_NS_ROW = {
     "id": "ns-acme",
     "tenant_id": "t1",
     "namespace": "tenant/acme/v1/types",
-    "base_uri": "https://api.apiome.app/types/tenant/acme/v1/types/",
+    "base_uri": "https://api.apiome.dev/types/tenant/acme/v1/types/",
     "version_root": "v1",
     "description": None,
     "is_system": False,
@@ -108,7 +108,7 @@ def test_create_namespace_ok_derives_base_uri_and_version_root():
         mdb.is_user_tenant_admin.return_value = True
         mdb.get_type_namespace_by_path.return_value = None
         created = {**_TENANT_NS_ROW, "namespace": "tenant/acme/v2/payments",
-                   "base_uri": "https://api.apiome.app/types/tenant/acme/v2/payments/",
+                   "base_uri": "https://api.apiome.dev/types/tenant/acme/v2/payments/",
                    "version_root": "v2", "type_count": 0}
         mdb.create_type_namespace.return_value = created
         r = client.post(
@@ -120,7 +120,7 @@ def test_create_namespace_ok_derives_base_uri_and_version_root():
     assert body["namespace"] == "tenant/acme/v2/payments"
     # Derived when omitted by the client.
     kwargs = mdb.create_type_namespace.call_args.kwargs
-    assert kwargs["base_uri"] == "https://api.apiome.app/types/tenant/acme/v2/payments/"
+    assert kwargs["base_uri"] == "https://api.apiome.dev/types/tenant/acme/v2/payments/"
     assert kwargs["version_root"] == "v2"
     assert kwargs["is_system"] is False
     assert kwargs["is_public"] is False
@@ -245,3 +245,73 @@ def test_update_namespace_empty_base_uri_400():
         r = client.put("/v1/types/acme/namespaces/ns-acme", json={"base_uri": "   "})
     assert r.status_code == 400
     mdb.update_type_namespace.assert_not_called()
+
+
+# ===========================================================================
+# DELETE
+# ===========================================================================
+
+
+def test_delete_namespace_ok_reports_unregistered_types():
+    """Removing a registration leaves its types in place, and says how many that is."""
+    with patch("app.type_namespaces_routes.db") as mdb:
+        mdb.is_user_tenant_admin.return_value = True
+        mdb.get_type_namespace_by_id.return_value = _TENANT_NS_ROW
+        mdb.delete_type_namespace.return_value = True
+        r = client.delete("/v1/types/acme/namespaces/ns-acme")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["success"] is True
+    assert body["namespace"] == "tenant/acme/v1/types"
+    assert body["unregistered_type_count"] == 3
+    # The write is scoped by the token's tenant, not the URL slug.
+    assert mdb.delete_type_namespace.call_args.args == ("ns-acme", "t1")
+
+
+def test_delete_namespace_does_not_touch_its_types():
+    """The list is referential: no primitive is deleted or rewritten by removing a namespace."""
+    with patch("app.type_namespaces_routes.db") as mdb:
+        mdb.is_user_tenant_admin.return_value = True
+        mdb.get_type_namespace_by_id.return_value = _TENANT_NS_ROW
+        mdb.delete_type_namespace.return_value = True
+        r = client.delete("/v1/types/acme/namespaces/ns-acme")
+    assert r.status_code == 200
+    mdb.delete_primitive.assert_not_called()
+    mdb.update_primitive.assert_not_called()
+
+
+def test_delete_namespace_requires_admin():
+    app.dependency_overrides[validate_authentication] = lambda: _JWT_NON_ADMIN
+    with patch("app.type_namespaces_routes.db") as mdb:
+        mdb.is_user_tenant_admin.return_value = False
+        r = client.delete("/v1/types/acme/namespaces/ns-acme")
+    assert r.status_code == 403
+    mdb.delete_type_namespace.assert_not_called()
+
+
+def test_delete_system_namespace_forbidden():
+    with patch("app.type_namespaces_routes.db") as mdb:
+        mdb.is_user_tenant_admin.return_value = True
+        mdb.get_type_namespace_by_id.return_value = _SYSTEM_NS_ROW
+        r = client.delete("/v1/types/acme/namespaces/ns-sys")
+    assert r.status_code == 403
+    mdb.delete_type_namespace.assert_not_called()
+
+
+def test_delete_namespace_not_found_404():
+    with patch("app.type_namespaces_routes.db") as mdb:
+        mdb.is_user_tenant_admin.return_value = True
+        mdb.get_type_namespace_by_id.return_value = None
+        r = client.delete("/v1/types/acme/namespaces/missing")
+    assert r.status_code == 404
+    mdb.delete_type_namespace.assert_not_called()
+
+
+def test_delete_namespace_vanished_between_read_and_write_404():
+    """A concurrent delete leaves the row gone by the time the write runs."""
+    with patch("app.type_namespaces_routes.db") as mdb:
+        mdb.is_user_tenant_admin.return_value = True
+        mdb.get_type_namespace_by_id.return_value = _TENANT_NS_ROW
+        mdb.delete_type_namespace.return_value = False
+        r = client.delete("/v1/types/acme/namespaces/ns-acme")
+    assert r.status_code == 404

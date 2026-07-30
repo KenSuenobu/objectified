@@ -13,7 +13,7 @@ import type { TypeNamespaceCollection } from './primitivesRegistryTypes';
  * Registry root every base URI hangs off. Mirrors ``REGISTRY_BASE_URL`` in
  * ``type_namespaces_routes.py`` so the client-side default matches what the API derives.
  */
-export const REGISTRY_BASE_URL = 'https://api.apiome.app/types/';
+export const REGISTRY_BASE_URL = 'https://api.apiome.dev/types/';
 
 /** The ``std/`` root is reserved for platform-curated system-core namespaces (read-only here). */
 export const SYSTEM_NAMESPACE_ROOT = 'std';

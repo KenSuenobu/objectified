@@ -875,7 +875,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     reads are tenant-scoped by token, and a published-but-private portal withholds every
     API name, description, URL and count — `robots.txt` disallows all crawling and the
     manifests carry `contentWithheld: true`, so private content is never emitted.
-  - New setting `APIOME_SLATE_PORTAL_BASE_URL` (default `https://portal.apiome.app`)
+  - New setting `APIOME_SLATE_PORTAL_BASE_URL` (default `https://portal.apiome.dev`)
     configures the portal base the human-page and agent-output URLs are built under.
 
 ## [1.154.0] - 2026-07-22

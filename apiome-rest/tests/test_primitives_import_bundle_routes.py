@@ -74,7 +74,7 @@ def test_bundle_of_n_types_imports_n_rows_with_refs_intact():
     order_refs = by_name["Order"]["refs"]
     assert {
         "relative_ref": "./line",
-        "resolved_target": "https://api.apiome.app/types/std/v0/types/line",
+        "resolved_target": "https://api.apiome.dev/types/std/v0/types/line",
         "status": "unresolved",
     } in order_refs
     assert all(e["status"] != "internal" for e in order_refs)

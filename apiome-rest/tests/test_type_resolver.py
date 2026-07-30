@@ -11,7 +11,7 @@ from app.type_resolver import (
     reresolve_edges,
 )
 
-BASE = "https://api.apiome.app/types/"
+BASE = "https://api.apiome.dev/types/"
 MONEY = BASE + "tenant/acme/types/money"
 DECIMAL = BASE + "tenant/acme/types/decimal"
 STRING = BASE + "std/v0/primitives/string"

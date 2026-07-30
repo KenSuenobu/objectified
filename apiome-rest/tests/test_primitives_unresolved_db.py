@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 from app.database import Database
 
 _TID = "tenant-1"
-_TARGET = "https://api.apiome.app/types/std/v0/primitives/string"
+_TARGET = "https://api.apiome.dev/types/std/v0/primitives/string"
 
 
 def test_count_unresolved_refs_shapes_result():

@@ -24,14 +24,14 @@ const RESOLVE_RESPONSE = {
       id: 'p-date',
       name: 'date',
       namespace: 'std/v0/types',
-      base_uri: 'https://api.apiome.app/types/std/v0/types/',
+      base_uri: 'https://api.apiome.dev/types/std/v0/types/',
       ref_count: 1,
       resolved_count: 1,
       unresolved_count: 0,
       refs: [
         {
           relative_ref: '../primitives/string',
-          resolved_target: 'https://api.apiome.app/types/std/v0/primitives/string',
+          resolved_target: 'https://api.apiome.dev/types/std/v0/primitives/string',
           status: 'resolved',
           target_id: 'p-string',
           target_name: 'string',
@@ -42,21 +42,21 @@ const RESOLVE_RESPONSE = {
       id: 'p-charge',
       name: 'charge',
       namespace: 'tenant/acme/v1/payments',
-      base_uri: 'https://api.apiome.app/types/tenant/acme/v1/payments/',
+      base_uri: 'https://api.apiome.dev/types/tenant/acme/v1/payments/',
       ref_count: 2,
       resolved_count: 1,
       unresolved_count: 1,
       refs: [
         {
           relative_ref: '../../../std/v0/types/money',
-          resolved_target: 'https://api.apiome.app/types/std/v0/types/money',
+          resolved_target: 'https://api.apiome.dev/types/std/v0/types/money',
           status: 'resolved',
           target_id: 'p-money',
           target_name: 'money',
         },
         {
           relative_ref: './discount',
-          resolved_target: 'https://api.apiome.app/types/tenant/acme/v1/payments/discount',
+          resolved_target: 'https://api.apiome.dev/types/tenant/acme/v1/payments/discount',
           status: 'unresolved',
           target_id: null,
           target_name: null,
@@ -67,14 +67,14 @@ const RESOLVE_RESPONSE = {
       id: 'p-node',
       name: 'node',
       namespace: 'tenant/globex/v2/types',
-      base_uri: 'https://api.apiome.app/types/tenant/globex/v2/types/',
+      base_uri: 'https://api.apiome.dev/types/tenant/globex/v2/types/',
       ref_count: 1,
       resolved_count: 0,
       unresolved_count: 0,
       refs: [
         {
           relative_ref: './edge',
-          resolved_target: 'https://api.apiome.app/types/tenant/globex/v2/types/edge',
+          resolved_target: 'https://api.apiome.dev/types/tenant/globex/v2/types/edge',
           status: 'circular',
           target_id: 'p-edge',
           target_name: 'edge',
@@ -124,7 +124,7 @@ describe('PrimitivesResolverView', () => {
     expect(screen.getAllByText('cross-scope').length).toBeGreaterThanOrEqual(1);
 
     // Read-only resolution base from the data.
-    expect(screen.getByText('https://api.apiome.app/types/')).toBeInTheDocument();
+    expect(screen.getByText('https://api.apiome.dev/types/')).toBeInTheDocument();
 
     // "4 of 4 references shown" footer (no filter).
     expect(screen.getByText(/4 of 4 references shown/i)).toBeInTheDocument();
@@ -176,5 +176,71 @@ describe('PrimitivesResolverView', () => {
     render(<PrimitivesResolverView onMessage={onMessage} />);
 
     await waitFor(() => expect(onMessage).toHaveBeenCalledWith('error', 'Tenant not found'));
+  });
+});
+
+describe('PrimitivesResolverView — opening a resolved target', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  async function renderResolved() {
+    global.fetch = mockResolve() as unknown as typeof fetch;
+    render(<PrimitivesResolverView />);
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument());
+  }
+
+  it('links each resolved target in the table to that type’s detail screen', async () => {
+    await renderResolved();
+
+    // std/v0/types/date → std/v0/primitives/string (target p-string).
+    const link = screen.getByTestId('table-target-link-p-date:0');
+    expect(link).toHaveAttribute('href', '/ade/dashboard/primitives/p-string');
+    expect(link).toHaveTextContent('std/v0/primitives/string');
+    expect(link).toHaveAccessibleName('View details for std/v0/primitives/string');
+  });
+
+  it('links the resolved target in the reference graph as well', async () => {
+    await renderResolved();
+
+    const link = screen.getByTestId('graph-target-link-p-charge:0');
+    expect(link).toHaveAttribute('href', '/ade/dashboard/primitives/p-money');
+    expect(link).toHaveTextContent('std/v0/types/money');
+  });
+
+  it('leaves an unresolved target as plain text in both surfaces', async () => {
+    await renderResolved();
+
+    // p-charge:1 is the unresolved ./discount edge — no target row, so nothing to open.
+    expect(screen.queryByTestId('table-target-link-p-charge:1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('graph-target-link-p-charge:1')).not.toBeInTheDocument();
+    // The target path is still shown, just not as a link.
+    expect(
+      screen.getAllByText('tenant/acme/v1/payments/discount').length
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it('links a circular edge, which still names a real type', async () => {
+    await renderResolved();
+
+    expect(screen.getByTestId('table-target-link-p-node:0')).toHaveAttribute(
+      'href',
+      '/ade/dashboard/primitives/p-edge'
+    );
+  });
+
+  it('keeps the cross-scope badge outside the link', async () => {
+    await renderResolved();
+
+    const link = screen.getByTestId('table-target-link-p-charge:0');
+    expect(link).not.toHaveTextContent('cross-scope');
+    expect(link.closest('td')).toHaveTextContent('cross-scope');
+  });
+
+  it('drops the links along with the rows when a filter excludes them', async () => {
+    await renderResolved();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Unresolved' }));
+
+    expect(screen.queryByTestId('table-target-link-p-date:0')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('graph-target-link-p-date:0')).not.toBeInTheDocument();
   });
 });

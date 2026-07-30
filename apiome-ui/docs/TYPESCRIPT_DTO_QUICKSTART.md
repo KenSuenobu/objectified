@@ -322,7 +322,7 @@ class User(BaseModel):
 #!/bin/bash
 
 # 1. Fetch latest from Apiome API
-curl -X GET "https://your-apiome.app/api/generate/typescript" \
+curl -X GET "https://your-apiome.dev/api/generate/typescript" \
   -H "Authorization: Bearer $API_KEY" \
   -o src/types/schema.ts
 

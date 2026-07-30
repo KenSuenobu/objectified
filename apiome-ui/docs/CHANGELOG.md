@@ -428,7 +428,7 @@
     - Custom industry categories for enterprise customers
     - 14 new tickets added (#239-#252)
 - **Added Schema Showcase Section** (🟠 High Priority, Q1 2026)
-    - Monthly showcase gallery on browse.apiome.app
+    - Monthly showcase gallery on browse.apiome.dev
     - Features schemas with top quality scores (90-100)
     - Company branding and recognition for featured schemas
     - Showcase categories: Industry Leaders, Best Practices, Innovation Awards, Community Choice

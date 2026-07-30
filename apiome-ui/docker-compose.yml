@@ -14,7 +14,7 @@ services:
       # Public mock runtime URL (published-versions dashboard mock links)
       - APIOME_MOCK_PUBLIC_BASE_URL=${APIOME_MOCK_PUBLIC_BASE_URL:-http://localhost:8775}
       # Public API browser (apiome-browse)
-      - NEXT_PUBLIC_BROWSE_URL=${NEXT_PUBLIC_BROWSE_URL:-https://browse.apiome.app}
+      - NEXT_PUBLIC_BROWSE_URL=${NEXT_PUBLIC_BROWSE_URL:-https://browse.apiome.dev}
       # Auth (Better Auth) — app base URL + shared signing secret (historical BETTER_AUTH_ names)
       - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}

@@ -14,7 +14,7 @@ from app.primitives_resolver import (
 )
 from app.primitives_scope import resolve_registry_uri
 
-BASE = "https://api.apiome.app/types/"
+BASE = "https://api.apiome.dev/types/"
 STD_TYPES_BASE = BASE + "std/v0/types/"
 STD_PRIMS = BASE + "std/v0/primitives/"
 ACME_BASE = BASE + "tenant/acme/v1/types/"

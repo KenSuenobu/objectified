@@ -48,7 +48,7 @@ curl -X GET "http://localhost:8000/v1/json/my-tenant/my-project/1.0.0" \
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://apiome.app/my-tenant/my-project/1.0.0/schema.json",
+  "$id": "https://apiome.dev/my-tenant/my-project/1.0.0/schema.json",
   "title": "my-project Schema",
   "description": "Generated JSON Schema from Apiome Studio - Version 1.0.0",
   "version": "1.0.0",
@@ -125,7 +125,7 @@ curl -X GET "http://localhost:8000/v1/json/my-tenant/my-project/1.0.0/User" \
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://apiome.app/my-tenant/my-project/1.0.0/User.json",
+  "$id": "https://apiome.dev/my-tenant/my-project/1.0.0/User.json",
   "title": "User Schema",
   "description": "JSON Schema specification for my-tenant/my-project/1.0.0/User",
   "version": "1.0.0",

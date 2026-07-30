@@ -83,6 +83,10 @@ describe("std/v0 core system types seed migration", () => {
   });
 
   it("derives base_uri and schema_id from the resolution base", () => {
+    // Asserts the literal text of V113, an already-applied migration, so this stays on the host
+    // V113 was written with. The registry moved to apiome.dev, and V219 rewrites the rows this seed
+    // produced — but editing V113 itself would change its checksum and make every existing database
+    // refuse to migrate.
     expect(sql).toContain("'https://api.apiome.app/types/' || s.namespace || '/'");
     expect(sql).toContain("'https://api.apiome.app/types/' || s.namespace || '/' || s.name");
   });

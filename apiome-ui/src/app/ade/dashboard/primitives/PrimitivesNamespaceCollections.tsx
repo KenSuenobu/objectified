@@ -12,10 +12,8 @@ import {
   FolderOpen,
   ChevronRight,
   ChevronDown,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
 } from 'lucide-react';
+import SortableTh from '@/app/components/ade/dashboard/SortableTh';
 import {
   dashboardPanelClass,
   dashboardTableTheadClass,
@@ -126,7 +124,7 @@ function statusBadge(unresolvedCount: number) {
   );
 }
 
-/** A column header that sorts the table, showing which way it is currently ordered. */
+/** This panel's binding of the shared sortable header cell. */
 function SortTh({
   column,
   sort,
@@ -142,33 +140,19 @@ function SortTh({
   align?: 'left' | 'right';
   children: ReactNode;
 }) {
-  const active = sort.column === column;
   return (
-    <th
-      scope="col"
+    <SortableTh
+      column={column}
+      activeColumn={sort.column}
+      direction={sort.direction}
+      onSort={onSortClick}
       className={className}
-      aria-sort={active ? (sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}
+      align={align}
+      testId={`namespace-collections-sort-${column}`}
+      ariaLabel={`Sort by ${typeof children === 'string' ? children : column}`}
     >
-      <button
-        type="button"
-        onClick={() => onSortClick(column)}
-        data-testid={`namespace-collections-sort-${column}`}
-        className={`inline-flex max-w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-medium uppercase tracking-wider text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white ${
-          align === 'right' ? 'flex-row-reverse' : ''
-        }`}
-      >
-        <span className="truncate">{children}</span>
-        {active ? (
-          sort.direction === 'asc' ? (
-            <ArrowUp className="h-3.5 w-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
-          ) : (
-            <ArrowDown className="h-3.5 w-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
-          )
-        ) : (
-          <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" aria-hidden />
-        )}
-      </button>
-    </th>
+      {children}
+    </SortableTh>
   );
 }
 

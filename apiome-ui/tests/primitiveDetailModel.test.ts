@@ -1,6 +1,10 @@
 import {
+  baseChainNodeHref,
+  baseChainNodeLabel,
   buildBaseChain,
   buildExampleInstance,
+  refEdgeTargetHref,
+  refEdgeTargetLabel,
   deriveOwner,
   deriveVersionRoot,
   effectiveNamespace,
@@ -39,8 +43,8 @@ describe('primitiveDetailModel helpers', () => {
 
   describe('namespaceFromSchemaId', () => {
     it('extracts the namespace between the registry mount and the type-name slug', () => {
-      expect(namespaceFromSchemaId('https://api.apiome.app/types/std/v0/types/money')).toBe('std/v0/types');
-      expect(namespaceFromSchemaId('https://api.apiome.app/types/tenant/acme/v1/payments/charge')).toBe(
+      expect(namespaceFromSchemaId('https://api.apiome.dev/types/std/v0/types/money')).toBe('std/v0/types');
+      expect(namespaceFromSchemaId('https://api.apiome.dev/types/tenant/acme/v1/payments/charge')).toBe(
         'tenant/acme/v1/payments'
       );
     });
@@ -56,7 +60,7 @@ describe('primitiveDetailModel helpers', () => {
     });
 
     it('decodes percent-encoded segments', () => {
-      expect(namespaceFromSchemaId('https://api.apiome.app/types/tenant/a%20b/v1/types/money')).toBe(
+      expect(namespaceFromSchemaId('https://api.apiome.dev/types/tenant/a%20b/v1/types/money')).toBe(
         'tenant/a b/v1/types'
       );
     });
@@ -69,7 +73,7 @@ describe('primitiveDetailModel helpers', () => {
     });
 
     it('returns null when the id carries a name but no namespace above it', () => {
-      expect(namespaceFromSchemaId('https://api.apiome.app/types/money')).toBeNull();
+      expect(namespaceFromSchemaId('https://api.apiome.dev/types/money')).toBeNull();
       expect(namespaceFromSchemaId('https://x.example/position')).toBeNull();
     });
 
@@ -83,7 +87,7 @@ describe('primitiveDetailModel helpers', () => {
   describe('effectiveNamespace', () => {
     it('prefers a registry-mounted $id over the stored column', () => {
       expect(
-        effectiveNamespace('https://api.apiome.app/types/std/v0/types/money', 'stale/from/column')
+        effectiveNamespace('https://api.apiome.dev/types/std/v0/types/money', 'stale/from/column')
       ).toBe('std/v0/types');
     });
 
@@ -106,7 +110,7 @@ describe('primitiveDetailModel helpers', () => {
 
   describe('parseSchemaIdNamespace', () => {
     it('reports whether the namespace came from under the registry mount', () => {
-      expect(parseSchemaIdNamespace('https://api.apiome.app/types/std/v0/types/money')).toEqual({
+      expect(parseSchemaIdNamespace('https://api.apiome.dev/types/std/v0/types/money')).toEqual({
         namespace: 'std/v0/types',
         registryMounted: true,
       });
@@ -123,7 +127,7 @@ describe('primitiveDetailModel helpers', () => {
     });
 
     it('falls back to the base URI when namespace is empty', () => {
-      expect(deriveVersionRoot(null, 'https://api.apiome.app/types/std/v0/types/')).toBe('v0');
+      expect(deriveVersionRoot(null, 'https://api.apiome.dev/types/std/v0/types/')).toBe('v0');
     });
 
     it('returns null when no version root is present', () => {
@@ -223,5 +227,51 @@ describe('primitiveDetailModel helpers', () => {
       expect(buildExampleInstance(null)).toBeNull();
       expect(buildExampleInstance('not-an-object')).toBeNull();
     });
+  });
+});
+
+describe('reference-target links', () => {
+  it('carries the resolved target identity onto each chain node', () => {
+    const chain = buildBaseChain('money', [
+      {
+        relative_ref: './decimal',
+        resolved_target: 'https://api.apiome.dev/types/std/v0/types/decimal',
+        status: 'resolved',
+        target_id: 'p-decimal',
+        target_name: 'decimal',
+      },
+      { relative_ref: './missing', resolved_target: null as unknown as string, status: 'unresolved' },
+    ]);
+
+    expect(chain[1]).toMatchObject({ targetId: 'p-decimal', targetName: 'decimal' });
+    expect(chain[2].targetId).toBeNull();
+  });
+
+  it('links an edge with a known target to the type-detail screen', () => {
+    expect(refEdgeTargetHref({ target_id: 'p-decimal' })).toBe('/ade/dashboard/primitives/p-decimal');
+  });
+
+  it('offers no link for an unresolved edge', () => {
+    expect(refEdgeTargetHref({})).toBeNull();
+    expect(refEdgeTargetHref({ target_id: null })).toBeNull();
+  });
+
+  it('labels an edge link with the target name, falling back to its $id', () => {
+    expect(refEdgeTargetLabel({ target_name: 'decimal' })).toBe('View details for decimal');
+    expect(refEdgeTargetLabel({ resolved_target: 'std/v0/types/decimal' })).toBe(
+      'View details for std/v0/types/decimal'
+    );
+    expect(refEdgeTargetLabel({})).toBe('View details for reference target');
+  });
+
+  it('resolves a base-chain node through the same route and label as its edge', () => {
+    const node = { targetId: 'p-decimal', targetName: 'decimal', target: 'std/v0/types/decimal' };
+    expect(baseChainNodeHref(node)).toBe('/ade/dashboard/primitives/p-decimal');
+    expect(baseChainNodeLabel(node)).toBe('View details for decimal');
+  });
+
+  it('never links the chain head, which is the type being viewed', () => {
+    const [head] = buildBaseChain('money', []);
+    expect(baseChainNodeHref(head)).toBeNull();
   });
 });

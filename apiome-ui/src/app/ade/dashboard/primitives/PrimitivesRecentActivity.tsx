@@ -36,7 +36,7 @@ export default function PrimitivesRecentActivity({ imports, loading }: Primitive
           <br />
           &quot;$ref&quot;: <span className="text-emerald-300">&quot;../primitives/string&quot;</span>
           <br />
-          <span className="text-gray-500"># base</span> api.apiome.app/types/
+          <span className="text-gray-500"># base</span> api.apiome.dev/types/
           <span className="text-indigo-300">std/v0/types/</span>
           <br />
           <span className="text-gray-500"># resolves →</span>{' '}

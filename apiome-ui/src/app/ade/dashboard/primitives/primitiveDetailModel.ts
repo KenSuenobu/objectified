@@ -12,6 +12,40 @@ export interface RefEdge {
   relative_ref?: string;
   resolved_target?: string;
   status?: string;
+  /**
+   * The type this edge points at, resolved server-side by `annotate_ref_targets` — the stored edge
+   * holds only the target's `$id`, which is enough to show but not to navigate to. Both are
+   * `null`/absent when the `$ref` resolves to nothing.
+   */
+  target_id?: string | null;
+  target_name?: string | null;
+}
+
+/**
+ * The dashboard route for the type an edge references, or `null` when there is nothing to open.
+ *
+ * An unresolved `$ref` has no target type — that is what unresolved means — so its `$ref` stays
+ * plain text rather than becoming a dead link.
+ */
+export function refEdgeTargetHref(edge: Pick<RefEdge, 'target_id'>): string | null {
+  return edge.target_id ? `/ade/dashboard/primitives/${edge.target_id}` : null;
+}
+
+/** Tooltip/screen-reader label for the link that opens an edge's target type. */
+export function refEdgeTargetLabel(edge: Pick<RefEdge, 'target_name' | 'resolved_target'>): string {
+  return `View details for ${edge.target_name || edge.resolved_target || 'reference target'}`;
+}
+
+/**
+ * The same two helpers for a base-chain node, which carries the target identity under camelCase
+ * names. They delegate rather than re-derive, so the route and label can never drift apart.
+ */
+export function baseChainNodeHref(node: Pick<BaseChainNode, 'targetId'>): string | null {
+  return refEdgeTargetHref({ target_id: node.targetId });
+}
+
+export function baseChainNodeLabel(node: Pick<BaseChainNode, 'targetName' | 'target'>): string {
+  return refEdgeTargetLabel({ target_name: node.targetName, resolved_target: node.target });
 }
 
 /**
@@ -38,6 +72,13 @@ export interface BaseChainNode {
   kind: 'self' | 'ref';
   /** Resolution status carried from the edge (`resolved` / `unresolved`). */
   status?: string;
+  /**
+   * The referenced type's id, carried from the edge so a chain node can link to it. Absent on the
+   * `self` head node and on any edge that resolves to nothing.
+   */
+  targetId?: string | null;
+  /** The referenced type's name, for the link's label. */
+  targetName?: string | null;
 }
 
 /** Aggregate "used in" counters shown in the right-rail mini-stats. */
@@ -67,6 +108,8 @@ export function buildBaseChain(typeName: string, refs?: RefEdge[]): BaseChainNod
       target: edge.resolved_target ?? undefined,
       status: edge.status ?? undefined,
       kind: 'ref',
+      targetId: edge.target_id ?? null,
+      targetName: edge.target_name ?? null,
     }));
   return [head, ...edges];
 }
@@ -75,7 +118,7 @@ export function buildBaseChain(typeName: string, refs?: RefEdge[]): BaseChainNod
  * The registry mount segment every derived `$id` hangs off.
  *
  * The API builds identity as `{REGISTRY_BASE_URL}{namespace}/{name-slug}` where `REGISTRY_BASE_URL`
- * is `https://api.apiome.app/types/` (``schema_validation.derive_base_uri`` / ``derive_schema_id``).
+ * is `https://api.apiome.dev/types/` (``schema_validation.derive_base_uri`` / ``derive_schema_id``).
  * Matching on the path segment rather than the whole base URL keeps this working for self-hosted
  * deployments serving the same registry layout from a different host.
  */
@@ -99,7 +142,7 @@ export interface SchemaIdNamespace {
  * The namespace is the id's path with the trailing type-name segment removed — the same shape any
  * `$id`-addressed schema collection uses, not just this registry's:
  *
- * - `https://api.apiome.app/types/std/v0/types/money` → `std/v0/types`
+ * - `https://api.apiome.dev/types/std/v0/types/money` → `std/v0/types`
  * - `https://schemas.sourcemeta.com/self/v1/schemas/api/schemas/position` → `self/v1/schemas/api/schemas`
  *
  * The one special case is this registry's own mount: the API roots ids at

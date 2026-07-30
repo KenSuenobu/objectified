@@ -101,7 +101,7 @@ def resolve_registry_uri(ref: str, base_uri: Optional[str]) -> Optional[str]:
 
     Returns:
         The absolute registry URI the ref targets (e.g.
-        ``https://api.apiome.app/types/std/v0/primitives/string``), or ``None``
+        ``https://api.apiome.dev/types/std/v0/primitives/string``), or ``None``
         when the ref is a fragment or points outside the registry.
     """
     if not isinstance(ref, str) or not ref or ref.startswith("#"):

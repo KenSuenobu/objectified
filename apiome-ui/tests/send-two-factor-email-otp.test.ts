@@ -32,7 +32,7 @@ describe('isTwoFactorEmailOtpConfigured', () => {
     expect(
       isTwoFactorEmailOtpConfigured({
         SENDGRID_API_KEY: 'sg-key',
-        EMAIL_FROM: 'noreply@apiome.app',
+        EMAIL_FROM: 'noreply@apiome.dev',
       })
     ).toBe(true);
   });
@@ -48,13 +48,13 @@ describe('sendTwoFactorEmailOtp', () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     await sendTwoFactorEmailOtp(
       { user: { email: 'user@example.com', name: 'Ada' }, otp: '654321' },
-      { SENDGRID_API_KEY: 'sg-key', EMAIL_FROM: 'noreply@apiome.app' }
+      { SENDGRID_API_KEY: 'sg-key', EMAIL_FROM: 'noreply@apiome.dev' }
     );
     expect(mockSetApiKey).toHaveBeenCalledWith('sg-key');
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'user@example.com',
-        from: 'noreply@apiome.app',
+        from: 'noreply@apiome.dev',
         subject: 'Your apiome sign-in code',
       })
     );

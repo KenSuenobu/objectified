@@ -163,7 +163,7 @@ psql -U your_user -d your_database -f apiome-db/scripts/20251108-220159.sql
 ### Using an API Key (Future Implementation)
 ```javascript
 // Example REST API call
-fetch('https://api.apiome.app/v1/data', {
+fetch('https://api.apiome.dev/v1/data', {
   headers: {
     'Authorization': 'Bearer sk_...',
     'Content-Type': 'application/json'

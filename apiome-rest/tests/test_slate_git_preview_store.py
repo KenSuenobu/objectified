@@ -98,7 +98,7 @@ def connection_row(**overrides) -> Dict[str, Any]:
         "repo_name": "docs",
         "repo_full_name": "acme/docs",
         "default_branch": "main",
-        "preview_host": "previews.apiome.app",
+        "preview_host": "previews.apiome.dev",
     }
     return {**base, **overrides}
 
@@ -135,7 +135,7 @@ class TestConnectionSealing:
             repo_owner="acme",
             repo_name="Docs",
             default_branch="main",
-            preview_host="previews.apiome.app",
+            preview_host="previews.apiome.dev",
             webhook_secret="plain-secret",
             token="ghp_plaintext",
         )
@@ -279,7 +279,7 @@ class TestChecks:
             "checks_state": "pending",
             "immutable_url": "https://p/acme-docs/commit/a1b2c3d4e5f6",
             "cleaned_up_at": None,
-            "preview_host": "previews.apiome.app",
+            "preview_host": "previews.apiome.dev",
             "site_slug": "acme-docs",
         }
         return {**base, **overrides}

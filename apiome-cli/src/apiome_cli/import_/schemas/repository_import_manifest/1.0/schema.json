@@ -1,5 +1,5 @@
 {
-  "$id": "https://apiome.app/schemas/repository-import-manifest/1.0/schema",
+  "$id": "https://apiome.dev/schemas/repository-import-manifest/1.0/schema",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Apiome repository import manifest",
   "description": "GitOps manifest (``.apiome.yaml``) declaring which repository files import into which catalog projects and versions.",
@@ -9,7 +9,7 @@
     "$schema": {
       "type": "string",
       "format": "uri",
-      "const": "https://apiome.app/schemas/repository-import-manifest/1.0/schema"
+      "const": "https://apiome.dev/schemas/repository-import-manifest/1.0/schema"
     },
     "version": {
       "type": "integer",

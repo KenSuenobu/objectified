@@ -67,7 +67,7 @@ class Settings(BaseSettings):
 
     # CORS allow-list. Comma-separated exact origins via APIOME_CORS_ALLOWED_ORIGINS
     # (defaults to the local Next.js dev ports). A regex for trusted subdomains is supplied
-    # via APIOME_CORS_ALLOWED_ORIGIN_REGEX (defaults to *.apiome.app); set it to an
+    # via APIOME_CORS_ALLOWED_ORIGIN_REGEX (defaults to *.apiome.dev); set it to an
     # empty string to disable subdomain matching entirely.
     cors_allowed_origins: Optional[str] = Field(
         default=None,
@@ -532,7 +532,7 @@ class Settings(BaseSettings):
         description="Public base URL for hosted mock runtime (no trailing slash).",
     )
     slate_portal_base_url: str = Field(
-        default="https://portal.apiome.app",
+        default="https://portal.apiome.dev",
         validation_alias=AliasChoices(
             "APIOME_SLATE_PORTAL_BASE_URL",
             "slate_portal_base_url",
@@ -1214,7 +1214,7 @@ class Settings(BaseSettings):
     @property
     def effective_cors_origin_regex(self) -> Optional[str]:
         """
-        CORS origin regex: the configured value, or the *.apiome.app default.
+        CORS origin regex: the configured value, or the *.apiome.dev default.
 
         An explicitly-empty string disables subdomain matching (returns None so the regex
         is not applied at all).

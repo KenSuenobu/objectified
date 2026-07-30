@@ -43,7 +43,7 @@ def connection_public(**overrides):
         "repo_name": "docs",
         "repo_full_name": "acme/docs",
         "default_branch": "main",
-        "preview_host": "previews.apiome.app",
+        "preview_host": "previews.apiome.dev",
         "has_webhook_secret": True,
         "has_token": True,
         "created_at": None,
@@ -64,7 +64,7 @@ def preview_row(**overrides):
         "source_digest": "sha256:" + "d" * 64,
         "status": "queued",
         "checks_state": "pending",
-        "immutable_url": "https://previews.apiome.app/acme-docs/commit/a1b2c3d4e5f6",
+        "immutable_url": "https://previews.apiome.dev/acme-docs/commit/a1b2c3d4e5f6",
         "access_policy": "tenant",
         "robots_excluded": True,
         "build_dispatched": False,
@@ -99,7 +99,7 @@ class TestAuthorization:
                     "siteId": "site-1",
                     "repoOwner": "acme",
                     "repoName": "docs",
-                    "previewHost": "previews.apiome.app",
+                    "previewHost": "previews.apiome.dev",
                 },
             )
         _, args, _ = _permissions.mock_calls[0]
@@ -141,7 +141,7 @@ class TestConnectionSecretsAreWriteOnly:
                     "siteId": "site-1",
                     "repoOwner": "acme",
                     "repoName": "docs",
-                    "previewHost": "previews.apiome.app",
+                    "previewHost": "previews.apiome.dev",
                     "webhookSecret": "s3cr3t",
                     "token": "ghp_secret",
                 },
@@ -256,7 +256,7 @@ class TestWebhookReceiver:
         }
         body = json.dumps(payload).encode()
         conn = {"id": "conn-1", "tenant_id": "t1", "site_id": "site-1",
-                "preview_host": "previews.apiome.app", "webhook_secret_enc": b"blob"}
+                "preview_host": "previews.apiome.dev", "webhook_secret_enc": b"blob"}
         with patch("app.slate_git_preview_routes.find_connections_by_repo", return_value=[conn]), \
              patch("app.slate_git_preview_routes.decrypt_signing_secret", return_value=secret), \
              patch("app.slate_git_preview_routes.ingest_preview_event", return_value=(preview_row(), True)) as ingest, \

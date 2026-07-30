@@ -17,7 +17,7 @@ jest.mock('@monaco-editor/react', () => ({
 
 import PrimitiveImportDialog from '../src/app/ade/dashboard/primitives/PrimitiveImportDialog';
 
-const REGISTRY_BASE = 'https://api.apiome.app/types/';
+const REGISTRY_BASE = 'https://api.apiome.dev/types/';
 
 /** The tenant registry the wizard resolves against. */
 const REGISTRY_PRIMITIVES = [

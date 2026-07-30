@@ -3,9 +3,9 @@
 A primitive's JSON Schema may reference other registry types by *relative* ``$ref``
 rooted at the type's import-source ``base_uri`` — the defining mechanic of the registry:
 
-    base   = https://api.apiome.app/types/std/v0/types/   (source: date)
+    base   = https://api.apiome.dev/types/std/v0/types/   (source: date)
     $ref   = ../primitives/string
-    target = https://api.apiome.app/types/std/v0/primitives/string
+    target = https://api.apiome.dev/types/std/v0/primitives/string
 
 This module turns each relative ``$ref`` in a schema into a persisted **edge** stored on
 ``apiome.primitives.refs`` (a JSONB array). Each edge is

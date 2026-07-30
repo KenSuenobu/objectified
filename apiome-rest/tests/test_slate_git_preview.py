@@ -87,12 +87,12 @@ class TestSourceDigest:
 
 class TestUrlDerivation:
     def test_the_immutable_url_is_keyed_on_the_commit(self):
-        url = derive_immutable_url("previews.apiome.app", "acme-docs", COMMIT)
-        assert url == "https://previews.apiome.app/acme-docs/commit/a1b2c3d4e5f6"
+        url = derive_immutable_url("previews.apiome.dev", "acme-docs", COMMIT)
+        assert url == "https://previews.apiome.dev/acme-docs/commit/a1b2c3d4e5f6"
 
     def test_the_alias_url_is_keyed_on_the_branch(self):
-        url = derive_branch_alias_url("previews.apiome.app", "acme-docs", "feature/new-api")
-        assert url == "https://previews.apiome.app/acme-docs/branch/feature-new-api"
+        url = derive_branch_alias_url("previews.apiome.dev", "acme-docs", "feature/new-api")
+        assert url == "https://previews.apiome.dev/acme-docs/branch/feature-new-api"
 
     def test_a_host_with_a_scheme_and_trailing_slash_is_normalised(self):
         url = derive_immutable_url("https://host.example/", "s", COMMIT)

@@ -38,7 +38,7 @@ from .type_resolver import STATUS_RESOLVED, STATUS_UNRESOLVED, reresolve_edges
 router = APIRouter(prefix="/v1/types", tags=["type-registry"])
 
 # Registry root every base URI hangs off (matches the seeded std/v0 primitives, #3449).
-REGISTRY_BASE_URL = "https://api.apiome.app/types/"
+REGISTRY_BASE_URL = "https://api.apiome.dev/types/"
 
 # A namespace path is one or more lowercase, slash-separated segments (letters, digits, _ and -).
 # e.g. std/v0/types, tenant/acme/v1/payments, vendor/fhir/r4.
@@ -274,6 +274,60 @@ async def update_namespace(
         raise HTTPException(status_code=404, detail=f"Namespace not found: {namespace_id}")
 
     return _to_schema(row)
+
+
+@router.delete("/{tenant_slug}/namespaces/{namespace_id}")
+async def delete_namespace(
+    tenant_slug: str,
+    namespace_id: str,
+    auth_data: Dict[str, Any] = Depends(require_primitives_registry),
+) -> Dict[str, Any]:
+    """Remove a tenant namespace registration.
+
+    The namespace list is referential: ``apiome.primitives.namespace`` is a string column with no
+    foreign key to ``apiome.type_namespaces``, so this unregisters the namespace and leaves its
+    types untouched. They keep their namespace path and surface as "unregistered" on the Primitives
+    dashboard, from which the namespace can be registered again. ``type_count`` is returned so the
+    caller can report how many types are now unregistered.
+
+    System-core namespaces are read-only and return 403.
+
+    Args:
+        tenant_slug: The tenant slug.
+        namespace_id: The namespace row id.
+        auth_data: Authentication data (injected by dependency).
+
+    Returns:
+        The deleted namespace's path and the number of types left unregistered.
+    """
+    enforce_permission(db, auth_data, Resource.TYPES, Action.DELETE)
+    tenant_id = auth_data["tenant_id"]
+    user_id = _assert_jwt_user(auth_data)
+    _assert_tenant_admin(tenant_id, user_id)
+
+    existing = db.get_type_namespace_by_id(namespace_id, tenant_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail=f"Namespace not found: {namespace_id}")
+
+    if existing.get("is_system"):
+        raise HTTPException(
+            status_code=403,
+            detail="System namespaces are read-only; platform administrator role required",
+        )
+
+    try:
+        deleted = db.delete_type_namespace(namespace_id, tenant_id)
+    except Exception as e:  # pragma: no cover - defensive
+        raise HTTPException(status_code=500, detail=str(e))
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Namespace not found: {namespace_id}")
+
+    return {
+        "success": True,
+        "namespace": existing["namespace"],
+        "unregistered_type_count": int(existing.get("type_count") or 0),
+    }
 
 
 def _settings_to_schema(row: Dict[str, Any]) -> TypeRegistrySettingsSchema:

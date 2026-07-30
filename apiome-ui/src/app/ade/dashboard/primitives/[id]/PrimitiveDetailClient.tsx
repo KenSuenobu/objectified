@@ -35,12 +35,16 @@ import {
   dashboardPanelPaddedClass,
 } from '@/app/components/ade/dashboard/dashboardScreenClasses';
 import {
+  baseChainNodeHref,
+  baseChainNodeLabel,
   buildBaseChain,
   buildExampleInstance,
   deriveOwner,
   deriveVersionRoot,
   effectiveNamespace,
   exportFileName,
+  refEdgeTargetHref,
+  refEdgeTargetLabel,
   scopeLabel,
   serializeSchemaExport,
   summarizeUsage,
@@ -375,6 +379,7 @@ export default function PrimitiveDetailClient() {
                     <h3 className="text-base font-semibold text-gray-900 dark:text-white">Reference resolution</h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Relative <span className="font-mono">$ref</span> values resolved against the type&apos;s base URL
+                      · click a resolved <span className="font-mono">$ref</span> to open the type it points at
                     </p>
                   </div>
                 </div>
@@ -388,10 +393,30 @@ export default function PrimitiveDetailClient() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-700/60">
-                      {primitive.refs?.map((edge, index) => (
+                      {primitive.refs?.map((edge, index) => {
+                        // A resolved edge knows which type it points at, so the $ref opens it.
+                        // An unresolved one has no target and stays plain text.
+                        const targetHref = refEdgeTargetHref(edge);
+                        return (
                         <tr key={`${edge.relative_ref}-${index}`} className="hover:bg-gray-50/60 dark:hover:bg-gray-900/30">
                           <td className="px-5 py-3 font-mono text-xs text-emerald-600 dark:text-emerald-400">
-                            {edge.relative_ref ?? '—'}
+                            {edge.relative_ref ? (
+                              targetHref ? (
+                                <Link
+                                  href={targetHref}
+                                  data-testid={`ref-edge-link-${index}`}
+                                  title={refEdgeTargetLabel(edge)}
+                                  aria-label={refEdgeTargetLabel(edge)}
+                                  className="underline decoration-dotted underline-offset-2 hover:decoration-solid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+                                >
+                                  {edge.relative_ref}
+                                </Link>
+                              ) : (
+                                edge.relative_ref
+                              )
+                            ) : (
+                              '—'
+                            )}
                           </td>
                           <td className="px-3 py-3 font-mono text-xs text-gray-600 dark:text-gray-300">
                             {edge.resolved_target ?? '—'}
@@ -408,7 +433,8 @@ export default function PrimitiveDetailClient() {
                             </span>
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 ) : (
@@ -577,10 +603,13 @@ export default function PrimitiveDetailClient() {
                   <GitCommitVertical className="w-4 h-4 text-indigo-500" /> Base chain
                 </h3>
                 <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
-                  Relative-ref chain down to a primitive.
+                  Relative-ref chain down to a primitive · click a resolved step to open it.
                 </p>
                 <ol className="relative ml-1.5 border-l border-gray-200 dark:border-gray-700 space-y-4 text-xs">
-                  {baseChain.map((node, index) => (
+                  {baseChain.map((node, index) => {
+                    // The head node is this type itself, so only the ref steps link anywhere.
+                    const nodeHref = baseChainNodeHref(node);
+                    return (
                     <li key={`${node.label}-${index}`} className="pl-4 relative">
                       <span
                         className={`absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full ${
@@ -591,7 +620,19 @@ export default function PrimitiveDetailClient() {
                               : 'bg-indigo-500'
                         }`}
                       />
-                      <p className="font-mono font-medium text-gray-700 dark:text-gray-200">{node.label}</p>
+                      {nodeHref ? (
+                        <Link
+                          href={nodeHref}
+                          data-testid={`base-chain-link-${index}`}
+                          title={baseChainNodeLabel(node)}
+                          aria-label={baseChainNodeLabel(node)}
+                          className="font-mono font-medium text-gray-700 dark:text-gray-200 underline decoration-dotted underline-offset-2 hover:decoration-solid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+                        >
+                          {node.label}
+                        </Link>
+                      ) : (
+                        <p className="font-mono font-medium text-gray-700 dark:text-gray-200">{node.label}</p>
+                      )}
                       <p className="text-[10px] text-gray-400 font-mono">
                         {node.kind === 'self'
                           ? `${primitive.category} · this type`
@@ -600,7 +641,8 @@ export default function PrimitiveDetailClient() {
                             : 'unresolved'}
                       </p>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ol>
               </section>
             </div>

@@ -19,7 +19,7 @@ const REGISTERED: TypeNamespaceCollection[] = [
     id: 'ns-1',
     tenant_id: null,
     namespace: 'std/v0/types',
-    base_uri: 'https://api.apiome.app/types/std/v0/types/',
+    base_uri: 'https://api.apiome.dev/types/std/v0/types/',
     version_root: 'v0',
     description: 'Core derived types.',
     scope: 'system',

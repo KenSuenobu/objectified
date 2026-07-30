@@ -20,7 +20,7 @@ client = TestClient(app)
 _JWT = {"tenant_id": "t1", "user_id": "u1", "auth_method": "jwt"}
 _NOW = datetime(2026, 6, 22, 12, 0, 0, tzinfo=timezone.utc)
 
-BASE = "https://api.apiome.app/types/"
+BASE = "https://api.apiome.dev/types/"
 STD_PRIMS_STRING = BASE + "std/v0/primitives/string"
 
 

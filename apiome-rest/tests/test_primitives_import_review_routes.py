@@ -20,7 +20,7 @@ client = TestClient(app)
 _JWT = {"tenant_id": "t1", "user_id": "u1", "auth_method": "jwt"}
 
 # The $id a Money type imported into tenant acme's default namespace derives.
-MONEY_ID = "https://api.apiome.app/types/tenant/acme/money"
+MONEY_ID = "https://api.apiome.dev/types/tenant/acme/money"
 
 
 @pytest.fixture(autouse=True)
@@ -65,7 +65,7 @@ def test_review_classifies_new_identical_and_conflict():
         if schema_id == MONEY_ID:
             # Money exists with the SAME schema → identical.
             return _existing_money(money_schema)
-        if schema_id == "https://api.apiome.app/types/tenant/acme/invoice":
+        if schema_id == "https://api.apiome.dev/types/tenant/acme/invoice":
             # Invoice exists with a DIFFERENT schema → conflict.
             return {"id": "e-inv", "schema": {"type": "string"}}
         return None  # Customer is new
@@ -204,7 +204,7 @@ def test_commit_rename_creates_under_new_name():
     assert len(created) == 1
     assert created[0]["name"] == "money_v2"
     # The renamed leaf is slugified (lowercased, '_' → '-') the same as any derived $id.
-    assert created[0]["schema_id"] == "https://api.apiome.app/types/tenant/acme/money-v2"
+    assert created[0]["schema_id"] == "https://api.apiome.dev/types/tenant/acme/money-v2"
 
 
 def test_commit_rename_into_existing_name_is_an_error():
@@ -212,7 +212,7 @@ def test_commit_rename_into_existing_name_is_an_error():
         # Both Money and the rename target already exist → rename collides.
         if sid == MONEY_ID:
             return _existing_money({"type": "string"})
-        if sid == "https://api.apiome.app/types/tenant/acme/money-v2":
+        if sid == "https://api.apiome.dev/types/tenant/acme/money-v2":
             return {"id": "e-v2", "schema": {"type": "boolean"}}
         return None
 
@@ -300,7 +300,7 @@ def test_commit_report_counts_match_mixed_outcome():
     created = []
     updated = []
 
-    invoice_id = "https://api.apiome.app/types/tenant/acme/invoice"
+    invoice_id = "https://api.apiome.dev/types/tenant/acme/invoice"
 
     def _lookup(sid, tid):
         if sid == MONEY_ID:

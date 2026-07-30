@@ -7,7 +7,7 @@ import { test as base, expect, Page } from '@playwright/test';
 // Test user credentials for authentication tests
 export const testUsers = {
   valid: {
-    email: 'admin@apiome.app',
+    email: 'admin@apiome.dev',
     password: '1234',
   },
   invalid: {

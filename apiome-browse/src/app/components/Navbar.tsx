@@ -108,7 +108,7 @@ export function Navbar({ stats }: { stats: DirectoryStats }) {
 
           {/* Login / Sign Up */}
           <a
-            href="https://app.apiome.app/"
+            href="https://app.apiome.dev/"
             className="flex items-center gap-1.5 rounded-md bg-[var(--brand)] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)] focus-visible:outline-none"
           >
             <span className="hidden sm:inline">Sign in</span>

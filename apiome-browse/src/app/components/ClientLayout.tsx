@@ -44,7 +44,7 @@ export function ClientLayout({
                 Tutorials
               </a>
               <a
-                href="https://app.apiome.app/"
+                href="https://app.apiome.dev/"
                 className="transition-colors hover:text-zinc-900 dark:hover:text-zinc-50"
               >
                 Sign in

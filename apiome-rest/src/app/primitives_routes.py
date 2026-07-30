@@ -136,6 +136,51 @@ def resolve_primitive_refs(
     return build_ref_edges(schema, base_uri=base_uri, target_exists=_target_exists)
 
 
+def annotate_ref_targets(
+    edges: Optional[List[Dict[str, Any]]], *, tenant_id: str
+) -> List[Dict[str, Any]]:
+    """Attach the identity of each edge's target type, so a caller can link to it.
+
+    ``apiome.primitives.refs`` stores only ``{relative_ref, resolved_target, status}``, and
+    ``resolved_target`` is a ``$id`` URI — enough to display, but not enough to navigate to. The
+    resolver listing (``POST /{tenant}/resolve``) already returns the target's id alongside each
+    edge; the type-detail page renders the same edges and needs the same thing, so this adds
+    ``target_id`` / ``target_name`` in that identical shape.
+
+    Read-only on purpose: unlike ``type_resolver.reresolve_edges`` this does **not** recompute or
+    persist ``status``. A GET must not write, and the detail page keeps showing exactly the status
+    that is stored — re-resolving stays the resolver endpoint's job.
+
+    Args:
+        edges: The primitive's stored edge list (may be ``None`` or empty).
+        tenant_id: The caller's tenant id, scoping target lookups to visible types (#3453).
+
+    Returns:
+        A new edge list, each edge copied with ``target_id`` / ``target_name`` — both ``None``
+        when the target does not resolve to a visible type.
+    """
+    # One lookup per distinct target, reused across edges that share it (and across repeated
+    # misses), mirroring the resolve route's cache.
+    target_cache: Dict[str, Optional[Dict[str, Any]]] = {}
+
+    annotated: List[Dict[str, Any]] = []
+    for edge in edges or []:
+        target = edge.get("resolved_target")
+        row: Optional[Dict[str, Any]] = None
+        if target:
+            if target not in target_cache:
+                target_cache[target] = db.get_primitive_by_schema_id(target, tenant_id)
+            row = target_cache[target]
+        annotated.append(
+            {
+                **edge,
+                "target_id": str(row["id"]) if row is not None else None,
+                "target_name": row.get("name") if row is not None else None,
+            }
+        )
+    return annotated
+
+
 def reconcile_dependents_for_target(schema_id: Optional[str], *, tenant_id: str) -> None:
     """Re-resolve the tenant's dangling edges that point at a now-existing target (#3457).
 
@@ -529,7 +574,8 @@ async def get_primitive(
         auth_data: Authentication data (injected by dependency)
 
     Returns:
-        The primitive details
+        The primitive details, its ``refs`` edges each carrying the target type's
+        ``target_id`` / ``target_name`` so the detail view can link through to it.
     """
     # Get primitive
     primitive = db.get_primitive_by_id(primitive_id, auth_data['tenant_id'])
@@ -539,6 +585,11 @@ async def get_primitive(
             status_code=404,
             detail=f"Primitive not found: {primitive_id}"
         )
+
+    primitive = {
+        **primitive,
+        "refs": annotate_ref_targets(primitive.get("refs"), tenant_id=auth_data['tenant_id']),
+    }
 
     return PrimitiveSchema(**primitive)
 

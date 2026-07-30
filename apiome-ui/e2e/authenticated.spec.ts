@@ -7,7 +7,7 @@ import { testUsers } from './fixtures/test-fixtures';
  * These tests log in with the test user credentials and verify
  * functionality that requires authentication.
  *
- * Note: These tests require the test user (admin@apiome.app) to exist
+ * Note: These tests require the test user (admin@apiome.dev) to exist
  * in the database with the correct password (1234).
  */
 
@@ -160,7 +160,7 @@ test.describe('Login Flow', () => {
     const url = page.url();
     if (url.includes('error=CredentialsSignin')) {
       // Test user not set up in database - skip this test
-      test.skip(true, 'Test user credentials not set up in database. Create user admin@apiome.app with password 1234.');
+      test.skip(true, 'Test user credentials not set up in database. Create user admin@apiome.dev with password 1234.');
       return;
     }
 

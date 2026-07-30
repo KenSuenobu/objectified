@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import Link from 'next/link';
 import {
   RefreshCw,
   Lock,
@@ -23,16 +24,53 @@ import {
   emptyResolveResponse,
   filterResolverRows,
   flattenResolverEdges,
+  resolverTargetHref,
+  resolverTargetLinkLabel,
   statusBadgeClass,
   statusLabel,
   summarizeStatuses,
   type ResolveResponse,
+  type ResolverEdgeRow,
   type ResolverStatusFilter,
 } from './primitivesResolverModel';
 
 interface PrimitivesResolverViewProps {
   /** Surface success/error notices through the parent screen's alert. */
   onMessage?: (type: 'success' | 'error', text: string) => void;
+}
+
+/**
+ * A resolved target, as a link to that type's details whenever the edge names a known primitive.
+ *
+ * Keyed on the target id rather than the status: an unresolved edge has no target row and stays the
+ * plain text it always was, while a circular edge does point at a real type — and that is precisely
+ * the one a reader wants to open. `testIdPrefix` keeps the graph and the table separately assertable.
+ */
+function ResolvedTargetLink({
+  row,
+  className,
+  testIdPrefix,
+  children,
+}: {
+  row: ResolverEdgeRow;
+  className: string;
+  testIdPrefix: string;
+  children: ReactNode;
+}) {
+  const href = resolverTargetHref(row);
+  if (!href) return <span className={className}>{children}</span>;
+
+  return (
+    <Link
+      href={href}
+      data-testid={`${testIdPrefix}-${row.key}`}
+      title={resolverTargetLinkLabel(row)}
+      aria-label={resolverTargetLinkLabel(row)}
+      className={`${className} underline decoration-dotted underline-offset-2 hover:decoration-solid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded`}
+    >
+      {children}
+    </Link>
+  );
 }
 
 const STATUS_FILTERS: { id: ResolverStatusFilter; label: string }[] = [
@@ -220,7 +258,7 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
             </h3>
             <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-4">
               Each edge is one relative <span className="font-mono">$ref</span>. Cross-scope edges
-              (tenant → core) are highlighted.
+              (tenant → core) are highlighted · click a resolved target to open its details.
             </p>
             <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 p-4 font-mono text-[12px] leading-7 overflow-x-auto">
               {rows.length === 0 ? (
@@ -242,7 +280,9 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
                         row.crossScope ? 'text-teal-500' : 'text-gray-400'
                       }`}
                     />
-                    <span
+                    <ResolvedTargetLink
+                      row={row}
+                      testIdPrefix="graph-target-link"
                       className={
                         row.status === 'resolved'
                           ? 'text-emerald-600 dark:text-emerald-300'
@@ -252,7 +292,7 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
                       }
                     >
                       {row.resolvedTarget || row.relativeRef}
-                    </span>
+                    </ResolvedTargetLink>
                     {row.crossScope ? (
                       <span className="text-teal-500 text-[10px]">(cross-scope: tenant → core)</span>
                     ) : null}
@@ -273,7 +313,7 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
                   </h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Relative <span className="font-mono">$ref</span> resolved against each source
-                    type&apos;s import-source base URL
+                    type&apos;s import-source base URL · click a resolved target to open its details
                   </p>
                 </div>
               </div>
@@ -327,8 +367,16 @@ export default function PrimitivesResolverView({ onMessage }: PrimitivesResolver
                         >
                           {row.relativeRef}
                         </td>
-                        <td className="px-3 py-3 font-mono text-xs text-indigo-600 dark:text-indigo-300">
-                          {row.resolvedTarget || (
+                        <td className="px-3 py-3 font-mono text-xs">
+                          {row.resolvedTarget ? (
+                            <ResolvedTargetLink
+                              row={row}
+                              testIdPrefix="table-target-link"
+                              className="text-indigo-600 dark:text-indigo-300"
+                            >
+                              {row.resolvedTarget}
+                            </ResolvedTargetLink>
+                          ) : (
                             <span className="text-gray-400">—</span>
                           )}
                           {row.crossScope ? (

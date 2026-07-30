@@ -86,12 +86,12 @@ behavior change, but a future refactor can't silently drop `state`. See
 layers, all through `lib/auth/cookie-options.ts`. The following payloads are all **correctly
 blocked**: `//evil.com`, `/\evil.com`, `/%2F%2Fevil.com`, `https://evil.com`,
 `https://sub.trusted.com.evil.com`, `https://trusted.com@evil.com`, `javascript:…`,
-`evil-trusted.com`, `trusted.com.evil.com`, `evilapiome.app`. Userinfo is stripped, backslashes
+`evil-trusted.com`, `trusted.com.evil.com`, `evilapiome.dev`. Userinfo is stripped, backslashes
 normalized, the `//` protocol-relative guard holds, HTTPS is required in prod, and the cookie
 domain uses leading-dot suffix matching. The NextAuth `redirect` callback fails closed to `baseUrl`.
 
 **Latent gap → #4961:** `registrableDomain()` uses naive last-two-labels instead of the Public
-Suffix List. Safe for `apiome.app` / `apiome.dev`, but under a multi-label public suffix or
+Suffix List. Safe for `apiome.dev` / `apiome.dev`, but under a multi-label public suffix or
 platform-preview host (`*.vercel.app`, `*.pages.dev`, `*.co.uk`) it collapses to the shared
 platform suffix and `https://attacker.vercel.app` would satisfy the trusted-deployment check.
 

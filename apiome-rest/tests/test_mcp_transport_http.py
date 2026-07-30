@@ -648,10 +648,10 @@ def test_explicit_origin_overrides_default():
     handler = RecordingHandler()
     t = StreamableHttpTransport(
         ENDPOINT,
-        origin="https://ade.apiome.app",
+        origin="https://ade.apiome.dev",
         client=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
     )
-    assert t.origin == "https://ade.apiome.app"
+    assert t.origin == "https://ade.apiome.dev"
 
 
 def test_extra_headers_are_merged():

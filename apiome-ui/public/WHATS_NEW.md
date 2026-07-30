@@ -10,6 +10,9 @@ We continue to improve the platform based on your feedback with improvements and
 - Primitives: Shows unregistered namespaces that were detected
 - Primitives: Now shows unassigned/unspecified namespaces in JSON Type definitions
 - Primitives: Grouping primitives in a namespace now works logically as expected
+- Primitives: Primitives are now clickable inside the reference graph
+- Primitives: Example form now builds inputs from the schema and allows for testing
+- Primitives: Cards for reference resolution and base chain details now include traversable $refs if any apply
 
 ## Bug Fixes
 
@@ -17,6 +20,8 @@ We continue to improve the platform based on your feedback with improvements and
 - Primitives: Now shows the JSON Schema using monaco-editor
 - Primitives: Added the ability to test a primitive by presenting a usable form that represents the content of the JSON Schema
 - Primitives: Duplicate names are no longer treated as duplicates unless the namespace is identical
+- Primitives: Removed invalid previously created primitives
+- Primitives: Corrected resolution for $ref values in native system types
 
 ---
 

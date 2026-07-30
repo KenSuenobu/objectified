@@ -77,8 +77,8 @@ def test_create_rejects_invalid_schema_with_field_errors():
 def test_create_persists_derived_schema_id_and_draft():
     with patch("app.primitives_routes.db") as mdb:
         mdb.create_primitive.return_value = _row(
-            schema_id="https://api.apiome.app/types/tenant/acme/my-type",
-            base_uri="https://api.apiome.app/types/tenant/acme/",
+            schema_id="https://api.apiome.dev/types/tenant/acme/my-type",
+            base_uri="https://api.apiome.dev/types/tenant/acme/",
         )
         r = client.post(
             "/v1/primitives/acme",
@@ -87,16 +87,16 @@ def test_create_persists_derived_schema_id_and_draft():
     assert r.status_code == 200
     kwargs = mdb.create_primitive.call_args.kwargs
     # Derived against the tenant-default base URI from the URL slug.
-    assert kwargs["schema_id"] == "https://api.apiome.app/types/tenant/acme/my-type"
+    assert kwargs["schema_id"] == "https://api.apiome.dev/types/tenant/acme/my-type"
     assert kwargs["draft"] == "2020-12"
-    assert kwargs["base_uri"] == "https://api.apiome.app/types/tenant/acme/"
+    assert kwargs["base_uri"] == "https://api.apiome.dev/types/tenant/acme/"
     # The persisted schema is stamped with its $id.
-    assert kwargs["schema"]["$id"] == "https://api.apiome.app/types/tenant/acme/my-type"
+    assert kwargs["schema"]["$id"] == "https://api.apiome.dev/types/tenant/acme/my-type"
     assert kwargs["schema"]["$schema"].endswith("/draft/2020-12/schema")
 
 
 def test_create_honors_author_declared_id():
-    declared = "https://api.apiome.app/types/std/v0/primitives/string"
+    declared = "https://api.apiome.dev/types/std/v0/primitives/string"
     with patch("app.primitives_routes.db") as mdb:
         mdb.create_primitive.return_value = _row(schema_id=declared)
         r = client.post(
@@ -125,8 +125,8 @@ def test_create_uses_namespace_for_base_uri():
         )
     assert r.status_code == 200
     kwargs = mdb.create_primitive.call_args.kwargs
-    assert kwargs["base_uri"] == "https://api.apiome.app/types/tenant/acme/v1/types/"
-    assert kwargs["schema_id"] == "https://api.apiome.app/types/tenant/acme/v1/types/money"
+    assert kwargs["base_uri"] == "https://api.apiome.dev/types/tenant/acme/v1/types/"
+    assert kwargs["schema_id"] == "https://api.apiome.dev/types/tenant/acme/v1/types/money"
     assert kwargs["namespace"] == "tenant/acme/v1/types"
 
 
@@ -157,7 +157,7 @@ def test_update_rederives_identity_on_schema_change():
         )
     assert r.status_code == 200
     updates = mdb.update_primitive.call_args.args[2]
-    assert updates["schema_id"] == "https://api.apiome.app/types/tenant/acme/my-type"
+    assert updates["schema_id"] == "https://api.apiome.dev/types/tenant/acme/my-type"
     assert updates["draft"] == "2020-12"
     assert updates["schema"]["$id"].endswith("/my-type")
 
@@ -251,7 +251,7 @@ def test_import_rewrites_internal_defs_refs_to_relative_registry_edges():
     money_refs = captured["Money"]["refs"]
     assert {
         "relative_ref": "./currency",
-        "resolved_target": "https://api.apiome.app/types/tenant/acme/currency",
+        "resolved_target": "https://api.apiome.dev/types/tenant/acme/currency",
         "status": "unresolved",
     } in money_refs
     assert all(e["status"] != "internal" for e in money_refs)
@@ -274,7 +274,7 @@ def test_import_stamps_identity_using_target_namespace():
         )
     assert r.status_code == 200
     kwargs = mdb.create_primitive.call_args.kwargs
-    assert kwargs["base_uri"] == "https://api.apiome.app/types/tenant/acme/v1/types/"
-    assert kwargs["schema_id"] == "https://api.apiome.app/types/tenant/acme/v1/types/good"
+    assert kwargs["base_uri"] == "https://api.apiome.dev/types/tenant/acme/v1/types/"
+    assert kwargs["schema_id"] == "https://api.apiome.dev/types/tenant/acme/v1/types/good"
     assert kwargs["namespace"] == "tenant/acme/v1/types"
     assert kwargs["source"] == "imported"

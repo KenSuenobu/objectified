@@ -9,7 +9,7 @@
  * longer looks like a registry reference:
  *
  * ```
- * base https://api.apiome.app/types/tenant/acme/v1/types/
+ * base https://api.apiome.dev/types/tenant/acme/v1/types/
  *   ../../../../std/v0/types/uri   → …/types/std/v0/types/uri   ✓ a registry edge
  *   ../../../../../std/v0/types/uri → …/std/v0/types/uri         ✗ outside the registry, dropped
  * ```
@@ -27,7 +27,7 @@
  */
 
 /** The registry root every resolvable `$ref` must land under (mirrors `REGISTRY_BASE_URL`). */
-export const REGISTRY_BASE_URL = 'https://api.apiome.app/types/';
+export const REGISTRY_BASE_URL = 'https://api.apiome.dev/types/';
 
 /** A type the import can resolve a `$ref` against. */
 export interface KnownTarget {

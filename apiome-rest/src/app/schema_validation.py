@@ -34,7 +34,7 @@ DRAFT_2020_12_META_URI = "https://json-schema.org/draft/2020-12/schema"
 
 # Registry root every derived ``$id`` / namespace base URI hangs off. Matches the
 # seeded ``std/v0`` primitives (#3449) and ``type_namespaces_routes.REGISTRY_BASE_URL``.
-REGISTRY_BASE_URL = "https://api.apiome.app/types/"
+REGISTRY_BASE_URL = "https://api.apiome.dev/types/"
 
 # Extracts the draft token from a ``$schema`` URI, e.g.
 # ``.../draft/2020-12/schema`` -> ``2020-12`` and ``.../draft-07/schema`` -> ``07``.

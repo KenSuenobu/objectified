@@ -21,7 +21,7 @@ const EXISTING: TypeNamespaceCollection = {
   id: 'ns-1',
   tenant_id: 't-1',
   namespace: 'tenant/acme/v1/types',
-  base_uri: 'https://api.apiome.app/types/tenant/acme/v1/types/',
+  base_uri: 'https://api.apiome.dev/types/tenant/acme/v1/types/',
   version_root: 'v1',
   description: null,
   scope: 'tenant',
@@ -100,5 +100,33 @@ describe('NamespaceEditorDialog — detected namespaces', () => {
     fireEvent.change(pathInput(), { target: { value: 'tenant/acme/v2/types' } });
 
     expect(pathInput().value).toBe('tenant/acme/v2/types');
+  });
+});
+
+describe('NamespaceEditorDialog — validation alert', () => {
+  /** Put the form into its invalid state: a reserved `std/` path fails validation. */
+  function triggerValidationError() {
+    renderDialog();
+    fireEvent.change(pathInput(), { target: { value: 'std/v9/types' } });
+  }
+
+  it('warns once, with a single icon', () => {
+    // `Alert variant="error"` renders its own AlertCircle, so passing one as a child showed the
+    // reader two "!" marks for one problem.
+    triggerValidationError();
+
+    const alert = screen.getByText('Fix the highlighted fields before saving.').closest('[role="alert"]')!;
+    expect(alert.querySelectorAll('svg')).toHaveLength(1);
+  });
+
+  it('clears the alert once the form is valid', () => {
+    // A fresh dialog is already invalid — the namespace path is required — so the alert starts out
+    // shown and must go away as soon as a usable path is entered.
+    triggerValidationError();
+    expect(screen.getByText('Fix the highlighted fields before saving.')).toBeInTheDocument();
+
+    fireEvent.change(pathInput(), { target: { value: 'tenant/acme/v1/types' } });
+
+    expect(screen.queryByText('Fix the highlighted fields before saving.')).not.toBeInTheDocument();
   });
 });

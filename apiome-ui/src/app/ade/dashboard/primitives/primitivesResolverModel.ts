@@ -49,7 +49,7 @@ export interface ResolveResponse {
 export type ResolverStatusFilter = 'all' | RefStatus;
 
 /** Registry import-source root — the read-only "resolution base" shown in the control. */
-export const REGISTRY_BASE_URL = 'https://api.apiome.app/types/';
+export const REGISTRY_BASE_URL = 'https://api.apiome.dev/types/';
 
 /** A single flattened row of the resolution table: one source primitive → one `$ref`. */
 export interface ResolverEdgeRow {
@@ -64,6 +64,11 @@ export interface ResolverEdgeRow {
   resolvedTarget: string;
   /** Resolved target exactly as persisted (absolute or already-relative). */
   resolvedTargetRaw: string | null;
+  /**
+   * The primitive this edge points at, when the resolver found one (REST `_reresolve_edges` sets it
+   * alongside the status). Its presence — not the status — is what makes a target openable.
+   */
+  targetId: string | null;
   targetName: string | null;
   status: RefStatus;
   /** A tenant type resolving to a system/core (`std/…`) target. */
@@ -143,6 +148,7 @@ export function flattenResolverEdges(
         relativeRef: edge.relative_ref,
         resolvedTarget: shortened,
         resolvedTargetRaw: edge.resolved_target ?? null,
+        targetId: edge.target_id ?? null,
         targetName: edge.target_name ?? null,
         status: edge.status,
         crossScope: isCrossScope(namespace, shortened),
@@ -150,6 +156,21 @@ export function flattenResolverEdges(
     });
   }
   return rows;
+}
+
+/**
+ * The dashboard route for a resolved target's details, or `null` when there is nothing to open.
+ *
+ * An unresolved edge has no target row — that is what "unresolved" means — so its target is plain
+ * text rather than a dead link. Reuses the same type-detail screen the primitives list opens.
+ */
+export function resolverTargetHref(row: Pick<ResolverEdgeRow, 'targetId'>): string | null {
+  return row.targetId ? `/ade/dashboard/primitives/${row.targetId}` : null;
+}
+
+/** A screen-reader/tooltip label for the link that opens a target's details. */
+export function resolverTargetLinkLabel(row: Pick<ResolverEdgeRow, 'resolvedTarget' | 'targetName'>): string {
+  return `View details for ${row.resolvedTarget || row.targetName || 'resolved target'}`;
 }
 
 /** Unique, sorted source namespaces present in the listing (for the namespace filter). */

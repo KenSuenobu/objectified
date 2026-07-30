@@ -80,7 +80,7 @@ export function getSharedCookieDomain(): string | undefined {
 
   if (configured) {
     const normalized = normalizeCookieDomain(configured);
-    // A stale .apiome.app cookie domain on an apiome.dev deploy is ignored by
+    // A stale .apiome.dev cookie domain on an apiome.dev deploy is ignored by
     // browsers and breaks both session sharing and callback validation.
     if (inferred && normalized.slice(1) !== inferred.slice(1)) {
       return inferred;

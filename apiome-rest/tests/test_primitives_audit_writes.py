@@ -43,10 +43,10 @@ def _row(**overrides):
         "is_public": False,
         "usage_count": 0,
         "source": "human",
-        "schema_id": "https://api.apiome.app/types/tenant/acme/my-type",
+        "schema_id": "https://api.apiome.dev/types/tenant/acme/my-type",
         "draft": "2020-12",
         "namespace": None,
-        "base_uri": "https://api.apiome.app/types/tenant/acme/",
+        "base_uri": "https://api.apiome.dev/types/tenant/acme/",
         "created_at": _NOW,
         "updated_at": _NOW,
         "enabled": True,
@@ -79,7 +79,7 @@ def test_create_writes_audit_row():
     assert args[2] == "success"
     assert kwargs["primitive_id"] == "p1"
     assert kwargs["actor_id"] == "u1"
-    assert kwargs["schema_id"] == "https://api.apiome.app/types/tenant/acme/my-type"
+    assert kwargs["schema_id"] == "https://api.apiome.dev/types/tenant/acme/my-type"
     assert kwargs["detail"]["name"] == "My Type"
     assert kwargs["detail"]["category"] == "string"
 
@@ -125,7 +125,7 @@ def test_delete_writes_audit_row():
     args, kwargs = mdb.insert_registry_audit.call_args
     assert args[1] == ACTION_DELETE
     assert kwargs["primitive_id"] == "p1"
-    assert kwargs["schema_id"] == "https://api.apiome.app/types/tenant/acme/my-type"
+    assert kwargs["schema_id"] == "https://api.apiome.dev/types/tenant/acme/my-type"
     assert kwargs["detail"]["name"] == "My Type"
 
 

@@ -43,7 +43,7 @@ curl -H "X-API-Key: your-api-key" \
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://apiome.app/{tenant}/{project}/{version}/schema.json",
+  "$id": "https://apiome.dev/{tenant}/{project}/{version}/schema.json",
   "title": "Schema Title",
   "description": "Schema description",
   "version": "1.0.0",
@@ -58,7 +58,7 @@ curl -H "X-API-Key: your-api-key" \
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://apiome.app/{tenant}/{project}/{version}/{class}.json",
+  "$id": "https://apiome.dev/{tenant}/{project}/{version}/{class}.json",
   "title": "ClassName Schema",
   "version": "1.0.0",
   "type": "object",

@@ -28,7 +28,7 @@ import {
 } from '../src/app/ade/dashboard/primitives/primitiveTestForm';
 
 const MONEY_SCHEMA = {
-  $id: 'https://api.apiome.app/types/std/v0/types/money',
+  $id: 'https://api.apiome.dev/types/std/v0/types/money',
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   type: 'object',
   properties: {

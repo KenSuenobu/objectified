@@ -177,7 +177,7 @@ class PortalContext:
 
     Attributes:
         base_url: Canonical portal base URL, no trailing slash
-            (for example ``https://portal.apiome.app/acme-api``).
+            (for example ``https://portal.apiome.dev/acme-api``).
         project_name: Human project name (content — withheld when not indexable).
         project_slug: Project slug (part of the shareable URL — always emitted).
         version_label: The version's semver label (for example ``1.0.65``).

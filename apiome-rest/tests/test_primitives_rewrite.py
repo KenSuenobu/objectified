@@ -20,8 +20,8 @@ from app.primitives_rewrite import (
 )
 from app.primitives_scope import resolve_registry_uri
 
-BASE = "https://api.apiome.app/types/std/v0/types/"
-TENANT_BASE = "https://api.apiome.app/types/tenant/acme/"
+BASE = "https://api.apiome.dev/types/std/v0/types/"
+TENANT_BASE = "https://api.apiome.dev/types/tenant/acme/"
 
 
 # ---------------------------------------------------------------------------
@@ -72,7 +72,7 @@ def test_rewrite_internal_ref_unescapes_pointer_tokens():
     [
         (BASE, core_type_uri("email")),
         (TENANT_BASE, core_type_uri("uuid")),
-        ("https://api.apiome.app/types/tenant/acme/v3/types/", core_type_uri("date")),
+        ("https://api.apiome.dev/types/tenant/acme/v3/types/", core_type_uri("date")),
     ],
 )
 def test_registry_relative_ref_round_trips(base, target):

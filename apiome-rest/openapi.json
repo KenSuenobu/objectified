@@ -2326,7 +2326,7 @@
           "primitives"
         ],
         "summary": "Get Primitive",
-        "description": "Get a specific primitive by ID.\n\nSupports authentication via JWT token or API key.\n\nArgs:\n    tenant_slug: The tenant slug\n    primitive_id: The primitive ID\n    auth_data: Authentication data (injected by dependency)\n\nReturns:\n    The primitive details",
+        "description": "Get a specific primitive by ID.\n\nSupports authentication via JWT token or API key.\n\nArgs:\n    tenant_slug: The tenant slug\n    primitive_id: The primitive ID\n    auth_data: Authentication data (injected by dependency)\n\nReturns:\n    The primitive details, its ``refs`` edges each carrying the target type's\n    ``target_id`` / ``target_name`` so the detail view can link through to it.",
         "operationId": "get_primitive_v1_primitives__tenant_slug___primitive_id__get",
         "parameters": [
           {
@@ -3305,6 +3305,104 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for update namespaceresponse422."
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "type-registry"
+        ],
+        "summary": "Delete Namespace",
+        "description": "Remove a tenant namespace registration.\n\nThe namespace list is referential: ``apiome.primitives.namespace`` is a string column with no\nforeign key to ``apiome.type_namespaces``, so this unregisters the namespace and leaves its\ntypes untouched. They keep their namespace path and surface as \"unregistered\" on the Primitives\ndashboard, from which the namespace can be registered again. ``type_count`` is returned so the\ncaller can report how many types are now unregistered.\n\nSystem-core namespaces are read-only and return 403.\n\nArgs:\n    tenant_slug: The tenant slug.\n    namespace_id: The namespace row id.\n    auth_data: Authentication data (injected by dependency).\n\nReturns:\n    The deleted namespace's path and the number of types left unregistered.",
+        "operationId": "delete_namespace_v1_types__tenant_slug__namespaces__namespace_id__delete",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "namespace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Namespace Id",
+              "description": "Namespace Id schema."
+            },
+            "description": "Path parameter identifying the namespace id segment."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Delete Namespaceauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Delete Namespaceauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Delete Namespace Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Delete Namespace Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for delete namespace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Delete Namespace V1 Types  Tenant Slug  Namespaces  Namespace Id  Delete",
+                  "description": "Response Delete Namespace V1 Types  Tenant Slug  Namespaces  Namespace Id  Delete schema."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for delete namespaceresponse422."
                 }
               }
             }
@@ -100618,7 +100716,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-07-29T03:48:54Z"
+            "example": "2026-07-30T00:25:26Z"
           }
         },
         "additionalProperties": false,
@@ -110549,7 +110647,7 @@
           "resolution_base_url": {
             "type": "string",
             "title": "Resolution Base Url",
-            "default": "https://api.apiome.app/types/",
+            "default": "https://api.apiome.dev/types/",
             "description": "Resolution Base URL.",
             "example": "https://example.com/resource"
           },
@@ -112743,14 +112841,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-07-29T03:48:54Z"
+            "example": "2026-07-30T00:25:26Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-07-29T03:48:54Z"
+            "example": "2026-07-30T00:25:26Z"
           },
           "outcome": {
             "anyOf": [

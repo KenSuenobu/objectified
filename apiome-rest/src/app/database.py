@@ -2546,6 +2546,38 @@ class Database:
             conn.rollback()
             raise e
 
+    def delete_type_namespace(self, namespace_id: str, tenant_id: str) -> bool:
+        """Delete a tenant namespace registration.
+
+        The registry is referential: ``apiome.primitives.namespace`` is a plain string column with
+        no foreign key to here, so deleting the row unregisters the namespace and leaves every type
+        exactly where it is. Those types then surface as "unregistered" on the Primitives dashboard
+        and the namespace can be registered again at any time.
+
+        System-core rows are excluded by the WHERE clause as well as by the route, so a
+        misrouted call cannot drop a platform-curated namespace.
+
+        Args:
+            namespace_id: The namespace row id.
+            tenant_id: The owning tenant id (scopes the write).
+
+        Returns:
+            True when a row was deleted, False when none matched for this tenant.
+        """
+        query = """
+            DELETE FROM apiome.type_namespaces
+            WHERE id = %s::uuid AND tenant_id = %s::uuid AND is_system = false
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, (namespace_id, tenant_id))
+                conn.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            raise e
+
     @staticmethod
     def _clear_default_type_namespace(cursor, tenant_id: Optional[str], is_system: bool) -> None:
         """Clear the current default namespace in a scope so a new default can be set.

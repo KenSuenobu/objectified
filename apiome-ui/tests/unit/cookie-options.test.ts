@@ -57,7 +57,7 @@ describe('cookie-options', () => {
 
   it('ignores a stale cookie domain that does not match the deployment hostnames', () => {
     process.env.NODE_ENV = 'production';
-    process.env.BETTER_AUTH_COOKIE_DOMAIN = '.apiome.app';
+    process.env.BETTER_AUTH_COOKIE_DOMAIN = '.apiome.dev';
     process.env.BETTER_AUTH_URL = 'https://main.apiome.dev';
 
     expect(getSharedCookieDomain()).toBe('.apiome.dev');

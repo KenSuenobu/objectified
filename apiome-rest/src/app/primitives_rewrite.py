@@ -84,7 +84,7 @@ def core_type_uri(leaf: str) -> str:
 
     Returns:
         The absolute registry URI (e.g.
-        ``https://api.apiome.app/types/std/v0/types/email``).
+        ``https://api.apiome.dev/types/std/v0/types/email``).
     """
     return f"{REGISTRY_BASE_URL}{CORE_TYPES_NAMESPACE}/{leaf}"
 

@@ -18,7 +18,7 @@ client = TestClient(app)
 
 _JWT = {"tenant_id": "t1", "user_id": "u1", "auth_method": "jwt"}
 
-BASE = "https://api.apiome.app/types/"
+BASE = "https://api.apiome.dev/types/"
 MONEY = BASE + "tenant/acme/types/money"
 DECIMAL = BASE + "tenant/acme/types/decimal"
 STRING = BASE + "std/v0/primitives/string"

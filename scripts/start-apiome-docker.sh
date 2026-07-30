@@ -12,7 +12,7 @@
 
 set -e
 
-REGISTRY="${REGISTRY:-registry.apiome.app}"
+REGISTRY="${REGISTRY:-registry.apiome.dev}"
 IMAGE="${IMAGE:-}"
 ENV_FILE="${ENV_FILE:-}"
 PORT="${PORT:-}"

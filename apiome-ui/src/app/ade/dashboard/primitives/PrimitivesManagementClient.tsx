@@ -34,6 +34,14 @@ import PrimitivesNamespaceCollections, {
   type NamespaceSelectOptions,
 } from './PrimitivesNamespaceCollections';
 import { isWithinNamespace } from '@/app/utils/primitives-namespace-groups';
+import SortableTh from '@/app/components/ade/dashboard/SortableTh';
+import {
+  DEFAULT_PRIMITIVES_TABLE_SORT,
+  nextPrimitivesTableSort,
+  sortPrimitivesTableRows,
+  type PrimitivesTableSortColumn,
+  type PrimitivesTableSortState,
+} from '@/app/utils/primitives-table-sort';
 import PrimitivesRecentActivity from './PrimitivesRecentActivity';
 import PrimitivesResolverView from './PrimitivesResolverView';
 import PrimitivesNamespacesView from './PrimitivesNamespacesView';
@@ -117,6 +125,11 @@ export default function PrimitivesManagementClient() {
   const [activeView, setActiveView] = useState<
     'registry' | 'namespaces' | 'resolver' | 'settings'
   >('registry');
+
+  /** Which column the types table is ordered by; opens on name-ascending as it always did. */
+  const [tableSort, setTableSort] = useState<PrimitivesTableSortState>(
+    DEFAULT_PRIMITIVES_TABLE_SORT
+  );
 
   const [showEditorDialog, setShowEditorDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
@@ -239,8 +252,15 @@ export default function PrimitivesManagementClient() {
       );
     }
 
-    setFilteredPrimitives(sortByName(filtered));
-  }, [primitives, searchQuery, selectedCategory, showSystemPrimitives, selectedNamespace]);
+    setFilteredPrimitives(sortPrimitivesTableRows(filtered, tableSort.column, tableSort.direction));
+  }, [
+    primitives,
+    searchQuery,
+    selectedCategory,
+    showSystemPrimitives,
+    selectedNamespace,
+    tableSort,
+  ]);
 
   useEffect(() => {
     if (currentTenantId) {
@@ -315,6 +335,10 @@ export default function PrimitivesManagementClient() {
   const handleRowClick = (primitive: Primitive) => {
     router.push(`/ade/dashboard/primitives/${primitive.id}`);
   };
+
+  const handleTableSort = useCallback((column: PrimitivesTableSortColumn) => {
+    setTableSort((current) => nextPrimitivesTableSort(current, column));
+  }, []);
 
   const handleNamespaceSelect = (namespace: string, options?: NamespaceSelectOptions) => {
     const includeDescendants = options?.includeDescendants ?? false;
@@ -565,12 +589,30 @@ export default function PrimitivesManagementClient() {
                 <table className="w-full">
                   <thead className={dashboardTableTheadClass}>
                     <tr>
-                      <th className={dashboardThClass}>Name</th>
-                      <th className={dashboardThClass}>Namespace</th>
-                      <th className={dashboardThClass}>Category</th>
-                      <th className={dashboardThClass}>Description</th>
-                      <th className={dashboardThClass}>Usage</th>
-                      <th className={dashboardThClass}>Type</th>
+                      {(
+                        [
+                          ['name', 'Name'],
+                          ['namespace', 'Namespace'],
+                          ['category', 'Category'],
+                          ['description', 'Description'],
+                          ['usage', 'Usage'],
+                          ['type', 'Type'],
+                        ] as [PrimitivesTableSortColumn, string][]
+                      ).map(([column, label]) => (
+                        <SortableTh
+                          key={column}
+                          column={column}
+                          activeColumn={tableSort.column}
+                          direction={tableSort.direction}
+                          onSort={handleTableSort}
+                          className={dashboardThClass}
+                          testId={`primitives-sort-${column}`}
+                          ariaLabel={`Sort by ${label}`}
+                        >
+                          {label}
+                        </SortableTh>
+                      ))}
+                      {/* Actions holds controls, not data — there is nothing to order by. */}
                       <th className={dashboardThRightClass}>Actions</th>
                     </tr>
                   </thead>
