@@ -769,3 +769,109 @@ def test_with_extra_findings_keeps_an_unscored_report_unscored() -> None:
 
     assert merged.score is None
     assert len(merged.findings) == 1
+
+
+# ---------------------------------------------------------------------------
+# The caller's policy gate and fetch observer (REPO-3.9, #2778)
+# ---------------------------------------------------------------------------
+
+
+def test_a_gate_refusal_stops_the_fetch_and_keeps_its_own_reason() -> None:
+    fetcher = _Fetcher({MSGS_URL: _doc(Signup={"type": "object"})})
+    documents = {"": _asyncapi_root()}
+
+    outcome = resolve_remote_refs(
+        documents,
+        fetcher=fetcher,
+        cache=_cache(),
+        gate=lambda url: ("host-not-allowlisted", f"{url} is not permitted"),
+    )
+
+    assert fetcher.calls == []
+    assert outcome.resolved == ()
+    assert len(outcome.unresolved) == 1
+    assert outcome.unresolved[0].reason == "host-not-allowlisted"
+    assert outcome.documents[""] == documents[""]
+
+
+def test_a_gate_refusal_counts_as_blocked_not_merely_unresolved() -> None:
+    """A deliberate refusal is a security signal, like the SSRF guard's own."""
+    outcome = resolve_remote_refs(
+        {"": _asyncapi_root()},
+        fetcher=_Fetcher({}),
+        cache=_cache(),
+        gate=lambda url: ("blocked-by-tenant-policy", "policy is block"),
+    )
+
+    assert len(outcome.blocked) == 1
+    assert outcome.blocked[0].gate_refused is True
+    assert [f.rule for f in outcome.findings()] == [RULE_BLOCKED_EXTERNAL_REF]
+
+
+def test_a_gate_that_allows_everything_changes_nothing() -> None:
+    fetcher = _Fetcher({MSGS_URL: _doc(Signup={"type": "object"})})
+
+    outcome = resolve_remote_refs(
+        {"": _asyncapi_root()}, fetcher=fetcher, cache=_cache(), gate=lambda url: None
+    )
+
+    assert fetcher.calls == [MSGS_URL]
+    assert len(outcome.resolved) == 1
+    assert not outcome.unresolved
+
+
+def test_the_gate_is_consulted_before_the_cache() -> None:
+    """A document one caller paid to fetch must not serve a caller whose gate refuses it."""
+    cache = _cache()
+    fetcher = _Fetcher({MSGS_URL: _doc(Signup={"type": "object"})})
+    resolve_remote_refs({"": _asyncapi_root()}, fetcher=fetcher, cache=cache)
+    assert fetcher.calls == [MSGS_URL]
+
+    outcome = resolve_remote_refs(
+        {"": _asyncapi_root()},
+        fetcher=fetcher,
+        cache=cache,
+        gate=lambda url: ("blocked-by-tenant-policy", "policy is block"),
+    )
+
+    assert fetcher.calls == [MSGS_URL]  # still one fetch, and no cache hit was served
+    assert outcome.cache_hits == 0
+    assert outcome.resolved == ()
+
+
+def test_the_observer_sees_every_document_obtained_including_cache_hits() -> None:
+    cache = _cache()
+    fetcher = _Fetcher({MSGS_URL: _doc(Signup={"type": "object"})})
+    seen: List[Any] = []
+
+    def observe(url: str, digest: str, fetched: int, from_cache: bool) -> None:
+        seen.append((url, bool(digest), fetched > 0, from_cache))
+
+    resolve_remote_refs({"": _asyncapi_root()}, fetcher=fetcher, cache=cache, on_fetch=observe)
+    resolve_remote_refs({"": _asyncapi_root()}, fetcher=fetcher, cache=cache, on_fetch=observe)
+
+    assert seen == [(MSGS_URL, True, True, False), (MSGS_URL, True, False, True)]
+
+
+def test_an_observer_that_raises_cannot_break_a_resolution() -> None:
+    fetcher = _Fetcher({MSGS_URL: _doc(Signup={"type": "object"})})
+
+    def boom(url: str, digest: str, fetched: int, from_cache: bool) -> None:
+        raise RuntimeError("observer exploded")
+
+    outcome = resolve_remote_refs(
+        {"": _asyncapi_root()}, fetcher=fetcher, cache=_cache(), on_fetch=boom
+    )
+
+    assert len(outcome.resolved) == 1
+
+
+def test_a_reference_the_ssrf_guard_refuses_is_still_marked_blocked_without_a_gate() -> None:
+    """The pre-existing signal is unchanged by the gate's arrival."""
+    outcome = resolve_remote_refs(
+        {"": {"a": {"$ref": "file:///etc/passwd"}}}, fetcher=_Fetcher({}), cache=_cache()
+    )
+
+    assert len(outcome.blocked) == 1
+    assert outcome.blocked[0].reason == REASON_BLOCKED
+    assert outcome.blocked[0].gate_refused is False

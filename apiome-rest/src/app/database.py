@@ -14510,7 +14510,8 @@ class Database:
         off = max(0, min(int(offset), 500_000))
         q_page = (
             "SELECT f.id, f.path, f.name, f.ext, f.size_bytes, f.blob_sha, f.detected_kind, "
-            "       f.quality_score, f.quality_grade, f.quality_status, f.quality_reason "
+            "       f.quality_score, f.quality_grade, f.quality_status, f.quality_reason, "
+            "       f.external_ref_warning "
             + from_sql
             + where_f
             + " ORDER BY f.path ASC LIMIT %s OFFSET %s"
@@ -14841,6 +14842,100 @@ class Database:
             WHERE id = %s::uuid
             """,
             (score, grade, status, reason, blob_sha, file_id),
+        )
+
+    # --- REPO-3.9: tenant external $ref policy + per-file warning ---------------
+
+    def get_tenant_external_ref_policy(self, tenant_id: str) -> Optional[Dict[str, Any]]:
+        """Read a tenant's external ``$ref`` policy and hostname allowlist (REPO-3.9).
+
+        Args:
+            tenant_id: The tenant owning the repository being scanned.
+
+        Returns:
+            A dict with ``repository_external_ref_policy`` and
+            ``repository_external_ref_allowlist``, or ``None`` when the tenant row is
+            missing (the caller then applies the fail-closed default). The values are
+            normalized by
+            :func:`app.repository_external_ref_policy.policy_from_row`, not here.
+        """
+        rows = self.execute_query(
+            """
+            SELECT repository_external_ref_policy, repository_external_ref_allowlist
+            FROM apiome.tenants
+            WHERE id = %s::uuid AND deleted_at IS NULL
+            LIMIT 1
+            """,
+            (tenant_id,),
+        )
+        return dict(rows[0]) if rows else None
+
+    def set_tenant_external_ref_policy(
+        self,
+        tenant_id: str,
+        *,
+        policy: str,
+        allowlist: Optional[List[str]] = None,
+    ) -> bool:
+        """Configure a tenant's external ``$ref`` policy (REPO-3.9).
+
+        Args:
+            tenant_id: The tenant to configure.
+            policy: ``block`` | ``inline`` | ``proxy-fetch``.
+            allowlist: Hostname patterns fetches are restricted to; ``None`` clears it.
+                Stored verbatim — normalization (case, wildcards, stray scheme/port) happens
+                on read, so a pattern is never silently rewritten under the operator.
+
+        Returns:
+            True when a tenant row was updated.
+
+        Raises:
+            ValueError: When ``policy`` is not one of the three supported values. Checked
+                here as well as by the column's CHECK so a typo fails at the call site.
+        """
+        mode = str(policy or "").strip().lower().replace("_", "-")
+        if mode not in ("block", "inline", "proxy-fetch"):
+            raise ValueError(
+                "external $ref policy must be one of: block, inline, proxy-fetch"
+            )
+        patterns = [str(p) for p in (allowlist or []) if str(p).strip()]
+        return (
+            self._execute_write(
+                """
+                UPDATE apiome.tenants
+                SET repository_external_ref_policy = %s,
+                    repository_external_ref_allowlist = %s::jsonb
+                WHERE id = %s::uuid AND deleted_at IS NULL
+                """,
+                (mode, json.dumps(patterns), tenant_id),
+            )
+            > 0
+        )
+
+    def set_repository_file_external_ref_warning(
+        self, file_id: str, warning: Optional[Dict[str, Any]]
+    ) -> int:
+        """Attach (or clear) a file's external ``$ref`` warning (REPO-3.9).
+
+        Passing ``None`` writes SQL NULL, which is what clears a warning when a file stops
+        referencing external schemas or the tenant switches to a fetching policy — a stale
+        warning is worse than none, because it names definitions that are no longer missing.
+
+        Args:
+            file_id: The ``tenant_repository_files`` row.
+            warning: The warning payload from
+                :func:`app.repository_external_ref_policy.build_warning`, or ``None``.
+
+        Returns:
+            The number of rows updated (0 when the file was deleted mid-scan).
+        """
+        return self._execute_write(
+            """
+            UPDATE apiome.tenant_repository_files
+            SET external_ref_warning = %s::jsonb
+            WHERE id = %s::uuid
+            """,
+            (json.dumps(warning) if warning is not None else None, file_id),
         )
 
     # --- REPO-2.5: per-tenant scan budget + stored resume cursor ---------------

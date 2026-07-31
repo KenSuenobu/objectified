@@ -21,6 +21,12 @@ Every claimed row is stamped with the blob sha the attempt read, success or not,
 
 Nothing here can fail a scan, a refresh, or an import: a per-row failure is recorded on the row
 and the sweep moves on, and a batch-level failure is logged and retried next tick.
+
+Because this is the scanner's only pass that holds a discovered file's *content*, it is also
+where the REPO-3.9 tenant external-``$ref`` policy is enforced
+(:mod:`app.repository_external_ref_scan`): one download serves both the score and the policy.
+That does couple the two — disabling spec scoring disables scan-time ``$ref`` handling as
+well — which is the right default, since both are informational passes over the same blob.
 """
 
 from __future__ import annotations
@@ -30,6 +36,7 @@ from typing import Any, Dict, NamedTuple, Optional
 
 from .config import settings
 from .database import Database
+from .repository_external_ref_scan import apply_policy_to_document_text
 from .repository_file_scan import _github_owner_repo, fetch_github_repository_file_text
 from .repository_spec_quality import (
     MAX_SCORE_BYTES,
@@ -135,6 +142,22 @@ def score_repository_file_row(db: Database, row: Dict[str, Any]) -> SpecQualityO
     except Exception:  # noqa: BLE001 - provider errors are ordinary here, not exceptional
         _logger.info("repository quality sweep: content fetch failed for %s", path, exc_info=True)
         return failed(REASON_FETCH_FAILED)
+
+    # REPO-3.9: the tenant's external `$ref` policy decides what this document's references
+    # may pull in. Under the default (`block`) nothing is fetched and the file simply gains a
+    # warning listing what is missing; under `inline` / `proxy-fetch` the permitted
+    # references are snapshotted into the text, so the score below grades the model the
+    # tenant will actually import rather than one full of dangling references. The call
+    # never raises and returns the original text whenever it changed nothing.
+    text = apply_policy_to_document_text(
+        db,
+        tenant_id=str(row.get("tenant_id") or ""),
+        repository_id=str(row.get("repository_id") or ""),
+        branch=branch,
+        path=path,
+        text=text,
+        file_id=str(row.get("id")) if row.get("id") else None,
+    )[0]
 
     return score_spec_text(detected_kind_s, path, text, truncated=truncated)
 

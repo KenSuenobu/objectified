@@ -33,6 +33,12 @@ What it guarantees:
   content-addressed cache (:class:`RemoteRefCache`): a URL maps to the SHA-256 of its
   bytes, and the parsed document is stored under that digest, so two URLs serving the same
   content share one entry and a second import of the same document is a cache hit.
+* **A caller may narrow what is fetchable, never widen it.** An optional per-URL gate
+  (:data:`RefGate`) is consulted before the cache and before any client exists, so a caller
+  can refuse a URL on its own grounds — REPO-3.9's tenant external-``$ref`` policy plugs in
+  there — and a cached document can never slip past it. Everything a gate allows still goes
+  through the SSRF guard unchanged. A companion observer (:data:`FetchObserver`) reports
+  every document obtained, so a caller can audit what entered the model.
 * **Resolution is opt-in and reported either way.** With resolution off (the default) the
   document is untouched and every external reference is reported as a finding
   (:data:`app.intake_lint_rules.RULE_UNRESOLVED_EXTERNAL_REF`) so the user can see exactly
@@ -93,6 +99,8 @@ __all__ = [
     "REASON_POINTER_NOT_FOUND",
     "REASON_UNPARSEABLE",
     "ExternalRef",
+    "FetchObserver",
+    "RefGate",
     "RemoteRefBudget",
     "RemoteRefCache",
     "RemoteRefOutcome",
@@ -264,8 +272,12 @@ class UnresolvedRef:
         location: Where the reference sits (see :attr:`ExternalRef.location`).
         ref: The raw ``$ref`` string.
         url: The absolute URL it points at.
-        reason: One of the ``REASON_*`` constants.
+        reason: One of the ``REASON_*`` constants, or — for a gate refusal — the reason the
+            caller's gate supplied (see :data:`RefGate`).
         detail: Human-readable detail (an error message, a bound that was hit).
+        gate_refused: Whether the caller's policy gate refused the URL, rather than the
+            reference failing for a completeness reason. Set by the resolver, never by a
+            caller.
     """
 
     location: str
@@ -273,11 +285,17 @@ class UnresolvedRef:
     url: str
     reason: str
     detail: str = ""
+    gate_refused: bool = False
 
     @property
     def blocked(self) -> bool:
-        """Whether the SSRF guard refused this reference."""
-        return self.reason == REASON_BLOCKED
+        """Whether a security policy refused this reference.
+
+        Covers both refusals: the SSRF guard's, and the caller's gate (REPO-3.9's
+        tenant external-``$ref`` policy). Both mean "nothing was fetched from this URL
+        on purpose", which is a different signal from "we tried and could not".
+        """
+        return self.reason == REASON_BLOCKED or self.gate_refused
 
     def as_dict(self) -> Dict[str, Any]:
         """Serialize for the job summary."""
@@ -547,6 +565,20 @@ def default_cache() -> RemoteRefCache:
 #: returns the raw bytes. Tests substitute a callable; production uses :func:`_http_fetch`.
 RefFetcher = Callable[..., bytes]
 
+#: A gate decides, per URL, whether this run may fetch it *at all* — the hook the REPO-3.9
+#: tenant external-``$ref`` policy plugs into. It returns ``None`` to allow the fetch, or
+#: ``(reason, detail)`` to refuse it, which becomes the reference's unresolved record. The
+#: resolver consults it before the cache and before any HTTP client exists, so a refusal
+#: costs nothing and a cached document cannot slip past a policy. A gate can only ever
+#: *narrow* what is fetched: the SSRF guard still runs on everything it allows.
+RefGate = Callable[[str], Optional[Tuple[str, str]]]
+
+#: Observer invoked once per reference document a run obtains — freshly fetched or served
+#: from the cache — as ``(url, digest, bytes_fetched, from_cache)``. Used to write the
+#: REPO-3.9 ``repository.external_ref_fetched`` audit rows. Exceptions it raises are logged
+#: and swallowed: observation must never fail a resolution.
+FetchObserver = Callable[[str, str, int, bool], None]
+
 
 class _FetchError(Exception):
     """Internal: a reference could not be resolved, with its reason and detail."""
@@ -555,6 +587,15 @@ class _FetchError(Exception):
         self.reason = reason
         self.detail = detail
         super().__init__(detail)
+
+
+class _GateRefusalError(_FetchError):
+    """Internal: the caller's :data:`RefGate` refused this URL.
+
+    A subclass rather than a flag so the recorded :class:`UnresolvedRef` can be marked
+    ``gate_refused`` — a deliberate policy refusal, not a failure to reach something — while
+    still travelling the one ``_FetchError`` path every other reason uses.
+    """
 
 
 def _http_fetch(url: str, *, max_bytes: int, timeout: float) -> bytes:
@@ -760,10 +801,22 @@ class _Run:
     cache: RemoteRefCache
     fetcher: RefFetcher
     deadline: float
+    gate: Optional[RefGate] = None
+    on_fetch: Optional[FetchObserver] = None
     resolved: List[ResolvedRef] = field(default_factory=list)
     unresolved: List[UnresolvedRef] = field(default_factory=list)
     fetched_bytes: int = 0
     cache_hits: int = 0
+    gate_refusals: int = 0
+
+    def observe(self, url: str, digest: str, fetched: int, from_cache: bool) -> None:
+        """Notify the run's fetch observer, never letting it break the resolution."""
+        if self.on_fetch is None:
+            return
+        try:
+            self.on_fetch(url, digest, fetched, from_cache)
+        except Exception:  # noqa: BLE001 - observation must never fail a resolution
+            logger.warning("remote $ref fetch observer failed for %s", url, exc_info=True)
 
     def remaining_bytes(self) -> int:
         """Bytes still allowed to be fetched for this import."""
@@ -799,12 +852,23 @@ class _Run:
             ``0`` for a cache hit.
 
         Raises:
-            _FetchError: If the URL cannot be fetched or parsed.
+            _FetchError: If the URL cannot be fetched or parsed, or the run's gate refused
+                it (with the gate's own reason).
             SSRFError: If the guard refuses the URL (or a redirect hop).
         """
+        # The policy gate runs first — before the cache, before any client exists. Consulting
+        # it after a cache lookup would let one tenant's fetch serve another tenant whose
+        # policy forbids that host, which is exactly the leak REPO-3.9 exists to close.
+        if self.gate is not None:
+            refusal = self.gate(url)
+            if refusal is not None:
+                self.gate_refusals += 1
+                raise _GateRefusalError(refusal[0], refusal[1])
+
         cached = self.cache.get(url)
         if cached is not None:
             self.cache_hits += 1
+            self.observe(url, cached[0], 0, True)
             return cached[0], cached[1], 0, True
 
         # Reject a structurally-disallowed URL (file:, data:, user:pass@) before any client
@@ -837,6 +901,7 @@ class _Run:
         except (IngestionError, IntakeLimitError) as exc:
             raise _FetchError(REASON_UNPARSEABLE, str(exc)) from exc
         digest = self.cache.put(url, content, document)
+        self.observe(url, digest, len(content), False)
         return digest, document, len(content), False
 
 
@@ -962,6 +1027,7 @@ def _inline_ref(
                 url=url,
                 reason=failure.reason,
                 detail=failure.detail,
+                gate_refused=isinstance(failure, _GateRefusalError),
             )
         )
         return unresolved_node
@@ -1014,6 +1080,8 @@ def resolve_remote_refs(
     budget: Optional[RemoteRefBudget] = None,
     cache: Optional[RemoteRefCache] = None,
     fetcher: Optional[RefFetcher] = None,
+    gate: Optional[RefGate] = None,
+    on_fetch: Optional[FetchObserver] = None,
 ) -> RemoteRefOutcome:
     """Resolve (or, when disabled, merely report) the external ``$ref``\\s in ``documents``.
 
@@ -1032,6 +1100,13 @@ def resolve_remote_refs(
         cache: Document cache; defaults to the process-wide :func:`default_cache`.
         fetcher: Fetch callable ``(url, *, max_bytes, timeout) -> bytes``; defaults to the
             SSRF-guarded HTTP fetcher. Tests substitute their own.
+        gate: Optional per-URL policy gate (:data:`RefGate`), consulted before the cache and
+            before any client exists. A refused URL is recorded unresolved with the gate's
+            reason and marked ``gate_refused``. This is how REPO-3.9's tenant policy is
+            enforced; a gate can only narrow what is fetched, never widen it.
+        on_fetch: Optional observer (:data:`FetchObserver`) called once per reference
+            document obtained, cache hits included, so a caller can audit what external
+            material entered the model.
 
     Returns:
         The :class:`RemoteRefOutcome` for the run.
@@ -1059,6 +1134,8 @@ def resolve_remote_refs(
         cache=cache if cache is not None else default_cache(),
         fetcher=fetcher or _http_fetch,
         deadline=time.monotonic() + effective_budget.total_timeout_seconds,
+        gate=gate,
+        on_fetch=on_fetch,
     )
 
     out_documents: Dict[str, Any] = {}

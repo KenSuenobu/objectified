@@ -6,10 +6,11 @@ POST requires JWT so we can verify linked GitHub accounts via ``external_auth_pr
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 _logger = logging.getLogger(__name__)
 
@@ -95,6 +96,34 @@ def _preset_like_patterns(preset: str) -> List[str]:
     if not raw:
         return []
     return [_glob_token_to_sql_like(p.strip()) for p in raw.split(",") if p.strip()]
+
+
+def _external_ref_summary(raw: Any) -> Tuple[Optional[str], Optional[int]]:
+    """Summarize a file's REPO-3.9 ``external_ref_warning`` for the Files listing.
+
+    Args:
+        raw: The stored JSONB warning — a mapping, a JSON string (some drivers surface JSONB
+            that way), or ``None`` for a file with no unresolved external references.
+
+    Returns:
+        ``(policy, unresolved_count)``, both ``None`` when there is no usable warning. A
+        malformed warning degrades to ``(None, None)`` rather than failing the listing: it is
+        an informational badge, not something a caller is blocked on.
+    """
+    warning: Any = raw
+    if isinstance(warning, str):
+        try:
+            warning = json.loads(warning)
+        except ValueError:
+            return None, None
+    if not isinstance(warning, dict):
+        return None, None
+    policy = warning.get("policy")
+    count = warning.get("unresolved_count")
+    return (
+        str(policy) if policy else None,
+        int(count) if isinstance(count, int) and count >= 0 else None,
+    )
 
 
 def _display_kind(detected: Optional[str], path: str) -> str:
@@ -300,6 +329,7 @@ async def list_tenant_repository_files(
         blob = fr.get("blob_sha")
         sz = fr.get("size_bytes")
         qscore = fr.get("quality_score")
+        ref_policy, ref_unresolved = _external_ref_summary(fr.get("external_ref_warning"))
         files_out.append(
             TenantRepositoryFileRow(
                 id=str(fr["id"]),
@@ -317,6 +347,10 @@ async def list_tenant_repository_files(
                 quality_grade=str(fr["quality_grade"]) if fr.get("quality_grade") else None,
                 quality_status=str(fr["quality_status"]) if fr.get("quality_status") else None,
                 quality_reason=str(fr["quality_reason"]) if fr.get("quality_reason") else None,
+                # REPO-3.9: the tally only. The itemized references live on the row's
+                # `external_ref_warning` JSONB so a 500-file page stays small.
+                external_ref_policy=ref_policy,
+                external_ref_unresolved_count=ref_unresolved,
             )
         )
 
