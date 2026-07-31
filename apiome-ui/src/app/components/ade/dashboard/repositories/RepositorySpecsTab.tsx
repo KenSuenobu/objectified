@@ -51,6 +51,8 @@ export type RepositoryRefreshSpec = {
   last_refresh_failed: boolean;
   last_refreshed_at: string | null;
   spec_updated_at: string | null;
+  /** True when the spec was seeded by the RAR-1.6 backfill (imported before spec capture). */
+  backfilled?: boolean;
   refresh_interval_seconds: number;
   repo_last_refreshed_at: string | null;
   auto_refresh_enabled: boolean;
@@ -307,6 +309,15 @@ export function RepositorySpecsTable({
                         spec.branch
                       )}
                     </div>
+                    {spec.backfilled ? (
+                      <span
+                        data-testid="repository-spec-backfilled"
+                        title="This file was imported before import-spec capture existed; a default spec was seeded so it stays refresh-eligible. Re-importing the file records your actual options."
+                        className="mt-1 inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300"
+                      >
+                        Imported before spec capture
+                      </span>
+                    ) : null}
                   </td>
                   <td className="px-4 py-2 align-middle">
                     <div className="flex flex-col items-start gap-1">

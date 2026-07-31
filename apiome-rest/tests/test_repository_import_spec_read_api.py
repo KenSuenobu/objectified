@@ -50,6 +50,7 @@ def _spec_row(**overrides):
         "last_imported_commit_sha": "tipcommitsha1234",
         "last_imported_committed_at": "2026-06-20T10:00:00Z",
         "last_imported_blob_sha": "blobsha5678",
+        "backfilled": False,
         "created_at": None,
         "updated_at": None,
     }
@@ -177,6 +178,34 @@ def test_read_spec_upgrades_legacy_unversioned_options():
     assert body["spec_schema_version"] == REPOSITORY_IMPORT_SPEC_SCHEMA_VERSION
     assert body["options"]["apply_naming_convention"] is True
     assert "legacy_dropped_flag" not in body["options"]
+
+
+def test_read_spec_surfaces_backfilled_flag():
+    # RAR-1.6 (#3517): a spec seeded by the historical backfill migration reports
+    # backfilled=true so the UI can label it "imported before spec capture".
+    row = _spec_row(backfilled=True, options_json={})
+    with patch("app.tenant_repositories_routes.db") as mdb:
+        mdb.get_repository_import_spec_by_id.return_value = row
+        r = client.get(f"/v1/tenants/acme/repository-imports/{_SPEC_ID}/spec")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["backfilled"] is True
+    # A backfilled spec is the system defaults: empty options validate into the
+    # current-shape defaults, keeping it replayable by the refresh worker.
+    assert body["options"]["selected_schemas"] == []
+    assert body["options"]["apply_naming_convention"] is False
+
+
+def test_read_spec_backfilled_defaults_false_for_captured_specs():
+    # Captured (user-authored) specs — including rows read before the DAO
+    # surfaced the column — report backfilled=false.
+    row = _spec_row()
+    row.pop("backfilled")
+    with patch("app.tenant_repositories_routes.db") as mdb:
+        mdb.get_repository_import_spec_by_id.return_value = row
+        r = client.get(f"/v1/tenants/acme/repository-imports/{_SPEC_ID}/spec")
+    assert r.status_code == 200
+    assert r.json()["backfilled"] is False
 
 
 def test_read_spec_null_descriptor_fields_serialize():

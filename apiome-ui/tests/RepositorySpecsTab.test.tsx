@@ -122,6 +122,21 @@ describe('RepositorySpecsTable', () => {
     expect(screen.getByText(/No imported specs yet/i)).toBeInTheDocument();
   });
 
+  // RAR-1.6 (#3517): specs seeded by the historical backfill are labeled so the
+  // user knows the stored options are defaults, not their original request.
+  test('a backfilled spec shows the "imported before spec capture" badge', () => {
+    render(
+      <RepositorySpecsTable repositoryId="repo-1" specs={[makeSpec({ backfilled: true })]} now={NOW} />,
+    );
+    const badge = screen.getByTestId('repository-spec-backfilled');
+    expect(badge).toHaveTextContent('Imported before spec capture');
+  });
+
+  test('a captured (non-backfilled) spec shows no backfill badge', () => {
+    render(<RepositorySpecsTable repositoryId="repo-1" specs={[makeSpec()]} now={NOW} />);
+    expect(screen.queryByTestId('repository-spec-backfilled')).not.toBeInTheDocument();
+  });
+
   test('per-repo and per-file Refresh actions fire their callbacks (RAR-5.2)', () => {
     const onRefreshRepo = jest.fn();
     const onRefreshFile = jest.fn();

@@ -66,6 +66,10 @@ export async function recordTenantRepositoryImport(params: {
  * gate "newer-than" re-imports (RAR-2.2). When no scan row matches the lineage the
  * anchors are stored as NULL and the comparator falls back to checksum-only gating.
  *
+ * A genuine capture always writes `backfilled = FALSE`: when the lineage held a
+ * spec seeded by the RAR-1.6 historical backfill, the first real import replaces
+ * it and clears the flag, keeping "imported before spec capture" truthful.
+ *
  * @returns true when a row was written (repository belonged to the tenant), false otherwise.
  */
 export async function upsertRepositoryImportSpec(params: {
@@ -98,12 +102,14 @@ export async function upsertRepositoryImportSpec(params: {
        tenant_id, repository_id, branch, path, project_id,
        source_kind, format_override, content_type,
        options_json, spec_schema_version, created_by,
-       last_imported_commit_sha, last_imported_committed_at, last_imported_blob_sha
+       last_imported_commit_sha, last_imported_committed_at, last_imported_blob_sha,
+       backfilled
      )
      SELECT $1::uuid, $2::uuid, $3, $4, $5::uuid,
             $6, $7, $8,
             $9::jsonb, $10, $11::uuid,
-            trf.commit_sha, trf.committed_at, trf.blob_sha
+            trf.commit_sha, trf.committed_at, trf.blob_sha,
+            FALSE
      FROM apiome.tenant_repositories tr
      LEFT JOIN apiome.tenant_repository_files trf
        ON trf.repository_id = tr.id AND trf.branch = $3 AND trf.path = $4
@@ -121,6 +127,7 @@ export async function upsertRepositoryImportSpec(params: {
        last_imported_commit_sha = EXCLUDED.last_imported_commit_sha,
        last_imported_committed_at = EXCLUDED.last_imported_committed_at,
        last_imported_blob_sha = EXCLUDED.last_imported_blob_sha,
+       backfilled = FALSE,
        updated_at = CURRENT_TIMESTAMP
      RETURNING id`,
     [
@@ -260,6 +267,8 @@ export type TenantRepositoryRefreshSpecRow = {
   last_refreshed_at: string | null;
   /** When the stored import spec was last written (fallback "last refreshed"). */
   spec_updated_at: string | null;
+  /** True when the spec was seeded by the RAR-1.6 backfill (imported before spec capture). */
+  backfilled: boolean;
   /** Per-repo refresh cadence in seconds (RAR-3.1). */
   refresh_interval_seconds: number;
   /** Repository's last sweep tick timestamp (RAR-3.1), ISO-8601 or null. */
@@ -299,6 +308,7 @@ export async function listTenantRepositoryRefreshSpecs(params: {
             p.slug AS project_slug,
             s.last_imported_committed_at::text AS last_imported_committed_at,
             s.last_imported_blob_sha,
+            s.backfilled,
             s.updated_at::text AS spec_updated_at,
             trf.committed_at::text AS remote_committed_at,
             trf.blob_sha AS remote_blob_sha,
