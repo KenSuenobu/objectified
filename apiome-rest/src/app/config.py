@@ -322,6 +322,45 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Large-monorepo repository walk (REPO-2.5, #2766). A scan pass runs under a
+    # per-tenant wall-clock budget stored in
+    # apiome.tenants.repository_scan_budget_seconds; these set the default applied
+    # when a tenant has no explicit value and the floor/ceiling that clamp it at
+    # read time. When the budget is spent the walker stores a resume cursor and the
+    # scan continues on the next sweep tick.
+    #
+    # repository_scan_chunk_size bounds how many walked entries are buffered before
+    # being written, so a monorepo tree never materializes in memory. It is capped
+    # at repository_scan_budget.MAX_WALK_CHUNK_SIZE (1000) regardless of this value.
+    repository_scan_budget_seconds: int = Field(
+        default=300,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_SCAN_BUDGET_DEFAULT",
+            "repository_scan_budget_seconds",
+        ),
+    )
+    repository_scan_budget_min_seconds: int = Field(
+        default=5,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_SCAN_BUDGET_MIN",
+            "repository_scan_budget_min_seconds",
+        ),
+    )
+    repository_scan_budget_max_seconds: int = Field(
+        default=3600,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_SCAN_BUDGET_MAX",
+            "repository_scan_budget_max_seconds",
+        ),
+    )
+    repository_scan_chunk_size: int = Field(
+        default=1000,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_SCAN_CHUNK_SIZE",
+            "repository_scan_chunk_size",
+        ),
+    )
+
     # Primitives type-registry entitlement gating (#3478). When False (default), the
     # advanced Type Registry surface (resolver, namespaces, settings, stats, import) is
     # open to every authenticated tenant — current behavior, unchanged. When True, those

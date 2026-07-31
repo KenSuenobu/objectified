@@ -101,6 +101,8 @@ class _FakeCursor:
     def __init__(self, row: Optional[Dict[str, Any]]):
         self.row = row
         self.executed: List[Any] = []
+        # ``Database._execute_write`` reads this after a DELETE/UPDATE.
+        self.rowcount = 0
 
     def __enter__(self) -> "_FakeCursor":
         return self

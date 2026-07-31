@@ -44,6 +44,30 @@ from .revision_lifecycle import prepare_version_metadata_update, sql_effective_l
 
 _logger = logging.getLogger(__name__)
 
+#: SQL mirror of ``repository_file_scan._importable_hint`` — keep the two in lockstep.
+#:
+#: The ``json%%`` arm resolves JSON Schema by *filename shape* rather than by kind: the
+#: scanner labels every ``.json`` blob ``json-candidate``, so admitting the kind wholesale
+#: would count ``package.json`` and friends. Deriving it from the stored ``f.path`` also
+#: means already-indexed repositories gain their importable rows without a re-scan.
+#:
+#: ``%%`` (not ``%``) because these fragments are always passed through
+#: ``cursor.execute(query, params)``, where a lone ``%`` starts a parameter placeholder.
+#: Every query embedding this must alias ``apiome.tenant_repository_files`` as ``f``.
+REPOSITORY_FILE_IMPORTABLE_SQL = """(
+          f.detected_kind IS NOT NULL AND (
+            f.detected_kind ILIKE 'openapi%%' OR f.detected_kind ILIKE 'arazzo%%' OR
+            f.detected_kind ILIKE 'asyncapi%%' OR f.detected_kind ILIKE 'graphql%%' OR
+            f.detected_kind ILIKE 'protobuf%%' OR f.detected_kind ILIKE 'postman%%' OR
+            f.detected_kind ILIKE 'prisma%%' OR f.detected_kind ILIKE 'sql-ddl%%' OR
+            f.detected_kind ILIKE 'avro%%' OR f.detected_kind ILIKE 'dbml%%' OR
+            (f.detected_kind ILIKE 'json%%' AND (
+              f.path ILIKE '%%.schema.json' OR
+              f.path ILIKE '%%/schemas/%%.json' OR f.path ILIKE 'schemas/%%.json'
+            ))
+          )
+        )"""
+
 
 def normalize_email(email: str) -> str:
     """Canonicalize an email address to the stored/indexed form: trimmed and lower-cased.
@@ -14034,25 +14058,7 @@ class Database:
         if not self.get_tenant_repository(tenant_id, repository_id):
             return None
 
-        # Mirror of ``repository_file_scan._importable_hint`` — keep the two in lockstep.
-        # The ``json%%`` arm resolves JSON Schema by *filename shape* rather than by kind:
-        # the scanner labels every ``.json`` blob ``json-candidate``, so admitting the kind
-        # wholesale would count ``package.json`` and friends. Deriving it from the stored
-        # ``f.path`` also means already-indexed repositories gain their importable rows
-        # without a re-scan.
-        importable_sql = """(
-          f.detected_kind IS NOT NULL AND (
-            f.detected_kind ILIKE 'openapi%%' OR f.detected_kind ILIKE 'arazzo%%' OR
-            f.detected_kind ILIKE 'asyncapi%%' OR f.detected_kind ILIKE 'graphql%%' OR
-            f.detected_kind ILIKE 'protobuf%%' OR f.detected_kind ILIKE 'postman%%' OR
-            f.detected_kind ILIKE 'prisma%%' OR f.detected_kind ILIKE 'sql-ddl%%' OR
-            f.detected_kind ILIKE 'avro%%' OR f.detected_kind ILIKE 'dbml%%' OR
-            (f.detected_kind ILIKE 'json%%' AND (
-              f.path ILIKE '%%.schema.json' OR
-              f.path ILIKE '%%/schemas/%%.json' OR f.path ILIKE 'schemas/%%.json'
-            ))
-          )
-        )"""
+        importable_sql = REPOSITORY_FILE_IMPORTABLE_SQL
 
         from_sql = """
             FROM apiome.tenant_repository_files f
@@ -14216,13 +14222,23 @@ class Database:
             raise e
 
     def claim_next_repository_file_scan_job(self) -> Optional[Dict[str, Any]]:
+        """Claim the oldest waiting scan job, counting a resume as a fresh arrival.
+
+        Ordering on ``COALESCE(requeued_at, created_at)`` is what keeps a large
+        monorepo (REPO-2.5) from monopolizing the worker: each paused pass moves
+        its job to the back of the queue, so other repositories get a turn between
+        passes while the monorepo still makes steady progress.
+
+        Returns:
+            The claimed job row, or None when nothing is queued.
+        """
         q = """
             UPDATE apiome.tenant_repository_file_scan_jobs j
             SET status = 'running', started_at = CURRENT_TIMESTAMP
             FROM (
                 SELECT id FROM apiome.tenant_repository_file_scan_jobs
                 WHERE status = 'queued'
-                ORDER BY created_at ASC
+                ORDER BY COALESCE(requeued_at, created_at) ASC
                 LIMIT 1
                 FOR UPDATE SKIP LOCKED
             ) AS sub
@@ -14240,47 +14256,281 @@ class Database:
             conn.rollback()
             raise e
 
-    def replace_tenant_repository_files(
-        self, repository_id: str, branch: str, files: List[Dict[str, Any]]
-    ) -> None:
+    def delete_tenant_repository_files(self, repository_id: str, branch: str) -> None:
+        """Drop every indexed file row for one branch (start of a fresh walk).
+
+        A resumed walk (REPO-2.5) must *not* call this: it appends to the rows an
+        earlier pass already persisted.
+
+        Args:
+            repository_id: The repository whose index is being cleared.
+            branch: The branch whose rows are dropped.
+        """
+        self._execute_write(
+            """
+            DELETE FROM apiome.tenant_repository_files
+            WHERE repository_id = %s::uuid AND branch = %s
+            """,
+            (repository_id, branch),
+        )
+
+    def append_tenant_repository_files(
+        self, repository_id: str, branch: str, files: Sequence[Dict[str, Any]]
+    ) -> int:
+        """Persist one chunk of walked blobs, upserting on (repository, branch, path).
+
+        This is the streaming write behind the REPO-2.5 paged walk: the walker
+        flushes at most ``MAX_WALK_CHUNK_SIZE`` entries at a time instead of
+        buffering a whole monorepo tree. The upsert makes a re-emitted chunk (a
+        pass that crashed after writing but before storing its cursor) a no-op
+        rather than a unique-violation.
+
+        Args:
+            repository_id: The repository the entries belong to.
+            branch: The branch the entries were walked on.
+            files: The chunk of entry mappings produced by the walker; each needs
+                ``path`` and ``name``, with the remaining columns optional.
+
+        Returns:
+            The number of entries written (the length of ``files``).
+        """
+        if not files:
+            return 0
         conn = self.connect()
         try:
             with conn.cursor() as cursor:
-                cursor.execute(
+                cursor.executemany(
                     """
-                    DELETE FROM apiome.tenant_repository_files
-                    WHERE repository_id = %s::uuid AND branch = %s
+                    INSERT INTO apiome.tenant_repository_files (
+                        repository_id, branch, path, name, ext, size_bytes, blob_sha,
+                        detected_kind, commit_sha, committed_at
+                    ) VALUES (%s::uuid, %s, %s, %s, %s, %s, %s, %s, %s, %s::timestamptz)
+                    ON CONFLICT (repository_id, branch, path) DO UPDATE SET
+                        name = EXCLUDED.name,
+                        ext = EXCLUDED.ext,
+                        size_bytes = EXCLUDED.size_bytes,
+                        blob_sha = EXCLUDED.blob_sha,
+                        detected_kind = EXCLUDED.detected_kind,
+                        commit_sha = EXCLUDED.commit_sha,
+                        committed_at = EXCLUDED.committed_at
                     """,
-                    (repository_id, branch),
+                    [
+                        (
+                            repository_id,
+                            branch,
+                            f["path"],
+                            f["name"],
+                            f.get("ext"),
+                            f.get("size_bytes"),
+                            f.get("blob_sha"),
+                            f.get("detected_kind"),
+                            f.get("commit_sha"),
+                            f.get("committed_at"),
+                        )
+                        for f in files
+                    ],
                 )
-                if files:
-                    cursor.executemany(
-                        """
-                        INSERT INTO apiome.tenant_repository_files (
-                            repository_id, branch, path, name, ext, size_bytes, blob_sha,
-                            detected_kind, commit_sha, committed_at
-                        ) VALUES (%s::uuid, %s, %s, %s, %s, %s, %s, %s, %s, %s::timestamptz)
-                        """,
-                        [
-                            (
-                                repository_id,
-                                branch,
-                                f["path"],
-                                f["name"],
-                                f.get("ext"),
-                                f.get("size_bytes"),
-                                f.get("blob_sha"),
-                                f.get("detected_kind"),
-                                f.get("commit_sha"),
-                                f.get("committed_at"),
-                            )
-                            for f in files
-                        ],
-                    )
                 conn.commit()
+                return len(files)
         except Exception as e:
             conn.rollback()
             raise e
+
+    def replace_tenant_repository_files(
+        self, repository_id: str, branch: str, files: List[Dict[str, Any]]
+    ) -> None:
+        """Replace a branch's whole file index in one shot (non-resumable path).
+
+        Kept as the simple "I already have every entry in memory" helper; the
+        resumable walker uses :meth:`delete_tenant_repository_files` plus repeated
+        :meth:`append_tenant_repository_files` instead.
+
+        Args:
+            repository_id: The repository whose index is replaced.
+            branch: The branch being reindexed.
+            files: Every entry for the branch.
+        """
+        self.delete_tenant_repository_files(repository_id, branch)
+        self.append_tenant_repository_files(repository_id, branch, files)
+
+    def count_tenant_repository_files(self, repository_id: str, branch: str) -> Tuple[int, int]:
+        """Count indexed entries for a branch as ``(total, importable)``.
+
+        The walker uses this at the end of a completed scan so the repository's
+        stored counts come from the rows that actually landed, rather than from
+        in-flight counters that a re-emitted chunk could double-count. The
+        importable predicate is the shared :data:`REPOSITORY_FILE_IMPORTABLE_SQL`
+        mirror, so these counts agree with the browser's filtered counts.
+
+        Args:
+            repository_id: The repository to count.
+            branch: The branch to count.
+
+        Returns:
+            ``(total_files, importable_count)``.
+        """
+        q = (
+            "SELECT COUNT(*) AS c, COUNT(*) FILTER (WHERE "
+            + REPOSITORY_FILE_IMPORTABLE_SQL
+            + ") AS ic FROM apiome.tenant_repository_files f "
+            "WHERE f.repository_id = %s::uuid AND f.branch = %s"
+        )
+        rows = self.execute_query(q, (repository_id, branch))
+        if not rows:
+            return 0, 0
+        return int(rows[0]["c"] or 0), int(rows[0]["ic"] or 0)
+
+    # --- REPO-2.5: per-tenant scan budget + stored resume cursor ---------------
+
+    def get_tenant_repository_scan_budget_seconds(self, tenant_id: str) -> Optional[int]:
+        """Read a tenant's configured per-scan wall-clock budget in seconds.
+
+        Args:
+            tenant_id: The tenant owning the repository being scanned.
+
+        Returns:
+            The stored ``repository_scan_budget_seconds``, or None when the tenant
+            row is missing (the caller then applies the default). The value is
+            clamped by ``repository_scan_budget.resolve_scan_budget_seconds``, not
+            here.
+        """
+        rows = self.execute_query(
+            """
+            SELECT repository_scan_budget_seconds
+            FROM apiome.tenants
+            WHERE id = %s::uuid AND deleted_at IS NULL
+            LIMIT 1
+            """,
+            (tenant_id,),
+        )
+        if not rows:
+            return None
+        raw = rows[0].get("repository_scan_budget_seconds")
+        return int(raw) if raw is not None else None
+
+    def set_tenant_repository_scan_budget_seconds(self, tenant_id: str, seconds: int) -> bool:
+        """Configure a tenant's per-scan wall-clock budget.
+
+        Args:
+            tenant_id: The tenant to configure.
+            seconds: The budget in seconds; must be positive (the column's CHECK
+                rejects anything else).
+
+        Returns:
+            True when a tenant row was updated.
+
+        Raises:
+            ValueError: When ``seconds`` is not positive.
+        """
+        if int(seconds) <= 0:
+            raise ValueError("repository scan budget must be a positive number of seconds")
+        return (
+            self._execute_write(
+                """
+                UPDATE apiome.tenants
+                SET repository_scan_budget_seconds = %s,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s::uuid AND deleted_at IS NULL
+                """,
+                (int(seconds), tenant_id),
+            )
+            > 0
+        )
+
+    def get_repository_scan_cursor(self, repository_id: str, branch: str) -> Optional[Dict[str, Any]]:
+        """Load the stored resume cursor for a branch, if a walk is unfinished.
+
+        Args:
+            repository_id: The repository being walked.
+            branch: The branch being walked.
+
+        Returns:
+            The cursor row (``cursor_json``, running counts, ``attempt_count``,
+            ``updated_at``), or None when the branch has no unfinished walk.
+        """
+        rows = self.execute_query(
+            """
+            SELECT id, repository_id, branch, cursor_json, entries_indexed,
+                   importable_indexed, attempt_count, last_error, created_at, updated_at
+            FROM apiome.tenant_repository_scan_cursors
+            WHERE repository_id = %s::uuid AND branch = %s
+            LIMIT 1
+            """,
+            (repository_id, branch),
+        )
+        return dict(rows[0]) if rows else None
+
+    def save_repository_scan_cursor(
+        self,
+        repository_id: str,
+        branch: str,
+        *,
+        cursor_json: Dict[str, Any],
+        entries_indexed: int,
+        importable_indexed: int,
+        last_error: Optional[str] = None,
+    ) -> None:
+        """Store (or advance) the resume cursor for an unfinished walk.
+
+        Called when a pass stops early — its wall-clock budget ran out, or a
+        transient provider error interrupted it.
+
+        ``attempt_count`` counts *consecutive passes that indexed nothing new*: a
+        pass that made progress resets it to 0, one that did not increments it. A
+        long monorepo walk therefore never trips
+        ``repository_scan_budget.should_abandon_cursor``, while a walk wedged on
+        the same failing sub-tree does.
+
+        Args:
+            repository_id: The repository being walked.
+            branch: The branch being walked.
+            cursor_json: The serialized ``ScanCursor``.
+            entries_indexed: Entries persisted for this branch so far.
+            importable_indexed: Importable entries persisted so far.
+            last_error: The transient error that stopped the pass, if any.
+        """
+        self._execute_write(
+            """
+            INSERT INTO apiome.tenant_repository_scan_cursors (
+                repository_id, branch, cursor_json, entries_indexed,
+                importable_indexed, attempt_count, last_error
+            ) VALUES (%s::uuid, %s, %s::jsonb, %s, %s, 0, %s)
+            ON CONFLICT (repository_id, branch) DO UPDATE SET
+                cursor_json = EXCLUDED.cursor_json,
+                entries_indexed = EXCLUDED.entries_indexed,
+                importable_indexed = EXCLUDED.importable_indexed,
+                attempt_count = CASE
+                    WHEN EXCLUDED.entries_indexed > apiome.tenant_repository_scan_cursors.entries_indexed
+                    THEN 0
+                    ELSE apiome.tenant_repository_scan_cursors.attempt_count + 1
+                END,
+                last_error = EXCLUDED.last_error,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (
+                repository_id,
+                branch,
+                json.dumps(cursor_json),
+                int(entries_indexed),
+                int(importable_indexed),
+                last_error[:4000] if last_error else None,
+            ),
+        )
+
+    def clear_repository_scan_cursor(self, repository_id: str, branch: str) -> None:
+        """Drop a branch's resume cursor once its walk finished (or was abandoned).
+
+        Args:
+            repository_id: The repository being walked.
+            branch: The branch being walked.
+        """
+        self._execute_write(
+            """
+            DELETE FROM apiome.tenant_repository_scan_cursors
+            WHERE repository_id = %s::uuid AND branch = %s
+            """,
+            (repository_id, branch),
+        )
 
     def update_tenant_repository_after_file_scan(
         self,
@@ -14335,6 +14585,34 @@ class Database:
         except Exception as e:
             conn.rollback()
             raise e
+
+    def requeue_repository_file_scan_job(self, job_id: str, note: str) -> None:
+        """Put a running scan job back on the queue so a later tick resumes it.
+
+        Used by the REPO-2.5 bounded walk: a pass that stopped on its wall-clock
+        budget, or one interrupted by a transient provider failure that left a
+        stored resume cursor, is not a failure — the work continues on the next
+        sweep tick from the cursor. ``started_at`` is cleared so the job's timing
+        reflects the pass that actually completes it, and ``requeued_at`` sends the
+        job to the back of the claim order so a long walk yields to other
+        repositories between passes.
+
+        Args:
+            job_id: The job to re-queue.
+            note: Why the pass stopped, recorded in ``error_message`` for
+                operators (truncated to the column's practical limit).
+        """
+        self._execute_write(
+            """
+            UPDATE apiome.tenant_repository_file_scan_jobs
+            SET status = 'queued',
+                started_at = NULL,
+                requeued_at = CURRENT_TIMESTAMP,
+                error_message = %s
+            WHERE id = %s::uuid
+            """,
+            (note[:8000], job_id),
+        )
 
     def mark_repository_file_scan_job_failed(self, job_id: str, error_message: str) -> None:
         q = """

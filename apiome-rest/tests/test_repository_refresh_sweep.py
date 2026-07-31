@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 import app.repository_refresh_sweep as sweep
+from app.repository_file_scan import ScanPass
 from app.repository_refresh_sweep import process_repository_refresh_sweep
 
 NOW = datetime(2026, 6, 21, 12, 0, 0, tzinfo=timezone.utc)
@@ -107,7 +108,7 @@ def _patch_scan(monkeypatch):
     def _fake_scan(db, repo_row, branch):
         calls.append((str(repo_row["id"]), branch))
         db.scanned.append((str(repo_row["id"]), branch))
-        return (1, 1)
+        return ScanPass(total_files=1, importable_count=1, completed=True, resumed=False)
 
     monkeypatch.setattr(sweep, "scan_repository_branch_into_index", _fake_scan)
     return calls
