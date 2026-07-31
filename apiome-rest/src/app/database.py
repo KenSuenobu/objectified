@@ -14025,6 +14025,7 @@ class Database:
         q = """
             SELECT f.id, f.repository_id, f.branch, f.path, f.name, f.ext, f.size_bytes, f.blob_sha,
                    f.detected_kind,
+                   f.quality_score, f.quality_grade, f.quality_status, f.quality_reason,
                    r.provider, r.clone_url, r.repository_full_name, r.linked_account_id, r.created_by,
                    r.visibility
             FROM apiome.tenant_repository_files f
@@ -14131,7 +14132,8 @@ class Database:
         lim = max(1, min(int(limit), 500))
         off = max(0, min(int(offset), 500_000))
         q_page = (
-            "SELECT f.id, f.path, f.name, f.ext, f.size_bytes, f.blob_sha, f.detected_kind "
+            "SELECT f.id, f.path, f.name, f.ext, f.size_bytes, f.blob_sha, f.detected_kind, "
+            "       f.quality_score, f.quality_grade, f.quality_status, f.quality_reason "
             + from_sql
             + where_f
             + " ORDER BY f.path ASC LIMIT %s OFFSET %s"
@@ -14379,6 +14381,90 @@ class Database:
         if not rows:
             return 0, 0
         return int(rows[0]["c"] or 0), int(rows[0]["ic"] or 0)
+
+    # --- REPO-2.8: quality score per discovered spec ---------------------------
+
+    def claim_repository_files_for_quality_scoring(self, limit: int = 25) -> List[Dict[str, Any]]:
+        """Return the next classified spec rows that still need a quality score (REPO-2.8).
+
+        A row is due when its stored ``quality_scored_blob_sha`` differs from its current
+        ``blob_sha`` — never attempted (both NULL-vs-value), or attempted against an older
+        revision of the file. Because every attempt writes that column
+        (:meth:`set_repository_file_quality`), each ``(file, blob)`` pair is claimed at most
+        once and an unscorable file is not re-fetched on every sweep tick.
+
+        Only classified specs are selected (the shared
+        :data:`REPOSITORY_FILE_IMPORTABLE_SQL` predicate), so ``unknown_spec`` files never
+        enter the queue at all. Rows are joined to their repository because the scorer needs
+        the provider, clone URL and linked-account columns to download the blob.
+
+        This claim does not lock: the sweep is single-flight per process and re-scoring a row
+        is idempotent, so a rare double-claim costs one wasted fetch rather than correctness.
+
+        Args:
+            limit: Maximum rows to return; clamped to 1..500 to bound one sweep tick.
+
+        Returns:
+            One dict per due row (file columns plus the repository columns needed to fetch).
+        """
+        lim = max(1, min(int(limit), 500))
+        q = (
+            "SELECT f.id, f.repository_id, f.branch, f.path, f.name, f.size_bytes, f.blob_sha, "
+            "       f.detected_kind, "
+            "       r.tenant_id, r.provider, r.clone_url, r.repository_full_name, "
+            "       r.linked_account_id, r.created_by, r.visibility "
+            "FROM apiome.tenant_repository_files f "
+            "INNER JOIN apiome.tenant_repositories r ON r.id = f.repository_id "
+            "WHERE r.deleted_at IS NULL "
+            "  AND f.blob_sha IS NOT NULL "
+            "  AND f.quality_scored_blob_sha IS DISTINCT FROM f.blob_sha "
+            "  AND " + REPOSITORY_FILE_IMPORTABLE_SQL + " "
+            "ORDER BY f.repository_id, f.path ASC "
+            "LIMIT %s"
+        )
+        rows = self.execute_query(q, (lim,))
+        return [dict(r) for r in rows]
+
+    def set_repository_file_quality(
+        self,
+        file_id: str,
+        *,
+        status: str,
+        score: Optional[int],
+        grade: Optional[str],
+        reason: Optional[str],
+        blob_sha: Optional[str],
+    ) -> int:
+        """Record one scoring attempt on an indexed file row (REPO-2.8).
+
+        Always writes ``quality_scored_blob_sha`` — including for a skip or an error — so the
+        attempt is not repeated for the same blob on the next tick. Editing the file gives it a
+        new sha, which makes the row due again.
+
+        Args:
+            file_id: The ``tenant_repository_files`` row scored.
+            status: ``scored`` | ``skipped`` | ``error``.
+            score: 0-100 score when scored, else ``None``.
+            grade: A-F grade when scored, else ``None``.
+            reason: Stable machine reason for a skip/error, else ``None``.
+            blob_sha: The blob the attempt read; stamped so the row settles.
+
+        Returns:
+            The number of rows updated (0 when the file was deleted mid-flight).
+        """
+        return self._execute_write(
+            """
+            UPDATE apiome.tenant_repository_files
+            SET quality_score = %s,
+                quality_grade = %s,
+                quality_status = %s,
+                quality_reason = %s,
+                quality_scored_at = NOW(),
+                quality_scored_blob_sha = %s
+            WHERE id = %s::uuid
+            """,
+            (score, grade, status, reason, blob_sha, file_id),
+        )
 
     # --- REPO-2.5: per-tenant scan budget + stored resume cursor ---------------
 

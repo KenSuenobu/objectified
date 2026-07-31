@@ -117,7 +117,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.81.2",
+    version="1.82.0",
 )
 
 
@@ -381,6 +381,7 @@ app.include_router(auth_provider_resolved_router)
 _webhook_delivery_task: asyncio.Task | None = None
 _repository_file_scan_task: asyncio.Task | None = None
 _repository_refresh_task: asyncio.Task | None = None
+_repository_quality_task: asyncio.Task | None = None
 _mcp_discovery_task: asyncio.Task | None = None
 _mcp_catalog_digest_task: asyncio.Task | None = None
 _lint_waiver_expiry_task: asyncio.Task | None = None
@@ -496,6 +497,40 @@ async def startup_event():
                 raise
             except Exception:
                 log.exception("repository refresh sweep")
+
+    async def _repository_quality_sweep() -> None:
+        """Periodically score newly discovered repository specs (REPO-2.8).
+
+        Ticks on ``APIOME_REPOSITORY_QUALITY_INTERVAL`` (default 30s) and scores at most
+        ``APIOME_REPOSITORY_QUALITY_BATCH_SIZE`` files per tick, so draining a monorepo's
+        backlog is spread out instead of bursting at the provider. Each attempt stamps the
+        blob it read, so the backlog strictly shrinks and a settled repository costs one
+        empty query per tick. Set ``APIOME_REPOSITORY_QUALITY_SCORING=false`` to disable.
+        """
+        from .config import settings
+
+        log = logging.getLogger(__name__)
+        tick_seconds = max(1, int(settings.repository_quality_interval_seconds))
+        while True:
+            await asyncio.sleep(tick_seconds)
+            try:
+
+                def _run_quality() -> Any:
+                    thread_db = Database()
+                    try:
+                        from .repository_quality_sweep import (
+                            process_repository_spec_quality_batch,
+                        )
+
+                        return process_repository_spec_quality_batch(thread_db)
+                    finally:
+                        thread_db.close()
+
+                await asyncio.to_thread(_run_quality)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                log.exception("repository spec quality sweep")
 
     async def _mcp_discovery_sweep() -> None:
         """Periodically re-discover MCP catalog endpoints on their cadence (MCAT-5.1/5.2).
@@ -634,6 +669,8 @@ async def startup_event():
     _repository_file_scan_task = asyncio.create_task(_repository_file_scan_sweep())
     global _repository_refresh_task
     _repository_refresh_task = asyncio.create_task(_repository_refresh_sweep())
+    global _repository_quality_task
+    _repository_quality_task = asyncio.create_task(_repository_quality_sweep())
     global _mcp_discovery_task
     _mcp_discovery_task = asyncio.create_task(_mcp_discovery_sweep())
     global _mcp_catalog_digest_task
@@ -671,6 +708,14 @@ async def shutdown_event():
         except asyncio.CancelledError:
             pass
         _repository_refresh_task = None
+    global _repository_quality_task
+    if _repository_quality_task is not None:
+        _repository_quality_task.cancel()
+        try:
+            await _repository_quality_task
+        except asyncio.CancelledError:
+            pass
+        _repository_quality_task = None
     global _mcp_discovery_task
     if _mcp_discovery_task is not None:
         _mcp_discovery_task.cancel()
