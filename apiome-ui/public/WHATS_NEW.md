@@ -8,6 +8,7 @@ We continue to improve the platform based on your feedback with improvements and
 
 - Import: Arazzo workflow documents now import as first-class Workflow and Workflow Step entities; each step's `operationRef`/`operationId` links to the matching operation when that OpenAPI spec was imported in the same scan, and an unresolved reference keeps its raw value with a warning instead of being dropped
 - Repository: specs that reference schemas on external hosts are now governed by a per-tenant policy — `block` (the default; nothing is fetched and the file is flagged with exactly which references are missing), `inline` (permitted references are fetched once and snapshotted into the scanned spec), or `proxy-fetch` (the same, restricted to an allowlist of hostnames, wildcards like `*.acme.com` included). Every fetch is recorded in the audit trail
+- Repository: registered repositories now accept signed webhook deliveries, so a push to a branch you import from makes the repository due for a refresh immediately instead of at the end of its polling interval. Pull-request events can additionally index the PR's head branch so you can inspect the specs a review touches before it merges. Each repository gets its own signing secret, and the delivery history — including anything that failed to verify — is visible per repository
 - UI/UX: Updates look and feel for tabs
 - UI/UX: Added tabbed sections to Style Guides
 - Primitives

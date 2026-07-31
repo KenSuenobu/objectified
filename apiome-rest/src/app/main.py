@@ -81,6 +81,7 @@ from .verification_policy_routes import router as verification_policy_router
 from .scrub_policy_routes import router as scrub_policy_router
 from .rate_limit import RateLimitMiddleware
 from .registry_audit_routes import router as registry_audit_router
+from .repository_webhook_routes import router as repository_webhook_router
 from .slate_agent_outputs_routes import router as slate_agent_outputs_router
 from .slate_cache_routes import router as slate_cache_router
 from .slate_functions_routes import router as slate_functions_router
@@ -117,7 +118,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.87.0",
+    version="1.88.0",
 )
 
 
@@ -348,6 +349,9 @@ app.include_router(export_router)
 app.include_router(export_tenant_router)
 app.include_router(export_job_router)
 app.include_router(tenant_repositories_router)
+# Repository webhook ingestion (REPO-4.3, #2781): unauthenticated by necessity — a provider
+# holds no token — and authenticated instead by the HMAC signature over the raw body.
+app.include_router(repository_webhook_router)
 app.include_router(access_router)
 app.include_router(access_platform_router)
 # Mock Server (#3615): tenant-scoped management plane, then the public data plane catch-all.

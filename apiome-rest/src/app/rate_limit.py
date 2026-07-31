@@ -44,7 +44,13 @@ _EXEMPT_PATHS = frozenset(
 # Top-level ``/v1`` areas whose second path segment is NOT a tenant slug, so we
 # do not mis-key their requests onto a bogus "tenant" bucket. Everything else
 # under ``/v1`` is assumed tenant-scoped (``/v1/<area>/<tenant_slug>/...``).
-_NON_TENANT_AREAS = frozenset({"browse", "tenants", "platform"})
+# ``repositories`` is here for the REPO-4.3 webhook ingress (/v1/repositories/webhook/{provider}):
+# its second segment is the literal "webhook", so without this entry every provider delivery
+# for every tenant would share one bogus ``tenant:webhook`` bucket and one busy repository
+# could throttle everybody else's pushes. Falling through to the per-IP bucket keys deliveries
+# by the provider address that sent them, which is the right granularity for an endpoint that
+# carries no tenant credential.
+_NON_TENANT_AREAS = frozenset({"browse", "tenants", "platform", "repositories"})
 
 # Sweep stale buckets once the table grows past this many keys, so a flood of
 # distinct IPs/tenants cannot grow memory without bound.

@@ -799,6 +799,43 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Repository webhook ingestion (REPO-4.3, #2781). Provider push/PR deliveries make a
+    # repository due for the RAR-3.2 sweep immediately instead of at the end of its cadence.
+    #
+    # repository_webhook_enabled       Kill switch for the ingestion endpoint. When False a
+    #                                  delivery is accepted (so the provider stops retrying),
+    #                                  recorded in the ledger, and dispatches nothing.
+    # repository_webhook_pr_preview_enabled
+    #                                  Deployment-wide gate on the pull-request preview scan.
+    #                                  Overrides the per-subscription pr_preview_enabled flag;
+    #                                  either being False disables PR scans.
+    # repository_webhook_base_url      Public base URL deliveries arrive at, e.g.
+    #                                  https://api.apiome.dev. Required to auto-create a
+    #                                  provider hook at registration time; unset leaves every
+    #                                  subscription in the `local` state, which honours signed
+    #                                  deliveries but has no hook pointing at it.
+    repository_webhook_enabled: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_ENABLED",
+            "repository_webhook_enabled",
+        ),
+    )
+    repository_webhook_pr_preview_enabled: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_PR_PREVIEW",
+            "repository_webhook_pr_preview_enabled",
+        ),
+    )
+    repository_webhook_base_url: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_BASE_URL",
+            "repository_webhook_base_url",
+        ),
+    )
+
     # MCP catalog periodic re-discovery sweep (V2-MCP-19.1 / MCAT-5.1, #3673). A background
     # async loop re-handshakes enabled endpoints whose discovery cadence has elapsed, mirroring
     # the repository auto-refresh sweep above.

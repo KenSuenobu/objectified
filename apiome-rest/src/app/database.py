@@ -14584,6 +14584,409 @@ class Database:
             conn.rollback()
             raise e
 
+    # ── Repository webhook subscriptions + delivery ledger (REPO-4.3, #2781) ──
+
+    def insert_repository_webhook_subscription(
+        self,
+        *,
+        tenant_id: str,
+        repository_id: str,
+        provider: str,
+        repo_full_name: str,
+        secret_enc: Optional[bytes],
+        secret_fingerprint: Optional[str],
+        pr_preview_enabled: bool = True,
+    ) -> Optional[Dict[str, Any]]:
+        """Create the webhook subscription for a repository (REPO-4.3).
+
+        One subscription per repository, enforced by the table's UNIQUE constraint: a second
+        insert for the same repository is a no-op returning ``None`` rather than a second
+        live secret. The secret is written here and never rewritten — the
+        ``repository_webhook_secret_guard`` trigger refuses an UPDATE that would change it.
+
+        Args:
+            tenant_id: Owning tenant id.
+            repository_id: The registered repository this subscription belongs to.
+            provider: Provider id (``github`` / ``gitlab`` / ``bitbucket``).
+            repo_full_name: Lowercased ``owner/name`` the ingestion path resolves against.
+            secret_enc: Fernet ciphertext of the signing secret, or ``None`` when the
+                deployment has no encryption key (verification then fails closed).
+            secret_fingerprint: Truncated SHA-256 of the plaintext secret, for display.
+            pr_preview_enabled: Whether PR events may enqueue a preview scan.
+
+        Returns:
+            The inserted row without ``secret_enc``, or ``None`` when a subscription already
+            existed for the repository.
+        """
+        q = """
+            INSERT INTO apiome.repository_webhook_subscription (
+                tenant_id, repository_id, provider, repo_full_name,
+                secret_enc, secret_fingerprint, pr_preview_enabled
+            )
+            VALUES (%s::uuid, %s::uuid, %s, %s, %s, %s, %s)
+            ON CONFLICT (repository_id) DO NOTHING
+            RETURNING id, tenant_id, repository_id, provider, repo_full_name,
+                      secret_fingerprint, pr_preview_enabled, provider_hook_id,
+                      registration_state, registration_error, last_event_at,
+                      last_delivery_id, event_count, created_at, updated_at
+        """
+        params = (
+            tenant_id,
+            repository_id,
+            provider,
+            repo_full_name,
+            (psycopg2.Binary(secret_enc) if secret_enc else None),
+            secret_fingerprint,
+            bool(pr_preview_enabled),
+        )
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(q, params)
+                row = cursor.fetchone()
+                conn.commit()
+                return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def get_repository_webhook_subscription(
+        self, tenant_id: str, repository_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Read a repository's webhook subscription, **without** its secret (REPO-4.3).
+
+        This is the read the REST layer uses, so ``secret_enc`` is not in the projection at
+        all — a column that is never selected cannot be leaked by a later careless response
+        model.
+
+        Args:
+            tenant_id: Owning tenant id (scopes the lookup).
+            repository_id: The repository to read.
+
+        Returns:
+            The subscription row, or ``None`` when the repository has none.
+        """
+        q = """
+            SELECT s.id, s.tenant_id, s.repository_id, s.provider, s.repo_full_name,
+                   s.secret_fingerprint, s.pr_preview_enabled, s.provider_hook_id,
+                   s.registration_state, s.registration_error, s.last_event_at,
+                   s.last_delivery_id, s.event_count, s.created_at, s.updated_at
+            FROM apiome.repository_webhook_subscription s
+            WHERE s.repository_id = %s::uuid AND s.tenant_id = %s::uuid
+            LIMIT 1
+        """
+        rows = self.execute_query(q, (repository_id, tenant_id))
+        return dict(rows[0]) if rows else None
+
+    def find_repository_webhook_subscriptions(
+        self, provider: str, repo_full_name: str
+    ) -> List[Dict[str, Any]]:
+        """Resolve the subscriptions a delivery could belong to (REPO-4.3).
+
+        The unauthenticated ingestion endpoint has only the payload's repository name, so the
+        same repository registered by two tenants yields two candidates; the signature then
+        decides which one owns the delivery. This is the one query that *does* select
+        ``secret_enc``, because verifying is the only thing the secret is for.
+
+        Soft-deleted repositories are excluded: a repository a tenant has removed must not
+        keep driving scans because a provider hook was left behind.
+
+        Args:
+            provider: Normalized provider id.
+            repo_full_name: Lowercased ``owner/name`` from the payload.
+
+        Returns:
+            Candidate subscription rows joined to their repository, oldest first.
+        """
+        q = """
+            SELECT s.id, s.tenant_id, s.repository_id, s.provider, s.repo_full_name,
+                   s.secret_enc, s.secret_fingerprint, s.pr_preview_enabled,
+                   s.provider_hook_id, s.registration_state, s.event_count,
+                   r.default_branch, r.repository_full_name, r.status
+            FROM apiome.repository_webhook_subscription s
+            INNER JOIN apiome.tenant_repositories r ON r.id = s.repository_id
+            WHERE s.provider = %s AND s.repo_full_name = %s AND r.deleted_at IS NULL
+            ORDER BY s.created_at ASC
+        """
+        return self.execute_query(q, (provider, repo_full_name))
+
+    def update_repository_webhook_registration(
+        self,
+        subscription_id: str,
+        *,
+        registration_state: str,
+        provider_hook_id: Optional[str] = None,
+        registration_error: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Record how far provider-side hook creation actually got (REPO-4.3).
+
+        Only the registration facets are writable; the secret and the subscription's identity
+        are refused by the ``repository_webhook_secret_guard`` trigger, so this method cannot
+        become an accidental secret-rotation path.
+
+        Args:
+            subscription_id: The subscription to update.
+            registration_state: ``local`` | ``registered`` | ``failed``.
+            provider_hook_id: The provider's hook identifier, when one was created.
+            registration_error: Why the provider refused, for the ``failed`` state.
+
+        Returns:
+            The updated row (secret excluded), or ``None`` when the subscription is gone.
+        """
+        q = """
+            UPDATE apiome.repository_webhook_subscription
+            SET registration_state = %s,
+                provider_hook_id = COALESCE(%s, provider_hook_id),
+                registration_error = %s,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s::uuid
+            RETURNING id, tenant_id, repository_id, provider, repo_full_name,
+                      secret_fingerprint, pr_preview_enabled, provider_hook_id,
+                      registration_state, registration_error, last_event_at,
+                      last_delivery_id, event_count, created_at, updated_at
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    q,
+                    (
+                        registration_state,
+                        provider_hook_id,
+                        registration_error,
+                        subscription_id,
+                    ),
+                )
+                row = cursor.fetchone()
+                conn.commit()
+                return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def record_repository_webhook_event(
+        self,
+        *,
+        provider: str,
+        outcome: str,
+        tenant_id: Optional[str] = None,
+        subscription_id: Optional[str] = None,
+        repository_id: Optional[str] = None,
+        delivery_id: Optional[str] = None,
+        event_type: Optional[str] = None,
+        action: Optional[str] = None,
+        repo_full_name: Optional[str] = None,
+        branch: Optional[str] = None,
+        head_sha: Optional[str] = None,
+        pr_number: Optional[int] = None,
+        reason: Optional[str] = None,
+        jobs_enqueued: int = 0,
+    ) -> Optional[Dict[str, Any]]:
+        """Append one delivery to the webhook ledger (REPO-4.3).
+
+        The insert doubles as the redelivery guard: ``uq_repository_webhook_event_delivery``
+        makes a second delivery of the same ``(subscription_id, delivery_id)`` collide, so a
+        ``None`` return means "already processed" and the caller enqueues nothing. A provider
+        that sends no delivery id gets no idempotency from this index and every delivery is
+        recorded — deliberately, since silently dropping unidentified deliveries would be
+        worse than scanning twice.
+
+        Args:
+            provider: Normalized provider id.
+            outcome: ``enqueued`` | ``preview-scan`` | ``ignored`` | ``duplicate`` |
+                ``rejected``.
+            tenant_id: Owning tenant, when the delivery resolved to one.
+            subscription_id: The subscription that verified the delivery, when any.
+            repository_id: The repository the delivery drives, when resolved.
+            delivery_id: The provider's delivery identifier (the idempotency key).
+            event_type: The provider's event name.
+            action: The pull-request action, when applicable.
+            repo_full_name: The repository name the payload carried.
+            branch: The branch the event was about.
+            head_sha: The head commit the event pointed at.
+            pr_number: The pull-request number, when applicable.
+            reason: Stable machine-readable code explaining the outcome.
+            jobs_enqueued: How many scan jobs the delivery actually queued.
+
+        Returns:
+            The inserted ledger row, or ``None`` when this delivery id was already recorded
+            for this subscription (a redelivery).
+        """
+        q = """
+            INSERT INTO apiome.repository_webhook_event (
+                tenant_id, subscription_id, repository_id, provider, delivery_id,
+                event_type, action, repo_full_name, branch, head_sha, pr_number,
+                outcome, reason, jobs_enqueued
+            )
+            VALUES (
+                %s::uuid, %s::uuid, %s::uuid, %s, %s,
+                %s, %s, %s, %s, %s, %s,
+                %s, %s, %s
+            )
+            ON CONFLICT (subscription_id, delivery_id)
+                WHERE subscription_id IS NOT NULL AND delivery_id IS NOT NULL
+            DO NOTHING
+            RETURNING id, tenant_id, subscription_id, repository_id, provider, delivery_id,
+                      event_type, action, repo_full_name, branch, head_sha, pr_number,
+                      outcome, reason, jobs_enqueued, received_at
+        """
+        params = (
+            (str(tenant_id) if tenant_id else None),
+            (str(subscription_id) if subscription_id else None),
+            (str(repository_id) if repository_id else None),
+            provider,
+            delivery_id,
+            event_type,
+            action,
+            repo_full_name,
+            branch,
+            head_sha,
+            (int(pr_number) if pr_number is not None else None),
+            outcome,
+            reason,
+            max(0, int(jobs_enqueued or 0)),
+        )
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(q, params)
+                row = cursor.fetchone()
+                conn.commit()
+                return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def touch_repository_webhook_subscription(
+        self, subscription_id: str, delivery_id: Optional[str] = None
+    ) -> None:
+        """Advance a subscription's delivery counters (REPO-4.3).
+
+        Bookkeeping only — ``last_event_at`` / ``last_delivery_id`` / ``event_count`` are
+        what tell an operator that a hook they configured is actually firing.
+
+        Args:
+            subscription_id: The subscription that just accepted a delivery.
+            delivery_id: The provider's delivery identifier, when sent.
+        """
+        q = """
+            UPDATE apiome.repository_webhook_subscription
+            SET last_event_at = CURRENT_TIMESTAMP,
+                last_delivery_id = COALESCE(%s, last_delivery_id),
+                event_count = event_count + 1,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s::uuid
+        """
+        self._execute_write(q, (delivery_id, subscription_id))
+
+    def list_repository_webhook_events(
+        self, tenant_id: str, repository_id: str, limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """Recent webhook deliveries for one repository, newest first (REPO-4.3).
+
+        Args:
+            tenant_id: Owning tenant id (scopes the lookup).
+            repository_id: The repository whose deliveries to list.
+            limit: Maximum rows to return; clamped to 1..200.
+
+        Returns:
+            Ledger rows, newest first.
+        """
+        q = """
+            SELECT id, provider, delivery_id, event_type, action, branch, head_sha,
+                   pr_number, outcome, reason, jobs_enqueued, received_at
+            FROM apiome.repository_webhook_event
+            WHERE tenant_id = %s::uuid AND repository_id = %s::uuid
+            ORDER BY received_at DESC
+            LIMIT %s
+        """
+        # `limit or 50` would swallow an explicit 0 into the default; None is the only value
+        # that means "unspecified".
+        requested = 50 if limit is None else int(limit)
+        return self.execute_query(
+            q, (tenant_id, repository_id, max(1, min(200, requested)))
+        )
+
+    def enqueue_repository_file_scan_job_if_idle(
+        self, tenant_id: str, repository_id: str, branch: str
+    ) -> Optional[str]:
+        """Enqueue a branch scan unless one is already queued or running (REPO-4.3).
+
+        The plain :meth:`enqueue_repository_file_scan_job` is unconditional, which is right
+        at registration time (exactly one caller, exactly one branch). A webhook is the
+        opposite: a team pushing ten commits in a minute would otherwise queue ten identical
+        walks of the same branch and spend the tenant's provider rate limit on work the
+        first walk already covers. Collapsing onto the in-flight job is the correct
+        semantics, not merely a saving — the queued walk has not started, so it will observe
+        the newest tip anyway.
+
+        Args:
+            tenant_id: Owning tenant id.
+            repository_id: The repository to scan.
+            branch: The branch to walk.
+
+        Returns:
+            The new job id, or ``None`` when an active job already covers this branch.
+        """
+        q = """
+            INSERT INTO apiome.tenant_repository_file_scan_jobs
+                (tenant_id, repository_id, branch, status)
+            SELECT %s::uuid, %s::uuid, %s, 'queued'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM apiome.tenant_repository_file_scan_jobs
+                WHERE repository_id = %s::uuid
+                  AND branch = %s
+                  AND status IN ('queued', 'running')
+            )
+            RETURNING id
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    q, (tenant_id, repository_id, branch, repository_id, branch)
+                )
+                row = cursor.fetchone()
+                conn.commit()
+                return str(row["id"]) if row else None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def mark_repository_poll_due(self, repository_id: str) -> bool:
+        """Make a repository immediately due for the auto-refresh sweep (REPO-4.3).
+
+        This is what "the webhook enqueues a poll" means against the RAR-3.1 cadence model:
+        the sweep polls whatever is *due*, so clearing the cadence anchor and the backoff
+        deferral hands the repository to the very next tick instead of waiting out an
+        interval measured in minutes or hours.
+
+        Two things are deliberately **not** cleared. ``auto_refresh_enabled`` is a tenant's
+        explicit "do not refresh this repository", and an inbound push is not consent to
+        overrule it. ``refresh_paused_at`` is the RAR-3.4 auto-pause, which exists precisely
+        because the repository keeps failing; a push does not make a broken repository work,
+        and clearing the pause would turn every push into a retry of a known-failing walk.
+        Both remain the operator's to lift.
+
+        Args:
+            repository_id: The repository to make due.
+
+        Returns:
+            True when a row was made due; False when the repository does not exist, is
+            soft-deleted, has auto-refresh disabled, or is auto-paused.
+        """
+        q = """
+            UPDATE apiome.tenant_repositories
+            SET last_refreshed_at = NULL,
+                refresh_backoff_until = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s::uuid
+              AND deleted_at IS NULL
+              AND COALESCE(auto_refresh_enabled, TRUE) = TRUE
+              AND refresh_paused_at IS NULL
+        """
+        return self._execute_write(q, (repository_id,)) > 0
+
     def enqueue_repository_file_scan_job(self, tenant_id: str, repository_id: str, branch: str) -> str:
         q = """
             INSERT INTO apiome.tenant_repository_file_scan_jobs (tenant_id, repository_id, branch, status)
