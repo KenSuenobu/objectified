@@ -4,33 +4,13 @@ name: Golden Path
 # docker-compose (postgres -> migrate -> seed -> rest -> mcp) and runs the golden path:
 #   import OpenAPI -> edit a class & a path -> lint -> cut a version -> publish
 #                 -> enable mock -> GET /pets via mock -> view in browse -> export via CLI -> query via MCP
-# This is intended to be a REQUIRED status check on `main`: a red run means the spine regressed.
+# Run **on demand only** — start it from the Actions tab (or `gh workflow run golden-path.yml`).
+# It brings up the whole spine on a self-hosted runner, so it is deliberately not wired to
+# push/pull_request. Because it no longer runs automatically it cannot serve as a required
+# status check; run it before a release, or after a change to the spine, docker-compose, or
+# scripts/golden_path/.
 
 on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - '.github/workflows/golden-path.yml'
-      - 'scripts/golden_path/**'
-      - 'docker-compose.yml'
-      - 'docker-compose.env.example'
-      - 'apiome-rest/**'
-      - 'apiome-mcp/**'
-      - 'apiome-mock/**'
-      - 'apiome-db/**'
-      - 'apiome-cli/**'
-  pull_request:
-    branches: [ main, develop ]
-    paths:
-      - '.github/workflows/golden-path.yml'
-      - 'scripts/golden_path/**'
-      - 'docker-compose.yml'
-      - 'docker-compose.env.example'
-      - 'apiome-rest/**'
-      - 'apiome-mcp/**'
-      - 'apiome-mock/**'
-      - 'apiome-db/**'
-      - 'apiome-cli/**'
   workflow_dispatch:
 
 jobs:

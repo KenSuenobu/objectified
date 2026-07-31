@@ -10,31 +10,13 @@ name: OLO Journey (MVP gate)
 #      Free-license issue + seat limit, tenant switcher, credentials sign-in, and 2FA
 #      (TOTP enroll + login + backup code);
 #   2. the REST-side journey pytest twin (apiome-rest/tests/test_journey_olo.py).
-# Intended to be a REQUIRED status check on `main`: red means the MVP journey regressed.
+# Run **on demand only** — start it from the Actions tab (or `gh workflow run e2e-journey.yml`).
+# It brings up the spine and drives a real browser on a self-hosted runner, so it is deliberately
+# not wired to push/pull_request. Because it no longer runs automatically it cannot serve as a
+# required status check; run it before a release, or after a change to auth, onboarding, or the
+# journey specs.
 
 on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - '.github/workflows/e2e-journey.yml'
-      - 'docker-compose.yml'
-      - 'docker-compose.env.example'
-      - 'apiome-ui/**'
-      - 'apiome-rest/**'
-      - 'apiome-db/**'
-      - 'package.json'
-      - 'yarn.lock'
-  pull_request:
-    branches: [ main, develop ]
-    paths:
-      - '.github/workflows/e2e-journey.yml'
-      - 'docker-compose.yml'
-      - 'docker-compose.env.example'
-      - 'apiome-ui/**'
-      - 'apiome-rest/**'
-      - 'apiome-db/**'
-      - 'package.json'
-      - 'yarn.lock'
   workflow_dispatch:
 
 jobs:
