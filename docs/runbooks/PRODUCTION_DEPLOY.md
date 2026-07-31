@@ -79,6 +79,29 @@ openssl rand -base64 32   # BETTER_AUTH_SECRET  (must match apiome-ui)
 openssl rand -hex 32      # APIOME_BACKUP_KEY → store in the secret manager, NOT on this host
 ```
 
+### 3.1 Sign-in providers configured from the admin screen (optional)
+
+Skip this if your OAuth apps are configured from environment variables (`GITHUB_ID` /
+`GITHUB_SECRET`, …). If you intend to configure them from the admin screen instead, three more
+values are needed — and **none of them fails loudly when it is missing**. The provider path is
+built to degrade to env config so a misconfiguration can never take down sign-in, which means an
+incomplete setup always looks the same: the admin screen saves, and sign-in ignores it.
+
+| Variable | Set on | Without it |
+|---|---|---|
+| `ADMIN_SESSION_SECRET` (or a matching `ADMIN_PASSWORD`) | apiome-rest **and** apiome-ui | REST cannot verify the admin session and rejects every provider-config write |
+| `AUTH_CONFIG_ENC_KEY` | apiome-rest | Saving a client **secret** returns 503; the client id is stored without it |
+| `INTERNAL_SERVICE_TOKEN` | apiome-rest **and** apiome-ui (identical) | The login page never reads the DB config and runs on env vars — silently, with no log line when the *UI* side is the one missing it |
+
+```bash
+openssl rand -base64 48   # ADMIN_SESSION_SECRET, INTERNAL_SERVICE_TOKEN
+python -c "import base64, os; print(base64.b64encode(os.urandom(32)).decode())"  # AUTH_CONFIG_ENC_KEY
+```
+
+apiome-ui must also be able to reach REST **server-side**: its
+`NEXT_PUBLIC_REST_API_BASE_URL` is used by the login-time resolver, so inside a container it
+must point at the REST service (e.g. `http://rest:8000/v1`), not `localhost`.
+
 > The `.env` file holds live secrets and is git-ignored — never commit it. Only the
 > `*.env.example` templates are tracked.
 
@@ -139,6 +162,23 @@ curl -fsS -o /dev/null -w "%{http_code}\n" https://$DEPLOY_STUDIO_DOMAIN/  # Stu
 
 `/readyz` returns 200 only once REST can reach a **migrated** database; a 503 means migrations
 have not been applied (re-check §4.4). The deploy is "working" when REST, MCP, and Studio respond over HTTPS.
+
+If you configured sign-in providers from the admin screen (§3.1), verify that path explicitly —
+it is the one part of the stack whose failure mode is silence:
+
+```bash
+# The variables actually reached the container (empty output = they did not):
+dc exec rest env | grep -E 'INTERNAL_SERVICE_TOKEN|AUTH_CONFIG_ENC_KEY|ADMIN_SESSION_SECRET'
+
+# The login-time read path answers. 200 = working; 503 = REST has no INTERNAL_SERVICE_TOKEN;
+# 403 = the two sides' tokens differ; 401 = the header did not arrive.
+dc exec rest python -c "import os,urllib.request;r=urllib.request.Request('http://127.0.0.1:8000/v1/internal/auth-providers/resolved',headers={'X-Internal-Service-Token':os.environ.get('INTERNAL_SERVICE_TOKEN','')});print(urllib.request.urlopen(r,timeout=4).status)"
+```
+
+Then load the sign-in page and confirm the provider button appears. If it does not, check the
+apiome-ui logs for `[provider-config-resolver] resolved endpoint returned …` — and note that
+**no** such line means apiome-ui itself has no `INTERNAL_SERVICE_TOKEN` (that case returns
+without logging).
 
 Set `APIOME_CORS_ALLOWED_ORIGINS` to include both the main app and Studio origins (e.g.
 `https://app.apiome.dev,https://studio.apiome.dev`). The default regex also allows

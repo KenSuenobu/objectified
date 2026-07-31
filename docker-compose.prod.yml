@@ -69,6 +69,13 @@ services:
       # Surface backup freshness on the ops dashboard (RC1-3.2 reads RC1-1.3 manifests).
       APIOME_BACKUP_DIR: /var/backups/apiome
       APIOME_MOCK_PUBLIC_BASE_URL: https://${DEPLOY_MOCK_DOMAIN:?set DEPLOY_MOCK_DOMAIN in your .env}
+      # Admin-configured sign-in providers (OLO-8.x). The pass-throughs are declared in the base
+      # compose and inherited here; they stay optional because a deployment that configures its
+      # OAuth apps purely from .env needs none of them. If you *do* use the admin screen, set
+      # ADMIN_SESSION_SECRET, AUTH_CONFIG_ENC_KEY and INTERNAL_SERVICE_TOKEN in your .env — the
+      # last one identically in apiome-ui, which reads the decrypted config from REST at login.
+      # Leaving one unset is not an error anywhere: the provider path degrades to env config, so
+      # the symptom is "the admin screen saves but sign-in ignores it".
     # Schema is applied by the gated migrate step before bring-up, so REST only needs the DB up.
     depends_on: !override
       postgres:

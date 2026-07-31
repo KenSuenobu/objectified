@@ -95,6 +95,27 @@ services:
       POSTGRES_PORT: "5432"
       POSTGRES_DB: ${POSTGRES_DB:-apiome}
       APIOME_MOCK_PUBLIC_BASE_URL: ${APIOME_MOCK_PUBLIC_BASE_URL:-http://localhost:8775}
+      # ── DB-over-env sign-in provider configuration (OLO-8.3/8.4/8.5) ────────────────────────
+      # A compose service only receives the variables listed here, and there is no `env_file`,
+      # so anything absent from this block is simply not in the container no matter what the
+      # operator's .env says. All five are optional pass-throughs (empty ⇒ unset), but each
+      # missing one silently disables a step of the admin-configured provider path, and every
+      # failure in that path degrades to env-configured providers rather than erroring:
+      #
+      #   ADMIN_SESSION_SECRET / ADMIN_PASSWORD  verify the /admin portal's signed session, so
+      #       GET/PUT /v1/admin/auth-providers can be served at all. With neither set that
+      #       surface fails closed and every save is rejected. Must match apiome-ui's values.
+      #   AUTH_CONFIG_ENC_KEY                    seals the client secret before it is stored.
+      #       Without it, saving a secret is a 503 ("secret encryption is not configured").
+      #   INTERNAL_SERVICE_TOKEN                 gates GET /v1/internal/auth-providers/resolved,
+      #       the login-time read apiome-ui merges over env. Unset ⇒ 503 ⇒ sign-in keeps using
+      #       GITHUB_ID/GITHUB_SECRET and the admin screen appears to do nothing. Must match
+      #       apiome-ui's INTERNAL_SERVICE_TOKEN byte for byte.
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      AUTH_CONFIG_ENC_KEY: ${AUTH_CONFIG_ENC_KEY:-}
+      AUTH_CONFIG_ENC_ACTIVE_KEY_ID: ${AUTH_CONFIG_ENC_ACTIVE_KEY_ID:-}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-}
     depends_on:
       postgres:
         condition: service_healthy

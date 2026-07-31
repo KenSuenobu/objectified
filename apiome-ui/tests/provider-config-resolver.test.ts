@@ -54,6 +54,19 @@ describe('fetch gating & transport', () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
+  it('says once that a missing service token means admin config has no effect', async () => {
+    // Running on env alone is legitimate, so this is not per-login noise — but it is also the
+    // state where the admin screen silently does nothing, which needs to be visible somewhere.
+    const base = { GITHUB_ID: 'env-id' };
+    await resolveProviderEnv(base, 1000);
+    await resolveProviderEnv(base, 2000);
+
+    const notices = (console.warn as jest.Mock).mock.calls.filter((call) =>
+      String(call[0]).includes('INTERNAL_SERVICE_TOKEN is not set')
+    );
+    expect(notices).toHaveLength(1);
+  });
+
   it('calls the resolved endpoint with the service-token header', async () => {
     mockFetch.mockResolvedValue(okResponse({}));
     await resolveProviderEnv({ ...TOKEN_ENV }, 1000);
