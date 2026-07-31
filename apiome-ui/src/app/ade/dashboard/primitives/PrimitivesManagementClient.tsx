@@ -11,7 +11,6 @@ import {
   Search,
   FileCode,
   AlertCircle,
-  CheckCircle,
   Upload,
   Shield,
   RefreshCw,
@@ -20,6 +19,7 @@ import {
   FolderTree,
   Settings,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { countUnassignedTypes, detectUnregisteredNamespaces } from './namespaceModel';
 import { Button } from '@/app/components/ui/Button';
 import { Input } from '@/app/components/ui/Input';
@@ -105,7 +105,6 @@ export default function PrimitivesManagementClient() {
   const [filteredPrimitives, setFilteredPrimitives] = useState<Primitive[]>([]);
   const [loading, setLoading] = useState(true);
   const [registryLoading, setRegistryLoading] = useState(true);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [stats, setStats] = useState<RegistryCoverageStats | null>(null);
   const [namespaces, setNamespaces] = useState<TypeNamespaceCollection[]>([]);
@@ -141,9 +140,16 @@ export default function PrimitivesManagementClient() {
   const sortByName = (items: Primitive[]) =>
     [...items].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
+  // Page-level outcomes (import summaries, deletes, settings/resolver/namespace actions) go to the
+  // app-wide toaster in the bottom-right corner rather than a banner above the content. A banner
+  // pushed the KPI strip and tabs down on every message, and an import summary that lands after the
+  // dialog closes reads as a transient result, not as page furniture.
   const showMessage = useCallback((type: 'success' | 'error', text: string) => {
-    setMessage({ type, text });
-    setTimeout(() => setMessage(null), 5000);
+    if (type === 'success') {
+      toast.success(text);
+    } else {
+      toast.error(text);
+    }
   }, []);
 
   const loadRegistryOverview = useCallback(async () => {
@@ -405,17 +411,6 @@ export default function PrimitivesManagementClient() {
 
       <main className={dashboardMainClass} aria-busy={loading || registryLoading}>
         <div className={dashboardContentStackClass}>
-          {message && (
-            <Alert variant={message.type === 'success' ? 'default' : 'error'}>
-              {message.type === 'success' ? (
-                <CheckCircle className="h-4 w-4" />
-              ) : (
-                <AlertCircle className="h-4 w-4" />
-              )}
-              <span>{message.text}</span>
-            </Alert>
-          )}
-
           <PrimitivesRegistryKpiStrip stats={stats} loading={registryLoading} />
 
           <nav role="tablist" aria-label="Primitives views" className={TAB_LIST_CLASS}>
