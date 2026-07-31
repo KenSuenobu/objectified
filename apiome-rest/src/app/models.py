@@ -7328,10 +7328,16 @@ class RepositoryWebhookSubscriptionOut(BaseModel):
     """A repository's webhook subscription as a client may see it (REPO-4.3, #2781).
 
     Every field here is deliberately non-sensitive. The signing secret has **no** field on
-    this model: it is written once at registration time, kept Fernet-encrypted, and used only
-    to verify an inbound delivery. ``secret_fingerprint`` is a truncated SHA-256 of it, which
-    lets an operator confirm the provider holds the same secret without either side
-    revealing it.
+    this model: it is minted server-side, kept Fernet-encrypted, and used only to verify an
+    inbound delivery. ``secret_fingerprint`` is a truncated SHA-256 of it, which lets an
+    operator confirm the provider holds the same secret without either side revealing it.
+
+    Rotation (REPO-4.7, #2785) adds a second set of the same non-sensitive facts:
+    ``previous_secret_fingerprint`` names the outgoing secret, ``previous_secret_expires_at``
+    is when it stops verifying, and ``provider_secret_synced`` says whether the provider's
+    hook has caught up. ``provider_secret_synced`` false with a near
+    ``previous_secret_expires_at`` is the state that needs an operator: the provider is still
+    signing with a secret that is about to be retired.
     """
 
     model_config = ConfigDict(populate_by_name=True)
@@ -7343,6 +7349,16 @@ class RepositoryWebhookSubscriptionOut(BaseModel):
     registration_error: Optional[str] = Field(None, alias="registrationError")
     provider_hook_id: Optional[str] = Field(None, alias="providerHookId")
     secret_fingerprint: Optional[str] = Field(None, alias="secretFingerprint")
+    previous_secret_fingerprint: Optional[str] = Field(
+        None, alias="previousSecretFingerprint"
+    )
+    previous_secret_expires_at: Optional[str] = Field(
+        None, alias="previousSecretExpiresAt"
+    )
+    rotated_at: Optional[str] = Field(None, alias="rotatedAt")
+    rotation_count: int = Field(0, alias="rotationCount")
+    provider_secret_synced: bool = Field(True, alias="providerSecretSynced")
+    rotation_error: Optional[str] = Field(None, alias="rotationError")
     pr_preview_enabled: bool = Field(True, alias="prPreviewEnabled")
     signature_header: Optional[str] = Field(None, alias="signatureHeader")
     endpoint_path: str = Field(alias="endpointPath")
@@ -7381,6 +7397,61 @@ class RepositoryWebhookStatusResponse(BaseModel):
     success: bool = True
     subscription: Optional[RepositoryWebhookSubscriptionOut] = None
     events: List[RepositoryWebhookEventOut] = Field(default_factory=list)
+
+
+class RepositoryWebhookRotateRequest(BaseModel):
+    """Ask for a repository's signing secret to be rotated (REPO-4.7, #2785).
+
+    The body carries at most a grace window, and even that is optional: rotating with the
+    deployment default is the case that should be one click. A requested window outside the
+    deployment's bounds is clamped rather than rejected — a rotation refused on a validation
+    technicality is a rotation that does not happen, which is the failure this ticket exists
+    to prevent.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    grace_seconds: Optional[int] = Field(
+        None,
+        alias="graceSeconds",
+        ge=0,
+        description=(
+            "How long the outgoing secret keeps verifying deliveries. Omit for the "
+            "deployment default (24h). Clamped to the deployment's configured bounds."
+        ),
+    )
+
+
+class RepositoryWebhookRotateResponse(BaseModel):
+    """What a rotation did (REPO-4.7, #2785).
+
+    Carries no secret — new or old. The new secret exists only server-side and in the
+    provider's hook configuration; what a client gets is the fingerprint of each, which is
+    enough to tell the two apart and useless to anyone who intercepts it.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    success: bool = True
+    subscription: RepositoryWebhookSubscriptionOut
+    grace_seconds: int = Field(
+        alias="graceSeconds",
+        description="The grace window actually applied, after clamping.",
+    )
+    provider_secret_synced: bool = Field(
+        alias="providerSecretSynced",
+        description=(
+            "Whether the provider's hook was updated to the new secret. False means the "
+            "grace window is load-bearing: the provider is still signing with the outgoing "
+            "secret, and deliveries will start failing when the window closes unless the "
+            "hook is updated (the background sweep keeps retrying until then)."
+        ),
+    )
+    provider_error: Optional[str] = Field(
+        None,
+        alias="providerError",
+        description="Why the provider hook could not be updated, when it could not be.",
+    )
 
 
 class RepositoryWebhookReceiptResponse(BaseModel):

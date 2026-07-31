@@ -836,6 +836,48 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Webhook signing-secret rotation (REPO-4.7, #2785). A rotation mints a new secret and
+    # keeps the outgoing one verifying for a grace window, so deliveries already in flight —
+    # and deliveries a provider keeps signing until its hook is updated — do not start
+    # failing the moment an operator clicks "rotate".
+    #
+    # repository_webhook_secret_grace_seconds
+    #                                  Default grace window, 24h per the ticket. A caller may
+    #                                  ask for a different one per rotation; the request is
+    #                                  clamped to [min, max] below rather than rejected, since
+    #                                  a rotation refused on a validation technicality is a
+    #                                  rotation that does not happen.
+    # repository_webhook_secret_min_grace_seconds
+    #                                  Floor. Zero would make rotation a hard cutover with no
+    #                                  window at all, which is the failure mode this feature
+    #                                  exists to remove; five minutes is the smallest window
+    #                                  that still covers deliveries in flight.
+    # repository_webhook_secret_max_grace_seconds
+    #                                  Ceiling. A retired secret that verifies for a month is
+    #                                  the audit finding the ticket opens with, so the window
+    #                                  a tenant can ask for is bounded by the deployment.
+    repository_webhook_secret_grace_seconds: int = Field(
+        default=86400,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_SECRET_GRACE_SECONDS",
+            "repository_webhook_secret_grace_seconds",
+        ),
+    )
+    repository_webhook_secret_min_grace_seconds: int = Field(
+        default=300,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_SECRET_MIN_GRACE_SECONDS",
+            "repository_webhook_secret_min_grace_seconds",
+        ),
+    )
+    repository_webhook_secret_max_grace_seconds: int = Field(
+        default=604800,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_SECRET_MAX_GRACE_SECONDS",
+            "repository_webhook_secret_max_grace_seconds",
+        ),
+    )
+
     # MCP catalog periodic re-discovery sweep (V2-MCP-19.1 / MCAT-5.1, #3673). A background
     # async loop re-handshakes enabled endpoints whose discovery cadence has elapsed, mirroring
     # the repository auto-refresh sweep above.

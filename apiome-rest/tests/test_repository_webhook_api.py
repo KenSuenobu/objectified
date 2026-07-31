@@ -388,3 +388,244 @@ def test_the_delivery_limit_is_bounded(auth_jwt) -> None:
 
     assert too_many.status_code == 422
     assert too_few.status_code == 422
+
+
+# --- Rotation endpoint (REPO-4.7, #2785) ------------------------------------------------
+
+_ROTATED_ROW = {
+    **_SUBSCRIPTION_ROW,
+    "secret_fingerprint": "aaaabbbbccccdddd",
+    "previous_secret_fingerprint": "0123456789abcdef",
+    "previous_secret_expires_at": "2026-08-01T12:00:00+00:00",
+    "rotated_at": "2026-07-31T12:00:00+00:00",
+    "rotation_count": 1,
+    "provider_secret_synced": True,
+    "rotation_error": None,
+}
+
+
+def _rotation_result(**overrides):
+    from app.repository_webhook_rotation import RotationResult
+
+    fields = {
+        "subscription": dict(_ROTATED_ROW),
+        "grace_seconds": 86400,
+        "provider_synced": True,
+        "provider_error": None,
+    }
+    fields.update(overrides)
+    return RotationResult(**fields)
+
+
+def test_rotating_reports_the_new_fingerprint_and_the_deadline(auth_jwt) -> None:
+    with (
+        patch("app.tenant_repositories_routes.db") as mdb,
+        patch("app.tenant_repositories_routes.rotate_repository_webhook_secret") as rotate,
+    ):
+        mdb.get_tenant_repository.return_value = _REPO_ROW
+        rotate.return_value = _rotation_result()
+        r = client.post(
+            f"/v1/tenants/acme/repositories/{_REPO_ID}/webhook/rotate", json={}
+        )
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["subscription"]["secretFingerprint"] == "aaaabbbbccccdddd"
+    assert body["subscription"]["previousSecretFingerprint"] == "0123456789abcdef"
+    assert body["subscription"]["previousSecretExpiresAt"] == "2026-08-01T12:00:00+00:00"
+    assert body["graceSeconds"] == 86400
+    assert body["providerSecretSynced"] is True
+
+
+def test_the_rotation_response_never_carries_a_secret(auth_jwt) -> None:
+    """Neither the new secret nor the outgoing one has anywhere to appear."""
+    poisoned = {
+        **_ROTATED_ROW,
+        "secret_enc": b"new-ciphertext",
+        "previous_secret_enc": b"old-ciphertext",
+        "secret": "plaintext-should-never-appear",
+    }
+    with (
+        patch("app.tenant_repositories_routes.db") as mdb,
+        patch("app.tenant_repositories_routes.rotate_repository_webhook_secret") as rotate,
+    ):
+        mdb.get_tenant_repository.return_value = _REPO_ROW
+        rotate.return_value = _rotation_result(subscription=poisoned)
+        r = client.post(
+            f"/v1/tenants/acme/repositories/{_REPO_ID}/webhook/rotate", json={}
+        )
+
+    assert r.status_code == 200
+    assert "new-ciphertext" not in r.text
+    assert "old-ciphertext" not in r.text
+    assert "plaintext-should-never-appear" not in r.text
+
+
+def test_a_requested_grace_window_reaches_the_rotation(auth_jwt) -> None:
+    with (
+        patch("app.tenant_repositories_routes.db") as mdb,
+        patch("app.tenant_repositories_routes.rotate_repository_webhook_secret") as rotate,
+    ):
+        mdb.get_tenant_repository.return_value = _REPO_ROW
+        rotate.return_value = _rotation_result(grace_seconds=3600)
+        r = client.post(
+            f"/v1/tenants/acme/repositories/{_REPO_ID}/webhook/rotate",
+            json={"graceSeconds": 3600},
+        )
+
+    assert r.status_code == 200
+    assert rotate.call_args.kwargs["grace_seconds"] == 3600
+
+
+def test_omitting_the_body_field_uses_the_deployment_default(auth_jwt) -> None:
+    with (
+        patch("app.tenant_repositories_routes.db") as mdb,
+        patch("app.tenant_repositories_routes.rotate_repository_webhook_secret") as rotate,
+    ):
+        mdb.get_tenant_repository.return_value = _REPO_ROW
+        rotate.return_value = _rotation_result()
+        client.post(f"/v1/tenants/acme/repositories/{_REPO_ID}/webhook/rotate", json={})
+
+    assert rotate.call_args.kwargs["grace_seconds"] is None
+
+
+def test_a_negative_grace_window_is_rejected_by_the_model(auth_jwt) -> None:
+    with patch("app.tenant_repositories_routes.db") as mdb:
+        mdb.get_tenant_repository.return_value = _REPO_ROW
+        r = client.post(
+            f"/v1/tenants/acme/repositories/{_REPO_ID}/webhook/rotate",
+            json={"graceSeconds": -1},
+        )
+
+    assert r.status_code == 422
+
+
+def test_a_rotation_the_provider_refused_is_still_a_success(auth_jwt) -> None:
+    """The new secret exists and the old one still works; the flag is where the news is."""
+    with (
+        patch("app.tenant_repositories_routes.db") as mdb,
+        patch("app.tenant_repositories_routes.rotate_repository_webhook_secret") as rotate,
+    ):
+        mdb.get_tenant_repository.return_value = _REPO_ROW
+        rotate.return_value = _rotation_result(
+            provider_synced=False, provider_error="GitHub said no"
+        )
+        r = client.post(
+            f"/v1/tenants/acme/repositories/{_REPO_ID}/webhook/rotate", json={}
+        )
+
+    assert r.status_code == 200
+    assert r.json()["providerSecretSynced"] is False
+    assert r.json()["providerError"] == "GitHub said no"
+
+
+def test_rotating_a_repository_of_another_tenant_is_a_404(auth_jwt) -> None:
+    with (
+        patch("app.tenant_repositories_routes.db") as mdb,
+        patch("app.tenant_repositories_routes.rotate_repository_webhook_secret") as rotate,
+    ):
+        mdb.get_tenant_repository.return_value = None
+        r = client.post(
+            f"/v1/tenants/acme/repositories/{_REPO_ID}/webhook/rotate", json={}
+        )
+
+    assert r.status_code == 404
+    rotate.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "code,status",
+    [
+        ("no_subscription", 404),
+        ("no_encryption_key", 409),
+        ("no_secret_to_rotate", 409),
+        ("store_failed", 500),
+    ],
+)
+def test_a_refused_rotation_maps_onto_an_honest_status(auth_jwt, code, status) -> None:
+    from app.repository_webhook_rotation import RotationError
+
+    with (
+        patch("app.tenant_repositories_routes.db") as mdb,
+        patch("app.tenant_repositories_routes.rotate_repository_webhook_secret") as rotate,
+    ):
+        mdb.get_tenant_repository.return_value = _REPO_ROW
+        rotate.side_effect = RotationError(code, "nope")
+        r = client.post(
+            f"/v1/tenants/acme/repositories/{_REPO_ID}/webhook/rotate", json={}
+        )
+
+    assert r.status_code == status
+    assert r.json()["detail"]["code"] == code
+
+
+def test_the_rotation_passes_the_registering_accounts_token(auth_jwt) -> None:
+    """A hook created under one account cannot be edited with another account's token."""
+    with (
+        patch("app.tenant_repositories_routes.db") as mdb,
+        patch("app.tenant_repositories_routes.rotate_repository_webhook_secret") as rotate,
+    ):
+        mdb.get_tenant_repository.return_value = {
+            **_REPO_ROW,
+            "linked_account_id": "aa0e8400-e29b-41d4-a716-44665544000a",
+            "created_by": _USER_ID,
+        }
+        mdb.get_external_auth_provider_for_user.return_value = {"access_token": "gh-token"}
+        rotate.return_value = _rotation_result()
+        client.post(f"/v1/tenants/acme/repositories/{_REPO_ID}/webhook/rotate", json={})
+
+    assert rotate.call_args.kwargs["access_token"] == "gh-token"
+    assert rotate.call_args.kwargs["actor_id"] == _USER_ID
+
+
+def test_a_public_url_repository_rotates_without_a_token(auth_jwt) -> None:
+    with (
+        patch("app.tenant_repositories_routes.db") as mdb,
+        patch("app.tenant_repositories_routes.rotate_repository_webhook_secret") as rotate,
+    ):
+        mdb.get_tenant_repository.return_value = _REPO_ROW  # no linked account
+        rotate.return_value = _rotation_result()
+        client.post(f"/v1/tenants/acme/repositories/{_REPO_ID}/webhook/rotate", json={})
+
+    assert rotate.call_args.kwargs["access_token"] is None
+    mdb.get_external_auth_provider_for_user.assert_not_called()
+
+
+def test_a_token_lookup_failure_does_not_block_the_rotation(auth_jwt) -> None:
+    """A rotation that can only be local is still better than a secret that never rotates."""
+    with (
+        patch("app.tenant_repositories_routes.db") as mdb,
+        patch("app.tenant_repositories_routes.rotate_repository_webhook_secret") as rotate,
+    ):
+        mdb.get_tenant_repository.return_value = {
+            **_REPO_ROW,
+            "linked_account_id": "aa0e8400-e29b-41d4-a716-44665544000a",
+            "created_by": _USER_ID,
+        }
+        mdb.get_external_auth_provider_for_user.side_effect = RuntimeError("down")
+        rotate.return_value = _rotation_result()
+        r = client.post(
+            f"/v1/tenants/acme/repositories/{_REPO_ID}/webhook/rotate", json={}
+        )
+
+    assert r.status_code == 200
+    assert rotate.call_args.kwargs["access_token"] is None
+
+
+def test_the_status_view_reports_a_rotation_in_progress(auth_jwt) -> None:
+    """The state an operator has to act on: the provider is still on the outgoing secret."""
+    with patch("app.tenant_repositories_routes.db") as mdb:
+        mdb.get_tenant_repository.return_value = _REPO_ROW
+        mdb.get_repository_webhook_subscription.return_value = {
+            **_ROTATED_ROW,
+            "provider_secret_synced": False,
+            "rotation_error": "GitHub said no",
+        }
+        mdb.list_repository_webhook_events.return_value = []
+        r = client.get(f"/v1/tenants/acme/repositories/{_REPO_ID}/webhook")
+
+    subscription = r.json()["subscription"]
+    assert subscription["providerSecretSynced"] is False
+    assert subscription["rotationError"] == "GitHub said no"
+    assert subscription["previousSecretExpiresAt"] == "2026-08-01T12:00:00+00:00"
+    assert subscription["rotationCount"] == 1

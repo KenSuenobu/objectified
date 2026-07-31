@@ -33,6 +33,14 @@ no import spec targets a PR head, so no scan of one can produce a version. A PR 
 lives in a fork is recorded and skipped — the head branch does not exist in this repository's
 tree, so there is nothing to walk under the repository's own credentials.
 
+**Two secrets during a rotation (REPO-4.7).** A subscription whose secret was rotated recently
+holds an outgoing secret as well as a current one, and a delivery signed with either verifies
+until the grace window closes. That is not a weakening of the check: both values are secrets
+this repository legitimately issued, and the alternative — a hard cutover — makes every
+delivery fail between the moment the store is updated and the moment the provider is. Which
+generation verified is recorded on the acceptance audit, so "still on the old secret" is
+visible while there is time to fix it.
+
 **Failure is loud in the ledger and quiet on the wire.** Every delivery lands in
 ``apiome.repository_webhook_event``, including the ones that verify against nothing. A
 signature that does not verify is a 401 *and* a ``workflow_audit`` row, per the ticket. A
@@ -60,7 +68,10 @@ from .repository_webhook_ingest import (
     repo_full_name_from_payload,
     verify_signature,
 )
-from .repository_webhook_subscriptions import resolve_subscription_secret
+from .repository_webhook_subscriptions import (
+    SECRET_GENERATION_CURRENT,
+    resolve_subscription_secrets,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -294,13 +305,19 @@ def _resolve_verified_subscription(
     repo_full_name: str,
     raw_body: bytes,
     headers: Mapping[str, Any],
-) -> Tuple[Optional[Dict[str, Any]], List[Dict[str, Any]]]:
+) -> Tuple[Optional[Dict[str, Any]], List[Dict[str, Any]], str]:
     """Find the subscription whose secret verifies this delivery.
 
     The same repository may be registered by more than one tenant, so every candidate is
     tried and the first whose secret verifies owns the delivery. A candidate whose secret
     cannot be recovered (no encryption key configured, or a corrupt column) never verifies —
     the failure is closed, not permissive.
+
+    Each candidate may offer **two** secrets while a REPO-4.7 rotation grace window is open:
+    the current one and the outgoing one. Both are genuine secrets of this repository — the
+    provider may not have been updated yet, and a delivery signed before the rotation may
+    still be in flight — so accepting either is correct, and which one verified is reported
+    back so the acceptance audit can say so.
 
     Args:
         db: Database handle.
@@ -310,7 +327,9 @@ def _resolve_verified_subscription(
         headers: The request headers.
 
     Returns:
-        ``(verified_subscription_or_None, all_candidates)``.
+        ``(verified_subscription_or_None, all_candidates, secret_generation)``, where the
+        generation is ``current`` / ``previous`` for a verified delivery and ``current`` when
+        nothing verified (there is no generation to name).
     """
     try:
         candidates = db.find_repository_webhook_subscriptions(provider, repo_full_name)
@@ -318,13 +337,13 @@ def _resolve_verified_subscription(
         _logger.exception(
             "repository webhook subscription lookup failed repo=%s", repo_full_name
         )
-        return None, []
+        return None, [], SECRET_GENERATION_CURRENT
 
     for candidate in candidates or []:
-        secret = resolve_subscription_secret(candidate)
-        if verify_signature(provider, secret, raw_body, headers):
-            return dict(candidate), list(candidates)
-    return None, list(candidates or [])
+        for secret, generation in resolve_subscription_secrets(candidate):
+            if verify_signature(provider, secret, raw_body, headers):
+                return dict(candidate), list(candidates), generation
+    return None, list(candidates or []), SECRET_GENERATION_CURRENT
 
 
 def _tracked_branches(db: Any, repository_id: str) -> List[str]:
@@ -506,7 +525,7 @@ def ingest_webhook_delivery(
     if not repo_full_name:
         raise ValueError("delivery does not name a repository")
 
-    subscription, candidates = _resolve_verified_subscription(
+    subscription, candidates, secret_generation = _resolve_verified_subscription(
         db,
         provider=key,
         repo_full_name=repo_full_name,
@@ -559,6 +578,17 @@ def ingest_webhook_delivery(
         raise WebhookRejectedError(
             "signature_invalid",
             "The delivery signature did not verify for this repository.",
+        )
+
+    if secret_generation != SECRET_GENERATION_CURRENT:
+        # Logged as well as audited: an ignored delivery writes no audit row, and "the
+        # provider is still on the old secret" is worth knowing before the window closes even
+        # when the delivery itself did nothing.
+        _logger.info(
+            "repository webhook delivery verified with the outgoing secret repository_id=%s "
+            "provider=%s — the provider hook has not been updated since the last rotation",
+            subscription.get("repository_id"),
+            key,
         )
 
     try:
@@ -645,6 +675,11 @@ def ingest_webhook_delivery(
                 "outcome": result.outcome,
                 "jobsEnqueued": result.jobs_enqueued,
                 "pollDue": result.poll_due,
+                # Which of the subscription's two secrets verified this delivery (REPO-4.7).
+                # `previous` means the provider is still signing with the outgoing secret and
+                # this delivery only worked because the grace window is open — the audit trail
+                # says so while there is still time to do something about it.
+                "secretGeneration": secret_generation,
             },
         )
 
