@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-_MIGRATION = "apiome-db/scripts/V200__repository_importable_json_schema_backfill.sql"
+_MIGRATION = "apiome-db/scripts/V220__repository_importable_json_schema_backfill.sql"
 
 # The recount exists so already-indexed repositories gain their JSON Schema rows without
 # re-walking a Git tree. These fragments pin the properties that make that true:

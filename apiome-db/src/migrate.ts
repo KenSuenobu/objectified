@@ -3,7 +3,8 @@
  *
  * - Scripts are named `V<version>__<description>.sql` (Flyway versioned migrations). The
  *   version is a zero-padded sequential number (`V001`, `V002`, …); parts may be separated by
- *   `.` or `_`; the description follows the `__` separator.
+ *   `.` or `_`; the description follows the `__` separator. Versions must be unique — two files
+ *   claiming one version is an error, because only one of them could ever be applied.
  * - Applied state is tracked in a Flyway-shaped history table (`flyway_schema_history`) living
  *   in the configured history schema (default `public`, which survives the app `apiome` schema
  *   being dropped by the first migration / `clean`).
@@ -71,6 +72,42 @@ export function parseMigrationName(name: string): ParsedMigration {
   return { version: match[1] ?? "", description: (match[2] ?? "").replace(/_/g, " ") };
 }
 
+/**
+ * Comparison key for a version, with each numeric part normalized so zero-padding cannot hide a
+ * collision: `V7`, `V07` and `V0.7` all key as `7`. History rows keep the raw digits (that is what
+ * `parseMigrationName` returns and what applied rows are matched on) — this key exists only to
+ * decide whether two *files* claim the same slot.
+ */
+function versionKey(version: string): string {
+  return version
+    .split(/[._]/)
+    .map((part) => String(Number(part)))
+    .join(".");
+}
+
+/**
+ * The next unused version, formatted like the file that collided (`V200` → `V221`), for the hint.
+ * Falls back to the raw number when no file has a plain integer version.
+ */
+function suggestNextVersion(files: string[], like: string): string {
+  let max = 0;
+  for (const file of files) {
+    const numeric = Number(versionKey(parseMigrationName(file).version).split(".")[0] ?? "0");
+    if (Number.isFinite(numeric) && numeric > max) max = numeric;
+  }
+  const next = String(max + 1);
+  return next.padStart(like.length, "0");
+}
+
+/**
+ * List the versioned migration scripts in `scriptsDir`, sorted by filename.
+ *
+ * Two files claiming the same version is rejected here rather than left to surface downstream:
+ * history is keyed by version, so only one of them can ever be recorded — the rest are treated as
+ * already applied and silently never run. When that happened the symptom was a checksum mismatch
+ * naming the *older* migration (the one that did apply), which sends you hunting for an edit that
+ * never happened. Fail with the collision itself instead.
+ */
 export async function listMigrationFiles(scriptsDir: string): Promise<string[]> {
   let entries: string[];
   try {
@@ -81,7 +118,36 @@ export async function listMigrationFiles(scriptsDir: string): Promise<string[]> 
       exitCode: 2,
     });
   }
-  return entries.filter(isMigrationFilename).sort();
+  const files = entries.filter(isMigrationFilename).sort();
+
+  const byVersion = new Map<string, string[]>();
+  for (const file of files) {
+    const key = versionKey(parseMigrationName(file).version);
+    const group = byVersion.get(key) ?? [];
+    group.push(file);
+    byVersion.set(key, group);
+  }
+  const duplicates = [...byVersion.entries()].filter(([, group]) => group.length > 1);
+  if (duplicates.length > 0) {
+    const detail = duplicates
+      .map(([version, group]) => `  version ${version}: ${group.join(", ")}`)
+      .join("\n");
+    const [firstVersion, firstGroup] = duplicates[0] ?? ["", []];
+    const suggestion = suggestNextVersion(files, firstVersion);
+    throw new CliError(
+      `Duplicate migration version${duplicates.length === 1 ? "" : "s"} in ${scriptsDir}:\n${detail}`,
+      {
+        hint:
+          "Migration history is keyed by version, so only one script per version is ever applied — " +
+          "the others are skipped without running. Renumber the newest to the next free version " +
+          `(V${suggestion}), keeping its description, and update any references to its filename.\n` +
+          `  git mv ${scriptsDir}/${firstGroup[1] ?? "<file>"} ` +
+          `${scriptsDir}/V${suggestion}__<description>.sql`,
+        exitCode: 2,
+      },
+    );
+  }
+  return files;
 }
 
 // ─────────────────────────────── checksum ───────────────────────────────

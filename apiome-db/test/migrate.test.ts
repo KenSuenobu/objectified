@@ -1,4 +1,8 @@
-import { describe, expect, it } from "vitest";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
   computeChecksum,
@@ -61,11 +65,59 @@ describe("computeChecksum", () => {
 });
 
 describe("listMigrationFiles", () => {
+  const tempDirs: string[] = [];
+
+  /** A throwaway scripts/ directory holding empty files with the given names. */
+  async function scriptsDirWith(...names: string[]): Promise<string> {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "apiome-db-migrations-"));
+    tempDirs.push(dir);
+    for (const name of names) await fs.writeFile(path.join(dir, name), "-- test\n");
+    return dir;
+  }
+
+  afterEach(async () => {
+    for (const dir of tempDirs.splice(0)) {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  });
+
   it("returns sorted Flyway migration filenames from scripts/", async () => {
     const files = await listMigrationFiles(new URL("../scripts", import.meta.url).pathname);
     expect(files.length).toBeGreaterThan(50);
     expect(files[0]).toMatch(/^V\d+__.+\.sql$/);
     const sorted = [...files].sort();
     expect(files).toEqual(sorted);
+  });
+
+  it("rejects two scripts claiming the same version", async () => {
+    const dir = await scriptsDirWith(
+      "V001__init.sql",
+      "V002__alpha.sql",
+      "V002__beta.sql",
+    );
+    await expect(listMigrationFiles(dir)).rejects.toThrow(
+      /Duplicate migration version[\s\S]*V002__alpha\.sql, V002__beta\.sql/,
+    );
+  });
+
+  it("names the next free version so the collision can be renumbered", async () => {
+    const dir = await scriptsDirWith("V200__alpha.sql", "V200__beta.sql", "V219__later.sql");
+    await expect(listMigrationFiles(dir)).rejects.toMatchObject({
+      hint: expect.stringContaining("V220"),
+    });
+  });
+
+  it("sees through zero-padding when comparing versions", async () => {
+    const dir = await scriptsDirWith("V7__alpha.sql", "V007__beta.sql");
+    await expect(listMigrationFiles(dir)).rejects.toThrow(/Duplicate migration version/);
+  });
+
+  it("accepts distinct versions that only look similar", async () => {
+    const dir = await scriptsDirWith("V1__alpha.sql", "V1_1__beta.sql", "V11__gamma.sql");
+    await expect(listMigrationFiles(dir)).resolves.toEqual([
+      "V11__gamma.sql",
+      "V1_1__beta.sql",
+      "V1__alpha.sql",
+    ]);
   });
 });
