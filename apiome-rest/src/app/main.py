@@ -118,7 +118,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.88.0",
+    version="1.89.0",
 )
 
 
@@ -390,6 +390,7 @@ _mcp_discovery_task: asyncio.Task | None = None
 _mcp_catalog_digest_task: asyncio.Task | None = None
 _lint_waiver_expiry_task: asyncio.Task | None = None
 _async_job_retention_task: asyncio.Task | None = None
+_repository_webhook_secret_task: asyncio.Task | None = None
 
 
 @app.on_event("startup")
@@ -667,6 +668,37 @@ async def startup_event():
             except Exception:
                 log.exception("async job retention sweep")
 
+    async def _repository_webhook_secret_sweep() -> None:
+        """Periodically close webhook signing-secret rotation windows (REPO-4.7, #2785).
+
+        Each tick retries the provider hook update for rotations that have not reached their
+        provider yet, then retires every outgoing secret whose grace window has closed. The
+        retirement claim is atomic across replicas (``FOR UPDATE SKIP LOCKED``), so each old
+        secret is retired — and audited — exactly once no matter how many instances sweep.
+        Runs on a dedicated DB connection like the other sweeps.
+        """
+        log = logging.getLogger(__name__)
+        while True:
+            await asyncio.sleep(300)
+            try:
+
+                def _run_secret_sweep() -> dict:
+                    thread_db = Database()
+                    try:
+                        from .repository_webhook_secret_sweep import (
+                            process_repository_webhook_secret_sweep,
+                        )
+
+                        return process_repository_webhook_secret_sweep(thread_db)
+                    finally:
+                        thread_db.close()
+
+                await asyncio.to_thread(_run_secret_sweep)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                log.exception("repository webhook secret rotation sweep")
+
     global _webhook_delivery_task
     _webhook_delivery_task = asyncio.create_task(_webhook_delivery_sweep())
     global _repository_file_scan_task
@@ -683,6 +715,10 @@ async def startup_event():
     _lint_waiver_expiry_task = asyncio.create_task(_lint_waiver_expiry_sweep())
     global _async_job_retention_task
     _async_job_retention_task = asyncio.create_task(_async_job_retention_sweep())
+    global _repository_webhook_secret_task
+    _repository_webhook_secret_task = asyncio.create_task(
+        _repository_webhook_secret_sweep()
+    )
 
 
 @app.on_event("shutdown")
@@ -752,6 +788,14 @@ async def shutdown_event():
         except asyncio.CancelledError:
             pass
         _async_job_retention_task = None
+    global _repository_webhook_secret_task
+    if _repository_webhook_secret_task is not None:
+        _repository_webhook_secret_task.cancel()
+        try:
+            await _repository_webhook_secret_task
+        except asyncio.CancelledError:
+            pass
+        _repository_webhook_secret_task = None
     db.close()
 
 

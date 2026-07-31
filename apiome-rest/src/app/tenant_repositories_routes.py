@@ -31,6 +31,8 @@ from .models import (
     RepositoryRefreshNowRequest,
     RepositoryRefreshNowResponse,
     RepositoryWebhookEventOut,
+    RepositoryWebhookRotateRequest,
+    RepositoryWebhookRotateResponse,
     RepositoryWebhookStatusResponse,
     RepositoryWebhookSubscriptionOut,
     TenantRepositoryCreate,
@@ -45,6 +47,11 @@ from .models import (
 )
 from .repository_refresh_audit import RefreshOutcome, RefreshTrigger
 from .repository_file_scan import _github_owner_repo, fetch_github_repository_file_text
+from .repository_webhook_rotation import (
+    RotationError,
+    resolve_linked_account_token,
+    rotate_repository_webhook_secret,
+)
 from .repository_webhook_subscriptions import (
     describe_subscription,
     provision_repository_webhook,
@@ -844,6 +851,89 @@ async def get_tenant_repository_webhook(
             )
             for e in events
         ],
+    )
+
+
+@router.post(
+    "/{tenant_slug}/repositories/{repository_id}/webhook/rotate",
+    response_model=RepositoryWebhookRotateResponse,
+    response_model_by_alias=True,
+)
+async def rotate_tenant_repository_webhook_secret(
+    tenant_slug: str,
+    repository_id: uuid.UUID,
+    payload: RepositoryWebhookRotateRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryWebhookRotateResponse:
+    """Rotate a repository's webhook signing secret (REPO-4.7, #2785).
+
+    Mints a new secret, keeps the outgoing one verifying for a grace window (24h by default),
+    and updates the provider's hook to the new secret. The old secret expires on its own — the
+    background sweep retires it when the window closes, and keeps retrying the provider update
+    until then.
+
+    **No secret is returned**, new or old. There is nothing for an operator to copy: when the
+    provider hook is ours to edit we edit it, and when it is not (``providerSecretSynced``
+    false) the rotation is recorded with the reason so it can be repaired at the provider.
+    The response carries fingerprints and a deadline, which is what an operator actually needs
+    to answer "which secret is where, and how long do I have".
+
+    A rotation that reached the store is a success even when the provider could not be
+    updated: the new secret exists, the old one still works, and rolling the store back would
+    leave the tenant with an unchanged, aging secret and no record that anybody tried.
+    ``providerSecretSynced`` is where that distinction lives, not the status code.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        repository_id: The repository whose subscription to rotate.
+        payload: Optional grace-window override.
+        auth_data: Authenticated principal; supplies the tenant scope and the audit actor.
+
+    Returns:
+        The rotated subscription projection, the applied grace window, and whether the
+        provider hook now holds the new secret.
+
+    Raises:
+        HTTPException: 404 when the repository does not belong to the tenant or has no
+            webhook subscription; 409 when the deployment cannot store a rotated secret
+            (no encryption key, or a subscription that never held one); 500 when the store
+            refused the write.
+    """
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.EDIT)
+    _ = tenant_slug
+    tenant_id = str(auth_data["tenant_id"])
+    rid = str(repository_id)
+
+    repo_row = db.get_tenant_repository(tenant_id, rid)
+    if not repo_row:
+        raise HTTPException(status_code=404, detail="repository not found")
+
+    try:
+        result = rotate_repository_webhook_secret(
+            db,
+            tenant_id=tenant_id,
+            repository_id=rid,
+            grace_seconds=payload.grace_seconds,
+            actor_id=get_authenticated_user_id(auth_data),
+            access_token=resolve_linked_account_token(db, repo_row),
+        )
+    except RotationError as exc:
+        status = {
+            "no_subscription": 404,
+            "no_encryption_key": 409,
+            "no_secret_to_rotate": 409,
+        }.get(exc.code, 500)
+        raise HTTPException(
+            status_code=status, detail={"code": exc.code, "message": str(exc)}
+        ) from exc
+
+    projection = describe_subscription(result.subscription)
+    return RepositoryWebhookRotateResponse(
+        success=True,
+        subscription=RepositoryWebhookSubscriptionOut(**projection),
+        grace_seconds=result.grace_seconds,
+        provider_secret_synced=result.provider_synced,
+        provider_error=result.provider_error,
     )
 
 

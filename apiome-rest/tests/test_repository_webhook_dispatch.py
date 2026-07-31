@@ -15,6 +15,7 @@ its own contract with the real schema is pinned by ``test_repository_webhook_mig
 import hashlib
 import hmac
 import json
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 import pytest
@@ -70,7 +71,7 @@ class FakeDb:
                     "repository_id": _REPO_ID,
                     "provider": "github",
                     "repo_full_name": _REPO,
-                    # Not real ciphertext: resolve_subscription_secret is patched per test.
+                    # Not real ciphertext: decryption is patched per test.
                     "secret_enc": b"ciphertext",
                     "pr_preview_enabled": True,
                 }
@@ -140,12 +141,26 @@ class FakeDb:
         return [e["outcome"] for e in self.events]
 
 
+def _fake_decrypt(mapping: Dict[bytes, Optional[str]]):
+    """Build a ``decrypt_signing_secret`` stand-in from a ciphertext → plaintext map.
+
+    Patched at the crypto boundary rather than at the resolver, so every test runs the real
+    :func:`app.repository_webhook_subscriptions.resolve_subscription_secrets` — including its
+    REPO-4.7 grace-window arithmetic — instead of a stub that would agree with itself.
+    """
+
+    def _decrypt(blob):
+        return mapping.get(bytes(blob))
+
+    return _decrypt
+
+
 @pytest.fixture(autouse=True)
 def _secret_always_recovers(monkeypatch):
     """Decrypt the fake ciphertext to the known secret, so tests exercise verification."""
     monkeypatch.setattr(
-        "app.repository_webhook_dispatch.resolve_subscription_secret",
-        lambda row: (_SECRET if row.get("secret_enc") else None),
+        "app.repository_webhook_subscriptions.decrypt_signing_secret",
+        _fake_decrypt({b"ciphertext": _SECRET}),
     )
 
 
@@ -475,7 +490,7 @@ def test_a_tampered_body_does_not_verify_against_its_own_signature() -> None:
 def test_a_subscription_whose_secret_cannot_be_recovered_never_verifies(monkeypatch) -> None:
     """A deployment with no encryption key rejects deliveries rather than trusting them."""
     monkeypatch.setattr(
-        "app.repository_webhook_dispatch.resolve_subscription_secret", lambda row: None
+        "app.repository_webhook_subscriptions.decrypt_signing_secret", lambda blob: None
     )
     db = FakeDb()
     body, headers = _signed(_push())
@@ -512,8 +527,8 @@ def test_the_first_matching_secret_owns_a_delivery_for_a_doubly_registered_repos
         ]
     )
     monkeypatch.setattr(
-        "app.repository_webhook_dispatch.resolve_subscription_secret",
-        lambda row: (_SECRET if row["secret_enc"] == b"ours" else "different"),
+        "app.repository_webhook_subscriptions.decrypt_signing_secret",
+        _fake_decrypt({b"ours": _SECRET, b"other": "different"}),
     )
     body, headers = _signed(_push())
 
@@ -675,3 +690,106 @@ def test_a_subscription_lookup_failure_degrades_to_ignoring_the_delivery() -> No
 
     assert result.outcome == OUTCOME_IGNORED
     assert result.reason == REASON_NO_SUBSCRIPTION
+
+
+# --- Rotation grace window (REPO-4.7, #2785) ---------------------------------------------
+
+_NEW_SECRET = "rotated-secret"
+
+
+def _rotating_db(*, expires_in: timedelta) -> FakeDb:
+    """A subscription mid-rotation: a new current secret, the old one still inside its window."""
+    return FakeDb(
+        subscriptions=[
+            {
+                "id": _SUB_ID,
+                "tenant_id": _TENANT,
+                "repository_id": _REPO_ID,
+                "provider": "github",
+                "repo_full_name": _REPO,
+                "secret_enc": b"new-cipher",
+                "previous_secret_enc": b"old-cipher",
+                "previous_secret_expires_at": datetime.now(timezone.utc) + expires_in,
+                "pr_preview_enabled": True,
+            }
+        ]
+    )
+
+
+@pytest.fixture
+def _rotated_secrets(monkeypatch):
+    """Both ciphertexts decrypt, so the grace-window arithmetic is what decides."""
+    monkeypatch.setattr(
+        "app.repository_webhook_subscriptions.decrypt_signing_secret",
+        _fake_decrypt({b"new-cipher": _NEW_SECRET, b"old-cipher": _SECRET}),
+    )
+
+
+def test_a_delivery_signed_with_the_new_secret_verifies(_rotated_secrets) -> None:
+    db = _rotating_db(expires_in=timedelta(hours=6))
+    body, headers = _signed(_push(), secret=_NEW_SECRET)
+
+    result = ingest_webhook_delivery(db, provider="github", raw_body=body, headers=headers)
+
+    assert result.outcome == OUTCOME_ENQUEUED
+
+
+def test_a_delivery_signed_with_the_outgoing_secret_still_verifies(_rotated_secrets) -> None:
+    """Acceptance criterion 1: the provider may not have been updated yet."""
+    db = _rotating_db(expires_in=timedelta(hours=6))
+    body, headers = _signed(_push(), secret=_SECRET)
+
+    result = ingest_webhook_delivery(db, provider="github", raw_body=body, headers=headers)
+
+    assert result.outcome == OUTCOME_ENQUEUED
+    assert db.scan_jobs == [(_TENANT, _REPO_ID, "main")]
+
+
+def test_an_acceptance_records_which_secret_verified_it(_rotated_secrets) -> None:
+    """"Still on the old secret" must be visible while there is time to fix it."""
+    db = _rotating_db(expires_in=timedelta(hours=6))
+    body, headers = _signed(_push(), secret=_SECRET)
+
+    ingest_webhook_delivery(db, provider="github", raw_body=body, headers=headers)
+
+    accepted = [a for a in db.audits if a["action"] == WEBHOOK_ACCEPTED_ACTION]
+    assert accepted[0]["detail"]["secretGeneration"] == "previous"
+
+
+def test_an_ordinary_acceptance_names_the_current_secret(_rotated_secrets) -> None:
+    db = _rotating_db(expires_in=timedelta(hours=6))
+    body, headers = _signed(_push(), secret=_NEW_SECRET)
+
+    ingest_webhook_delivery(db, provider="github", raw_body=body, headers=headers)
+
+    accepted = [a for a in db.audits if a["action"] == WEBHOOK_ACCEPTED_ACTION]
+    assert accepted[0]["detail"]["secretGeneration"] == "current"
+
+
+def test_the_outgoing_secret_stops_verifying_when_the_window_closes(_rotated_secrets) -> None:
+    """Acceptance criterion 2: expiry is what makes rotation worth doing."""
+    db = _rotating_db(expires_in=timedelta(seconds=-1))
+    body, headers = _signed(_push(), secret=_SECRET)
+
+    with pytest.raises(WebhookRejectedError):
+        ingest_webhook_delivery(db, provider="github", raw_body=body, headers=headers)
+
+    assert db.outcomes() == [OUTCOME_REJECTED]
+
+
+def test_the_new_secret_still_verifies_after_the_window_closes(_rotated_secrets) -> None:
+    db = _rotating_db(expires_in=timedelta(seconds=-1))
+    body, headers = _signed(_push(), secret=_NEW_SECRET)
+
+    result = ingest_webhook_delivery(db, provider="github", raw_body=body, headers=headers)
+
+    assert result.outcome == OUTCOME_ENQUEUED
+
+
+def test_a_third_secret_never_verifies_during_a_rotation(_rotated_secrets) -> None:
+    """Two secrets, not "any secret": a rotation widens the window, not the door."""
+    db = _rotating_db(expires_in=timedelta(hours=6))
+    body, headers = _signed(_push(), secret="attacker-secret")
+
+    with pytest.raises(WebhookRejectedError):
+        ingest_webhook_delivery(db, provider="github", raw_body=body, headers=headers)

@@ -78,14 +78,68 @@ Each repository gets its own 256-bit secret, minted at registration time and sto
 encrypted (`APIOME_WEBHOOK_SIGNING_SECRET_ENCRYPTION_KEY`) in
 `apiome.repository_webhook_subscription`.
 
-* **Write-once.** A database trigger refuses any UPDATE that would change `secret_enc` once
-  it is set, or repoint a subscription at another repository or tenant. Rotation is
-  delete-and-recreate, which is visible in the ledger.
+* **Changeable only by rotation.** A database trigger refuses any UPDATE that changes
+  `secret_enc` other than as a well-formed rotation — one that simultaneously carries the
+  outgoing secret into `previous_secret_enc` and attaches a deadline to it (see below). It
+  also refuses any UPDATE that would repoint a subscription at another repository or tenant,
+  or rewind its rotation count.
 * **Never returned.** No REST response carries it. The subscription projection carries a
   truncated SHA-256 `secretFingerprint`, which lets an operator confirm the provider holds
   the same secret without either side revealing it.
 * **No key configured?** `secret_enc` is NULL and every delivery for that repository is
   rejected. Verification fails closed rather than accepting on trust.
+
+## Rotating the signing secret
+
+REPO-4.7 (#2785). A secret that has been in a provider's hook configuration since the
+repository was registered is an audit finding waiting to be written down, and the only safe
+way to change one is to have two of them for a while:
+
+```
+POST /v1/tenants/{tenant}/repositories/{repositoryId}/webhook/rotate
+{ "graceSeconds": 86400 }        // optional; the deployment default is 24h
+```
+
+1. A new secret is minted and stored, **carrying the outgoing one into a grace window** in the
+   same statement. There is no statement in the system that can replace a secret without
+   leaving the displaced one verifying.
+2. The provider's hook is updated to the new secret. This needs a linked-account token with
+   `admin:repo_hook` and a configured `APIOME_REPOSITORY_WEBHOOK_BASE_URL`; when it succeeds,
+   `providerSecretSynced` is true and the window is belt-and-braces.
+3. **Both secrets verify** until the window closes. A delivery signed with the outgoing secret
+   is accepted, and the acceptance audit records `secretGeneration: "previous"` so "the
+   provider is still on the old secret" is visible while there is time to act.
+4. When the window closes, a background sweep clears the outgoing secret. From that moment a
+   delivery signed with it is a `401` like any other bad signature.
+
+The database is written **before** the provider, deliberately. The other order has a failure
+mode nothing can rescue — a provider signing with a secret this deployment never stored — while
+this order's worst case is a provider still signing with the outgoing secret, which verifies
+for the whole window.
+
+The response and the status view carry no secret, only fingerprints:
+
+| Field | Meaning |
+|---|---|
+| `secretFingerprint` | The current secret. |
+| `previousSecretFingerprint` | The outgoing secret, while its window is open. |
+| `previousSecretExpiresAt` | When the outgoing secret stops verifying. |
+| `providerSecretSynced` | Whether the provider's hook holds the *current* secret. |
+| `rotationError` | Why it does not, when it does not. |
+| `rotationCount` | How many times this subscription has been rotated. |
+
+`providerSecretSynced: false` with a near `previousSecretExpiresAt` is the state that needs an
+operator: the provider is still signing with a secret that is about to be retired. The sweep
+retries the provider update on every tick for as long as the window is open, so a token
+re-linked with `admin:repo_hook` fixes it without a second rotation.
+
+Every rotation writes a `repository.webhook_secret_rotated` audit row (naming both secrets by
+fingerprint, plus the deadline), and every expiry writes
+`repository.webhook_secret_rotation_expired`.
+
+Rotation is refused, with nothing changed, when the deployment has no encryption key or the
+subscription never held a secret — storing a NULL ciphertext would take a working endpoint to
+rejecting every delivery.
 
 ## Registration
 
@@ -133,3 +187,6 @@ than queuing a second scan.
 | `APIOME_REPOSITORY_WEBHOOK_PR_PREVIEW` | `true` | Deployment-wide gate on PR preview scans; overrides the per-subscription flag. |
 | `APIOME_REPOSITORY_WEBHOOK_BASE_URL` | *(unset)* | Public base URL deliveries arrive at, e.g. `https://api.apiome.dev`. Required to auto-create a provider hook and to show an operator the URL to paste. |
 | `APIOME_WEBHOOK_SIGNING_SECRET_ENCRYPTION_KEY` | *(unset)* | Fernet key protecting the stored secrets. Without it, verification fails closed. |
+| `APIOME_REPOSITORY_WEBHOOK_SECRET_GRACE_SECONDS` | `86400` | Default rotation grace window — how long the outgoing secret keeps verifying. |
+| `APIOME_REPOSITORY_WEBHOOK_SECRET_MIN_GRACE_SECONDS` | `300` | Floor for a requested window. Zero would make rotation a hard cutover. |
+| `APIOME_REPOSITORY_WEBHOOK_SECRET_MAX_GRACE_SECONDS` | `604800` | Ceiling for a requested window. A retired secret that verifies for a month is the finding rotation exists to close. |

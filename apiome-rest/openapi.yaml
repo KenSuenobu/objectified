@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.88.0
+  version: 1.89.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -34280,6 +34280,105 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for get tenant repository webhookresponse422.
+  /v1/tenants/{tenant_slug}/repositories/{repository_id}/webhook/rotate:
+    post:
+      tags:
+      - tenant-repositories
+      summary: Rotate Tenant Repository Webhook Secret
+      description: "Rotate a repository's webhook signing secret (REPO-4.7, #2785).\n\
+        \nMints a new secret, keeps the outgoing one verifying for a grace window\
+        \ (24h by default),\nand updates the provider's hook to the new secret. The\
+        \ old secret expires on its own — the\nbackground sweep retires it when the\
+        \ window closes, and keeps retrying the provider update\nuntil then.\n\n**No\
+        \ secret is returned**, new or old. There is nothing for an operator to copy:\
+        \ when the\nprovider hook is ours to edit we edit it, and when it is not (``providerSecretSynced``\n\
+        false) the rotation is recorded with the reason so it can be repaired at the\
+        \ provider.\nThe response carries fingerprints and a deadline, which is what\
+        \ an operator actually needs\nto answer \"which secret is where, and how long\
+        \ do I have\".\n\nA rotation that reached the store is a success even when\
+        \ the provider could not be\nupdated: the new secret exists, the old one still\
+        \ works, and rolling the store back would\nleave the tenant with an unchanged,\
+        \ aging secret and no record that anybody tried.\n``providerSecretSynced``\
+        \ is where that distinction lives, not the status code.\n\nArgs:\n    tenant_slug:\
+        \ Tenant slug from the path (scoping comes from the token).\n    repository_id:\
+        \ The repository whose subscription to rotate.\n    payload: Optional grace-window\
+        \ override.\n    auth_data: Authenticated principal; supplies the tenant scope\
+        \ and the audit actor.\n\nReturns:\n    The rotated subscription projection,\
+        \ the applied grace window, and whether the\n    provider hook now holds the\
+        \ new secret.\n\nRaises:\n    HTTPException: 404 when the repository does\
+        \ not belong to the tenant or has no\n        webhook subscription; 409 when\
+        \ the deployment cannot store a rotated secret\n        (no encryption key,\
+        \ or a subscription that never held one); 500 when the store\n        refused\
+        \ the write."
+      operationId: rotate_tenant_repository_webhook_secret_v1_tenants__tenant_slug__repositories__repository_id__webhook_rotate_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: repository_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Repository Id
+          description: Repository Id schema.
+        description: Connected repository identifier.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Rotate Tenant Repository Webhook Secretauthorization schema.
+          - type: 'null'
+            description: Rotate Tenant Repository Webhook Secretauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Rotate Tenant Repository Webhook Secret Xapikey schema.
+          - type: 'null'
+            description: Rotate Tenant Repository Webhook Secret Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepositoryWebhookRotateRequest'
+              description: Request body for rotate tenant repository webhook secretrequest.
+        description: Request body for rotate tenant repository webhook secret.
+      responses:
+        '200':
+          description: Successful response for rotate tenant repository webhook secret.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepositoryWebhookRotateResponse'
+                description: Response payload for rotate tenant repository webhook
+                  secretresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for rotate tenant repository webhook
+                  secretresponse422.
   /v1/tenants/{tenant_slug}/repositories/{repository_id}/refresh:
     post:
       tags:
@@ -75573,6 +75672,88 @@ components:
         stops retrying; anything richer would be a side channel describing a tenant''s
 
         repositories to whoever can reach the endpoint.'
+    RepositoryWebhookRotateRequest:
+      properties:
+        graceSeconds:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Request body for repository webhook rotate.
+          - type: 'null'
+            description: Request body for repository webhook rotate.
+          title: Graceseconds
+          description: How long the outgoing secret keeps verifying deliveries. Omit
+            for the deployment default (24h). Clamped to the deployment's configured
+            bounds.
+      type: object
+      title: RepositoryWebhookRotateRequest
+      description: 'Ask for a repository''s signing secret to be rotated (REPO-4.7,
+        #2785).
+
+
+        The body carries at most a grace window, and even that is optional: rotating
+        with the
+
+        deployment default is the case that should be one click. A requested window
+        outside the
+
+        deployment''s bounds is clamped rather than rejected — a rotation refused
+        on a validation
+
+        technicality is a rotation that does not happen, which is the failure this
+        ticket exists
+
+        to prevent.'
+    RepositoryWebhookRotateResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          default: true
+          description: Success.
+          example: false
+        subscription:
+          $ref: '#/components/schemas/RepositoryWebhookSubscriptionOut'
+          description: Subscription.
+        graceSeconds:
+          type: integer
+          title: Graceseconds
+          description: The grace window actually applied, after clamping.
+          example: 1
+        providerSecretSynced:
+          type: boolean
+          title: Providersecretsynced
+          description: 'Whether the provider''s hook was updated to the new secret.
+            False means the grace window is load-bearing: the provider is still signing
+            with the outgoing secret, and deliveries will start failing when the window
+            closes unless the hook is updated (the background sweep keeps retrying
+            until then).'
+          example: false
+        providerError:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook rotate.
+          - type: 'null'
+            description: Response payload for repository webhook rotate.
+          title: Providererror
+          description: Why the provider hook could not be updated, when it could not
+            be.
+      type: object
+      required:
+      - subscription
+      - graceSeconds
+      - providerSecretSynced
+      title: RepositoryWebhookRotateResponse
+      description: 'What a rotation did (REPO-4.7, #2785).
+
+
+        Carries no secret — new or old. The new secret exists only server-side and
+        in the
+
+        provider''s hook configuration; what a client gets is the fingerprint of each,
+        which is
+
+        enough to tell the two apart and useless to anyone who intercepts it.'
     RepositoryWebhookStatusResponse:
       properties:
         success:
@@ -75647,6 +75828,50 @@ components:
             description: Response payload for repository webhook subscription.
           title: Secretfingerprint
           description: Secret Fingerprint.
+        previousSecretFingerprint:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Previoussecretfingerprint
+          description: Previous Secret Fingerprint.
+        previousSecretExpiresAt:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Previoussecretexpiresat
+          description: Previous Secret Expires At.
+        rotatedAt:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Rotatedat
+          description: Rotated At.
+        rotationCount:
+          type: integer
+          title: Rotationcount
+          default: 0
+          description: Number of rotation.
+          example: 1
+        providerSecretSynced:
+          type: boolean
+          title: Providersecretsynced
+          default: true
+          description: Provider Secret Synced.
+          example: false
+        rotationError:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Rotationerror
+          description: Rotation Error.
         prPreviewEnabled:
           type: boolean
           title: Prpreviewenabled
@@ -75726,16 +75951,29 @@ components:
         Every field here is deliberately non-sensitive. The signing secret has **no**
         field on
 
-        this model: it is written once at registration time, kept Fernet-encrypted,
-        and used only
+        this model: it is minted server-side, kept Fernet-encrypted, and used only
+        to verify an
 
-        to verify an inbound delivery. ``secret_fingerprint`` is a truncated SHA-256
-        of it, which
+        inbound delivery. ``secret_fingerprint`` is a truncated SHA-256 of it, which
+        lets an
 
-        lets an operator confirm the provider holds the same secret without either
-        side
+        operator confirm the provider holds the same secret without either side revealing
+        it.
 
-        revealing it.'
+
+        Rotation (REPO-4.7, #2785) adds a second set of the same non-sensitive facts:
+
+        ``previous_secret_fingerprint`` names the outgoing secret, ``previous_secret_expires_at``
+
+        is when it stops verifying, and ``provider_secret_synced`` says whether the
+        provider''s
+
+        hook has caught up. ``provider_secret_synced`` false with a near
+
+        ``previous_secret_expires_at`` is the state that needs an operator: the provider
+        is still
+
+        signing with a secret that is about to be retired.'
     RequestBodyContentTypeRequest:
       properties:
         media_type:
@@ -76227,7 +76465,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-07-31T19:49:12Z'
+          example: '2026-07-31T21:38:04Z'
       additionalProperties: false
       type: object
       required:
@@ -85725,13 +85963,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-07-31T19:49:12Z'
+          example: '2026-07-31T21:38:04Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-07-31T19:49:12Z'
+          example: '2026-07-31T21:38:04Z'
         outcome:
           anyOf:
           - type: string

@@ -68,6 +68,41 @@ REPOSITORY_FILE_IMPORTABLE_SQL = """(
           )
         )"""
 
+#: The repository-webhook subscription columns that may be read outside verification
+#: (REPO-4.3, #2781; rotation columns added by REPO-4.7, #2785).
+#:
+#: Neither ``secret_enc`` nor ``previous_secret_enc`` appears here, and that is the whole
+#: point: every REST-facing read and every ``RETURNING`` clause in the subscription DAO shares
+#: this one list, so a ciphertext cannot reach a response through a projection somebody
+#: extended in a hurry. The single place that needs the ciphertext —
+#: :meth:`Database.find_repository_webhook_subscriptions`, which verifies signatures — names
+#: those columns explicitly.
+REPOSITORY_WEBHOOK_SUBSCRIPTION_COLUMNS = """id, tenant_id, repository_id, provider, repo_full_name,
+                      secret_fingerprint, pr_preview_enabled, provider_hook_id,
+                      registration_state, registration_error, last_event_at,
+                      last_delivery_id, event_count, previous_secret_fingerprint,
+                      previous_secret_expires_at, rotated_at, rotation_count,
+                      provider_secret_synced, rotation_error, created_at, updated_at"""
+
+
+def _bounded_limit(limit: Optional[int], *, default: int = 100, ceiling: int = 1000) -> int:
+    """Clamp a caller-supplied row limit into a range a sweep can afford (REPO-4.7).
+
+    ``limit or default`` would fold an explicit 0 into the default; ``None`` is the only value
+    that means "unspecified", the same rule
+    :meth:`Database.list_repository_webhook_events` follows.
+
+    Args:
+        limit: The requested row cap, or ``None`` for the default.
+        default: Used when ``limit`` is ``None``.
+        ceiling: The largest cap a caller may ask for.
+
+    Returns:
+        The clamped limit, at least 1.
+    """
+    requested = default if limit is None else int(limit)
+    return max(1, min(ceiling, requested))
+
 
 def normalize_email(email: str) -> str:
     """Canonicalize an email address to the stored/indexed form: trimmed and lower-cased.
@@ -14625,10 +14660,7 @@ class Database:
             )
             VALUES (%s::uuid, %s::uuid, %s, %s, %s, %s, %s)
             ON CONFLICT (repository_id) DO NOTHING
-            RETURNING id, tenant_id, repository_id, provider, repo_full_name,
-                      secret_fingerprint, pr_preview_enabled, provider_hook_id,
-                      registration_state, registration_error, last_event_at,
-                      last_delivery_id, event_count, created_at, updated_at
+            RETURNING """ + REPOSITORY_WEBHOOK_SUBSCRIPTION_COLUMNS + """
         """
         params = (
             tenant_id,
@@ -14667,12 +14699,9 @@ class Database:
             The subscription row, or ``None`` when the repository has none.
         """
         q = """
-            SELECT s.id, s.tenant_id, s.repository_id, s.provider, s.repo_full_name,
-                   s.secret_fingerprint, s.pr_preview_enabled, s.provider_hook_id,
-                   s.registration_state, s.registration_error, s.last_event_at,
-                   s.last_delivery_id, s.event_count, s.created_at, s.updated_at
-            FROM apiome.repository_webhook_subscription s
-            WHERE s.repository_id = %s::uuid AND s.tenant_id = %s::uuid
+            SELECT """ + REPOSITORY_WEBHOOK_SUBSCRIPTION_COLUMNS + """
+            FROM apiome.repository_webhook_subscription
+            WHERE repository_id = %s::uuid AND tenant_id = %s::uuid
             LIMIT 1
         """
         rows = self.execute_query(q, (repository_id, tenant_id))
@@ -14686,7 +14715,10 @@ class Database:
         The unauthenticated ingestion endpoint has only the payload's repository name, so the
         same repository registered by two tenants yields two candidates; the signature then
         decides which one owns the delivery. This is the one query that *does* select
-        ``secret_enc``, because verifying is the only thing the secret is for.
+        ``secret_enc``, because verifying is the only thing the secret is for. It also selects
+        ``previous_secret_enc`` and its expiry (REPO-4.7): during a rotation grace window a
+        delivery signed with the outgoing secret is still this repository's delivery, and the
+        caller — not this query — decides whether the window is still open.
 
         Soft-deleted repositories are excluded: a repository a tenant has removed must not
         keep driving scans because a provider hook was left behind.
@@ -14702,6 +14734,8 @@ class Database:
             SELECT s.id, s.tenant_id, s.repository_id, s.provider, s.repo_full_name,
                    s.secret_enc, s.secret_fingerprint, s.pr_preview_enabled,
                    s.provider_hook_id, s.registration_state, s.event_count,
+                   s.previous_secret_enc, s.previous_secret_fingerprint,
+                   s.previous_secret_expires_at, s.provider_secret_synced,
                    r.default_branch, r.repository_full_name, r.status
             FROM apiome.repository_webhook_subscription s
             INNER JOIN apiome.tenant_repositories r ON r.id = s.repository_id
@@ -14740,10 +14774,7 @@ class Database:
                 registration_error = %s,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = %s::uuid
-            RETURNING id, tenant_id, repository_id, provider, repo_full_name,
-                      secret_fingerprint, pr_preview_enabled, provider_hook_id,
-                      registration_state, registration_error, last_event_at,
-                      last_delivery_id, event_count, created_at, updated_at
+            RETURNING """ + REPOSITORY_WEBHOOK_SUBSCRIPTION_COLUMNS + """
         """
         conn = self.connect()
         try:
@@ -14763,6 +14794,222 @@ class Database:
         except Exception as e:
             conn.rollback()
             raise e
+
+    # ── Signing-secret rotation (REPO-4.7, #2785) ─────────────────────────────
+
+    def rotate_repository_webhook_secret(
+        self,
+        subscription_id: str,
+        *,
+        secret_enc: Optional[bytes],
+        secret_fingerprint: Optional[str],
+        grace_seconds: int,
+    ) -> Optional[Dict[str, Any]]:
+        """Install a new signing secret and open a grace window on the old one (REPO-4.7).
+
+        One statement, because the two halves must not be separable: the outgoing secret is
+        carried into ``previous_secret_enc`` and given a deadline in the same UPDATE that
+        installs the new one. The ``repository_webhook_secret_guard`` trigger enforces exactly
+        that shape, so no other statement in the system can change a secret at all — a
+        rotation is the only legal way, and a rotation always leaves the displaced key
+        verifying until its window closes.
+
+        ``provider_secret_synced`` drops to FALSE here rather than in a later update: from the
+        moment the row carries a new secret, the provider is by definition holding an older
+        one until somebody proves otherwise. The caller sets it back to TRUE when the provider
+        confirms the hook was updated.
+
+        Args:
+            subscription_id: The subscription to rotate.
+            secret_enc: Fernet ciphertext of the **new** secret. ``None`` is refused (a
+                deployment with no encryption key cannot rotate — see
+                :func:`app.repository_webhook_rotation.rotate_repository_webhook_secret`,
+                which checks before calling).
+            secret_fingerprint: Truncated SHA-256 of the new plaintext secret.
+            grace_seconds: How long the outgoing secret keeps verifying.
+
+        Returns:
+            The updated row (no ciphertext in the projection), or ``None`` when the
+            subscription is gone or has no secret to rotate.
+
+        Raises:
+            ValueError: When ``secret_enc`` is missing — rotating to "no secret" would take a
+                working endpoint to failing-closed for every delivery.
+        """
+        if not secret_enc:
+            raise ValueError("cannot rotate a webhook signing secret to an empty value")
+
+        q = """
+            UPDATE apiome.repository_webhook_subscription
+            SET previous_secret_enc = secret_enc,
+                previous_secret_fingerprint = secret_fingerprint,
+                previous_secret_expires_at = CURRENT_TIMESTAMP + (%s || ' seconds')::interval,
+                secret_enc = %s,
+                secret_fingerprint = %s,
+                rotated_at = CURRENT_TIMESTAMP,
+                rotation_count = rotation_count + 1,
+                provider_secret_synced = FALSE,
+                rotation_error = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s::uuid AND secret_enc IS NOT NULL
+            RETURNING """ + REPOSITORY_WEBHOOK_SUBSCRIPTION_COLUMNS + """
+        """
+        params = (
+            str(max(0, int(grace_seconds))),
+            psycopg2.Binary(secret_enc),
+            secret_fingerprint,
+            subscription_id,
+        )
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(q, params)
+                row = cursor.fetchone()
+                conn.commit()
+                return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def set_repository_webhook_provider_secret_synced(
+        self,
+        subscription_id: str,
+        *,
+        synced: bool,
+        error: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Record whether the provider hook now holds the current secret (REPO-4.7).
+
+        Separate from :meth:`rotate_repository_webhook_secret` because it is retried: the
+        secret-rotation sweep calls this on every tick for as long as a rotation remains
+        unsynced and its grace window remains open.
+
+        Args:
+            subscription_id: The rotated subscription.
+            synced: True once the provider confirmed the hook update.
+            error: Why it failed, for the unsynced case. Cleared on success.
+
+        Returns:
+            The updated row, or ``None`` when the subscription is gone.
+        """
+        q = """
+            UPDATE apiome.repository_webhook_subscription
+            SET provider_secret_synced = %s,
+                rotation_error = %s,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s::uuid
+            RETURNING """ + REPOSITORY_WEBHOOK_SUBSCRIPTION_COLUMNS + """
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    q,
+                    (bool(synced), (None if synced else error), subscription_id),
+                )
+                row = cursor.fetchone()
+                conn.commit()
+                return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def claim_expired_repository_webhook_secrets(
+        self, limit: int = 100
+    ) -> List[Dict[str, Any]]:
+        """Retire outgoing secrets whose grace window has closed (REPO-4.7).
+
+        The claim *is* the lock, in the style of
+        :meth:`claim_expiring_lint_waivers`: rows are selected ``FOR UPDATE SKIP LOCKED`` and
+        cleared in the same statement, so several replicas sweeping concurrently each retire a
+        disjoint set and each old secret produces exactly one audit row rather than one per
+        instance.
+
+        Clearing all three ``previous_*`` columns together is what the
+        ``ck_repository_webhook_previous_secret_expires`` constraint requires, and what makes
+        the retirement irreversible: the guard trigger refuses any later UPDATE that would put
+        a value back into ``previous_secret_enc`` outside a rotation.
+
+        Args:
+            limit: Maximum subscriptions retired this tick.
+
+        Returns:
+            The retired rows, each carrying the fingerprint of the secret that just stopped
+            verifying so the caller can audit it by identity rather than by value.
+        """
+        q = """
+            WITH due AS (
+                SELECT id, previous_secret_fingerprint, previous_secret_expires_at
+                FROM apiome.repository_webhook_subscription
+                WHERE previous_secret_enc IS NOT NULL
+                  AND previous_secret_expires_at <= CURRENT_TIMESTAMP
+                ORDER BY previous_secret_expires_at ASC
+                LIMIT %s
+                FOR UPDATE SKIP LOCKED
+            )
+            UPDATE apiome.repository_webhook_subscription s
+            SET previous_secret_enc = NULL,
+                previous_secret_fingerprint = NULL,
+                previous_secret_expires_at = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            FROM due
+            WHERE s.id = due.id
+            RETURNING s.id, s.tenant_id, s.repository_id, s.provider, s.repo_full_name,
+                      s.secret_fingerprint, s.provider_secret_synced, s.rotation_error,
+                      s.rotation_count, s.rotated_at,
+                      -- Read from the CTE, not from `s`: the row's own columns are already
+                      -- NULL by the time RETURNING projects them, and the audit row names the
+                      -- retired secret by fingerprint.
+                      due.previous_secret_fingerprint AS retired_secret_fingerprint,
+                      due.previous_secret_expires_at AS retired_expires_at
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(q, (_bounded_limit(limit),))
+                rows = cursor.fetchall() or []
+                conn.commit()
+                return [dict(r) for r in rows]
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def list_repository_webhook_subscriptions_pending_provider_secret(
+        self, limit: int = 100
+    ) -> List[Dict[str, Any]]:
+        """Rotations whose provider hook has not yet been updated (REPO-4.7).
+
+        Only rows still inside their grace window are returned. Once the window closes there
+        is nothing a retry can rescue — the old secret has stopped verifying, so the provider
+        must be repaired by an operator, and the sweep hammering the provider's API for a
+        subscription that is already broken helps nobody.
+
+        The repository columns needed to reach the provider (linked account, creator,
+        visibility) are joined in so the sweep can resolve a token without a second query per
+        row.
+
+        Args:
+            limit: Maximum subscriptions returned this tick.
+
+        Returns:
+            Subscription rows joined to their repository, soonest deadline first. Carries
+            ``secret_enc`` — the sweep's whole job is to hand that secret to the provider.
+        """
+        q = """
+            SELECT s.id, s.tenant_id, s.repository_id, s.provider, s.repo_full_name,
+                   s.secret_enc, s.secret_fingerprint, s.provider_hook_id,
+                   s.registration_state, s.previous_secret_expires_at, s.rotation_count,
+                   r.linked_account_id, r.created_by, r.visibility
+            FROM apiome.repository_webhook_subscription s
+            INNER JOIN apiome.tenant_repositories r ON r.id = s.repository_id
+            WHERE s.provider_secret_synced = FALSE
+              AND s.previous_secret_expires_at IS NOT NULL
+              AND s.previous_secret_expires_at > CURRENT_TIMESTAMP
+              AND r.deleted_at IS NULL
+            ORDER BY s.previous_secret_expires_at ASC
+            LIMIT %s
+        """
+        return self.execute_query(q, (_bounded_limit(limit),))
 
     def record_repository_webhook_event(
         self,

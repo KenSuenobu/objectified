@@ -128,7 +128,7 @@ def test_the_rest_facing_read_is_tenant_scoped() -> None:
     db.get_repository_webhook_subscription(_TENANT, _REPO_ID)
 
     sql, params = db.execute_query.call_args[0]
-    assert "s.tenant_id = %s::uuid" in sql
+    assert "WHERE repository_id = %s::uuid AND tenant_id = %s::uuid" in sql
     assert params == (_REPO_ID, _TENANT)
 
 
@@ -306,3 +306,189 @@ def test_making_a_repository_due_skips_removed_repositories() -> None:
     db.mark_repository_poll_due(_REPO_ID)
 
     assert "deleted_at IS NULL" in db._execute_write.call_args[0][0]
+
+
+# --- Rotation (REPO-4.7, #2785) ----------------------------------------------------------
+
+
+def test_a_rotation_is_one_statement_that_carries_the_old_secret_forward() -> None:
+    """Two statements could be interrupted between them, leaving one secret and no window."""
+    db, _, cursor = _db_with_cursor(fetchone={"id": _SUB_ID})
+
+    db.rotate_repository_webhook_secret(
+        _SUB_ID, secret_enc=b"new", secret_fingerprint="ffff", grace_seconds=3600
+    )
+
+    sql = cursor.execute.call_args[0][0]
+    set_clause = sql.split("SET", 1)[1].split("WHERE", 1)[0]
+    assert "previous_secret_enc = secret_enc" in set_clause
+    assert "previous_secret_fingerprint = secret_fingerprint" in set_clause
+    assert "previous_secret_expires_at = CURRENT_TIMESTAMP" in set_clause
+    assert "rotation_count = rotation_count + 1" in set_clause
+    assert "provider_secret_synced = FALSE" in set_clause
+
+
+def test_a_rotation_never_returns_the_ciphertext_it_just_wrote() -> None:
+    db, _, cursor = _db_with_cursor(fetchone={"id": _SUB_ID})
+
+    db.rotate_repository_webhook_secret(
+        _SUB_ID, secret_enc=b"new", secret_fingerprint="ffff", grace_seconds=3600
+    )
+
+    returning = cursor.execute.call_args[0][0].split("RETURNING", 1)[1]
+    assert "secret_enc" not in returning
+    assert "previous_secret_fingerprint" in returning
+    assert "provider_secret_synced" in returning
+
+
+def test_a_subscription_with_no_secret_is_not_rotatable() -> None:
+    """Rotating a NULL secret would install a first key while claiming to retire one."""
+    db, _, cursor = _db_with_cursor(fetchone=None)
+
+    result = db.rotate_repository_webhook_secret(
+        _SUB_ID, secret_enc=b"new", secret_fingerprint="ffff", grace_seconds=3600
+    )
+
+    assert "secret_enc IS NOT NULL" in cursor.execute.call_args[0][0]
+    assert result is None
+
+
+def test_rotating_to_an_empty_secret_is_refused_before_any_sql_runs() -> None:
+    """Storing NULL ciphertext would make every delivery for this repository a 401."""
+    db, conn, cursor = _db_with_cursor(fetchone={"id": _SUB_ID})
+
+    try:
+        db.rotate_repository_webhook_secret(
+            _SUB_ID, secret_enc=None, secret_fingerprint=None, grace_seconds=3600
+        )
+    except ValueError:
+        pass
+    else:  # pragma: no cover - the raise above is the expected path
+        raise AssertionError("expected a refusal")
+
+    cursor.execute.assert_not_called()
+
+
+def test_a_negative_grace_window_becomes_an_immediate_expiry_not_a_past_one() -> None:
+    db, _, cursor = _db_with_cursor(fetchone={"id": _SUB_ID})
+
+    db.rotate_repository_webhook_secret(
+        _SUB_ID, secret_enc=b"new", secret_fingerprint="ffff", grace_seconds=-500
+    )
+
+    assert cursor.execute.call_args[0][1][0] == "0"
+
+
+def test_the_expiry_claim_clears_every_previous_column_together() -> None:
+    """The CHECK pairs the secret with its deadline; clearing one without the other fails."""
+    db, _, cursor = _db_with_cursor()
+    cursor.fetchall.return_value = []
+
+    db.claim_expired_repository_webhook_secrets()
+
+    sql = cursor.execute.call_args[0][0]
+    set_clause = sql.split("SET", 1)[1].split("FROM due", 1)[0]
+    assert "previous_secret_enc = NULL" in set_clause
+    assert "previous_secret_fingerprint = NULL" in set_clause
+    assert "previous_secret_expires_at = NULL" in set_clause
+
+
+def test_the_expiry_claim_is_safe_for_concurrent_replicas() -> None:
+    """The claim is the lock: two instances retire disjoint sets, so each audits once."""
+    db, _, cursor = _db_with_cursor()
+    cursor.fetchall.return_value = []
+
+    db.claim_expired_repository_webhook_secrets()
+
+    sql = cursor.execute.call_args[0][0]
+    assert "FOR UPDATE SKIP LOCKED" in sql
+    assert "previous_secret_expires_at <= CURRENT_TIMESTAMP" in sql
+
+
+def test_the_expiry_claim_returns_the_fingerprint_it_just_cleared() -> None:
+    """Read from the CTE: the row's own column is already NULL when RETURNING projects it."""
+    db, _, cursor = _db_with_cursor()
+    cursor.fetchall.return_value = []
+
+    db.claim_expired_repository_webhook_secrets()
+
+    sql = cursor.execute.call_args[0][0]
+    assert "due.previous_secret_fingerprint AS retired_secret_fingerprint" in sql
+
+
+def test_the_expiry_claim_is_bounded() -> None:
+    db, _, cursor = _db_with_cursor()
+    cursor.fetchall.return_value = []
+
+    db.claim_expired_repository_webhook_secrets(100000)
+    assert cursor.execute.call_args[0][1][0] == 1000
+
+    db.claim_expired_repository_webhook_secrets(0)
+    assert cursor.execute.call_args[0][1][0] == 1
+
+
+def test_the_retry_pass_only_sees_rotations_still_inside_their_window() -> None:
+    """Once the window closes there is nothing a retry can rescue."""
+    db = Database()
+    db.execute_query = MagicMock(return_value=[])
+
+    db.list_repository_webhook_subscriptions_pending_provider_secret()
+
+    sql = db.execute_query.call_args[0][0]
+    assert "s.provider_secret_synced = FALSE" in sql
+    assert "s.previous_secret_expires_at > CURRENT_TIMESTAMP" in sql
+    assert "r.deleted_at IS NULL" in sql
+
+
+def test_the_retry_pass_selects_the_secret_it_has_to_hand_over() -> None:
+    db = Database()
+    db.execute_query = MagicMock(return_value=[])
+
+    db.list_repository_webhook_subscriptions_pending_provider_secret()
+
+    sql = db.execute_query.call_args[0][0]
+    assert "s.secret_enc" in sql
+    # And the repository columns that resolve a token, so the sweep needs no second query.
+    assert "r.linked_account_id" in sql
+    assert "r.created_by" in sql
+
+
+def test_marking_a_provider_synced_clears_the_reason_it_was_not() -> None:
+    db, _, cursor = _db_with_cursor(fetchone={"id": _SUB_ID})
+
+    db.set_repository_webhook_provider_secret_synced(
+        _SUB_ID, synced=True, error="stale message"
+    )
+
+    assert cursor.execute.call_args[0][1][:2] == (True, None)
+
+
+def test_marking_a_provider_unsynced_keeps_the_reason() -> None:
+    db, _, cursor = _db_with_cursor(fetchone={"id": _SUB_ID})
+
+    db.set_repository_webhook_provider_secret_synced(
+        _SUB_ID, synced=False, error="GitHub said no"
+    )
+
+    assert cursor.execute.call_args[0][1][:2] == (False, "GitHub said no")
+
+
+def test_the_sync_update_never_touches_a_secret() -> None:
+    db, _, cursor = _db_with_cursor(fetchone={"id": _SUB_ID})
+
+    db.set_repository_webhook_provider_secret_synced(_SUB_ID, synced=True)
+
+    set_clause = cursor.execute.call_args[0][0].split("SET", 1)[1].split("WHERE", 1)[0]
+    assert "secret_enc" not in set_clause
+
+
+def test_the_verification_lookup_also_selects_the_outgoing_secret() -> None:
+    """Acceptance criterion 1: a delivery signed with either secret must resolve here."""
+    db = Database()
+    db.execute_query = MagicMock(return_value=[])
+
+    db.find_repository_webhook_subscriptions("github", "octocat/hello-world")
+
+    sql = db.execute_query.call_args[0][0]
+    assert "s.previous_secret_enc" in sql
+    assert "s.previous_secret_expires_at" in sql
