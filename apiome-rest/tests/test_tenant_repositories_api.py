@@ -201,6 +201,72 @@ def test_create_requires_jwt():
     assert r.status_code == 403
 
 
+def test_resume_refresh_ok():
+    """POST .../refresh/resume clears the pause and returns the updated record (RAR-3.4)."""
+    rid = _LIST_ROW["id"]
+    resumed_row = {
+        **_LIST_ROW,
+        "refresh_consecutive_failures": 0,
+        "refresh_backoff_until": None,
+        "refresh_paused_at": None,
+        "refresh_pause_reason": None,
+    }
+    with patch("app.tenant_repositories_routes.db") as mdb:
+        mdb.resume_repository_refresh.return_value = {"was_paused": True}
+        mdb.get_tenant_repository.return_value = resumed_row
+        r = client.post(f"/v1/tenants/acme/repositories/{rid}/refresh/resume")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["success"] is True
+    assert body["repository"]["refresh_paused_at"] is None
+    assert body["repository"]["refresh_consecutive_failures"] == 0
+    mdb.resume_repository_refresh.assert_called_once_with(_TENANT_ID, rid)
+
+
+def test_resume_refresh_not_found():
+    with patch("app.tenant_repositories_routes.db") as mdb:
+        mdb.resume_repository_refresh.return_value = None
+        r = client.post(
+            "/v1/tenants/acme/repositories/880e8400-e29b-41d4-a716-446655440099/refresh/resume"
+        )
+    assert r.status_code == 404
+
+
+def test_repository_record_surfaces_pause_state():
+    """A paused repo's record carries the RAR-3.4 failure/pause fields."""
+    rid = _LIST_ROW["id"]
+    paused_row = {
+        **_LIST_ROW,
+        "refresh_consecutive_failures": 8,
+        "refresh_backoff_until": "2026-07-31T12:00:00+00:00",
+        "refresh_paused_at": "2026-07-30T09:00:00+00:00",
+        "refresh_pause_reason": "branch main: 401 bad credentials",
+    }
+    with patch("app.tenant_repositories_routes.db") as mdb:
+        mdb.get_tenant_repository.return_value = paused_row
+        r = client.get(f"/v1/tenants/acme/repositories/{rid}")
+    assert r.status_code == 200
+    repo = r.json()["repository"]
+    assert repo["refresh_consecutive_failures"] == 8
+    assert repo["refresh_paused_at"] == "2026-07-30T09:00:00+00:00"
+    assert repo["refresh_backoff_until"] == "2026-07-31T12:00:00+00:00"
+    assert repo["refresh_pause_reason"] == "branch main: 401 bad credentials"
+
+
+def test_repository_record_defaults_healthy_for_pre_column_rows():
+    """A row predating the RAR-3.4 columns reads as healthy (0 failures, unpaused)."""
+    rid = _LIST_ROW["id"]
+    with patch("app.tenant_repositories_routes.db") as mdb:
+        mdb.get_tenant_repository.return_value = dict(_LIST_ROW)
+        r = client.get(f"/v1/tenants/acme/repositories/{rid}")
+    assert r.status_code == 200
+    repo = r.json()["repository"]
+    assert repo["refresh_consecutive_failures"] == 0
+    assert repo["refresh_paused_at"] is None
+    assert repo["refresh_backoff_until"] is None
+    assert repo["refresh_pause_reason"] is None
+
+
 def test_delete_repository_ok():
     rid = _LIST_ROW["id"]
     with patch("app.tenant_repositories_routes.db") as mdb:

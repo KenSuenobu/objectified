@@ -322,6 +322,26 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Refresh backoff + auto-pause (RAR-3.4, #3525), extending REPO-4.5 to the
+    # refresh loop. Consecutive refresh failures defer a repo by its interval times
+    # an exponential multiplier (×2, ×4 … ×32) capped at the max below; after the
+    # threshold the repo auto-pauses (requires a manual resume). A threshold of 0
+    # or below disables auto-pause (backoff still applies).
+    refresh_auto_pause_threshold: int = Field(
+        default=8,
+        validation_alias=AliasChoices(
+            "APIOME_REFRESH_AUTO_PAUSE_THRESHOLD",
+            "refresh_auto_pause_threshold",
+        ),
+    )
+    refresh_backoff_max_seconds: int = Field(
+        default=7 * 24 * 60 * 60,
+        validation_alias=AliasChoices(
+            "APIOME_REFRESH_BACKOFF_MAX_INTERVAL",
+            "refresh_backoff_max_seconds",
+        ),
+    )
+
     # Large-monorepo repository walk (REPO-2.5, #2766). A scan pass runs under a
     # per-tenant wall-clock budget stored in
     # apiome.tenants.repository_scan_budget_seconds; these set the default applied

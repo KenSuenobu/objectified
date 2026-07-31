@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.83.0
+  version: 1.84.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -34113,6 +34113,82 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for read repository import specresponse422.
+  /v1/tenants/{tenant_slug}/repositories/{repository_id}/refresh/resume:
+    post:
+      tags:
+      - tenant-repositories
+      summary: Resume Tenant Repository Refresh
+      description: "Manually resume a repository whose auto-refresh was paused (RAR-3.4,\
+        \ #3525).\n\nA repository auto-pauses after ``APIOME_REFRESH_AUTO_PAUSE_THRESHOLD``\n\
+        consecutive refresh failures (extending REPO-4.5 to the refresh loop). This\n\
+        clears the pause and resets the failure counter and backoff anchor, so the\n\
+        repository is immediately eligible for the sweep again on its normal cadence.\n\
+        Safe to call on a repository that is not paused (it just resets the failure\n\
+        bookkeeping). Returns the updated repository record.\n\nArgs:\n    tenant_slug:\
+        \ Tenant slug from the path (scoping comes from the token).\n    repository_id:\
+        \ The repository to resume.\n    auth_data: Authenticated principal; supplies\
+        \ the tenant scope.\n\nReturns:\n    The updated repository record (pause\
+        \ fields cleared).\n\nRaises:\n    HTTPException: 404 when the repository\
+        \ does not belong to the tenant."
+      operationId: resume_tenant_repository_refresh_v1_tenants__tenant_slug__repositories__repository_id__refresh_resume_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: repository_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Repository Id
+          description: Repository Id schema.
+        description: Connected repository identifier.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Resume Tenant Repository Refreshauthorization schema.
+          - type: 'null'
+            description: Resume Tenant Repository Refreshauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Resume Tenant Repository Refresh Xapikey schema.
+          - type: 'null'
+            description: Resume Tenant Repository Refresh Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for resume tenant repository refresh.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantRepositoryGetResponse'
+                description: Response payload for resume tenant repository refreshresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for resume tenant repository refreshresponse422.
   /v1/tenants/{tenant_slug}/repositories/{repository_id}/refresh:
     post:
       tags:
@@ -75722,7 +75798,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-07-31T15:34:37Z'
+          example: '2026-07-31T15:57:35Z'
       additionalProperties: false
       type: object
       required:
@@ -82537,6 +82613,36 @@ components:
           default: true
           description: Auto Refresh Enabled.
           example: false
+        refresh_consecutive_failures:
+          type: integer
+          title: Refresh Consecutive Failures
+          default: 0
+          description: Refresh Consecutive Failures.
+          example: 1
+        refresh_backoff_until:
+          anyOf:
+          - type: string
+            description: Tenant Repository schema.
+          - type: 'null'
+            description: Tenant Repository schema.
+          title: Refresh Backoff Until
+          description: Refresh Backoff Until.
+        refresh_paused_at:
+          anyOf:
+          - type: string
+            description: Tenant Repository schema.
+          - type: 'null'
+            description: Tenant Repository schema.
+          title: Refresh Paused At
+          description: Refresh Paused At timestamp (ISO 8601).
+        refresh_pause_reason:
+          anyOf:
+          - type: string
+            description: Tenant Repository schema.
+          - type: 'null'
+            description: Tenant Repository schema.
+          title: Refresh Pause Reason
+          description: Refresh Pause Reason.
         created_at:
           anyOf:
           - type: string
@@ -85168,13 +85274,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-07-31T15:34:37Z'
+          example: '2026-07-31T15:57:35Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-07-31T15:34:37Z'
+          example: '2026-07-31T15:57:35Z'
         outcome:
           anyOf:
           - type: string

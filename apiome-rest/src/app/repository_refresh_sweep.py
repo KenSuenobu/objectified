@@ -26,6 +26,16 @@ blob-level newer-than verdict and lets the executor suppress no-op churn.
 ``last_refreshed_at`` is advanced for every processed repo, success or failure, so
 a repository that errors on the GitHub walk does not stay perpetually "due" and
 hammer the provider every tick.
+
+Backoff + auto-pause (RAR-3.4, #3525, extending REPO-4.5): each tick additionally
+records the repo's outcome. A failed tick (any branch rescan error) increments the
+repo's consecutive-failure counter and defers it exponentially
+(``refresh_backoff_until``); after ``APIOME_REFRESH_AUTO_PAUSE_THRESHOLD``
+consecutive failures the repo auto-pauses (excluded from due-selection until a
+manual resume) and a RAR-5.4 notification fires exactly once, on the transition.
+A successful tick resets the counter so recovered repos return to their normal
+cadence. All of this bookkeeping is best-effort: a failure recording problem never
+aborts the sweep.
 """
 
 from __future__ import annotations
@@ -142,7 +152,24 @@ def enqueue_stale_files_for_branch(
     return BranchEnqueueResult(enqueued=enqueued, skipped=skipped)
 
 
-def _refresh_one_repository(db: Database, due_row: Dict[str, Any]) -> int:
+class RepositoryRefreshResult(NamedTuple):
+    """Outcome of one repository's rescan + enqueue tick.
+
+    Attributes:
+        enqueued: Number of refresh jobs inserted across the repo's spec branches.
+        failed: True when at least one branch rescan raised — the tick counts as a
+            failed refresh for the RAR-3.4 backoff/auto-pause bookkeeping.
+        error: A short diagnostic from the last branch failure (pause reason).
+    """
+
+    enqueued: int
+    failed: bool
+    error: Optional[str]
+
+
+def _refresh_one_repository(
+    db: Database, due_row: Dict[str, Any]
+) -> RepositoryRefreshResult:
     """Rescan + enqueue for a single due repository (already holding its lock).
 
     Args:
@@ -150,7 +177,8 @@ def _refresh_one_repository(db: Database, due_row: Dict[str, Any]) -> int:
         due_row: A row from ``list_due_repositories``.
 
     Returns:
-        The number of refresh jobs enqueued across the repo's spec branches.
+        A :class:`RepositoryRefreshResult` with the enqueued count and whether any
+        branch rescan failed (feeding the RAR-3.4 failure bookkeeping).
     """
     repository_id = str(due_row["id"])
     tenant_id = str(due_row["tenant_id"])
@@ -159,26 +187,91 @@ def _refresh_one_repository(db: Database, due_row: Dict[str, Any]) -> int:
     if not branches:
         # No captured spec for any branch -> nothing to refresh; skip the GitHub
         # walk entirely. The anchor still advances (caller's finally block).
-        return 0
+        return RepositoryRefreshResult(enqueued=0, failed=False, error=None)
 
     # The due row lacks created_by (needed for private-repo token resolution);
     # fetch the full row.
     repo_row = db.get_tenant_repository(tenant_id, repository_id)
     if not repo_row:
-        return 0
+        return RepositoryRefreshResult(enqueued=0, failed=False, error=None)
 
     enqueued = 0
+    failed = False
+    last_error: Optional[str] = None
     for branch in branches:
         try:
             enqueued += enqueue_stale_files_for_branch(db, repo_row, branch).enqueued
-        except Exception:
-            # One bad branch (GitHub error, etc.) must not abort the others.
+        except Exception as exc:
+            # One bad branch (GitHub error, etc.) must not abort the others, but it
+            # does make this tick count as a failed refresh (RAR-3.4).
+            failed = True
+            last_error = f"branch {branch}: {exc}"
             _logger.exception(
                 "repository refresh rescan failed repository_id=%s branch=%s",
                 repository_id,
                 branch,
             )
-    return enqueued
+    return RepositoryRefreshResult(enqueued=enqueued, failed=failed, error=last_error)
+
+
+def _record_refresh_outcome(
+    db: Database, due_row: Dict[str, Any], result: RepositoryRefreshResult
+) -> None:
+    """Record one repo tick's outcome for the RAR-3.4 backoff/auto-pause policy.
+
+    On failure, increments the consecutive-failure counter, stamps the exponential
+    backoff anchor, and — exactly once, on the transition into the auto-pause —
+    fires the RAR-5.4 ``repository.refresh.auto_paused`` notification. On success,
+    resets the counter so the repo returns to its normal cadence (skipped when the
+    counter is already 0, saving a write for the common healthy case).
+
+    Best-effort by contract: any bookkeeping or notification error is logged and
+    swallowed so it can never abort the sweep tick.
+
+    Args:
+        db: Database handle.
+        due_row: The repository's row from ``list_due_repositories``.
+        result: The tick outcome from :func:`_refresh_one_repository`.
+    """
+    from .config import settings
+
+    repository_id = str(due_row["id"])
+    try:
+        if not result.failed:
+            if int(due_row.get("refresh_consecutive_failures") or 0) > 0:
+                db.record_repository_refresh_success(repository_id)
+            return
+
+        outcome = db.record_repository_refresh_failure(
+            repository_id, error=result.error
+        )
+        if not outcome:
+            return
+        _logger.warning(
+            "repository refresh failure recorded repository_id=%s "
+            "consecutive_failures=%s backoff_seconds=%s paused=%s",
+            repository_id,
+            outcome.get("consecutive_failures"),
+            outcome.get("backoff_seconds"),
+            outcome.get("paused"),
+        )
+        if outcome.get("newly_paused"):
+            from .repository_refresh_notifications import notify_refresh_auto_paused
+
+            notify_refresh_auto_paused(
+                db,
+                tenant_id=str(due_row["tenant_id"]),
+                repository_id=repository_id,
+                repository_full_name=due_row.get("repository_full_name"),
+                consecutive_failures=int(outcome.get("consecutive_failures") or 0),
+                threshold=settings.refresh_auto_pause_threshold,
+                error=result.error,
+            )
+    except Exception:
+        _logger.exception(
+            "repository refresh outcome bookkeeping failed repository_id=%s",
+            repository_id,
+        )
 
 
 def process_repository_refresh_sweep(db: Database) -> int:
@@ -197,6 +290,12 @@ def process_repository_refresh_sweep(db: Database) -> int:
     all auto-refresh for incident response. The per-repo ``auto_refresh_enabled``
     opt-out is enforced earlier, in ``list_due_repositories``. Neither gate affects
     manual "Refresh Now" (RAR-5.2), which does not run through this sweep.
+
+    Each repo tick's outcome also feeds the RAR-3.4 backoff/auto-pause bookkeeping
+    (:func:`_record_refresh_outcome`): failures back the repo off exponentially and
+    can auto-pause it (with a one-time RAR-5.4 notification); a success resets the
+    failure counter. Paused / backed-off repos are excluded by
+    ``list_due_repositories`` until resumed / due again.
 
     Args:
         db: Database handle for this tick (one connection holds the advisory
@@ -228,11 +327,17 @@ def process_repository_refresh_sweep(db: Database) -> int:
             continue
 
         try:
-            enqueued_total += _refresh_one_repository(db, due_row)
-        except Exception:
+            result = _refresh_one_repository(db, due_row)
+            enqueued_total += result.enqueued
+        except Exception as exc:
+            # A repo-level error (candidate query, branch listing, …) counts as a
+            # failed tick for the RAR-3.4 bookkeeping, like a branch rescan error.
+            result = RepositoryRefreshResult(enqueued=0, failed=True, error=str(exc))
             _logger.exception(
                 "repository refresh sweep failed repository_id=%s", repository_id
             )
+        try:
+            _record_refresh_outcome(db, due_row, result)
         finally:
             # Advance the cadence anchor each tick (success or failure) so the repo
             # is not immediately due again, then release the lock.

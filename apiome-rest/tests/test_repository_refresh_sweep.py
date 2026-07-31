@@ -9,6 +9,12 @@ Covers the acceptance criteria:
   - each enqueued job carries the stored spec snapshot;
   - per-repo single-flight via the advisory lock (a held lock skips the repo);
   - ``last_refreshed_at`` is advanced each tick, including on rescan failure.
+
+Plus the RAR-3.4 (#3525) backoff/auto-pause bookkeeping the sweep feeds:
+  - a failed tick records a refresh failure (with the branch error detail);
+  - a successful tick resets the failure counter (only when it was non-zero);
+  - the auto-pause transition fires the RAR-5.4 notification exactly once;
+  - bookkeeping/notification errors never abort the sweep.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -61,6 +67,15 @@ class FakeDB:
         self.scanned = []
         self.enqueued = []
         self.refreshed = []
+        # RAR-3.4 bookkeeping recorders + the canned outcome record_..._failure returns.
+        self.failures_recorded = []
+        self.successes_recorded = []
+        self.failure_outcome = {
+            "consecutive_failures": 1,
+            "backoff_seconds": 600,
+            "paused": False,
+            "newly_paused": False,
+        }
         # Track active (queued/running) lineages to emulate the idempotent insert.
         self._active_lineage = set()
 
@@ -97,6 +112,15 @@ class FakeDB:
 
     def mark_repository_refreshed(self, repository_id):
         self.refreshed.append(repository_id)
+        return True
+
+    # --- RAR-3.4 failure bookkeeping ---
+    def record_repository_refresh_failure(self, repository_id, *, error=None):
+        self.failures_recorded.append({"repository_id": repository_id, "error": error})
+        return dict(self.failure_outcome)
+
+    def record_repository_refresh_success(self, repository_id):
+        self.successes_recorded.append(repository_id)
         return True
 
 
@@ -315,3 +339,188 @@ def test_multiple_branches_each_rescanned():
 
     assert enqueued == 2
     assert db.scanned == [("r1", "main"), ("r1", "dev")]
+
+
+# ----------------------------------------------- RAR-3.4 backoff / auto-pause
+
+
+def test_rescan_failure_records_refresh_failure(monkeypatch):
+    """A failed branch rescan records a refresh failure with the error detail."""
+
+    def _boom(db, repo_row, branch):
+        raise ValueError("GitHub branches API error: HTTP 503")
+
+    monkeypatch.setattr(sweep, "scan_repository_branch_into_index", _boom)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): []},
+    )
+
+    process_repository_refresh_sweep(db)
+
+    assert len(db.failures_recorded) == 1
+    assert db.failures_recorded[0]["repository_id"] == "r1"
+    assert "HTTP 503" in db.failures_recorded[0]["error"]
+    assert db.successes_recorded == []
+    # The tick still advances the anchor and releases the lock.
+    assert db.refreshed == ["r1"]
+    assert db.released == ["r1"]
+
+
+def test_success_after_failures_resets_counter():
+    """A good tick on a repo with prior failures resets its counter (AC: reset on success)."""
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1", "refresh_consecutive_failures": 3}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): []},
+    )
+
+    process_repository_refresh_sweep(db)
+
+    assert db.successes_recorded == ["r1"]
+    assert db.failures_recorded == []
+
+
+def test_healthy_success_skips_reset_write():
+    """A good tick on an already-healthy repo (0 failures) skips the reset UPDATE."""
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1", "refresh_consecutive_failures": 0}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): []},
+    )
+
+    process_repository_refresh_sweep(db)
+
+    assert db.successes_recorded == []
+    assert db.failures_recorded == []
+
+
+def test_auto_pause_transition_fires_notification_once(monkeypatch):
+    """newly_paused=True fires the RAR-5.4 auto-pause notification exactly once."""
+    import app.repository_refresh_notifications as notifications
+
+    def _boom(db, repo_row, branch):
+        raise ValueError("bad credentials")
+
+    monkeypatch.setattr(sweep, "scan_repository_branch_into_index", _boom)
+
+    notified = []
+    monkeypatch.setattr(
+        notifications,
+        "notify_refresh_auto_paused",
+        lambda db, **kwargs: notified.append(kwargs) or [],
+    )
+
+    db = FakeDB(
+        due=[
+            {
+                "id": "r1",
+                "tenant_id": "t1",
+                "repository_full_name": "octocat/Hello-World",
+                "refresh_consecutive_failures": 7,
+            }
+        ],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): []},
+    )
+    db.failure_outcome = {
+        "consecutive_failures": 8,
+        "backoff_seconds": 9600,
+        "paused": True,
+        "newly_paused": True,
+    }
+
+    process_repository_refresh_sweep(db)
+
+    assert len(notified) == 1
+    assert notified[0]["repository_id"] == "r1"
+    assert notified[0]["tenant_id"] == "t1"
+    assert notified[0]["repository_full_name"] == "octocat/Hello-World"
+    assert notified[0]["consecutive_failures"] == 8
+    assert "bad credentials" in notified[0]["error"]
+
+
+def test_already_paused_failure_does_not_renotify(monkeypatch):
+    """paused=True but newly_paused=False (renewal) stays silent."""
+    import app.repository_refresh_notifications as notifications
+
+    def _boom(db, repo_row, branch):
+        raise ValueError("still broken")
+
+    monkeypatch.setattr(sweep, "scan_repository_branch_into_index", _boom)
+
+    notified = []
+    monkeypatch.setattr(
+        notifications,
+        "notify_refresh_auto_paused",
+        lambda db, **kwargs: notified.append(kwargs) or [],
+    )
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): []},
+    )
+    db.failure_outcome = {
+        "consecutive_failures": 9,
+        "backoff_seconds": 9600,
+        "paused": True,
+        "newly_paused": False,
+    }
+
+    process_repository_refresh_sweep(db)
+
+    assert notified == []
+    assert len(db.failures_recorded) == 1
+
+
+def test_bookkeeping_error_does_not_abort_sweep(monkeypatch):
+    """A record_..._failure crash is swallowed: anchor advances, lock releases, next repo runs."""
+
+    def _boom(db, repo_row, branch):
+        raise ValueError("walk failed")
+
+    monkeypatch.setattr(sweep, "scan_repository_branch_into_index", _boom)
+
+    db = FakeDB(
+        due=[
+            {"id": "r1", "tenant_id": "t1"},
+            {"id": "r2", "tenant_id": "t1"},
+        ],
+        branches={"r1": ["main"], "r2": []},
+        candidates={("r1", "main"): []},
+    )
+
+    def _record_boom(repository_id, *, error=None):
+        raise RuntimeError("bookkeeping DB down")
+
+    db.record_repository_refresh_failure = _record_boom
+
+    enqueued = process_repository_refresh_sweep(db)
+
+    assert enqueued == 0
+    assert db.refreshed == ["r1", "r2"]   # both repos still processed
+    assert db.released == ["r1", "r2"]
+
+
+def test_repo_level_error_counts_as_failed_tick(monkeypatch):
+    """An error outside the branch loop (e.g. branch listing) records a failure too."""
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): []},
+    )
+
+    def _listing_boom(repository_id):
+        raise RuntimeError("branch listing query failed")
+
+    db.list_repository_import_spec_branches = _listing_boom
+
+    process_repository_refresh_sweep(db)
+
+    assert len(db.failures_recorded) == 1
+    assert "branch listing query failed" in db.failures_recorded[0]["error"]
+    assert db.refreshed == ["r1"]
+    assert db.released == ["r1"]
