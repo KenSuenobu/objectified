@@ -6,6 +6,7 @@ We continue to improve the platform based on your feedback with improvements and
 
 ## Features/Improvements
 
+- Import: Arazzo workflow documents now import as first-class Workflow and Workflow Step entities; each step's `operationRef`/`operationId` links to the matching operation when that OpenAPI spec was imported in the same scan, and an unresolved reference keeps its raw value with a warning instead of being dropped
 - UI/UX: Updates look and feel for tabs
 - UI/UX: Added tabbed sections to Style Guides
 - Primitives

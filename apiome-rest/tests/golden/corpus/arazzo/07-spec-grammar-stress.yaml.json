@@ -33,10 +33,18 @@
       {
         "description": "Build an audit report from the latest snapshot",
         "extras": {
+          "dependsOn": [
+            "sync-inventory"
+          ],
+          "outputs": {
+            "reportId": "$steps.build-report.outputs.reportId"
+          },
           "stepOrder": [
             "build-report"
           ],
-          "workflowId": "audit-report"
+          "summary": "Build an audit report from the latest snapshot",
+          "workflowId": "audit-report",
+          "workflowIndex": 1
         },
         "key": "audit-report",
         "name": "audit-report",
@@ -94,11 +102,16 @@
             },
             "type": "object"
           },
+          "outputs": {
+            "snapshotId": "$steps.push-snapshot.outputs.snapshotId"
+          },
           "stepOrder": [
             "fetch-items",
             "push-snapshot"
           ],
-          "workflowId": "sync-inventory"
+          "summary": "Pull inventory items and push a stock snapshot",
+          "workflowId": "sync-inventory",
+          "workflowIndex": 0
         },
         "key": "sync-inventory",
         "name": "sync-inventory",
@@ -108,6 +121,14 @@
             "deprecated": false,
             "description": "Fetch current items via an operationRef pointer",
             "extras": {
+              "onFailure": [
+                {
+                  "name": "retryFetch",
+                  "retryAfter": 2,
+                  "retryLimit": 3,
+                  "type": "retry"
+                }
+              ],
               "operationRef": "#/sourceDescriptions/inventoryApi/paths/~1items/get",
               "outputs": {
                 "firstSku": "$response.body#/items/0/sku"
@@ -149,6 +170,12 @@
             "deprecated": false,
             "description": "Push a stock snapshot for the fetched items",
             "extras": {
+              "onSuccess": [
+                {
+                  "name": "recordAndFinish",
+                  "type": "end"
+                }
+              ],
               "operationId": "createSnapshot",
               "outputs": {
                 "snapshotId": "$response.body#/id"
@@ -204,7 +231,7 @@
     "confidence": 0.99,
     "format": "arazzo"
   },
-  "fingerprint": "sha256:67b97eb2c15a409854c5583cfdccd341d6b6f455a8d54693f44dd75278d0cff6",
+  "fingerprint": "sha256:81b9ce0bd8feaadfc57a361e916ff3d1c857b688589c927304346f149c2f76a2",
   "lint": {
     "findings": 0,
     "grade": "A",

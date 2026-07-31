@@ -70,6 +70,7 @@ from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
 from .analysis_telemetry import analysis_telemetry
+from .arazzo_workflow_persistence import ARAZZO_WORKFLOW_FORMATS
 from .archive_intake import ArchiveIntakeError, is_archive_payload, unpack_archive
 from .canonical_model import CanonicalApi
 from .config import settings
@@ -1052,6 +1053,76 @@ def analysis_summary_block(
     }
 
 
+def _persist_arazzo_workflows(
+    db: Any,
+    *,
+    tenant_id: str,
+    creator_id: str,
+    project_id: str,
+    version_record_id: str,
+    model: CanonicalApi,
+    git_source: Optional[Dict[str, Any]],
+) -> None:
+    """Persist an Arazzo import's workflows for one version (REPO-3.4, #2773).
+
+    Writes the canonical artifact first (the workflows hang off it), builds the scan's
+    operation index so each step's ``operationRef`` can be resolved to an internal
+    ``path_operation``, then writes the Workflow/WorkflowStep rows.
+
+    Best-effort by design: workflow persistence is an enrichment on top of the catalog item the
+    caller has already stored, so a failure here is logged and swallowed rather than failing an
+    import whose source bytes are safely on disk.
+
+    Args:
+        db: The database handle.
+        tenant_id: Owning tenant UUID.
+        creator_id: User the artifact is attributed to.
+        project_id: Owning project UUID.
+        version_record_id: Target ``versions.id`` UUID.
+        model: The Arazzo-normalized canonical model.
+        git_source: The import's ``options.git_source`` mapping, when the bytes came from a
+            repository — it scopes which projects' operations count as "the same scan".
+    """
+    try:
+        artifact_id = db.persist_canonical_api(
+            tenant_id=tenant_id,
+            creator_id=creator_id,
+            version_id=version_record_id,
+            model=model,
+        )
+        index_rows = db.get_scan_path_operation_index(
+            tenant_id=tenant_id,
+            project_id=project_id,
+            repo_url=(git_source or {}).get("repo_url"),
+            branch=(git_source or {}).get("ref"),
+        )
+        from .arazzo_workflow_persistence import OperationIndex
+
+        result = db.persist_arazzo_workflows(
+            tenant_id=tenant_id,
+            project_id=project_id,
+            version_id=version_record_id,
+            artifact_id=artifact_id,
+            model=model,
+            index=OperationIndex(index_rows or []),
+        )
+        for warning in result.warnings:
+            logger.info("Arazzo import (version %s): %s", version_record_id, warning)
+        logger.info(
+            "Arazzo import (version %s): %d workflow(s), %d step(s), %d reference(s) resolved",
+            version_record_id,
+            len(result.workflows),
+            result.step_count,
+            result.resolved_count,
+        )
+    except Exception as exc:
+        logger.warning(
+            "Arazzo workflow persistence failed for version %s: %s",
+            version_record_id,
+            exc,
+        )
+
+
 def persist_adapter_import(
     payload: Dict[str, Any],
     model: CanonicalApi,
@@ -1168,6 +1239,20 @@ def persist_adapter_import(
             creator_id=creator_id,
             version_id=version_record_id,
             model=model,
+        )
+
+    # REPO-3.4 (#2773): an Arazzo import lands its orchestration as Workflow/WorkflowStep rows
+    # alongside the canonical artifact, resolving each step's operationRef against the OpenAPI
+    # operations imported in the same scan.
+    if model.format in ARAZZO_WORKFLOW_FORMATS and creator_id:
+        _persist_arazzo_workflows(
+            db,
+            tenant_id=tenant_id,
+            creator_id=creator_id,
+            project_id=project_id,
+            version_record_id=version_record_id,
+            model=model,
+            git_source=git_source if isinstance(git_source, dict) else None,
         )
 
     return SpecImportJobResult(

@@ -33,7 +33,8 @@
             "AddTags",
             "Publish"
           ],
-          "workflowId": "PublishContent"
+          "workflowId": "PublishContent",
+          "workflowIndex": 0
         },
         "key": "PublishContent",
         "name": "PublishContent",
@@ -171,7 +172,7 @@
     "confidence": 0.99,
     "format": "arazzo"
   },
-  "fingerprint": "sha256:f302cfca8f1340e7e5417b802b02b12c0205c8c43fff482b415888e5645b06b0",
+  "fingerprint": "sha256:809b6f0d141ad94c1d0c36ef9ddaea69530d8d4caa90400b1ac8fd9e8afd1d3a",
   "lint": {
     "findings": 6,
     "grade": "C",

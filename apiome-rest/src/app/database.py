@@ -11876,6 +11876,120 @@ class Database:
 
         return _load(self, tenant_id=tenant_id, version_id=version_id)
 
+    def get_scan_path_operation_index(
+        self,
+        *,
+        tenant_id: str,
+        project_id: Optional[str] = None,
+        repo_url: Optional[str] = None,
+        branch: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """List the path operations an Arazzo import may reference (REPO-3.4 / #2773).
+
+        Defines "the same scan" concretely. When the import carries repository provenance,
+        the scope is every project ``repository_import_spec`` links to the same repository and
+        branch — i.e. the OpenAPI specs discovered alongside the Arazzo document. Rows from the
+        importing project itself are always included, which covers a plain upload where the
+        OpenAPI spec was imported into the same project.
+
+        Args:
+            tenant_id: Owning tenant UUID.
+            project_id: The importing project, always part of the scope when given.
+            repo_url: Clone URL from the import's git provenance, if any.
+            branch: Branch/ref the fileset was read at, if any.
+
+        Returns:
+            One dict per live path operation with ``id``, ``operation`` (HTTP verb),
+            ``pathname``, ``operation_id``, ``project_id``, ``version_id``, and ``source_path``
+            (the repository path the spec came from, when known). Empty on any database fault —
+            an unavailable index degrades every reference to "unresolved", never to an error.
+        """
+        clauses: List[str] = []
+        params: List[Any] = [tenant_id]
+        if project_id:
+            clauses.append("p.id = %s::uuid")
+            params.append(project_id)
+        if repo_url and branch:
+            from .repository_validation import normalize_clone_url_for_dedup
+
+            try:
+                normalized_repo = normalize_clone_url_for_dedup(repo_url)
+            except ValueError:
+                # A clone URL we cannot normalize (non-HTTPS, malformed) simply contributes no
+                # repository scope; the importing project is still searched.
+                normalized_repo = None
+            if normalized_repo:
+                clauses.append(
+                    """
+                    p.id IN (
+                        SELECT ris.project_id
+                        FROM apiome.repository_import_spec ris
+                        JOIN apiome.tenant_repositories tr ON tr.id = ris.repository_id
+                        WHERE ris.tenant_id = %s::uuid
+                          AND ris.branch = %s
+                          AND tr.clone_url_normalized = %s
+                    )
+                    """
+                )
+                params.extend([tenant_id, branch, normalized_repo])
+        if not clauses:
+            return []
+
+        query = f"""
+            SELECT
+                po.id AS id,
+                po.operation AS operation,
+                vp.pathname AS pathname,
+                pod.operation_id AS operation_id,
+                p.id AS project_id,
+                v.id AS version_id,
+                ris.path AS source_path
+            FROM apiome.projects p
+            JOIN apiome.versions v ON v.project_id = p.id
+            JOIN apiome.version_path vp ON vp.version_id = v.id
+            JOIN apiome.path_operation po ON po.version_path_id = vp.id
+            LEFT JOIN apiome.path_operation_description pod
+                   ON pod.path_operation_id = po.id
+            LEFT JOIN apiome.repository_import_spec ris ON ris.project_id = p.id
+            WHERE p.tenant_id = %s::uuid AND ({" OR ".join(clauses)})
+        """
+        try:
+            return self.execute_query(query, tuple(params))
+        except Exception as exc:  # pragma: no cover - defensive; index is best-effort
+            _logger.warning("Arazzo operation index unavailable: %s", exc)
+            return []
+
+    def persist_arazzo_workflows(
+        self,
+        *,
+        tenant_id: str,
+        project_id: Optional[str],
+        version_id: str,
+        artifact_id: str,
+        model: Any,
+        index: Any = None,
+    ) -> Any:
+        """Write an Arazzo model's workflows/steps for a version (REPO-3.4 / #2773)."""
+        from .arazzo_workflow_persistence import persist_arazzo_workflows as _persist
+
+        return _persist(
+            self,
+            tenant_id=tenant_id,
+            project_id=project_id,
+            version_id=version_id,
+            artifact_id=artifact_id,
+            model=model,
+            index=index,
+        )
+
+    def load_arazzo_workflows(
+        self, *, tenant_id: str, version_id: str
+    ) -> List[Any]:
+        """Load the live Arazzo workflows for ``version_id`` (REPO-3.4 / #2773)."""
+        from .arazzo_workflow_persistence import load_arazzo_workflows as _load
+
+        return _load(self, tenant_id=tenant_id, version_id=version_id)
+
     def create_version_push_transaction(
         self,
         project_id: str,

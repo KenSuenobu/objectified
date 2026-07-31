@@ -175,13 +175,35 @@ class _ArazzoWriter:
 
     def _workflows_from_services(self) -> List[Dict[str, Any]]:
         workflows: List[Dict[str, Any]] = []
-        for service in self._api.services:
+        # Source declaration order, recorded by the normalizer because the canonical model sorts
+        # services by key. Emitting in document order keeps an orchestration readable and makes
+        # the emit → re-import round trip reproduce the source ordering (REPO-3.4, #2773).
+        services = sorted(
+            self._api.services,
+            key=lambda svc: (
+                svc.extras.get("workflowIndex")
+                if isinstance(svc.extras.get("workflowIndex"), int)
+                else len(self._api.services),
+                svc.key,
+            ),
+        )
+        for service in services:
             workflow: Dict[str, Any] = {"workflowId": service.key}
+            # `summary` and `description` are distinct fields in Arazzo. The normalizer keeps the
+            # source `summary` in extras and maps `description or summary` onto the Service, so
+            # emitting each from its own home round-trips both instead of collapsing a
+            # description into a summary (REPO-3.4, #2773).
+            summary = service.extras.get("summary")
+            if isinstance(summary, str) and summary:
+                workflow["summary"] = summary
             if service.description:
-                workflow["summary"] = service.description
+                workflow["description"] = service.description
             inputs = service.extras.get("inputs")
             if isinstance(inputs, dict):
                 workflow["inputs"] = inputs
+            outputs = service.extras.get("outputs")
+            if isinstance(outputs, dict) and outputs:
+                workflow["outputs"] = outputs
 
             step_order = service.extras.get("stepOrder")
             operations_by_step: Dict[str, Any] = {}
@@ -218,11 +240,18 @@ class _ArazzoWriter:
         for key in (
             "operationId",
             "operationRef",
+            # Arazzo 1.0.0's pointer spelling, and the step-calls-a-workflow target; both are
+            # carried by the normalizer, so emitting them keeps the round trip lossless
+            # (REPO-3.4, #2773).
+            "operationPath",
+            "workflowId",
             "dependsOn",
             "successCriteria",
             "parameters",
             "requestBody",
             "outputs",
+            "onSuccess",
+            "onFailure",
             "request",
             "when",
             "assertions",

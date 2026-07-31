@@ -37,7 +37,8 @@
             "RegisterUser",
             "SendWelcome"
           ],
-          "workflowId": "RegisterAndNotify"
+          "workflowId": "RegisterAndNotify",
+          "workflowIndex": 0
         },
         "key": "RegisterAndNotify",
         "name": "RegisterAndNotify",
@@ -139,7 +140,7 @@
     "confidence": 0.99,
     "format": "arazzo"
   },
-  "fingerprint": "sha256:ab8bfe46f26dd3e718d73e4c7220c177271f10cf4179d9a9f97f9ecfc5937866",
+  "fingerprint": "sha256:7ad11f9d55e549c2bc0e215ec57f09fbfb535039ddfdd2b130669241363b4e8d",
   "lint": {
     "findings": 2,
     "grade": "A",
