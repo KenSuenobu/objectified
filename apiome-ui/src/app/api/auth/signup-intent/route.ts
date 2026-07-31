@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isProviderEnabled } from '../../../../../lib/auth/provider-registry';
+import { resolveProviderEnv } from '../../../../../lib/auth/provider-config-resolver';
 import { resolveClientIp } from '../../../../../lib/auth/client-ip';
 import {
   AUTH_RATE_LIMITED_CODE,
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
   }
   const provider = body?.provider;
-  if (typeof provider !== 'string' || !isProviderEnabled(provider)) {
+  if (typeof provider !== 'string' || !isProviderEnabled(provider, await resolveProviderEnv())) {
     return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
   }
 

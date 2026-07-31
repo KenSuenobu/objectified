@@ -5,6 +5,7 @@ import {
   LINKABLE_PROVIDERS,
 } from '../../../../../../lib/auth/account-resolution';
 import { isProviderEnabled } from '../../../../../../lib/auth/provider-registry';
+import { resolveProviderEnv } from '../../../../../../lib/auth/provider-config-resolver';
 import { resolveClientIp } from '../../../../../../lib/auth/client-ip';
 import {
   AUTH_RATE_LIMITED_CODE,
@@ -36,8 +37,8 @@ function rateLimitedResponse(retryAfterMs: number): NextResponse {
  * @param provider The provider slug from the route path.
  * @returns True when a linking-intent cookie for this provider can lead to a working OAuth flow.
  */
-function isProviderLinkable(provider: string): boolean {
-  return LINKABLE_PROVIDERS.has(provider) && isProviderEnabled(provider);
+async function isProviderLinkable(provider: string): Promise<boolean> {
+  return LINKABLE_PROVIDERS.has(provider) && isProviderEnabled(provider, await resolveProviderEnv());
 }
 
 /**
@@ -80,7 +81,7 @@ export async function GET(
 
   const { provider } = await params;
 
-  if (!isProviderLinkable(provider)) {
+  if (!(await isProviderLinkable(provider))) {
     return NextResponse.json(
       {
         error: `Provider '${provider}' is not available for linking on this deployment`,
