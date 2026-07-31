@@ -3,6 +3,7 @@ import { getAuthSession } from '@lib/auth/server-session';
 import { resolveCallbackUrl } from '@lib/auth/cookie-options';
 import { resolvePostLoginRouteForUser } from '@lib/auth/post-login-routing';
 import { providerSummaries } from '@lib/auth/provider-registry';
+import { resolveProviderEnv } from '@lib/auth/provider-config-resolver';
 import LoginClient from '@/app/login/LoginClient';
 
 export default async function LoginPage({
@@ -31,8 +32,12 @@ export default async function LoginPage({
   }
 
   // Env is server-side only, so the enabled-provider list (provider registry, OLO-2.3)
-  // is resolved here and passed down; the client resolves brand icons by id.
-  const ssoProviders = providerSummaries().filter((provider) => provider.enabled);
+  // is resolved here and passed down; the client resolves brand icons by id. The registry reads
+  // through the DB-over-env merge (OLO-8.5) so a provider enabled only in the admin screen
+  // gets its login button too, not just a working OAuth flow.
+  const ssoProviders = providerSummaries(await resolveProviderEnv()).filter(
+    (provider) => provider.enabled
+  );
 
   return <LoginClient error={params.error} callbackUrl={callbackUrl} ssoProviders={ssoProviders} />;
 }
