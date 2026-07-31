@@ -70,6 +70,11 @@ EVENT_TYPE_BY_OUTCOME: Dict[RefreshOutcome, str] = {
 # absent: a no-op refresh has nothing to act on, so it stays silent.
 NOTIFIABLE_OUTCOMES = frozenset(EVENT_TYPE_BY_OUTCOME.keys())
 
+# Repo-level event fired when consecutive refresh failures trip the auto-pause
+# threshold (RAR-3.4, #3525). Unlike the per-file outcomes above this describes the
+# whole repository: its auto-refresh stopped and requires a manual resume.
+EVENT_TYPE_AUTO_PAUSED = "repository.refresh.auto_paused"
+
 
 @dataclass(frozen=True)
 class RefreshNotificationPreferences:
@@ -87,6 +92,9 @@ class RefreshNotificationPreferences:
     notify_diverged: bool = True
     #: Notify when a refresh cycle fails. Default on.
     notify_failed: bool = True
+    #: Notify when a repository auto-pauses after consecutive refresh failures
+    #: (RAR-3.4) — someone must manually resume it. Default on.
+    notify_auto_paused: bool = True
 
     def allows(self, outcome: RefreshOutcome) -> bool:
         """Return whether ``outcome`` is permitted to notify under these preferences.
@@ -139,6 +147,7 @@ class RefreshNotificationPreferences:
             notify_new_version=_flag("notify_new_version", "refresh_new_version"),
             notify_diverged=_flag("notify_diverged", "refresh_diverged"),
             notify_failed=_flag("notify_failed", "refresh_failed"),
+            notify_auto_paused=_flag("notify_auto_paused", "refresh_auto_paused"),
         )
 
 
@@ -363,8 +372,32 @@ def notify_refresh_outcome(
         error=error,
         extra=extra,
     )
-    event_type = payload["event"]
+    return _fan_out_notification(db, tenant_id, payload["event"], payload)
 
+
+def _fan_out_notification(
+    db: Any,
+    tenant_id: str,
+    event_type: str,
+    payload: Dict[str, Any],
+) -> List[str]:
+    """Enqueue ``payload`` once per active push-webhook subscription, best-effort.
+
+    Shared delivery core for :func:`notify_refresh_outcome` and
+    :func:`notify_refresh_auto_paused`. Never raises: a listing failure returns an
+    empty list, and a per-subscription enqueue failure (e.g. a subscription
+    deactivated between the listing and the enqueue) is logged and skipped.
+
+    Args:
+        db: The database handle exposing ``list_active_push_webhook_subscription_ids``
+            and ``enqueue_push_webhook_delivery``.
+        tenant_id: Owning tenant id (subscription scope).
+        event_type: The push-webhook event type to stamp on each delivery.
+        payload: The JSON-serializable notification payload.
+
+    Returns:
+        The list of enqueued delivery-event ids (possibly empty).
+    """
     try:
         subscription_ids = db.list_active_push_webhook_subscription_ids(tenant_id)
     except Exception:
@@ -395,3 +428,97 @@ def notify_refresh_outcome(
                 subscription_id,
             )
     return enqueued
+
+
+def build_auto_pause_notification(
+    *,
+    repository_id: str,
+    repository_full_name: Optional[str] = None,
+    consecutive_failures: int,
+    threshold: int,
+    error: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Assemble the payload for a repository auto-pause event (RAR-3.4).
+
+    Unlike :func:`build_refresh_notification` this is repo-level (no branch/path
+    lineage): the repository's scheduled auto-refresh stopped after consecutive
+    failures and requires a manual resume. The payload carries a ``resumeHref``
+    deep-link to the repository's Settings tab, where the resume action lives.
+
+    Args:
+        repository_id: The repository that auto-paused.
+        repository_full_name: Human-readable ``owner/name``, when known.
+        consecutive_failures: The failure count that tripped the pause.
+        threshold: The configured auto-pause threshold that was reached.
+        error: The last refresh error, when known (also stored as the pause reason).
+
+    Returns:
+        A JSON-serializable notification dict with camelCase keys.
+    """
+    payload: Dict[str, Any] = {
+        "event": EVENT_TYPE_AUTO_PAUSED,
+        "repositoryId": _clean_str(repository_id),
+        "consecutiveFailures": int(consecutive_failures),
+        "threshold": int(threshold),
+    }
+    repo = _clean_str(repository_id)
+    if repo is not None:
+        payload["resumeHref"] = (
+            f"/ade/dashboard/repositories/{quote(repo, safe='')}/preview?tab=settings"
+        )
+    for key, value in (
+        ("repositoryFullName", repository_full_name),
+        ("error", error),
+    ):
+        cleaned = _clean_str(value)
+        if cleaned is not None:
+            payload[key] = cleaned
+    return payload
+
+
+def notify_refresh_auto_paused(
+    db: Any,
+    *,
+    tenant_id: str,
+    repository_id: str,
+    repository_full_name: Optional[str] = None,
+    consecutive_failures: int,
+    threshold: int,
+    error: Optional[str] = None,
+    preferences: Optional[RefreshNotificationPreferences] = None,
+) -> List[str]:
+    """Notify that a repository auto-paused its refresh after N failures (RAR-3.4).
+
+    Fired by the refresh sweep exactly once, on the transition into the pause
+    (``newly_paused`` from
+    :meth:`app.database.Database.record_repository_refresh_failure`). Gated on the
+    recipient's ``notify_auto_paused`` toggle; delivery is best-effort over the
+    same push-webhook channels as the per-file refresh outcomes, and the function
+    never raises, so a notification problem cannot break the sweep.
+
+    Args:
+        db: The database handle exposing the push-webhook accessors.
+        tenant_id: Owning tenant id (notification + subscription scope).
+        repository_id: The repository that auto-paused.
+        repository_full_name: Human-readable ``owner/name``, when known.
+        consecutive_failures: The failure count that tripped the pause.
+        threshold: The configured auto-pause threshold that was reached.
+        error: The last refresh error, when known.
+        preferences: The recipient's toggles; defaults (all on) when ``None``.
+
+    Returns:
+        The list of enqueued delivery-event ids (empty when muted or no active
+        subscription exists).
+    """
+    prefs = preferences or RefreshNotificationPreferences()
+    if not prefs.notify_auto_paused:
+        return []
+
+    payload = build_auto_pause_notification(
+        repository_id=repository_id,
+        repository_full_name=repository_full_name,
+        consecutive_failures=consecutive_failures,
+        threshold=threshold,
+        error=error,
+    )
+    return _fan_out_notification(db, tenant_id, EVENT_TYPE_AUTO_PAUSED, payload)

@@ -13599,7 +13599,9 @@ class Database:
             SELECT id, tenant_id, source, provider, clone_url, repository_full_name,
                    description, default_branch, visibility, status, created_at, updated_at,
                    linked_account_id, last_scanned_at, total_files, importable_count, branch_count,
-                   refresh_interval_seconds, last_refreshed_at, auto_refresh_enabled
+                   refresh_interval_seconds, last_refreshed_at, auto_refresh_enabled,
+                   refresh_consecutive_failures, refresh_backoff_until,
+                   refresh_paused_at, refresh_pause_reason
             FROM apiome.tenant_repositories
             WHERE tenant_id = %s::uuid AND deleted_at IS NULL
             ORDER BY created_at DESC
@@ -13611,7 +13613,9 @@ class Database:
             SELECT id, tenant_id, source, provider, clone_url, repository_full_name,
                    description, default_branch, visibility, status, created_at, updated_at,
                    linked_account_id, last_scanned_at, total_files, importable_count, branch_count, created_by,
-                   refresh_interval_seconds, last_refreshed_at, auto_refresh_enabled
+                   refresh_interval_seconds, last_refreshed_at, auto_refresh_enabled,
+                   refresh_consecutive_failures, refresh_backoff_until,
+                   refresh_paused_at, refresh_pause_reason
             FROM apiome.tenant_repositories
             WHERE id = %s::uuid AND tenant_id = %s::uuid AND deleted_at IS NULL
             LIMIT 1
@@ -13636,6 +13640,14 @@ class Database:
         excluded. The recency comparison is done in the database against
         ``now()`` so it does not depend on application clock skew.
 
+        Backoff + auto-pause (RAR-3.4): a repository that auto-paused after
+        consecutive refresh failures (``refresh_paused_at`` set) is excluded until
+        a manual resume clears the pause, and one deferred by the exponential
+        backoff (``refresh_backoff_until`` in the future) is excluded until that
+        anchor elapses. Both anchors are stamped by
+        :meth:`record_repository_refresh_failure` and cleared by
+        :meth:`record_repository_refresh_success` / :meth:`resume_repository_refresh`.
+
         The actual rescan + enqueue is the RAR-3.2 sweep; this is the
         due-selection primitive it iterates.
 
@@ -13659,11 +13671,15 @@ class Database:
             SELECT id, tenant_id, source, provider, clone_url, repository_full_name,
                    description, default_branch, visibility, status, created_at, updated_at,
                    linked_account_id, last_scanned_at, total_files, importable_count, branch_count,
-                   refresh_interval_seconds, last_refreshed_at, auto_refresh_enabled
+                   refresh_interval_seconds, last_refreshed_at, auto_refresh_enabled,
+                   refresh_consecutive_failures, refresh_backoff_until,
+                   refresh_paused_at, refresh_pause_reason
             FROM apiome.tenant_repositories
             WHERE deleted_at IS NULL
               AND status IN ('ready', 'error')
               AND auto_refresh_enabled = TRUE
+              AND refresh_paused_at IS NULL
+              AND (refresh_backoff_until IS NULL OR refresh_backoff_until <= now())
               AND (
                 last_refreshed_at IS NULL
                 OR last_refreshed_at <= now() - make_interval(
@@ -13790,6 +13806,220 @@ class Database:
                 row = cursor.fetchone()
                 conn.commit()
                 return bool(enabled) if row else None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def record_repository_refresh_failure(
+        self,
+        repository_id: str,
+        *,
+        error: Optional[str] = None,
+        auto_pause_threshold: Optional[int] = None,
+        backoff_max_seconds: Optional[int] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Record a failed refresh tick: increment, back off, maybe auto-pause (RAR-3.4).
+
+        The failure counterpart of :meth:`record_repository_refresh_success`,
+        extending REPO-4.5 (#2783) to the refresh loop. In one transaction this:
+
+        1. increments ``refresh_consecutive_failures``;
+        2. computes the exponential deferral from the *new* count and the repo's
+           effective interval (:func:`app.repository_refresh_backoff.compute_refresh_backoff_seconds`
+           — the stored ``refresh_interval_seconds`` is **not** mutated) and stamps
+           ``refresh_backoff_until = now() + deferral`` so due-selection skips the
+           repo until it elapses; and
+        3. when the new count reaches the auto-pause threshold, sets
+           ``refresh_paused_at`` / ``refresh_pause_reason`` so the repo is excluded
+           from the sweep until a manual resume — an already-paused repo keeps its
+           original ``refresh_paused_at`` (the pause does not "renew").
+
+        Args:
+            repository_id: The repository whose refresh tick failed.
+            error: Short diagnostic text stored as the pause reason if this failure
+                trips the threshold.
+            auto_pause_threshold: Consecutive-failure count that trips the pause;
+                ``<= 0`` disables auto-pause. Defaults to
+                ``settings.refresh_auto_pause_threshold``.
+            backoff_max_seconds: Hard cap on the computed deferral. Defaults to
+                ``settings.refresh_backoff_max_seconds``.
+
+        Returns:
+            ``{"consecutive_failures": int, "backoff_seconds": int, "paused": bool,
+            "newly_paused": bool}`` describing the post-update state, or ``None``
+            when no live repository row matched. ``newly_paused`` is ``True`` only
+            on the transition into the pause, so the caller can fire the RAR-5.4
+            notification exactly once.
+        """
+        from .config import settings
+        from .repository_refresh_backoff import (
+            compute_refresh_backoff_seconds,
+            should_auto_pause,
+        )
+        from .repository_refresh_cadence import resolve_refresh_interval
+
+        threshold = (
+            auto_pause_threshold
+            if auto_pause_threshold is not None
+            else settings.refresh_auto_pause_threshold
+        )
+        max_seconds = (
+            backoff_max_seconds
+            if backoff_max_seconds is not None
+            else settings.refresh_backoff_max_seconds
+        )
+
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    UPDATE apiome.tenant_repositories
+                    SET refresh_consecutive_failures = refresh_consecutive_failures + 1,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s::uuid AND deleted_at IS NULL
+                    RETURNING refresh_consecutive_failures, refresh_interval_seconds,
+                              (refresh_paused_at IS NOT NULL) AS was_paused
+                    """,
+                    (repository_id,),
+                )
+                row = cursor.fetchone()
+                if row is None:
+                    conn.commit()
+                    return None
+
+                failures = int(row["refresh_consecutive_failures"])
+                already_paused = bool(row["was_paused"])
+                interval = resolve_refresh_interval(
+                    row.get("refresh_interval_seconds"),
+                    floor_seconds=settings.refresh_min_interval_seconds,
+                    default_seconds=settings.refresh_default_interval_seconds,
+                )
+                backoff_seconds = compute_refresh_backoff_seconds(
+                    failures,
+                    interval_seconds=interval,
+                    max_seconds=max_seconds,
+                )
+                pause = should_auto_pause(failures, threshold=threshold)
+                newly_paused = pause and not already_paused
+
+                # Stamp the backoff anchor always; set the pause fields only when
+                # tripping the threshold, preserving the original refresh_paused_at
+                # for an already-paused repo (no renewal).
+                cursor.execute(
+                    """
+                    UPDATE apiome.tenant_repositories
+                    SET refresh_backoff_until = now() + make_interval(secs => %s),
+                        refresh_paused_at = CASE
+                            WHEN %s THEN COALESCE(refresh_paused_at, now())
+                            ELSE refresh_paused_at
+                        END,
+                        refresh_pause_reason = CASE
+                            WHEN %s AND refresh_paused_at IS NULL THEN %s
+                            ELSE refresh_pause_reason
+                        END
+                    WHERE id = %s::uuid
+                    """,
+                    (backoff_seconds, pause, pause, error, repository_id),
+                )
+                conn.commit()
+                return {
+                    "consecutive_failures": failures,
+                    "backoff_seconds": backoff_seconds,
+                    "paused": pause or already_paused,
+                    "newly_paused": newly_paused,
+                }
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def record_repository_refresh_success(self, repository_id: str) -> bool:
+        """Reset a repository's refresh-failure bookkeeping after a good tick (RAR-3.4).
+
+        Clears ``refresh_consecutive_failures`` back to 0 and drops the
+        ``refresh_backoff_until`` anchor so the normal RAR-3.1 cadence resumes.
+        Deliberately leaves ``refresh_paused_at`` untouched: a paused repository is
+        never selected by the sweep, so a success can only arrive for an unpaused
+        repo, and un-pausing is reserved for the explicit manual resume.
+
+        Args:
+            repository_id: The repository whose refresh tick succeeded.
+
+        Returns:
+            True when a live row was updated.
+        """
+        q = """
+            UPDATE apiome.tenant_repositories
+            SET refresh_consecutive_failures = 0,
+                refresh_backoff_until = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s::uuid AND deleted_at IS NULL
+            RETURNING id
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(q, (repository_id,))
+                row = cursor.fetchone()
+                conn.commit()
+                return bool(row)
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def resume_repository_refresh(
+        self, tenant_id: str, repository_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Manually resume a paused repository's auto-refresh (RAR-3.4).
+
+        Clears the auto-pause (``refresh_paused_at`` / ``refresh_pause_reason``)
+        and resets the failure counter and backoff anchor, so the repository is
+        immediately eligible for due-selection again on its normal cadence.
+        Tenant-scoped for isolation. Safe to call on a repo that is not paused —
+        it simply resets the failure bookkeeping.
+
+        Args:
+            tenant_id: Owning tenant id (scopes the update for isolation).
+            repository_id: The repository to resume.
+
+        Returns:
+            ``{"was_paused": bool}`` when a live repository matched the
+            tenant + id, or ``None`` when no row was updated.
+        """
+        q = """
+            UPDATE apiome.tenant_repositories
+            SET refresh_paused_at = NULL,
+                refresh_pause_reason = NULL,
+                refresh_consecutive_failures = 0,
+                refresh_backoff_until = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s::uuid AND tenant_id = %s::uuid AND deleted_at IS NULL
+            RETURNING id
+        """
+        # RETURNING sees the post-UPDATE row, so was_paused is read *before* the
+        # update, in the same transaction.
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT (refresh_paused_at IS NOT NULL) AS was_paused
+                    FROM apiome.tenant_repositories
+                    WHERE id = %s::uuid AND tenant_id = %s::uuid AND deleted_at IS NULL
+                    LIMIT 1
+                    """,
+                    (repository_id, tenant_id),
+                )
+                pre = cursor.fetchone()
+                if pre is None:
+                    conn.commit()
+                    return None
+                cursor.execute(q, (repository_id, tenant_id))
+                row = cursor.fetchone()
+                conn.commit()
+                if row is None:
+                    return None
+                return {"was_paused": bool(pre["was_paused"])}
         except Exception as e:
             conn.rollback()
             raise e

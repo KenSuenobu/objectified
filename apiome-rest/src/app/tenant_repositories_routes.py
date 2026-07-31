@@ -161,6 +161,13 @@ def _row_to_record(row: Dict[str, Any]) -> TenantRepositoryRecord:
         branch_count=row.get("branch_count") if isinstance(row.get("branch_count"), int) else None,
         # Default-on so a repo whose row predates the RAR-3.3 column reads as enabled.
         auto_refresh_enabled=bool(row.get("auto_refresh_enabled", True)),
+        # RAR-3.4 backoff/auto-pause state; healthy defaults for pre-column rows.
+        refresh_consecutive_failures=int(row.get("refresh_consecutive_failures") or 0),
+        refresh_backoff_until=_ts(row.get("refresh_backoff_until")),
+        refresh_paused_at=_ts(row.get("refresh_paused_at")),
+        refresh_pause_reason=(
+            str(row["refresh_pause_reason"]) if row.get("refresh_pause_reason") else None
+        ),
         created_at=_ts(row.get("created_at")),
         updated_at=_ts(row.get("updated_at")),
     )
@@ -642,6 +649,56 @@ async def update_tenant_repository(
         )
         if updated is None:
             raise HTTPException(status_code=404, detail="repository not found")
+
+    row = db.get_tenant_repository(tenant_id, rid)
+    if not row:
+        raise HTTPException(status_code=404, detail="repository not found")
+    return TenantRepositoryGetResponse(success=True, repository=_row_to_record(row))
+
+
+@router.post(
+    "/{tenant_slug}/repositories/{repository_id}/refresh/resume",
+    response_model=TenantRepositoryGetResponse,
+)
+async def resume_tenant_repository_refresh(
+    tenant_slug: str,
+    repository_id: uuid.UUID,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> TenantRepositoryGetResponse:
+    """Manually resume a repository whose auto-refresh was paused (RAR-3.4, #3525).
+
+    A repository auto-pauses after ``APIOME_REFRESH_AUTO_PAUSE_THRESHOLD``
+    consecutive refresh failures (extending REPO-4.5 to the refresh loop). This
+    clears the pause and resets the failure counter and backoff anchor, so the
+    repository is immediately eligible for the sweep again on its normal cadence.
+    Safe to call on a repository that is not paused (it just resets the failure
+    bookkeeping). Returns the updated repository record.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        repository_id: The repository to resume.
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        The updated repository record (pause fields cleared).
+
+    Raises:
+        HTTPException: 404 when the repository does not belong to the tenant.
+    """
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.EDIT)
+    _ = tenant_slug
+    tenant_id = str(auth_data["tenant_id"])
+    rid = str(repository_id)
+
+    resumed = db.resume_repository_refresh(tenant_id, rid)
+    if resumed is None:
+        raise HTTPException(status_code=404, detail="repository not found")
+    if resumed.get("was_paused"):
+        _logger.info(
+            "repository auto-refresh manually resumed repository_id=%s tenant_id=%s",
+            rid,
+            tenant_id,
+        )
 
     row = db.get_tenant_repository(tenant_id, rid)
     if not row:

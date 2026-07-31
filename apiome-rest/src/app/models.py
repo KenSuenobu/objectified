@@ -7266,6 +7266,16 @@ class TenantRepositoryRecord(BaseModel):
     # repo on its cadence; False = the sweep skips it. Defaults to True for repos
     # whose row predates the column.
     auto_refresh_enabled: bool = True
+    # Refresh backoff + auto-pause (RAR-3.4, #3525). Consecutive failed refresh
+    # ticks; when the count trips APIOME_REFRESH_AUTO_PAUSE_THRESHOLD the repo
+    # auto-pauses (refresh_paused_at set, reason recorded) until a manual resume
+    # (POST .../refresh/resume). refresh_backoff_until is the exponential-backoff
+    # anchor deferring the next sweep pick. All default to the healthy state for
+    # rows predating the columns.
+    refresh_consecutive_failures: int = 0
+    refresh_backoff_until: Optional[str] = None
+    refresh_paused_at: Optional[str] = None
+    refresh_pause_reason: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
