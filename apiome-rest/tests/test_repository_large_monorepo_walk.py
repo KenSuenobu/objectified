@@ -746,8 +746,16 @@ def test_private_repository_without_a_token_is_still_rejected() -> None:
 class _FakeJobDB:
     """Minimal queue DAO for ``process_next_repository_file_scan_job``."""
 
-    def __init__(self, *, has_cursor: bool = False):
+    def __init__(
+        self,
+        *,
+        has_cursor: bool = False,
+        branch: str = "main",
+        default_branch: Optional[str] = None,
+    ):
         self.has_cursor = has_cursor
+        self.branch = branch
+        self.default_branch = default_branch
         self.claimed = False
         self.succeeded: List[str] = []
         self.requeued: List[Any] = []
@@ -758,10 +766,18 @@ class _FakeJobDB:
         if self.claimed:
             return None
         self.claimed = True
-        return {"id": "job-1", "tenant_id": "t1", "repository_id": "r1", "branch": "main"}
+        return {
+            "id": "job-1",
+            "tenant_id": "t1",
+            "repository_id": "r1",
+            "branch": self.branch,
+        }
 
     def get_tenant_repository(self, tenant_id: str, repository_id: str) -> Dict[str, Any]:
-        return _repo_row()
+        row = _repo_row()
+        if self.default_branch is not None:
+            row["default_branch"] = self.default_branch
+        return row
 
     def get_repository_scan_cursor(self, repository_id: str, branch: str) -> Optional[Dict[str, Any]]:
         return {"cursor_json": {}} if self.has_cursor else None
@@ -817,6 +833,70 @@ def test_job_fails_when_a_transient_failure_left_nothing_to_resume(monkeypatch: 
     assert process_next_repository_file_scan_job(db) == 1
     assert db.requeued == []
     assert db.failed and "503" in db.failed[0][1]
+    assert db.repo_updates[-1]["status"] == "error"
+
+
+def test_a_failed_default_branch_scan_still_marks_the_repository_errored(
+    monkeypatch: Any,
+) -> None:
+    """The repository's status describes its default branch, so that failure is its own."""
+    db = _FakeJobDB(has_cursor=False, branch="main", default_branch="main")
+    monkeypatch.setattr(
+        "app.repository_file_scan.scan_repository_branch_into_index",
+        lambda *a, **k: (_ for _ in ()).throw(ValueError("GitHub branch not found: main")),
+    )
+
+    assert process_next_repository_file_scan_job(db) == 1
+    assert db.failed
+    assert db.repo_updates[-1]["status"] == "error"
+
+
+def test_a_failed_side_branch_scan_does_not_poison_the_repository(monkeypatch: Any) -> None:
+    """REPO-4.3 queues ephemeral PR heads; a merge-and-delete must not error the repository.
+
+    Before this guard, a pull-request head branch removed between the webhook delivery and
+    the walk would 404, flip a perfectly healthy repository to ``error`` and zero its file
+    counts — a lie about the repository, caused by a branch that no longer exists.
+    """
+    db = _FakeJobDB(has_cursor=False, branch="feature/gone", default_branch="main")
+    monkeypatch.setattr(
+        "app.repository_file_scan.scan_repository_branch_into_index",
+        lambda *a, **k: (_ for _ in ()).throw(
+            ValueError("GitHub branch not found: feature/gone")
+        ),
+    )
+
+    assert process_next_repository_file_scan_job(db) == 1
+    assert db.failed and "feature/gone" in db.failed[0][1]
+    assert db.repo_updates == []
+
+
+def test_a_side_branch_transient_failure_with_no_cursor_also_spares_the_repository(
+    monkeypatch: Any,
+) -> None:
+    db = _FakeJobDB(has_cursor=False, branch="feature/gone", default_branch="main")
+
+    def _boom(*_a: Any, **_k: Any) -> ScanPass:
+        raise TransientScanError("GitHub branches API error: HTTP 503")
+
+    monkeypatch.setattr("app.repository_file_scan.scan_repository_branch_into_index", _boom)
+
+    assert process_next_repository_file_scan_job(db) == 1
+    assert db.failed
+    assert db.repo_updates == []
+
+
+def test_an_unknown_default_branch_keeps_the_original_fail_loud_behaviour(
+    monkeypatch: Any,
+) -> None:
+    """When we cannot tell whether the branch owns the status, surface the failure."""
+    db = _FakeJobDB(has_cursor=False, branch="anything", default_branch="")
+    monkeypatch.setattr(
+        "app.repository_file_scan.scan_repository_branch_into_index",
+        lambda *a, **k: (_ for _ in ()).throw(ValueError("boom")),
+    )
+
+    assert process_next_repository_file_scan_job(db) == 1
     assert db.repo_updates[-1]["status"] == "error"
 
 

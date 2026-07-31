@@ -30,6 +30,9 @@ from .models import (
     repository_import_spec_read_from_row,
     RepositoryRefreshNowRequest,
     RepositoryRefreshNowResponse,
+    RepositoryWebhookEventOut,
+    RepositoryWebhookStatusResponse,
+    RepositoryWebhookSubscriptionOut,
     TenantRepositoryCreate,
     TenantRepositoryCreateResponse,
     TenantRepositoryFileContentResponse,
@@ -42,6 +45,10 @@ from .models import (
 )
 from .repository_refresh_audit import RefreshOutcome, RefreshTrigger
 from .repository_file_scan import _github_owner_repo, fetch_github_repository_file_text
+from .repository_webhook_subscriptions import (
+    describe_subscription,
+    provision_repository_webhook,
+)
 from .repository_validation import (
     fetch_github_repo_with_token,
     normalize_clone_url_for_dedup,
@@ -545,6 +552,9 @@ async def create_tenant_repository(
     user_id = _require_jwt_user(auth_data)
 
     linked_account_id: Optional[str] = None
+    # Kept from the linked-account branch so the REPO-4.3 webhook provisioning below can try
+    # to create the provider hook. A public-URL registration has no token and stays local.
+    access_token: Optional[str] = None
 
     if body.source == "public_url":
         requested_clone = str(body.clone_url).strip()
@@ -577,6 +587,7 @@ async def create_tenant_repository(
         token = row_oauth.get("access_token")
         if not token:
             raise HTTPException(status_code=401, detail="no access token for linked account; re-link GitHub")
+        access_token = str(token)
 
         try:
             meta = fetch_github_repo_with_token(str(token), owner, repo)
@@ -649,6 +660,27 @@ async def create_tenant_repository(
         _logger.warning(
             "repository registered but file scan job was not enqueued (check migration 20260501-120000): %s",
             exc,
+        )
+
+    # Webhook subscription (REPO-4.3, #2781). Provisioned here — the REPO-1.4 registration
+    # path the ticket names — so a repository is ready to accept signed deliveries from the
+    # moment it exists. Never fatal: a repository whose hook could not be created still syncs
+    # on the RAR-3.1 polling cadence, and the subscription records why it stayed local.
+    webhook = provision_repository_webhook(
+        db,
+        tenant_id=tenant_id,
+        repository_id=str(inserted["id"]),
+        provider=str(inserted.get("provider") or "github"),
+        repo_full_name=inserted.get("repository_full_name"),
+        access_token=access_token,
+        actor_id=user_id,
+    )
+    if webhook.error:
+        _logger.info(
+            "repository webhook provisioning did not complete repository_id=%s state=%s: %s",
+            inserted["id"],
+            webhook.state,
+            webhook.error,
         )
 
     record = _row_to_record(inserted)
@@ -738,6 +770,81 @@ async def resume_tenant_repository_refresh(
     if not row:
         raise HTTPException(status_code=404, detail="repository not found")
     return TenantRepositoryGetResponse(success=True, repository=_row_to_record(row))
+
+
+@router.get(
+    "/{tenant_slug}/repositories/{repository_id}/webhook",
+    response_model=RepositoryWebhookStatusResponse,
+    response_model_by_alias=True,
+)
+async def get_tenant_repository_webhook(
+    tenant_slug: str,
+    repository_id: uuid.UUID,
+    limit: int = Query(
+        default=20, ge=1, le=200, description="Maximum recent deliveries to return."
+    ),
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryWebhookStatusResponse:
+    """Report a repository's webhook subscription and its recent deliveries (REPO-4.3, #2781).
+
+    This is how an operator answers "is the hook actually firing, and is the provider holding
+    the secret I think it is". The **signing secret is never part of this response** — the
+    projection is built by :func:`repository_webhook_subscriptions.describe_subscription`
+    from an explicit field list, and the underlying read does not even select the ciphertext
+    column. What is returned is a truncated fingerprint of the secret, which confirms
+    identity without revealing it.
+
+    A repository registered before this feature — or one whose provisioning could not store a
+    subscription — reports ``subscription: null`` rather than an error: it simply has no
+    webhook, and still syncs on its polling cadence.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        repository_id: The repository to report on.
+        limit: How many recent deliveries to include.
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        The subscription projection (or ``None``) plus the recent delivery ledger.
+
+    Raises:
+        HTTPException: 404 when the repository does not belong to the tenant.
+    """
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.VIEW)
+    _ = tenant_slug
+    tenant_id = str(auth_data["tenant_id"])
+    rid = str(repository_id)
+
+    if not db.get_tenant_repository(tenant_id, rid):
+        raise HTTPException(status_code=404, detail="repository not found")
+
+    row = db.get_repository_webhook_subscription(tenant_id, rid)
+    projection = describe_subscription(row)
+    events = db.list_repository_webhook_events(tenant_id, rid, limit)
+
+    return RepositoryWebhookStatusResponse(
+        success=True,
+        subscription=(
+            RepositoryWebhookSubscriptionOut(**projection) if projection else None
+        ),
+        events=[
+            RepositoryWebhookEventOut(
+                id=str(e["id"]),
+                provider=str(e.get("provider") or ""),
+                delivery_id=e.get("delivery_id"),
+                event_type=e.get("event_type"),
+                action=e.get("action"),
+                branch=e.get("branch"),
+                head_sha=e.get("head_sha"),
+                pr_number=e.get("pr_number"),
+                outcome=str(e.get("outcome") or ""),
+                reason=e.get("reason"),
+                jobs_enqueued=int(e.get("jobs_enqueued") or 0),
+                received_at=_ts(e.get("received_at")),
+            )
+            for e in events
+        ],
+    )
 
 
 @router.post(

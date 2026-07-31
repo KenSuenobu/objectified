@@ -104,6 +104,17 @@ def test_identity_non_tenant_area_falls_back_to_ip():
     assert key == "ip:203.0.113.7"
 
 
+def test_identity_webhook_ingress_buckets_by_ip_not_by_a_bogus_tenant():
+    """REPO-4.3: the second segment is the literal "webhook", not a tenant slug.
+
+    Keying it as a tenant would put every provider delivery for every tenant in one bucket,
+    so one busy repository's push storm would throttle everybody else's.
+    """
+    key, authed = resolve_identity(_make_request("/v1/repositories/webhook/github"))
+    assert authed is False
+    assert key == "ip:203.0.113.7"
+
+
 # ===========================================================================
 # Middleware end-to-end
 # ===========================================================================

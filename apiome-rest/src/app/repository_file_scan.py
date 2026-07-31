@@ -852,8 +852,58 @@ def scan_repository_branch_into_index(
     return ScanPass(total_files, importable_count, True, resumed)
 
 
-def _fail_job_and_repo(db: Database, tenant_id: str, repository_id: str, job_id: str, message: str) -> None:
+def _branch_owns_repository_status(repo_row: Optional[Dict[str, Any]], branch: str) -> bool:
+    """Whether a failed scan of ``branch`` should mark the whole repository errored.
+
+    A repository's ``status`` / ``total_files`` / ``importable_count`` describe its *default*
+    branch — that is what registration scans and what the dashboard shows. A side branch is a
+    different question, and since REPO-4.3 the scan queue also carries genuinely ephemeral
+    branches: a pull-request head that a merge-and-delete removes between the delivery and the
+    walk. Letting that vanished branch flip a healthy repository to ``error`` and zero its file
+    counts would be a lie about the repository.
+
+    Unknown default branch (a row we could not read, or a caller that supplies a partial row)
+    resolves to ``True``, preserving the pre-REPO-4.3 behaviour: when in doubt, surface the
+    failure.
+
+    Args:
+        repo_row: The ``tenant_repositories`` row, when it could be read.
+        branch: The branch whose scan failed.
+
+    Returns:
+        True when the failure should be reflected in the repository's own status.
+    """
+    if not repo_row:
+        return True
+    default_branch = str(repo_row.get("default_branch") or "").strip()
+    if not default_branch:
+        return True
+    return branch == default_branch
+
+
+def _fail_job_and_repo(
+    db: Database,
+    tenant_id: str,
+    repository_id: str,
+    job_id: str,
+    message: str,
+    *,
+    fail_repository: bool = True,
+) -> None:
+    """Mark a scan job failed, and the repository with it when the branch owns its status.
+
+    Args:
+        db: Database handle.
+        tenant_id: Owning tenant id.
+        repository_id: The repository whose scan failed.
+        job_id: The failed job.
+        message: Short diagnostic recorded on the job.
+        fail_repository: When False only the job is failed — see
+            :func:`_branch_owns_repository_status`.
+    """
     db.mark_repository_file_scan_job_failed(job_id, message)
+    if not fail_repository:
+        return
     db.update_tenant_repository_after_file_scan(
         tenant_id=tenant_id,
         repository_id=repository_id,
@@ -871,7 +921,12 @@ def process_next_repository_file_scan_job(db: Database) -> int:
     wall-clock budget, or when a transient provider failure left a stored resume
     cursor behind (REPO-2.5), the job goes back to ``queued`` and the next sweep
     tick resumes it from that cursor. Only a fatal error — or a transient failure
-    that produced no cursor to resume from — marks the job and repository failed.
+    that produced no cursor to resume from — marks the job failed.
+
+    Whether that failure also marks the *repository* failed depends on the branch
+    (:func:`_branch_owns_repository_status`): the repository's status describes its
+    default branch, so a side branch — including the ephemeral pull-request heads
+    REPO-4.3 queues — fails its own job without zeroing the repository's counts.
 
     Args:
         db: Database handle for this tick.
@@ -887,6 +942,7 @@ def process_next_repository_file_scan_job(db: Database) -> int:
     tenant_id = str(job["tenant_id"])
     repository_id = str(job["repository_id"])
     branch = str(job["branch"])
+    repo_row: Optional[Dict[str, Any]] = None
 
     try:
         repo_row = db.get_tenant_repository(tenant_id, repository_id)
@@ -936,9 +992,23 @@ def process_next_repository_file_scan_job(db: Database) -> int:
             # Nothing to resume from (the failure preceded any progress); fail so a
             # permanently broken repository cannot re-queue itself forever.
             _logger.exception("repository file scan failed job_id=%s", job_id)
-            _fail_job_and_repo(db, tenant_id, repository_id, job_id, msg[:2000])
+            _fail_job_and_repo(
+                db,
+                tenant_id,
+                repository_id,
+                job_id,
+                msg[:2000],
+                fail_repository=_branch_owns_repository_status(repo_row, branch),
+            )
     except Exception as exc:
         _logger.exception("repository file scan failed job_id=%s", job_id)
         msg = str(exc) if str(exc) else type(exc).__name__
-        _fail_job_and_repo(db, tenant_id, repository_id, job_id, msg[:2000])
+        _fail_job_and_repo(
+            db,
+            tenant_id,
+            repository_id,
+            job_id,
+            msg[:2000],
+            fail_repository=_branch_owns_repository_status(repo_row, branch),
+        )
     return 1

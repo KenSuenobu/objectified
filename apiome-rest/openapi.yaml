@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.87.0
+  version: 1.88.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -34189,6 +34189,97 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for resume tenant repository refreshresponse422.
+  /v1/tenants/{tenant_slug}/repositories/{repository_id}/webhook:
+    get:
+      tags:
+      - tenant-repositories
+      summary: Get Tenant Repository Webhook
+      description: "Report a repository's webhook subscription and its recent deliveries\
+        \ (REPO-4.3, #2781).\n\nThis is how an operator answers \"is the hook actually\
+        \ firing, and is the provider holding\nthe secret I think it is\". The **signing\
+        \ secret is never part of this response** — the\nprojection is built by :func:`repository_webhook_subscriptions.describe_subscription`\n\
+        from an explicit field list, and the underlying read does not even select\
+        \ the ciphertext\ncolumn. What is returned is a truncated fingerprint of the\
+        \ secret, which confirms\nidentity without revealing it.\n\nA repository registered\
+        \ before this feature — or one whose provisioning could not store a\nsubscription\
+        \ — reports ``subscription: null`` rather than an error: it simply has no\n\
+        webhook, and still syncs on its polling cadence.\n\nArgs:\n    tenant_slug:\
+        \ Tenant slug from the path (scoping comes from the token).\n    repository_id:\
+        \ The repository to report on.\n    limit: How many recent deliveries to include.\n\
+        \    auth_data: Authenticated principal; supplies the tenant scope.\n\nReturns:\n\
+        \    The subscription projection (or ``None``) plus the recent delivery ledger.\n\
+        \nRaises:\n    HTTPException: 404 when the repository does not belong to the\
+        \ tenant."
+      operationId: get_tenant_repository_webhook_v1_tenants__tenant_slug__repositories__repository_id__webhook_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: repository_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Repository Id
+          description: Repository Id schema.
+        description: Connected repository identifier.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Maximum recent deliveries to return.
+          default: 20
+          title: Limit
+        description: Maximum recent deliveries to return.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Tenant Repository Webhookauthorization schema.
+          - type: 'null'
+            description: Get Tenant Repository Webhookauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Tenant Repository Webhook Xapikey schema.
+          - type: 'null'
+            description: Get Tenant Repository Webhook Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get tenant repository webhook.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepositoryWebhookStatusResponse'
+                description: Response payload for get tenant repository webhookresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get tenant repository webhookresponse422.
   /v1/tenants/{tenant_slug}/repositories/{repository_id}/refresh:
     post:
       tags:
@@ -34447,6 +34538,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for list repository refresh historyresponse422.
+  /v1/repositories/webhook/{provider}:
+    post:
+      tags:
+      - repository-webhooks
+      summary: Ingest a provider push / pull-request webhook delivery
+      description: "Receive one signed provider delivery and turn it into a poll (REPO-4.3).\n\
+        \nArgs:\n    request: The inbound request; its **raw** body is what the signature\
+        \ covers, so it is\n        read as bytes and never re-serialised from parsed\
+        \ JSON.\n    provider: The provider path segment.\n\nReturns:\n    A thin\
+        \ receipt: the outcome, its reason code, and how many scan jobs were queued.\n\
+        \nRaises:\n    HTTPException: 400 for an unsupported provider or an unusable\
+        \ body; 401 when the\n        signature does not verify for a repository registered\
+        \ here."
+      operationId: ingest_repository_webhook_v1_repositories_webhook__provider__post
+      parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          type: string
+          description: 'Git provider that signed this delivery: github | gitlab |
+            bitbucket'
+          title: Provider
+        description: 'Git provider that signed this delivery: github | gitlab | bitbucket'
+      responses:
+        '200':
+          description: Successful response for ingest a provider push / pull-request
+            webhook delivery.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepositoryWebhookReceiptResponse'
+                description: Request body for ingestaproviderpushpullrequestwebhookdelresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Request body for ingestaproviderpushpullrequestwebhookdelresponse422.
   /v1/access/{tenant_slug}/permissions/me:
     get:
       tags:
@@ -75307,6 +75438,304 @@ components:
         this model carries them from the executor through to version creation so they
 
         land on the new ``apiome.versions`` row.'
+    RepositoryWebhookEventOut:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        provider:
+          type: string
+          title: Provider
+          description: Provider.
+          example: example
+        deliveryId:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook event.
+          - type: 'null'
+            description: Response payload for repository webhook event.
+          title: Deliveryid
+          description: Delivery ID.
+        eventType:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook event.
+          - type: 'null'
+            description: Response payload for repository webhook event.
+          title: Eventtype
+          description: Event Type.
+        action:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook event.
+          - type: 'null'
+            description: Response payload for repository webhook event.
+          title: Action
+          description: Action.
+        branch:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook event.
+          - type: 'null'
+            description: Response payload for repository webhook event.
+          title: Branch
+          description: Branch.
+        headSha:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook event.
+          - type: 'null'
+            description: Response payload for repository webhook event.
+          title: Headsha
+          description: Head Sha.
+        prNumber:
+          anyOf:
+          - type: integer
+            description: Response payload for repository webhook event.
+          - type: 'null'
+            description: Response payload for repository webhook event.
+          title: Prnumber
+          description: Pr Number.
+        outcome:
+          type: string
+          title: Outcome
+          description: Outcome.
+          example: example
+        reason:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook event.
+          - type: 'null'
+            description: Response payload for repository webhook event.
+          title: Reason
+          description: Reason.
+        jobsEnqueued:
+          type: integer
+          title: Jobsenqueued
+          default: 0
+          description: Jobs Enqueued.
+          example: 1
+        receivedAt:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook event.
+          - type: 'null'
+            description: Response payload for repository webhook event.
+          title: Receivedat
+          description: Received At.
+      type: object
+      required:
+      - id
+      - provider
+      - outcome
+      title: RepositoryWebhookEventOut
+      description: 'One recorded webhook delivery (REPO-4.3, #2781).'
+    RepositoryWebhookReceiptResponse:
+      properties:
+        accepted:
+          type: boolean
+          title: Accepted
+          default: true
+          description: Accepted.
+          example: false
+        outcome:
+          type: string
+          title: Outcome
+          description: Outcome.
+          example: example
+        reason:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook receipt.
+          - type: 'null'
+            description: Response payload for repository webhook receipt.
+          title: Reason
+          description: Reason.
+        jobsEnqueued:
+          type: integer
+          title: Jobsenqueued
+          default: 0
+          description: Jobs Enqueued.
+          example: 1
+      type: object
+      required:
+      - outcome
+      title: RepositoryWebhookReceiptResponse
+      description: 'What the ingestion endpoint tells a provider it did (REPO-4.3,
+        #2781).
+
+
+        Kept deliberately thin. A provider only needs to know the delivery was accepted
+        so it
+
+        stops retrying; anything richer would be a side channel describing a tenant''s
+
+        repositories to whoever can reach the endpoint.'
+    RepositoryWebhookStatusResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          default: true
+          description: Success.
+          example: false
+        subscription:
+          anyOf:
+          - $ref: '#/components/schemas/RepositoryWebhookSubscriptionOut'
+          - type: 'null'
+            description: Response payload for repository webhook status.
+          description: Subscription.
+        events:
+          items:
+            $ref: '#/components/schemas/RepositoryWebhookEventOut'
+          type: array
+          title: Events
+          description: Events.
+          maxItems: 1000
+      type: object
+      title: RepositoryWebhookStatusResponse
+      description: 'Webhook subscription + recent deliveries for one repository (REPO-4.3,
+        #2781).'
+    RepositoryWebhookSubscriptionOut:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        provider:
+          type: string
+          title: Provider
+          description: Provider.
+          example: example
+        repositoryFullName:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Repositoryfullname
+          description: Repository Full Name.
+        registrationState:
+          type: string
+          title: Registrationstate
+          description: Registration State.
+          example: example
+        registrationError:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Registrationerror
+          description: Registration Error.
+        providerHookId:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Providerhookid
+          description: Provider Hook ID.
+        secretFingerprint:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Secretfingerprint
+          description: Secret Fingerprint.
+        prPreviewEnabled:
+          type: boolean
+          title: Prpreviewenabled
+          default: true
+          description: Pr Preview Enabled.
+          example: false
+        signatureHeader:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Signatureheader
+          description: Signature Header.
+        endpointPath:
+          type: string
+          title: Endpointpath
+          description: Endpoint Path.
+          example: example
+        endpointUrl:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Endpointurl
+          description: Endpoint URL.
+        eventCount:
+          type: integer
+          title: Eventcount
+          default: 0
+          description: Number of event.
+          example: 1
+        lastEventAt:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Lasteventat
+          description: Last Event At.
+        lastDeliveryId:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Lastdeliveryid
+          description: Last Delivery ID.
+        createdAt:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Createdat
+          description: Created At.
+        updatedAt:
+          anyOf:
+          - type: string
+            description: Response payload for repository webhook subscription.
+          - type: 'null'
+            description: Response payload for repository webhook subscription.
+          title: Updatedat
+          description: Updated At.
+      type: object
+      required:
+      - id
+      - provider
+      - registrationState
+      - endpointPath
+      title: RepositoryWebhookSubscriptionOut
+      description: 'A repository''s webhook subscription as a client may see it (REPO-4.3,
+        #2781).
+
+
+        Every field here is deliberately non-sensitive. The signing secret has **no**
+        field on
+
+        this model: it is written once at registration time, kept Fernet-encrypted,
+        and used only
+
+        to verify an inbound delivery. ``secret_fingerprint`` is a truncated SHA-256
+        of it, which
+
+        lets an operator confirm the provider holds the same secret without either
+        side
+
+        revealing it.'
     RequestBodyContentTypeRequest:
       properties:
         media_type:
@@ -75798,7 +76227,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-07-31T18:52:52Z'
+          example: '2026-07-31T19:49:12Z'
       additionalProperties: false
       type: object
       required:
@@ -85296,13 +85725,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-07-31T18:52:52Z'
+          example: '2026-07-31T19:49:12Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-07-31T18:52:52Z'
+          example: '2026-07-31T19:49:12Z'
         outcome:
           anyOf:
           - type: string

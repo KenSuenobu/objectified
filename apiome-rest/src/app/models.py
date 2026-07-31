@@ -7324,6 +7324,81 @@ class RepositoryRefreshNowResponse(BaseModel):
     branches: List[str]
 
 
+class RepositoryWebhookSubscriptionOut(BaseModel):
+    """A repository's webhook subscription as a client may see it (REPO-4.3, #2781).
+
+    Every field here is deliberately non-sensitive. The signing secret has **no** field on
+    this model: it is written once at registration time, kept Fernet-encrypted, and used only
+    to verify an inbound delivery. ``secret_fingerprint`` is a truncated SHA-256 of it, which
+    lets an operator confirm the provider holds the same secret without either side
+    revealing it.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    provider: str
+    repository_full_name: Optional[str] = Field(None, alias="repositoryFullName")
+    registration_state: str = Field(alias="registrationState")
+    registration_error: Optional[str] = Field(None, alias="registrationError")
+    provider_hook_id: Optional[str] = Field(None, alias="providerHookId")
+    secret_fingerprint: Optional[str] = Field(None, alias="secretFingerprint")
+    pr_preview_enabled: bool = Field(True, alias="prPreviewEnabled")
+    signature_header: Optional[str] = Field(None, alias="signatureHeader")
+    endpoint_path: str = Field(alias="endpointPath")
+    endpoint_url: Optional[str] = Field(None, alias="endpointUrl")
+    event_count: int = Field(0, alias="eventCount")
+    last_event_at: Optional[str] = Field(None, alias="lastEventAt")
+    last_delivery_id: Optional[str] = Field(None, alias="lastDeliveryId")
+    created_at: Optional[str] = Field(None, alias="createdAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
+
+
+class RepositoryWebhookEventOut(BaseModel):
+    """One recorded webhook delivery (REPO-4.3, #2781)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    provider: str
+    delivery_id: Optional[str] = Field(None, alias="deliveryId")
+    event_type: Optional[str] = Field(None, alias="eventType")
+    action: Optional[str] = None
+    branch: Optional[str] = None
+    head_sha: Optional[str] = Field(None, alias="headSha")
+    pr_number: Optional[int] = Field(None, alias="prNumber")
+    outcome: str
+    reason: Optional[str] = None
+    jobs_enqueued: int = Field(0, alias="jobsEnqueued")
+    received_at: Optional[str] = Field(None, alias="receivedAt")
+
+
+class RepositoryWebhookStatusResponse(BaseModel):
+    """Webhook subscription + recent deliveries for one repository (REPO-4.3, #2781)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    success: bool = True
+    subscription: Optional[RepositoryWebhookSubscriptionOut] = None
+    events: List[RepositoryWebhookEventOut] = Field(default_factory=list)
+
+
+class RepositoryWebhookReceiptResponse(BaseModel):
+    """What the ingestion endpoint tells a provider it did (REPO-4.3, #2781).
+
+    Kept deliberately thin. A provider only needs to know the delivery was accepted so it
+    stops retrying; anything richer would be a side channel describing a tenant's
+    repositories to whoever can reach the endpoint.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    accepted: bool = True
+    outcome: str
+    reason: Optional[str] = None
+    jobs_enqueued: int = Field(0, alias="jobsEnqueued")
+
+
 class TenantRepositoriesListResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
