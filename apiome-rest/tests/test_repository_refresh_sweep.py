@@ -15,6 +15,15 @@ Plus the RAR-3.4 (#3525) backoff/auto-pause bookkeeping the sweep feeds:
   - a successful tick resets the failure counter (only when it was non-zero);
   - the auto-pause transition fires the RAR-5.4 notification exactly once;
   - bookkeeping/notification errors never abort the sweep.
+
+Plus the RAR-3.5 (#3526) per-tenant quotas / fairness:
+  - the due list is round-robin interleaved across tenants;
+  - a tenant over its windowed quota has its repos deferred (no lock, no
+    anchor advance, no failure) while other tenants proceed;
+  - the quota bounds enqueues mid-repo and across a tenant's repos in one tick;
+  - deferral never records a refresh failure;
+  - a disabled quota (<= 0) or a usage-count error degrades to unlimited;
+  - the manual path (no ``max_enqueues``) is never quota-limited.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -57,11 +66,21 @@ def _candidate(path: str, *, remote_committed_at, remote_blob, last_committed_at
 class FakeDB:
     """Records sweep interactions; no real database."""
 
-    def __init__(self, *, due=None, branches=None, candidates=None, lock_result=True):
+    def __init__(
+        self,
+        *,
+        due=None,
+        branches=None,
+        candidates=None,
+        lock_result=True,
+        recent_jobs_by_tenant=None,
+    ):
         self._due = due if due is not None else []
         self._branches = branches if branches is not None else {}
         self._candidates = candidates if candidates is not None else {}
         self._lock_result = lock_result
+        # RAR-3.5: jobs already enqueued per tenant inside the quota window.
+        self._recent_jobs_by_tenant = recent_jobs_by_tenant or {}
         self.acquired = []
         self.released = []
         self.scanned = []
@@ -82,6 +101,10 @@ class FakeDB:
     # --- due selection / lock ---
     def list_due_repositories(self):
         return list(self._due)
+
+    # --- RAR-3.5 tenant quota window usage ---
+    def count_recent_repository_refresh_jobs_by_tenant(self, window_seconds):
+        return dict(self._recent_jobs_by_tenant)
 
     def try_acquire_repository_refresh_lock(self, repository_id):
         self.acquired.append(repository_id)
@@ -524,3 +547,185 @@ def test_repo_level_error_counts_as_failed_tick(monkeypatch):
     assert "branch listing query failed" in db.failures_recorded[0]["error"]
     assert db.refreshed == ["r1"]
     assert db.released == ["r1"]
+
+
+# ----------------------------------------------- RAR-3.5 tenant quotas / fairness
+
+
+def _stale(path):
+    """A stale + newer candidate (always passes the freshness gate)."""
+    return _candidate(
+        path,
+        remote_committed_at=NEWER, remote_blob=f"new-{path}",
+        last_committed_at=OLDER, last_blob=f"old-{path}",
+    )
+
+
+def test_sweep_round_robins_tenants():
+    """Due repos are processed one-per-tenant per round, not tenant-clustered."""
+    db = FakeDB(
+        due=[
+            {"id": "a1", "tenant_id": "t1"},
+            {"id": "a2", "tenant_id": "t1"},
+            {"id": "a3", "tenant_id": "t1"},
+            {"id": "b1", "tenant_id": "t2"},
+        ],
+        branches={},  # no specs anywhere: order is all we observe
+    )
+
+    process_repository_refresh_sweep(db)
+
+    # t2's repo runs second, after t1's most-overdue repo — not after all of t1.
+    assert db.refreshed == ["a1", "b1", "a2", "a3"]
+
+
+def test_tenant_over_quota_is_deferred_others_proceed(monkeypatch):
+    """An exhausted tenant's repos defer (no lock/anchor/failure); others run."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 2)
+
+    db = FakeDB(
+        due=[
+            {"id": "a1", "tenant_id": "t1"},
+            {"id": "b1", "tenant_id": "t2"},
+        ],
+        branches={"a1": ["main"], "b1": ["main"]},
+        candidates={("a1", "main"): [_stale("a.yaml")], ("b1", "main"): [_stale("b.yaml")]},
+        recent_jobs_by_tenant={"t1": 2},  # t1 already at its window bound
+    )
+
+    enqueued = process_repository_refresh_sweep(db)
+
+    assert enqueued == 1
+    assert [j["path"] for j in db.enqueued] == ["b.yaml"]
+    # Deferral is total for a1: never locked, never scanned, anchor untouched,
+    # and no RAR-3.4 failure recorded (deferral is not an error).
+    assert db.acquired == ["b1"]
+    assert db.refreshed == ["b1"]
+    assert db.scanned == [("b1", "main")]
+    assert db.failures_recorded == []
+
+
+def test_quota_bounds_enqueues_mid_repo(monkeypatch):
+    """A repo with more stale files than budget enqueues up to the bound, defers the rest."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 1)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml"), _stale("two.yaml")]},
+    )
+
+    enqueued = process_repository_refresh_sweep(db)
+
+    assert enqueued == 1
+    assert [j["path"] for j in db.enqueued] == ["one.yaml"]
+    # The deferred file is not a failure and the tick completes normally.
+    assert db.failures_recorded == []
+    assert db.refreshed == ["r1"]
+    assert db.released == ["r1"]
+
+
+def test_quota_spent_skips_remaining_branch_walks(monkeypatch):
+    """Once the budget is spent, later branches are not even rescanned (no provider calls)."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 1)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main", "dev"]},
+        candidates={
+            ("r1", "main"): [_stale("main.yaml")],
+            ("r1", "dev"): [_stale("dev.yaml")],
+        },
+    )
+
+    enqueued = process_repository_refresh_sweep(db)
+
+    assert enqueued == 1
+    assert [j["path"] for j in db.enqueued] == ["main.yaml"]
+    assert db.scanned == [("r1", "main")]  # dev walk skipped entirely
+    assert db.failures_recorded == []
+
+
+def test_quota_spans_tenant_repos_within_one_tick(monkeypatch):
+    """A tenant's budget is shared across its repos inside a single tick."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 1)
+
+    db = FakeDB(
+        due=[
+            {"id": "rA", "tenant_id": "t1"},
+            {"id": "rB", "tenant_id": "t1"},
+        ],
+        branches={"rA": ["main"], "rB": ["main"]},
+        candidates={("rA", "main"): [_stale("a.yaml")], ("rB", "main"): [_stale("b.yaml")]},
+    )
+
+    enqueued = process_repository_refresh_sweep(db)
+
+    assert enqueued == 1
+    assert [j["path"] for j in db.enqueued] == ["a.yaml"]
+    # rB deferred before its lock: stays due for a later tick once the window rolls.
+    assert db.acquired == ["rA"]
+    assert db.refreshed == ["rA"]
+    assert db.failures_recorded == []
+
+
+def test_quota_disabled_is_unlimited(monkeypatch):
+    """APIOME_REFRESH_TENANT_QUOTA <= 0 disables the bound entirely."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 0)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml"), _stale("two.yaml")]},
+        recent_jobs_by_tenant={"t1": 10_000},  # would exhaust any enabled quota
+    )
+
+    enqueued = process_repository_refresh_sweep(db)
+
+    assert enqueued == 2
+
+
+def test_quota_usage_count_error_degrades_to_unlimited(monkeypatch):
+    """A window-usage count failure never blocks the sweep (protective bound only)."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 1)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml"), _stale("two.yaml")]},
+    )
+
+    def _count_boom(window_seconds):
+        raise RuntimeError("quota usage query failed")
+
+    db.count_recent_repository_refresh_jobs_by_tenant = _count_boom
+
+    enqueued = process_repository_refresh_sweep(db)
+
+    assert enqueued == 2  # degraded to unlimited for the tick
+    assert db.refreshed == ["r1"]
+
+
+def test_manual_path_without_budget_is_never_limited():
+    """enqueue_stale_files_for_branch without max_enqueues (manual path) has no bound."""
+    db = FakeDB(
+        candidates={("r1", "main"): [_stale("one.yaml"), _stale("two.yaml")]},
+    )
+    repo_row = {"id": "r1", "tenant_id": "t1", "provider": "github"}
+
+    result = sweep.enqueue_stale_files_for_branch(db, repo_row, "main")
+
+    assert result.enqueued == 2
+    assert result.deferred == 0

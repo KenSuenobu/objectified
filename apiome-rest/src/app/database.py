@@ -14236,6 +14236,39 @@ class Database:
             conn.rollback()
             raise e
 
+    def count_recent_repository_refresh_jobs_by_tenant(
+        self, window_seconds: int
+    ) -> Dict[str, int]:
+        """Count refresh jobs enqueued per tenant inside a rolling window (RAR-3.5).
+
+        Seeds the per-tenant quota tracker for one sweep tick: every row of
+        ``apiome.tenant_repository_refresh_jobs`` created within the last
+        ``window_seconds`` counts against its tenant regardless of the job's
+        current status — the quota bounds enqueue *rate*, so a job that already
+        completed (or failed) still occupied its window slot. The comparison
+        runs against ``now()`` in the database so it does not depend on
+        application clock skew.
+
+        Args:
+            window_seconds: Length of the rolling window, in seconds.
+
+        Returns:
+            Mapping of tenant id to the number of refresh jobs enqueued in the
+            window. Tenants with no jobs in the window are absent.
+        """
+        q = """
+            SELECT tenant_id, COUNT(*) AS jobs
+            FROM apiome.tenant_repository_refresh_jobs
+            WHERE created_at >= now() - make_interval(secs => %s)
+            GROUP BY tenant_id
+        """
+        rows = self.execute_query(q, (int(window_seconds),))
+        return {
+            str(r["tenant_id"]): int(r["jobs"] or 0)
+            for r in rows
+            if r.get("tenant_id") is not None
+        }
+
     def list_tenant_repository_file_branches(self, tenant_id: str, repository_id: str) -> List[str]:
         """Distinct branch names that have indexed file rows for this repository."""
         q = """
