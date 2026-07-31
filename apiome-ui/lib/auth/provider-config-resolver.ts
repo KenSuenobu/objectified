@@ -121,7 +121,17 @@ let cache: CacheEntry | null = null;
  */
 export function invalidateProviderConfigCache(): void {
   cache = null;
+  missingTokenNoticeLogged = false;
 }
+
+/**
+ * Whether the "no service token" notice has already been emitted in this process.
+ *
+ * Running without the token is a legitimate configuration (providers come from env alone), so it is
+ * not a warning on every login — but it is also the state in which admin-screen provider config
+ * silently has no effect, which is indistinguishable from a bug unless something says so once.
+ */
+let missingTokenNoticeLogged = false;
 
 /**
  * Whether a candidate override value is present (a non-blank string). Blank ⇒ treated as absent so
@@ -149,7 +159,17 @@ async function fetchResolvedProviderConfig(
 ): Promise<ResolvedProviderConfigResponse | null> {
   const token = env.INTERNAL_SERVICE_TOKEN?.trim();
   if (!token) {
-    // No token ⇒ the resolved read path is disabled; run on env alone. Not an error.
+    // No token ⇒ the resolved read path is disabled; run on env alone. Not an error — but say so
+    // once per process, because otherwise the *only* observable difference between "configured
+    // from env on purpose" and "the deploy dropped the token" is that admin-screen provider
+    // config quietly does nothing. Once, not per login: this is a startup-shaped fact.
+    if (!missingTokenNoticeLogged) {
+      missingTokenNoticeLogged = true;
+      console.warn(
+        '[provider-config-resolver] INTERNAL_SERVICE_TOKEN is not set; sign-in providers are ' +
+          'configured from env only, and admin-screen provider config will have no effect'
+      );
+    }
     return null;
   }
 

@@ -9,7 +9,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # REST API Base URL
+      # REST API Base URL. Also used by *server-side* calls (the login-time provider resolver
+      # below), so in a container the default localhost is this container — point it at the REST
+      # service on the shared network (e.g. http://rest:8000/v1) or a reachable public URL.
       - NEXT_PUBLIC_REST_API_BASE_URL=${NEXT_PUBLIC_REST_API_BASE_URL:-http://localhost:8000/v1}
       # Public mock runtime URL (published-versions dashboard mock links)
       - APIOME_MOCK_PUBLIC_BASE_URL=${APIOME_MOCK_PUBLIC_BASE_URL:-http://localhost:8775}
@@ -32,6 +34,18 @@ services:
       - NEXT_PUBLIC_BETA_MODE=${NEXT_PUBLIC_BETA_MODE:-true}
       # Admin Password
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      # Secret signing the super-admin session cookie. Optional (derived from ADMIN_PASSWORD
+      # when unset) but must resolve to the SAME value apiome-rest sees, or REST rejects the
+      # admin provider-config writes this app proxies to it.
+      - ADMIN_SESSION_SECRET=${ADMIN_SESSION_SECRET:-}
+      # DB-over-env sign-in provider config (OLO-8.5). The login page resolves providers by
+      # calling apiome-rest's GET /v1/internal/auth-providers/resolved with this token. Unset ⇒
+      # the resolver returns silently (no log line) and sign-in runs on the *_ID/*_SECRET env
+      # vars above, so provider config saved in the admin screen appears to have no effect.
+      # Must MATCH INTERNAL_SERVICE_TOKEN in apiome-rest.
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-}
+      # Optional in-process TTL (ms) for that resolved config; clamped to [5000, 60000].
+      - AUTH_PROVIDER_CONFIG_CACHE_TTL_MS=${AUTH_PROVIDER_CONFIG_CACHE_TTL_MS:-}
       # Database Connection (for PostgreSQL)
       - PGHOST=${PGHOST:-localhost}
       - PGPORT=${PGPORT:-5432}
