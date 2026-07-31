@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.81.2",
+    "version": "1.82.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -100772,7 +100772,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-07-30T03:30:56Z"
+            "example": "2026-07-31T15:06:48Z"
           }
         },
         "additionalProperties": false,
@@ -109280,6 +109280,64 @@
             "default": "filename",
             "description": "Confidence.",
             "example": "example"
+          },
+          "quality_score": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "description": "Tenant Repository File Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Tenant Repository File Row schema."
+              }
+            ],
+            "title": "Quality Score",
+            "description": "Rough 0-100 quality score for a classified spec (REPO-2.8), from the same lint engines that score imports. Null until the file has been scored, and for any file that could not be scored. Informational only \u2014 it never gates sync or import."
+          },
+          "quality_grade": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Tenant Repository File Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Tenant Repository File Row schema."
+              }
+            ],
+            "title": "Quality Grade",
+            "description": "A-F letter grade matching quality_score; null when unscored."
+          },
+          "quality_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Tenant Repository File Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Tenant Repository File Row schema."
+              }
+            ],
+            "title": "Quality Status",
+            "description": "Outcome of the last scoring attempt: 'scored', 'skipped', or 'error'. Null means no attempt has run yet."
+          },
+          "quality_reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Tenant Repository File Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Tenant Repository File Row schema."
+              }
+            ],
+            "title": "Quality Reason",
+            "description": "Stable machine reason a file was skipped or errored (e.g. 'unclassified', 'no-adapter', 'too-large', 'parse-failed'); null when scored."
           }
         },
         "type": "object",
@@ -112897,14 +112955,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-07-30T03:30:56Z"
+            "example": "2026-07-31T15:06:48Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-07-30T03:30:56Z"
+            "example": "2026-07-31T15:06:48Z"
           },
           "outcome": {
             "anyOf": [

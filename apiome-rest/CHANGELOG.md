@@ -5,6 +5,45 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.218.0] - 2026-07-31
+
+### Added
+- **Quality scoring per discovered spec (REPO-2.8, #2769)** — the repository scanner classified
+  a discovered file by filename but said nothing about whether it was any good, so triaging a
+  repository's specs meant opening each candidate by hand. Every *classified* spec now carries a
+  rough 0–100 quality score.
+  - **Reuses the existing engines, not new scoring.** A discovered spec is scored through its
+    import-source adapter — `parse` → `normalize` → `lint` — which for OpenAPI is the native
+    path/schema linter (`schema_lint.lint_openapi_spec`: the PATH-QUALITY and SCHEMA-QUALITY rule
+    groups) and for every other format the canonical-model rule packs behind `ImportSource.lint`.
+    A repository file and an imported revision therefore land on one comparable scale, and a rule
+    added to either engine shows up here for free.
+  - **Only classified specs.** `unknown_spec` files — no `detected_kind`, or a generic container
+    kind like `json-candidate` on a `package.json` — are never scored, selected by the same
+    importable predicate the Files browser filters on. A classified format with no adapter yet
+    (Prisma, SQL DDL, DBML) is skipped for its own distinct, labelled reason.
+  - **Persisted on the file row.** `apiome.tenant_repository_files` gains `quality_score`,
+    `quality_grade`, `quality_status` (`scored` | `skipped` | `error`), `quality_reason`,
+    `quality_scored_at` and `quality_scored_blob_sha` (V222). All nullable, so every
+    already-indexed repository reads as "not scored yet" and no re-scan is required.
+  - **Bounded background pass.** Scoring runs in its own sweep
+    (`repository_quality_sweep.process_repository_spec_quality_batch`), not inside the REPO-2.5
+    tree walk, so a monorepo scan keeps its current cost. Each tick claims at most
+    `APIOME_REPOSITORY_QUALITY_BATCH_SIZE` (default 10) due files every
+    `APIOME_REPOSITORY_QUALITY_INTERVAL` seconds (default 30); set
+    `APIOME_REPOSITORY_QUALITY_SCORING=false` to disable it entirely.
+  - **One download per revision.** Every attempt stamps the blob sha it read, success or not, so
+    an unscorable file settles instead of being re-fetched each tick, and editing the file makes
+    it due again. Private repositories are read only with their linked-account token, and files
+    above the 900 KB content cap are skipped without being downloaded.
+  - **Informational only.** No scoring path can raise: an unparseable document, a missing
+    toolchain, a provider failure, or an adapter bug is recorded on the row as a stable machine
+    reason. Nothing gates a scan, a refresh, or an import on the score — spec promotion gating
+    remains REPO-5.6's job.
+  - `GET /v1/tenants/{slug}/repositories/{id}/files` returns `quality_score`, `quality_grade`,
+    `quality_status` and `quality_reason` per row, and the Repository detail Files tab renders
+    them in a new **Quality** column (REPO-6.2).
+
 ## [1.217.0] - 2026-07-30
 
 ### Added

@@ -7330,6 +7330,34 @@ class TenantRepositoryFileRow(BaseModel):
     detected_kind: Optional[str] = None
     display_kind: str
     confidence: str = "filename"
+    quality_score: Optional[int] = Field(
+        default=None,
+        ge=0,
+        le=100,
+        description=(
+            "Rough 0-100 quality score for a classified spec (REPO-2.8), from the same lint "
+            "engines that score imports. Null until the file has been scored, and for any file "
+            "that could not be scored. Informational only — it never gates sync or import."
+        ),
+    )
+    quality_grade: Optional[str] = Field(
+        default=None,
+        description="A-F letter grade matching quality_score; null when unscored.",
+    )
+    quality_status: Optional[str] = Field(
+        default=None,
+        description=(
+            "Outcome of the last scoring attempt: 'scored', 'skipped', or 'error'. Null means no "
+            "attempt has run yet."
+        ),
+    )
+    quality_reason: Optional[str] = Field(
+        default=None,
+        description=(
+            "Stable machine reason a file was skipped or errored (e.g. 'unclassified', "
+            "'no-adapter', 'too-large', 'parse-failed'); null when scored."
+        ),
+    )
 
 
 class TenantRepositoryFilesListResponse(BaseModel):

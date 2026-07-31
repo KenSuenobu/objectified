@@ -292,6 +292,7 @@ async def list_tenant_repository_files(
         dk_s = str(dk) if dk is not None else None
         blob = fr.get("blob_sha")
         sz = fr.get("size_bytes")
+        qscore = fr.get("quality_score")
         files_out.append(
             TenantRepositoryFileRow(
                 id=str(fr["id"]),
@@ -303,6 +304,12 @@ async def list_tenant_repository_files(
                 detected_kind=dk_s,
                 display_kind=_display_kind(dk_s, path),
                 confidence="filename",
+                # REPO-2.8: informational only. The browser renders it as a badge; nothing
+                # downstream reads it as a gate.
+                quality_score=int(qscore) if isinstance(qscore, int) else None,
+                quality_grade=str(fr["quality_grade"]) if fr.get("quality_grade") else None,
+                quality_status=str(fr["quality_status"]) if fr.get("quality_status") else None,
+                quality_reason=str(fr["quality_reason"]) if fr.get("quality_reason") else None,
             )
         )
 

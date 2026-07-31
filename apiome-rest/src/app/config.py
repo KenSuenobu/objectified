@@ -361,6 +361,37 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Per-spec quality scoring for discovered repository files (REPO-2.8, #2769). A
+    # background sweep downloads each newly discovered *classified* spec once and runs
+    # the existing import lint engines over it, storing a 0-100 score on
+    # apiome.tenant_repository_files.quality_score. The score is informational only.
+    #
+    # repository_quality_scoring_enabled turns the sweep off entirely (no provider
+    # traffic at all); repository_quality_batch_size bounds how many files one tick
+    # downloads, which is what caps the sweep's provider rate; and
+    # repository_quality_interval_seconds is how often a tick runs.
+    repository_quality_scoring_enabled: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_QUALITY_SCORING",
+            "repository_quality_scoring_enabled",
+        ),
+    )
+    repository_quality_batch_size: int = Field(
+        default=10,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_QUALITY_BATCH_SIZE",
+            "repository_quality_batch_size",
+        ),
+    )
+    repository_quality_interval_seconds: int = Field(
+        default=30,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_QUALITY_INTERVAL",
+            "repository_quality_interval_seconds",
+        ),
+    )
+
     # Primitives type-registry entitlement gating (#3478). When False (default), the
     # advanced Type Registry surface (resolver, namespaces, settings, stats, import) is
     # open to every authenticated tenant — current behavior, unchanged. When True, those

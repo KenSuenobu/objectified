@@ -23,6 +23,7 @@ import { Input } from '@/app/components/ui/Input';
 import { cn } from '@lib/utils';
 import { RepositoryFileDetail } from '@/app/components/ade/dashboard/repositories/RepositoryFileDetail';
 import { RepositoryFileImportMapping } from '@/app/components/ade/dashboard/repositories/RepositoryFileImportMapping';
+import { repositoryFileQualityBadge } from '@/app/utils/repository-file-quality';
 import type { RepositoryFileStagedImportTarget } from '@/app/components/ade/dashboard/repositories/repositoryFileStagedImport';
 
 export type RepositoryFileApiRow = {
@@ -35,6 +36,11 @@ export type RepositoryFileApiRow = {
   detected_kind?: string | null;
   display_kind: string;
   confidence: string;
+  /** REPO-2.8: rough 0–100 score for a classified spec; null until scored / when unscorable. */
+  quality_score?: number | null;
+  quality_grade?: string | null;
+  quality_status?: string | null;
+  quality_reason?: string | null;
 };
 
 type FilesApiResponse = {
@@ -791,10 +797,16 @@ export function RepositoryFilesBrowser({
                     aria-label="Select all files on this page"
                   />
                 </th>
-                <th className="min-w-[20rem] w-[50%] py-2 text-left align-middle font-semibold lg:min-w-[26rem] xl:min-w-[34rem]">
+                <th className="min-w-[20rem] w-[44%] py-2 text-left align-middle font-semibold lg:min-w-[26rem] xl:min-w-[34rem]">
                   Path
                 </th>
                 <th className="w-[11%] whitespace-nowrap py-2 text-left align-middle font-semibold">Detected kind</th>
+                <th
+                  className="w-[7%] whitespace-nowrap py-2 text-left align-middle font-semibold"
+                  title="Rough 0–100 quality score for classified specs. Informational only — it does not gate import or sync."
+                >
+                  Quality
+                </th>
                 <th className="w-[9%] whitespace-nowrap py-2 text-left align-middle font-semibold">Confidence</th>
                 <th className="w-[7%] whitespace-nowrap py-2 text-left align-middle font-semibold">Size</th>
                 <th className="w-[8%] whitespace-nowrap py-2 text-left align-middle font-semibold">Blob</th>
@@ -804,7 +816,7 @@ export function RepositoryFilesBrowser({
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {!loading && data && data.files.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+                  <td colSpan={8} className="px-4 py-12 text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400">
                     No indexed files for this branch yet. Run a successful repository scan, or widen filters (turn off
                     &quot;Hide non-importable&quot;, clear regex).
                   </td>
@@ -812,6 +824,7 @@ export function RepositoryFilesBrowser({
               ) : null}
               {data?.files.map((f) => {
                 const cb = confidenceBadge(f.confidence);
+                const quality = repositoryFileQualityBadge(f);
                 return (
                   <tr
                     key={f.id}
@@ -846,6 +859,18 @@ export function RepositoryFilesBrowser({
                         )}
                       >
                         {f.display_kind}
+                      </span>
+                    </td>
+                    <td className="align-middle">
+                      <span
+                        className={cn(
+                          'inline-block min-w-[2.25rem] whitespace-nowrap rounded px-2 py-0.5 text-center font-mono text-[11px] font-semibold',
+                          quality.className
+                        )}
+                        title={quality.title}
+                        data-testid="repository-file-quality"
+                      >
+                        {quality.label}
                       </span>
                     </td>
                     <td className="align-middle">
