@@ -36,6 +36,16 @@ manual resume) and a RAR-5.4 notification fires exactly once, on the transition.
 A successful tick resets the counter so recovered repos return to their normal
 cadence. All of this bookkeeping is best-effort: a failure recording problem never
 aborts the sweep.
+
+Per-tenant quotas + fairness (RAR-3.5, #3526, extending REPO-4.6): the sweep
+round-robins the due list across tenants (one repo per tenant per round, via
+:func:`repository_refresh_quota.interleave_due_rows_by_tenant`) and bounds the
+refresh jobs each tenant may enqueue per rolling window
+(``APIOME_REFRESH_TENANT_QUOTA`` / ``APIOME_REFRESH_TENANT_QUOTA_WINDOW``). A
+tenant over its quota has its remaining due repos *deferred*: skipped without
+advancing the cadence anchor and without counting as a failure, so they stay
+due and are picked up once the window rolls. Manual "Refresh Now" (RAR-5.2)
+bypasses the sweep and is never quota-limited.
 """
 
 from __future__ import annotations
@@ -58,10 +68,16 @@ class BranchEnqueueResult(NamedTuple):
         skipped: Candidates considered but not enqueued — either not newer than
             the last import (RAR-2.2 freshness gate) or already covered by an
             active (queued/running) job for the same lineage (idempotent no-op).
+        deferred: Stale + newer candidates that were *not* enqueued because the
+            caller's ``max_enqueues`` budget ran out (RAR-3.5 tenant quota).
+            They remain stale, so a later tick re-evaluates and enqueues them
+            once the tenant's quota window rolls. Always 0 on the unlimited
+            (manual "Refresh Now") path.
     """
 
     enqueued: int
     skipped: int
+    deferred: int = 0
 
 
 def enqueue_stale_files_for_branch(
@@ -70,6 +86,7 @@ def enqueue_stale_files_for_branch(
     branch: str,
     *,
     path_filter: Optional[str] = None,
+    max_enqueues: Optional[int] = None,
 ) -> BranchEnqueueResult:
     """Rescan one branch and enqueue a re-import job per stale + newer file.
 
@@ -88,9 +105,14 @@ def enqueue_stale_files_for_branch(
             considered (the rest of the branch's candidates are ignored). Used by
             per-file "Refresh Now"; ``None`` evaluates every candidate on the
             branch.
+        max_enqueues: When set, at most this many jobs are inserted; further
+            stale + newer candidates are counted as ``deferred`` instead
+            (RAR-3.5 per-tenant quota). ``None`` (the manual-refresh default)
+            applies no bound.
 
     Returns:
-        A :class:`BranchEnqueueResult` with the enqueued and skipped counts.
+        A :class:`BranchEnqueueResult` with the enqueued, skipped, and deferred
+        counts.
     """
     repository_id = str(repo_row["id"])
     tenant_id = str(repo_row["tenant_id"])
@@ -111,6 +133,7 @@ def enqueue_stale_files_for_branch(
 
     enqueued = 0
     skipped = 0
+    deferred = 0
     for cand in db.list_repository_refresh_candidates(repository_id, branch):
         if path_filter is not None and str(cand.get("path")) != path_filter:
             continue
@@ -124,6 +147,12 @@ def enqueue_stale_files_for_branch(
         if not decision.should_refresh:
             # Up-to-date / stale-guarded: honors the freshness gate (RAR-2.2).
             skipped += 1
+            continue
+
+        if max_enqueues is not None and enqueued >= max_enqueues:
+            # Tenant quota budget spent (RAR-3.5): the candidate stays stale
+            # and a later tick enqueues it once the window rolls.
+            deferred += 1
             continue
 
         job = db.enqueue_repository_refresh_job(
@@ -149,7 +178,7 @@ def enqueue_stale_files_for_branch(
         else:
             # Active job already exists for this lineage (idempotent no-op).
             skipped += 1
-    return BranchEnqueueResult(enqueued=enqueued, skipped=skipped)
+    return BranchEnqueueResult(enqueued=enqueued, skipped=skipped, deferred=deferred)
 
 
 class RepositoryRefreshResult(NamedTuple):
@@ -160,25 +189,37 @@ class RepositoryRefreshResult(NamedTuple):
         failed: True when at least one branch rescan raised — the tick counts as a
             failed refresh for the RAR-3.4 backoff/auto-pause bookkeeping.
         error: A short diagnostic from the last branch failure (pause reason).
+        deferred: Stale + newer files not enqueued because the tenant's quota
+            budget ran out mid-repo (RAR-3.5). Deferral is a scheduling
+            decision, never a failure: the files stay stale and a later tick
+            enqueues them once the quota window rolls.
     """
 
     enqueued: int
     failed: bool
     error: Optional[str]
+    deferred: int = 0
 
 
 def _refresh_one_repository(
-    db: Database, due_row: Dict[str, Any]
+    db: Database,
+    due_row: Dict[str, Any],
+    *,
+    max_enqueues: Optional[int] = None,
 ) -> RepositoryRefreshResult:
     """Rescan + enqueue for a single due repository (already holding its lock).
 
     Args:
         db: Database handle.
         due_row: A row from ``list_due_repositories``.
+        max_enqueues: Remaining tenant quota budget for this repo's tick
+            (RAR-3.5); at most this many jobs are enqueued across all branches,
+            further stale files are deferred. ``None`` applies no bound.
 
     Returns:
-        A :class:`RepositoryRefreshResult` with the enqueued count and whether any
-        branch rescan failed (feeding the RAR-3.4 failure bookkeeping).
+        A :class:`RepositoryRefreshResult` with the enqueued / deferred counts
+        and whether any branch rescan failed (feeding the RAR-3.4 failure
+        bookkeeping).
     """
     repository_id = str(due_row["id"])
     tenant_id = str(due_row["tenant_id"])
@@ -196,11 +237,32 @@ def _refresh_one_repository(
         return RepositoryRefreshResult(enqueued=0, failed=False, error=None)
 
     enqueued = 0
+    deferred = 0
     failed = False
     last_error: Optional[str] = None
     for branch in branches:
+        remaining: Optional[int] = None
+        if max_enqueues is not None:
+            remaining = max(0, max_enqueues - enqueued)
+            if remaining == 0:
+                # Budget spent on the earlier branches: walking further
+                # branches could only defer more files, and avoiding the
+                # provider calls is the whole point of the quota (REPO-4.6).
+                # Any stale files there remain stale, so a later tick finishes
+                # the job once the tenant's window rolls.
+                _logger.info(
+                    "repository refresh skipping remaining branches "
+                    "(tenant quota spent, RAR-3.5) repository_id=%s branch=%s",
+                    repository_id,
+                    branch,
+                )
+                break
         try:
-            enqueued += enqueue_stale_files_for_branch(db, repo_row, branch).enqueued
+            result = enqueue_stale_files_for_branch(
+                db, repo_row, branch, max_enqueues=remaining
+            )
+            enqueued += result.enqueued
+            deferred += result.deferred
         except Exception as exc:
             # One bad branch (GitHub error, etc.) must not abort the others, but it
             # does make this tick count as a failed refresh (RAR-3.4).
@@ -211,7 +273,18 @@ def _refresh_one_repository(
                 repository_id,
                 branch,
             )
-    return RepositoryRefreshResult(enqueued=enqueued, failed=failed, error=last_error)
+    if deferred:
+        _logger.info(
+            "repository refresh deferred stale files (tenant quota, RAR-3.5) "
+            "repository_id=%s tenant_id=%s deferred=%s enqueued=%s",
+            repository_id,
+            tenant_id,
+            deferred,
+            enqueued,
+        )
+    return RepositoryRefreshResult(
+        enqueued=enqueued, failed=failed, error=last_error, deferred=deferred
+    )
 
 
 def _record_refresh_outcome(
@@ -297,6 +370,17 @@ def process_repository_refresh_sweep(db: Database) -> int:
     failure counter. Paused / backed-off repos are excluded by
     ``list_due_repositories`` until resumed / due again.
 
+    Per-tenant quotas + fairness (RAR-3.5): the due list is round-robin
+    interleaved across tenants so one tenant's backlog cannot occupy the head
+    of every tick, and each tenant's refresh jobs are bounded per rolling
+    window by the ``APIOME_REFRESH_TENANT_QUOTA`` /
+    ``APIOME_REFRESH_TENANT_QUOTA_WINDOW`` settings. A repo whose tenant is
+    over quota is *deferred*: skipped before its lock is taken, without
+    advancing its cadence anchor and without touching the RAR-3.4 failure
+    bookkeeping, so it stays due and a later tick picks it up once the window
+    rolls. The quota is best-effort protective: if the window usage cannot be
+    read the tick proceeds unlimited rather than halting refresh.
+
     Args:
         db: Database handle for this tick (one connection holds the advisory
             locks; the caller uses a dedicated ``Database`` per tick).
@@ -314,9 +398,33 @@ def process_repository_refresh_sweep(db: Database) -> int:
         )
         return 0
 
+    from .repository_refresh_quota import (
+        interleave_due_rows_by_tenant,
+        load_tenant_refresh_quota_tracker,
+    )
+
+    quota = load_tenant_refresh_quota_tracker(db)
+
     enqueued_total = 0
-    for due_row in db.list_due_repositories():
+    quota_logged_tenants: set[str] = set()
+    for due_row in interleave_due_rows_by_tenant(db.list_due_repositories()):
         repository_id = str(due_row["id"])
+        tenant_id = str(due_row["tenant_id"])
+
+        if quota is not None and quota.is_exhausted(tenant_id):
+            # Tenant over its refresh-job quota (RAR-3.5): defer this repo —
+            # no lock, no anchor advance, no failure bookkeeping — so it stays
+            # due and is retried once the window rolls. Logged once per tenant
+            # per tick to keep a large backlog from flooding the log.
+            if tenant_id not in quota_logged_tenants:
+                quota_logged_tenants.add(tenant_id)
+                _logger.info(
+                    "repository refresh deferred (tenant quota exhausted) "
+                    "tenant_id=%s quota=%s",
+                    tenant_id,
+                    quota.quota,
+                )
+            continue
 
         if not db.try_acquire_repository_refresh_lock(repository_id):
             # Another worker / overlapping tick owns this repo right now.
@@ -327,8 +435,16 @@ def process_repository_refresh_sweep(db: Database) -> int:
             continue
 
         try:
-            result = _refresh_one_repository(db, due_row)
+            result = _refresh_one_repository(
+                db,
+                due_row,
+                max_enqueues=(
+                    quota.remaining(tenant_id) if quota is not None else None
+                ),
+            )
             enqueued_total += result.enqueued
+            if quota is not None:
+                quota.consume(tenant_id, result.enqueued)
         except Exception as exc:
             # A repo-level error (candidate query, branch listing, …) counts as a
             # failed tick for the RAR-3.4 bookkeeping, like a branch rescan error.
