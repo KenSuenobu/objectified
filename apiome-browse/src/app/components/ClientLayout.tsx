@@ -33,7 +33,7 @@ export function ClientLayout({
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-zinc-600 dark:text-zinc-400">
               <a
-                href="https://www.youtube.com/@objectifieddev/"
+                href="https://www.youtube.com/@apiomedev/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 transition-colors hover:text-zinc-900 dark:hover:text-zinc-50"

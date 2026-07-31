@@ -94,7 +94,7 @@ export function Navbar({ stats }: { stats: DirectoryStats }) {
 
           {/* Tutorials */}
           <a
-            href="https://www.youtube.com/@objectifieddev/"
+            href="https://www.youtube.com/@apiomedev/"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 sm:flex"

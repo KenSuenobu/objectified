@@ -109,7 +109,7 @@ const RESOURCE_LINKS: ResourceLink[] = [
     id: 'help',
     name: 'Help & tutorials',
     description: 'Video walkthroughs on YouTube',
-    href: 'https://www.youtube.com/@objectifieddev',
+    href: 'https://www.youtube.com/@apiomedev',
     enabled: true,
     external: true,
     icon: HelpCircle,

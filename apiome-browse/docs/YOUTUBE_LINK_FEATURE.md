@@ -1,7 +1,7 @@
 # YouTube Link Feature
 
 ## Overview
-Added links to the Apiome YouTube channel (https://www.youtube.com/@objectifieddev/) so users can easily access video tutorials and content about the platform.
+Added links to the Apiome YouTube channel (https://www.youtube.com/@apiomedev/) so users can easily access video tutorials and content about the platform.
 
 ## Implementation Details
 
@@ -51,7 +51,7 @@ The YouTube link appears in two locations:
 - **Accessibility**: Properly labeled for screen readers and keyboard navigation
 
 ## Link Details
-- **URL**: https://www.youtube.com/@objectifieddev/
+- **URL**: https://www.youtube.com/@apiomedev/
 - **Target Audience**: Users looking for video tutorials, demos, and platform updates
 - **Opens In**: New tab/window to preserve user's current session
 

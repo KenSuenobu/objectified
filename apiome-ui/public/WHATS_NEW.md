@@ -7,6 +7,7 @@ We continue to improve the platform based on your feedback with improvements and
 ## Features/Improvements
 
 - UI/UX: Updates look and feel for tabs
+- UI/UX: Added tabbed sections to Style Guides
 - Primitives
   - Major UX improvements in the import functionality
   - Shows unregistered namespaces that were detected

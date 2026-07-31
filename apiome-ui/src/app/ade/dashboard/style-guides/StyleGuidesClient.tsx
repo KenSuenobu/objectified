@@ -10,6 +10,11 @@
  *  - Assign dialog: make a guide the tenant default or bind it to individual projects
  *    (writes `style_guide_assignments`; the next lint run resolves it per GOV-1.4).
  *
+ * The screen's three governance sections — the guide list, the import/export quality policy
+ * (IXH-2.3), and the verification publish/deploy policy (ECA-3.1) — sit behind a tab strip
+ * rather than stacked down one page. Each policy panel loads its own data on mount, so an
+ * unopened tab costs nothing.
+ *
  * Mutations are tenant-admin only (the REST layer enforces this; the UI hides the
  * controls via `/api/access/permissions/me`). The built-in "Apiome Recommended" guide is
  * read-only: it can be duplicated and assigned, never edited or deleted.
@@ -38,6 +43,8 @@ import {
   DialogTitle,
 } from '@/app/components/ui/Dialog';
 import { useDialog } from '@/app/components/providers/DialogProvider';
+import { TAB_LIST_CLASS, tabTriggerClass } from '@/app/components/ui/tabStyles';
+import { cn } from '@lib/utils';
 import QualityPolicyPanel from './QualityPolicyPanel';
 import VerificationPolicyPanel from './VerificationPolicyPanel';
 import {
@@ -52,6 +59,15 @@ interface ProjectOption {
   id: string;
   name: string;
 }
+
+/** The screen's sections, one per tab. */
+type StyleGuidesTab = 'guides' | 'quality' | 'verification';
+
+const TABS: { id: StyleGuidesTab; label: string }[] = [
+  { id: 'guides', label: 'Style guides' },
+  { id: 'quality', label: 'Import & export policy' },
+  { id: 'verification', label: 'Verification policy' },
+];
 
 /** Render an ISO timestamp as a short local date, or a dash when absent. */
 function formatDate(iso: string | null): string {
@@ -400,6 +416,7 @@ export default function StyleGuidesClient() {
   const [createState, setCreateState] = useState<CreateDialogState | null>(null);
   const [editGuideId, setEditGuideId] = useState<string | null>(null);
   const [assignGuideId, setAssignGuideId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<StyleGuidesTab>('guides');
 
   const canMutate = !!perms?.is_admin;
   const recommendedGuide = guides.find((g) => g.source === 'builtin') || null;
@@ -537,7 +554,7 @@ export default function StyleGuidesClient() {
   return (
     <>
       <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex items-center justify-between gap-4 px-6 py-4">
+        <div className="flex items-center justify-between gap-4 px-6 pt-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600">
               <BookOpenCheck className="h-5 w-5 text-white" />
@@ -549,7 +566,7 @@ export default function StyleGuidesClient() {
               </p>
             </div>
           </div>
-          {canMutate && (
+          {canMutate && activeTab === 'guides' && (
             <div className="flex shrink-0 gap-2">
               <button
                 type="button"
@@ -572,6 +589,24 @@ export default function StyleGuidesClient() {
             </div>
           )}
         </div>
+
+        {/* One tab per governance section: the guide list, and the two tenant policies. */}
+        <nav role="tablist" aria-label="Style guide sections" className={cn(TAB_LIST_CLASS, 'mt-4 px-6')}>
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              id={`style-guides-tab-${tab.id}`}
+              aria-selected={activeTab === tab.id}
+              aria-controls={`style-guides-panel-${tab.id}`}
+              onClick={() => setActiveTab(tab.id)}
+              className={tabTriggerClass({ active: activeTab === tab.id })}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
       </header>
 
       <main className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-6 dark:bg-slate-950">
@@ -582,132 +617,144 @@ export default function StyleGuidesClient() {
           </div>
         )}
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
-          </div>
-        ) : guides.length === 0 ? (
-          <div className="rounded-xl border border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
-            <BookOpenCheck className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">No style guides yet.</p>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wider text-gray-400 dark:border-slate-800">
-                  <th className="px-4 py-3 font-semibold">Name</th>
-                  <th className="px-4 py-3 font-semibold">Rules on</th>
-                  <th className="px-4 py-3 font-semibold">Assignments</th>
-                  <th className="px-4 py-3 font-semibold">Updated</th>
-                  {canMutate && <th className="px-4 py-3 text-right font-semibold">Actions</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {guides.map((guide) => (
-                  <tr key={guide.id}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/ade/dashboard/style-guides/${guide.id}`}
-                          className="font-medium text-gray-900 hover:text-indigo-600 hover:underline dark:text-white dark:hover:text-indigo-400"
-                        >
-                          {guide.name}
-                        </Link>
-                        {guide.source === 'builtin' && (
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                            Built-in
-                          </span>
-                        )}
-                        {guide.isDefault && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                            <BadgeCheck className="h-3 w-3" />
-                            Default
-                          </span>
-                        )}
-                      </div>
-                      {guide.description && (
-                        <p className="mt-0.5 max-w-md truncate text-xs text-gray-500 dark:text-gray-400">
-                          {guide.description}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                      <span className="font-mono">{guide.enabledRuleCount}</span>
-                      <span className="text-gray-400"> / {guide.ruleCount}</span>
-                    </td>
-                    <td className="px-4 py-3">{assignmentSummary(guide)}</td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{formatDate(guide.updatedAt)}</td>
-                    {canMutate && (
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setAssignGuideId(guide.id)}
-                            disabled={busy}
-                            className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-gray-700 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-gray-200 dark:hover:bg-slate-800"
-                          >
-                            Assign…
-                          </button>
-                          <button
-                            type="button"
-                            aria-label={`Duplicate ${guide.name}`}
-                            title="Duplicate"
-                            onClick={() => setCreateState({ sourceGuide: guide })}
-                            disabled={busy}
-                            className="rounded-lg border border-slate-200 p-1.5 text-gray-500 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-gray-400 dark:hover:bg-slate-800"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </button>
-                          {guide.source !== 'builtin' && (
-                            <>
+        {activeTab === 'guides' && (
+          <div role="tabpanel" id="style-guides-panel-guides" aria-labelledby="style-guides-tab-guides">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            ) : guides.length === 0 ? (
+              <div className="rounded-xl border border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
+                <BookOpenCheck className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No style guides yet.</p>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wider text-gray-400 dark:border-slate-800">
+                      <th className="px-4 py-3 font-semibold">Name</th>
+                      <th className="px-4 py-3 font-semibold">Rules on</th>
+                      <th className="px-4 py-3 font-semibold">Assignments</th>
+                      <th className="px-4 py-3 font-semibold">Updated</th>
+                      {canMutate && <th className="px-4 py-3 text-right font-semibold">Actions</th>}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {guides.map((guide) => (
+                      <tr key={guide.id}>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <Link
+                              href={`/ade/dashboard/style-guides/${guide.id}`}
+                              className="font-medium text-gray-900 hover:text-indigo-600 hover:underline dark:text-white dark:hover:text-indigo-400"
+                            >
+                              {guide.name}
+                            </Link>
+                            {guide.source === 'builtin' && (
+                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                Built-in
+                              </span>
+                            )}
+                            {guide.isDefault && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                <BadgeCheck className="h-3 w-3" />
+                                Default
+                              </span>
+                            )}
+                          </div>
+                          {guide.description && (
+                            <p className="mt-0.5 max-w-md truncate text-xs text-gray-500 dark:text-gray-400">
+                              {guide.description}
+                            </p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                          <span className="font-mono">{guide.enabledRuleCount}</span>
+                          <span className="text-gray-400"> / {guide.ruleCount}</span>
+                        </td>
+                        <td className="px-4 py-3">{assignmentSummary(guide)}</td>
+                        <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{formatDate(guide.updatedAt)}</td>
+                        {canMutate && (
+                          <td className="px-4 py-3">
+                            <div className="flex justify-end gap-1.5">
                               <button
                                 type="button"
-                                aria-label={`Edit ${guide.name}`}
-                                title="Edit"
-                                onClick={() => setEditGuideId(guide.id)}
+                                onClick={() => setAssignGuideId(guide.id)}
+                                disabled={busy}
+                                className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-gray-700 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-gray-200 dark:hover:bg-slate-800"
+                              >
+                                Assign…
+                              </button>
+                              <button
+                                type="button"
+                                aria-label={`Duplicate ${guide.name}`}
+                                title="Duplicate"
+                                onClick={() => setCreateState({ sourceGuide: guide })}
                                 disabled={busy}
                                 className="rounded-lg border border-slate-200 p-1.5 text-gray-500 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-gray-400 dark:hover:bg-slate-800"
                               >
-                                <Pencil className="h-3.5 w-3.5" />
+                                <Copy className="h-3.5 w-3.5" />
                               </button>
-                              <button
-                                type="button"
-                                aria-label={`Delete ${guide.name}`}
-                                title="Delete"
-                                onClick={() => handleDelete(guide)}
-                                disabled={busy}
-                                className="rounded-lg border border-rose-200 p-1.5 text-rose-500 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-900/20"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                              {guide.source !== 'builtin' && (
+                                <>
+                                  <button
+                                    type="button"
+                                    aria-label={`Edit ${guide.name}`}
+                                    title="Edit"
+                                    onClick={() => setEditGuideId(guide.id)}
+                                    disabled={busy}
+                                    className="rounded-lg border border-slate-200 p-1.5 text-gray-500 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-gray-400 dark:hover:bg-slate-800"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    aria-label={`Delete ${guide.name}`}
+                                    title="Delete"
+                                    onClick={() => handleDelete(guide)}
+                                    disabled={busy}
+                                    className="rounded-lg border border-rose-200 p-1.5 text-rose-500 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-900/20"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <p className="mt-3 text-[11px] text-gray-400">
+              The built-in “Apiome Recommended” guide is read-only — duplicate it to customize. Open a
+              guide to tailor its rule catalog; custom rules arrive with GOV-2.3.
+            </p>
           </div>
         )}
-
-        <p className="mt-3 text-[11px] text-gray-400">
-          The built-in “Apiome Recommended” guide is read-only — duplicate it to customize. Open a
-          guide to tailor its rule catalog; custom rules arrive with GOV-2.3.
-        </p>
 
         {/* A guide decides how a document is scored; the quality policy decides what score is
             good enough to import or export it (IXH-2.3). Non-admins see it read-only, because a
             user who cannot see the policy cannot understand why a commit was refused. */}
-        <div className="mt-8">
-          <QualityPolicyPanel readOnly={!canMutate} />
-        </div>
+        {activeTab === 'quality' && (
+          <div role="tabpanel" id="style-guides-panel-quality" aria-labelledby="style-guides-tab-quality">
+            <QualityPolicyPanel readOnly={!canMutate} />
+          </div>
+        )}
 
-        <div className="mt-8">
-          <VerificationPolicyPanel readOnly={!canMutate} />
-        </div>
+        {activeTab === 'verification' && (
+          <div
+            role="tabpanel"
+            id="style-guides-panel-verification"
+            aria-labelledby="style-guides-tab-verification"
+          >
+            <VerificationPolicyPanel readOnly={!canMutate} />
+          </div>
+        )}
       </main>
 
       {/* `key` remounts each dialog when it opens (or targets a new guide), resetting its

@@ -44,7 +44,7 @@ The button is positioned in a hero action bar at the top of the home page, along
     </div>
     <div className="flex flex-wrap items-center gap-3">
       {/* Watch Tutorials */}
-      <a href="https://www.youtube.com/@objectifieddev/" ...>
+      <a href="https://www.youtube.com/@apiomedev/" ...>
         Watch Tutorials
       </a>
       {/* Login / Sign Up */}

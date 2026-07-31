@@ -153,6 +153,51 @@ describe('StyleGuidesClient — list view', () => {
   });
 });
 
+describe('StyleGuidesClient — section tabs', () => {
+  it('opens on the guide list and offers a tab per governance section', async () => {
+    render(<StyleGuidesClient />);
+    await screen.findByText('Apiome Recommended');
+
+    const tabs = screen.getAllByRole('tab').map((t) => t.textContent);
+    expect(tabs).toEqual(['Style guides', 'Import & export policy', 'Verification policy']);
+    expect(screen.getByRole('tab', { name: 'Style guides' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+
+    // Only the guide list is mounted — the policy panels stay unloaded until selected.
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.queryByTestId('quality-policy-panel')).toBeNull();
+    expect(screen.queryByText('Verification publish & deploy policy')).toBeNull();
+  });
+
+  it('swaps the guide list for the quality policy panel when its tab is selected', async () => {
+    render(<StyleGuidesClient />);
+    await screen.findByText('Apiome Recommended');
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Import & export policy' }));
+
+    expect(await screen.findByTestId('quality-policy-panel')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).toBeNull();
+    // The list-only header actions leave with the list.
+    expect(screen.queryByText('New guide')).toBeNull();
+    expect(screen.queryByText('Start from Recommended')).toBeNull();
+  });
+
+  it('shows the verification policy on its own tab and returns to the list', async () => {
+    render(<StyleGuidesClient />);
+    await screen.findByText('Apiome Recommended');
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Verification policy' }));
+    expect(await screen.findByText('Verification publish & deploy policy')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).toBeNull();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Style guides' }));
+    expect(await screen.findByRole('table')).toBeInTheDocument();
+    expect(screen.getByText('New guide')).toBeInTheDocument();
+  });
+});
+
 describe('StyleGuidesClient — create & duplicate', () => {
   it('creates an empty guide via the New guide dialog', async () => {
     render(<StyleGuidesClient />);
