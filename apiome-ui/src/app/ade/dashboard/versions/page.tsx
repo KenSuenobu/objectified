@@ -64,6 +64,7 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 import { Textarea } from '../../../components/ui/Textarea';
 import { Badge } from '../../../components/ui/Badge';
 import { TAB_LIST_CLASS, tabTriggerClass } from '../../../components/ui/tabStyles';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/Tabs';
 import { cn } from '@lib/utils';
 import { VersionLintBadge } from '../../../components/ade/dashboard/VersionLintBadge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/Select';
@@ -171,6 +172,9 @@ const SUCCESSOR_SELECT_NONE = '__none__';
 
 const SPEC_JSON_YAML_TOGGLE_ITEM_CLASS =
   'px-3 py-2 text-xs font-semibold rounded-md transition-all duration-200 data-[state=on]:bg-white dark:data-[state=on]:bg-gray-600 data-[state=on]:text-indigo-600 dark:data-[state=on]:text-indigo-400 data-[state=on]:shadow-sm data-[state=off]:text-gray-600 dark:data-[state=off]:text-gray-400 hover:text-gray-900 dark:hover:text-white';
+
+/** The renderings the View Spec dialog offers, in tab order. */
+const SPEC_FORMATS = ['json', 'yaml'] as const;
 
 function SpecJsonYamlToggle({
   value,
@@ -4615,30 +4619,43 @@ const Versions = () => {
       <Dialog open={showOpenApiDialog} onOpenChange={setShowOpenApiDialog}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader className="space-y-0">
-            <div className="flex items-start justify-between gap-4 pr-8">
-              <div className="min-w-0">
-                <DialogTitle>OpenAPI 3.1.0 Specification</DialogTitle>
-                {viewingVersion && (
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    {projects.find(p => p.id === viewingVersion.project_id)?.name} - v{viewingVersion.version_id}
-                  </p>
-                )}
-              </div>
-              <SpecJsonYamlToggle value={openApiFormat} onChange={setOpenApiFormat} />
+            <div className="min-w-0 pr-8">
+              <DialogTitle>OpenAPI 3.1.0 Specification</DialogTitle>
+              {viewingVersion && (
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {projects.find(p => p.id === viewingVersion.project_id)?.name} - v{viewingVersion.version_id}
+                </p>
+              )}
             </div>
           </DialogHeader>
-          <div className="h-[60vh]">
-            {isLoadingSpec ? (
-              <LoadingState
-                className="h-full"
-                minHeightClassName="min-h-0"
-                spinnerSize="md"
-                message="Loading specification..."
-              />
-            ) : (
-              <Editor height="100%" language={openApiFormat} value={openApiFormat === 'json' ? openApiSpec : YAML.stringify(JSON.parse(openApiSpec || '{}'))} theme="vs-dark" options={{ readOnly: true, minimap: { enabled: true }, fontSize: 13 }} />
-            )}
-          </div>
+          {/* JSON and YAML are panes of the spec, each with its own editor, so the picker is the
+              app's standard tab strip rather than a segmented pair of buttons. */}
+          <Tabs
+            value={openApiFormat}
+            onValueChange={(next) => { if (next) setOpenApiFormat(next as 'json' | 'yaml'); }}
+          >
+            <TabsList aria-label="Specification format">
+              {SPEC_FORMATS.map((format) => (
+                <TabsTrigger key={format} value={format} data-testid={`spec-format-tab-${format}`}>
+                  {format.toUpperCase()}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {SPEC_FORMATS.map((format) => (
+              <TabsContent key={format} value={format} className="h-[60vh]">
+                {isLoadingSpec ? (
+                  <LoadingState
+                    className="h-full"
+                    minHeightClassName="min-h-0"
+                    spinnerSize="md"
+                    message="Loading specification..."
+                  />
+                ) : (
+                  <Editor height="100%" language={format} value={format === 'json' ? openApiSpec : YAML.stringify(JSON.parse(openApiSpec || '{}'))} theme="vs-dark" options={{ readOnly: true, minimap: { enabled: true }, fontSize: 13 }} />
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
           {/* Version-scoped export entry point (MFX-6.5, #3859): the fidelity pre-summary
               (best-fidelity vs lossy targets for this source) + this version's recent exports,
               rendered on the version view before the ExportDialog opens. */}
