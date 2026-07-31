@@ -13,7 +13,7 @@ import inspect
 
 import pytest
 
-from app.database import Database
+from app.database import REPOSITORY_FILE_IMPORTABLE_SQL, Database
 from app.repository_file_scan import (
     _importable_hint,
     detected_kind_from_path,
@@ -78,8 +78,21 @@ def test_sql_mirror_matches_the_python_predicate() -> None:
     Deriving importability from the stored ``path`` is what lets already-indexed
     repositories pick this up without a re-scan, so the SQL arm is load-bearing.
     """
-    src = inspect.getsource(Database.tenant_repository_files_stats_and_page)
-    assert "f.detected_kind ILIKE 'json%%'" in src
-    assert "f.path ILIKE '%%.schema.json'" in src
-    assert "f.path ILIKE '%%/schemas/%%.json'" in src
-    assert "f.path ILIKE 'schemas/%%.json'" in src
+    assert "f.detected_kind ILIKE 'json%%'" in REPOSITORY_FILE_IMPORTABLE_SQL
+    assert "f.path ILIKE '%%.schema.json'" in REPOSITORY_FILE_IMPORTABLE_SQL
+    assert "f.path ILIKE '%%/schemas/%%.json'" in REPOSITORY_FILE_IMPORTABLE_SQL
+    assert "f.path ILIKE 'schemas/%%.json'" in REPOSITORY_FILE_IMPORTABLE_SQL
+
+
+def test_every_sql_consumer_uses_the_shared_predicate() -> None:
+    """Both the browser page query and the scan's count helper share one mirror.
+
+    REPO-2.5 added ``count_tenant_repository_files``; keeping both on the module
+    constant is what stops the two from drifting apart.
+    """
+    for method in (
+        Database.tenant_repository_files_stats_and_page,
+        Database.count_tenant_repository_files,
+    ):
+        src = inspect.getsource(method)
+        assert "REPOSITORY_FILE_IMPORTABLE_SQL" in src

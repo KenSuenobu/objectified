@@ -85,8 +85,19 @@ def enqueue_stale_files_for_branch(
     repository_id = str(repo_row["id"])
     tenant_id = str(repo_row["tenant_id"])
 
-    # Reindex the branch so the candidate query sees current remote signals.
-    scan_repository_branch_into_index(db, repo_row, branch)
+    # Reindex the branch so the candidate query sees current remote signals. On a
+    # large monorepo the walk is bounded (REPO-2.5): a pass that runs out of its
+    # wall-clock budget stores a resume cursor and comes back incomplete, so this
+    # tick evaluates the portion indexed so far and the next tick continues.
+    scan = scan_repository_branch_into_index(db, repo_row, branch)
+    if not scan.completed:
+        _logger.info(
+            "repository refresh evaluating a partially indexed branch (scan resumes next tick) "
+            "repository_id=%s branch=%s files_so_far=%s",
+            repository_id,
+            branch,
+            scan.total_files,
+        )
 
     enqueued = 0
     skipped = 0

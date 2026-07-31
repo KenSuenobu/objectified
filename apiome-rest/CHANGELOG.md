@@ -5,6 +5,40 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.217.0] - 2026-07-30
+
+### Added
+- **Large-monorepo support: sparse / paged repository walk (REPO-2.5, #2766)** — a repository
+  with more than ~25k entries could not be indexed at all: the walker pulled the whole branch
+  tree in one `recursive=1` GitHub Trees call, buffered every blob in memory, and turned
+  GitHub's own `truncated: true` size signal into the hard failure "repository too large for
+  this scan pass". The walk is now bounded and resumable.
+  - **Streams in chunks.** `walk_github_tree_in_chunks` hands entries to its sink in batches of
+    at most 1000 (`repository_scan_budget.MAX_WALK_CHUNK_SIZE`, capped regardless of
+    `APIOME_REPOSITORY_SCAN_CHUNK_SIZE`), written through the new upserting
+    `Database.append_tenant_repository_files` instead of one whole-branch statement.
+  - **Provider-side sparse primitive.** A `truncated` recursive response now switches the walk
+    to a breadth-first per-directory descent over the non-recursive Trees API, so only a queue
+    of unvisited *directories* is ever held in memory.
+  - **Per-tenant wall-clock budget.** `tenants.repository_scan_budget_seconds` (default 300 =
+    5 min) bounds one scan pass, clamped at read time into
+    `[APIOME_REPOSITORY_SCAN_BUDGET_MIN, APIOME_REPOSITORY_SCAN_BUDGET_MAX]`. A pass that spends
+    its budget stores its position and comes back incomplete rather than being killed.
+  - **Resume via stored cursor.** `apiome.tenant_repository_scan_cursors` holds one cursor per
+    (repository, branch) — the pinned tree SHA, the RAR-2.1 branch-tip anchors, the walk mode and
+    the pending sub-tree queue. A paused pass, or one interrupted by a transient provider failure
+    (network error, 429, 5xx), re-queues its scan job instead of failing it, and the next sweep
+    tick continues from the cursor. The tree SHA is pinned so a resumed pass keeps indexing the
+    same snapshot even if the branch moves.
+  - **Fair queueing.** A resumed job is claimed on `COALESCE(requeued_at, created_at)`, so a
+    monorepo needing twenty passes yields to other repositories between them instead of owning
+    the scan worker for the whole walk.
+  - Safeguards: a cursor older than 24h is discarded and the branch rewalked; a walk that indexes
+    nothing new for too many consecutive passes is abandoned with an error (progress resets that
+    counter, so a long walk is never penalized for being long); a transient failure with no stored
+    position still fails the job; and a completed scan re-reads its counts from the persisted rows
+    so a re-emitted chunk cannot inflate them.
+
 ## [1.216.0] - 2026-07-29
 
 ### Fixed
