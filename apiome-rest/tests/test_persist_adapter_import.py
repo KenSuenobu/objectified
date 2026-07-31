@@ -29,6 +29,9 @@ class _FakeDb:
         self.source_format_call: Optional[Dict[str, Any]] = None
         self.persisted_canonical: Optional[Dict[str, Any]] = None
         self.created_classes: list = []
+        self.persisted_workflows: Optional[Dict[str, Any]] = None
+        self.scan_index_call: Optional[Dict[str, Any]] = None
+        self.scan_index_rows: list = []
 
     def get_project_by_slug(self, slug: str, tenant_id: str) -> Optional[Dict[str, Any]]:
         return None
@@ -89,6 +92,36 @@ class _FakeDb:
             "operation_count": len(model.operations()),
         }
         return "artifact-1"
+
+    # REPO-3.4 (#2773): the Arazzo branch of the hook.
+    def get_scan_path_operation_index(
+        self, *, tenant_id, project_id=None, repo_url=None, branch=None
+    ):
+        self.scan_index_call = {
+            "tenant_id": tenant_id,
+            "project_id": project_id,
+            "repo_url": repo_url,
+            "branch": branch,
+        }
+        return self.scan_index_rows
+
+    def persist_arazzo_workflows(
+        self, *, tenant_id, project_id, version_id, artifact_id, model, index=None
+    ):
+        from app.arazzo_workflow_persistence import (
+            build_workflow_rows,
+            resolve_workflow_steps,
+        )
+
+        result = resolve_workflow_steps(build_workflow_rows(model), index)
+        self.persisted_workflows = {
+            "tenant_id": tenant_id,
+            "project_id": project_id,
+            "version_id": version_id,
+            "artifact_id": artifact_id,
+            "result": result,
+        }
+        return result
 
 
 def _model() -> CanonicalApi:
@@ -460,3 +493,166 @@ def test_archive_import_without_git_source_stays_an_archive(monkeypatch) -> None
     fmd = fake.source_format_call["format_metadata"]
     assert fmd["intakeKind"] == "archive"
     assert "gitCommit" not in fmd
+
+
+# --------------------------------------------------------------------------------------------
+# REPO-3.4 (#2773) — an Arazzo import also lands its workflows
+# --------------------------------------------------------------------------------------------
+
+
+_ARAZZO_SOURCE = """
+arazzo: 1.0.1
+info:
+  title: Checkout
+  version: 1.0.0
+sourceDescriptions:
+  - name: cart
+    url: ./cart.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: orderCheckout
+    summary: Create a cart and check out
+    steps:
+      - stepId: createCart
+        operationRef: "./cart.openapi.yaml#/paths/~1carts/post"
+        successCriteria:
+          - condition: $statusCode == 201
+      - stepId: checkout
+        operationId: startCheckout
+        successCriteria:
+          - condition: $statusCode == 200
+"""
+
+
+def _arazzo_model() -> CanonicalApi:
+    from app.arazzo_import_source import ArazzoImportSource
+
+    adapter = ArazzoImportSource()
+    return adapter.normalize(adapter.parse(_ARAZZO_SOURCE, source_label="checkout.arazzo.yaml"))
+
+
+def _arazzo_payload() -> Dict[str, Any]:
+    payload = _payload()
+    payload["filename"] = "checkout.arazzo.yaml"
+    payload["metadata"]["source_kind"] = "arazzo"
+    return payload
+
+
+def test_arazzo_import_persists_workflows_and_resolves_refs(monkeypatch) -> None:
+    """The hook writes the canonical artifact, then the workflows, resolving in-scan refs."""
+    fake = _FakeDb()
+    fake.scan_index_rows = [
+        {
+            "id": "op-create-cart",
+            "pathname": "/carts",
+            "operation": "POST",
+            "operation_id": "createCart",
+            "project_id": "proj-1",
+            "version_id": "ver-0",
+            "source_path": "cart.openapi.yaml",
+        },
+        {
+            "id": "op-checkout",
+            "pathname": "/checkout",
+            "operation": "POST",
+            "operation_id": "startCheckout",
+            "project_id": "proj-1",
+            "version_id": "ver-0",
+            "source_path": "checkout.openapi.yaml",
+        },
+    ]
+    monkeypatch.setattr("app.database.db", fake)
+
+    persist_adapter_import(
+        _arazzo_payload(), _arazzo_model(), _text_intake(_ARAZZO_SOURCE), _catalog_routing()
+    )
+
+    # The workflows hang off the artifact the same call created.
+    assert fake.persisted_canonical["format"] == "arazzo"
+    assert fake.persisted_workflows["artifact_id"] == "artifact-1"
+    assert fake.persisted_workflows["version_id"] == "ver-1"
+    assert fake.persisted_workflows["project_id"] == "proj-1"
+
+    result = fake.persisted_workflows["result"]
+    assert [w.workflow_id for w in result.workflows] == ["orderCheckout"]
+    # Both spellings resolved: a `#/paths/…` pointer and a bare operationId.
+    assert [step.resolved_path_operation_id for step in result.workflows[0].steps] == [
+        "op-create-cart",
+        "op-checkout",
+    ]
+    assert result.resolved_count == 2
+    assert result.warnings == []
+
+
+def test_arazzo_scan_scope_uses_git_provenance_when_present(monkeypatch) -> None:
+    """Repository provenance scopes "the same scan" to that repo and branch."""
+    fake = _FakeDb()
+    monkeypatch.setattr("app.database.db", fake)
+    payload = _arazzo_payload()
+    payload["metadata"]["options"] = {
+        "input_kind": "fileset",
+        "git_source": {
+            "provider": "github",
+            "repo_url": "https://github.com/acme/specs",
+            "ref": "main",
+            "commit_sha": "9f1c0de5b4a37821cc0d4f3a6a5b0e2d1c8a7b60",
+            "path": "specs/**",
+        },
+    }
+
+    persist_adapter_import(
+        payload, _arazzo_model(), _text_intake(_ARAZZO_SOURCE), _catalog_routing()
+    )
+
+    assert fake.scan_index_call["repo_url"] == "https://github.com/acme/specs"
+    assert fake.scan_index_call["branch"] == "main"
+    assert fake.scan_index_call["project_id"] == "proj-1"
+
+
+def test_arazzo_unresolved_refs_do_not_fail_the_import(monkeypatch) -> None:
+    """An empty scan leaves refs unresolved with warnings; the catalog item is still stored."""
+    fake = _FakeDb()
+    monkeypatch.setattr("app.database.db", fake)
+
+    result = persist_adapter_import(
+        _arazzo_payload(), _arazzo_model(), _text_intake(_ARAZZO_SOURCE), _catalog_routing()
+    )
+
+    assert result is not None
+    assert fake.source_format_call["format_metadata"]["sourceContent"] == _ARAZZO_SOURCE
+    persisted = fake.persisted_workflows["result"]
+    assert persisted.resolved_count == 0
+    assert len(persisted.warnings) == 2
+    # Raw references survive verbatim.
+    steps = persisted.workflows[0].steps
+    assert steps[0].operation_ref == "./cart.openapi.yaml#/paths/~1carts/post"
+    assert steps[1].operation_id == "startCheckout"
+
+
+def test_arazzo_workflow_failure_does_not_break_the_catalog_import(monkeypatch) -> None:
+    """Workflow persistence is an enrichment: if it raises, the import still succeeds."""
+    fake = _FakeDb()
+
+    def _boom(**_kwargs):
+        raise RuntimeError("api_workflows unavailable")
+
+    fake.persist_arazzo_workflows = _boom  # type: ignore[assignment]
+    monkeypatch.setattr("app.database.db", fake)
+
+    result = persist_adapter_import(
+        _arazzo_payload(), _arazzo_model(), _text_intake(_ARAZZO_SOURCE), _catalog_routing()
+    )
+
+    assert result is not None
+    assert result.project_id == "proj-1"
+    assert fake.source_format_call["format_metadata"]["sourceContent"] == _ARAZZO_SOURCE
+
+
+def test_non_arazzo_import_writes_no_workflows(monkeypatch) -> None:
+    fake = _FakeDb()
+    monkeypatch.setattr("app.database.db", fake)
+
+    persist_adapter_import(_payload(), _model(), _text_intake("syntax = \"proto3\";"), _catalog_routing())
+
+    assert fake.persisted_workflows is None
+    assert fake.scan_index_call is None

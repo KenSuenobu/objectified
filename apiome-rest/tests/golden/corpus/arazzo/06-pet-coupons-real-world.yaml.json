@@ -50,7 +50,9 @@
             "find-coupon",
             "place-order"
           ],
-          "workflowId": "place-discounted-order"
+          "summary": "Find a pet and place a discounted order",
+          "workflowId": "place-discounted-order",
+          "workflowIndex": 0
         },
         "key": "place-discounted-order",
         "name": "place-discounted-order",
@@ -189,7 +191,7 @@
     "confidence": 0.99,
     "format": "arazzo"
   },
-  "fingerprint": "sha256:6b14c3abbdddf453eff2b8f002a7ef74ca4b1eae5dc8e695ac037392503f10b6",
+  "fingerprint": "sha256:082a1ed76e1540ecf4113a831e57b287f1122809ab1ede39046091b262faad37",
   "lint": {
     "findings": 0,
     "grade": "A",

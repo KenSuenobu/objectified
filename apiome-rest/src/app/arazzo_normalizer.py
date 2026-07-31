@@ -75,7 +75,7 @@ class ArazzoNormalizer(Normalizer, register=True):
     def _services(self, source: Dict[str, Any]) -> List[Service]:
         workflows = source.get("workflows") or []
         services: List[Service] = []
-        for workflow in workflows:
+        for workflow_index, workflow in enumerate(workflows):
             if not isinstance(workflow, dict):
                 continue
             workflow_id = workflow.get("workflowId")
@@ -99,10 +99,19 @@ class ArazzoNormalizer(Normalizer, register=True):
             ]
             service_extras: Dict[str, Any] = {
                 "workflowId": workflow_id,
+                # Declaration order, kept because `normalize_ordering` sorts services by key —
+                # the same reason each step carries `stepIndex`.
+                "workflowIndex": workflow_index,
                 "stepOrder": step_order,
             }
             if isinstance(workflow.get("inputs"), dict):
                 service_extras["inputs"] = workflow["inputs"]
+            # Workflow-level attributes the Service model has no column for. They are carried
+            # verbatim so REPO-3.4 (#2773) can persist them as `api_workflows` columns without
+            # re-reading the source document.
+            for key in ("summary", "outputs", "dependsOn", "successActions", "failureActions"):
+                if workflow.get(key) is not None:
+                    service_extras[key] = workflow[key]
             services.append(
                 Service(
                     key=workflow_id,
@@ -130,6 +139,10 @@ class ArazzoNormalizer(Normalizer, register=True):
             extras["operationId"] = step["operationId"]
         if step.get("operationRef"):
             extras["operationRef"] = step["operationRef"]
+        if step.get("operationPath"):
+            # Arazzo 1.0.0's third target spelling (a pointer into a sourceDescription's
+            # document), used by the official LoginAndRetrievePets bundle.
+            extras["operationPath"] = step["operationPath"]
         if step.get("dependsOn"):
             extras["dependsOn"] = step["dependsOn"]
         if step.get("successCriteria") is not None:
@@ -146,8 +159,13 @@ class ArazzoNormalizer(Normalizer, register=True):
             extras["assertions"] = step["assertions"]
         if step.get("outputs"):
             extras["outputs"] = step["outputs"]
+        # Step-level attributes REPO-3.4 (#2773) persists as `api_workflow_steps` columns.
+        # `workflowId` marks a step that calls a sibling workflow rather than an operation, so
+        # operationRef resolution can classify it `not_applicable` instead of "unknown".
+        for key in ("onFailure", "onSuccess", "workflowId"):
+            if step.get(key) is not None:
+                extras[key] = step[key]
 
-        referenced = step.get("operationId") or step.get("operationRef") or step_id
         return Operation(
             key=op_key,
             name=step_id,

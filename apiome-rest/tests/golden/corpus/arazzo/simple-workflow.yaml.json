@@ -32,7 +32,8 @@
             "CreateTodo",
             "GetTodo"
           ],
-          "workflowId": "CreateAndGetTodo"
+          "workflowId": "CreateAndGetTodo",
+          "workflowIndex": 0
         },
         "key": "CreateAndGetTodo",
         "name": "CreateAndGetTodo",
@@ -136,7 +137,7 @@
     "confidence": 0.99,
     "format": "arazzo"
   },
-  "fingerprint": "sha256:e1d97cd5ffdd42b2866f4f47e844165b8bcdbb51da47c7e9458ffeadf29e6464",
+  "fingerprint": "sha256:582d89f2794502e9054c4dd5779d02da0e79de9b61b709bac5c004650e069217",
   "lint": {
     "findings": 2,
     "grade": "A",

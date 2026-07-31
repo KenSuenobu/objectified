@@ -44,7 +44,8 @@
             "CreateProfile",
             "Notify"
           ],
-          "workflowId": "SignupLoginProfile"
+          "workflowId": "SignupLoginProfile",
+          "workflowIndex": 0
         },
         "key": "SignupLoginProfile",
         "name": "SignupLoginProfile",
@@ -230,7 +231,7 @@
     "confidence": 0.99,
     "format": "arazzo"
   },
-  "fingerprint": "sha256:7312f699dbaa4c0a68d990bc615dc02930caf589828b224c58822b7181128adc",
+  "fingerprint": "sha256:ae0fa8d27eee682000f1f0ea65bea215947f5e247b013c696aa266cdad576513",
   "lint": {
     "findings": 8,
     "grade": "D",

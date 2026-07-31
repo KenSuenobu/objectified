@@ -5,6 +5,39 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.222.0] - 2026-07-31
+
+### Added
+- **Arazzo 1.x workflow importer (REPO-3.4, #2773)** — Arazzo describes orchestrated multi-step
+  API workflows and is a sibling specification to OpenAPI, but Apiome could only *read* one
+  (detect → parse → normalize → lint → emit → diff, MFI-30.2). An imported Arazzo document landed
+  as a store-raw catalog item and its orchestration was invisible. It is now a first-class entity.
+  - **Workflow + WorkflowStep entities (V225).** `apiome.api_workflows` and
+    `apiome.api_workflow_steps` hang off the version's `api_artifacts` row like every other
+    canonical child, so a re-import replaces the previous orchestration instead of accumulating
+    duplicates. Each `workflows[]` entry becomes one workflow row (`workflowId`, `summary`,
+    `description`, `inputs`, `outputs`) plus N step rows in source order.
+  - **`operationRef` resolution.** A step that points at an OpenAPI operation imported in the same
+    scan resolves to that internal `path_operation` id. "The same scan" is concrete: with git
+    provenance it is every project `repository_import_spec` links to the same repository and
+    branch; otherwise it is the importing project. Every reference spelling in the wild is
+    handled — `operationId`, `$sourceDescriptions.<name>.<operationId>`, an `operationRef`
+    JSON-pointer (`…#/paths/~1pets~1{petId}/get`), and Arazzo 1.0.0's `operationPath` route
+    pointer, which resolves only when the route carries exactly one operation.
+  - **A miss is not a failure.** An unresolved reference keeps its raw string verbatim, leaves the
+    FK NULL, and records a stable `resolution_reason` (`unknown-operation`, `ambiguous-operation`,
+    `no-operation-target`, …) plus a human-readable warning. A step that calls a sibling workflow
+    is `not_applicable` rather than "unknown"; a step that cannot be read at all is isolated as
+    `parse_error` and its siblings still import. Workflow persistence is an enrichment over the
+    catalog item, so a failure there never fails an import whose source bytes are already stored.
+  - **Verbatim step payloads.** `parameters`, `successCriteria`, `onFailure`, `outputs` and
+    `dependsOn` are stored exactly as written — Arazzo's runtime-expression grammar
+    (`$response.body#/id`, `$steps.foo.outputs.bar`) is never re-parsed, which keeps round-trip
+    honest.
+  - **Verified against the official bundles.** `tests/fixtures/arazzo` carries the OAI example
+    documents verbatim (`pet-coupons`, `LoginAndRetrievePets`, `oauth`); they round-trip
+    normalize → map → persist → load with identical workflows and steps.
+
 ## [1.218.0] - 2026-07-31
 
 ### Added
