@@ -20328,6 +20328,11 @@ class Database:
         The insert is guarded by a subquery so a row is only written when the
         repository belongs to the given tenant.
 
+        A genuine capture always writes ``backfilled = FALSE``: when the lineage
+        previously held a spec seeded by the RAR-1.6 historical backfill, the
+        first real import replaces it and clears the flag, so ``backfilled``
+        remains a reliable "imported before spec capture" marker.
+
         Freshness signals (RAR-2.1) — ``last_imported_commit_sha``,
         ``last_imported_committed_at``, ``last_imported_blob_sha`` — are copied from
         the matching indexed ``tenant_repository_files`` row via a LEFT JOIN, so the
@@ -20361,12 +20366,14 @@ class Database:
                 tenant_id, repository_id, branch, path, project_id,
                 source_kind, format_override, content_type,
                 options_json, spec_schema_version, created_by,
-                last_imported_commit_sha, last_imported_committed_at, last_imported_blob_sha
+                last_imported_commit_sha, last_imported_committed_at, last_imported_blob_sha,
+                backfilled
             )
             SELECT %s::uuid, %s::uuid, %s, %s, %s::uuid,
                    %s, %s, %s,
                    %s::jsonb, %s, %s::uuid,
-                   trf.commit_sha, trf.committed_at, trf.blob_sha
+                   trf.commit_sha, trf.committed_at, trf.blob_sha,
+                   FALSE
             FROM apiome.tenant_repositories tr
             LEFT JOIN apiome.tenant_repository_files trf
                 ON trf.repository_id = tr.id AND trf.branch = %s AND trf.path = %s
@@ -20384,12 +20391,13 @@ class Database:
                 last_imported_commit_sha = EXCLUDED.last_imported_commit_sha,
                 last_imported_committed_at = EXCLUDED.last_imported_committed_at,
                 last_imported_blob_sha = EXCLUDED.last_imported_blob_sha,
+                backfilled = FALSE,
                 updated_at = CURRENT_TIMESTAMP
             RETURNING id, tenant_id, repository_id, branch, path, project_id,
                       source_kind, format_override, content_type,
                       options_json, spec_schema_version, created_by,
                       last_imported_commit_sha, last_imported_committed_at,
-                      last_imported_blob_sha, created_at, updated_at
+                      last_imported_blob_sha, backfilled, created_at, updated_at
         """
         params = (
             tenant_id, repository_id, branch, path, project_id,
@@ -20433,7 +20441,7 @@ class Database:
                    source_kind, format_override, content_type,
                    options_json, spec_schema_version, created_by,
                    last_imported_commit_sha, last_imported_committed_at,
-                   last_imported_blob_sha, created_at, updated_at
+                   last_imported_blob_sha, backfilled, created_at, updated_at
             FROM apiome.repository_import_spec
             WHERE tenant_id = %s::uuid
               AND repository_id = %s::uuid
@@ -20493,7 +20501,7 @@ class Database:
                    s.source_kind, s.format_override, s.content_type,
                    s.options_json, s.spec_schema_version, s.created_by,
                    s.last_imported_commit_sha, s.last_imported_committed_at,
-                   s.last_imported_blob_sha, s.created_at, s.updated_at,
+                   s.last_imported_blob_sha, s.backfilled, s.created_at, s.updated_at,
                    trf.committed_at AS remote_committed_at,
                    trf.blob_sha AS remote_blob_sha
             FROM apiome.repository_import_spec s
@@ -20537,7 +20545,7 @@ class Database:
                    s.source_kind, s.format_override, s.content_type,
                    s.options_json, s.spec_schema_version, s.created_by,
                    s.last_imported_commit_sha, s.last_imported_committed_at,
-                   s.last_imported_blob_sha, s.created_at, s.updated_at,
+                   s.last_imported_blob_sha, s.backfilled, s.created_at, s.updated_at,
                    trf.committed_at AS remote_committed_at,
                    trf.blob_sha AS remote_blob_sha
             FROM apiome.repository_import_spec s

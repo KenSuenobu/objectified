@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.82.0",
+    "version": "1.83.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -100023,6 +100023,13 @@
             "$ref": "#/components/schemas/RefreshStatus",
             "description": "Materialized per-file refresh state (RAR-2.3): one of up-to-date / stale / refreshing / failed / diverged. Derived from the current scan recency vs the last_imported_* anchors, overlaid with any in-flight refresh, last-attempt failure, or divergence hold.",
             "default": "up-to-date"
+          },
+          "backfilled": {
+            "type": "boolean",
+            "title": "Backfilled",
+            "description": "True when the spec was seeded by the RAR-1.6 backfill migration for an import that predates spec capture (RAR-1.2) \u2014 the options are system defaults and the source_kind was detected, not user-chosen. The UI can label such files 'imported before spec capture'. Cleared automatically when the lineage is genuinely re-imported.",
+            "default": false,
+            "example": false
           }
         },
         "additionalProperties": false,
@@ -100772,7 +100779,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-07-31T15:06:48Z"
+            "example": "2026-07-31T15:34:37Z"
           }
         },
         "additionalProperties": false,
@@ -112955,14 +112962,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-07-31T15:06:48Z"
+            "example": "2026-07-31T15:34:37Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-07-31T15:06:48Z"
+            "example": "2026-07-31T15:34:37Z"
           },
           "outcome": {
             "anyOf": [

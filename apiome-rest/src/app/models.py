@@ -842,6 +842,14 @@ class RepositoryImportSpec(BaseModel):
         default=None,
         description="Blob SHA of the file content at import time (RAR-2.1).",
     )
+    backfilled: bool = Field(
+        default=False,
+        description=(
+            "True when this spec was seeded by the RAR-1.6 historical backfill "
+            "(default options + detected source_kind) rather than captured from a "
+            "user-authored import; cleared on the next genuine import."
+        ),
+    )
     created_by: Optional[str] = None
     created_at: Optional[Union[datetime, str]] = None
     updated_at: Optional[Union[datetime, str]] = None
@@ -1039,6 +1047,16 @@ class RepositoryImportSpecRead(BaseModel):
             "refresh, last-attempt failure, or divergence hold."
         ),
     )
+    backfilled: bool = Field(
+        default=False,
+        description=(
+            "True when the spec was seeded by the RAR-1.6 backfill migration for an "
+            "import that predates spec capture (RAR-1.2) — the options are system "
+            "defaults and the source_kind was detected, not user-chosen. The UI can "
+            "label such files 'imported before spec capture'. Cleared automatically "
+            "when the lineage is genuinely re-imported."
+        ),
+    )
 
 
 def repository_import_spec_read_from_row(
@@ -1091,6 +1109,7 @@ def repository_import_spec_read_from_row(
         last_imported_committed_at=row.get("last_imported_committed_at"),
         last_imported_blob_sha=row.get("last_imported_blob_sha"),
         refresh_status=refresh_status,
+        backfilled=bool(row.get("backfilled")),
     )
 
 

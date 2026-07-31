@@ -162,6 +162,22 @@ describe('upsertRepositoryImportSpec (RAR-1.2, #3513)', () => {
     expect(params[7]).toBeNull(); // content_type
   });
 
+  // RAR-1.6 (#3517): a genuine capture must clear the historical-backfill flag,
+  // so a lineage whose spec was seeded by the migration becomes user-authored
+  // (backfilled=false) the first time it is really re-imported.
+  test('writes backfilled=false on insert and clears the flag on re-import', async () => {
+    const { upsertRepositoryImportSpec } = require('../lib/db/repository-import-metrics');
+
+    await upsertRepositoryImportSpec(BASE_PARAMS);
+
+    const [sql] = mockQuery.mock.calls[0];
+    expect(sql).toContain('backfilled');
+    // Fresh captures insert the flag as FALSE...
+    expect(sql).toMatch(/trf\.blob_sha,\s*FALSE/);
+    // ...and a conflicting (pre-existing, possibly backfilled) row is cleared.
+    expect(sql).toContain('backfilled = FALSE');
+  });
+
   // RAR-2.1 (#3518): the spec records freshness anchors copied from the matching
   // indexed tenant_repository_files row via a LEFT JOIN on (repository, branch, path),
   // so a future auto-refresh can gate "newer-than" re-imports.
