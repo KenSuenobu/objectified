@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.86.0",
+    "version": "1.87.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -100878,7 +100878,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-07-31T17:49:43Z"
+            "example": "2026-07-31T18:52:52Z"
           }
         },
         "additionalProperties": false,
@@ -109444,6 +109444,35 @@
             ],
             "title": "Quality Reason",
             "description": "Stable machine reason a file was skipped or errored (e.g. 'unclassified', 'no-adapter', 'too-large', 'parse-failed'); null when scored."
+          },
+          "external_ref_policy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Tenant Repository File Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Tenant Repository File Row schema."
+              }
+            ],
+            "title": "External Ref Policy",
+            "description": "External $ref policy that applied when this file was last scanned (REPO-3.9): 'block', 'inline', or 'proxy-fetch'. Null when the file has no unresolved external references."
+          },
+          "external_ref_unresolved_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0,
+                "description": "Tenant Repository File Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Tenant Repository File Row schema."
+              }
+            ],
+            "title": "External Ref Unresolved Count",
+            "description": "How many external $refs in this file were left unresolved by the policy (REPO-3.9). Null when there are none. The itemized references \u2014 each with its URL and refusal reason \u2014 are stored on the file row; this listing carries the tally only, so a page of files stays small."
           }
         },
         "type": "object",
@@ -113110,14 +113139,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-07-31T17:49:43Z"
+            "example": "2026-07-31T18:52:52Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-07-31T17:49:43Z"
+            "example": "2026-07-31T18:52:52Z"
           },
           "outcome": {
             "anyOf": [

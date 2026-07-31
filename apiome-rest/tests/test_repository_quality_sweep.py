@@ -95,6 +95,12 @@ class FakeDb:
         self.claims: List[int] = []
         self.writes: List[Dict[str, Any]] = []
         self.write_error: Optional[Exception] = None
+        #: REPO-3.9: the external-$ref policy step the sweep runs on every downloaded blob.
+        #: No stored row means the fail-closed default (``block``), which is what these
+        #: scoring tests want — nothing is fetched and no document is rewritten.
+        self.external_ref_policy_row: Optional[Dict[str, Any]] = None
+        self.external_ref_warnings: List[Any] = []
+        self.audits: List[Dict[str, Any]] = []
 
     def claim_repository_files_for_quality_scoring(self, limit: int = 25) -> List[Dict[str, Any]]:
         self.claims.append(limit)
@@ -108,6 +114,18 @@ class FakeDb:
 
     def get_external_auth_provider_for_user(self, linked: str, user: str) -> Optional[Dict[str, Any]]:
         return {"access_token": self.token} if self.token else None
+
+    def get_tenant_external_ref_policy(self, tenant_id: str) -> Optional[Dict[str, Any]]:
+        return self.external_ref_policy_row
+
+    def set_repository_file_external_ref_warning(self, file_id: str, warning: Any) -> int:
+        self.external_ref_warnings.append({"file_id": file_id, "warning": warning})
+        return 1
+
+    def insert_workflow_audit(
+        self, tenant_id, project_id, version_id, action, outcome, actor_id, detail=None
+    ) -> None:
+        self.audits.append({"action": action, "detail": detail})
 
 
 @pytest.fixture()
@@ -411,3 +429,87 @@ def test_the_files_listing_page_returns_the_quality_columns() -> None:
     source = inspect.getsource(Database.tenant_repository_files_stats_and_page)
     for column in ("f.quality_score", "f.quality_grade", "f.quality_status", "f.quality_reason"):
         assert column in source
+
+
+# --- REPO-3.9: the external $ref policy runs on the blob this sweep downloads ------------------
+
+
+_SPEC_WITH_EXTERNAL_REF = """
+openapi: 3.0.3
+info:
+  title: Widget API
+  version: 1.0.0
+  description: Widgets and their care.
+paths: {}
+components:
+  schemas:
+    Price:
+      $ref: "https://schemas.acme.com/common.json#/Money"
+"""
+
+
+def test_the_default_policy_warns_the_file_instead_of_fetching(stub_download) -> None:
+    """AC4: under `block` the file gains a warning naming the reference it is missing."""
+    stub_download(_SPEC_WITH_EXTERNAL_REF)
+    db = FakeDb()
+
+    score_repository_file_row(db, _row())
+
+    assert len(db.external_ref_warnings) == 1
+    written = db.external_ref_warnings[0]
+    assert written["file_id"] == "11111111-1111-1111-1111-111111111111"
+    warning = written["warning"]
+    assert warning["policy"] == "block"
+    assert warning["unresolved_count"] == 1
+    assert warning["unresolved"][0]["url"] == "https://schemas.acme.com/common.json"
+
+
+def test_a_file_with_no_external_refs_has_its_warning_cleared(stub_download) -> None:
+    stub_download()  # the plain OpenAPI fixture: in-document $refs only
+    db = FakeDb()
+
+    score_repository_file_row(db, _row())
+
+    assert db.external_ref_warnings == [
+        {"file_id": "11111111-1111-1111-1111-111111111111", "warning": None}
+    ]
+
+
+def test_an_inline_tenant_scores_the_snapshot_the_policy_produced(
+    stub_download, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The point of `inline`: the graded document is the one the tenant will import."""
+    from app.repository_external_ref_policy import EXTERNAL_REF_FETCHED_ACTION
+    from app.repository_spec_quality import skipped
+
+    stub_download(_SPEC_WITH_EXTERNAL_REF)
+    db = FakeDb()
+    db.external_ref_policy_row = {
+        "repository_external_ref_policy": "inline",
+        "repository_external_ref_allowlist": [],
+    }
+    graded: List[str] = []
+
+    def _capture(detected_kind, path, text, *, truncated=False):
+        graded.append(text)
+        return skipped("unclassified")
+
+    monkeypatch.setattr(sweep, "score_spec_text", _capture)
+    # Substituted at the resolver's own fetch seam, so the SSRF-guarded client is never built
+    # and the test stays off the network.
+    monkeypatch.setattr(
+        "app.remote_ref_resolver._http_fetch",
+        lambda url, *, max_bytes, timeout: b'{"Money": {"type": "object"}}',
+    )
+
+    score_repository_file_row(db, _row())
+
+    assert len(graded) == 1
+    assert "schemas.acme.com" not in graded[0], "the reference should have been inlined"
+    assert '"type":"object"' in graded[0]
+    # AC3: the fetch is auditable; AC4's warning is cleared because nothing is unresolved.
+    assert [audit["action"] for audit in db.audits] == [EXTERNAL_REF_FETCHED_ACTION]
+    assert db.audits[0]["detail"]["path"] == "api/openapi.yaml"
+    assert db.external_ref_warnings == [
+        {"file_id": "11111111-1111-1111-1111-111111111111", "warning": None}
+    ]

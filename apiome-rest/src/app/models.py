@@ -7387,6 +7387,24 @@ class TenantRepositoryFileRow(BaseModel):
             "'no-adapter', 'too-large', 'parse-failed'); null when scored."
         ),
     )
+    external_ref_policy: Optional[str] = Field(
+        default=None,
+        description=(
+            "External $ref policy that applied when this file was last scanned (REPO-3.9): "
+            "'block', 'inline', or 'proxy-fetch'. Null when the file has no unresolved "
+            "external references."
+        ),
+    )
+    external_ref_unresolved_count: Optional[int] = Field(
+        default=None,
+        ge=0,
+        description=(
+            "How many external $refs in this file were left unresolved by the policy "
+            "(REPO-3.9). Null when there are none. The itemized references — each with its "
+            "URL and refusal reason — are stored on the file row; this listing carries the "
+            "tally only, so a page of files stays small."
+        ),
+    )
 
 
 class TenantRepositoryFilesListResponse(BaseModel):
