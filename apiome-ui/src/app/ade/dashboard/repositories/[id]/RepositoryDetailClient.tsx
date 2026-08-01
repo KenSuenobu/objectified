@@ -46,6 +46,7 @@ import {
   repoInitials,
   repositoryStatusNeedsPolling,
 } from '@/app/components/ade/dashboard/repositories/repositoryStoreUi';
+import { RepositoryConflictPolicy } from '@/app/components/ade/dashboard/repositories/RepositoryConflictPolicy';
 import { RepositoryHealthBadge } from '@/app/components/ade/dashboard/repositories/RepositoryHealthBadge';
 import { RepositoryFilesBrowser } from '@/app/components/ade/dashboard/repositories/RepositoryFilesBrowser';
 import { RepositorySpecsTab } from '@/app/components/ade/dashboard/repositories/RepositorySpecsTab';
@@ -999,6 +1000,9 @@ export function RepositoryDetailClient() {
               </div>
             </fieldset>
           </div>
+
+          {/* RAR-4.5 (#3531): what a refresh does when it meets a hand-edited version. */}
+          <RepositoryConflictPolicy repositoryId={repo.id} defaultBranch={repo.default_branch} />
 
           <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="border-b border-gray-100 pb-2 text-sm font-semibold dark:border-gray-700 dark:text-gray-100">

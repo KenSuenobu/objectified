@@ -5,6 +5,49 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.233.0] - 2026-08-01
+
+### Added
+- **Per-repository / per-file refresh conflict policy (RAR-4.5, #3531)** —
+  the RAR-4.4 divergence guard gave auto-refresh one answer when it meets a version that was
+  hand-edited after the original import: hold, do not clobber. That is the right default and
+  it is only one of the three answers teams want. This makes the answer configurable, at the
+  two scopes the work actually needs.
+  - **Three policies, stored as their wire tokens.** `overwrite` lets the refresh supersede
+    the hand edit — the divergence is still *detected and reported*, it just does not stop the
+    refresh; `hold-for-review` (the default) skips the refresh and flags the file `diverged`;
+    `new-branch` leaves the current version untouched and lands the refresh on a side branch
+    so neither the edit nor the upstream change is lost.
+  - **The default does not move.** `tenant_repositories.refresh_conflict_policy` is
+    `NOT NULL DEFAULT 'hold-for-review'`, so every existing repository keeps the behaviour it
+    has today. Opting into a policy that can lose work not held in the repository is an
+    explicit act, never a migration side-effect — and every degradation path (an unrecognised
+    token, a missing row, a blank value) falls back toward that same safe default rather than
+    failing a refresh.
+  - **Per-file overrides are exceptions, not enrolments.**
+    `apiome.repository_conflict_policy_override` holds one row per file that deviates, keyed on
+    the same `(repository_id, branch, path)` lineage tuple as RAR-1.1's `repository_import_spec`.
+    A file with no row inherits its repository's policy, so the table stays tiny and clearing an
+    override is a *delete* — the file then follows whatever the repository says next, not a
+    frozen copy of today's setting. The table is separate from `tenant_repository_files`
+    deliberately: that one is rewritten by every scan, and policy must outlive the scan index.
+  - **One decision site.** `app/repository_conflict_policy.py` resolves
+    `per-file → repository → default`, runs the RAR-4.4 guard under the resolved policy, and
+    returns a `ConflictOutcome` carrying the action (`apply` / `hold` / `new-branch`), whether
+    a manual edit was detected, the reason code, the policy and where it came from. Branch
+    names for the `new-branch` policy are deterministic
+    (`apiome-refresh/<branch>/<file stem>-<short sha>`), so a refresh that runs twice for one
+    commit targets one branch rather than accumulating near-duplicates. Like RAR-4.1–4.4 the
+    module is pure and DB-free; acting on the outcome remains the EPIC-4 dispatcher's job.
+  - **API.** `GET/PUT /v1/tenants/{slug}/repositories/{id}/conflict-policy` reads and sets the
+    repository policy; `PUT …/conflict-policy/file` sets an override, or clears it with
+    `"policy": null`. Both the read and every mutation return the same projection — policy,
+    default, accepted tokens and overrides — so a settings panel cannot drift from stored
+    state. An unrecognised token is a `400` that lists what is accepted, not a `500` from the
+    column's CHECK. The repository policy is also patchable through the existing dashboard
+    `PATCH /v1/tenants/{slug}/repositories/{id}` as `refreshConflictPolicy`.
+  - See `docs/repository_conflict_policy.md`.
+
 ## [1.232.0] - 2026-08-01
 
 ### Added

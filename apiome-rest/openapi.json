@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.96.0",
+    "version": "1.97.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -48720,6 +48720,325 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for read repository import specresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/repositories/{repository_id}/conflict-policy": {
+      "get": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Get Repository Conflict Policy",
+        "description": "Read a repository's refresh conflict policy and its per-file overrides (RAR-4.5, #3531).\n\nWhen an auto-refresh finds the imported version has been hand-edited since\n(RAR-4.4 divergence), this policy decides what happens: ``overwrite`` lets the\nrefresh win, ``hold-for-review`` (the default) parks it for a human, and\n``new-branch`` lands the refresh on a side branch so neither side is lost. The\nrepository-wide setting applies to every file that has no override row.\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    repository_id: The repository to read.\n    auth_data: Authenticated principal; supplies the tenant scope.\n\nReturns:\n    The repository policy, the built-in default, the accepted tokens, and the\n    per-file overrides.\n\nRaises:\n    HTTPException: 404 when the repository does not belong to the tenant.",
+        "operationId": "get_repository_conflict_policy_v1_tenants__tenant_slug__repositories__repository_id__conflict_policy_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "repository_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Repository Id",
+              "description": "Repository Id schema."
+            },
+            "description": "Connected repository identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Get Repository Conflict Policyauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Get Repository Conflict Policyauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Get Repository Conflict Policy Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Get Repository Conflict Policy Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for get repository conflict policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryConflictPolicyResponse",
+                  "description": "Response payload for get repository conflict policyresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for get repository conflict policyresponse422."
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Set Repository Conflict Policy",
+        "description": "Set a repository's refresh conflict policy (RAR-4.5, #3531).\n\nApplies to every file in the repository that has no per-file override. The\nchange takes effect on the next refresh tick; it never retroactively applies or\nreleases a refresh already held, and it never clears an existing override.\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    repository_id: The repository to configure.\n    payload: The requested policy.\n    auth_data: Authenticated principal; supplies the tenant scope.\n\nReturns:\n    The repository's conflict-policy projection after the update.\n\nRaises:\n    HTTPException: 400 when the policy token is not recognised; 404 when the\n        repository does not belong to the tenant.",
+        "operationId": "set_repository_conflict_policy_v1_tenants__tenant_slug__repositories__repository_id__conflict_policy_put",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "repository_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Repository Id",
+              "description": "Repository Id schema."
+            },
+            "description": "Connected repository identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Set Repository Conflict Policyauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Set Repository Conflict Policyauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Set Repository Conflict Policy Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Set Repository Conflict Policy Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepositoryConflictPolicyUpdate",
+                "description": "Request body for set repository conflict policyrequest."
+              }
+            }
+          },
+          "description": "Request body for set repository conflict policy."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for set repository conflict policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryConflictPolicyResponse",
+                  "description": "Response payload for set repository conflict policyresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for set repository conflict policyresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/repositories/{repository_id}/conflict-policy/file": {
+      "put": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Set Repository File Conflict Policy",
+        "description": "Set or clear one file's conflict-policy override (RAR-4.5, #3531).\n\nA ``policy`` value writes the override, so this one file deviates from the\nrepository-wide setting; ``policy: null`` removes the override and the file\ninherits the repository policy again. Overrides are stored as exceptions, so\nclearing one is a delete rather than a stored copy of the repository policy\nthat would go stale the moment the repository policy changed.\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    repository_id: The repository the file belongs to.\n    payload: The file (branch + path) and the policy to set, or null to clear.\n    auth_data: Authenticated principal; supplies the tenant scope.\n\nReturns:\n    The repository's conflict-policy projection after the change.\n\nRaises:\n    HTTPException: 400 when the policy token or the file key is invalid; 404\n        when the repository does not belong to the tenant.",
+        "operationId": "set_repository_file_conflict_policy_v1_tenants__tenant_slug__repositories__repository_id__conflict_policy_file_put",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "repository_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Repository Id",
+              "description": "Repository Id schema."
+            },
+            "description": "Connected repository identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Set Repository File Conflict Policyauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Set Repository File Conflict Policyauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Set Repository File Conflict Policy Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Set Repository File Conflict Policy Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepositoryConflictPolicyOverrideRequest",
+                "description": "Request body for set repository file conflict policyrequest."
+              }
+            }
+          },
+          "description": "Request body for set repository file conflict policy."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for set repository file conflict policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryConflictPolicyResponse",
+                  "description": "Response payload for set repository file conflict policyresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for set repository file conflict policyresponse422."
                 }
               }
             }
@@ -101891,6 +102210,201 @@
         "title": "ReleaseSourceBody",
         "description": "Where the release was built from."
       },
+      "RepositoryConflictPolicyOut": {
+        "properties": {
+          "repositoryId": {
+            "type": "string",
+            "title": "Repositoryid",
+            "description": "Repository ID.",
+            "example": "example"
+          },
+          "policy": {
+            "type": "string",
+            "title": "Policy",
+            "description": "Repository-wide policy applied when a refresh meets a hand-edited version: overwrite | hold-for-review | new-branch.",
+            "example": "example"
+          },
+          "defaultPolicy": {
+            "type": "string",
+            "title": "Defaultpolicy",
+            "description": "The policy in force when neither the file nor the repository sets one.",
+            "example": "example"
+          },
+          "availablePolicies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Availablepolicies",
+            "description": "Every policy token the API accepts, for rendering the selector.",
+            "maxItems": 1000
+          },
+          "overrides": {
+            "items": {
+              "$ref": "#/components/schemas/RepositoryConflictPolicyOverrideOut"
+            },
+            "type": "array",
+            "title": "Overrides",
+            "description": "Per-file exceptions; empty when every file follows the repository policy.",
+            "maxItems": 1000
+          }
+        },
+        "type": "object",
+        "required": [
+          "repositoryId",
+          "policy",
+          "defaultPolicy",
+          "availablePolicies"
+        ],
+        "title": "RepositoryConflictPolicyOut",
+        "description": "A repository's conflict-policy configuration (RAR-4.5, #3531).\n\nCarries both levels the resolution walks \u2014 the repository-wide policy and the\nper-file exceptions \u2014 plus the built-in default, so a panel can render \"this\nfile follows the repository\" without a second request."
+      },
+      "RepositoryConflictPolicyOverrideOut": {
+        "properties": {
+          "branch": {
+            "type": "string",
+            "title": "Branch",
+            "description": "The branch the overridden file was imported from.",
+            "example": "example"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Repository-relative path of the overridden file.",
+            "example": "/resources/{id}"
+          },
+          "policy": {
+            "type": "string",
+            "title": "Policy",
+            "description": "This file's policy: overwrite | hold-for-review | new-branch.",
+            "example": "example"
+          },
+          "createdBy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository conflict policy override."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository conflict policy override."
+              }
+            ],
+            "title": "Createdby",
+            "description": "User who introduced the override, when still known."
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository conflict policy override."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository conflict policy override."
+              }
+            ],
+            "title": "Createdat",
+            "description": "Created At."
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository conflict policy override."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository conflict policy override."
+              }
+            ],
+            "title": "Updatedat",
+            "description": "Updated At."
+          }
+        },
+        "type": "object",
+        "required": [
+          "branch",
+          "path",
+          "policy"
+        ],
+        "title": "RepositoryConflictPolicyOverrideOut",
+        "description": "One per-file conflict-policy override as the settings panel sees it (RAR-4.5, #3531)."
+      },
+      "RepositoryConflictPolicyOverrideRequest": {
+        "properties": {
+          "branch": {
+            "type": "string",
+            "title": "Branch",
+            "description": "The branch the file was imported from.",
+            "example": "example"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Repository-relative path of the file.",
+            "example": "/resources/{id}"
+          },
+          "policy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for repository conflict policy override."
+              },
+              {
+                "type": "null",
+                "description": "Request body for repository conflict policy override."
+              }
+            ],
+            "title": "Policy",
+            "description": "overwrite | hold-for-review | new-branch, or null to clear the override and inherit the repository policy."
+          }
+        },
+        "type": "object",
+        "required": [
+          "branch",
+          "path"
+        ],
+        "title": "RepositoryConflictPolicyOverrideRequest",
+        "description": "Set or clear one file's conflict-policy override (RAR-4.5, #3531).\n\n``policy`` set writes the override; ``policy`` null removes it so the file\ninherits its repository's policy again."
+      },
+      "RepositoryConflictPolicyResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true,
+            "description": "Success.",
+            "example": false
+          },
+          "conflictPolicy": {
+            "$ref": "#/components/schemas/RepositoryConflictPolicyOut",
+            "description": "Conflict Policy."
+          }
+        },
+        "type": "object",
+        "required": [
+          "conflictPolicy"
+        ],
+        "title": "RepositoryConflictPolicyResponse",
+        "description": "Envelope returned by the conflict-policy read *and* by every mutation (RAR-4.5).\n\nMutations return the same projection the read does, so a settings panel\nre-renders from the shape it loaded and can never drift from stored state."
+      },
+      "RepositoryConflictPolicyUpdate": {
+        "properties": {
+          "policy": {
+            "type": "string",
+            "title": "Policy",
+            "description": "overwrite | hold-for-review | new-branch.",
+            "example": "example"
+          }
+        },
+        "type": "object",
+        "required": [
+          "policy"
+        ],
+        "title": "RepositoryConflictPolicyUpdate",
+        "description": "Set a repository's conflict policy (RAR-4.5, #3531)."
+      },
       "RepositoryHealthFactorOut": {
         "properties": {
           "code": {
@@ -104170,7 +104684,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-01T16:53:42Z"
+            "example": "2026-08-01T20:08:32Z"
           }
         },
         "additionalProperties": false,
@@ -113508,6 +114022,13 @@
             "title": "Refresh Pause Reason",
             "description": "Refresh Pause Reason."
           },
+          "refresh_conflict_policy": {
+            "type": "string",
+            "title": "Refresh Conflict Policy",
+            "default": "hold-for-review",
+            "description": "Refresh Conflict Policy.",
+            "example": "example"
+          },
           "health": {
             "anyOf": [
               {
@@ -113576,11 +114097,25 @@
             ],
             "title": "Autorefreshenabled",
             "description": "Auto Refresh Enabled."
+          },
+          "refreshConflictPolicy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Tenant Repository Update schema."
+              },
+              {
+                "type": "null",
+                "description": "Tenant Repository Update schema."
+              }
+            ],
+            "title": "Refreshconflictpolicy",
+            "description": "Conflict policy for a diverged refresh: overwrite | hold-for-review | new-branch. Applies to every file in the repository that has no override."
           }
         },
         "type": "object",
         "title": "TenantRepositoryUpdate",
-        "description": "Dashboard: patch mutable settings on a registered repository (RAR-3.3).\n\nOnly fields present in the request body are applied. Currently the per-repo\nauto-refresh toggle (``auto_refresh_enabled``); accepts both the snake_case and\ncamelCase spellings so the UI can send either."
+        "description": "Dashboard: patch mutable settings on a registered repository (RAR-3.3, RAR-4.5).\n\nOnly fields present in the request body are applied: the per-repo auto-refresh\ntoggle (``auto_refresh_enabled``, RAR-3.3) and the repository-wide conflict\npolicy (``refresh_conflict_policy``, RAR-4.5). Both accept the snake_case and\ncamelCase spellings so the UI can send either."
       },
       "TenantsMeResponse": {
         "properties": {
@@ -116869,14 +117404,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-01T16:53:42Z"
+            "example": "2026-08-01T20:08:32Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-01T16:53:42Z"
+            "example": "2026-08-01T20:08:32Z"
           },
           "outcome": {
             "anyOf": [

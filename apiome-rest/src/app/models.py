@@ -7323,6 +7323,10 @@ class TenantRepositoryRecord(BaseModel):
     refresh_backoff_until: Optional[str] = None
     refresh_paused_at: Optional[str] = None
     refresh_pause_reason: Optional[str] = None
+    # Repository-wide conflict policy for a diverged refresh (RAR-4.5, #3531):
+    # overwrite | hold-for-review | new-branch. Defaults to hold-for-review — the
+    # RAR-4.4 hold-not-clobber behaviour — for rows predating the column.
+    refresh_conflict_policy: str = "hold-for-review"
     # At-a-glance health badge (REPO-6.5, #2798). Null only when the health signals could
     # not be read at all — the badge is then simply not rendered, never guessed.
     health: Optional[RepositoryHealthOut] = None
@@ -7331,10 +7335,11 @@ class TenantRepositoryRecord(BaseModel):
 
 
 class TenantRepositoryUpdate(BaseModel):
-    """Dashboard: patch mutable settings on a registered repository (RAR-3.3).
+    """Dashboard: patch mutable settings on a registered repository (RAR-3.3, RAR-4.5).
 
-    Only fields present in the request body are applied. Currently the per-repo
-    auto-refresh toggle (``auto_refresh_enabled``); accepts both the snake_case and
+    Only fields present in the request body are applied: the per-repo auto-refresh
+    toggle (``auto_refresh_enabled``, RAR-3.3) and the repository-wide conflict
+    policy (``refresh_conflict_policy``, RAR-4.5). Both accept the snake_case and
     camelCase spellings so the UI can send either.
     """
 
@@ -7343,6 +7348,109 @@ class TenantRepositoryUpdate(BaseModel):
     auto_refresh_enabled: Optional[bool] = Field(
         None,
         validation_alias=AliasChoices("autoRefreshEnabled", "auto_refresh_enabled"),
+    )
+    refresh_conflict_policy: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices(
+            "refreshConflictPolicy", "refresh_conflict_policy"
+        ),
+        description=(
+            "Conflict policy for a diverged refresh: overwrite | hold-for-review | "
+            "new-branch. Applies to every file in the repository that has no override."
+        ),
+    )
+
+
+class RepositoryConflictPolicyOverrideOut(BaseModel):
+    """One per-file conflict-policy override as the settings panel sees it (RAR-4.5, #3531)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    branch: str = Field(description="The branch the overridden file was imported from.")
+    path: str = Field(description="Repository-relative path of the overridden file.")
+    policy: str = Field(
+        description="This file's policy: overwrite | hold-for-review | new-branch.",
+    )
+    created_by: Optional[str] = Field(
+        default=None,
+        alias="createdBy",
+        description="User who introduced the override, when still known.",
+    )
+    created_at: Optional[str] = Field(default=None, alias="createdAt")
+    updated_at: Optional[str] = Field(default=None, alias="updatedAt")
+
+
+class RepositoryConflictPolicyOut(BaseModel):
+    """A repository's conflict-policy configuration (RAR-4.5, #3531).
+
+    Carries both levels the resolution walks — the repository-wide policy and the
+    per-file exceptions — plus the built-in default, so a panel can render "this
+    file follows the repository" without a second request.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    repository_id: str = Field(alias="repositoryId")
+    policy: str = Field(
+        description=(
+            "Repository-wide policy applied when a refresh meets a hand-edited "
+            "version: overwrite | hold-for-review | new-branch."
+        ),
+    )
+    default_policy: str = Field(
+        alias="defaultPolicy",
+        description="The policy in force when neither the file nor the repository sets one.",
+    )
+    available_policies: List[str] = Field(
+        alias="availablePolicies",
+        description="Every policy token the API accepts, for rendering the selector.",
+    )
+    overrides: List[RepositoryConflictPolicyOverrideOut] = Field(
+        default_factory=list,
+        description="Per-file exceptions; empty when every file follows the repository policy.",
+    )
+
+
+class RepositoryConflictPolicyResponse(BaseModel):
+    """Envelope returned by the conflict-policy read *and* by every mutation (RAR-4.5).
+
+    Mutations return the same projection the read does, so a settings panel
+    re-renders from the shape it loaded and can never drift from stored state.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    success: bool = True
+    conflict_policy: RepositoryConflictPolicyOut = Field(alias="conflictPolicy")
+
+
+class RepositoryConflictPolicyUpdate(BaseModel):
+    """Set a repository's conflict policy (RAR-4.5, #3531)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    policy: str = Field(
+        description="overwrite | hold-for-review | new-branch.",
+    )
+
+
+class RepositoryConflictPolicyOverrideRequest(BaseModel):
+    """Set or clear one file's conflict-policy override (RAR-4.5, #3531).
+
+    ``policy`` set writes the override; ``policy`` null removes it so the file
+    inherits its repository's policy again.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    branch: str = Field(description="The branch the file was imported from.")
+    path: str = Field(description="Repository-relative path of the file.")
+    policy: Optional[str] = Field(
+        default=None,
+        description=(
+            "overwrite | hold-for-review | new-branch, or null to clear the override "
+            "and inherit the repository policy."
+        ),
     )
 
 

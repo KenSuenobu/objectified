@@ -31,6 +31,11 @@ from .models import (
     RefreshHistoryEntryOut,
     RefreshHistoryPageResponse,
     RefreshHistoryPaginationOut,
+    RepositoryConflictPolicyOut,
+    RepositoryConflictPolicyOverrideOut,
+    RepositoryConflictPolicyOverrideRequest,
+    RepositoryConflictPolicyResponse,
+    RepositoryConflictPolicyUpdate,
     RepositoryHealthOut,
     RepositoryImportSpecRead,
     RepositoryNotificationPreferenceOut,
@@ -66,6 +71,11 @@ from .models import (
     TenantRepositoryRecord,
     TenantRepositoryUpdate,
     TenantRepositoriesListResponse,
+)
+from .repository_conflict_policy import (
+    ConflictPolicy,
+    DEFAULT_CONFLICT_POLICY,
+    parse_conflict_policy,
 )
 from .repository_event_notifications import (
     ALL_EVENT_TYPES as ALL_REPOSITORY_NOTIFICATION_EVENTS,
@@ -303,6 +313,13 @@ def _row_to_record(
         refresh_pause_reason=(
             str(row["refresh_pause_reason"]) if row.get("refresh_pause_reason") else None
         ),
+        # RAR-4.5 conflict policy; an unset/unrecognised value reads as the
+        # hold-not-clobber default so a pre-column row never reports "overwrite".
+        refresh_conflict_policy=(
+            parse_conflict_policy(
+                row.get("refresh_conflict_policy"), default=DEFAULT_CONFLICT_POLICY
+            )
+        ).value,
         # REPO-6.5 badge; omitted (null) when health signals could not be read.
         health=RepositoryHealthOut(**health) if health else None,
         created_at=_ts(row.get("created_at")),
@@ -1722,6 +1739,11 @@ async def update_tenant_repository(
         if updated is None:
             raise HTTPException(status_code=404, detail="repository not found")
 
+    if payload.refresh_conflict_policy is not None:
+        stored = _set_conflict_policy_or_400(tenant_id, rid, payload.refresh_conflict_policy)
+        if stored is None:
+            raise HTTPException(status_code=404, detail="repository not found")
+
     row = db.get_tenant_repository(tenant_id, rid)
     if not row:
         raise HTTPException(status_code=404, detail="repository not found")
@@ -1729,6 +1751,269 @@ async def update_tenant_repository(
     return TenantRepositoryGetResponse(
         success=True, repository=_row_to_record(row, health.get(rid))
     )
+
+
+# --- RAR-4.5 conflict policy (#3531) -----------------------------------------------------
+
+
+def _set_conflict_policy_or_400(
+    tenant_id: str, repository_id: str, policy: str
+) -> Optional[str]:
+    """Persist a repository's conflict policy, turning a bad token into a 400.
+
+    The DAO raises :class:`ValueError` on an unrecognised policy so a bad value can
+    never reach the column's CHECK constraint. Callers want that as a client error,
+    not a 500, and with the accepted tokens listed so the caller can correct it.
+
+    Args:
+        tenant_id: Owning tenant id.
+        repository_id: The repository to update.
+        policy: The requested policy token.
+
+    Returns:
+        The canonical stored policy, or None when the repository was not found.
+
+    Raises:
+        HTTPException: 400 when ``policy`` is not a recognised conflict policy.
+    """
+    try:
+        return db.set_repository_conflict_policy(tenant_id, repository_id, policy)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"{exc}; expected one of: "
+                + ", ".join(p.value for p in ConflictPolicy)
+            ),
+        ) from exc
+
+
+def _conflict_policy_projection(
+    tenant_id: str, repository_id: str, row: Dict[str, Any]
+) -> RepositoryConflictPolicyOut:
+    """Build the conflict-policy projection for one repository (RAR-4.5).
+
+    Reads the repository-wide policy off the already-loaded repository row and the
+    per-file exceptions from their table, and reports the built-in default and the
+    accepted tokens alongside them so a settings panel can render the selector and
+    the "inherits from repository" copy without a second request.
+
+    Args:
+        tenant_id: Owning tenant id (scopes the override read).
+        repository_id: The repository being projected.
+        row: The repository row from :meth:`Database.get_tenant_repository`.
+
+    Returns:
+        The :class:`RepositoryConflictPolicyOut` projection.
+    """
+    overrides = [
+        RepositoryConflictPolicyOverrideOut(
+            branch=str(o.get("branch") or ""),
+            path=str(o.get("path") or ""),
+            policy=str(o.get("policy") or DEFAULT_CONFLICT_POLICY.value),
+            created_by=str(o["created_by"]) if o.get("created_by") else None,
+            created_at=_ts(o.get("created_at")),
+            updated_at=_ts(o.get("updated_at")),
+        )
+        for o in db.list_repository_conflict_policy_overrides(tenant_id, repository_id)
+    ]
+    return RepositoryConflictPolicyOut(
+        repository_id=repository_id,
+        policy=parse_conflict_policy(
+            row.get("refresh_conflict_policy"), default=DEFAULT_CONFLICT_POLICY
+        ).value,
+        default_policy=DEFAULT_CONFLICT_POLICY.value,
+        available_policies=[p.value for p in ConflictPolicy],
+        overrides=overrides,
+    )
+
+
+def _conflict_policy_response(
+    tenant_id: str, repository_id: str
+) -> RepositoryConflictPolicyResponse:
+    """Load and wrap a repository's conflict-policy projection (RAR-4.5).
+
+    Shared by the read and by every mutation so a panel always re-renders from the
+    same shape and cannot drift from stored state after an edit.
+
+    Args:
+        tenant_id: Owning tenant id.
+        repository_id: The repository to project.
+
+    Returns:
+        The response envelope.
+
+    Raises:
+        HTTPException: 404 when the repository does not belong to the tenant.
+    """
+    row = db.get_tenant_repository(tenant_id, repository_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="repository not found")
+    return RepositoryConflictPolicyResponse(
+        success=True,
+        conflict_policy=_conflict_policy_projection(tenant_id, repository_id, row),
+    )
+
+
+@router.get(
+    "/{tenant_slug}/repositories/{repository_id}/conflict-policy",
+    response_model=RepositoryConflictPolicyResponse,
+    response_model_by_alias=True,
+)
+async def get_repository_conflict_policy(
+    tenant_slug: str,
+    repository_id: uuid.UUID,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryConflictPolicyResponse:
+    """Read a repository's refresh conflict policy and its per-file overrides (RAR-4.5, #3531).
+
+    When an auto-refresh finds the imported version has been hand-edited since
+    (RAR-4.4 divergence), this policy decides what happens: ``overwrite`` lets the
+    refresh win, ``hold-for-review`` (the default) parks it for a human, and
+    ``new-branch`` lands the refresh on a side branch so neither side is lost. The
+    repository-wide setting applies to every file that has no override row.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        repository_id: The repository to read.
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        The repository policy, the built-in default, the accepted tokens, and the
+        per-file overrides.
+
+    Raises:
+        HTTPException: 404 when the repository does not belong to the tenant.
+    """
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.VIEW)
+    _ = tenant_slug
+    return _conflict_policy_response(str(auth_data["tenant_id"]), str(repository_id))
+
+
+@router.put(
+    "/{tenant_slug}/repositories/{repository_id}/conflict-policy",
+    response_model=RepositoryConflictPolicyResponse,
+    response_model_by_alias=True,
+)
+async def set_repository_conflict_policy(
+    tenant_slug: str,
+    repository_id: uuid.UUID,
+    payload: RepositoryConflictPolicyUpdate,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryConflictPolicyResponse:
+    """Set a repository's refresh conflict policy (RAR-4.5, #3531).
+
+    Applies to every file in the repository that has no per-file override. The
+    change takes effect on the next refresh tick; it never retroactively applies or
+    releases a refresh already held, and it never clears an existing override.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        repository_id: The repository to configure.
+        payload: The requested policy.
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        The repository's conflict-policy projection after the update.
+
+    Raises:
+        HTTPException: 400 when the policy token is not recognised; 404 when the
+            repository does not belong to the tenant.
+    """
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.EDIT)
+    _ = tenant_slug
+    tenant_id = str(auth_data["tenant_id"])
+    rid = str(repository_id)
+
+    stored = _set_conflict_policy_or_400(tenant_id, rid, payload.policy)
+    if stored is None:
+        raise HTTPException(status_code=404, detail="repository not found")
+    _logger.info(
+        "repository conflict policy updated tenant_id=%s repository_id=%s policy=%s",
+        tenant_id,
+        rid,
+        stored,
+    )
+    return _conflict_policy_response(tenant_id, rid)
+
+
+@router.put(
+    "/{tenant_slug}/repositories/{repository_id}/conflict-policy/file",
+    response_model=RepositoryConflictPolicyResponse,
+    response_model_by_alias=True,
+)
+async def set_repository_file_conflict_policy(
+    tenant_slug: str,
+    repository_id: uuid.UUID,
+    payload: RepositoryConflictPolicyOverrideRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryConflictPolicyResponse:
+    """Set or clear one file's conflict-policy override (RAR-4.5, #3531).
+
+    A ``policy`` value writes the override, so this one file deviates from the
+    repository-wide setting; ``policy: null`` removes the override and the file
+    inherits the repository policy again. Overrides are stored as exceptions, so
+    clearing one is a delete rather than a stored copy of the repository policy
+    that would go stale the moment the repository policy changed.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        repository_id: The repository the file belongs to.
+        payload: The file (branch + path) and the policy to set, or null to clear.
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        The repository's conflict-policy projection after the change.
+
+    Raises:
+        HTTPException: 400 when the policy token or the file key is invalid; 404
+            when the repository does not belong to the tenant.
+    """
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.EDIT)
+    _ = tenant_slug
+    tenant_id = str(auth_data["tenant_id"])
+    rid = str(repository_id)
+
+    branch = (payload.branch or "").strip()
+    path = (payload.path or "").strip()
+    if not branch or not path:
+        raise HTTPException(status_code=400, detail="branch and path are required")
+
+    if payload.policy is None:
+        # Clearing is idempotent: a file with no override is already inheriting, so
+        # a delete that matched nothing is still the requested end state. The
+        # repository lookup below is what turns an unknown repository into a 404.
+        db.clear_repository_file_conflict_policy(tenant_id, rid, branch, path)
+        return _conflict_policy_response(tenant_id, rid)
+
+    try:
+        stored = db.set_repository_file_conflict_policy(
+            tenant_id,
+            rid,
+            branch,
+            path,
+            payload.policy,
+            actor_id=get_authenticated_user_id(auth_data),
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"{exc}; expected one of: " + ", ".join(p.value for p in ConflictPolicy)
+            ),
+        ) from exc
+    if stored is None:
+        raise HTTPException(status_code=404, detail="repository not found")
+    _logger.info(
+        "repository file conflict policy updated tenant_id=%s repository_id=%s "
+        "branch=%s path=%s policy=%s",
+        tenant_id,
+        rid,
+        branch,
+        path,
+        stored.get("policy"),
+    )
+    return _conflict_policy_response(tenant_id, rid)
 
 
 @router.post(

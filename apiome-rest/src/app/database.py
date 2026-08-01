@@ -13881,7 +13881,7 @@ class Database:
                    linked_account_id, last_scanned_at, total_files, importable_count, branch_count,
                    refresh_interval_seconds, last_refreshed_at, auto_refresh_enabled,
                    refresh_consecutive_failures, refresh_backoff_until,
-                   refresh_paused_at, refresh_pause_reason
+                   refresh_paused_at, refresh_pause_reason, refresh_conflict_policy
             FROM apiome.tenant_repositories
             WHERE tenant_id = %s::uuid AND deleted_at IS NULL
             ORDER BY created_at DESC
@@ -13895,7 +13895,7 @@ class Database:
                    linked_account_id, last_scanned_at, total_files, importable_count, branch_count, created_by,
                    refresh_interval_seconds, last_refreshed_at, auto_refresh_enabled,
                    refresh_consecutive_failures, refresh_backoff_until,
-                   refresh_paused_at, refresh_pause_reason
+                   refresh_paused_at, refresh_pause_reason, refresh_conflict_policy
             FROM apiome.tenant_repositories
             WHERE id = %s::uuid AND tenant_id = %s::uuid AND deleted_at IS NULL
             LIMIT 1
@@ -14179,6 +14179,250 @@ class Database:
         except Exception as e:
             conn.rollback()
             raise e
+
+    # --- RAR-4.5 conflict policy (#3531) ---------------------------------------
+
+    def set_repository_conflict_policy(
+        self,
+        tenant_id: str,
+        repository_id: str,
+        policy: str,
+    ) -> Optional[str]:
+        """Set a repository's conflict policy for diverged refreshes (RAR-4.5).
+
+        The policy selects what happens when an auto-refresh meets a version that
+        was hand-edited after import (RAR-4.4 divergence): ``overwrite`` lets the
+        refresh win, ``hold-for-review`` (the default) parks it, ``new-branch``
+        diverts it. A per-file override row takes precedence over this value; see
+        :meth:`set_repository_file_conflict_policy`.
+
+        The token is normalised through
+        :func:`repository_conflict_policy.parse_conflict_policy` before it is
+        written, so an alias spelling is stored in its canonical form and an
+        unrecognised token is rejected here rather than by the column's CHECK.
+
+        Args:
+            tenant_id: Owning tenant id (scopes the update for isolation).
+            repository_id: The repository to update.
+            policy: The requested policy token.
+
+        Returns:
+            The canonical policy that was stored, or None when no live repository
+            matched the tenant + id.
+
+        Raises:
+            ValueError: When ``policy`` is not a recognised conflict policy.
+        """
+        from .repository_conflict_policy import parse_conflict_policy
+
+        parsed = parse_conflict_policy(policy)
+        if parsed is None:
+            raise ValueError(f"unrecognised conflict policy: {policy!r}")
+
+        q = """
+            UPDATE apiome.tenant_repositories
+            SET refresh_conflict_policy = %s,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s::uuid AND tenant_id = %s::uuid AND deleted_at IS NULL
+            RETURNING id
+        """
+        rows = self.execute_query(q, (parsed.value, repository_id, tenant_id))
+        return parsed.value if rows else None
+
+    def set_repository_file_conflict_policy(
+        self,
+        tenant_id: str,
+        repository_id: str,
+        branch: str,
+        path: str,
+        policy: str,
+        actor_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Upsert a per-file conflict-policy override (RAR-4.5).
+
+        Overrides are exceptions: only files that need to deviate from their
+        repository's policy get a row, and the ``(repository_id, branch, path)``
+        unique key means re-setting a file's policy rewrites its single row rather
+        than accumulating history. ``created_by`` is stamped on insert and left
+        alone on update, so it records who introduced the exception.
+
+        Args:
+            tenant_id: Owning tenant id (scopes the write for isolation).
+            repository_id: The repository the file belongs to.
+            branch: The branch the file was imported from.
+            path: The repository-relative file path.
+            policy: The requested policy token for this one file.
+            actor_id: The user setting the override, recorded on insert.
+
+        Returns:
+            The stored override row, or None when the repository does not belong
+            to the tenant (the insert is gated on that lookup, so a cross-tenant
+            write cannot create an orphan row).
+
+        Raises:
+            ValueError: When ``policy`` is not a recognised conflict policy, or
+                when ``branch``/``path`` is blank.
+        """
+        from .repository_conflict_policy import parse_conflict_policy
+
+        parsed = parse_conflict_policy(policy)
+        if parsed is None:
+            raise ValueError(f"unrecognised conflict policy: {policy!r}")
+        branch_key = (branch or "").strip()
+        path_key = (path or "").strip()
+        if not branch_key or not path_key:
+            raise ValueError("branch and path are required for a conflict-policy override")
+
+        # Gate on tenant ownership first: the table's FK only proves the repository
+        # exists, not that this tenant owns it.
+        if not self.get_tenant_repository(tenant_id, repository_id):
+            return None
+
+        q = """
+            INSERT INTO apiome.repository_conflict_policy_override
+                (tenant_id, repository_id, branch, path, policy, created_by)
+            VALUES (%s::uuid, %s::uuid, %s, %s, %s, %s)
+            ON CONFLICT (repository_id, branch, path) DO UPDATE
+            SET policy = EXCLUDED.policy,
+                updated_at = CURRENT_TIMESTAMP
+            RETURNING id, tenant_id, repository_id, branch, path, policy,
+                      created_by, created_at, updated_at
+        """
+        rows = self.execute_query(
+            q,
+            (
+                tenant_id,
+                repository_id,
+                branch_key,
+                path_key,
+                parsed.value,
+                actor_id,
+            ),
+        )
+        return dict(rows[0]) if rows else None
+
+    def clear_repository_file_conflict_policy(
+        self,
+        tenant_id: str,
+        repository_id: str,
+        branch: str,
+        path: str,
+    ) -> bool:
+        """Remove a per-file conflict-policy override (RAR-4.5).
+
+        The file then inherits its repository's policy again — which is the point
+        of storing overrides as exceptions: clearing one is a delete, not a write
+        of "same as the repository" that would go stale the moment the repository
+        policy changed.
+
+        Args:
+            tenant_id: Owning tenant id (scopes the delete for isolation).
+            repository_id: The repository the file belongs to.
+            branch: The branch the file was imported from.
+            path: The repository-relative file path.
+
+        Returns:
+            True when an override row was removed, False when there was none.
+        """
+        q = """
+            DELETE FROM apiome.repository_conflict_policy_override
+            WHERE tenant_id = %s::uuid
+              AND repository_id = %s::uuid
+              AND branch = %s
+              AND path = %s
+        """
+        affected = self._execute_write(
+            q,
+            (tenant_id, repository_id, (branch or "").strip(), (path or "").strip()),
+        )
+        return affected > 0
+
+    def list_repository_conflict_policy_overrides(
+        self,
+        tenant_id: str,
+        repository_id: str,
+    ) -> List[Dict[str, Any]]:
+        """List a repository's per-file conflict-policy overrides (RAR-4.5).
+
+        Ordered by branch then path so the settings panel renders a stable list.
+
+        Args:
+            tenant_id: Owning tenant id (scopes the read for isolation).
+            repository_id: The repository whose overrides to list.
+
+        Returns:
+            The override rows; empty when every file follows the repository policy.
+        """
+        q = """
+            SELECT id, tenant_id, repository_id, branch, path, policy,
+                   created_by, created_at, updated_at
+            FROM apiome.repository_conflict_policy_override
+            WHERE tenant_id = %s::uuid AND repository_id = %s::uuid
+            ORDER BY branch ASC, path ASC
+        """
+        return self.execute_query(q, (tenant_id, repository_id))
+
+    def resolve_repository_conflict_policy(
+        self,
+        tenant_id: str,
+        repository_id: str,
+        branch: str,
+        path: str,
+    ) -> Optional[Dict[str, Any]]:
+        """Resolve the conflict policy in force for one file (RAR-4.5).
+
+        Reads both levels in one round trip — the repository setting and the
+        file's override, if any — and hands them to
+        :func:`repository_conflict_policy.resolve_conflict_policy`, which applies
+        the ``file -> repository -> default`` precedence. This is the read the
+        refresh executor makes per file before acting on a divergence.
+
+        Args:
+            tenant_id: Owning tenant id (scopes the read for isolation).
+            repository_id: The repository the file belongs to.
+            branch: The branch the file was imported from.
+            path: The repository-relative file path.
+
+        Returns:
+            ``{"policy": str, "source": str, "repository_policy": str | None,
+            "file_policy": str | None}`` describing the resolution, or None when
+            the repository does not belong to the tenant.
+        """
+        from .repository_conflict_policy import resolve_conflict_policy
+
+        q = """
+            SELECT r.refresh_conflict_policy AS repository_policy,
+                   o.policy AS file_policy
+            FROM apiome.tenant_repositories r
+            LEFT JOIN apiome.repository_conflict_policy_override o
+                   ON o.repository_id = r.id
+                  AND o.branch = %s
+                  AND o.path = %s
+            WHERE r.id = %s::uuid AND r.tenant_id = %s::uuid AND r.deleted_at IS NULL
+            LIMIT 1
+        """
+        rows = self.execute_query(
+            q,
+            (
+                (branch or "").strip(),
+                (path or "").strip(),
+                repository_id,
+                tenant_id,
+            ),
+        )
+        if not rows:
+            return None
+        row = rows[0]
+        resolved = resolve_conflict_policy(
+            file_policy=row.get("file_policy"),
+            repository_policy=row.get("repository_policy"),
+        )
+        return {
+            "policy": resolved.policy.value,
+            "source": resolved.source.value,
+            "repository_policy": row.get("repository_policy"),
+            "file_policy": row.get("file_policy"),
+        }
 
     def record_repository_refresh_failure(
         self,
