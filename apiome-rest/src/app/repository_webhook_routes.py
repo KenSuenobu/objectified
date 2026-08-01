@@ -7,7 +7,7 @@ authentication, so the handler's only job is to hand the exact received bytes to
 repository, verifies against that repository's stored secret, and dispatches — and then map
 its outcome onto a status code.
 
-Three status codes, and no others:
+Four status codes, and no others:
 
 ``200``  The delivery was accepted. That includes deliveries deliberately ignored (a ping, a
          tag push, an untracked branch): the provider must stop retrying something that is
@@ -16,6 +16,8 @@ Three status codes, and no others:
          failure, so not a 401.
 ``401``  The signature did not verify for a repository registered here. Audited, per the
          ticket's acceptance criteria.
+``403``  The source address is not on the allowlist (REPO-7.6). Decided *before* the body
+         reaches the dispatcher, so a blocked sender never gets a signature checked at all.
 
 The response body says what happened in the coarsest terms that are still useful — outcome,
 reason code, job count. It never names a tenant, a repository id or a branch: anyone who can
@@ -31,6 +33,7 @@ from .database import db
 from .models import RepositoryWebhookReceiptResponse
 from .repository_webhook_dispatch import WebhookRejectedError, ingest_webhook_delivery
 from .repository_webhook_ingest import SUPPORTED_PROVIDERS, normalize_provider
+from .repository_webhook_ip_allowlist import guard_webhook_delivery
 
 router = APIRouter(prefix="/v1/repositories", tags=["repository-webhooks"])
 
@@ -63,7 +66,8 @@ async def ingest_repository_webhook(
 
     Raises:
         HTTPException: 400 for an unsupported provider or an unusable body; 401 when the
-            signature does not verify for a repository registered here.
+            signature does not verify for a repository registered here; 403 when the source
+            address is not on the allowlist (REPO-7.6) — raised before any verification.
     """
     key = normalize_provider(provider)
     if not key:
@@ -80,6 +84,26 @@ async def ingest_repository_webhook(
         )
 
     raw = await request.body()
+
+    # REPO-7.6: the network filter runs here, ahead of the dispatcher, so a source address
+    # nobody vouches for never reaches `verify_signature`. The 403 body says only that the
+    # source was refused — naming the allowlist, the tenant or the matched range would turn
+    # the endpoint into a probe for the deployment's network policy.
+    decision = guard_webhook_delivery(
+        db,
+        provider=key,
+        raw_body=raw,
+        headers=request.headers,
+        peer_ip=(request.client.host if request.client else None),
+    )
+    if not decision.allowed:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "source_not_allowed",
+                "message": "This source address is not permitted to deliver webhooks here.",
+            },
+        )
 
     try:
         result = ingest_webhook_delivery(

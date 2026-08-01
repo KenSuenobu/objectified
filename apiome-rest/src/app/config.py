@@ -897,6 +897,104 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Webhook source-IP allowlist (REPO-7.6, #2804). The ingestion endpoint has no bearer
+    # token, so without a network filter every unsigned POST on the internet buys a
+    # subscription lookup and an HMAC comparison. These settings gate the filter that runs
+    # *before* verification.
+    #
+    # repository_webhook_ip_allowlist_enabled
+    #                                  Master switch, default OFF. Enforcement that turned
+    #                                  itself on during an upgrade would silently 403 every
+    #                                  existing deployment's deliveries, and providers retrying
+    #                                  into a 403 is one of the quietest failures there is.
+    #                                  Turn it on once the provider ranges have refreshed at
+    #                                  least once (visible in the admin panel).
+    # repository_webhook_ip_allowlist_strict
+    #                                  What to do when a provider has *no* cached ranges — a
+    #                                  fresh deployment, or an upstream endpoint that has never
+    #                                  answered. Default False allows the delivery and logs a
+    #                                  warning; True fails closed, for deployments that would
+    #                                  rather take the outage than the exposure.
+    # repository_webhook_trusted_proxy_hops
+    #                                  How many reverse proxies the deployment operates in
+    #                                  front of this service. 0 (default) trusts nothing but
+    #                                  the socket peer and ignores X-Forwarded-For entirely,
+    #                                  because an unverified header would let a caller name its
+    #                                  own source address. N > 0 reads the Nth entry from the
+    #                                  right of the header; a shorter header means the request
+    #                                  did not traverse the chain we believe in, and is refused.
+    # repository_webhook_ip_refresh_interval_seconds
+    #                                  Cadence of the provider range refresh (daily per the
+    #                                  ticket). Measured from the last *success*, so a failing
+    #                                  provider endpoint is retried on the next sweep tick.
+    # repository_webhook_ip_cache_seconds
+    #                                  Process-local TTL on the cached ranges. The guard runs
+    #                                  on an unauthenticated route, so without it a flood of
+    #                                  blocked deliveries is a flood of queries. Ranges move
+    #                                  daily; a minute of staleness costs nothing.
+    # repository_webhook_ip_ranges_{github,gitlab,bitbucket}
+    #                                  Comma-separated CIDRs merged into each provider's cache
+    #                                  on every refresh. GitLab.com publishes no
+    #                                  machine-readable range list, so its entry is the only
+    #                                  source for that provider; the other two exist for
+    #                                  self-hosted instances no public endpoint knows about.
+    repository_webhook_ip_allowlist_enabled: bool = Field(
+        default=False,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_IP_ALLOWLIST",
+            "repository_webhook_ip_allowlist_enabled",
+        ),
+    )
+    repository_webhook_ip_allowlist_strict: bool = Field(
+        default=False,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_IP_ALLOWLIST_STRICT",
+            "repository_webhook_ip_allowlist_strict",
+        ),
+    )
+    repository_webhook_trusted_proxy_hops: int = Field(
+        default=0,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_TRUSTED_PROXY_HOPS",
+            "repository_webhook_trusted_proxy_hops",
+        ),
+    )
+    repository_webhook_ip_refresh_interval_seconds: int = Field(
+        default=86400,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_IP_REFRESH_INTERVAL_SECONDS",
+            "repository_webhook_ip_refresh_interval_seconds",
+        ),
+    )
+    repository_webhook_ip_cache_seconds: int = Field(
+        default=60,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_IP_CACHE_SECONDS",
+            "repository_webhook_ip_cache_seconds",
+        ),
+    )
+    repository_webhook_ip_ranges_github: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_IP_RANGES_GITHUB",
+            "repository_webhook_ip_ranges_github",
+        ),
+    )
+    repository_webhook_ip_ranges_gitlab: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_IP_RANGES_GITLAB",
+            "repository_webhook_ip_ranges_gitlab",
+        ),
+    )
+    repository_webhook_ip_ranges_bitbucket: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_WEBHOOK_IP_RANGES_BITBUCKET",
+            "repository_webhook_ip_ranges_bitbucket",
+        ),
+    )
+
     # MCP catalog periodic re-discovery sweep (V2-MCP-19.1 / MCAT-5.1, #3673). A background
     # async loop re-handshakes enabled endpoints whose discovery cadence has elapsed, mirroring
     # the repository auto-refresh sweep above.

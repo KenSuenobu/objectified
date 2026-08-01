@@ -14,6 +14,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  ShieldCheck,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/app/components/ui/Button";
 import { Input } from "@/app/components/ui/Input";
@@ -269,6 +270,18 @@ export default function RepositoriesPage() {
               >
                 <Activity className="h-4 w-4 shrink-0" aria-hidden />
                 Quota &amp; limits
+              </Link>
+              {/* REPO-7.6: which source addresses may deliver webhooks here at all. */}
+              <Link
+                href="/ade/dashboard/repositories/webhook-ip-allowlist"
+                className={cn(
+                  buttonVariants({ variant: "secondary" }),
+                  "h-auto min-h-10 shrink-0 whitespace-nowrap py-2",
+                )}
+                title="Provider IP ranges and this workspace's own allowlist for webhook delivery"
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden />
+                Webhook IPs
               </Link>
               <Button
                 type="button"

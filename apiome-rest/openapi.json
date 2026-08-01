@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.95.0",
+    "version": "1.96.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -46757,6 +46757,497 @@
         }
       }
     },
+    "/v1/tenants/{tenant_slug}/repository-webhook-ip-allowlist": {
+      "get": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Get Repository Webhook Ip Allowlist",
+        "description": "Show the webhook source-IP allowlist for this tenant (REPO-7.6, #2804).\n\nThe webhook endpoint carries no bearer token, so an IP filter in front of the HMAC check\nis what stops every unsigned POST on the internet from reaching a real secret comparison.\nThis read answers the three questions the panel exists for: is the filter enforced for us,\nwhat do the providers currently vouch for (and how stale is that list), and what have we\nadded ourselves.\n\nReadable by any member who can view imports \u2014 the provider ranges are public information\nand a tenant's own entries are its own \u2014 while every *change* below requires a tenant\nadministrator.\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    auth_data: Authenticated principal; supplies the tenant scope.\n\nReturns:\n    The allowlist: deployment posture, cached provider ranges, and this tenant's entries.",
+        "operationId": "get_repository_webhook_ip_allowlist_v1_tenants__tenant_slug__repository_webhook_ip_allowlist_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Get Repository Webhook Ip Allowlistauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Get Repository Webhook Ip Allowlistauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Get Repository Webhook Ip Allowlist Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Get Repository Webhook Ip Allowlist Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for get repository webhook ip allowlist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryWebhookIpAllowlistResponse",
+                  "description": "Response payload for get repository webhook ip allowlistresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for get repository webhook ip allowlistresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/repository-webhook-ip-allowlist/entries": {
+      "post": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Add Repository Webhook Ip Allowlist Entry",
+        "description": "Allow one additional source range for this tenant (REPO-7.6, #2804).\n\nFor the addresses no provider publishes: a self-hosted GitLab runner, a corporate egress\ngateway, a delivery relay. The entry applies only to this tenant's repositories \u2014 a\nworkspace can widen its own filter and no one else's.\n\nTenant administrators only. Widening the range of addresses that may reach the signature\ncheck is the same class of act as turning enforcement off, and the ticket puts that behind\nthe admin role.\n\nA CIDR the tenant already has is updated (and re-enabled) rather than refused: a\nre-submitted form should leave the operator with what they asked for, not a 409.\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    payload: The CIDR to allow and why.\n    auth_data: Authenticated principal; must resolve to a tenant administrator.\n\nReturns:\n    The allowlist, including the new entry.\n\nRaises:\n    HTTPException: 403 for non-administrators or API-key auth; 400 for a CIDR that is not\n        a valid network or that carries host bits.",
+        "operationId": "add_repository_webhook_ip_allowlist_entry_v1_tenants__tenant_slug__repository_webhook_ip_allowlist_entries_post",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Add Repository Webhook Ip Allowlist Entryauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Add Repository Webhook Ip Allowlist Entryauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Add Repository Webhook Ip Allowlist Entry Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Add Repository Webhook Ip Allowlist Entry Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepositoryWebhookIpAllowlistEntryCreate",
+                "description": "Request body for add repository webhook ip allowlist entryrequest."
+              }
+            }
+          },
+          "description": "Request body for add repository webhook ip allowlist entry."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for add repository webhook ip allowlist entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryWebhookIpAllowlistResponse",
+                  "description": "Response payload for add repository webhook ip allowlist entryresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for add repository webhook ip allowlist entryresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/repository-webhook-ip-allowlist/entries/{entry_id}": {
+      "patch": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Update Repository Webhook Ip Allowlist Entry",
+        "description": "Enable or disable one allowlist entry (REPO-7.6, #2804).\n\nNarrowing the filter during an incident should not cost the entry and its description \u2014\nan operator who deletes and later re-types a range loses the reason it was there.\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    entry_id: The entry to toggle.\n    payload: The new enabled state.\n    auth_data: Authenticated principal; must resolve to a tenant administrator.\n\nReturns:\n    The allowlist, with the entry in its new state.\n\nRaises:\n    HTTPException: 403 for non-administrators or API-key auth; 404 when no entry of the\n        tenant's has that id.",
+        "operationId": "update_repository_webhook_ip_allowlist_entry_v1_tenants__tenant_slug__repository_webhook_ip_allowlist_entries__entry_id__patch",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entry Id",
+              "description": "Entry Id schema."
+            },
+            "description": "Path parameter identifying the entry id segment."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Update Repository Webhook Ip Allowlist Entryauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Update Repository Webhook Ip Allowlist Entryauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Update Repository Webhook Ip Allowlist Entry Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Update Repository Webhook Ip Allowlist Entry Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepositoryWebhookIpAllowlistEntryUpdate",
+                "description": "Request body for update repository webhook ip allowlist entryrequest."
+              }
+            }
+          },
+          "description": "Request body for update repository webhook ip allowlist entry."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for update repository webhook ip allowlist entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryWebhookIpAllowlistResponse",
+                  "description": "Response payload for update repository webhook ip allowlist entryresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for update repository webhook ip allowlist entryresponse422."
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Delete Repository Webhook Ip Allowlist Entry",
+        "description": "Remove one allowlist entry (REPO-7.6, #2804).\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    entry_id: The entry to remove.\n    auth_data: Authenticated principal; must resolve to a tenant administrator.\n\nReturns:\n    The allowlist without the entry.\n\nRaises:\n    HTTPException: 403 for non-administrators or API-key auth; 404 when no entry of the\n        tenant's has that id.",
+        "operationId": "delete_repository_webhook_ip_allowlist_entry_v1_tenants__tenant_slug__repository_webhook_ip_allowlist_entries__entry_id__delete",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entry Id",
+              "description": "Entry Id schema."
+            },
+            "description": "Path parameter identifying the entry id segment."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Delete Repository Webhook Ip Allowlist Entryauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Delete Repository Webhook Ip Allowlist Entryauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Delete Repository Webhook Ip Allowlist Entry Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Delete Repository Webhook Ip Allowlist Entry Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for delete repository webhook ip allowlist entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryWebhookIpAllowlistResponse",
+                  "description": "Response payload for delete repository webhook ip allowlist entryresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for delete repository webhook ip allowlist entryresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/repository-webhook-ip-allowlist/policy": {
+      "put": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Set Repository Webhook Ip Policy",
+        "description": "Turn allowlist enforcement on or off for this tenant (REPO-7.6, #2804).\n\nThe bypass the ticket puts behind the tenant-administrator role. Disabling enforcement\nmeans this tenant's repositories accept deliveries from any address \u2014 the posture that\nexisted before the filter \u2014 and it affects only this tenant.\n\nA reason is required to disable and is recorded on both the policy row and the audit\nledger, because \"who turned the filter off, when, and why\" is the first thing a review\nasks and the hardest thing to reconstruct afterwards.\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    payload: The new enforcement state and, when disabling, why.\n    auth_data: Authenticated principal; must resolve to a tenant administrator.\n\nReturns:\n    The allowlist with the new policy applied.\n\nRaises:\n    HTTPException: 403 for non-administrators or API-key auth; 400 when enforcement is\n        being disabled with no reason given.",
+        "operationId": "set_repository_webhook_ip_policy_v1_tenants__tenant_slug__repository_webhook_ip_allowlist_policy_put",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Set Repository Webhook Ip Policyauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Set Repository Webhook Ip Policyauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Set Repository Webhook Ip Policy Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Set Repository Webhook Ip Policy Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepositoryWebhookIpPolicyUpdate",
+                "description": "Request body for set repository webhook ip policyrequest."
+              }
+            }
+          },
+          "description": "Request body for set repository webhook ip policy."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for set repository webhook ip policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryWebhookIpAllowlistResponse",
+                  "description": "Response payload for set repository webhook ip policyresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for set repository webhook ip policyresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/tenants/{tenant_slug}/repositories": {
       "get": {
         "tags": [
@@ -48922,7 +49413,7 @@
           "repository-webhooks"
         ],
         "summary": "Ingest a provider push / pull-request webhook delivery",
-        "description": "Receive one signed provider delivery and turn it into a poll (REPO-4.3).\n\nArgs:\n    request: The inbound request; its **raw** body is what the signature covers, so it is\n        read as bytes and never re-serialised from parsed JSON.\n    provider: The provider path segment.\n\nReturns:\n    A thin receipt: the outcome, its reason code, and how many scan jobs were queued.\n\nRaises:\n    HTTPException: 400 for an unsupported provider or an unusable body; 401 when the\n        signature does not verify for a repository registered here.",
+        "description": "Receive one signed provider delivery and turn it into a poll (REPO-4.3).\n\nArgs:\n    request: The inbound request; its **raw** body is what the signature covers, so it is\n        read as bytes and never re-serialised from parsed JSON.\n    provider: The provider path segment.\n\nReturns:\n    A thin receipt: the outcome, its reason code, and how many scan jobs were queued.\n\nRaises:\n    HTTPException: 400 for an unsupported provider or an unusable body; 401 when the\n        signature does not verify for a repository registered here; 403 when the source\n        address is not on the allowlist (REPO-7.6) \u2014 raised before any verification.",
         "operationId": "ingest_repository_webhook_v1_repositories_webhook__provider__post",
         "parameters": [
           {
@@ -101645,6 +102136,239 @@
         "title": "RepositoryImportSpecRead",
         "description": "Current-shape import spec returned by the read endpoint (RAR-1.5).\n\nThe response surface for ``GET \u2026/repository-imports/{id}/spec`` (and its\n``?path=`` lookup variant). It exposes the captured source descriptor and the\nfull ``SpecImportOptions`` payload, upgraded on read to the current envelope\nshape, so the refresh worker, the UI status surface, and the CLI can replay\nthe user's original import request. ``spec_schema_version`` always reports the\ncurrent envelope version because ``options`` has already been migrated forward."
       },
+      "RepositoryIpAllowlistEntryOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Stable resource identifier.",
+            "example": "res_01h2xcejqtf3fz5y5j0v8k9m2p"
+          },
+          "cidr": {
+            "type": "string",
+            "title": "Cidr",
+            "description": "The range, in canonical CIDR notation.",
+            "example": "example"
+          },
+          "family": {
+            "type": "integer",
+            "title": "Family",
+            "description": "IP version: 4 or 6.",
+            "example": 1
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository ip allowlist entry."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository ip allowlist entry."
+              }
+            ],
+            "title": "Description",
+            "description": "Why this entry exists."
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "False leaves the entry in place but stops it matching deliveries.",
+            "example": true
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository ip allowlist entry."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository ip allowlist entry."
+              }
+            ],
+            "title": "Createdat",
+            "description": "Created At."
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository ip allowlist entry."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository ip allowlist entry."
+              }
+            ],
+            "title": "Updatedat",
+            "description": "Updated At."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "cidr",
+          "family",
+          "enabled"
+        ],
+        "title": "RepositoryIpAllowlistEntryOut",
+        "description": "One tenant-managed additional allowlist entry (REPO-7.6, #2804)."
+      },
+      "RepositoryIpProviderOut": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "github | gitlab | bitbucket.",
+            "example": "example"
+          },
+          "sourceUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository ip provider."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository ip provider."
+              }
+            ],
+            "title": "Sourceurl",
+            "description": "The published endpoint the ranges are fetched from, or null for a provider that publishes none (GitLab.com) and is configuration-only."
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "description": "One line explaining where this provider's ranges come from.",
+            "example": "example"
+          },
+          "rangeCount": {
+            "type": "integer",
+            "title": "Rangecount",
+            "description": "How many ranges are currently cached.",
+            "example": 1
+          },
+          "ranges": {
+            "items": {
+              "$ref": "#/components/schemas/RepositoryIpRangeOut"
+            },
+            "type": "array",
+            "title": "Ranges",
+            "description": "The cached ranges, ordered by family then CIDR.",
+            "maxItems": 1000
+          },
+          "lastAttemptAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository ip provider."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository ip provider."
+              }
+            ],
+            "title": "Lastattemptat",
+            "description": "When a refresh was last attempted (ISO 8601), successful or not."
+          },
+          "lastSuccessAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository ip provider."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository ip provider."
+              }
+            ],
+            "title": "Lastsuccessat",
+            "description": "When a refresh last stored ranges (ISO 8601). Separate from lastAttemptAt so a failing endpoint is distinguishable from a fresh cache."
+          },
+          "lastOutcome": {
+            "type": "string",
+            "title": "Lastoutcome",
+            "description": "pending | success | failure | skipped.",
+            "example": "example"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository ip provider."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository ip provider."
+              }
+            ],
+            "title": "Lasterror",
+            "description": "Failure detail from the last attempt, when there was one."
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "description": "True when no successful refresh has landed within two refresh cadences \u2014 i.e. one has actually been missed, rather than merely run late.",
+            "example": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "note",
+          "rangeCount",
+          "ranges",
+          "lastOutcome",
+          "stale"
+        ],
+        "title": "RepositoryIpProviderOut",
+        "description": "One provider's cached ranges and the health of the refresh that fills them."
+      },
+      "RepositoryIpRangeOut": {
+        "properties": {
+          "cidr": {
+            "type": "string",
+            "title": "Cidr",
+            "description": "The range, in canonical CIDR notation.",
+            "example": "example"
+          },
+          "family": {
+            "type": "integer",
+            "title": "Family",
+            "description": "IP version: 4 or 6.",
+            "example": 1
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "`provider` when fetched from the provider's published endpoint, `configured` when supplied by this deployment's settings.",
+            "example": "human"
+          },
+          "refreshedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository ip range."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository ip range."
+              }
+            ],
+            "title": "Refreshedat",
+            "description": "When this range was last confirmed present at the source (ISO 8601)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "cidr",
+          "family",
+          "source"
+        ],
+        "title": "RepositoryIpRangeOut",
+        "description": "One CIDR in a provider's cached webhook source ranges (REPO-7.6, #2804)."
+      },
       "RepositoryNotificationPreferenceOut": {
         "properties": {
           "eventType": {
@@ -102248,6 +102972,183 @@
         ],
         "title": "RepositoryWebhookEventOut",
         "description": "One recorded webhook delivery (REPO-4.3, #2781)."
+      },
+      "RepositoryWebhookIpAllowlistEntryCreate": {
+        "properties": {
+          "cidr": {
+            "type": "string",
+            "title": "Cidr",
+            "description": "The range to allow. A bare address is accepted and stored as its single-host network; a value with host bits set (10.0.0.1/24) is rejected rather than silently widened.",
+            "example": "example"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "description": "Repository Webhook Ip Allowlist Entry Create schema."
+              },
+              {
+                "type": "null",
+                "description": "Repository Webhook Ip Allowlist Entry Create schema."
+              }
+            ],
+            "title": "Description",
+            "description": "Why this range should be allowed. Required in practice \u2014 an allowlist nobody can explain is one nobody dares prune."
+          }
+        },
+        "type": "object",
+        "required": [
+          "cidr"
+        ],
+        "title": "RepositoryWebhookIpAllowlistEntryCreate",
+        "description": "Add (or refresh) one additional allowlist entry (REPO-7.6, #2804)."
+      },
+      "RepositoryWebhookIpAllowlistEntryUpdate": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "False stops the entry matching deliveries without deleting it.",
+            "example": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "RepositoryWebhookIpAllowlistEntryUpdate",
+        "description": "Enable or disable one existing allowlist entry (REPO-7.6, #2804)."
+      },
+      "RepositoryWebhookIpAllowlistResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true,
+            "description": "Success.",
+            "example": false
+          },
+          "enforcementEnabled": {
+            "type": "boolean",
+            "title": "Enforcementenabled",
+            "description": "Deployment-wide switch. False means the filter is not enforced anywhere, whatever this tenant's own policy says.",
+            "example": false
+          },
+          "strict": {
+            "type": "boolean",
+            "title": "Strict",
+            "description": "True when a provider with no cached ranges blocks its deliveries instead of allowing them with a warning.",
+            "example": false
+          },
+          "refreshIntervalSeconds": {
+            "type": "integer",
+            "title": "Refreshintervalseconds",
+            "description": "How often the provider ranges are refreshed.",
+            "example": 1
+          },
+          "trustedProxyHops": {
+            "type": "integer",
+            "title": "Trustedproxyhops",
+            "description": "How many reverse proxies the deployment reads X-Forwarded-For through. 0 means the header is ignored and only the socket peer is trusted.",
+            "example": 1
+          },
+          "tenantEnforcementEnabled": {
+            "type": "boolean",
+            "title": "Tenantenforcementenabled",
+            "description": "False is this tenant's bypass: its repositories accept deliveries from any address. Changing it requires the tenant-administrator role.",
+            "example": false
+          },
+          "bypassReason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository webhook ip allowlist."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository webhook ip allowlist."
+              }
+            ],
+            "title": "Bypassreason",
+            "description": "Why enforcement was turned off for this tenant."
+          },
+          "policyUpdatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository webhook ip allowlist."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository webhook ip allowlist."
+              }
+            ],
+            "title": "Policyupdatedat",
+            "description": "When this tenant's policy was last changed (ISO 8601)."
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/RepositoryIpProviderOut"
+            },
+            "type": "array",
+            "title": "Providers",
+            "description": "Cached provider ranges, one entry per supported provider.",
+            "maxItems": 1000
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/RepositoryIpAllowlistEntryOut"
+            },
+            "type": "array",
+            "title": "Entries",
+            "description": "This tenant's additional ranges, oldest first.",
+            "maxItems": 100
+          }
+        },
+        "type": "object",
+        "required": [
+          "enforcementEnabled",
+          "strict",
+          "refreshIntervalSeconds",
+          "trustedProxyHops",
+          "tenantEnforcementEnabled",
+          "providers",
+          "entries"
+        ],
+        "title": "RepositoryWebhookIpAllowlistResponse",
+        "description": "The webhook source-IP allowlist as a tenant administrator sees it (REPO-7.6, #2804).\n\nReturned by the read *and* by every mutation, so a panel re-renders from the same shape it\nloaded and can never drift from the stored state after an edit."
+      },
+      "RepositoryWebhookIpPolicyUpdate": {
+        "properties": {
+          "enforcementEnabled": {
+            "type": "boolean",
+            "title": "Enforcementenabled",
+            "description": "False bypasses the allowlist for this tenant's repositories. Tenant administrators only.",
+            "example": false
+          },
+          "bypassReason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "description": "Repository Webhook Ip Policy Update schema."
+              },
+              {
+                "type": "null",
+                "description": "Repository Webhook Ip Policy Update schema."
+              }
+            ],
+            "title": "Bypassreason",
+            "description": "Why enforcement is being turned off. Required when disabling; ignored when re-enabling."
+          }
+        },
+        "type": "object",
+        "required": [
+          "enforcementEnabled"
+        ],
+        "title": "RepositoryWebhookIpPolicyUpdate",
+        "description": "Set this tenant's allowlist enforcement policy (REPO-7.6, #2804)."
       },
       "RepositoryWebhookReceiptResponse": {
         "properties": {
@@ -103269,7 +104170,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-01T04:55:33Z"
+            "example": "2026-08-01T16:53:42Z"
           }
         },
         "additionalProperties": false,
@@ -115968,14 +116869,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-01T04:55:33Z"
+            "example": "2026-08-01T16:53:42Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-01T04:55:33Z"
+            "example": "2026-08-01T16:53:42Z"
           },
           "outcome": {
             "anyOf": [
