@@ -34,6 +34,8 @@ from .models import (
     RepositoryPollingQuotaOut,
     RepositoryPollingQuotaResponse,
     RepositoryPollingQuotaUpdate,
+    RepositoryQuotaTelemetryOut,
+    RepositoryQuotaTelemetryResponse,
     repository_import_spec_read_from_row,
     RepositoryRefreshNowRequest,
     RepositoryRefreshNowResponse,
@@ -72,6 +74,11 @@ from .repository_spec_catalog import (
     normalize_status,
     status_facet_options,
     validate_search_term,
+)
+from .repository_quota_window import (
+    DEFAULT_TELEMETRY_DAYS,
+    MAX_TELEMETRY_DAYS,
+    describe_quota_telemetry,
 )
 from .repository_refresh_quota import describe_tenant_polling_quota
 from .repository_file_scan import _github_owner_repo, fetch_github_repository_file_text
@@ -366,6 +373,55 @@ async def set_tenant_repository_polling_quota(
     return RepositoryPollingQuotaResponse(
         success=True,
         quota=RepositoryPollingQuotaOut(**describe_tenant_polling_quota(db, tenant_id)),
+    )
+
+
+@router.get(
+    "/{tenant_slug}/repository-quota-telemetry",
+    response_model=RepositoryQuotaTelemetryResponse,
+    response_model_by_alias=True,
+)
+async def get_tenant_repository_quota_telemetry(
+    tenant_slug: str,
+    days: int = Query(
+        DEFAULT_TELEMETRY_DAYS,
+        ge=1,
+        le=MAX_TELEMETRY_DAYS,
+        description="Trailing range to report, in days.",
+    ),
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryQuotaTelemetryResponse:
+    """Report this tenant's quota and rate-limit telemetry (REPO-7.3, #2801).
+
+    The polling quota (REPO-4.6) and the scan budget (REPO-2.5) both work silently: without
+    this read, the only evidence a tenant is parked against its ceiling is a log line and a
+    per-replica counter that dies with the process. This returns the durable rolling-window
+    counters — polls and scan volume, with the quota's deferrals counted separately — plus
+    the tenant's current quota position, so a dashboard can render "where are we right now"
+    and "how did we get here" from one request.
+
+    Every metric is present in every response, zero-filled across the whole range, so a
+    tenant that has never been deferred renders a flat line rather than a missing panel. A
+    counter read that fails comes back with ``available: false`` and zeros rather than an
+    error, so the quota position is still answered.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        days: Trailing range in days; defaults to 7 and is capped at 90.
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        The tenant's quota projection and its telemetry series.
+    """
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.VIEW)
+    _ = tenant_slug
+    tenant_id = str(auth_data["tenant_id"])
+    return RepositoryQuotaTelemetryResponse(
+        success=True,
+        quota=RepositoryPollingQuotaOut(**describe_tenant_polling_quota(db, tenant_id)),
+        telemetry=RepositoryQuotaTelemetryOut(
+            **describe_quota_telemetry(db, tenant_id, days=days)
+        ),
     )
 
 

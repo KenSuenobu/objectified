@@ -47,9 +47,11 @@ persisted per tenant on ``apiome.tenants.repository_polls_per_hour`` (default
 ``APIOME_REFRESH_TENANT_QUOTA_WINDOW`` as the window length. A tenant over its
 quota has its remaining due repos *deferred*: skipped without advancing the
 cadence anchor and without counting as a failure, so they stay due and are
-picked up once the window rolls. Every dispatch and deferral is counted in
-:mod:`app.repository_polling_telemetry` for the REPO-7.3 dashboard. Manual
-"Refresh Now" (RAR-5.2) bypasses the sweep and is never quota-limited.
+picked up once the window rolls. Every dispatch and deferral is counted twice: in
+:mod:`app.repository_polling_telemetry` (in-process, exact, restart-scoped) and in
+:mod:`app.repository_quota_window` (durable rolling-window rows, REPO-7.3 #2801),
+which is what the 7-day dashboard reads. Manual "Refresh Now" (RAR-5.2) bypasses
+the sweep and is never quota-limited.
 """
 
 from __future__ import annotations
@@ -285,7 +287,10 @@ def _refresh_one_repository(
 
 
 def _record_poll_telemetry(
-    quota: Any, due_row: Dict[str, Any], result: RepositoryRefreshResult
+    db: Database,
+    quota: Any,
+    due_row: Dict[str, Any],
+    result: RepositoryRefreshResult,
 ) -> None:
     """Count one polled repository for the REPO-4.6 / REPO-7.3 dashboard.
 
@@ -293,11 +298,17 @@ def _record_poll_telemetry(
     budget ran out part-way through the repo, a ``files_deferred`` event for the
     stale files left unenqueued.
 
+    The same two facts are also accumulated into the tenant's durable rolling-window
+    counters (REPO-7.3, :mod:`app.repository_quota_window`) so they survive the restart
+    that clears the in-process registry. The in-process counters stay exact and free for
+    "what is happening right now"; the window rows are what a 7-day dashboard reads.
+
     Best-effort by contract, like the RAR-3.4 bookkeeping beside it: a counter
     problem is logged and swallowed. Telemetry must never be able to turn a
     healthy poll into a recorded refresh failure.
 
     Args:
+        db: Database handle for the durable counter write.
         quota: The tick's :class:`repository_refresh_quota.TenantRefreshQuotaTracker`,
             or None when quotas are disabled for this tick.
         due_row: The repository's row from ``list_due_repositories``.
@@ -307,6 +318,11 @@ def _record_poll_telemetry(
         KIND_FILES_DEFERRED,
         KIND_POLL_DISPATCHED,
         polling_telemetry,
+    )
+    from .repository_quota_window import (
+        METRIC_FILES_DEFERRED,
+        METRIC_POLLS,
+        record_quota_usage,
     )
 
     tenant_id = str(due_row["tenant_id"])
@@ -337,6 +353,12 @@ def _record_poll_telemetry(
         _logger.exception(
             "repository polling telemetry failed repository_id=%s", repository_id
         )
+
+    # Durable counters (REPO-7.3). `polls` counts the jobs enqueued, not the repositories
+    # visited, because jobs are the unit the REPO-4.6 quota actually bounds — a series a
+    # reader can hold against `polls_per_hour` without a conversion.
+    record_quota_usage(db, tenant_id, METRIC_POLLS, result.enqueued)
+    record_quota_usage(db, tenant_id, METRIC_FILES_DEFERRED, result.deferred)
 
 
 def _record_refresh_outcome(
@@ -464,9 +486,11 @@ def process_repository_refresh_sweep(db: Database) -> int:
     window rolls. The quota is best-effort protective: if the window usage
     cannot be read the tick proceeds unlimited rather than halting refresh.
 
-    Every dispatch and deferral is recorded in
-    :mod:`app.repository_polling_telemetry` — the counters REPO-7.3 renders —
-    so quota pressure is visible without reading sweep logs line by line.
+    Every dispatch and deferral is recorded twice: in
+    :mod:`app.repository_polling_telemetry` (per-process counters that answer "what
+    is happening right now") and in :mod:`app.repository_quota_window` (durable
+    per-tenant window rows, REPO-7.3), so quota pressure is visible both live and
+    a week later without reading sweep logs line by line.
 
     Args:
         db: Database handle for this tick (one connection holds the advisory
@@ -489,6 +513,7 @@ def process_repository_refresh_sweep(db: Database) -> int:
         KIND_REPOSITORY_DEFERRED,
         polling_telemetry,
     )
+    from .repository_quota_window import METRIC_POLLS_DEFERRED, record_quota_usage
     from .repository_refresh_quota import (
         interleave_due_rows_by_tenant,
         load_tenant_refresh_quota_tracker,
@@ -522,6 +547,10 @@ def process_repository_refresh_sweep(db: Database) -> int:
                     "repository polling telemetry failed repository_id=%s",
                     repository_id,
                 )
+            # Durable counterpart (REPO-7.3): deferrals are their own metric, never
+            # folded into `polls`, so "we did less work" and "the quota pushed work
+            # into a later window" stay distinguishable a week later.
+            record_quota_usage(db, tenant_id, METRIC_POLLS_DEFERRED, 1)
             continue
 
         if not db.try_acquire_repository_refresh_lock(repository_id):
@@ -543,7 +572,7 @@ def process_repository_refresh_sweep(db: Database) -> int:
             enqueued_total += result.enqueued
             if quota is not None:
                 quota.consume(tenant_id, result.enqueued)
-            _record_poll_telemetry(quota, due_row, result)
+            _record_poll_telemetry(db, quota, due_row, result)
         except Exception as exc:
             # A repo-level error (candidate query, branch listing, …) counts as a
             # failed tick for the RAR-3.4 bookkeeping, like a branch rescan error.

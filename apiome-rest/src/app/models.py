@@ -7709,6 +7709,110 @@ class RepositoryPollingQuotaUpdate(BaseModel):
     )
 
 
+class QuotaTelemetryPointOut(BaseModel):
+    """One day of one quota-telemetry metric (REPO-7.3, #2801)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    date: str = Field(
+        description="The day this point covers, as an ISO 8601 date (UTC).",
+    )
+    value: int = Field(
+        description=(
+            "The metric's total for that day. Zero is reported explicitly rather than "
+            "omitted, so a quiet day is distinguishable from a missing one."
+        ),
+    )
+
+
+class QuotaTelemetryMetricOut(BaseModel):
+    """One metric's trailing series and headline numbers (REPO-7.3, #2801)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    metric: str = Field(
+        description=(
+            "Stable metric id: polls, polls_deferred, files_deferred, scans or "
+            "bytes_scanned."
+        ),
+    )
+    label: str = Field(description="Short human-readable name for the metric.")
+    description: str = Field(
+        description="One sentence on what the metric counts and what it does not.",
+    )
+    window_kind: str = Field(
+        alias="windowKind",
+        description=(
+            "The bucket the counter accumulates into before it resets: 'hour' for the "
+            "polling metrics (matching the REPO-4.6 quota window) or 'day' for scan volume."
+        ),
+    )
+    unit: str = Field(
+        description=(
+            "Unit of every value in this metric: 'count', or 'bytes' for bytes_scanned "
+            "(clients render megabytes)."
+        ),
+    )
+    deferral: bool = Field(
+        description=(
+            "True when the metric counts work the quota pushed into a later window rather "
+            "than work performed. Deferral metrics are never folded into 'polls'."
+        ),
+    )
+    points: List[QuotaTelemetryPointOut] = Field(
+        description="One point per day in the requested range, oldest first.",
+    )
+    total: int = Field(description="Sum of every point in the range.")
+    peak: int = Field(description="Largest single day in the range.")
+    current_window: int = Field(
+        alias="currentWindow",
+        description=(
+            "The metric's value in its live bucket — the current hour for hourly metrics, "
+            "today for daily ones. For 'polls' this is the number to compare against "
+            "pollsPerHour."
+        ),
+    )
+
+
+class RepositoryQuotaTelemetryOut(BaseModel):
+    """A tenant's quota and rate-limit telemetry over a trailing range (REPO-7.3, #2801)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    days: int = Field(description="Length of the reported range in days.")
+    range_start: str = Field(
+        alias="rangeStart",
+        description="Start of the oldest day bucket in the range (ISO 8601, UTC).",
+    )
+    range_end: str = Field(
+        alias="rangeEnd",
+        description="Start of the most recent day bucket in the range (ISO 8601, UTC).",
+    )
+    available: bool = Field(
+        description=(
+            "False when the counters could not be read. Every series is still present and "
+            "zeroed, so callers can say 'unavailable' rather than 'no activity'."
+        ),
+    )
+    metrics: List[QuotaTelemetryMetricOut] = Field(
+        description="One entry per metric, in presentation order.",
+    )
+
+
+class RepositoryQuotaTelemetryResponse(BaseModel):
+    """Envelope for the quota telemetry read (REPO-7.3, #2801).
+
+    Carries the current quota projection alongside the history so a caller can render
+    "42 of 600 used this hour" and "here is the last week" without a second request.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    success: bool = True
+    quota: RepositoryPollingQuotaOut
+    telemetry: RepositoryQuotaTelemetryOut
+
+
 class TenantRepositoriesListResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 

@@ -14,9 +14,11 @@ class FakeDb:
         self.reap_artifact_calls = []
         self.reap_job_calls = []
         self.prune_calls = []
+        self.quota_window_prune_calls = []
         self._job_batches = []
         self._artifact_counts = []
         self._prune_counts = []
+        self._quota_window_prune_counts = []
 
     def reap_expired_export_job_artifacts(self, *, now=None, limit=100):
         self.reap_artifact_calls.append((now, limit))
@@ -34,6 +36,12 @@ class FakeDb:
         self.prune_calls.append((older_than, limit))
         if self._prune_counts:
             return self._prune_counts.pop(0)
+        return 0
+
+    def prune_repository_quota_windows(self, *, older_than):
+        self.quota_window_prune_calls.append(older_than)
+        if self._quota_window_prune_counts:
+            return self._quota_window_prune_counts.pop(0)
         return 0
 
 
@@ -62,6 +70,7 @@ def test_sweep_reaps_artifacts_jobs_and_history():
         ]
     ]
     db._prune_counts = [1]
+    db._quota_window_prune_counts = [4]
     now = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
     with patch("app.async_job_retention_sweep.settings") as settings:
         settings.async_job_retention_export_completed_hours = 1
@@ -72,18 +81,30 @@ def test_sweep_reaps_artifacts_jobs_and_history():
         settings.async_job_retention_spec_import_canceled_hours = 1
         settings.async_job_history_retention_days = 90
         settings.async_job_retention_sweep_batch_size = 50
+        settings.repository_quota_window_retention_days = 120
         result = process_async_job_retention_sweep(db, now=now, batch_size=50)
-    assert result == {"artifacts_reaped": 3, "jobs_deleted": 2, "history_pruned": 1}
+    assert result == {
+        "artifacts_reaped": 3,
+        "jobs_deleted": 2,
+        "history_pruned": 1,
+        "quota_windows_pruned": 4,
+    }
     assert db.reap_artifact_calls[0][1] == 50
     assert len(db.reap_job_calls[0][0]) == 6
     assert db.prune_calls[0][0] == now - timedelta(days=90)
+    assert db.quota_window_prune_calls[0] == now - timedelta(days=120)
 
 
 def test_sweep_second_tick_is_idempotent_when_empty():
     db = FakeDb()
     first = process_async_job_retention_sweep(db, batch_size=10, history_retention_days=30)
     second = process_async_job_retention_sweep(db, batch_size=10, history_retention_days=30)
-    assert first == {"artifacts_reaped": 0, "jobs_deleted": 0, "history_pruned": 0}
+    assert first == {
+        "artifacts_reaped": 0,
+        "jobs_deleted": 0,
+        "history_pruned": 0,
+        "quota_windows_pruned": 0,
+    }
     assert second == first
     assert len(db.reap_artifact_calls) == 2
     assert len(db.reap_job_calls) == 2
@@ -113,3 +134,39 @@ def test_history_prune_skipped_when_days_non_positive():
     db = FakeDb()
     process_async_job_retention_sweep(db, history_retention_days=0)
     assert db.prune_calls == []
+
+
+# --- REPO-7.3 (#2801): quota telemetry counter retention ------------------------------------
+
+
+def test_quota_window_prune_is_bounded_by_its_own_retention_window():
+    """The counters outlive job history deliberately: the telemetry API will serve a 90-day
+    range, so a 30-day counter retention would silently truncate a supported read."""
+    db = FakeDb()
+    now = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
+    process_async_job_retention_sweep(
+        db, now=now, history_retention_days=30, quota_window_retention_days=120
+    )
+    assert db.quota_window_prune_calls == [now - timedelta(days=120)]
+
+
+def test_quota_window_prune_skipped_when_days_non_positive():
+    """The documented way to keep counters forever."""
+    db = FakeDb()
+    process_async_job_retention_sweep(db, quota_window_retention_days=0)
+    assert db.quota_window_prune_calls == []
+
+
+def test_a_failed_quota_window_prune_does_not_lose_the_rest_of_the_tick():
+    class BrokenQuotaWindows(FakeDb):
+        def prune_repository_quota_windows(self, **kwargs):
+            raise RuntimeError("quota window table is gone")
+
+        def reap_expired_export_job_artifacts(self, **kwargs):
+            return 2
+
+    result = process_async_job_retention_sweep(
+        BrokenQuotaWindows(), history_retention_days=30, quota_window_retention_days=120
+    )
+    assert result["artifacts_reaped"] == 2
+    assert result["quota_windows_pruned"] == 0
