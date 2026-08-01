@@ -55,6 +55,7 @@ import {
 } from "@/app/components/ade/dashboard/repositories/repositoryStoreUi";
 import { RepositoryRowMenu } from "@/app/components/ade/dashboard/repositories/RepositoryRowMenu";
 import { RepositoryHealthBadge } from "@/app/components/ade/dashboard/repositories/RepositoryHealthBadge";
+import { RepositoryRefreshActivityCard } from "@/app/components/ade/dashboard/repositories/RepositoryRefreshActivityCard";
 
 const VIEW_STORAGE = "apiome-dashboard-repositories-view";
 
@@ -341,6 +342,10 @@ export default function RepositoriesPage() {
                     : undefined
                 }
               />
+            </div>
+            {/* RAR-5.5: tenant-wide auto-refresh health with drill-in per repo. */}
+            <div className="mt-4">
+              <RepositoryRefreshActivityCard />
             </div>
           </div>
 

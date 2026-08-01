@@ -364,3 +364,120 @@ export async function listTenantRepositoryRefreshSpecs(params: {
   );
   return result.rows as TenantRepositoryRefreshSpecRow[];
 }
+
+/**
+ * One tenant-wide per-lineage refresh signal row for the "Refresh activity"
+ * dashboard widget (RAR-5.5).
+ *
+ * A slimmed-down, cross-repository variant of
+ * {@link TenantRepositoryRefreshSpecRow}: it carries only the signals the
+ * client-side state machine (`repository-refresh-status.ts`) needs to derive
+ * each lineage's refresh state — the RAR-2.1 recency anchors vs the scanned
+ * remote recency, the RAR-3.2 operational job flags, and the last successful
+ * refresh time (for the "refreshed in the last 24h" tally) — plus the owning
+ * repository's identity so counts can be drilled into per repo.
+ */
+export type TenantRefreshActivitySignalRow = {
+  /** Owning repository id (drill-in target). */
+  repository_id: string;
+  /** Provider `owner/name` when known (display name source). */
+  repository_full_name: string | null;
+  /** Registered clone URL (display-name fallback when full name is absent). */
+  clone_url: string | null;
+  branch: string;
+  path: string;
+  /** Committed-at anchor captured at import time (RAR-2.1), ISO-8601 or null. */
+  last_imported_committed_at: string | null;
+  /** Blob SHA anchor captured at import time (RAR-2.1). */
+  last_imported_blob_sha: string | null;
+  /** Current scanned commit timestamp for the file, ISO-8601 or null. */
+  remote_committed_at: string | null;
+  /** Current scanned blob SHA for the file. */
+  remote_blob_sha: string | null;
+  /** True when a refresh job is queued/running for this lineage. */
+  is_refreshing: boolean;
+  /** True when the most recent finished refresh job for this lineage failed. */
+  last_refresh_failed: boolean;
+  /** Finished-at of the most recent successful refresh of this file, or null. */
+  last_refreshed_at: string | null;
+};
+
+/**
+ * List refresh signal rows for every stored import-spec lineage across all of a
+ * tenant's repositories (RAR-5.5 dashboard widget).
+ *
+ * The same joins as {@link listTenantRepositoryRefreshSpecs} minus the
+ * repository filter and the cadence columns (the widget aggregates states; it
+ * does not render next-due). Tenant-scoped via the `repository_import_spec.
+ * tenant_id` predicate plus the `tenant_repositories` join, so lineages under
+ * another tenant's (or a soft-deleted) repository are never returned.
+ *
+ * The cap is deliberately generous (default and max 2000) because the widget
+ * counts states across the whole tenant; a truncated read would under-report.
+ * Callers can detect truncation by comparing `rows.length` to the limit.
+ *
+ * @param params.tenantId Owning tenant id (scopes the lookup).
+ * @param params.limit Max rows to return (clamped to 1–2000, default 2000).
+ * @returns The per-lineage refresh signal rows, most recently updated first.
+ */
+export async function listTenantRefreshActivitySignals(params: {
+  tenantId: string;
+  limit?: number;
+}): Promise<TenantRefreshActivitySignalRow[]> {
+  const limit = Math.min(Math.max(params.limit ?? 2000, 1), 2000);
+  const result = await connectionPool.query(
+    `SELECT s.repository_id,
+            tr.repository_full_name,
+            tr.clone_url,
+            s.branch,
+            s.path,
+            s.last_imported_committed_at::text AS last_imported_committed_at,
+            s.last_imported_blob_sha,
+            trf.committed_at::text AS remote_committed_at,
+            trf.blob_sha AS remote_blob_sha,
+            EXISTS (
+              SELECT 1 FROM apiome.tenant_repository_refresh_jobs aj
+              WHERE aj.repository_id = s.repository_id
+                AND aj.branch = s.branch
+                AND aj.path = s.path
+                AND aj.status IN ('queued', 'running')
+            ) AS is_refreshing,
+            COALESCE(lf.failed, FALSE) AS last_refresh_failed,
+            ls.last_refreshed_at::text AS last_refreshed_at
+     FROM apiome.repository_import_spec s
+     JOIN apiome.tenant_repositories tr
+       ON tr.id = s.repository_id
+      AND tr.tenant_id = s.tenant_id
+      AND tr.deleted_at IS NULL
+     LEFT JOIN apiome.tenant_repository_files trf
+       ON trf.repository_id = s.repository_id
+      AND trf.branch = s.branch
+      AND trf.path = s.path
+     LEFT JOIN LATERAL (
+       SELECT (j.status = 'failed') AS failed
+       FROM apiome.tenant_repository_refresh_jobs j
+       WHERE j.repository_id = s.repository_id
+         AND j.branch = s.branch
+         AND j.path = s.path
+         AND j.finished_at IS NOT NULL
+       ORDER BY j.finished_at DESC
+       LIMIT 1
+     ) lf ON TRUE
+     LEFT JOIN LATERAL (
+       SELECT j.finished_at AS last_refreshed_at
+       FROM apiome.tenant_repository_refresh_jobs j
+       WHERE j.repository_id = s.repository_id
+         AND j.branch = s.branch
+         AND j.path = s.path
+         AND j.status = 'succeeded'
+         AND j.finished_at IS NOT NULL
+       ORDER BY j.finished_at DESC
+       LIMIT 1
+     ) ls ON TRUE
+     WHERE s.tenant_id = $1::uuid
+     ORDER BY s.updated_at DESC
+     LIMIT $2`,
+    [params.tenantId, limit]
+  );
+  return result.rows as TenantRefreshActivitySignalRow[];
+}
