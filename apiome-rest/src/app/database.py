@@ -23230,16 +23230,98 @@ class Database:
             "version_count": int(row.get("version_count") or 0),
         }
 
+    # --- Protocol/format facets (MFI-6.1) -----------------------------------------------------
+    #
+    # Both facet axes read the MFI-7.1 columns on ``apiome.versions``. Values are normalized to
+    # lower-case here (and blank strings folded to NULL) so a facet chip, a stored row, and a
+    # caller's filter all compare in exactly one form; ``app.browse_facets`` normalizes the caller
+    # side to match. The partial indexes V136 created (``idx_versions_source_format`` /
+    # ``idx_versions_protocol``) back these reads.
+
+    _BROWSE_PROTOCOL_SQL = "NULLIF(LOWER(TRIM(COALESCE(v.protocol, ''))), '')"
+    _BROWSE_FORMAT_SQL = "NULLIF(LOWER(TRIM(COALESCE(v.source_format, ''))), '')"
+
+    @staticmethod
+    def _browse_facet_clauses(
+        protocol: Optional[str],
+        source_format: Optional[str],
+        params: List[Any],
+    ) -> str:
+        """Build the facet ``WHERE`` fragment for a browse listing, appending its bind parameters.
+
+        The fragment is applied to a CTE that has already projected normalized ``protocol`` and
+        ``source_format`` columns, so it is identical for the tenant, public-project and
+        member-project listings.
+
+        Args:
+            protocol: Normalized protocol filter, or None for "any".
+            source_format: Normalized source-format filter, or None for "any".
+            params: The query's parameter list, extended in place in fragment order.
+
+        Returns:
+            SQL that is either empty or a chain of ``AND`` predicates.
+        """
+        clauses = ""
+        if protocol:
+            clauses += " AND protocol = %s"
+            params.append(protocol)
+        if source_format:
+            clauses += " AND source_format = %s"
+            params.append(source_format)
+        return clauses
+
+    @staticmethod
+    def _browse_facet_rows_to_counts(
+        rows: List[Dict[str, Any]],
+    ) -> Dict[str, Dict[str, int]]:
+        """Fold ``(facet, value, count)`` rows into ``{"protocols": {...}, "formats": {...}}``.
+
+        Args:
+            rows: Rows from a facet-count query, each with ``facet``/``value``/``count``.
+
+        Returns:
+            Counts keyed by axis; both axes are always present, possibly empty.
+        """
+        counts: Dict[str, Dict[str, int]] = {"protocols": {}, "formats": {}}
+        for row in rows:
+            axis = "protocols" if row.get("facet") == "protocol" else "formats"
+            value = row.get("value")
+            if not value:
+                continue
+            counts[axis][str(value)] = int(row.get("count") or 0)
+        return counts
+
+    #: Facet-count projection over a CTE named ``eligible`` that exposes normalized ``protocol`` and
+    #: ``source_format`` columns plus the entity id being counted. ``{entity}`` is the column to
+    #: count distinctly (tenants or projects).
+    _BROWSE_FACET_COUNT_SQL = """
+        SELECT 'protocol' AS facet, protocol AS value, COUNT(DISTINCT {entity})::int AS count
+        FROM eligible
+        WHERE protocol IS NOT NULL
+        GROUP BY protocol
+        UNION ALL
+        SELECT 'format' AS facet, source_format AS value, COUNT(DISTINCT {entity})::int AS count
+        FROM eligible
+        WHERE source_format IS NOT NULL
+        GROUP BY source_format
+    """
+
     def list_public_browse_tenants(
         self,
         *,
         search: Optional[str] = None,
         sort: str = "name",
+        protocol: Optional[str] = None,
+        source_format: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Tenants that have at least one published public version, with aggregates.
         Optional ``search`` filters by tenant name or slug (substring, case-insensitive).
         ``sort`` is one of: name, projects, latest.
+        Optional ``protocol`` / ``source_format`` keep only tenants publishing at least one version
+        with that protocol/format (MFI-6.1); the per-tenant aggregates still describe *all* of the
+        tenant's published public versions, so a facet narrows the directory without rewriting the
+        rows it returns.
         """
         sort_key = sort if sort in ("name", "projects", "latest") else "name"
         order_clause = {
@@ -23249,32 +23331,23 @@ class Database:
         }[sort_key]
 
         search_clause = ""
-        params: Tuple[Any, ...] = ()
+        params: List[Any] = []
         term = search.strip() if search and search.strip() else ""
         if term:
             search_clause = "AND (t.name ILIKE %s OR t.slug ILIKE %s)"
             pat = f"%{term}%"
-            params = (pat, pat)
+            params.extend([pat, pat])
+
+        eligible_cte = self._public_browse_tenant_eligible_cte(search_clause)
+        facet_clauses = self._browse_facet_clauses(protocol, source_format, params)
 
         query = f"""
-            WITH eligible AS (
-                SELECT
-                    t.id AS tenant_id,
-                    t.slug,
-                    t.name,
-                    p.id AS project_id,
-                    v.id AS version_id,
-                    v.version_id AS version_slug,
-                    COALESCE(v.published_at, v.updated_at, v.created_at) AS activity_ts
-                FROM apiome.tenants t
-                INNER JOIN apiome.projects p ON t.id = p.tenant_id
-                INNER JOIN apiome.versions v ON p.id = v.project_id
-                WHERE v.published = true
-                  AND v.visibility = 'public'
-                  AND t.deleted_at IS NULL
-                  AND p.deleted_at IS NULL
-                  AND v.deleted_at IS NULL
-                  {search_clause}
+            WITH eligible AS ({eligible_cte}),
+            matched AS (
+                SELECT DISTINCT tenant_id
+                FROM eligible
+                WHERE 1 = 1
+                  {facet_clauses}
             ),
             agg AS (
                 SELECT
@@ -23283,7 +23356,15 @@ class Database:
                     name,
                     COUNT(DISTINCT project_id)::int AS project_count,
                     COUNT(DISTINCT version_id)::int AS published_versions,
-                    MAX(activity_ts) AS latest_activity_at
+                    MAX(activity_ts) AS latest_activity_at,
+                    COALESCE(
+                        array_agg(DISTINCT protocol) FILTER (WHERE protocol IS NOT NULL),
+                        ARRAY[]::text[]
+                    ) AS protocols,
+                    COALESCE(
+                        array_agg(DISTINCT source_format) FILTER (WHERE source_format IS NOT NULL),
+                        ARRAY[]::text[]
+                    ) AS formats
                 FROM eligible
                 GROUP BY tenant_id, slug, name
             ),
@@ -23300,12 +23381,81 @@ class Database:
                 a.project_count,
                 a.published_versions,
                 lv.latest_version,
-                a.latest_activity_at
+                a.latest_activity_at,
+                a.protocols,
+                a.formats
             FROM agg a
+            INNER JOIN matched m ON m.tenant_id = a.tenant_id
             LEFT JOIN latest_ver lv ON lv.tenant_id = a.tenant_id
             ORDER BY {order_clause}
         """
-        return self.execute_query(query, params)
+        return self.execute_query(query, tuple(params))
+
+    def _public_browse_tenant_eligible_cte(self, search_clause: str) -> str:
+        """SQL for the tenant-directory ``eligible`` row set (one row per published public version).
+
+        Shared by :meth:`list_public_browse_tenants` and
+        :meth:`get_public_browse_tenant_facets` so the listing and its facet counts can never drift
+        apart on what "in the directory" means.
+
+        Args:
+            search_clause: An already-built ``AND (...)`` search predicate, or an empty string.
+
+        Returns:
+            A ``SELECT`` usable as the body of a CTE, projecting normalized facet columns.
+        """
+        return f"""
+                SELECT
+                    t.id AS tenant_id,
+                    t.slug,
+                    t.name,
+                    p.id AS project_id,
+                    v.id AS version_id,
+                    v.version_id AS version_slug,
+                    COALESCE(v.published_at, v.updated_at, v.created_at) AS activity_ts,
+                    {self._BROWSE_PROTOCOL_SQL} AS protocol,
+                    {self._BROWSE_FORMAT_SQL} AS source_format
+                FROM apiome.tenants t
+                INNER JOIN apiome.projects p ON t.id = p.tenant_id
+                INNER JOIN apiome.versions v ON p.id = v.project_id
+                WHERE v.published = true
+                  AND v.visibility = 'public'
+                  AND t.deleted_at IS NULL
+                  AND p.deleted_at IS NULL
+                  AND v.deleted_at IS NULL
+                  {search_clause}
+        """
+
+    def get_public_browse_tenant_facets(
+        self,
+        *,
+        search: Optional[str] = None,
+    ) -> Dict[str, Dict[str, int]]:
+        """Protocol/format facet counts across the public tenant directory (MFI-6.1).
+
+        Each count is the number of *tenants* publishing at least one public version with that
+        protocol/format. ``search`` is honoured so the chips describe the listing on screen; the
+        protocol/format selection itself deliberately is not, so a visitor can always see what else
+        is available to pick.
+
+        Args:
+            search: The same tenant name/slug substring filter the listing used, or None.
+
+        Returns:
+            ``{"protocols": {value: count}, "formats": {value: count}}``.
+        """
+        search_clause = ""
+        params: List[Any] = []
+        term = search.strip() if search and search.strip() else ""
+        if term:
+            search_clause = "AND (t.name ILIKE %s OR t.slug ILIKE %s)"
+            pat = f"%{term}%"
+            params.extend([pat, pat])
+
+        eligible_cte = self._public_browse_tenant_eligible_cte(search_clause)
+        counts_sql = self._BROWSE_FACET_COUNT_SQL.format(entity="tenant_id")
+        query = f"WITH eligible AS ({eligible_cte})\n{counts_sql}"
+        return self._browse_facet_rows_to_counts(self.execute_query(query, tuple(params)))
 
     _BROWSE_PROJECT_DOMAIN_COMPARE_SQL = """
         LOWER(TRIM(COALESCE(
@@ -23319,40 +23469,25 @@ class Database:
         )))
         """
 
-    def list_public_browse_projects_for_tenant(
+    def _public_browse_project_eligible_cte(
         self,
-        tenant_id: str,
-        *,
-        search: Optional[str] = None,
-        domain: Optional[str] = None,
-        require_published: bool = False,
-    ) -> List[Dict[str, Any]]:
-        """
-        Projects with at least one published **public** version (browse-app parity).
+        search_clause: str,
+        domain_clause: str,
+    ) -> str:
+        """SQL for the public project ``eligible`` row set (one row per published public version).
 
-        Optional ``search`` filters slug/name (substring, case-insensitive).
-        Optional ``domain`` filters metadata ``domain`` / ``domainCategory`` (case-insensitive).
-        ``require_published`` retained for API symmetry; this listing already implies ≥1 public publish.
-        """
-        dom_sql = self._BROWSE_PROJECT_DOMAIN_COMPARE_SQL.strip()
-        term = search.strip() if search and search.strip() else ""
-        search_clause = ""
-        params: List[Any] = [tenant_id]
-        if term:
-            search_clause = " AND (p.slug ILIKE %s OR p.name ILIKE %s)"
-            pat = f"%{term}%"
-            params.extend([pat, pat])
-        domain_clause = ""
-        domain_term = domain.strip() if domain and domain.strip() else ""
-        if domain_term:
-            domain_clause = f" AND ({dom_sql}) = LOWER(TRIM(%s))"
-            params.append(domain_term)
-        published_outer = ""
-        if require_published:
-            published_outer = " AND a.published_versions >= 1"
+        Shared by :meth:`list_public_browse_projects_for_tenant` and
+        :meth:`get_public_browse_project_facets_for_tenant` so a listing and its facet counts always
+        describe the same rows.
 
-        query = f"""
-            WITH eligible AS (
+        Args:
+            search_clause: An already-built ``AND (...)`` slug/name predicate, or an empty string.
+            domain_clause: An already-built ``AND (...)`` domain predicate, or an empty string.
+
+        Returns:
+            A ``SELECT`` usable as the body of a CTE, projecting normalized facet columns.
+        """
+        return f"""
                 SELECT
                     p.id AS project_id,
                     p.slug,
@@ -23360,7 +23495,9 @@ class Database:
                     p.metadata,
                     v.id AS version_id,
                     v.version_id AS version_slug,
-                    COALESCE(v.published_at, v.updated_at, v.created_at) AS activity_ts
+                    COALESCE(v.published_at, v.updated_at, v.created_at) AS activity_ts,
+                    {self._BROWSE_PROTOCOL_SQL} AS protocol,
+                    {self._BROWSE_FORMAT_SQL} AS source_format
                 FROM apiome.projects p
                 INNER JOIN apiome.tenants t ON p.tenant_id = t.id
                 INNER JOIN apiome.versions v ON p.id = v.project_id
@@ -23372,6 +23509,74 @@ class Database:
                   AND v.deleted_at IS NULL
                   {search_clause}
                   {domain_clause}
+        """
+
+    def _browse_project_filter_clauses(
+        self,
+        tenant_id: str,
+        search: Optional[str],
+        domain: Optional[str],
+    ) -> Tuple[str, str, List[Any]]:
+        """Build the shared search/domain predicates for a project browse query.
+
+        Args:
+            tenant_id: The tenant whose projects are listed (always the first bind parameter).
+            search: Slug/name substring filter, or None.
+            domain: Domain / domainCategory filter, or None.
+
+        Returns:
+            ``(search_clause, domain_clause, params)`` with ``params`` in fragment order.
+        """
+        params: List[Any] = [tenant_id]
+        search_clause = ""
+        term = search.strip() if search and search.strip() else ""
+        if term:
+            search_clause = " AND (p.slug ILIKE %s OR p.name ILIKE %s)"
+            pat = f"%{term}%"
+            params.extend([pat, pat])
+        domain_clause = ""
+        domain_term = domain.strip() if domain and domain.strip() else ""
+        if domain_term:
+            domain_clause = f" AND ({self._BROWSE_PROJECT_DOMAIN_COMPARE_SQL.strip()}) = LOWER(TRIM(%s))"
+            params.append(domain_term)
+        return search_clause, domain_clause, params
+
+    def list_public_browse_projects_for_tenant(
+        self,
+        tenant_id: str,
+        *,
+        search: Optional[str] = None,
+        domain: Optional[str] = None,
+        require_published: bool = False,
+        protocol: Optional[str] = None,
+        source_format: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Projects with at least one published **public** version (browse-app parity).
+
+        Optional ``search`` filters slug/name (substring, case-insensitive).
+        Optional ``domain`` filters metadata ``domain`` / ``domainCategory`` (case-insensitive).
+        Optional ``protocol`` / ``source_format`` keep only projects with at least one listed
+        version carrying that protocol/format (MFI-6.1); each returned row still reports its
+        ``protocols``/``formats`` and counts across *all* of its listed versions.
+        ``require_published`` retained for API symmetry; this listing already implies ≥1 public publish.
+        """
+        search_clause, domain_clause, params = self._browse_project_filter_clauses(
+            tenant_id, search, domain
+        )
+        eligible_cte = self._public_browse_project_eligible_cte(search_clause, domain_clause)
+        facet_clauses = self._browse_facet_clauses(protocol, source_format, params)
+        published_outer = ""
+        if require_published:
+            published_outer = " AND a.published_versions >= 1"
+
+        query = f"""
+            WITH eligible AS ({eligible_cte}),
+            matched AS (
+                SELECT DISTINCT project_id
+                FROM eligible
+                WHERE 1 = 1
+                  {facet_clauses}
             ),
             agg AS (
                 SELECT
@@ -23380,7 +23585,15 @@ class Database:
                     e.name,
                     e.metadata,
                     COUNT(DISTINCT e.version_id)::int AS published_versions,
-                    MAX(e.activity_ts) AS latest_activity_ts
+                    MAX(e.activity_ts) AS latest_activity_ts,
+                    COALESCE(
+                        array_agg(DISTINCT e.protocol) FILTER (WHERE e.protocol IS NOT NULL),
+                        ARRAY[]::text[]
+                    ) AS protocols,
+                    COALESCE(
+                        array_agg(DISTINCT e.source_format) FILTER (WHERE e.source_format IS NOT NULL),
+                        ARRAY[]::text[]
+                    ) AS formats
                 FROM eligible e
                 GROUP BY e.project_id, e.slug, e.name, e.metadata
             ),
@@ -23398,8 +23611,11 @@ class Database:
                 a.metadata,
                 a.published_versions,
                 lv.latest_version,
-                lv.latest_published_at
+                lv.latest_published_at,
+                a.protocols,
+                a.formats
             FROM agg a
+            INNER JOIN matched m ON m.project_id = a.project_id
             LEFT JOIN latest_ver lv ON lv.project_id = a.project_id
             WHERE 1 = 1
               {published_outer}
@@ -23407,38 +23623,53 @@ class Database:
         """
         return self.execute_query(query, tuple(params))
 
-    def list_member_browse_projects_for_tenant(
+    def get_public_browse_project_facets_for_tenant(
         self,
         tenant_id: str,
         *,
         search: Optional[str] = None,
         domain: Optional[str] = None,
-        require_published: bool = False,
-    ) -> List[Dict[str, Any]]:
-        """
-        All non-deleted projects for a tenant member (JWT/API key scoped to tenant).
+    ) -> Dict[str, Dict[str, int]]:
+        """Protocol/format facet counts for a tenant's public project listing (MFI-6.1).
 
-        Counts and ``latest_*`` consider any published version (any visibility).
-        """
-        dom_sql = self._BROWSE_PROJECT_DOMAIN_COMPARE_SQL.strip()
-        term = search.strip() if search and search.strip() else ""
-        search_clause = ""
-        params: List[Any] = [tenant_id]
-        if term:
-            search_clause = " AND (p.slug ILIKE %s OR p.name ILIKE %s)"
-            pat = f"%{term}%"
-            params.extend([pat, pat])
-        domain_clause = ""
-        domain_term = domain.strip() if domain and domain.strip() else ""
-        if domain_term:
-            domain_clause = f" AND ({dom_sql}) = LOWER(TRIM(%s))"
-            params.append(domain_term)
-        published_clause = ""
-        if require_published:
-            published_clause = " AND COALESCE(va.published_versions, 0) >= 1"
+        Each count is the number of *projects* with at least one published public version carrying
+        that protocol/format, under the same ``search``/``domain`` filters the listing used. The
+        protocol/format selection itself is not applied, so the chips keep showing the alternatives.
 
-        query = f"""
-            WITH project_base AS (
+        Args:
+            tenant_id: The tenant whose projects are listed.
+            search: The listing's slug/name filter, or None.
+            domain: The listing's domain filter, or None.
+
+        Returns:
+            ``{"protocols": {value: count}, "formats": {value: count}}``.
+        """
+        search_clause, domain_clause, params = self._browse_project_filter_clauses(
+            tenant_id, search, domain
+        )
+        eligible_cte = self._public_browse_project_eligible_cte(search_clause, domain_clause)
+        counts_sql = self._BROWSE_FACET_COUNT_SQL.format(entity="project_id")
+        query = f"WITH eligible AS ({eligible_cte})\n{counts_sql}"
+        return self._browse_facet_rows_to_counts(self.execute_query(query, tuple(params)))
+
+    def _member_browse_project_ctes(self, search_clause: str, domain_clause: str) -> str:
+        """SQL for the member project ``project_base`` + ``eligible`` CTEs.
+
+        ``eligible`` is one row per published version (any visibility) of a matching project, with
+        the normalized facet columns projected — the member-side mirror of
+        :meth:`_public_browse_project_eligible_cte`. Shared by
+        :meth:`list_member_browse_projects_for_tenant` and
+        :meth:`get_member_browse_project_facets_for_tenant`.
+
+        Args:
+            search_clause: An already-built ``AND (...)`` slug/name predicate, or an empty string.
+            domain_clause: An already-built ``AND (...)`` domain predicate, or an empty string.
+
+        Returns:
+            Two comma-separated named CTEs, ready to follow a ``WITH``.
+        """
+        return f"""
+            project_base AS (
                 SELECT
                     p.id AS project_id,
                     p.slug,
@@ -23449,6 +23680,67 @@ class Database:
                   AND p.deleted_at IS NULL
                   {search_clause}
                   {domain_clause}
+            ),
+            eligible AS (
+                SELECT
+                    v.project_id,
+                    {self._BROWSE_PROTOCOL_SQL} AS protocol,
+                    {self._BROWSE_FORMAT_SQL} AS source_format
+                FROM apiome.versions v
+                INNER JOIN project_base pb ON pb.project_id = v.project_id
+                WHERE v.deleted_at IS NULL
+                  AND v.published IS TRUE
+            )
+        """
+
+    def list_member_browse_projects_for_tenant(
+        self,
+        tenant_id: str,
+        *,
+        search: Optional[str] = None,
+        domain: Optional[str] = None,
+        require_published: bool = False,
+        protocol: Optional[str] = None,
+        source_format: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        All non-deleted projects for a tenant member (JWT/API key scoped to tenant).
+
+        Counts and ``latest_*`` consider any published version (any visibility).
+        Optional ``protocol`` / ``source_format`` keep only projects with at least one published
+        version carrying that protocol/format (MFI-6.1). A project with no published version at all
+        therefore drops out of a faceted listing — it has nothing that could carry a facet value.
+        """
+        search_clause, domain_clause, params = self._browse_project_filter_clauses(
+            tenant_id, search, domain
+        )
+        base_ctes = self._member_browse_project_ctes(search_clause, domain_clause)
+        facet_clauses = self._browse_facet_clauses(protocol, source_format, params)
+        published_clause = ""
+        if require_published:
+            published_clause = " AND COALESCE(va.published_versions, 0) >= 1"
+
+        query = f"""
+            WITH {base_ctes},
+            matched AS (
+                SELECT DISTINCT project_id
+                FROM eligible
+                WHERE 1 = 1
+                  {facet_clauses}
+            ),
+            facet_tags AS (
+                SELECT
+                    project_id,
+                    COALESCE(
+                        array_agg(DISTINCT protocol) FILTER (WHERE protocol IS NOT NULL),
+                        ARRAY[]::text[]
+                    ) AS protocols,
+                    COALESCE(
+                        array_agg(DISTINCT source_format) FILTER (WHERE source_format IS NOT NULL),
+                        ARRAY[]::text[]
+                    ) AS formats
+                FROM eligible
+                GROUP BY project_id
             ),
             version_agg AS (
                 SELECT
@@ -23481,8 +23773,12 @@ class Database:
                 pb.metadata,
                 COALESCE(va.published_versions, 0) AS published_versions,
                 lv.latest_version,
-                lv.latest_published_at
+                lv.latest_published_at,
+                COALESCE(ft.protocols, ARRAY[]::text[]) AS protocols,
+                COALESCE(ft.formats, ARRAY[]::text[]) AS formats
             FROM project_base pb
+            {"INNER JOIN matched m ON m.project_id = pb.project_id" if facet_clauses else ""}
+            LEFT JOIN facet_tags ft ON ft.project_id = pb.project_id
             LEFT JOIN version_agg va ON va.project_id = pb.project_id
             LEFT JOIN latest_ver lv ON lv.project_id = pb.project_id
             WHERE 1 = 1
@@ -23490,6 +23786,35 @@ class Database:
             ORDER BY pb.slug ASC
         """
         return self.execute_query(query, tuple(params))
+
+    def get_member_browse_project_facets_for_tenant(
+        self,
+        tenant_id: str,
+        *,
+        search: Optional[str] = None,
+        domain: Optional[str] = None,
+    ) -> Dict[str, Dict[str, int]]:
+        """Protocol/format facet counts for a member's tenant project listing (MFI-6.1).
+
+        The member mirror of :meth:`get_public_browse_project_facets_for_tenant`: counts projects
+        with at least one published version (any visibility) carrying each protocol/format, under
+        the listing's ``search``/``domain`` filters.
+
+        Args:
+            tenant_id: The tenant whose projects are listed.
+            search: The listing's slug/name filter, or None.
+            domain: The listing's domain filter, or None.
+
+        Returns:
+            ``{"protocols": {value: count}, "formats": {value: count}}``.
+        """
+        search_clause, domain_clause, params = self._browse_project_filter_clauses(
+            tenant_id, search, domain
+        )
+        base_ctes = self._member_browse_project_ctes(search_clause, domain_clause)
+        counts_sql = self._BROWSE_FACET_COUNT_SQL.format(entity="project_id")
+        query = f"WITH {base_ctes}\n{counts_sql}"
+        return self._browse_facet_rows_to_counts(self.execute_query(query, tuple(params)))
 
     def project_has_public_published_version(self, tenant_id: str, project_slug: str) -> bool:
         """True when the project has at least one published version visible on the public browse surface."""
@@ -23534,6 +23859,8 @@ class Database:
                 v.published_at,
                 v.description,
                 v.change_log,
+                v.protocol,
+                v.source_format,
                 cr.change_model_json,
                 COALESCE(
                     (
@@ -23581,6 +23908,8 @@ class Database:
                 v.published_at,
                 v.description,
                 v.change_log,
+                v.protocol,
+                v.source_format,
                 cr.change_model_json,
                 COALESCE(
                     (

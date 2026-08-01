@@ -5,6 +5,37 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.234.0] - 2026-08-01
+
+### Added
+- **Protocol / format facets on public browse (MFI-6.1, #3753)** —
+  the directory now spans many API description formats, so browsing it needs more than a name
+  search: a visitor has to be able to ask for "the event-driven ones" or "everything published as
+  gRPC". Both facet axes read the columns MFI-7.1 put on `apiome.versions` (`protocol`,
+  `source_format`), backed by that migration's partial facet indexes.
+  - **Two filters, one vocabulary.** `GET /v1/browse/tenants` and
+    `GET /v1/browse/tenants/{slug}/projects` accept `protocol` (the canonical `ApiParadigm`:
+    `rest`, `rpc`, `event`, `graph`, `data_schema`, `agent`) and `format` (the specific source
+    format key an adapter recorded at import: `openapi-3.1`, `protobuf`, `graphql`, …). Matching is
+    case- and punctuation-insensitive — `data-schema`, `event-driven` and `graphql` all resolve —
+    and an unrecognised value *narrows to nothing* rather than erroring, the same contract the
+    existing `search`/`domain` filters have. The two axes compose with AND, and an entry matches
+    when **any** of its listed versions carries the value.
+  - **Counts per facet.** Both responses gained a `facets` block — `{protocols, formats}`, each a
+    list of `{value, label, count}`. Counts honour the listing's *other* filters (`search`,
+    `domain`) but deliberately ignore the facet selection itself, so a chip row always answers
+    "what else could I pick" instead of collapsing to what is already selected. Protocols come
+    back in canonical paradigm order; formats by descending count, ties broken by key.
+  - **Rows say what they are.** Every tenant and project row now carries `protocols` / `formats`
+    (the distinct values across its listed versions) and every version row carries its own
+    `protocol` / `source_format`, so a listing stays readable once a facet has narrowed it.
+  - **Labels reuse the registries.** `app/browse_facets.py` owns the normalization and the
+    labelling; format labels come from the import-source registry (so a newly registered adapter
+    labels its own chips) with a versioned-key rule that keeps `openapi-3.0`, `openapi-3.1` and
+    `swagger-2.0` distinguishable. An unknown key still renders — as itself.
+  - **Note.** Revisions imported before MFI-7.1 carry no protocol/format and so contribute no
+    chip; the MFI-7.3 backfill (#3758) is what lights the facets up for pre-existing specs.
+
 ## [1.233.0] - 2026-08-01
 
 ### Added

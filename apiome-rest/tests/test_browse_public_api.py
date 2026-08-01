@@ -284,3 +284,237 @@ def test_browse_versions_public_masked_when_no_public_publish():
         r = client.get("/v1/browse/tenants/acme-corp/projects/private-only/versions")
     assert r.status_code == 404
     m.list_public_browse_versions_for_project.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Protocol / format facets (MFI-6.1, #3753)
+# ---------------------------------------------------------------------------
+
+
+def _facet_counts(protocols=None, formats=None):
+    """Shape a stubbed ``db.*_facets*`` return value."""
+    return {"protocols": protocols or {}, "formats": formats or {}}
+
+
+def test_browse_tenants_returns_labelled_ordered_facets():
+    with patch("app.browse_public_routes.db") as m:
+        m.get_public_browse_directory_stats.return_value = {
+            "tenant_count": 0,
+            "project_count": 0,
+            "version_count": 0,
+        }
+        m.list_public_browse_tenants.return_value = []
+        m.get_public_browse_tenant_facets.return_value = _facet_counts(
+            protocols={"graph": 1, "rest": 4},
+            formats={"graphql": 1, "openapi-3.1": 4},
+        )
+        r = client.get("/v1/browse/tenants")
+    assert r.status_code == 200
+    facets = r.json()["facets"]
+    # Protocols follow canonical paradigm order; formats follow descending count.
+    assert [f["value"] for f in facets["protocols"]] == ["rest", "graph"]
+    assert facets["protocols"][0] == {"value": "rest", "label": "REST", "count": 4}
+    assert [f["value"] for f in facets["formats"]] == ["openapi-3.1", "graphql"]
+    assert facets["formats"][0]["label"] == "OpenAPI 3.1"
+
+
+def test_browse_tenants_passes_normalized_facet_filters():
+    with patch("app.browse_public_routes.db") as m:
+        m.get_public_browse_directory_stats.return_value = {
+            "tenant_count": 0,
+            "project_count": 0,
+            "version_count": 0,
+        }
+        m.list_public_browse_tenants.return_value = []
+        m.get_public_browse_tenant_facets.return_value = _facet_counts()
+        r = client.get("/v1/browse/tenants?protocol=Data-Schema&format=%20Avro%20&search=acme")
+    assert r.status_code == 200
+    ca = m.list_public_browse_tenants.call_args
+    assert ca.kwargs["protocol"] == "data_schema"
+    assert ca.kwargs["source_format"] == "avro"
+    # Facet counts honour search but deliberately ignore the facet selection itself.
+    m.get_public_browse_tenant_facets.assert_called_once_with(search="acme")
+
+
+def test_browse_tenants_surfaces_per_tenant_protocols_and_formats():
+    rows = [
+        {
+            "slug": "acme-corp",
+            "name": "Acme Corporation",
+            "project_count": 2,
+            "published_versions": 5,
+            "latest_version": "2.1.0",
+            "latest_activity_at": None,
+            "protocols": ["rest", "rpc"],
+            "formats": ["openapi-3.1", "protobuf"],
+        },
+    ]
+    with patch("app.browse_public_routes.db") as m:
+        m.get_public_browse_directory_stats.return_value = {
+            "tenant_count": 1,
+            "project_count": 2,
+            "version_count": 5,
+        }
+        m.list_public_browse_tenants.return_value = rows
+        m.get_public_browse_tenant_facets.return_value = _facet_counts()
+        r = client.get("/v1/browse/tenants")
+    assert r.status_code == 200
+    tenant = r.json()["tenants"][0]
+    assert tenant["protocols"] == ["rest", "rpc"]
+    assert tenant["formats"] == ["openapi-3.1", "protobuf"]
+
+
+def test_browse_projects_passes_facet_filters_and_returns_facets():
+    tenant = {"id": "tid-1", "slug": "acme-corp", "name": "Acme Corp"}
+    rows = [
+        {
+            "slug": "orders-events",
+            "name": "Orders Events",
+            "metadata": {"domain": "commerce"},
+            "published_versions": 2,
+            "latest_version": "1.2.0",
+            "latest_published_at": None,
+            "protocols": ["event"],
+            "formats": ["asyncapi-3"],
+        },
+    ]
+    with patch("app.browse_public_routes.db") as m:
+        m.get_tenant_row_by_slug.return_value = tenant
+        m.list_public_browse_projects_for_tenant.return_value = rows
+        m.get_public_browse_project_facets_for_tenant.return_value = _facet_counts(
+            protocols={"event": 1, "rest": 3},
+            formats={"asyncapi-3": 1, "openapi-3.1": 3},
+        )
+        r = client.get(
+            "/v1/browse/tenants/acme-corp/projects?protocol=event-driven&format=AsyncAPI-3&domain=commerce"
+        )
+    assert r.status_code == 200
+    ca = m.list_public_browse_projects_for_tenant.call_args
+    assert ca.kwargs["protocol"] == "event"
+    assert ca.kwargs["source_format"] == "asyncapi-3"
+    m.get_public_browse_project_facets_for_tenant.assert_called_once_with(
+        "tid-1", search=None, domain="commerce"
+    )
+
+    body = r.json()
+    assert body["projects"][0]["protocols"] == ["event"]
+    assert body["projects"][0]["formats"] == ["asyncapi-3"]
+    assert [f["label"] for f in body["facets"]["protocols"]] == ["REST", "Event-driven"]
+    assert [f["label"] for f in body["facets"]["formats"]] == ["OpenAPI 3.1", "AsyncAPI 3"]
+
+
+def test_browse_projects_member_uses_member_facet_counts():
+    tenant = {"id": "tid-1", "slug": "acme-corp", "name": "Acme Corp"}
+    with patch("app.browse_public_routes.db") as m, patch(
+        "app.auth.db.validate_api_key",
+        return_value={"tenant_slug": "acme-corp"},
+    ):
+        m.get_tenant_row_by_slug.return_value = tenant
+        m.list_member_browse_projects_for_tenant.return_value = []
+        m.get_member_browse_project_facets_for_tenant.return_value = _facet_counts(
+            protocols={"rpc": 2}
+        )
+        r = client.get(
+            "/v1/browse/tenants/acme-corp/projects?protocol=grpc",
+            headers={"X-API-Key": "member-key"},
+        )
+    assert r.status_code == 200
+    assert m.list_member_browse_projects_for_tenant.call_args.kwargs["protocol"] == "rpc"
+    m.get_member_browse_project_facets_for_tenant.assert_called_once()
+    m.get_public_browse_project_facets_for_tenant.assert_not_called()
+    assert r.json()["facets"]["protocols"] == [{"value": "rpc", "label": "RPC", "count": 2}]
+
+
+def test_browse_projects_blank_facet_filters_are_ignored():
+    tenant = {"id": "tid-1", "slug": "acme-corp", "name": "Acme Corp"}
+    with patch("app.browse_public_routes.db") as m:
+        m.get_tenant_row_by_slug.return_value = tenant
+        m.list_public_browse_projects_for_tenant.return_value = []
+        m.get_public_browse_project_facets_for_tenant.return_value = _facet_counts()
+        r = client.get("/v1/browse/tenants/acme-corp/projects?protocol=%20&format=")
+    assert r.status_code == 200
+    ca = m.list_public_browse_projects_for_tenant.call_args
+    assert ca.kwargs["protocol"] is None
+    assert ca.kwargs["source_format"] is None
+
+
+def test_browse_projects_unknown_facet_value_narrows_instead_of_erroring():
+    tenant = {"id": "tid-1", "slug": "acme-corp", "name": "Acme Corp"}
+    with patch("app.browse_public_routes.db") as m:
+        m.get_tenant_row_by_slug.return_value = tenant
+        m.list_public_browse_projects_for_tenant.return_value = []
+        m.get_public_browse_project_facets_for_tenant.return_value = _facet_counts()
+        r = client.get("/v1/browse/tenants/acme-corp/projects?protocol=Telepathy&format=Smoke%20Signals")
+    assert r.status_code == 200
+    assert r.json()["filtered_count"] == 0
+    ca = m.list_public_browse_projects_for_tenant.call_args
+    assert ca.kwargs["protocol"] == "telepathy"
+    assert ca.kwargs["source_format"] == "smoke signals"
+
+
+def test_browse_projects_missing_facet_columns_degrade_to_empty_lists():
+    """A row from before the facet columns existed must still serialize."""
+    tenant = {"id": "tid-1", "slug": "acme-corp", "name": "Acme Corp"}
+    rows = [
+        {
+            "slug": "legacy-api",
+            "name": "Legacy API",
+            "metadata": None,
+            "published_versions": 1,
+            "latest_version": "1.0.0",
+            "latest_published_at": None,
+            "protocols": None,
+            "formats": None,
+        },
+    ]
+    with patch("app.browse_public_routes.db") as m:
+        m.get_tenant_row_by_slug.return_value = tenant
+        m.list_public_browse_projects_for_tenant.return_value = rows
+        m.get_public_browse_project_facets_for_tenant.return_value = None
+        r = client.get("/v1/browse/tenants/acme-corp/projects")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["projects"][0]["protocols"] == []
+    assert body["projects"][0]["formats"] == []
+    assert body["facets"] == {"protocols": [], "formats": []}
+
+
+def test_browse_versions_expose_protocol_and_format():
+    tenant = {"id": "tid-1", "slug": "acme-corp", "name": "Acme Corp"}
+    project = {"id": "pid-1", "slug": "orders-events", "name": "Orders Events"}
+    rows = [
+        {
+            "id": "v1",
+            "version_id": "1.0.0",
+            "published_at": datetime(2026, 5, 4, 12, 0, 0),
+            "description": None,
+            "change_log": None,
+            "change_model_json": None,
+            "tags": [],
+            "protocol": "EVENT",
+            "source_format": " AsyncAPI-3 ",
+        },
+        {
+            "id": "v0",
+            "version_id": "0.9.0",
+            "published_at": None,
+            "description": None,
+            "change_log": None,
+            "change_model_json": None,
+            "tags": [],
+            "protocol": None,
+            "source_format": "",
+        },
+    ]
+    with patch("app.browse_public_routes.db") as m:
+        m.get_tenant_row_by_slug.return_value = tenant
+        m.get_project_by_slug.return_value = project
+        m.project_has_public_published_version.return_value = True
+        m.list_public_browse_versions_for_project.return_value = rows
+        r = client.get("/v1/browse/tenants/acme-corp/projects/orders-events/versions")
+    assert r.status_code == 200
+    versions = r.json()["versions"]
+    assert versions[0]["protocol"] == "event"
+    assert versions[0]["source_format"] == "asyncapi-3"
+    assert versions[1]["protocol"] is None
+    assert versions[1]["source_format"] is None
