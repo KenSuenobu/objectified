@@ -157,6 +157,152 @@ urlencode() {
   python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$1"
 }
 
+# ---------------------------------------------------------------------------
+# Database connectivity check
+# ---------------------------------------------------------------------------
+# Validates the PostgreSQL settings before seven .env files are written with them. Result
+# codes, shared by every probe below:
+#
+#   0  connected and the credentials were accepted
+#   1  the host:port answered, but no client library was available to check credentials
+#   2  (internal) this probe cannot run; the caller falls through to the next one
+#   3  the server rejected the database name — it does not exist yet
+#   4  the server rejected the user or password
+#   5  nothing answered at host:port
+#   6  connected, but failed for some other reason
+#   7  (internal) failed with no machine-readable code; classify from the message text
+#
+# The failure text lands in DB_CHECK_DETAIL. The password always travels through the
+# environment, never argv, because argv is world-readable through `ps`.
+
+DB_CHECK_DETAIL=""
+
+# psycopg (3 or 2) probe. Uses the driver's SQLSTATE when there is one, since message text is
+# localised by the server's lc_messages. psycopg2 leaves SQLSTATE unset on connection-time
+# failures (verified against 2.9), so those exit 7 and are classified from their text instead.
+read -r -d '' DB_PING_DRIVER_PY <<'PY' || true
+import os, sys
+
+host, port, user, dbname = sys.argv[1:5]
+password = os.environ.get("PGPASSWORD", "")
+
+driver = None
+for candidate in ("psycopg", "psycopg2"):
+    try:
+        driver = __import__(candidate)
+        break
+    except ImportError:
+        continue
+
+if driver is None:
+    sys.exit(2)
+
+try:
+    driver.connect(
+        host=host, port=port, user=user, dbname=dbname,
+        password=password, connect_timeout=5,
+    ).close()
+except Exception as exc:
+    sys.stderr.write(str(exc).strip())
+    sqlstate = getattr(exc, "sqlstate", None)
+    if sqlstate is None:
+        diag = getattr(exc, "diag", None)
+        sqlstate = getattr(diag, "sqlstate", None) if diag is not None else None
+    if sqlstate == "3D000":
+        sys.exit(3)
+    if sqlstate in ("28P01", "28000", "28P02"):
+        sys.exit(4)
+    sys.exit(7 if sqlstate is None else 6)
+
+sys.exit(0)
+PY
+
+# Last-resort probe: proves something is listening, nothing more.
+read -r -d '' DB_PING_SOCKET_PY <<'PY' || true
+import socket, sys
+
+try:
+    socket.create_connection((sys.argv[1], int(sys.argv[2])), timeout=5).close()
+except OSError as exc:
+    sys.stderr.write(str(exc))
+    sys.exit(5)
+
+sys.exit(0)
+PY
+
+# Map a psql failure to a result code. Order matters: a missing *role* also says
+# "does not exist", and that is a credentials problem, not a missing database.
+classify_db_error() {
+  local text="${1,,}"
+
+  case "$text" in
+    *'role "'*'does not exist'*)     return 4 ;;
+    *'database "'*'does not exist'*) return 3 ;;
+    *authentication*failed*|*'no password supplied'*|*'password authentication'*) return 4 ;;
+    *'could not connect'*|*'connection refused'*|*'could not translate host'*) return 5 ;;
+    *'name or service not known'*|*'timeout expired'*|*'connection timed out'*) return 5 ;;
+    *'no route to host'*|*'server closed the connection unexpectedly'*) return 5 ;;
+    *) return 6 ;;
+  esac
+}
+
+db_ping_psql() {
+  local out
+  if out="$(PGPASSWORD="$POSTGRES_PASSWORD" PGCONNECT_TIMEOUT=5 \
+      psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" \
+           -d "$POSTGRES_DB" -tAqc 'SELECT 1' 2>&1)"; then
+    return 0
+  fi
+
+  DB_CHECK_DETAIL="$out"
+  classify_db_error "$out"
+}
+
+db_ping_python() {
+  local script="$1" out rc=0
+  shift
+
+  out="$(PGPASSWORD="$POSTGRES_PASSWORD" python3 -c "$script" "$@" 2>&1)" || rc=$?
+  if [[ $rc -ne 0 && $rc -ne 2 ]]; then
+    DB_CHECK_DETAIL="$out"
+  fi
+  return "$rc"
+}
+
+# Try psql, then a psycopg driver, then bare TCP reachability.
+check_database_connection() {
+  local rc=0
+
+  DB_CHECK_DETAIL=""
+
+  if command -v psql >/dev/null 2>&1; then
+    db_ping_psql || rc=$?
+    return "$rc"
+  fi
+
+  db_ping_python "$DB_PING_DRIVER_PY" \
+    "$POSTGRES_HOST" "$POSTGRES_PORT" "$POSTGRES_USER" "$POSTGRES_DB" || rc=$?
+
+  # The driver reached the server but reported no SQLSTATE: fall back to the same text
+  # classification psql output goes through.
+  if [[ $rc -eq 7 ]]; then
+    rc=0
+    classify_db_error "$DB_CHECK_DETAIL" || rc=$?
+    return "$rc"
+  fi
+
+  if [[ $rc -ne 2 ]]; then
+    return "$rc"
+  fi
+
+  rc=0
+  db_ping_python "$DB_PING_SOCKET_PY" "$POSTGRES_HOST" "$POSTGRES_PORT" || rc=$?
+  if [[ $rc -eq 0 ]]; then
+    return 1   # reachable, but user/password/database all still unverified
+  fi
+  return "$rc"
+}
+
 # Quote .env values when they contain characters that need escaping.
 format_env_value() {
   local val="$1"
@@ -234,19 +380,69 @@ fi
 # ---------------------------------------------------------------------------
 
 info "Database (shared by apiome-rest, apiome-ui, apiome-mcp, apiome-mock, apiome-browse)"
-prompt POSTGRES_HOST "PostgreSQL host" "localhost"
-prompt POSTGRES_PORT "PostgreSQL port" "5432"
-prompt POSTGRES_USER "PostgreSQL user" "postgres"
 
+# Each answer becomes the default for the next round, so correcting one typo after a failed
+# connection does not mean retyping the other four.
 while true; do
-  prompt_secret POSTGRES_PASSWORD "PostgreSQL password"
-  if [[ -n "$POSTGRES_PASSWORD" ]]; then
-    break
-  fi
-  warn "Password is required."
-done
+  prompt POSTGRES_HOST "PostgreSQL host" "${POSTGRES_HOST:-localhost}"
+  prompt POSTGRES_PORT "PostgreSQL port" "${POSTGRES_PORT:-5432}"
+  prompt POSTGRES_USER "PostgreSQL user" "${POSTGRES_USER:-postgres}"
 
-prompt POSTGRES_DB "PostgreSQL database name" "apiome"
+  while true; do
+    prompt_secret POSTGRES_PASSWORD "PostgreSQL password" "${POSTGRES_PASSWORD:-}"
+    if [[ -n "$POSTGRES_PASSWORD" ]]; then
+      break
+    fi
+    warn "Password is required."
+  done
+
+  prompt POSTGRES_DB "PostgreSQL database name" "${POSTGRES_DB:-apiome}"
+
+  printf '%bChecking connection to %s:%s...%b\n' \
+    "$DIM" "$POSTGRES_HOST" "$POSTGRES_PORT" "$RESET"
+
+  db_check_rc=0
+  check_database_connection || db_check_rc=$?
+
+  case "$db_check_rc" in
+    0)
+      ok "  connected to \"$POSTGRES_DB\" as \"$POSTGRES_USER\""
+      break
+      ;;
+    1)
+      warn "  $POSTGRES_HOST:$POSTGRES_PORT accepts connections, but neither psql nor psycopg"
+      warn "  is available here, so the user, password, and database name are unverified."
+      break
+      ;;
+    3)
+      warn "  reached the server, but database \"$POSTGRES_DB\" does not exist yet."
+      warn "  Expected on a first run — step 1 of the next steps below creates it."
+      prompt_yes_no keep_db_settings "Keep these settings?" "y"
+      if [[ "$keep_db_settings" == true ]]; then
+        break
+      fi
+      ;;
+    4)
+      warn "  the server rejected these credentials (user \"$POSTGRES_USER\")."
+      ;;
+    5)
+      warn "  nothing answered at $POSTGRES_HOST:$POSTGRES_PORT."
+      ;;
+    *)
+      warn "  the connection attempt failed."
+      ;;
+  esac
+
+  if [[ "$db_check_rc" == 4 || "$db_check_rc" == 5 || "$db_check_rc" == 6 ]]; then
+    if [[ -n "$DB_CHECK_DETAIL" ]]; then
+      printf '%b  %s%b\n' "$DIM" "${DB_CHECK_DETAIL//$'\n'/ }" "$RESET" >&2
+    fi
+    prompt_yes_no retry_db_settings "Re-enter the database settings?" "y"
+    if [[ "$retry_db_settings" != true ]]; then
+      break
+    fi
+  fi
+done
 
 ENCODED_PASSWORD="$(urlencode "$POSTGRES_PASSWORD")"
 DATABASE_URL="postgresql://${POSTGRES_USER}:${ENCODED_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
@@ -645,15 +841,54 @@ write_compose_env
 
 printf '\n'
 ok "Setup complete: ${CREATED} file(s) written, ${SKIPPED} skipped (mode: ${APP_MODE})."
+
+# ---------------------------------------------------------------------------
+# Workspace dependencies
+# ---------------------------------------------------------------------------
+# Installing here rather than leaving it to the next-steps list means a fresh clone is
+# runnable when the script exits. A failure is reported but not fatal: the .env files are
+# already written, and re-running `yarn install` by hand is the whole remedy.
+
+YARN_INSTALLED=false
+
+printf '\n'
+if ! command -v yarn >/dev/null 2>&1; then
+  warn "yarn was not found on PATH, so dependencies were not installed."
+  warn "This repo pins yarn via corepack (packageManager in package.json); enable it with"
+  warn "'corepack enable', then run 'yarn install' in $ROOT."
+else
+  info "Workspace dependencies"
+  prompt_yes_no run_yarn_install "Run yarn install now?" "y"
+  if [[ "$run_yarn_install" == true ]]; then
+    printf '%bInstalling workspace dependencies — this can take a few minutes...%b\n' \
+      "$DIM" "$RESET"
+    yarn_rc=0
+    # Run from the repo root: yarn resolves the workspace set relative to the cwd.
+    (cd "$ROOT" && yarn install) || yarn_rc=$?
+    if [[ $yarn_rc -eq 0 ]]; then
+      YARN_INSTALLED=true
+      ok "  dependencies installed"
+    else
+      warn "  yarn install exited with status ${yarn_rc}; re-run it in $ROOT once resolved."
+    fi
+  fi
+fi
+
 printf '\n'
 info "Next steps:"
 printf '  1. Ensure PostgreSQL is running and create the database if needed:\n'
 printf '       psql -U %s -h %s -p %s -c "CREATE DATABASE %s;"\n' \
   "$POSTGRES_USER" "$POSTGRES_HOST" "$POSTGRES_PORT" "$POSTGRES_DB"
 printf '  2. Run migrations: cd apiome-db && apiome-db migrate\n'
-if [[ "$APP_MODE" == "production" ]]; then
-  printf '  3. Build and start the stack: yarn install && yarn build && yarn start\n'
+# Only re-list `yarn install` when it did not already succeed above.
+if [[ "$YARN_INSTALLED" == true ]]; then
+  YARN_PREFIX=""
 else
-  printf '  3. Start the stack: yarn install && yarn dev\n'
+  YARN_PREFIX="yarn install && "
+fi
+if [[ "$APP_MODE" == "production" ]]; then
+  printf '  3. Build and start the stack: %syarn build && yarn start\n' "$YARN_PREFIX"
+else
+  printf '  3. Start the stack: %syarn dev\n' "$YARN_PREFIX"
 fi
 printf '\n'
