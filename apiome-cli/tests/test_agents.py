@@ -90,3 +90,15 @@ def test_agents_documents_diff_command(agents: str) -> None:
     assert "src/apiome_cli/output_diff.py" in agents
     assert "POST /v1/diff/{tenant_slug}/classified" in agents
     assert "--fail-on" in agents
+
+
+def test_agents_documents_repository_refresh_commands(agents: str) -> None:
+    """AGENTS.md documents the repository auto-refresh command group (RAR-5.6)."""
+    assert "### Repository auto-refresh (`repository refresh`)" in agents
+    assert "src/apiome_cli/client/repository_refresh.py" in agents
+    assert "src/apiome_cli/repository_refresh_output.py" in agents
+    assert "`repository refresh REPO`" in agents
+    assert "`repository refresh status REPO`" in agents
+    assert "POST /v1/tenants/{tenant_slug}/repositories/{repository_id}/refresh" in agents
+    assert "GET /v1/tenants/{tenant_slug}/repositories/{repository_id}/refresh-history" in agents
+    assert "GET /v1/tenants/{tenant_slug}/repository-imports/{id}/spec" in agents
