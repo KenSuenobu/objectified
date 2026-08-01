@@ -9,6 +9,10 @@ unbounded table. This sweep:
    ``FOR UPDATE SKIP LOCKED``, writes a slim ``async_job_history`` summary, then deletes the
    live job (CASCADE removes any leftover ``export_job_artifact`` row).
 3. Prunes ``async_job_history`` rows older than ``async_job_history_retention_days``.
+4. Prunes ``repository_quota_window`` counter rows older than
+   ``repository_quota_window_retention_days`` (REPO-7.3, #2801). Those aggregates accrue on
+   a schedule of their own, and this tick is already the deployment's retention worker —
+   giving them a second background task would buy nothing but another thing to supervise.
 
 Exactly-once / multi-instance safety comes from the claim (SKIP LOCKED), not the scheduler —
 every instance runs the tick; only one wins each row. Failures log and retry next interval.
@@ -74,6 +78,7 @@ def process_async_job_retention_sweep(
     now: Optional[datetime] = None,
     batch_size: Optional[int] = None,
     history_retention_days: Optional[int] = None,
+    quota_window_retention_days: Optional[int] = None,
 ) -> Dict[str, int]:
     """Run one retention tick: reap artifacts, delete expired jobs, prune history.
 
@@ -84,9 +89,13 @@ def process_async_job_retention_sweep(
             ``settings.async_job_retention_sweep_batch_size``.
         history_retention_days: History prune window; defaults to
             ``settings.async_job_history_retention_days``. ``<= 0`` skips history prune.
+        quota_window_retention_days: REPO-7.3 quota-counter prune window; defaults to
+            ``settings.repository_quota_window_retention_days``. ``<= 0`` keeps counters
+            forever, which is the documented way to disable this prune.
 
     Returns:
-        Counts: ``artifacts_reaped``, ``jobs_deleted``, ``history_pruned``.
+        Counts: ``artifacts_reaped``, ``jobs_deleted``, ``history_pruned``,
+        ``quota_windows_pruned``.
     """
     limit = (
         batch_size
@@ -134,15 +143,36 @@ def process_async_job_retention_sweep(
                 "async job retention sweep: history prune failed", exc_info=True
             )
 
-    if artifacts_reaped or jobs_deleted or history_pruned:
+    quota_windows_pruned = 0
+    quota_days = (
+        quota_window_retention_days
+        if quota_window_retention_days is not None
+        else int(settings.repository_quota_window_retention_days)
+    )
+    if quota_days > 0:
+        try:
+            quota_windows_pruned = int(
+                database.prune_repository_quota_windows(
+                    older_than=clock - timedelta(days=quota_days)
+                )
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning(
+                "async job retention sweep: quota window prune failed", exc_info=True
+            )
+
+    if artifacts_reaped or jobs_deleted or history_pruned or quota_windows_pruned:
         logger.info(
-            "async job retention sweep: artifacts_reaped=%d jobs_deleted=%d history_pruned=%d",
+            "async job retention sweep: artifacts_reaped=%d jobs_deleted=%d "
+            "history_pruned=%d quota_windows_pruned=%d",
             artifacts_reaped,
             jobs_deleted,
             history_pruned,
+            quota_windows_pruned,
         )
     return {
         "artifacts_reaped": artifacts_reaped,
         "jobs_deleted": jobs_deleted,
         "history_pruned": history_pruned,
+        "quota_windows_pruned": quota_windows_pruned,
     }

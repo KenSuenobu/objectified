@@ -5,6 +5,43 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.230.0] - 2026-07-31
+
+### Added
+- **Quota & rate-limit telemetry (REPO-7.3, #2801)** — the REPO-4.6 polling quota and the
+  REPO-2.5 scan budget both work silently. The only record of a deferral was a log line and a
+  per-replica in-memory counter that died with the process, so "is this workspace permanently
+  parked against its ceiling, or was that one bad afternoon?" had no answer anyone could give.
+  There is now a durable per-tenant counter behind it.
+  - **Five metrics in a rolling-window table** (`apiome.repository_quota_window`, V233):
+    `polls`, `polls_deferred` and `files_deferred` bucket hourly (matching the REPO-4.6 quota
+    window); `scans` and `bytes_scanned` bucket daily. Aggregates, not events — a workspace
+    polling 600 times an hour costs one row an hour, not 600.
+  - **A window boundary is the reset.** Nothing zeroes a counter: an increment lands on the
+    bucket its timestamp falls in, so crossing a boundary writes to a different row and the new
+    window starts at zero. That holds across restarts, across replicas, and across a sweep tick
+    that straddles the boundary — none of which a "reset the counter" job would survive.
+  - **Deferrals are counted apart from work.** `polls` says how much refreshing happened;
+    `polls_deferred` / `files_deferred` say how much the quota pushed into a later window.
+    Folding them together would erase the one signal the dashboard exists to show.
+  - **Increments are a single atomic upsert** on `(tenant_id, metric, window_start)`, so two
+    replicas sweeping the same tenant in the same window converge on one row rather than each
+    creating their own and halving every subsequent read.
+  - **Recording can never fail a caller.** Every counter write is best-effort and swallowed:
+    telemetry that can raise would turn an observability problem into a refresh outage. A scan
+    pass that *raised* records nothing at all — reporting it as scan volume would make a broken
+    repository look like a busy one.
+  - `GET /v1/tenants/{slug}/repository-quota-telemetry?days=7` returns the trailing series
+    alongside the tenant's current quota position, so a dashboard renders "42 of 600 used this
+    hour" and "here is the last week" from one request. Every metric is present and zero-filled
+    across the whole range, so a workspace that has never been deferred sees a flat line rather
+    than a missing panel. A counter read that fails comes back `available: false` with zeros —
+    the flag is what stops "we could not read this" being shown as "nothing happened".
+  - Counter rows are pruned by the existing async-job retention sweep after
+    `APIOME_REPOSITORY_QUOTA_WINDOW_RETENTION_DAYS` (default 120, comfortably longer than the
+    90-day maximum range the API serves). `0` keeps them forever.
+  - V233 adds the counter table. Table and indexes only; no existing data is touched.
+
 ## [1.229.0] - 2026-07-31
 
 ### Added

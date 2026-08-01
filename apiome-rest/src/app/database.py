@@ -14528,6 +14528,91 @@ class Database:
         """
         return self.execute_query(q, (tenant_id, repository_id))
 
+    # --- REPO-7.3 (#2801): quota & rate-limit telemetry --------------------------------
+
+    def increment_repository_quota_window(
+        self,
+        tenant_id: str,
+        metric: str,
+        window_kind: str,
+        window_start: datetime,
+        amount: int = 1,
+    ) -> None:
+        """Add ``amount`` to one tenant's counter for one window (REPO-7.3).
+
+        A single upsert on ``(tenant_id, metric, window_start)``: the first increment in a
+        window creates the row, every later one adds to it. Two replicas sweeping the same
+        tenant inside the same window therefore converge on one row rather than each
+        creating their own and halving every subsequent read.
+
+        The bucket is supplied by the caller (via
+        ``repository_quota_window.floor_to_window``) rather than computed in SQL, so the
+        writer and the reader derive window identity from the same function and a clock
+        override in a test reaches the stored row.
+
+        Args:
+            tenant_id: The tenant the usage belongs to.
+            metric: The counter being incremented; must be a value V233's CHECK permits.
+            window_kind: ``hour`` or ``day`` — the width ``window_start`` was truncated to.
+            window_start: Inclusive start of the bucket, in UTC.
+            amount: How much to add. Must be positive; the caller filters non-positive
+                values before reaching here.
+        """
+        self._execute_write(
+            """
+            INSERT INTO apiome.repository_quota_window
+              (tenant_id, metric, window_kind, window_start, amount)
+            VALUES (%s::uuid, %s, %s, %s, %s)
+            ON CONFLICT (tenant_id, metric, window_start) DO UPDATE
+              SET amount = apiome.repository_quota_window.amount + EXCLUDED.amount,
+                  updated_at = CURRENT_TIMESTAMP
+            """,
+            (tenant_id, metric, window_kind, window_start, int(amount)),
+        )
+
+    def list_repository_quota_windows(
+        self, tenant_id: str, since: datetime
+    ) -> List[Dict[str, Any]]:
+        """Read one tenant's quota counters from ``since`` onward (REPO-7.3).
+
+        The dashboard read. Every metric and both bucket widths come back in one query —
+        the projection layer buckets them into days — so the page costs one round trip
+        rather than one per metric.
+
+        Args:
+            tenant_id: The tenant whose counters to read (scopes the read for isolation).
+            since: Inclusive lower bound on ``window_start``.
+
+        Returns:
+            One dict per stored window with ``metric``, ``window_kind``, ``window_start``
+            and ``amount``, oldest window first.
+        """
+        q = """
+            SELECT metric, window_kind, window_start, amount
+            FROM apiome.repository_quota_window
+            WHERE tenant_id = %s::uuid AND window_start >= %s
+            ORDER BY window_start ASC, metric ASC
+        """
+        return self.execute_query(q, (tenant_id, since))
+
+    def prune_repository_quota_windows(self, older_than: datetime) -> int:
+        """Delete quota counter rows whose window started before ``older_than`` (REPO-7.3).
+
+        Aggregate rows are small, but they accrue forever: one tenant with all five metrics
+        active adds roughly 100 rows a day. Retention keeps the table proportional to the
+        longest range the API will serve rather than to the deployment's age.
+
+        Args:
+            older_than: Exclusive cutoff — windows starting before this are removed.
+
+        Returns:
+            The number of rows deleted.
+        """
+        return self._execute_write(
+            "DELETE FROM apiome.repository_quota_window WHERE window_start < %s",
+            (older_than,),
+        )
+
     def try_acquire_repository_refresh_lock(self, repository_id: str) -> bool:
         """Try to take the per-repo auto-refresh advisory lock (RAR-3.2).
 

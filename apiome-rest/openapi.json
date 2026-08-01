@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.93.0",
+    "version": "1.94.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -46510,6 +46510,107 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for set tenant repository polling quotaresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/repository-quota-telemetry": {
+      "get": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Get Tenant Repository Quota Telemetry",
+        "description": "Report this tenant's quota and rate-limit telemetry (REPO-7.3, #2801).\n\nThe polling quota (REPO-4.6) and the scan budget (REPO-2.5) both work silently: without\nthis read, the only evidence a tenant is parked against its ceiling is a log line and a\nper-replica counter that dies with the process. This returns the durable rolling-window\ncounters \u2014 polls and scan volume, with the quota's deferrals counted separately \u2014 plus\nthe tenant's current quota position, so a dashboard can render \"where are we right now\"\nand \"how did we get here\" from one request.\n\nEvery metric is present in every response, zero-filled across the whole range, so a\ntenant that has never been deferred renders a flat line rather than a missing panel. A\ncounter read that fails comes back with ``available: false`` and zeros rather than an\nerror, so the quota position is still answered.\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    days: Trailing range in days; defaults to 7 and is capped at 90.\n    auth_data: Authenticated principal; supplies the tenant scope.\n\nReturns:\n    The tenant's quota projection and its telemetry series.",
+        "operationId": "get_tenant_repository_quota_telemetry_v1_tenants__tenant_slug__repository_quota_telemetry_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "description": "Trailing range to report, in days.",
+              "default": 7,
+              "title": "Days"
+            },
+            "description": "Trailing range to report, in days."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Get Tenant Repository Quota Telemetryauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Get Tenant Repository Quota Telemetryauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Get Tenant Repository Quota Telemetry Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Get Tenant Repository Quota Telemetry Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for get tenant repository quota telemetry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryQuotaTelemetryResponse",
+                  "description": "Response payload for get tenant repository quota telemetryresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for get tenant repository quota telemetryresponse422."
                 }
               }
             }
@@ -99718,6 +99819,111 @@
         "title": "QualityWaiverOut",
         "description": "One recorded quality waiver (IXH-2.3, #5098)."
       },
+      "QuotaTelemetryMetricOut": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric",
+            "description": "Stable metric id: polls, polls_deferred, files_deferred, scans or bytes_scanned.",
+            "example": "example"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Short human-readable name for the metric.",
+            "example": "example"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "One sentence on what the metric counts and what it does not.",
+            "example": "A pet available for adoption in the store."
+          },
+          "windowKind": {
+            "type": "string",
+            "title": "Windowkind",
+            "description": "The bucket the counter accumulates into before it resets: 'hour' for the polling metrics (matching the REPO-4.6 quota window) or 'day' for scan volume.",
+            "example": "example"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit",
+            "description": "Unit of every value in this metric: 'count', or 'bytes' for bytes_scanned (clients render megabytes).",
+            "example": "example"
+          },
+          "deferral": {
+            "type": "boolean",
+            "title": "Deferral",
+            "description": "True when the metric counts work the quota pushed into a later window rather than work performed. Deferral metrics are never folded into 'polls'.",
+            "example": false
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/QuotaTelemetryPointOut"
+            },
+            "type": "array",
+            "title": "Points",
+            "description": "One point per day in the requested range, oldest first.",
+            "maxItems": 1000
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Sum of every point in the range.",
+            "example": 1
+          },
+          "peak": {
+            "type": "integer",
+            "title": "Peak",
+            "description": "Largest single day in the range.",
+            "example": 1
+          },
+          "currentWindow": {
+            "type": "integer",
+            "title": "Currentwindow",
+            "description": "The metric's value in its live bucket \u2014 the current hour for hourly metrics, today for daily ones. For 'polls' this is the number to compare against pollsPerHour.",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "label",
+          "description",
+          "windowKind",
+          "unit",
+          "deferral",
+          "points",
+          "total",
+          "peak",
+          "currentWindow"
+        ],
+        "title": "QuotaTelemetryMetricOut",
+        "description": "One metric's trailing series and headline numbers (REPO-7.3, #2801)."
+      },
+      "QuotaTelemetryPointOut": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "The day this point covers, as an ISO 8601 date (UTC).",
+            "example": "example"
+          },
+          "value": {
+            "type": "integer",
+            "title": "Value",
+            "description": "The metric's total for that day. Zero is reported explicitly rather than omitted, so a quiet day is distinguishable from a missing one.",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "value"
+        ],
+        "title": "QuotaTelemetryPointOut",
+        "description": "One day of one quota-telemetry metric (REPO-7.3, #2801)."
+      },
       "RatePresetBody": {
         "properties": {
           "key": {
@@ -101552,6 +101758,79 @@
         "title": "RepositoryPollingQuotaUpdate",
         "description": "Set a tenant's repository polling quota (REPO-4.6, #2784).\n\n``0`` is a meaningful value, not an unset one: it marks the tenant as unlimited. The upper\nbound is a sanity rail \u2014 a five-figure quota is indistinguishable from unlimited in\npractice, and asking for one is far more likely a typo than an intent."
       },
+      "RepositoryQuotaTelemetryOut": {
+        "properties": {
+          "days": {
+            "type": "integer",
+            "title": "Days",
+            "description": "Length of the reported range in days.",
+            "example": 1
+          },
+          "rangeStart": {
+            "type": "string",
+            "title": "Rangestart",
+            "description": "Start of the oldest day bucket in the range (ISO 8601, UTC).",
+            "example": "example"
+          },
+          "rangeEnd": {
+            "type": "string",
+            "title": "Rangeend",
+            "description": "Start of the most recent day bucket in the range (ISO 8601, UTC).",
+            "example": "example"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "description": "False when the counters could not be read. Every series is still present and zeroed, so callers can say 'unavailable' rather than 'no activity'.",
+            "example": false
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/QuotaTelemetryMetricOut"
+            },
+            "type": "array",
+            "title": "Metrics",
+            "description": "One entry per metric, in presentation order.",
+            "maxItems": 1000
+          }
+        },
+        "type": "object",
+        "required": [
+          "days",
+          "rangeStart",
+          "rangeEnd",
+          "available",
+          "metrics"
+        ],
+        "title": "RepositoryQuotaTelemetryOut",
+        "description": "A tenant's quota and rate-limit telemetry over a trailing range (REPO-7.3, #2801)."
+      },
+      "RepositoryQuotaTelemetryResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true,
+            "description": "Success.",
+            "example": false
+          },
+          "quota": {
+            "$ref": "#/components/schemas/RepositoryPollingQuotaOut",
+            "description": "Quota."
+          },
+          "telemetry": {
+            "$ref": "#/components/schemas/RepositoryQuotaTelemetryOut",
+            "description": "Telemetry."
+          }
+        },
+        "type": "object",
+        "required": [
+          "quota",
+          "telemetry"
+        ],
+        "title": "RepositoryQuotaTelemetryResponse",
+        "description": "Envelope for the quota telemetry read (REPO-7.3, #2801).\n\nCarries the current quota projection alongside the history so a caller can render\n\"42 of 600 used this hour\" and \"here is the last week\" without a second request."
+      },
       "RepositoryRefreshNowRequest": {
         "properties": {
           "path": {
@@ -102851,7 +103130,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-01T03:43:42Z"
+            "example": "2026-08-01T04:17:49Z"
           }
         },
         "additionalProperties": false,
@@ -115550,14 +115829,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-01T03:43:42Z"
+            "example": "2026-08-01T04:17:49Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-01T03:43:42Z"
+            "example": "2026-08-01T04:17:49Z"
           },
           "outcome": {
             "anyOf": [

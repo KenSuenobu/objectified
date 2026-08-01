@@ -4,6 +4,7 @@ import { useAuthSession } from '@lib/auth/session-client';
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Activity,
   ArrowRight,
   FolderGit2,
   LayoutGrid,
@@ -256,6 +257,18 @@ export default function RepositoriesPage() {
               >
                 <Library className="h-4 w-4 shrink-0" aria-hidden />
                 Spec catalog
+              </Link>
+              {/* REPO-7.3: what the polling quota and the scanner have actually been doing. */}
+              <Link
+                href="/ade/dashboard/repositories/telemetry"
+                className={cn(
+                  buttonVariants({ variant: "secondary" }),
+                  "h-auto min-h-10 shrink-0 whitespace-nowrap py-2",
+                )}
+                title="Polling quota usage, deferrals and scan volume over the last week"
+              >
+                <Activity className="h-4 w-4 shrink-0" aria-hidden />
+                Quota &amp; limits
               </Link>
               <Button
                 type="button"

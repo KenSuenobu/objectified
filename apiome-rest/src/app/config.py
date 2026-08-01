@@ -369,6 +369,20 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Quota & rate-limit telemetry retention (REPO-7.3, #2801). The rolling-window
+    # counter rows in apiome.repository_quota_window are aggregates, not events, so
+    # they are cheap to keep — this only stops the table growing with the age of the
+    # deployment. The default is comfortably longer than the widest range the API
+    # will serve (repository_quota_window.MAX_TELEMETRY_DAYS), so retention can
+    # never truncate a supported read. 0 or below keeps counters forever.
+    repository_quota_window_retention_days: int = Field(
+        default=120,
+        validation_alias=AliasChoices(
+            "APIOME_REPOSITORY_QUOTA_WINDOW_RETENTION_DAYS",
+            "repository_quota_window_retention_days",
+        ),
+    )
+
     # Large-monorepo repository walk (REPO-2.5, #2766). A scan pass runs under a
     # per-tenant wall-clock budget stored in
     # apiome.tenants.repository_scan_budget_seconds; these set the default applied

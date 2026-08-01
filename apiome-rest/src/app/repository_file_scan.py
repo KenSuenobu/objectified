@@ -679,12 +679,44 @@ class ScanPass(NamedTuple):
             stopped on its wall-clock budget and a resume cursor was stored.
         resumed: True when this pass continued a stored cursor rather than
             starting a fresh walk.
+        bytes_scanned: Bytes of repository content *this pass* indexed (REPO-7.3).
+            Counted per pass, not per branch, so a resumed walk does not re-report
+            the volume its earlier passes already recorded. Entries whose provider
+            reports no size (sub-trees, submodules) contribute 0.
     """
 
     total_files: int
     importable_count: int
     completed: bool
     resumed: bool
+    bytes_scanned: int = 0
+
+
+def _record_scan_volume(db: Database, tenant_id: str, bytes_scanned: int) -> None:
+    """Count one scan pass and its byte volume for the REPO-7.3 dashboard.
+
+    Called from the single choke point every repository walk goes through, so the one-shot
+    scan job and the auto-refresh sweep are counted identically without either path having
+    to remember to.
+
+    A pass counts whether it *finished* or paused on its wall-clock budget: both consumed
+    the same provider calls and the same scan worker, which is the cost the metric exists
+    to expose. Recording is best-effort — :func:`repository_quota_window.record_quota_usage`
+    swallows write failures, so a telemetry problem can never fail a scan that succeeded.
+
+    Args:
+        db: Database handle.
+        tenant_id: The tenant that owns the repository being scanned.
+        bytes_scanned: Bytes this pass indexed; ``0`` records the pass but no volume.
+    """
+    from .repository_quota_window import (
+        METRIC_BYTES_SCANNED,
+        METRIC_SCANS,
+        record_quota_usage,
+    )
+
+    record_quota_usage(db, tenant_id, METRIC_SCANS, 1)
+    record_quota_usage(db, tenant_id, METRIC_BYTES_SCANNED, bytes_scanned)
 
 
 def scan_repository_branch_into_index(
@@ -717,6 +749,12 @@ def scan_repository_branch_into_index(
     * On completion the cursor row is deleted and the stored counts are re-read
       from the persisted rows (rather than from in-flight counters), so a re-emitted
       chunk cannot inflate them.
+
+    Every pass that reaches a return — completed or budget-paused — records one ``scans``
+    and its ``bytes_scanned`` volume against the tenant's REPO-7.3 rolling-window counters
+    (:func:`_record_scan_volume`). A pass that raises records nothing: it consumed provider
+    calls, but reporting it as scan volume would make a failing repository look like a busy
+    one on the dashboard.
 
     Unlike the job path this raises on any error rather than recording job/repo
     failure state; the caller owns failure bookkeeping.
@@ -781,7 +819,9 @@ def scan_repository_branch_into_index(
         chunk_size if chunk_size is not None else settings.repository_scan_chunk_size
     )
 
-    counts = {"entries": entries, "importable": importable}
+    # "bytes" counts only what *this* pass walked, so a resumed walk reports the volume it
+    # added rather than re-reporting what earlier passes already recorded (REPO-7.3).
+    counts = {"entries": entries, "importable": importable, "bytes": 0}
 
     def _sink(chunk: Sequence[Dict[str, Any]]) -> None:
         """Persist one chunk and advance the running counters."""
@@ -789,6 +829,11 @@ def scan_repository_branch_into_index(
         counts["entries"] += len(chunk)
         counts["importable"] += sum(
             1 for e in chunk if _importable_hint(e.get("detected_kind"), str(e.get("path") or ""))
+        )
+        counts["bytes"] += sum(
+            max(0, int(e["size_bytes"]))
+            for e in chunk
+            if isinstance(e.get("size_bytes"), int)
         )
 
     def _store_cursor(state: Optional[ScanCursor], error: Optional[str]) -> None:
@@ -837,7 +882,10 @@ def scan_repository_branch_into_index(
             budget.seconds,
             counts["entries"],
         )
-        return ScanPass(counts["entries"], counts["importable"], False, resumed)
+        _record_scan_volume(db, tenant_id, counts["bytes"])
+        return ScanPass(
+            counts["entries"], counts["importable"], False, resumed, counts["bytes"]
+        )
 
     db.clear_repository_scan_cursor(repository_id, branch)
     total_files, importable_count = db.count_tenant_repository_files(repository_id, branch)
@@ -849,7 +897,8 @@ def scan_repository_branch_into_index(
         status="ready",
         touch_last_scanned_at=True,
     )
-    return ScanPass(total_files, importable_count, True, resumed)
+    _record_scan_volume(db, tenant_id, counts["bytes"])
+    return ScanPass(total_files, importable_count, True, resumed, counts["bytes"])
 
 
 def _branch_owns_repository_status(repo_row: Optional[Dict[str, Any]], branch: str) -> bool:

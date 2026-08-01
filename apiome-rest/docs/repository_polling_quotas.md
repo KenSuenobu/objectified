@@ -67,8 +67,11 @@ and *is* bounded.
 
 ## Telemetry
 
-Every tick records into `app.repository_polling_telemetry` (per-process counters, surfaced by
-REPO-7.3):
+Quota pressure is recorded twice, because the two recordings answer different questions.
+
+### In-process counters (live)
+
+Every tick records into `app.repository_polling_telemetry` (per-process counters):
 
 | Counter | Meaning |
 |---|---|
@@ -83,6 +86,14 @@ always exact.
 Every record also emits one structured log line, `repository.polling.quota`, at INFO — quota
 pressure is a routine scheduling outcome, and an operator watching for errors must not see it
 as one.
+
+### Rolling-window counters (durable)
+
+The same events also accumulate into `apiome.repository_quota_window` (REPO-7.3, V233), which
+is what the dashboard reads. See [`repository_quota_telemetry.md`](repository_quota_telemetry.md).
+The short version: `polls` counts the jobs enqueued (the unit this quota bounds),
+`polls_deferred` and `files_deferred` count what the quota postponed, and each is bucketed per
+hour so a window boundary — not a scheduled job — is what resets a counter.
 
 ## API
 

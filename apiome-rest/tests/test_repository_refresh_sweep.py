@@ -31,8 +31,16 @@ Plus the REPO-4.6 (#2784) persisted per-tenant polling quota:
   - a stored ``0`` means that tenant is unlimited;
   - a limits-read failure falls back to the default (still bounded), unlike a
     usage-count failure which degrades to unlimited;
-  - dispatches and both kinds of deferral are counted in the REPO-7.3 telemetry,
-    and a deferral is never recorded as a failure.
+  - dispatches and both kinds of deferral are counted in the in-process polling
+    telemetry, and a deferral is never recorded as a failure.
+
+Plus the REPO-7.3 (#2801) durable rolling-window counters:
+  - a dispatch records the jobs it enqueued (the unit the quota bounds), and both
+    kinds of deferral are counted as metrics of their own, never folded into it;
+  - a tick that enqueued nothing writes no row at all;
+  - counters are attributed per tenant;
+  - a counter write failure never becomes a refresh failure and never blocks a
+    deferral.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -107,6 +115,8 @@ class FakeDB:
             "paused": False,
             "newly_paused": False,
         }
+        # REPO-7.3: durable rolling-window counter writes.
+        self.quota_windows = []
         # Track active (queued/running) lineages to emulate the idempotent insert.
         self._active_lineage = set()
 
@@ -161,6 +171,28 @@ class FakeDB:
     def record_repository_refresh_success(self, repository_id):
         self.successes_recorded.append(repository_id)
         return True
+
+    # --- REPO-7.3 durable quota telemetry ---
+    def increment_repository_quota_window(
+        self, *, tenant_id, metric, window_kind, window_start, amount
+    ):
+        self.quota_windows.append(
+            {
+                "tenant_id": tenant_id,
+                "metric": metric,
+                "window_kind": window_kind,
+                "window_start": window_start,
+                "amount": amount,
+            }
+        )
+
+    def quota_total(self, metric, tenant_id="t1"):
+        """Sum every increment recorded for one (tenant, metric) pair."""
+        return sum(
+            row["amount"]
+            for row in self.quota_windows
+            if row["metric"] == metric and row["tenant_id"] == tenant_id
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -1075,3 +1107,162 @@ def test_dispatch_telemetry_records_quota_and_jobs(monkeypatch, telemetry):
     assert snapshot["totals"]["poll_dispatched_jobs"] == 2
     assert "repository_deferred" not in snapshot["totals"]
     assert "files_deferred" not in snapshot["totals"]
+
+
+# --- REPO-7.3 (#2801): durable rolling-window counters -------------------------------------
+#
+# The in-process registry above answers "what is happening right now" and dies with the
+# process. These tests cover the second recording path: the same facts accumulated into
+# per-tenant window rows a 7-day dashboard can read a restart later.
+
+
+def test_a_dispatch_records_the_jobs_it_enqueued(monkeypatch, telemetry):
+    """`polls` counts jobs, not repositories, because jobs are the unit REPO-4.6's
+    pollsPerHour bounds — a series a reader can hold against the quota directly."""
+    import app.config as config
+    from app.repository_quota_window import METRIC_POLLS, WINDOW_HOUR
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml"), _stale("two.yaml")]},
+        polls_per_hour_by_tenant={"t1": 600},
+    )
+
+    process_repository_refresh_sweep(db)
+
+    assert db.quota_total(METRIC_POLLS) == 2
+    polls = [row for row in db.quota_windows if row["metric"] == METRIC_POLLS]
+    assert polls[0]["window_kind"] == WINDOW_HOUR
+
+
+def test_a_deferred_repository_is_counted_apart_from_the_work_that_happened(
+    monkeypatch, telemetry
+):
+    """Folding deferrals into `polls` would erase the one signal the dashboard exists for:
+    a tenant parked against its ceiling would look like a tenant doing less work."""
+    import app.config as config
+    from app.repository_quota_window import METRIC_POLLS, METRIC_POLLS_DEFERRED
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    db = FakeDB(
+        due=[{"id": "rA", "tenant_id": "t1"}, {"id": "rB", "tenant_id": "t1"}],
+        branches={"rA": ["main"], "rB": ["main"]},
+        candidates={("rA", "main"): [_stale("a.yaml")], ("rB", "main"): [_stale("b.yaml")]},
+        polls_per_hour_by_tenant={"t1": 1},
+    )
+
+    process_repository_refresh_sweep(db)
+
+    assert db.quota_total(METRIC_POLLS_DEFERRED) == 1
+    assert db.quota_total(METRIC_POLLS) == 1
+
+
+def test_files_left_stale_mid_repository_are_counted_separately(monkeypatch, telemetry):
+    import app.config as config
+    from app.repository_quota_window import METRIC_FILES_DEFERRED
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={
+            ("r1", "main"): [_stale("one.yaml"), _stale("two.yaml"), _stale("three.yaml")]
+        },
+        polls_per_hour_by_tenant={"t1": 1},
+    )
+
+    process_repository_refresh_sweep(db)
+
+    assert db.quota_total(METRIC_FILES_DEFERRED) == 2
+
+
+def test_a_tick_that_enqueued_nothing_writes_no_counter_row(monkeypatch, telemetry):
+    """A repository polled with nothing stale is the common case; a zero row per tick per
+    repository would cost more storage than the counters it carries."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): []},
+    )
+
+    process_repository_refresh_sweep(db)
+
+    assert db.quota_windows == []
+
+
+def test_counters_are_attributed_per_tenant(monkeypatch, telemetry):
+    import app.config as config
+    from app.repository_quota_window import METRIC_POLLS
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    db = FakeDB(
+        due=[{"id": "rA", "tenant_id": "t1"}, {"id": "rB", "tenant_id": "t2"}],
+        branches={"rA": ["main"], "rB": ["main"]},
+        candidates={
+            ("rA", "main"): [_stale("a.yaml")],
+            ("rB", "main"): [_stale("b.yaml"), _stale("c.yaml")],
+        },
+        polls_per_hour_by_tenant={"t1": 600, "t2": 600},
+    )
+
+    process_repository_refresh_sweep(db)
+
+    assert db.quota_total(METRIC_POLLS, "t1") == 1
+    assert db.quota_total(METRIC_POLLS, "t2") == 2
+
+
+def test_a_counter_write_failure_never_becomes_a_refresh_failure(monkeypatch, telemetry):
+    """The durable path gets the same contract as the in-process one: an observability
+    problem must not stop repositories refreshing."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml")]},
+    )
+
+    def _increment_boom(**kwargs):
+        raise RuntimeError("counter table is gone")
+
+    db.increment_repository_quota_window = _increment_boom
+
+    assert process_repository_refresh_sweep(db) == 1
+    assert db.failures_recorded == []
+    assert db.refreshed == ["r1"]
+    assert db.released == ["r1"]
+
+
+def test_a_counter_write_failure_never_blocks_a_deferral(monkeypatch, telemetry):
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml")]},
+        recent_jobs_by_tenant={"t1": 60},  # already at the bound
+    )
+
+    def _increment_boom(**kwargs):
+        raise RuntimeError("counter table is gone")
+
+    db.increment_repository_quota_window = _increment_boom
+
+    assert process_repository_refresh_sweep(db) == 0
+    assert db.acquired == []
+    assert db.refreshed == []
+    assert db.failures_recorded == []
