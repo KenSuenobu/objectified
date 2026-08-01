@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.90.0",
+    "version": "1.91.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -47257,6 +47257,278 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for list tenant repository filesresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/repository-files": {
+      "get": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "List Tenant Repository Spec Catalog",
+        "description": "Tenant-wide catalog of every discovered spec across all repositories (REPO-6.4).\n\nThe per-repository Files listing answers \"what is in this repo\"; this answers \"where does\nthis spec live\" across the whole tenant. Search, filtering, ordering and pagination are all\nevaluated in SQL so the response carries only the requested page.\n\nArgs:\n    tenant_slug: Present for URL symmetry only \u2014 the tenant is always taken from the\n        authenticated token, never from the path.\n    auth_data: Injected auth context.\n    q: Free-text search term.\n    format: Format-family filter.\n    repository_id: Single-repository filter.\n    project_id: Filter to specs mapped or imported into one project.\n    status: Derived-status filter.\n    importable_only: Whether to hide indexed files that are not spec candidates.\n    all_branches: Whether to list non-default branches.\n    sort: Ordering key.\n    limit: Page size (1..500).\n    offset: Rows to skip.\n    include_facets: Whether to compute filter options.\n\nReturns:\n    One page of catalog rows plus the total and matched counts.\n\nRaises:\n    HTTPException: 400 when a filter names an unknown format or status, or the search term\n        is unusable.",
+        "operationId": "list_tenant_repository_spec_catalog_v1_tenants__tenant_slug__repository_files_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "List Tenant Repository Spec Catalogq schema."
+                },
+                {
+                  "type": "null",
+                  "description": "List Tenant Repository Spec Catalogq schema."
+                }
+              ],
+              "description": "Free-text search, matched as a case-insensitive substring against the file path, its detected kind, the repository full name and the mapped project name.",
+              "title": "Q"
+            },
+            "description": "Free-text search, matched as a case-insensitive substring against the file path, its detected kind, the repository full name and the mapped project name."
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "List Tenant Repository Spec Catalogformat schema."
+                },
+                {
+                  "type": "null",
+                  "description": "List Tenant Repository Spec Catalogformat schema."
+                }
+              ],
+              "description": "Format family key, or `all`.",
+              "title": "Format"
+            },
+            "description": "Format family key, or `all`."
+          },
+          {
+            "name": "repository_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "List Tenant Repository Spec Catalogrepositoryid schema."
+                },
+                {
+                  "type": "null",
+                  "description": "List Tenant Repository Spec Catalogrepositoryid schema."
+                }
+              ],
+              "title": "Repository Id",
+              "description": "Repository Id schema."
+            },
+            "description": "Connected repository identifier."
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "List Tenant Repository Spec Catalogprojectid schema."
+                },
+                {
+                  "type": "null",
+                  "description": "List Tenant Repository Spec Catalogprojectid schema."
+                }
+              ],
+              "title": "Project Id",
+              "description": "Project Id schema."
+            },
+            "description": "Project identifier that scopes the request."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "List Tenant Repository Spec Catalogstatus schema."
+                },
+                {
+                  "type": "null",
+                  "description": "List Tenant Repository Spec Catalogstatus schema."
+                }
+              ],
+              "description": "Catalog status key, or `all`.",
+              "title": "Status"
+            },
+            "description": "Catalog status key, or `all`."
+          },
+          {
+            "name": "importable_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Restrict to files classified as an importable spec type.",
+              "default": true,
+              "title": "Importable Only"
+            },
+            "description": "Restrict to files classified as an importable spec type."
+          },
+          {
+            "name": "all_branches",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "List every tracked branch. Off by default so each spec appears once, on its repository's default branch.",
+              "default": false,
+              "title": "All Branches"
+            },
+            "description": "List every tracked branch. Off by default so each spec appears once, on its repository's default branch."
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "List Tenant Repository Spec Catalogsort schema."
+                },
+                {
+                  "type": "null",
+                  "description": "List Tenant Repository Spec Catalogsort schema."
+                }
+              ],
+              "description": "`repository` (default), `path`, `format`, `status`, `recent`.",
+              "title": "Sort"
+            },
+            "description": "`repository` (default), `path`, `format`, `status`, `recent`."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit",
+              "description": "Limit schema."
+            },
+            "description": "Maximum number of rows to return."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset",
+              "description": "Offset schema."
+            },
+            "description": "Number of rows to skip before returning results."
+          },
+          {
+            "name": "include_facets",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Also return the filter dropdown options. Request it once when the page mounts; paging and re-filtering do not need it.",
+              "default": false,
+              "title": "Include Facets"
+            },
+            "description": "Also return the filter dropdown options. Request it once when the page mounts; paging and re-filtering do not need it."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "List Tenant Repository Spec Catalogauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "List Tenant Repository Spec Catalogauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "List Tenant Repository Spec Catalog Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "List Tenant Repository Spec Catalog Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for list tenant repository spec catalog.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpecCatalogResponse",
+                  "description": "Response payload for list tenant repository spec catalogresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for list tenant repository spec catalogresponse422."
                 }
               }
             }
@@ -102091,7 +102363,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-01T01:40:55Z"
+            "example": "2026-08-01T02:49:24Z"
           }
         },
         "additionalProperties": false,
@@ -106246,6 +106518,432 @@
         ],
         "title": "SpanBody",
         "description": "One span within a trace, placed by its offset from the trace start."
+      },
+      "SpecCatalogFacetOption": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "description": "The value to send back as a filter query parameter.",
+            "example": "example"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human-readable name for the filter dropdown.",
+            "example": "example"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Count",
+            "description": "Specs carrying this value across the whole catalog.",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "label",
+          "count"
+        ],
+        "title": "SpecCatalogFacetOption",
+        "description": "One selectable value in a catalog filter, with how many specs carry it."
+      },
+      "SpecCatalogFacets": {
+        "properties": {
+          "formats": {
+            "items": {
+              "$ref": "#/components/schemas/SpecCatalogFacetOption"
+            },
+            "type": "array",
+            "title": "Formats",
+            "description": "Formats.",
+            "maxItems": 1000
+          },
+          "statuses": {
+            "items": {
+              "$ref": "#/components/schemas/SpecCatalogFacetOption"
+            },
+            "type": "array",
+            "title": "Statuses",
+            "description": "Statuses.",
+            "maxItems": 1000
+          },
+          "repositories": {
+            "items": {
+              "$ref": "#/components/schemas/SpecCatalogFacetOption"
+            },
+            "type": "array",
+            "title": "Repositories",
+            "description": "Repositories.",
+            "maxItems": 1000
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/SpecCatalogFacetOption"
+            },
+            "type": "array",
+            "title": "Projects",
+            "description": "Projects.",
+            "maxItems": 1000
+          }
+        },
+        "type": "object",
+        "title": "SpecCatalogFacets",
+        "description": "Filter dropdown options for the discovered-specs catalog.\n\nCounts are always taken over the tenant's *entire* catalog, never over the currently\nfiltered result set: a facet list that shrank as filters were applied would strand an\noperator inside whichever filter they picked first."
+      },
+      "SpecCatalogResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true,
+            "description": "Success.",
+            "example": false
+          },
+          "catalog_total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Catalog Total",
+            "description": "Specs in the catalog before any search or filter is applied.",
+            "example": 1
+          },
+          "match_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Match Count",
+            "description": "Specs matching the current search and filters.",
+            "example": 1
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit.",
+            "example": 50
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset.",
+            "example": 0
+          },
+          "sort": {
+            "type": "string",
+            "title": "Sort",
+            "description": "Sort.",
+            "example": "example"
+          },
+          "specs": {
+            "items": {
+              "$ref": "#/components/schemas/SpecCatalogRow"
+            },
+            "type": "array",
+            "title": "Specs",
+            "description": "Specs.",
+            "maxItems": 1000
+          },
+          "facets": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpecCatalogFacets"
+              },
+              {
+                "type": "null",
+                "description": "Response payload for spec catalog."
+              }
+            ],
+            "description": "Filter options; present only when the request set `include_facets=true`."
+          }
+        },
+        "type": "object",
+        "required": [
+          "catalog_total",
+          "match_count",
+          "limit",
+          "offset",
+          "sort"
+        ],
+        "title": "SpecCatalogResponse",
+        "description": "A server-paginated page of the tenant-wide discovered-specs catalog."
+      },
+      "SpecCatalogRow": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "The `tenant_repository_files` row id.",
+            "example": "res_01h2xcejqtf3fz5y5j0v8k9m2p"
+          },
+          "repository_id": {
+            "type": "string",
+            "title": "Repository Id",
+            "description": "Repository ID.",
+            "example": "repository_01h2xcejqtf3fz5y5j0v8k9m2p"
+          },
+          "repository_full_name": {
+            "type": "string",
+            "title": "Repository Full Name",
+            "description": "e.g. `acme/api-platform`.",
+            "example": "Example"
+          },
+          "repository_provider": {
+            "type": "string",
+            "title": "Repository Provider",
+            "default": "github",
+            "description": "Repository Provider.",
+            "example": "example"
+          },
+          "branch": {
+            "type": "string",
+            "title": "Branch",
+            "description": "Branch.",
+            "example": "example"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Path.",
+            "example": "/resources/{id}"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Human-readable name.",
+            "example": "Pet"
+          },
+          "ext": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Ext",
+            "description": "Ext."
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Size Bytes",
+            "description": "Size Bytes."
+          },
+          "blob_sha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Blob Sha",
+            "description": "Blob Sha."
+          },
+          "detected_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Detected Kind",
+            "description": "Raw classifier output, e.g. `openapi-3.1`."
+          },
+          "format": {
+            "type": "string",
+            "title": "Format",
+            "description": "Normalized format family the row is filed and filtered under \u2014 `openapi`, `asyncapi`, `json_schema`, \u2026 `unclassified` for an indexed file the scanner could not type.",
+            "example": "openapi"
+          },
+          "display_kind": {
+            "type": "string",
+            "title": "Display Kind",
+            "description": "Human label for `format`, e.g. `OpenAPI`.",
+            "example": "example"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Derived lifecycle state, highest precedence first: `needs_attention` (quality scoring errored, or the scan left external $refs unresolved), `imported` (at least one import has run), `mapped` (bound to a project, not yet imported), `discovered` (indexed only).",
+            "example": "active"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Project Id",
+            "description": "Project the spec is mapped to, or was last imported into."
+          },
+          "project_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Project Name",
+            "description": "Project Name."
+          },
+          "project_slug": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Project Slug",
+            "description": "Project Slug."
+          },
+          "version_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Version Id",
+            "description": "Version produced by the most recent import of this file."
+          },
+          "last_imported_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Last Imported At",
+            "description": "Last Imported At timestamp (ISO 8601)."
+          },
+          "discovered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Discovered At",
+            "description": "When the walker first indexed this path."
+          },
+          "quality_score": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Quality Score",
+            "description": "Quality Score."
+          },
+          "quality_grade": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Quality Grade",
+            "description": "Quality Grade."
+          },
+          "quality_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "Quality Status",
+            "description": "Quality Status."
+          },
+          "external_ref_unresolved_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0,
+                "description": "Spec Catalog Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Catalog Row schema."
+              }
+            ],
+            "title": "External Ref Unresolved Count",
+            "description": "Unresolved external $refs left by the REPO-3.9 policy; null when none."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "repository_id",
+          "repository_full_name",
+          "branch",
+          "path",
+          "name",
+          "format",
+          "display_kind",
+          "status"
+        ],
+        "title": "SpecCatalogRow",
+        "description": "One discovered spec in the tenant-wide catalog, with its repository and project context."
       },
       "SpecImportCommitResponse": {
         "properties": {
@@ -114352,14 +115050,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-01T01:40:55Z"
+            "example": "2026-08-01T02:49:24Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-01T01:40:55Z"
+            "example": "2026-08-01T02:49:24Z"
           },
           "outcome": {
             "anyOf": [

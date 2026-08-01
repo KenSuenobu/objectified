@@ -34,6 +34,15 @@ from .mcp_facets import (
     UNKNOWN_VALUE,
 )
 from .push_webhook_crypto import encrypt_signing_secret
+from .repository_spec_catalog import (
+    DEFAULT_SPEC_SORT,
+    SPEC_FORMAT_SQL,
+    SPEC_SORT_SQL,
+    SPEC_STATUS_RANK_SQL,
+    SPEC_STATUS_SQL,
+    normalize_sort,
+    search_term_to_like,
+)
 from .revision_deprecation import (
     coerce_metadata,
     effective_sunset_string,
@@ -14595,6 +14604,287 @@ class Database:
             "limit": lim,
             "offset": off,
             "rows": rows,
+        }
+
+    #: Files whose path lives under a vendored tree are indexed but never belong in the
+    #: cross-repo catalog: a single ``node_modules`` checkout can carry hundreds of vendored
+    #: OpenAPI documents that no operator owns. The per-repository browser makes this optional
+    #: (``skip_vendor``) because a developer may be hunting for exactly one of them; the
+    #: tenant-wide catalog does not, because at tenant scale the noise is total.
+    _CATALOG_VENDOR_EXCLUSION_SQL = """(
+          f.path NOT ILIKE '%%/node_modules/%%' AND f.path NOT ILIKE 'node_modules/%%' AND
+          f.path NOT ILIKE '%%/vendor/%%' AND f.path NOT ILIKE 'vendor/%%' AND
+          f.path NOT ILIKE '%%/.git/%%' AND f.path NOT ILIKE '.git/%%'
+        )"""
+
+    #: Joins shared by every catalog query (page, counts and facets) so a row is counted under
+    #: exactly the project, status and format the page shows it with.
+    #:
+    #: ``spec`` is the REPO-5.1 project mapping (at most one per repo/branch/path, enforced by
+    #: ``uq_repository_import_spec_repo_branch_path``). ``imp`` is the *most recent* import of
+    #: that file — a lateral rather than a plain join because a file re-imported fifty times
+    #: must still contribute one catalog row. ``sp``/``ip`` resolve the project name from the
+    #: mapping first and the import second, which matters for a file imported once and later
+    #: re-pointed at a different project.
+    _CATALOG_FROM_SQL = """
+            FROM apiome.tenant_repository_files f
+            INNER JOIN apiome.tenant_repositories r ON r.id = f.repository_id
+            LEFT JOIN apiome.repository_import_spec spec
+                   ON spec.repository_id = f.repository_id
+                  AND spec.branch = f.branch
+                  AND spec.path = f.path
+            LEFT JOIN apiome.projects sp ON sp.id = spec.project_id AND sp.deleted_at IS NULL
+            LEFT JOIN LATERAL (
+                SELECT i.id, i.project_id, i.version_id, i.created_at
+                  FROM apiome.tenant_repository_imports i
+                 WHERE i.repository_id = f.repository_id
+                   AND i.branch = f.branch
+                   AND i.path = f.path
+                 ORDER BY i.created_at DESC
+                 LIMIT 1
+            ) imp ON TRUE
+            LEFT JOIN apiome.projects ip ON ip.id = imp.project_id AND ip.deleted_at IS NULL
+            WHERE """
+
+    def _catalog_scope(
+        self,
+        tenant_id: str,
+        *,
+        importable_only: bool,
+        all_branches: bool,
+    ) -> Tuple[List[str], List[Any]]:
+        """Build the predicates that define a tenant's catalog before any user filter.
+
+        Args:
+            tenant_id: Owning tenant; every catalog query is scoped to it.
+            importable_only: Restrict to files the scanner classified as an importable spec
+                type. ``False`` widens the catalog to every indexed path.
+            all_branches: ``False`` (the default) keeps one row per file by listing only each
+                repository's default branch. ``True`` lists every tracked branch, which is what
+                an operator wants when hunting for a spec that only exists on a feature branch.
+
+        Returns:
+            ``(predicates, params)`` — SQL fragments to be joined with ``AND``, and their
+            positional parameters in matching order.
+        """
+        parts = [
+            "r.tenant_id = %s::uuid",
+            "r.deleted_at IS NULL",
+            self._CATALOG_VENDOR_EXCLUSION_SQL,
+            # Dot-directories (.github, .venv, …) are tooling, not published surface area.
+            "f.path !~ '(^|/)\\.[^/]+(/|$)'",
+        ]
+        params: List[Any] = [tenant_id]
+        if not all_branches:
+            parts.append("f.branch = COALESCE(NULLIF(r.default_branch, ''), 'main')")
+        if importable_only:
+            parts.append(REPOSITORY_FILE_IMPORTABLE_SQL)
+        return parts, params
+
+    def tenant_repository_spec_catalog(
+        self,
+        tenant_id: str,
+        *,
+        search: Optional[str] = None,
+        repository_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+        format_key: Optional[str] = None,
+        status_key: Optional[str] = None,
+        importable_only: bool = True,
+        all_branches: bool = False,
+        sort: Optional[str] = DEFAULT_SPEC_SORT,
+        limit: int = 50,
+        offset: int = 0,
+        include_facets: bool = False,
+    ) -> Dict[str, Any]:
+        """Return one page of the tenant-wide discovered-spec catalog (REPO-6.4).
+
+        Unlike :meth:`tenant_repository_files_stats_and_page`, this spans every repository the
+        tenant owns and resolves each file's project mapping and import state, so a row can be
+        filtered by things that live outside ``tenant_repository_files``.
+
+        All filtering, counting and ordering happen in SQL: the caller receives only the rows
+        it will render, which is what keeps the page usable at 10k+ files.
+
+        Args:
+            tenant_id: Owning tenant.
+            search: Free-text term matched as a case-insensitive substring against the file
+                path, its detected kind, the repository's full name and the mapped project's
+                name. ``None`` disables the search.
+            repository_id: Restrict to one repository, or ``None`` for all.
+            project_id: Restrict to files mapped *or* imported into one project, or ``None``.
+            format_key: One :data:`~app.repository_spec_catalog.SPEC_FORMAT_LABELS` key, or
+                ``None``. Callers must pass a value already validated by
+                :func:`~app.repository_spec_catalog.normalize_format`.
+            status_key: One :data:`~app.repository_spec_catalog.SPEC_STATUS_LABELS` key, or
+                ``None``. Validate with
+                :func:`~app.repository_spec_catalog.normalize_status`.
+            importable_only: See :meth:`_catalog_scope`.
+            all_branches: See :meth:`_catalog_scope`.
+            sort: A :data:`~app.repository_spec_catalog.SPEC_SORT_SQL` key; anything else falls
+                back to the default. Never interpolated unvalidated.
+            limit: Page size, clamped to 1..500.
+            offset: Rows to skip, clamped to 0..500,000.
+            include_facets: Also compute the filter dropdown options (formats, statuses,
+                repositories, projects) over the *unfiltered* catalog scope. Off by default so
+                a paging click does not pay for four extra ``GROUP BY`` scans.
+
+        Returns:
+            A dict with ``catalog_total`` (rows in scope before user filters), ``match_count``
+            (rows matching the filters), the clamped ``limit``/``offset``, ``sort``, ``rows``,
+            and ``facets`` (``None`` unless ``include_facets``).
+        """
+        scope_parts, scope_params = self._catalog_scope(
+            tenant_id, importable_only=importable_only, all_branches=all_branches
+        )
+
+        filter_parts: List[str] = []
+        filter_params: List[Any] = []
+        if repository_id:
+            filter_parts.append("r.id = %s::uuid")
+            filter_params.append(repository_id)
+        if project_id:
+            filter_parts.append("COALESCE(spec.project_id, imp.project_id) = %s::uuid")
+            filter_params.append(project_id)
+        if format_key:
+            filter_parts.append("(" + SPEC_FORMAT_SQL + ") = %s")
+            filter_params.append(format_key)
+        if status_key:
+            filter_parts.append("(" + SPEC_STATUS_SQL + ") = %s")
+            filter_params.append(status_key)
+        if search:
+            like = search_term_to_like(search)
+            filter_parts.append(
+                """(
+          f.path ILIKE %s ESCAPE E'\\\\' OR
+          COALESCE(f.detected_kind, '') ILIKE %s ESCAPE E'\\\\' OR
+          COALESCE(r.repository_full_name, '') ILIKE %s ESCAPE E'\\\\' OR
+          COALESCE(sp.name, ip.name, '') ILIKE %s ESCAPE E'\\\\'
+        )"""
+            )
+            filter_params.extend([like, like, like, like])
+
+        where_scope = " AND ".join(scope_parts)
+        where_all = " AND ".join(scope_parts + filter_parts)
+        scope_only_params = tuple(scope_params)
+        all_params = tuple(scope_params + filter_params)
+
+        total_rows = self.execute_query(
+            "SELECT COUNT(*) AS c " + self._CATALOG_FROM_SQL + where_scope, scope_only_params
+        )
+        catalog_total = int(total_rows[0]["c"]) if total_rows else 0
+
+        if filter_parts:
+            match_rows = self.execute_query(
+                "SELECT COUNT(*) AS c " + self._CATALOG_FROM_SQL + where_all, all_params
+            )
+            match_count = int(match_rows[0]["c"]) if match_rows else 0
+        else:
+            # No filters means the two counts are the same query; skip the duplicate scan.
+            match_count = catalog_total
+
+        sort_key = normalize_sort(sort)
+        lim = max(1, min(int(limit), 500))
+        off = max(0, min(int(offset), 500_000))
+
+        page_sql = (
+            "SELECT f.id, f.repository_id, f.branch, f.path, f.name, f.ext, f.size_bytes, "
+            "       f.blob_sha, f.detected_kind, f.quality_score, f.quality_grade, "
+            "       f.quality_status, f.quality_reason, f.external_ref_warning, "
+            "       f.created_at AS discovered_at, "
+            "       r.repository_full_name, r.provider, r.default_branch, "
+            "       COALESCE(spec.project_id, imp.project_id) AS project_id, "
+            "       COALESCE(sp.name, ip.name) AS project_name, "
+            "       COALESCE(sp.slug, ip.slug) AS project_slug, "
+            "       imp.version_id AS version_id, "
+            "       imp.created_at AS last_imported_at, "
+            "       (" + SPEC_FORMAT_SQL + ") AS format_key, "
+            "       (" + SPEC_STATUS_SQL + ") AS status_key, "
+            "       (" + SPEC_STATUS_RANK_SQL + ") AS status_rank "
+            + self._CATALOG_FROM_SQL
+            + where_all
+            + " ORDER BY "
+            + SPEC_SORT_SQL[sort_key]
+            + " LIMIT %s OFFSET %s"
+        )
+        rows = self.execute_query(page_sql, tuple(list(all_params) + [lim, off]))
+
+        facets = (
+            self._tenant_repository_spec_catalog_facets(where_scope, scope_only_params)
+            if include_facets
+            else None
+        )
+
+        return {
+            "catalog_total": catalog_total,
+            "match_count": match_count,
+            "limit": lim,
+            "offset": off,
+            "sort": sort_key,
+            "rows": rows,
+            "facets": facets,
+        }
+
+    def _tenant_repository_spec_catalog_facets(
+        self, where_scope: str, scope_params: Tuple[Any, ...]
+    ) -> Dict[str, Any]:
+        """Compute the catalog's filter dropdown options.
+
+        Facets are deliberately computed over the *scope* — the tenant's whole catalog —
+        rather than over the currently filtered set. Narrowing the options as filters are
+        applied would make an operator who picked "OpenAPI" unable to see, let alone switch
+        to, "AsyncAPI" without clearing the filter first.
+
+        Args:
+            where_scope: The scope ``WHERE`` body from
+                :meth:`tenant_repository_spec_catalog`.
+            scope_params: Its positional parameters.
+
+        Returns:
+            ``{"formats": [(key, count)], "statuses": [(key, count)], "repositories": [...],
+            "projects": [...]}`` — raw tuples/dicts the route turns into labelled options.
+        """
+        fmt_rows = self.execute_query(
+            "SELECT (" + SPEC_FORMAT_SQL + ") AS k, COUNT(*) AS c "
+            + self._CATALOG_FROM_SQL
+            + where_scope
+            + " GROUP BY 1",
+            scope_params,
+        )
+        status_rows = self.execute_query(
+            "SELECT (" + SPEC_STATUS_SQL + ") AS k, COUNT(*) AS c "
+            + self._CATALOG_FROM_SQL
+            + where_scope
+            + " GROUP BY 1",
+            scope_params,
+        )
+        repo_rows = self.execute_query(
+            "SELECT r.id AS id, r.repository_full_name AS label, COUNT(*) AS c "
+            + self._CATALOG_FROM_SQL
+            + where_scope
+            + " GROUP BY 1, 2 ORDER BY 3 DESC, 2 ASC",
+            scope_params,
+        )
+        project_rows = self.execute_query(
+            "SELECT COALESCE(spec.project_id, imp.project_id) AS id, "
+            "       COALESCE(sp.name, ip.name) AS label, COUNT(*) AS c "
+            + self._CATALOG_FROM_SQL
+            + where_scope
+            + " AND COALESCE(spec.project_id, imp.project_id) IS NOT NULL"
+            + " GROUP BY 1, 2 ORDER BY 3 DESC, 2 ASC",
+            scope_params,
+        )
+        return {
+            "formats": [(str(r["k"]), int(r["c"])) for r in fmt_rows],
+            "statuses": [(str(r["k"]), int(r["c"])) for r in status_rows],
+            "repositories": [
+                {"id": str(r["id"]), "label": str(r["label"] or ""), "count": int(r["c"])}
+                for r in repo_rows
+            ],
+            "projects": [
+                {"id": str(r["id"]), "label": str(r["label"] or ""), "count": int(r["c"])}
+                for r in project_rows
+            ],
         }
 
     def insert_tenant_repository(

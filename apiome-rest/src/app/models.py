@@ -7664,6 +7664,111 @@ class TenantRepositoryFileContentResponse(BaseModel):
     truncated: bool = False
 
 
+# --- Cross-repository discovered-spec catalog (REPO-6.4, #2797) ---
+
+
+class SpecCatalogFacetOption(BaseModel):
+    """One selectable value in a catalog filter, with how many specs carry it."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    value: str = Field(description="The value to send back as a filter query parameter.")
+    label: str = Field(description="Human-readable name for the filter dropdown.")
+    count: int = Field(ge=0, description="Specs carrying this value across the whole catalog.")
+
+
+class SpecCatalogFacets(BaseModel):
+    """Filter dropdown options for the discovered-specs catalog.
+
+    Counts are always taken over the tenant's *entire* catalog, never over the currently
+    filtered result set: a facet list that shrank as filters were applied would strand an
+    operator inside whichever filter they picked first.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    formats: List[SpecCatalogFacetOption] = Field(default_factory=list)
+    statuses: List[SpecCatalogFacetOption] = Field(default_factory=list)
+    repositories: List[SpecCatalogFacetOption] = Field(default_factory=list)
+    projects: List[SpecCatalogFacetOption] = Field(default_factory=list)
+
+
+class SpecCatalogRow(BaseModel):
+    """One discovered spec in the tenant-wide catalog, with its repository and project context."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str = Field(description="The `tenant_repository_files` row id.")
+    repository_id: str
+    repository_full_name: str = Field(description="e.g. `acme/api-platform`.")
+    repository_provider: str = Field(default="github")
+    branch: str
+    path: str
+    name: str
+    ext: Optional[str] = None
+    size_bytes: Optional[int] = None
+    blob_sha: Optional[str] = None
+    detected_kind: Optional[str] = Field(
+        default=None, description="Raw classifier output, e.g. `openapi-3.1`."
+    )
+    format: str = Field(
+        description=(
+            "Normalized format family the row is filed and filtered under — `openapi`, "
+            "`asyncapi`, `json_schema`, … `unclassified` for an indexed file the scanner could "
+            "not type."
+        )
+    )
+    display_kind: str = Field(description="Human label for `format`, e.g. `OpenAPI`.")
+    status: str = Field(
+        description=(
+            "Derived lifecycle state, highest precedence first: `needs_attention` (quality "
+            "scoring errored, or the scan left external $refs unresolved), `imported` (at "
+            "least one import has run), `mapped` (bound to a project, not yet imported), "
+            "`discovered` (indexed only)."
+        )
+    )
+    project_id: Optional[str] = Field(
+        default=None, description="Project the spec is mapped to, or was last imported into."
+    )
+    project_name: Optional[str] = None
+    project_slug: Optional[str] = None
+    version_id: Optional[str] = Field(
+        default=None, description="Version produced by the most recent import of this file."
+    )
+    last_imported_at: Optional[str] = None
+    discovered_at: Optional[str] = Field(
+        default=None, description="When the walker first indexed this path."
+    )
+    quality_score: Optional[int] = Field(default=None, ge=0, le=100)
+    quality_grade: Optional[str] = None
+    quality_status: Optional[str] = None
+    external_ref_unresolved_count: Optional[int] = Field(
+        default=None,
+        ge=0,
+        description="Unresolved external $refs left by the REPO-3.9 policy; null when none.",
+    )
+
+
+class SpecCatalogResponse(BaseModel):
+    """A server-paginated page of the tenant-wide discovered-specs catalog."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    success: bool = True
+    catalog_total: int = Field(
+        ge=0, description="Specs in the catalog before any search or filter is applied."
+    )
+    match_count: int = Field(ge=0, description="Specs matching the current search and filters.")
+    limit: int
+    offset: int
+    sort: str
+    specs: List[SpecCatalogRow] = Field(default_factory=list)
+    facets: Optional[SpecCatalogFacets] = Field(
+        default=None,
+        description="Filter options; present only when the request set `include_facets=true`.",
+    )
+
+
 # --- CLI / session tenant discovery (#3198) ---
 
 

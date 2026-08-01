@@ -7,6 +7,7 @@ import {
   ArrowRight,
   FolderGit2,
   LayoutGrid,
+  Library,
   List,
   Loader2,
   Plus,
@@ -243,6 +244,18 @@ export default function RepositoriesPage() {
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-3">
+              {/* REPO-6.4: the tenant-wide view of what all these repositories contain. */}
+              <Link
+                href="/ade/dashboard/repositories/catalog"
+                className={cn(
+                  buttonVariants({ variant: "secondary" }),
+                  "h-auto min-h-10 shrink-0 whitespace-nowrap py-2",
+                )}
+                title="Search every discovered spec across all repositories"
+              >
+                <Library className="h-4 w-4 shrink-0" aria-hidden />
+                Spec catalog
+              </Link>
               <Button
                 type="button"
                 variant="secondary"

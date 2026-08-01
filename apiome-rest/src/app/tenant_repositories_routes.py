@@ -38,6 +38,10 @@ from .models import (
     RepositoryWebhookRotateResponse,
     RepositoryWebhookStatusResponse,
     RepositoryWebhookSubscriptionOut,
+    SpecCatalogFacetOption,
+    SpecCatalogFacets,
+    SpecCatalogResponse,
+    SpecCatalogRow,
     TenantRepositoryCreate,
     TenantRepositoryCreateResponse,
     TenantRepositoryFileContentResponse,
@@ -49,6 +53,15 @@ from .models import (
     TenantRepositoriesListResponse,
 )
 from .repository_refresh_audit import RefreshOutcome, RefreshTrigger
+from .repository_spec_catalog import (
+    SPEC_FORMAT_LABELS,
+    format_facet_options,
+    normalize_format,
+    normalize_sort,
+    normalize_status,
+    status_facet_options,
+    validate_search_term,
+)
 from .repository_refresh_quota import describe_tenant_polling_quota
 from .repository_file_scan import _github_owner_repo, fetch_github_repository_file_text
 from .repository_webhook_rotation import (
@@ -461,6 +474,180 @@ async def list_tenant_repository_files(
         limit=int(raw["limit"]),
         offset=int(raw["offset"]),
         files=files_out,
+    )
+
+
+def _catalog_row(raw: Dict[str, Any]) -> SpecCatalogRow:
+    """Project one catalog DAO row onto its API shape.
+
+    Args:
+        raw: A row from :meth:`app.database.Database.tenant_repository_spec_catalog`.
+
+    Returns:
+        The wire model. Nullable numeric columns are coerced defensively — a row whose
+        ``quality_score`` predates the REPO-2.8 column must still render.
+    """
+    fmt = str(raw.get("format_key") or "unclassified")
+    size = raw.get("size_bytes")
+    score = raw.get("quality_score")
+    _, ref_unresolved = _external_ref_summary(raw.get("external_ref_warning"))
+    return SpecCatalogRow(
+        id=str(raw["id"]),
+        repository_id=str(raw["repository_id"]),
+        repository_full_name=str(raw.get("repository_full_name") or ""),
+        repository_provider=str(raw.get("provider") or "github"),
+        branch=str(raw.get("branch") or ""),
+        path=str(raw.get("path") or ""),
+        name=str(raw.get("name") or ""),
+        ext=str(raw["ext"]) if raw.get("ext") else None,
+        size_bytes=int(size) if isinstance(size, int) else None,
+        blob_sha=str(raw["blob_sha"]) if raw.get("blob_sha") else None,
+        detected_kind=str(raw["detected_kind"]) if raw.get("detected_kind") else None,
+        format=fmt,
+        display_kind=SPEC_FORMAT_LABELS.get(fmt, fmt),
+        status=str(raw.get("status_key") or "discovered"),
+        project_id=str(raw["project_id"]) if raw.get("project_id") else None,
+        project_name=str(raw["project_name"]) if raw.get("project_name") else None,
+        project_slug=str(raw["project_slug"]) if raw.get("project_slug") else None,
+        version_id=str(raw["version_id"]) if raw.get("version_id") else None,
+        last_imported_at=_ts(raw.get("last_imported_at")),
+        discovered_at=_ts(raw.get("discovered_at")),
+        quality_score=int(score) if isinstance(score, int) else None,
+        quality_grade=str(raw["quality_grade"]) if raw.get("quality_grade") else None,
+        quality_status=str(raw["quality_status"]) if raw.get("quality_status") else None,
+        external_ref_unresolved_count=ref_unresolved,
+    )
+
+
+def _catalog_facets(raw: Dict[str, Any]) -> SpecCatalogFacets:
+    """Turn the DAO's raw facet tallies into labelled filter options.
+
+    Args:
+        raw: The ``facets`` payload from the catalog DAO.
+
+    Returns:
+        The wire model. Repository and project options are already count-ordered by SQL;
+        format and status options are ordered by their own module's rules.
+    """
+    return SpecCatalogFacets(
+        formats=[SpecCatalogFacetOption(**o) for o in format_facet_options(raw["formats"])],
+        statuses=[SpecCatalogFacetOption(**o) for o in status_facet_options(raw["statuses"])],
+        repositories=[
+            SpecCatalogFacetOption(value=o["id"], label=o["label"] or o["id"], count=o["count"])
+            for o in raw["repositories"]
+        ],
+        projects=[
+            SpecCatalogFacetOption(value=o["id"], label=o["label"] or o["id"], count=o["count"])
+            for o in raw["projects"]
+        ],
+    )
+
+
+@router.get("/{tenant_slug}/repository-files", response_model=SpecCatalogResponse)
+async def list_tenant_repository_spec_catalog(
+    tenant_slug: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+    q: Optional[str] = Query(
+        default=None,
+        description=(
+            "Free-text search, matched as a case-insensitive substring against the file path, "
+            "its detected kind, the repository full name and the mapped project name."
+        ),
+    ),
+    format: Optional[str] = Query(  # noqa: A002 - the query parameter is named `format` on the wire
+        default=None, description="Format family key, or `all`."
+    ),
+    repository_id: Optional[uuid.UUID] = Query(default=None),
+    project_id: Optional[uuid.UUID] = Query(default=None),
+    status: Optional[str] = Query(default=None, description="Catalog status key, or `all`."),
+    importable_only: bool = Query(
+        default=True,
+        description="Restrict to files classified as an importable spec type.",
+    ),
+    all_branches: bool = Query(
+        default=False,
+        description=(
+            "List every tracked branch. Off by default so each spec appears once, on its "
+            "repository's default branch."
+        ),
+    ),
+    sort: Optional[str] = Query(
+        default=None, description="`repository` (default), `path`, `format`, `status`, `recent`."
+    ),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    include_facets: bool = Query(
+        default=False,
+        description=(
+            "Also return the filter dropdown options. Request it once when the page mounts; "
+            "paging and re-filtering do not need it."
+        ),
+    ),
+) -> SpecCatalogResponse:
+    """Tenant-wide catalog of every discovered spec across all repositories (REPO-6.4).
+
+    The per-repository Files listing answers "what is in this repo"; this answers "where does
+    this spec live" across the whole tenant. Search, filtering, ordering and pagination are all
+    evaluated in SQL so the response carries only the requested page.
+
+    Args:
+        tenant_slug: Present for URL symmetry only — the tenant is always taken from the
+            authenticated token, never from the path.
+        auth_data: Injected auth context.
+        q: Free-text search term.
+        format: Format-family filter.
+        repository_id: Single-repository filter.
+        project_id: Filter to specs mapped or imported into one project.
+        status: Derived-status filter.
+        importable_only: Whether to hide indexed files that are not spec candidates.
+        all_branches: Whether to list non-default branches.
+        sort: Ordering key.
+        limit: Page size (1..500).
+        offset: Rows to skip.
+        include_facets: Whether to compute filter options.
+
+    Returns:
+        One page of catalog rows plus the total and matched counts.
+
+    Raises:
+        HTTPException: 400 when a filter names an unknown format or status, or the search term
+            is unusable.
+    """
+    _ = tenant_slug
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.VIEW)
+    tenant_id = str(auth_data["tenant_id"])
+
+    try:
+        term = validate_search_term(q)
+        fmt = normalize_format(format)
+        st = normalize_status(status)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    page = db.tenant_repository_spec_catalog(
+        tenant_id,
+        search=term,
+        repository_id=str(repository_id) if repository_id else None,
+        project_id=str(project_id) if project_id else None,
+        format_key=fmt,
+        status_key=st,
+        importable_only=importable_only,
+        all_branches=all_branches,
+        sort=normalize_sort(sort),
+        limit=limit,
+        offset=offset,
+        include_facets=include_facets,
+    )
+
+    return SpecCatalogResponse(
+        success=True,
+        catalog_total=int(page["catalog_total"]),
+        match_count=int(page["match_count"]),
+        limit=int(page["limit"]),
+        offset=int(page["offset"]),
+        sort=str(page["sort"]),
+        specs=[_catalog_row(r) for r in page["rows"]],
+        facets=_catalog_facets(page["facets"]) if page.get("facets") else None,
     )
 
 

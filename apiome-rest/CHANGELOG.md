@@ -5,6 +5,40 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.227.0] - 2026-07-31
+
+### Added
+- **Cross-repository discovered-specs catalog (REPO-6.4, #2797)** — the repository surface could
+  only answer "what specs are in *this* repo on *this* branch" (REPO-6.2). An operator running
+  more than a handful of repositories had no way to ask "where does this spec live", short of
+  opening each repository in turn.
+  - **`GET /v1/tenants/{slug}/repository-files`.** One tenant-wide, server-paginated listing of
+    every discovered spec across every registered repository. Free-text `q` matches the file
+    path, its detected kind, the repository's full name and the mapped project's name; `format`,
+    `repository_id`, `project_id` and `status` narrow it further; `sort` orders by repository,
+    path, format, status or recent activity. Search, filtering, ordering and pagination all
+    evaluate in SQL, so the response carries only the requested page.
+  - **Derived per-spec status.** Each row resolves to exactly one of `needs_attention` (quality
+    scoring errored, or the last scan left external `$ref`s unresolved), `imported`, `mapped`
+    (bound to a project, no import yet) or `discovered`, in that precedence. The status is
+    projected and filtered by the same SQL expression, so a row can never be listed under a
+    value it cannot be filtered by.
+  - **Project and version context per row.** Each spec carries the project it is mapped to (or
+    was last imported into) and the version its most recent import produced, resolved through a
+    lateral join so a file imported fifty times still contributes one catalog row.
+  - **Opt-in facets.** `include_facets=true` returns the filter dropdown options — formats,
+    statuses, repositories and projects, each with a catalog-wide count. Facets are computed
+    over the whole catalog rather than the filtered page, so picking one filter never hides the
+    others. The catalog page requests them once on mount.
+  - **Scoped for signal, not volume.** Vendored trees (`node_modules`, `vendor`, `.git`) and
+    dot-directories are always excluded; only each repository's default branch is listed unless
+    `all_branches=true`; only classified spec types unless `importable_only=false`.
+  - **Indexes for the 10k-file bar (V230).** A `pg_trgm` GIN index makes the substring search
+    indexable, and a `(repository_id, branch, path, created_at DESC)` index answers the
+    latest-import lookup with one backwards scan. The trigram block degrades to a notice where
+    the migration role cannot install contrib extensions — the catalog stays correct, just
+    sequential.
+
 ## [1.222.0] - 2026-07-31
 
 ### Added
