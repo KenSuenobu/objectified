@@ -5,6 +5,37 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.231.0] - 2026-07-31
+
+### Added
+- **SOC 2 / ISO 27001 audit export (REPO-7.5, #2803)** — compliance reviews need a structured,
+  dateable artifact of everything the repository subsystem wrote to the audit ledger, not a
+  paginated API a reviewer has to page through by hand.
+  - `GET /v1/tenants/{slug}/repository-audit-export?from=&to=&format=csv|json` streams every
+    `repository.*` row of `apiome.workflow_audit` (refresh cycles, webhook registrations /
+    deliveries / secret rotations, external-ref fetches, …) in the inclusive `created_at`
+    range, oldest first, served as an attachment with a range-stamped filename
+    (`repository-audit-export_20260101-20260731.csv`).
+  - **Admin-only.** The ledger names every repository and actor in the workspace, so the
+    export requires a signed-in tenant administrator; API keys are refused outright rather
+    than resolved to their creating user.
+  - **Streamed at any size.** Rows are read oldest-first with a `(created_at, id)` keyset
+    cursor in 1,000-row batches, so an export far beyond 10k rows holds one batch in memory
+    and every batch costs the same — no OFFSET cliff, and rows appended mid-export cannot
+    shift between batches.
+  - **CSV or JSON.** CSV is a header plus one RFC-4180 row per entry with `detail`
+    JSON-encoded in its cell; JSON is a single document — an `export` metadata envelope, the
+    `entries` array streamed element by element, and a trailing `rowCount` — that only parses
+    when the download ran to completion, so a truncated artifact is detectably incomplete
+    instead of silently short.
+  - **The export is itself evidence.** Every attempt appends a
+    `repository.audit_exported` row to the same ledger: `success` with the exact row count on
+    completion, `failure` with the partial count when the stream errors or the client
+    disconnects mid-download. Because the action carries the `repository.` prefix, each
+    export shows up in the next one. Recording is best-effort, so audit bookkeeping can never
+    break the download it describes.
+  - Ledger and endpoint only; no migration — `apiome.workflow_audit` is reused unchanged.
+
 ## [1.230.0] - 2026-07-31
 
 ### Added

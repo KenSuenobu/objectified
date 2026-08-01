@@ -17,9 +17,14 @@ _logger = logging.getLogger(__name__)
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from psycopg2 import errors as pg_errors
 
-from .auth import get_authenticated_user_id, validate_authentication
+from .auth import (
+    get_authenticated_user_id,
+    require_tenant_admin_session,
+    validate_authentication,
+)
 from .database import db
 from .permissions import enforce_permission, Resource, Action
 from .models import (
@@ -63,6 +68,15 @@ from .repository_event_notifications import (
     coerce_event as coerce_repository_notification_event,
     DEFAULT_THROTTLE_WINDOW_SECONDS,
     describe_repository_notification_preferences,
+)
+from .repository_audit_export import (
+    EXPORT_FORMAT_JSON,
+    export_filename,
+    export_media_type,
+    generate_export,
+    normalize_export_format,
+    parse_export_bound,
+    validate_export_range,
 )
 from .repository_health import health_payloads_for_rows
 from .repository_refresh_audit import RefreshOutcome, RefreshTrigger
@@ -422,6 +436,100 @@ async def get_tenant_repository_quota_telemetry(
         telemetry=RepositoryQuotaTelemetryOut(
             **describe_quota_telemetry(db, tenant_id, days=days)
         ),
+    )
+
+
+@router.get(
+    "/{tenant_slug}/repository-audit-export",
+    responses={
+        200: {
+            "description": (
+                "The export document, streamed. `format=json` yields one JSON "
+                "object (`export` metadata envelope, `entries` array, trailing "
+                "`rowCount`); `format=csv` yields a header line plus one row per "
+                "entry with `detail` JSON-encoded in its cell."
+            ),
+            "content": {"application/json": {}, "text/csv": {}},
+        }
+    },
+)
+async def export_tenant_repository_audit(
+    tenant_slug: str,
+    from_: Optional[str] = Query(
+        None,
+        alias="from",
+        description="Inclusive lower bound on the row's createdAt (ISO 8601).",
+    ),
+    to: Optional[str] = Query(
+        None,
+        description="Inclusive upper bound on the row's createdAt (ISO 8601).",
+    ),
+    export_format: str = Query(
+        EXPORT_FORMAT_JSON,
+        alias="format",
+        description="Export format: csv or json (default json).",
+    ),
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> StreamingResponse:
+    """Export the tenant's repository audit ledger for compliance (REPO-7.5, #2803).
+
+    Streams every ``repository.*`` row of ``apiome.workflow_audit`` in the requested
+    ``created_at`` range, oldest first, as CSV or JSON — the structured, dateable
+    artifact a SOC 2 / ISO 27001 review asks for. Rows are read in keyset batches, so
+    an export far beyond 10k rows streams in constant memory. The response is served
+    as an attachment with a range-stamped filename.
+
+    Admin-only: requires a signed-in tenant administrator (API keys are rejected),
+    since the ledger spans every repository and actor in the workspace. The export
+    itself is appended to the same ledger as ``repository.audit_exported`` —
+    ``success`` with the exact row count when the stream completes, ``failure`` with
+    the partial count when it aborts — so exports are evidence too, and appear in
+    the very next export.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        from_: Inclusive ISO 8601 lower bound; omit for "from the beginning".
+        to: Inclusive ISO 8601 upper bound; omit for "up to now".
+        export_format: ``csv`` or ``json`` (default ``json``).
+        auth_data: Authenticated principal; must resolve to a tenant administrator.
+
+    Returns:
+        The streamed export document.
+
+    Raises:
+        HTTPException: 403 for non-administrators or API-key auth; 400 for an
+            unknown format, a malformed bound, or an inverted range.
+    """
+    tenant_id = require_tenant_admin_session(
+        db,
+        auth_data,
+        detail="Only tenant administrators can export the repository audit ledger",
+    )
+    _ = tenant_slug
+    actor_id = get_authenticated_user_id(auth_data)
+
+    try:
+        fmt = normalize_export_format(export_format)
+        since = parse_export_bound("from", from_)
+        until = parse_export_bound("to", to)
+        validate_export_range(since, until)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    stream = generate_export(
+        db,
+        tenant_id,
+        export_format=fmt,
+        since=since,
+        until=until,
+        actor_id=actor_id,
+        generated_at=datetime.now(timezone.utc),
+    )
+    filename = export_filename(fmt, since, until)
+    return StreamingResponse(
+        stream,
+        media_type=export_media_type(fmt),
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 
