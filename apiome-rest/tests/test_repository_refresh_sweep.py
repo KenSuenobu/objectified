@@ -24,6 +24,15 @@ Plus the RAR-3.5 (#3526) per-tenant quotas / fairness:
   - deferral never records a refresh failure;
   - a disabled quota (<= 0) or a usage-count error degrades to unlimited;
   - the manual path (no ``max_enqueues``) is never quota-limited.
+
+Plus the REPO-4.6 (#2784) persisted per-tenant polling quota:
+  - ``tenants.repository_polls_per_hour`` overrides the setting default, in both
+    the more- and less-generous direction, and tenants bound independently;
+  - a stored ``0`` means that tenant is unlimited;
+  - a limits-read failure falls back to the default (still bounded), unlike a
+    usage-count failure which degrades to unlimited;
+  - dispatches and both kinds of deferral are counted in the REPO-7.3 telemetry,
+    and a deferral is never recorded as a failure.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -74,6 +83,7 @@ class FakeDB:
         candidates=None,
         lock_result=True,
         recent_jobs_by_tenant=None,
+        polls_per_hour_by_tenant=None,
     ):
         self._due = due if due is not None else []
         self._branches = branches if branches is not None else {}
@@ -81,6 +91,8 @@ class FakeDB:
         self._lock_result = lock_result
         # RAR-3.5: jobs already enqueued per tenant inside the quota window.
         self._recent_jobs_by_tenant = recent_jobs_by_tenant or {}
+        # REPO-4.6: persisted tenants.repository_polls_per_hour per tenant.
+        self._polls_per_hour_by_tenant = polls_per_hour_by_tenant or {}
         self.acquired = []
         self.released = []
         self.scanned = []
@@ -105,6 +117,10 @@ class FakeDB:
     # --- RAR-3.5 tenant quota window usage ---
     def count_recent_repository_refresh_jobs_by_tenant(self, window_seconds):
         return dict(self._recent_jobs_by_tenant)
+
+    # --- REPO-4.6 persisted per-tenant polling quotas ---
+    def list_tenant_repository_polls_per_hour(self):
+        return dict(self._polls_per_hour_by_tenant)
 
     def try_acquire_repository_refresh_lock(self, repository_id):
         self.acquired.append(repository_id)
@@ -729,3 +745,234 @@ def test_manual_path_without_budget_is_never_limited():
 
     assert result.enqueued == 2
     assert result.deferred == 0
+
+
+# ------------------------------------------- REPO-4.6 persisted per-tenant quota
+
+
+@pytest.fixture()
+def telemetry():
+    """A clean polling-telemetry registry per test (the registry is process-wide)."""
+    from app.repository_polling_telemetry import polling_telemetry
+
+    polling_telemetry.reset()
+    yield polling_telemetry
+    polling_telemetry.reset()
+
+
+def test_persisted_tenant_quota_overrides_the_setting_default(monkeypatch):
+    """tenants.repository_polls_per_hour wins over APIOME_REFRESH_TENANT_QUOTA."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 1)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml"), _stale("two.yaml")]},
+        polls_per_hour_by_tenant={"t1": 5},  # generous tenant beats the stingy default
+    )
+
+    assert process_repository_refresh_sweep(db) == 2
+
+
+def test_persisted_tenant_quota_can_be_stricter_than_the_default(monkeypatch):
+    """A tenant tuned below the deployment default is bounded at its own value."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml"), _stale("two.yaml")]},
+        polls_per_hour_by_tenant={"t1": 1},
+    )
+
+    assert process_repository_refresh_sweep(db) == 1
+    assert [j["path"] for j in db.enqueued] == ["one.yaml"]
+    assert db.failures_recorded == []
+
+
+def test_zero_polls_per_hour_makes_one_tenant_unlimited(monkeypatch):
+    """0 on the tenant row is 'unlimited', not 'defer everything'."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 1)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml"), _stale("two.yaml")]},
+        recent_jobs_by_tenant={"t1": 10_000},  # would exhaust any finite bound
+        polls_per_hour_by_tenant={"t1": 0},
+    )
+
+    assert process_repository_refresh_sweep(db) == 2
+    assert db.refreshed == ["r1"]
+
+
+def test_tenant_quotas_are_independent(monkeypatch):
+    """One tenant exhausting its (small) quota does not bound another tenant's."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    db = FakeDB(
+        due=[
+            {"id": "a1", "tenant_id": "noisy"},
+            {"id": "b1", "tenant_id": "quiet"},
+        ],
+        branches={"a1": ["main"], "b1": ["main"]},
+        candidates={
+            ("a1", "main"): [_stale("a1.yaml"), _stale("a2.yaml")],
+            ("b1", "main"): [_stale("b1.yaml"), _stale("b2.yaml")],
+        },
+        polls_per_hour_by_tenant={"noisy": 1, "quiet": 600},
+    )
+
+    assert process_repository_refresh_sweep(db) == 3
+    assert [j["path"] for j in db.enqueued] == ["a1.yaml", "b1.yaml", "b2.yaml"]
+
+
+def test_persisted_quota_read_error_falls_back_to_the_default(monkeypatch):
+    """A limits-read failure still bounds the sweep at the configured default."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 1)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml"), _stale("two.yaml")]},
+    )
+
+    def _limits_boom():
+        raise RuntimeError("tenant quota query failed")
+
+    db.list_tenant_repository_polls_per_hour = _limits_boom
+
+    # Falls back to the default (1), not to unlimited: the bound still protects.
+    assert process_repository_refresh_sweep(db) == 1
+
+
+def test_deferral_emits_telemetry_and_no_failure(monkeypatch, telemetry):
+    """A deferred repo is counted for REPO-7.3 and never recorded as a failure."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    db = FakeDB(
+        due=[
+            {"id": "rA", "tenant_id": "t1"},
+            {"id": "rB", "tenant_id": "t1"},
+        ],
+        branches={"rA": ["main"], "rB": ["main"]},
+        candidates={("rA", "main"): [_stale("a.yaml")], ("rB", "main"): [_stale("b.yaml")]},
+        polls_per_hour_by_tenant={"t1": 1},
+    )
+
+    process_repository_refresh_sweep(db)
+
+    snapshot = telemetry.snapshot()
+    assert snapshot["totals"]["poll_dispatched"] == 1
+    assert snapshot["totals"]["repository_deferred"] == 1
+    assert snapshot["by_tenant"]["t1"]["repository_deferred"] == 1
+    # A deferral is a scheduling decision, never a failure.
+    assert db.failures_recorded == []
+    assert "failed" not in snapshot["totals"]
+
+
+def test_mid_repo_file_deferral_is_counted(monkeypatch, telemetry):
+    """Stale files left unenqueued when the budget runs out are counted separately."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={
+            ("r1", "main"): [_stale("one.yaml"), _stale("two.yaml"), _stale("three.yaml")]
+        },
+        polls_per_hour_by_tenant={"t1": 1},
+    )
+
+    process_repository_refresh_sweep(db)
+
+    snapshot = telemetry.snapshot()
+    assert snapshot["totals"]["files_deferred"] == 1
+    assert snapshot["totals"]["files_deferred_jobs"] == 2  # two files left stale
+    assert snapshot["totals"]["poll_dispatched_jobs"] == 1
+    assert db.failures_recorded == []
+
+
+def test_telemetry_failure_never_becomes_a_refresh_failure(monkeypatch, telemetry):
+    """A broken counter must not turn a healthy poll into a recorded failure."""
+    import app.config as config
+    import app.repository_polling_telemetry as telemetry_module
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    def _record_boom(*args, **kwargs):
+        raise RuntimeError("counter exploded")
+
+    monkeypatch.setattr(telemetry_module.polling_telemetry, "record", _record_boom)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml")]},
+    )
+
+    assert process_repository_refresh_sweep(db) == 1
+    assert db.failures_recorded == []
+    assert db.refreshed == ["r1"]
+    assert db.released == ["r1"]
+
+
+def test_telemetry_failure_never_blocks_a_deferral(monkeypatch, telemetry):
+    """The deferral still happens (no lock, no anchor) when counting it fails."""
+    import app.config as config
+    import app.repository_polling_telemetry as telemetry_module
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    def _record_boom(*args, **kwargs):
+        raise RuntimeError("counter exploded")
+
+    monkeypatch.setattr(telemetry_module.polling_telemetry, "record", _record_boom)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml")]},
+        recent_jobs_by_tenant={"t1": 60},  # already at the bound
+    )
+
+    assert process_repository_refresh_sweep(db) == 0
+    assert db.acquired == []
+    assert db.refreshed == []
+    assert db.failures_recorded == []
+
+
+def test_dispatch_telemetry_records_quota_and_jobs(monkeypatch, telemetry):
+    """A within-quota poll is counted with the jobs it enqueued."""
+    import app.config as config
+
+    monkeypatch.setattr(config.settings, "refresh_tenant_quota_jobs", 60)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): [_stale("one.yaml"), _stale("two.yaml")]},
+        polls_per_hour_by_tenant={"t1": 600},
+    )
+
+    process_repository_refresh_sweep(db)
+
+    snapshot = telemetry.snapshot()
+    assert snapshot["totals"]["poll_dispatched"] == 1
+    assert snapshot["totals"]["poll_dispatched_jobs"] == 2
+    assert "repository_deferred" not in snapshot["totals"]
+    assert "files_deferred" not in snapshot["totals"]

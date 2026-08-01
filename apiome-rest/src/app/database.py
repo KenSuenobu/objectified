@@ -15622,6 +15622,92 @@ class Database:
             (json.dumps(warning) if warning is not None else None, file_id),
         )
 
+    # --- REPO-4.6: per-tenant repository polling quota -------------------------
+
+    def get_tenant_repository_polls_per_hour(self, tenant_id: str) -> Optional[int]:
+        """Read a tenant's configured repository polling quota (REPO-4.6).
+
+        Args:
+            tenant_id: The tenant to look up.
+
+        Returns:
+            The stored ``repository_polls_per_hour`` (``0`` meaning the tenant is
+            explicitly unlimited), or None when the tenant row is missing or
+            soft-deleted — the caller then applies the deployment default via
+            ``repository_refresh_quota.resolve_tenant_polls_per_hour``.
+        """
+        rows = self.execute_query(
+            """
+            SELECT repository_polls_per_hour
+            FROM apiome.tenants
+            WHERE id = %s::uuid AND deleted_at IS NULL
+            LIMIT 1
+            """,
+            (tenant_id,),
+        )
+        if not rows:
+            return None
+        raw = rows[0].get("repository_polls_per_hour")
+        return int(raw) if raw is not None else None
+
+    def list_tenant_repository_polls_per_hour(self) -> Dict[str, int]:
+        """Read every live tenant's repository polling quota (REPO-4.6).
+
+        The sweep needs one bound per tenant per tick; reading them all in a
+        single statement keeps the tick from issuing one query per due
+        repository. Soft-deleted tenants are excluded — they can have no due
+        repositories to bound.
+
+        Returns:
+            Mapping of tenant id to its stored ``repository_polls_per_hour``
+            (``0`` meaning unlimited). Tenants whose column is NULL are omitted
+            so the caller's default applies.
+        """
+        rows = self.execute_query(
+            """
+            SELECT id, repository_polls_per_hour
+            FROM apiome.tenants
+            WHERE deleted_at IS NULL
+            """
+        )
+        return {
+            str(r["id"]): int(r["repository_polls_per_hour"])
+            for r in rows
+            if r.get("id") is not None and r.get("repository_polls_per_hour") is not None
+        }
+
+    def set_tenant_repository_polls_per_hour(
+        self, tenant_id: str, polls_per_hour: int
+    ) -> Optional[int]:
+        """Configure a tenant's repository polling quota (REPO-4.6).
+
+        Args:
+            tenant_id: The tenant to configure.
+            polls_per_hour: Maximum poll (refresh) jobs the tenant may enqueue
+                per rolling quota window. ``0`` makes the tenant unlimited;
+                negative values are rejected (the column's CHECK forbids them).
+
+        Returns:
+            The stored value when a live tenant row was updated, or None when the
+            tenant does not exist or is soft-deleted.
+
+        Raises:
+            ValueError: When ``polls_per_hour`` is negative.
+        """
+        value = int(polls_per_hour)
+        if value < 0:
+            raise ValueError("repository polls per hour must be zero or positive")
+        updated = self._execute_write(
+            """
+            UPDATE apiome.tenants
+            SET repository_polls_per_hour = %s,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s::uuid AND deleted_at IS NULL
+            """,
+            (value, tenant_id),
+        )
+        return value if updated > 0 else None
+
     # --- REPO-2.5: per-tenant scan budget + stored resume cursor ---------------
 
     def get_tenant_repository_scan_budget_seconds(self, tenant_id: str) -> Optional[int]:
