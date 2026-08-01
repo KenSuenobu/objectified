@@ -45,6 +45,10 @@ from .models import (
     RepositoryRefreshNowRequest,
     RepositoryRefreshNowResponse,
     RepositoryWebhookEventOut,
+    RepositoryWebhookIpAllowlistEntryCreate,
+    RepositoryWebhookIpAllowlistEntryUpdate,
+    RepositoryWebhookIpAllowlistResponse,
+    RepositoryWebhookIpPolicyUpdate,
     RepositoryWebhookRotateRequest,
     RepositoryWebhookRotateResponse,
     RepositoryWebhookStatusResponse,
@@ -96,6 +100,12 @@ from .repository_quota_window import (
 )
 from .repository_refresh_quota import describe_tenant_polling_quota
 from .repository_file_scan import _github_owner_repo, fetch_github_repository_file_text
+from .repository_webhook_ip_allowlist import (
+    IP_ALLOWLIST_UPDATED_ACTION,
+    IP_POLICY_UPDATED_ACTION,
+    describe_tenant_ip_allowlist,
+    normalize_cidr,
+)
 from .repository_webhook_rotation import (
     RotationError,
     resolve_linked_account_token,
@@ -531,6 +541,349 @@ async def export_tenant_repository_audit(
         media_type=export_media_type(fmt),
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+def _ip_allowlist_view(tenant_id: str) -> RepositoryWebhookIpAllowlistResponse:
+    """Build the allowlist response for one tenant.
+
+    Every route below returns the same projection — read and mutations alike — so a panel
+    re-renders from what was actually stored rather than from what it hoped it stored.
+
+    Args:
+        tenant_id: The tenant whose view to build.
+
+    Returns:
+        The populated response model.
+    """
+    return RepositoryWebhookIpAllowlistResponse(
+        success=True, **describe_tenant_ip_allowlist(db, tenant_id)
+    )
+
+
+def _audit_ip_allowlist(
+    tenant_id: str,
+    actor_id: Optional[str],
+    action: str,
+    outcome: str,
+    detail: Dict[str, Any],
+) -> None:
+    """Append one allowlist-change audit row; best-effort, never raises.
+
+    Changing a network filter is exactly the kind of change a review asks about later, so
+    every mutation writes one — but the write must not be able to fail the change it
+    describes, which has already been committed by the time this runs.
+    """
+    try:
+        db.insert_workflow_audit(tenant_id, actor_id, None, action, outcome, None, detail)
+    except Exception:
+        _logger.exception("repository webhook ip allowlist audit failed action=%s", action)
+
+
+@router.get(
+    "/{tenant_slug}/repository-webhook-ip-allowlist",
+    response_model=RepositoryWebhookIpAllowlistResponse,
+    response_model_by_alias=True,
+)
+async def get_repository_webhook_ip_allowlist(
+    tenant_slug: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryWebhookIpAllowlistResponse:
+    """Show the webhook source-IP allowlist for this tenant (REPO-7.6, #2804).
+
+    The webhook endpoint carries no bearer token, so an IP filter in front of the HMAC check
+    is what stops every unsigned POST on the internet from reaching a real secret comparison.
+    This read answers the three questions the panel exists for: is the filter enforced for us,
+    what do the providers currently vouch for (and how stale is that list), and what have we
+    added ourselves.
+
+    Readable by any member who can view imports — the provider ranges are public information
+    and a tenant's own entries are its own — while every *change* below requires a tenant
+    administrator.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        The allowlist: deployment posture, cached provider ranges, and this tenant's entries.
+    """
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.VIEW)
+    _ = tenant_slug
+    return _ip_allowlist_view(str(auth_data["tenant_id"]))
+
+
+@router.post(
+    "/{tenant_slug}/repository-webhook-ip-allowlist/entries",
+    response_model=RepositoryWebhookIpAllowlistResponse,
+    response_model_by_alias=True,
+)
+async def add_repository_webhook_ip_allowlist_entry(
+    tenant_slug: str,
+    payload: RepositoryWebhookIpAllowlistEntryCreate,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryWebhookIpAllowlistResponse:
+    """Allow one additional source range for this tenant (REPO-7.6, #2804).
+
+    For the addresses no provider publishes: a self-hosted GitLab runner, a corporate egress
+    gateway, a delivery relay. The entry applies only to this tenant's repositories — a
+    workspace can widen its own filter and no one else's.
+
+    Tenant administrators only. Widening the range of addresses that may reach the signature
+    check is the same class of act as turning enforcement off, and the ticket puts that behind
+    the admin role.
+
+    A CIDR the tenant already has is updated (and re-enabled) rather than refused: a
+    re-submitted form should leave the operator with what they asked for, not a 409.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        payload: The CIDR to allow and why.
+        auth_data: Authenticated principal; must resolve to a tenant administrator.
+
+    Returns:
+        The allowlist, including the new entry.
+
+    Raises:
+        HTTPException: 403 for non-administrators or API-key auth; 400 for a CIDR that is not
+            a valid network or that carries host bits.
+    """
+    tenant_id = require_tenant_admin_session(
+        db,
+        auth_data,
+        detail="Only tenant administrators can change the webhook IP allowlist",
+    )
+    _ = tenant_slug
+    actor_id = get_authenticated_user_id(auth_data)
+
+    try:
+        cidr, family = normalize_cidr(payload.cidr)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    description = (payload.description or "").strip() or None
+    if not description:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "A description is required: an allowlist entry nobody can explain is one "
+                "nobody will ever remove."
+            ),
+        )
+
+    db.add_tenant_webhook_ip_allowlist_entry(
+        tenant_id,
+        cidr=cidr,
+        family=family,
+        description=description,
+        created_by=actor_id,
+    )
+    _audit_ip_allowlist(
+        tenant_id,
+        actor_id,
+        IP_ALLOWLIST_UPDATED_ACTION,
+        "success",
+        {"change": "added", "cidr": cidr, "family": family, "description": description},
+    )
+    return _ip_allowlist_view(tenant_id)
+
+
+@router.patch(
+    "/{tenant_slug}/repository-webhook-ip-allowlist/entries/{entry_id}",
+    response_model=RepositoryWebhookIpAllowlistResponse,
+    response_model_by_alias=True,
+)
+async def update_repository_webhook_ip_allowlist_entry(
+    tenant_slug: str,
+    entry_id: str,
+    payload: RepositoryWebhookIpAllowlistEntryUpdate,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryWebhookIpAllowlistResponse:
+    """Enable or disable one allowlist entry (REPO-7.6, #2804).
+
+    Narrowing the filter during an incident should not cost the entry and its description —
+    an operator who deletes and later re-types a range loses the reason it was there.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        entry_id: The entry to toggle.
+        payload: The new enabled state.
+        auth_data: Authenticated principal; must resolve to a tenant administrator.
+
+    Returns:
+        The allowlist, with the entry in its new state.
+
+    Raises:
+        HTTPException: 403 for non-administrators or API-key auth; 404 when no entry of the
+            tenant's has that id.
+    """
+    tenant_id = require_tenant_admin_session(
+        db,
+        auth_data,
+        detail="Only tenant administrators can change the webhook IP allowlist",
+    )
+    _ = tenant_slug
+    actor_id = get_authenticated_user_id(auth_data)
+
+    row = _lookup_allowlist_entry(tenant_id, entry_id)
+    updated = db.set_tenant_webhook_ip_allowlist_entry_enabled(
+        tenant_id, str(row["id"]), payload.enabled
+    )
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Allowlist entry not found")
+    _audit_ip_allowlist(
+        tenant_id,
+        actor_id,
+        IP_ALLOWLIST_UPDATED_ACTION,
+        "success",
+        {
+            "change": ("enabled" if payload.enabled else "disabled"),
+            "cidr": str(updated.get("cidr")),
+        },
+    )
+    return _ip_allowlist_view(tenant_id)
+
+
+@router.delete(
+    "/{tenant_slug}/repository-webhook-ip-allowlist/entries/{entry_id}",
+    response_model=RepositoryWebhookIpAllowlistResponse,
+    response_model_by_alias=True,
+)
+async def delete_repository_webhook_ip_allowlist_entry(
+    tenant_slug: str,
+    entry_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryWebhookIpAllowlistResponse:
+    """Remove one allowlist entry (REPO-7.6, #2804).
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        entry_id: The entry to remove.
+        auth_data: Authenticated principal; must resolve to a tenant administrator.
+
+    Returns:
+        The allowlist without the entry.
+
+    Raises:
+        HTTPException: 403 for non-administrators or API-key auth; 404 when no entry of the
+            tenant's has that id.
+    """
+    tenant_id = require_tenant_admin_session(
+        db,
+        auth_data,
+        detail="Only tenant administrators can change the webhook IP allowlist",
+    )
+    _ = tenant_slug
+    actor_id = get_authenticated_user_id(auth_data)
+
+    row = _lookup_allowlist_entry(tenant_id, entry_id)
+    removed = db.delete_tenant_webhook_ip_allowlist_entry(tenant_id, str(row["id"]))
+    if removed is None:
+        raise HTTPException(status_code=404, detail="Allowlist entry not found")
+    _audit_ip_allowlist(
+        tenant_id,
+        actor_id,
+        IP_ALLOWLIST_UPDATED_ACTION,
+        "success",
+        {"change": "removed", "cidr": str(removed.get("cidr"))},
+    )
+    return _ip_allowlist_view(tenant_id)
+
+
+@router.put(
+    "/{tenant_slug}/repository-webhook-ip-allowlist/policy",
+    response_model=RepositoryWebhookIpAllowlistResponse,
+    response_model_by_alias=True,
+)
+async def set_repository_webhook_ip_policy(
+    tenant_slug: str,
+    payload: RepositoryWebhookIpPolicyUpdate,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryWebhookIpAllowlistResponse:
+    """Turn allowlist enforcement on or off for this tenant (REPO-7.6, #2804).
+
+    The bypass the ticket puts behind the tenant-administrator role. Disabling enforcement
+    means this tenant's repositories accept deliveries from any address — the posture that
+    existed before the filter — and it affects only this tenant.
+
+    A reason is required to disable and is recorded on both the policy row and the audit
+    ledger, because "who turned the filter off, when, and why" is the first thing a review
+    asks and the hardest thing to reconstruct afterwards.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        payload: The new enforcement state and, when disabling, why.
+        auth_data: Authenticated principal; must resolve to a tenant administrator.
+
+    Returns:
+        The allowlist with the new policy applied.
+
+    Raises:
+        HTTPException: 403 for non-administrators or API-key auth; 400 when enforcement is
+            being disabled with no reason given.
+    """
+    tenant_id = require_tenant_admin_session(
+        db,
+        auth_data,
+        detail="Only tenant administrators can bypass the webhook IP allowlist",
+    )
+    _ = tenant_slug
+    actor_id = get_authenticated_user_id(auth_data)
+
+    reason = (payload.bypass_reason or "").strip() or None
+    if not payload.enforcement_enabled and not reason:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "A reason is required to bypass the webhook IP allowlist, so the audit "
+                "trail can say why the filter was turned off."
+            ),
+        )
+
+    db.set_tenant_webhook_ip_policy(
+        tenant_id,
+        enforcement_enabled=payload.enforcement_enabled,
+        # Re-enabling clears the reason: a stale "we had an incident in March" sitting next to
+        # an enforced filter reads as though the bypass were still in place.
+        bypass_reason=(reason if not payload.enforcement_enabled else None),
+        updated_by=actor_id,
+    )
+    _audit_ip_allowlist(
+        tenant_id,
+        actor_id,
+        IP_POLICY_UPDATED_ACTION,
+        ("success" if payload.enforcement_enabled else "failure"),
+        {
+            "enforcementEnabled": payload.enforcement_enabled,
+            "bypassReason": (reason if not payload.enforcement_enabled else None),
+        },
+    )
+    return _ip_allowlist_view(tenant_id)
+
+
+def _lookup_allowlist_entry(tenant_id: str, entry_id: str) -> Dict[str, Any]:
+    """Find one of the tenant's allowlist entries, or 404.
+
+    The id is validated as a UUID before it reaches a query: a malformed value would
+    otherwise surface as a 500 from the ``::uuid`` cast rather than as the 404 it is.
+
+    Args:
+        tenant_id: Owning tenant id.
+        entry_id: The entry id from the path.
+
+    Returns:
+        The stored row.
+
+    Raises:
+        HTTPException: 404 when the id is malformed or names no entry of this tenant's.
+    """
+    try:
+        uuid.UUID(str(entry_id))
+    except (ValueError, AttributeError, TypeError) as e:
+        raise HTTPException(status_code=404, detail="Allowlist entry not found") from e
+    for row in db.list_tenant_webhook_ip_allowlist(tenant_id) or []:
+        if str(row.get("id")) == str(entry_id):
+            return dict(row)
+    raise HTTPException(status_code=404, detail="Allowlist entry not found")
 
 
 @router.get("/{tenant_slug}/repositories", response_model=TenantRepositoriesListResponse)

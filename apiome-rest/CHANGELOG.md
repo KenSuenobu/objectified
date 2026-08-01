@@ -5,6 +5,63 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.232.0] - 2026-08-01
+
+### Added
+- **Source-IP allowlist for webhook ingestion (REPO-7.6, #2804)** —
+  `POST /v1/repositories/webhook/{provider}` is the one repository route with no bearer token,
+  so the HMAC signature is its only authentication. That check is sound and it is reached by
+  anyone who can open a socket: every unsigned POST on the internet buys a subscription
+  lookup, a constant-time comparison against a real secret, and a ledger row. The allowlist
+  filters on the source address **before** any of that runs.
+  - **A blocked delivery is a `403` and is never verified.** The guard runs in the route,
+    ahead of `ingest_webhook_delivery`, so a refused source never reaches `verify_signature`
+    at all — the ticket's defense-in-depth requirement, and the reason this is not a branch
+    inside the dispatcher. The response body says only that the source was refused; naming the
+    allowlist, the tenant or the matched range would turn the endpoint into a probe for the
+    deployment's network policy.
+  - **Provider ranges are fetched daily, not hard-coded.** GitHub's `hooks` array from
+    `api.github.com/meta` and Bitbucket's entries from `ip-ranges.atlassian.com` are refreshed
+    on a daily cadence into `apiome.webhook_provider_ip_range`, shared across replicas so
+    every process filters on the same list. Due-ness is measured from the last *success*, so a
+    provider whose endpoint is failing is retried on the next hourly tick rather than
+    tomorrow. GitLab.com publishes no machine-readable list; its ranges come from
+    `APIOME_REPOSITORY_WEBHOOK_IP_RANGES_GITLAB`, and the same setting exists for the other
+    two providers for self-hosted instances.
+  - **Per-tenant additional ranges, scoped to the tenant that owns the repository.** A
+    self-hosted runner or an egress gateway is added per workspace and consulted only for the
+    tenants that registered the repository the payload names — resolved by parsing, which
+    reaches no secret. A union across tenants would let one workspace widen the filter
+    protecting all the others.
+  - **The bypass is an administrator's act, with a reason.** `enforcement_enabled = false` on
+    `apiome.tenant_webhook_ip_policy` turns the filter off for one tenant's repositories;
+    setting it, and adding a range, both require a signed-in tenant administrator (API keys
+    are refused) and both write to `apiome.workflow_audit`. Disabling without a stated reason
+    is a 400.
+  - **Failure modes are chosen.** Enforcement is off by default
+    (`APIOME_REPOSITORY_WEBHOOK_IP_ALLOWLIST`), so an upgrade changes nothing. A provider with
+    no cached ranges allows and logs rather than rejecting everything;
+    `..._IP_ALLOWLIST_STRICT` flips that to fail-closed. An empty provider fetch is treated as
+    a failure and leaves the previous cache standing. An unidentifiable client address blocks
+    — unless the owning tenant has bypassed enforcement, which is exactly the escape hatch
+    that case calls for.
+  - **`X-Forwarded-For` is worth what the deployment says it is.**
+    `APIOME_REPOSITORY_WEBHOOK_TRUSTED_PROXY_HOPS` (default 0) decides how many hops in to
+    read; at 0 the header is ignored entirely, since honouring it unverified would let any
+    caller name its own source address. A header shorter than the configured chain is refused
+    rather than guessed at.
+  - `GET|POST|PATCH|DELETE|PUT /v1/tenants/{slug}/repository-webhook-ip-allowlist[...]` back
+    the admin panel. The read needs only import-view permission — seeing the filter is how
+    anyone diagnoses "our webhooks stopped" — while every mutation needs the admin role. Every
+    mutation answers with the whole allowlist, so a panel can never drift from what was
+    stored.
+  - Blocked deliveries land in the existing `apiome.repository_webhook_event` ledger with the
+    `rejected` outcome and an `ip-not-allowed` reason, and are audited per owning tenant as
+    `repository.webhook.ip_blocked` — which carries the `repository.` prefix, so it appears in
+    the REPO-7.5 compliance export with no further wiring.
+  - V234 adds the four tables (provider range cache, per-provider refresh state, per-tenant
+    entries, per-tenant policy). Tables and indexes only; no existing data is touched.
+
 ## [1.231.0] - 2026-07-31
 
 ### Added
