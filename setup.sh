@@ -333,6 +333,27 @@ while true; do
   warn "ADMIN_PASSWORD is required for the super admin portal."
 done
 
+# The /admin portal mints an HMAC-signed admin_session token that apiome-rest re-verifies
+# before serving GET/PUT /v1/admin/auth-providers (OLO-8.4). Both sides resolve the signing
+# key the same way — ADMIN_SESSION_SECRET wins, else it is derived from ADMIN_PASSWORD — so
+# a dedicated secret written to both keeps them in sync and survives a password rotation.
+# Values that differ between the two services 403 every save, reported as "session expired".
+printf '\n'
+prompt_yes_no use_generated_admin_session_secret \
+  "Generate ADMIN_SESSION_SECRET automatically? (shared with apiome-rest)" "y"
+if [[ "$use_generated_admin_session_secret" == true ]]; then
+  ADMIN_SESSION_SECRET="$(generate_base64_secret 48)"
+  ok "  generated ADMIN_SESSION_SECRET"
+else
+  while true; do
+    prompt_secret ADMIN_SESSION_SECRET "ADMIN_SESSION_SECRET (min 32 characters)"
+    if [[ ${#ADMIN_SESSION_SECRET} -ge 32 ]]; then
+      break
+    fi
+    warn "Secret must be at least 32 characters."
+  done
+fi
+
 DEFAULT_BROWSE_URL="http://localhost:3001"
 prompt NEXT_PUBLIC_BROWSE_URL "Public browse app URL (apiome-browse)" "$DEFAULT_BROWSE_URL"
 prompt OLLAMA_BASE_URL "Ollama LLM server URL" "http://localhost:11434"
@@ -419,6 +440,11 @@ RELOAD=$(format_env_value "$REST_RELOAD")
 # JWT Authentication (must match apiome-ui BETTER_AUTH_SECRET)
 BETTER_AUTH_SECRET=$(format_env_value "$BETTER_AUTH_SECRET")
 
+# Super-admin session verification (OLO-8.4). The /admin portal (apiome-ui) mints an
+# HMAC-signed admin_session token that REST re-verifies before serving the provider-config
+# admin surface, so this must MATCH apiome-ui. Without it REST fails closed with a 403.
+ADMIN_SESSION_SECRET=$(format_env_value "$ADMIN_SESSION_SECRET")
+
 # Auth-provider secret encryption-at-rest (OLO-8.3): base64 32-byte AES-256 KEK sealing the
 # client secrets saved from the admin screen. Unset => saving a secret returns 503.
 AUTH_CONFIG_ENC_KEY=$(format_env_value "$AUTH_CONFIG_ENC_KEY")
@@ -465,6 +491,10 @@ NEXT_PUBLIC_BETA_MODE=$(format_env_value "$NEXT_PUBLIC_BETA_MODE")
 
 # Admin password for super admin site
 ADMIN_PASSWORD=$(format_env_value "$ADMIN_PASSWORD")
+
+# Signs the super-admin session cookie (HMAC-SHA256). apiome-rest verifies the same token
+# against its own copy of this key, so the two must match byte for byte (OLO-8.4).
+ADMIN_SESSION_SECRET=$(format_env_value "$ADMIN_SESSION_SECRET")
 
 # Ollama LLM Server URL for AI-powered import feature
 OLLAMA_BASE_URL=$(format_env_value "$OLLAMA_BASE_URL")
@@ -584,6 +614,12 @@ POSTGRES_USER=$(format_env_value "$POSTGRES_USER")
 POSTGRES_PASSWORD=$(format_env_value "$POSTGRES_PASSWORD")
 POSTGRES_DB=$(format_env_value "$POSTGRES_DB")
 POSTGRES_PUBLISH_PORT=$(format_env_value "$POSTGRES_PORT")
+
+# Super-admin session (OLO-8.4), passed through to the rest service by docker-compose.yml.
+# ADMIN_PASSWORD is here because that service declares it too; with a dedicated
+# ADMIN_SESSION_SECRET set it is the fallback key source rather than the one in use.
+ADMIN_PASSWORD=$(format_env_value "$ADMIN_PASSWORD")
+ADMIN_SESSION_SECRET=$(format_env_value "$ADMIN_SESSION_SECRET")
 
 # Sign-in provider config store (OLO-8.3/8.5). docker-compose.yml passes both through to the
 # rest service; they must match the values in apiome-rest/.env and apiome-ui/.env.
