@@ -565,6 +565,25 @@ enough to enable. Forcing a provider **Enabled** requires its client id *and* se
 stored in the DB (env values do not count toward that check); saves take effect at the next
 login without a restart (OLO-8.5/8.6).
 
+#### Removing a provider
+
+A card's **Remove** button deletes that provider's whole `auth_provider_config` row, returning it
+to the env-only behaviour described above — the card disappears and the provider is offered again
+in **Add Provider**. It is confirmed inline first, because unlike every other control on the card
+it cannot be undone: **the encrypted client secret is destroyed with the row**, and re-configuring
+the provider means re-entering it from the provider's console.
+
+Removal is not the same as clearing fields individually:
+
+- **Clear stored secret** (on the secret field) drops only the secret; the row, client id, extras,
+  and any `enabled` override remain.
+- **Remove** drops everything, including the `enabled` override — so a provider that was forced on
+  from the DB reverts to env-derived enablement, which may turn its login button off.
+
+Like a save, a removal takes effect at the next login without a restart. If the provider's
+credentials are also present in `.env`, sign-in keeps working from those; if they are not, the
+provider disappears from the login page.
+
 ## Test-only endpoint overrides (OLO-7.4)
 
 The end-to-end journey suite (`e2e/journey/`, #4226) points every provider at a local

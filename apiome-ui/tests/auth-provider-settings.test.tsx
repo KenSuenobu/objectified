@@ -9,6 +9,11 @@
  * value), per-field ".env fallback" indicators, dirty-only partial saves,
  * blocked-enable 422 guidance, the Validate affordance, and the enablement
  * override semantics (true / false / null).
+ *
+ * Removal is covered separately at the end: the confirmation gate, the DELETE
+ * itself, the card disappearing and the provider returning to the Add picker,
+ * failure paths leaving the card in place, and the escape hatch on a
+ * coming-soon provider that has a stored row but nothing to edit.
  */
 import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
@@ -124,10 +129,14 @@ const DEFAULT_LIST = {
   providers: [GITHUB, GITLAB, AZURE, GOOGLE, OKTA, AWS, KEYCLOAK, OIDC, AUTH0, LINE, VK, WECHAT, ATLASSIAN],
 };
 
-/** Install a fetch mock; `putHandler` decides PUT responses, `listBodies` queues GET bodies. */
+/**
+ * Install a fetch mock; `putHandler` decides PUT responses, `listBodies` queues GET bodies,
+ * `deleteHandler` decides DELETE responses (removal — omit it to leave DELETE unhandled).
+ */
 function mockFetch(
   putHandler?: (url: string, body: Record<string, unknown>) => { status: number; body: unknown },
-  listBodies: unknown[] = [DEFAULT_LIST]
+  listBodies: unknown[] = [DEFAULT_LIST],
+  deleteHandler?: (url: string) => { status: number; body: unknown }
 ) {
   let listCall = 0;
   const impl = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -141,6 +150,14 @@ function mockFetch(
     if (method === 'PUT' && putHandler) {
       const parsed = JSON.parse(String(init?.body ?? '{}'));
       const result = putHandler(url, parsed);
+      return {
+        ok: result.status >= 200 && result.status < 300,
+        status: result.status,
+        json: async () => result.body,
+      } as unknown as Response;
+    }
+    if (method === 'DELETE' && deleteHandler) {
+      const result = deleteHandler(url);
       return {
         ok: result.status >= 200 && result.status < 300,
         status: result.status,
@@ -704,5 +721,178 @@ describe('AuthProviderSettingsClient — validate affordance', () => {
         gitlab.getByText(/configuration is complete — this provider can be enabled/)
       ).toBeInTheDocument()
     );
+  });
+});
+
+describe('AuthProviderSettingsClient — removing a provider', () => {
+  /** The post-delete view the REST surface returns: everything back to env-fallback. */
+  const GITLAB_REMOVED = makeView({
+    provider_id: 'gitlab',
+    label: 'GitLab',
+    missing_for_enable: ['client_id', 'client_secret'],
+  });
+
+  it('asks for confirmation before deleting anything', async () => {
+    const deleteHandler = jest.fn(() => ({ status: 200, body: GITLAB_REMOVED }));
+    mockFetch(undefined, [DEFAULT_LIST], deleteHandler);
+    render(<AuthProviderSettingsClient />);
+
+    const gitlab = await card('GitLab');
+    fireEvent.click(gitlab.getByRole('button', { name: /Remove/ }));
+
+    // The prompt names the provider and warns that the stored secret is unrecoverable.
+    expect(gitlab.getByText(/Remove the stored GitLab configuration\?/)).toBeInTheDocument();
+    expect(gitlab.getByText(/The stored secret cannot be recovered/)).toBeInTheDocument();
+    // Nothing is sent until the admin confirms.
+    expect(deleteHandler).not.toHaveBeenCalled();
+  });
+
+  it('cancelling the confirmation leaves the provider untouched', async () => {
+    const deleteHandler = jest.fn(() => ({ status: 200, body: GITLAB_REMOVED }));
+    mockFetch(undefined, [DEFAULT_LIST], deleteHandler);
+    render(<AuthProviderSettingsClient />);
+
+    const gitlab = await card('GitLab');
+    fireEvent.click(gitlab.getByRole('button', { name: /Remove/ }));
+    fireEvent.click(gitlab.getByRole('button', { name: 'Cancel' }));
+
+    expect(
+      gitlab.queryByText(/Remove the stored GitLab configuration\?/)
+    ).not.toBeInTheDocument();
+    expect(deleteHandler).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('region', { name: 'GitLab provider configuration' })
+    ).toBeInTheDocument();
+  });
+
+  it('confirming DELETEs the provider and drops its card', async () => {
+    const deleteHandler = jest.fn(() => ({ status: 200, body: GITLAB_REMOVED }));
+    const fetchMock = mockFetch(undefined, [DEFAULT_LIST], deleteHandler);
+    render(<AuthProviderSettingsClient />);
+
+    const gitlab = await card('GitLab');
+    fireEvent.click(gitlab.getByRole('button', { name: /Remove/ }));
+    fireEvent.click(gitlab.getByRole('button', { name: 'Remove provider' }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('region', { name: 'GitLab provider configuration' })
+      ).not.toBeInTheDocument()
+    );
+
+    expect(deleteHandler).toHaveBeenCalledWith('/api/admin/auth-providers/gitlab');
+    const deleteCall = fetchMock.mock.calls.find(([, init]) => init?.method === 'DELETE');
+    expect(deleteCall?.[1]?.body).toBeUndefined();
+    // Nothing else was configured in the fixture, so the empty state takes over.
+    expect(screen.getByText('No providers configured.')).toBeInTheDocument();
+  });
+
+  it('returns the removed provider to the Add Provider picker', async () => {
+    mockFetch(undefined, [DEFAULT_LIST], () => ({ status: 200, body: GITLAB_REMOVED }));
+    render(<AuthProviderSettingsClient />);
+
+    // GitLab is configured, so it starts out absent from the picker.
+    const before = await openAddModal();
+    expect(before.queryByRole('option', { name: /GitLab/ })).not.toBeInTheDocument();
+    fireEvent.click(before.getByRole('button', { name: 'Cancel' }));
+
+    const gitlab = await card('GitLab');
+    fireEvent.click(gitlab.getByRole('button', { name: /Remove/ }));
+    fireEvent.click(gitlab.getByRole('button', { name: 'Remove provider' }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('region', { name: 'GitLab provider configuration' })
+      ).not.toBeInTheDocument()
+    );
+
+    const after = await openAddModal();
+    expect(after.getByRole('option', { name: /GitLab/ })).toBeInTheDocument();
+  });
+
+  it('keeps the card and reports the failure when removal is rejected', async () => {
+    mockFetch(undefined, [DEFAULT_LIST], () => ({
+      status: 502,
+      body: {
+        error: 'rest_unreachable',
+        message: 'Could not reach the configuration service (apiome-rest).',
+      },
+    }));
+    render(<AuthProviderSettingsClient />);
+
+    const gitlab = await card('GitLab');
+    fireEvent.click(gitlab.getByRole('button', { name: /Remove/ }));
+    fireEvent.click(gitlab.getByRole('button', { name: 'Remove provider' }));
+
+    await waitFor(() =>
+      expect(
+        gitlab.getByText(/Could not reach the configuration service/)
+      ).toBeInTheDocument()
+    );
+    // The provider survives a failed removal.
+    expect(
+      screen.getByRole('region', { name: 'GitLab provider configuration' })
+    ).toBeInTheDocument();
+  });
+
+  it('surfaces an expired admin session instead of a generic failure', async () => {
+    mockFetch(undefined, [DEFAULT_LIST], () => ({
+      status: 403,
+      body: { error: 'forbidden', message: 'Invalid or expired super-admin session.' },
+    }));
+    render(<AuthProviderSettingsClient />);
+
+    const gitlab = await card('GitLab');
+    fireEvent.click(gitlab.getByRole('button', { name: /Remove/ }));
+    fireEvent.click(gitlab.getByRole('button', { name: 'Remove provider' }));
+
+    await waitFor(() =>
+      expect(gitlab.getByText(/admin session has expired/)).toBeInTheDocument()
+    );
+    expect(
+      screen.getByRole('region', { name: 'GitLab provider configuration' })
+    ).toBeInTheDocument();
+  });
+
+  it('offers removal on a configured coming-soon provider, which has nothing to edit', async () => {
+    const configuredComingSoon = makeView({
+      provider_id: 'atlassian',
+      label: 'Atlassian',
+      status: 'coming-soon',
+      required_fields: [],
+      missing_for_enable: [],
+      client_id: 'left-over-id',
+      client_id_source: 'db',
+      updated_at: '2026-07-20T10:00:00Z',
+      updated_by: 'admin',
+    });
+    const deleteHandler = jest.fn(() => ({
+      status: 200,
+      body: makeView({
+        provider_id: 'atlassian',
+        label: 'Atlassian',
+        status: 'coming-soon',
+        required_fields: [],
+        missing_for_enable: [],
+      }),
+    }));
+    mockFetch(
+      undefined,
+      [{ providers: [GITHUB, configuredComingSoon] }],
+      deleteHandler
+    );
+    render(<AuthProviderSettingsClient />);
+
+    const atlassian = await card('Atlassian');
+    // No editing controls exist for a coming-soon provider — only the escape hatch.
+    expect(atlassian.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+    fireEvent.click(atlassian.getByRole('button', { name: /Remove/ }));
+    fireEvent.click(atlassian.getByRole('button', { name: 'Remove provider' }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('region', { name: 'Atlassian provider configuration' })
+      ).not.toBeInTheDocument()
+    );
+    expect(deleteHandler).toHaveBeenCalledWith('/api/admin/auth-providers/atlassian');
   });
 });

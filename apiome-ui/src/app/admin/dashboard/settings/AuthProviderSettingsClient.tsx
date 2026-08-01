@@ -18,7 +18,11 @@
  *     `config` JSONB, env-var-keyed for the OLO-8.5 merge resolver;
  *   - a per-field "using .env fallback" badge whenever no DB value is set;
  *   - a Validate affordance surfacing the OLO-8.4 completeness check (`can_enable` /
- *     `missing_for_enable`).
+ *     `missing_for_enable`);
+ *   - a Remove action deleting the provider's whole stored row, so it reverts to env-only
+ *     governance. It is confirmed inline because it destroys the sealed secret irrecoverably —
+ *     unlike every other control here, editing a field back will not undo it. After removal the
+ *     card disappears and the provider returns to the Add Provider picker.
  *
  * All reads/writes go through the super-admin proxy (`/api/admin/auth-providers`), gated by the
  * hardened session (OLO-8.1). Saves send only the fields the admin actually changed (partial
@@ -35,6 +39,7 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
+  Trash2,
   X,
 } from 'lucide-react';
 import { getProviderBrand } from '@/app/components/auth/provider-brand';
@@ -113,6 +118,10 @@ const INPUT_CLASSES =
 /** Shared classes for secondary (outline) buttons. */
 const SECONDARY_BUTTON_CLASSES =
   'inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800';
+
+/** Shared classes for the destructive (remove) confirmation button. */
+const DANGER_BUTTON_CLASSES =
+  'inline-flex items-center gap-1.5 rounded-md bg-rose-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50';
 
 /** One option of the three-way enablement control. */
 function EnablementOption({
@@ -651,7 +660,9 @@ interface ValidationResult {
  * One provider's configuration card.
  *
  * @param view The provider's server-confirmed masked view.
- * @param onViewChange Callback replacing the view after a save or validate refresh.
+ * @param onViewChange Callback replacing the view after a save, validate refresh, or removal.
+ *   Removal hands up the provider's post-delete (all env-fallback) view, which no longer counts
+ *   as configured — so the parent drops this card and offers the provider in Add Provider again.
  */
 function ProviderCard({
   view,
@@ -677,6 +688,9 @@ function ProviderCard({
   const [justSaved, setJustSaved] = useState(false);
   const [validating, setValidating] = useState(false);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [removeError, setRemoveError] = useState<string | null>(null);
 
   const payload = comingSoon
     ? null
@@ -703,6 +717,7 @@ function ProviderCard({
     setJustSaved(false);
     setSaveError(null);
     setErrorMissingFields([]);
+    setRemoveError(null);
   };
 
   const handleSave = async () => {
@@ -749,6 +764,124 @@ function ProviderCard({
       setSaving(false);
     }
   };
+
+  const handleRemove = async () => {
+    if (removing) return;
+    setRemoving(true);
+    setRemoveError(null);
+    setSaveError(null);
+    setErrorMissingFields([]);
+    setJustSaved(false);
+    setValidation(null);
+    try {
+      const response = await fetch(
+        `/api/admin/auth-providers/${encodeURIComponent(view.provider_id)}`,
+        { method: 'DELETE' }
+      );
+      const body: unknown = await response.json().catch(() => null);
+      if (response.ok) {
+        // The reply is the provider's post-delete view (everything back to env-fallback). Handing
+        // it up removes this card and returns the provider to the Add Provider picker — no
+        // re-fetch, and no stale card left behind.
+        onViewChange(body as AdminProviderConfigView);
+        return;
+      }
+      if (response.status === 401 || response.status === 403) {
+        setRemoveError('Your admin session has expired. Sign out and back in, then retry.');
+        return;
+      }
+      setRemoveError(
+        extractRestErrorMessage(
+          body,
+          'Removing failed. Check the configuration service and retry.'
+        )
+      );
+    } catch {
+      setRemoveError('Removing failed: the server could not be reached.');
+    } finally {
+      setRemoving(false);
+      setConfirmingRemove(false);
+    }
+  };
+
+  /** The Remove trigger — opens the inline confirmation rather than deleting immediately. */
+  const removeButton = (
+    <button
+      type="button"
+      onClick={() => {
+        touch();
+        setValidation(null);
+        setConfirmingRemove(true);
+      }}
+      disabled={saving || validating || removing || confirmingRemove}
+      className={`${SECONDARY_BUTTON_CLASSES} text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40`}
+    >
+      {removing ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <Trash2 className="h-3.5 w-3.5" />
+      )}
+      Remove
+    </button>
+  );
+
+  /**
+   * Confirmation prompt + failure notice for removal.
+   *
+   * Removal is confirmed inline rather than executed on first click: it destroys the stored
+   * secret irrecoverably, and — unlike every other control on this card — it cannot be undone by
+   * editing a field back.
+   */
+  const removeNotices = (
+    <>
+      {removeError && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
+        >
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>{removeError}</p>
+        </div>
+      )}
+
+      {confirmingRemove && (
+        <div
+          role="alert"
+          aria-label={`Confirm removing ${view.label}`}
+          className="flex flex-col gap-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-3 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
+        >
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              Remove the stored {view.label} configuration? This deletes its database row —
+              client ID, {view.secret_set ? 'stored secret, ' : ''}enablement override, and
+              settings. {view.secret_set && 'The stored secret cannot be recovered. '}
+              Sign-in for this provider falls back to .env.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void handleRemove()}
+              disabled={removing}
+              className={DANGER_BUTTON_CLASSES}
+            >
+              {removing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {removing ? 'Removing…' : 'Remove provider'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmingRemove(false)}
+              disabled={removing}
+              className={SECONDARY_BUTTON_CLASSES}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
 
   const handleValidate = async () => {
     if (validating) return;
@@ -850,10 +983,17 @@ function ProviderCard({
       </div>
 
       {comingSoon ? (
-        <p className="px-5 py-4 text-sm text-slate-500 dark:text-slate-400">
-          This provider is on the roadmap. Configuration will be available once its sign-in
-          integration ships.
-        </p>
+        // A coming-soon provider can still hold a stored row (PUT blocks only *enabling* it), so
+        // it gets the remove action even though it has nothing to edit — otherwise that row would
+        // be unreachable from this screen.
+        <div className="flex flex-col gap-3 px-5 py-4">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            This provider is on the roadmap. Configuration will be available once its sign-in
+            integration ships.
+          </p>
+          {removeNotices}
+          <div className="flex items-center gap-3">{removeButton}</div>
+        </div>
       ) : (
         <div className="flex flex-col gap-4 px-5 py-4">
           {/* Enablement */}
@@ -1081,12 +1221,15 @@ function ProviderCard({
               </div>
             ))}
 
+          {/* Remove confirmation / failure */}
+          {removeNotices}
+
           {/* Actions */}
           <div className="flex items-center gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
             <button
               type="button"
               onClick={handleSave}
-              disabled={!dirty || saving}
+              disabled={!dirty || saving || removing}
               className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
@@ -1095,7 +1238,7 @@ function ProviderCard({
             <button
               type="button"
               onClick={handleValidate}
-              disabled={validating || saving}
+              disabled={validating || saving || removing}
               className={SECONDARY_BUTTON_CLASSES}
             >
               {validating ? (
@@ -1105,6 +1248,7 @@ function ProviderCard({
               )}
               Validate
             </button>
+            {removeButton}
             {justSaved && (
               <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="h-4 w-4" /> Saved

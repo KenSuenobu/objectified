@@ -14,6 +14,7 @@ jest.mock('../../lib/auth/provider-config-resolver', () => ({
 }));
 
 import {
+  proxyDeleteAuthProvider,
   proxyListAuthProviders,
   proxyUpdateAuthProvider,
 } from '../../lib/auth/admin-provider-config-proxy';
@@ -169,6 +170,88 @@ describe('proxyUpdateAuthProvider', () => {
   });
 });
 
+describe('proxyDeleteAuthProvider', () => {
+  it('DELETEs the provider path with no body and invalidates the resolver cache on success', async () => {
+    const postDeleteView = { provider_id: 'github', client_id: null, secret_set: false };
+    const fetchImpl = jest.fn().mockResolvedValue(fakeResponse(200, postDeleteView));
+
+    const result = await proxyDeleteAuthProvider(
+      TOKEN,
+      'github',
+      fetchImpl as unknown as typeof fetch
+    );
+
+    const [url, init] = fetchImpl.mock.calls[0];
+    expect(url).toBe('http://localhost:8000/v1/admin/auth-providers/github');
+    expect(init.method).toBe('DELETE');
+    expect(init.body).toBeUndefined();
+    expect(init.headers['X-Admin-Session']).toBe(TOKEN);
+    expect(result).toEqual({ status: 200, body: postDeleteView });
+    // Sign-in must stop using the deleted config on the very next login, not after the TTL.
+    expect(invalidateProviderConfigCache).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT invalidate the cache when the removal is rejected (e.g. unknown provider 404)', async () => {
+    const fetchImpl = jest
+      .fn()
+      .mockResolvedValue(fakeResponse(404, { detail: "Unknown auth provider: 'nope'." }));
+
+    const result = await proxyDeleteAuthProvider(
+      TOKEN,
+      'nope',
+      fetchImpl as unknown as typeof fetch
+    );
+
+    expect(result.status).toBe(404);
+    expect(invalidateProviderConfigCache).not.toHaveBeenCalled();
+  });
+
+  it('relays an upstream auth failure verbatim and leaves the cache alone', async () => {
+    const fetchImpl = jest
+      .fn()
+      .mockResolvedValue(fakeResponse(403, { detail: 'Invalid or expired super-admin session.' }));
+
+    const result = await proxyDeleteAuthProvider(
+      TOKEN,
+      'github',
+      fetchImpl as unknown as typeof fetch
+    );
+
+    expect(result.status).toBe(403);
+    expect(result.body).toEqual({ detail: 'Invalid or expired super-admin session.' });
+    expect(invalidateProviderConfigCache).not.toHaveBeenCalled();
+  });
+
+  it('URL-encodes the provider id so a hostile slug cannot change the upstream path', async () => {
+    const fetchImpl = jest.fn().mockResolvedValue(fakeResponse(404, { detail: 'unknown' }));
+
+    await proxyDeleteAuthProvider(
+      TOKEN,
+      '../internal/auth-providers/resolved',
+      fetchImpl as unknown as typeof fetch
+    );
+
+    expect(fetchImpl.mock.calls[0][0]).toBe(
+      'http://localhost:8000/v1/admin/auth-providers/..%2Finternal%2Fauth-providers%2Fresolved'
+    );
+    expect(invalidateProviderConfigCache).not.toHaveBeenCalled();
+  });
+
+  it('shapes a transport failure into a structured 502 without invalidating the cache', async () => {
+    const fetchImpl = jest.fn().mockRejectedValue(new Error('ECONNREFUSED'));
+
+    const result = await proxyDeleteAuthProvider(
+      TOKEN,
+      'github',
+      fetchImpl as unknown as typeof fetch
+    );
+
+    expect(result.status).toBe(502);
+    expect(result.body).toMatchObject({ error: 'rest_unreachable' });
+    expect(invalidateProviderConfigCache).not.toHaveBeenCalled();
+  });
+});
+
 describe('proxy route files (source contract)', () => {
   const API_ROOT = path.resolve(
     __dirname,
@@ -199,13 +282,27 @@ describe('proxy route files (source contract)', () => {
     expect(src).toContain('proxyListAuthProviders');
   });
 
-  it('update route exports PUT only, gates on the session, and rejects non-object bodies', () => {
+  it('update route exports PUT and DELETE only, gates on the session, and rejects non-object bodies', () => {
     const src = fs.readFileSync(UPDATE_ROUTE, 'utf8');
     expect(src).toMatch(/export\s+async\s+function\s+PUT/);
-    expect(src).not.toMatch(/export\s+async\s+function\s+(GET|POST|DELETE)/);
+    expect(src).toMatch(/export\s+async\s+function\s+DELETE/);
+    expect(src).not.toMatch(/export\s+async\s+function\s+(GET|POST)/);
     expect(src).toContain("cookieStore.get('admin_session')");
     expect(src).toContain('verifyAdminSessionToken');
     expect(src).toContain('proxyUpdateAuthProvider');
+    expect(src).toContain('proxyDeleteAuthProvider');
     expect(src).toContain("error: 'invalid_body'");
+  });
+
+  it('the DELETE handler is gated on the session exactly like PUT (401 then 403)', () => {
+    const src = fs.readFileSync(UPDATE_ROUTE, 'utf8');
+    // The removal handler must carry its own gate — not inherit one — so isolate its body and
+    // assert the checks are inside it.
+    const deleteBody = src.slice(src.search(/export\s+async\s+function\s+DELETE/));
+    expect(deleteBody).toContain("cookieStore.get('admin_session')");
+    expect(deleteBody).toContain('verifyAdminSessionToken');
+    expect(deleteBody).toContain('401');
+    expect(deleteBody).toContain('403');
+    expect(deleteBody).toContain('proxyDeleteAuthProvider');
   });
 });

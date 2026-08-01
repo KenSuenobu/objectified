@@ -143,3 +143,35 @@ export async function proxyUpdateAuthProvider(
   }
   return result;
 }
+
+/**
+ * Remove one provider's stored config entirely (forwards `DELETE /v1/admin/auth-providers/{id}`).
+ *
+ * The upstream drops the whole row — the provider reverts to env-only governance and its sealed
+ * secret is destroyed — and replies with the provider's post-delete (all env-fallback) view, which
+ * is relayed verbatim like every other response here.
+ *
+ * On success (2xx) the in-process resolved-config cache (OLO-8.5) is invalidated, so the next
+ * login stops using the deleted DB config immediately rather than after the cache TTL.
+ *
+ * @param adminSessionToken The verified signed admin-session token.
+ * @param providerId Provider slug from the route path (validated upstream; unknown ⇒ 404).
+ * @param fetchImpl Fetch implementation (injectable for tests).
+ * @returns The upstream status and body (the provider's post-delete masked view on 200).
+ */
+export async function proxyDeleteAuthProvider(
+  adminSessionToken: string,
+  providerId: string,
+  fetchImpl: typeof fetch = fetch
+): Promise<AdminProviderProxyResult> {
+  const result = await forwardToRest(
+    `/${encodeURIComponent(providerId)}`,
+    { method: 'DELETE' },
+    adminSessionToken,
+    fetchImpl
+  );
+  if (result.status >= 200 && result.status < 300) {
+    invalidateProviderConfigCache();
+  }
+  return result;
+}

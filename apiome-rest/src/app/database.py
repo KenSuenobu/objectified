@@ -3036,6 +3036,40 @@ class Database:
             conn.rollback()
             raise e
 
+    def delete_auth_provider_config(self, provider_id: str) -> bool:
+        """Delete one provider's stored config row (OLO-8.7).
+
+        The counterpart to :meth:`upsert_auth_provider_config`: it removes the whole row rather
+        than clearing individual columns, so the provider reverts to being governed entirely by
+        env (OLO-8.5) exactly as if it had never been configured. The sealed secret goes with the
+        row — this is the one path that destroys stored ciphertext, and it is not recoverable.
+
+        The delete is reported rather than asserted: a provider with no stored row is already in
+        the post-delete state, so the caller can treat a ``False`` as a satisfied no-op instead of
+        an error.
+
+        Args:
+            provider_id: Provider slug — the primary key.
+
+        Returns:
+            True when a row existed and was deleted; False when there was no stored row.
+        """
+        query = """
+            DELETE FROM apiome.auth_provider_config
+            WHERE provider_id = %s
+            RETURNING provider_id
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(query, (provider_id,))
+                deleted = cursor.fetchone()
+                conn.commit()
+                return deleted is not None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
     # ==================== Project CRUD Operations ====================
     # NOTE: queries below select `change_report_template_version_id`, which requires
     # migration 20260414-150000.sql. Ensure that migration is applied before deploying.

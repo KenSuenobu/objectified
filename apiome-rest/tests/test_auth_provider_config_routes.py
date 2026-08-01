@@ -561,6 +561,104 @@ def test_put_disable_never_completeness_checked(admin_headers):
     assert resp.status_code == 200
 
 
+# ---------------------------------------------------------------------------
+# DELETE removal
+# ---------------------------------------------------------------------------
+
+
+def test_delete_requires_session():
+    """No session credential ⇒ 401 on DELETE too."""
+    resp = client.delete("/v1/admin/auth-providers/github")
+    assert resp.status_code == 401
+
+
+def test_delete_invalid_session_forbidden(monkeypatch):
+    """A present-but-invalid session ⇒ 403; removal is never reachable without a real session."""
+    monkeypatch.setattr(settings, "admin_session_secret", _ADMIN_SECRET)
+    monkeypatch.setattr(settings, "admin_password", None)
+    forged = _mint_admin_token(key="the-wrong-key")
+    with patch("app.auth_provider_config_routes.db") as mock_db:
+        resp = client.delete(
+            "/v1/admin/auth-providers/github", headers={"X-Admin-Session": forged}
+        )
+    assert resp.status_code == 403
+    mock_db.delete_auth_provider_config.assert_not_called()
+
+
+def test_delete_removes_the_row(admin_headers):
+    """A stored provider's row is deleted and the post-delete (env-fallback) view returned."""
+    with patch("app.auth_provider_config_routes.db") as mock_db:
+        mock_db.delete_auth_provider_config.return_value = True
+        resp = client.delete("/v1/admin/auth-providers/github", headers=admin_headers)
+
+    assert resp.status_code == 200
+    mock_db.delete_auth_provider_config.assert_called_once_with("github")
+    body = resp.json()
+    # Every field reports env-fallback again — as if the provider had never been configured.
+    assert body["provider_id"] == "github"
+    assert body["enabled"] is None
+    assert body["enabled_source"] == "env-fallback"
+    assert body["client_id"] is None
+    assert body["client_id_source"] == "env-fallback"
+    assert body["secret_set"] is False
+    assert body["secret_source"] == "env-fallback"
+    assert body["config"] == {}
+    assert body["updated_at"] is None
+    assert body["updated_by"] is None
+    assert body["can_enable"] is False
+
+
+def test_delete_unknown_provider_404(admin_headers):
+    """A slug outside the registry is a caller error (404) and never reaches the data layer."""
+    with patch("app.auth_provider_config_routes.db") as mock_db:
+        resp = client.delete("/v1/admin/auth-providers/not-a-provider", headers=admin_headers)
+    assert resp.status_code == 404
+    mock_db.delete_auth_provider_config.assert_not_called()
+
+
+def test_delete_is_idempotent(admin_headers):
+    """Deleting a provider with no stored row succeeds — it is already in the requested state."""
+    with patch("app.auth_provider_config_routes.db") as mock_db:
+        mock_db.delete_auth_provider_config.return_value = False
+        resp = client.delete("/v1/admin/auth-providers/gitlab", headers=admin_headers)
+    assert resp.status_code == 200
+    assert resp.json()["provider_id"] == "gitlab"
+
+
+def test_delete_coming_soon_provider_allowed(admin_headers):
+    """A coming-soon provider can hold a stored row (PUT blocks only *enabling* it), so removal
+    must work for it too — otherwise that row would be unreachable from the admin surface.
+
+    The registry has no coming-soon entry at present, so one is injected via the descriptor lookup
+    rather than skipping (which would silently stop covering this path).
+    """
+    from app.auth_provider_registry import ProviderDescriptor, STATUS_COMING_SOON
+
+    descriptor = ProviderDescriptor("atlassian", "Atlassian", STATUS_COMING_SOON, ())
+
+    with patch("app.auth_provider_config_routes.db") as mock_db, patch(
+        "app.auth_provider_config_routes.get_provider_descriptor", return_value=descriptor
+    ):
+        mock_db.delete_auth_provider_config.return_value = True
+        resp = client.delete("/v1/admin/auth-providers/atlassian", headers=admin_headers)
+
+    assert resp.status_code == 200
+    mock_db.delete_auth_provider_config.assert_called_once_with("atlassian")
+    body = resp.json()
+    assert body["status"] == "coming-soon"
+    assert body["can_enable"] is False
+
+
+def test_delete_response_carries_no_secret(admin_headers):
+    """The removal response reports only masked state — never a secret or ciphertext."""
+    with patch("app.auth_provider_config_routes.db") as mock_db:
+        mock_db.delete_auth_provider_config.return_value = True
+        resp = client.delete("/v1/admin/auth-providers/github", headers=admin_headers)
+    assert resp.status_code == 200
+    assert "client_secret" not in resp.json()
+    assert "client_secret_encrypted" not in resp.text
+
+
 def test_no_response_ever_leaks_secret(admin_headers, enc_key):
     """Belt-and-braces: the raw PUT response text never contains the plaintext secret."""
     with patch("app.auth_provider_config_routes.db") as mock_db:

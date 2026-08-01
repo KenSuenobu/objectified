@@ -9,6 +9,9 @@ admin UI (OLO-8.7) and the per-request merge resolver (OLO-8.5) build on:
   back to env (no DB value) or is DB-sourced.
 * ``PUT /v1/admin/auth-providers/{provider_id}`` — set ``enabled``, ``client_id``, an optional
   write-only ``client_secret`` (sealed at rest via OLO-8.3), and the ``config`` JSONB extras.
+* ``DELETE /v1/admin/auth-providers/{provider_id}`` — drop the whole stored row so the provider
+  reverts to env-only governance (OLO-8.5). Distinct from clearing fields one at a time via PUT:
+  it leaves no row behind, and it destroys the sealed secret irrecoverably.
 
 Security invariants (issue acceptance criteria):
 
@@ -479,6 +482,63 @@ async def update_auth_provider(
 
     row = db.upsert_auth_provider_config(provider_id, updates, updated_by="admin")
     return _provider_view(descriptor, row)
+
+
+@router.delete(
+    "/{provider_id}",
+    response_model=ProviderConfigView,
+    responses={
+        401: {"description": "No super-admin session presented."},
+        403: {"description": "Super-admin session invalid or expired."},
+        404: {"description": "Unknown provider id (not in the registry)."},
+    },
+)
+async def delete_auth_provider(
+    provider_id: str,
+    _: None = Depends(require_super_admin),
+) -> ProviderConfigView:
+    """Remove one provider's stored configuration entirely (OLO-8.7).
+
+    Drops the whole ``auth_provider_config`` row, returning the provider to env-only governance
+    (OLO-8.5) as if it had never been configured — including its ``enabled`` override, so sign-in
+    enablement is once again derived from the environment. **The sealed client secret is destroyed
+    with the row and cannot be recovered**; re-configuring the provider means re-entering it.
+
+    Deleting is **idempotent**: a provider with no stored row is already in the requested end
+    state, so it succeeds rather than 404ing. The ``404`` is reserved for a slug that is not in the
+    registry at all, matching PUT — that is a caller error, not an absent row.
+
+    Returns the provider's post-delete view (rather than ``204``) for two reasons: it matches what
+    PUT returns, so the admin UI can swap one view for another without a re-fetch; and an empty
+    ``204`` body would force every JSON-parsing client on the path — notably the apiome-ui proxy —
+    to special-case this route.
+
+    Args:
+        provider_id: Provider slug from the path; must exist in the registry.
+
+    Returns:
+        The provider's masked view after removal — every field reported as env-fallback.
+
+    Raises:
+        HTTPException: ``404`` when the provider id is not in the registry.
+    """
+    descriptor = get_provider_descriptor(provider_id)
+    if descriptor is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unknown auth provider: {provider_id!r}.",
+        )
+
+    deleted = db.delete_auth_provider_config(provider_id)
+    if deleted:
+        # Audit trail for a destructive, non-recoverable change. Secret-free by construction.
+        logger.info(
+            "super-admin removed stored auth-provider config for %s (sealed secret destroyed)",
+            provider_id,
+        )
+
+    # No row now exists, so the view is built from the descriptor alone: pure env-fallback.
+    return _provider_view(descriptor, None)
 
 
 def _guard_enable_completeness(
