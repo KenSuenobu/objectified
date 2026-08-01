@@ -345,10 +345,24 @@ def _record_refresh_outcome(
     """Record one repo tick's outcome for the RAR-3.4 backoff/auto-pause policy.
 
     On failure, increments the consecutive-failure counter, stamps the exponential
-    backoff anchor, and — exactly once, on the transition into the auto-pause —
-    fires the RAR-5.4 ``repository.refresh.auto_paused`` notification. On success,
-    resets the counter so the repo returns to its normal cadence (skipped when the
-    counter is already 0, saving a write for the common healthy case).
+    backoff anchor, and notifies. On success, resets the counter so the repo returns
+    to its normal cadence (skipped when the counter is already 0, saving a write for
+    the common healthy case).
+
+    Two notifications can arise from a failing tick, both routed through the REPO-7.2
+    (#2800) policy gates — per-repo/per-event-type opt-out, then a one-per-hour
+    throttle — before any channel is resolved:
+
+    * ``repository.refresh.auto_paused``, exactly once, on the transition into the
+      auto-pause. Scheduled refresh has stopped and someone must resume it by hand.
+    * ``repository.refresh.repeated_failures``, on every failure once the count
+      reaches :data:`REPEATED_FAILURE_THRESHOLD` but the repo has *not* paused yet.
+      Firing on every tick is what the hourly throttle is for: a repository failing
+      each tick still notifies at most once an hour.
+
+    A newly paused repository sends only the auto-pause event; the pause is the
+    stronger statement, and pairing it with a repeated-failures warning about the
+    same failures would just be noise.
 
     Best-effort by contract: any bookkeeping or notification error is logged and
     swallowed so it can never abort the sweep tick.
@@ -380,16 +394,32 @@ def _record_refresh_outcome(
             outcome.get("backoff_seconds"),
             outcome.get("paused"),
         )
-        if outcome.get("newly_paused"):
-            from .repository_refresh_notifications import notify_refresh_auto_paused
 
-            notify_refresh_auto_paused(
+        from . import repository_event_notifications as notifications
+
+        tenant_id = str(due_row["tenant_id"])
+        failures = int(outcome.get("consecutive_failures") or 0)
+        if outcome.get("newly_paused"):
+            notifications.notify_repository_auto_paused(
                 db,
-                tenant_id=str(due_row["tenant_id"]),
+                tenant_id=tenant_id,
                 repository_id=repository_id,
                 repository_full_name=due_row.get("repository_full_name"),
-                consecutive_failures=int(outcome.get("consecutive_failures") or 0),
+                consecutive_failures=failures,
                 threshold=settings.refresh_auto_pause_threshold,
+                error=result.error,
+            )
+        elif (
+            not outcome.get("paused")
+            and failures >= notifications.REPEATED_FAILURE_THRESHOLD
+        ):
+            notifications.notify_repository_repeated_failures(
+                db,
+                tenant_id=tenant_id,
+                repository_id=repository_id,
+                repository_full_name=due_row.get("repository_full_name"),
+                consecutive_failures=failures,
+                pause_threshold=settings.refresh_auto_pause_threshold,
                 error=result.error,
             )
     except Exception:

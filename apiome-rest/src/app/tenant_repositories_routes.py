@@ -28,6 +28,9 @@ from .models import (
     RefreshHistoryPaginationOut,
     RepositoryHealthOut,
     RepositoryImportSpecRead,
+    RepositoryNotificationPreferenceOut,
+    RepositoryNotificationPreferencesResponse,
+    RepositoryNotificationPreferencesUpdate,
     RepositoryPollingQuotaOut,
     RepositoryPollingQuotaResponse,
     RepositoryPollingQuotaUpdate,
@@ -52,6 +55,12 @@ from .models import (
     TenantRepositoryRecord,
     TenantRepositoryUpdate,
     TenantRepositoriesListResponse,
+)
+from .repository_event_notifications import (
+    ALL_EVENT_TYPES as ALL_REPOSITORY_NOTIFICATION_EVENTS,
+    coerce_event as coerce_repository_notification_event,
+    DEFAULT_THROTTLE_WINDOW_SECONDS,
+    describe_repository_notification_preferences,
 )
 from .repository_health import health_payloads_for_rows
 from .repository_refresh_audit import RefreshOutcome, RefreshTrigger
@@ -416,6 +425,144 @@ async def get_tenant_repository(
         success=True,
         repository=_row_to_record(row, health.get(str(repository_id))),
     )
+
+
+def _notification_preference_out(row: Dict[str, Any]) -> RepositoryNotificationPreferenceOut:
+    """Project one described notification preference into its API model (REPO-7.2, #2800)."""
+    return RepositoryNotificationPreferenceOut(
+        event_type=str(row["event_type"]),
+        enabled=bool(row["enabled"]),
+        description=str(row["description"]),
+        last_notified_at=_ts(row.get("last_notified_at")),
+        suppressed_count=int(row.get("suppressed_count") or 0),
+        updated_at=_ts(row.get("updated_at")),
+    )
+
+
+def _notification_preferences_response(
+    tenant_id: str, repository_id: str
+) -> RepositoryNotificationPreferencesResponse:
+    """Build the preferences envelope for one repository (REPO-7.2, #2800)."""
+    return RepositoryNotificationPreferencesResponse(
+        success=True,
+        repository_id=repository_id,
+        throttle_window_seconds=DEFAULT_THROTTLE_WINDOW_SECONDS,
+        preferences=[
+            _notification_preference_out(row)
+            for row in describe_repository_notification_preferences(
+                db, tenant_id, repository_id
+            )
+        ],
+    )
+
+
+@router.get(
+    "/{tenant_slug}/repositories/{repository_id}/notification-preferences",
+    response_model=RepositoryNotificationPreferencesResponse,
+    response_model_by_alias=True,
+)
+async def get_tenant_repository_notification_preferences(
+    tenant_slug: str,
+    repository_id: uuid.UUID,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryNotificationPreferencesResponse:
+    """Read this repository's scan/sync notification settings (REPO-7.2, #2800).
+
+    Reports every event type REPO-7.2 defines — not only the ones an operator has already
+    written a preference for — so this is the whole picture of what the repository will and
+    will not tell anyone about. Each entry also carries the throttle state for that event,
+    which is how "we have heard nothing" is distinguished from "we have been suppressing it".
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        repository_id: The repository to read preferences for.
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        One entry per event type, plus the throttle window being enforced.
+
+    Raises:
+        HTTPException: 404 when the repository does not exist in this tenant.
+    """
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.VIEW)
+    _ = tenant_slug
+    tenant_id = str(auth_data["tenant_id"])
+    if not db.get_tenant_repository(tenant_id, str(repository_id)):
+        raise HTTPException(status_code=404, detail="repository not found")
+    return _notification_preferences_response(tenant_id, str(repository_id))
+
+
+@router.put(
+    "/{tenant_slug}/repositories/{repository_id}/notification-preferences",
+    response_model=RepositoryNotificationPreferencesResponse,
+    response_model_by_alias=True,
+)
+async def set_tenant_repository_notification_preferences(
+    tenant_slug: str,
+    repository_id: uuid.UUID,
+    payload: RepositoryNotificationPreferencesUpdate,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryNotificationPreferencesResponse:
+    """Mute or restore this repository's scan/sync notifications (REPO-7.2, #2800).
+
+    A partial update: event types the request does not mention keep whatever state they
+    already had, so a client that renders fewer events than the server knows about cannot
+    silently reset the rest. Unknown event types and duplicates are rejected outright rather
+    than being ignored or resolved by write order — an opt-out that quietly did nothing is
+    the one failure an operator would not notice until the pager went off.
+
+    Changing a preference never touches the throttle: un-muting an event does not grant it a
+    fresh slot inside a window it has already used.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        repository_id: The repository to update preferences for.
+        payload: The preference changes to apply.
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        Every event type's state after the update.
+
+    Raises:
+        HTTPException: 400 when an event type is unknown or repeated; 404 when the
+            repository does not exist in this tenant.
+    """
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.EDIT)
+    _ = tenant_slug
+    tenant_id = str(auth_data["tenant_id"])
+
+    seen: Dict[str, bool] = {}
+    for change in payload.preferences:
+        event = coerce_repository_notification_event(change.event_type)
+        if event is None:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"unknown notification event type: {change.event_type!r}; "
+                    f"expected one of {', '.join(ALL_REPOSITORY_NOTIFICATION_EVENTS)}"
+                ),
+            )
+        if event.value in seen:
+            raise HTTPException(
+                status_code=400,
+                detail=f"duplicate notification event type: {event.value}",
+            )
+        seen[event.value] = change.enabled
+
+    for event_type, enabled in seen.items():
+        stored = db.set_repository_notification_preference(
+            tenant_id, str(repository_id), event_type, enabled
+        )
+        if stored is None:
+            raise HTTPException(status_code=404, detail="repository not found")
+        _logger.info(
+            "repository notification preference updated repository_id=%s event=%s enabled=%s",
+            repository_id,
+            event_type,
+            enabled,
+        )
+
+    return _notification_preferences_response(tenant_id, str(repository_id))
 
 
 @router.get(

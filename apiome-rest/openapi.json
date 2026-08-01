@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.92.0",
+    "version": "1.93.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -47001,6 +47001,214 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for delete tenant repositoryresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tenants/{tenant_slug}/repositories/{repository_id}/notification-preferences": {
+      "get": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Get Tenant Repository Notification Preferences",
+        "description": "Read this repository's scan/sync notification settings (REPO-7.2, #2800).\n\nReports every event type REPO-7.2 defines \u2014 not only the ones an operator has already\nwritten a preference for \u2014 so this is the whole picture of what the repository will and\nwill not tell anyone about. Each entry also carries the throttle state for that event,\nwhich is how \"we have heard nothing\" is distinguished from \"we have been suppressing it\".\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    repository_id: The repository to read preferences for.\n    auth_data: Authenticated principal; supplies the tenant scope.\n\nReturns:\n    One entry per event type, plus the throttle window being enforced.\n\nRaises:\n    HTTPException: 404 when the repository does not exist in this tenant.",
+        "operationId": "get_tenant_repository_notification_preferences_v1_tenants__tenant_slug__repositories__repository_id__notification_preferences_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "repository_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Repository Id",
+              "description": "Repository Id schema."
+            },
+            "description": "Connected repository identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Get Tenant Repository Notification Preferencauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Get Tenant Repository Notification Preferencauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Get Tenant Repository Notification Preferenc Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Get Tenant Repository Notification Preferenc Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for get tenant repository notification preferences.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryNotificationPreferencesResponse",
+                  "description": "Response payload for get tenant repository notification preferencresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for get tenant repository notification preferencresponse422."
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Set Tenant Repository Notification Preferences",
+        "description": "Mute or restore this repository's scan/sync notifications (REPO-7.2, #2800).\n\nA partial update: event types the request does not mention keep whatever state they\nalready had, so a client that renders fewer events than the server knows about cannot\nsilently reset the rest. Unknown event types and duplicates are rejected outright rather\nthan being ignored or resolved by write order \u2014 an opt-out that quietly did nothing is\nthe one failure an operator would not notice until the pager went off.\n\nChanging a preference never touches the throttle: un-muting an event does not grant it a\nfresh slot inside a window it has already used.\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    repository_id: The repository to update preferences for.\n    payload: The preference changes to apply.\n    auth_data: Authenticated principal; supplies the tenant scope.\n\nReturns:\n    Every event type's state after the update.\n\nRaises:\n    HTTPException: 400 when an event type is unknown or repeated; 404 when the\n        repository does not exist in this tenant.",
+        "operationId": "set_tenant_repository_notification_preferences_v1_tenants__tenant_slug__repositories__repository_id__notification_preferences_put",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "repository_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Repository Id",
+              "description": "Repository Id schema."
+            },
+            "description": "Connected repository identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Set Tenant Repository Notification Preferencauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Set Tenant Repository Notification Preferencauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Set Tenant Repository Notification Preferenc Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Set Tenant Repository Notification Preferenc Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepositoryNotificationPreferencesUpdate",
+                "description": "Request body for set tenant repository notification preferencrequest."
+              }
+            }
+          },
+          "description": "Request body for set tenant repository notification preferences."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for set tenant repository notification preferences.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryNotificationPreferencesResponse",
+                  "description": "Response payload for set tenant repository notification preferencresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for set tenant repository notification preferencresponse422."
                 }
               }
             }
@@ -101092,6 +101300,154 @@
         "title": "RepositoryImportSpecRead",
         "description": "Current-shape import spec returned by the read endpoint (RAR-1.5).\n\nThe response surface for ``GET \u2026/repository-imports/{id}/spec`` (and its\n``?path=`` lookup variant). It exposes the captured source descriptor and the\nfull ``SpecImportOptions`` payload, upgraded on read to the current envelope\nshape, so the refresh worker, the UI status surface, and the CLI can replay\nthe user's original import request. ``spec_schema_version`` always reports the\ncurrent envelope version because ``options`` has already been migrated forward."
       },
+      "RepositoryNotificationPreferenceOut": {
+        "properties": {
+          "eventType": {
+            "type": "string",
+            "title": "Eventtype",
+            "description": "The push-webhook event type this entry governs, e.g. 'repository.refresh.auto_paused'.",
+            "example": "example"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Whether this repository notifies on this event. True unless an operator has explicitly opted out.",
+            "example": true
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "One sentence describing what muting this event would stop you hearing about.",
+            "example": "A pet available for adoption in the store."
+          },
+          "lastNotifiedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository notification preference."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository notification preference."
+              }
+            ],
+            "title": "Lastnotifiedat",
+            "description": "When this repository last notified on this event. Null when it never has. The throttle allows at most one notification per hour from this timestamp."
+          },
+          "suppressedCount": {
+            "type": "integer",
+            "title": "Suppressedcount",
+            "description": "How many notifications the hourly throttle has swallowed for this repository and event. Distinguishes 'nothing happened' from 'we muffled it'.",
+            "default": 0,
+            "example": 1
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for repository notification preference."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository notification preference."
+              }
+            ],
+            "title": "Updatedat",
+            "description": "When the opt-out was last changed. Null when none has ever been stored."
+          }
+        },
+        "type": "object",
+        "required": [
+          "eventType",
+          "enabled",
+          "description"
+        ],
+        "title": "RepositoryNotificationPreferenceOut",
+        "description": "One repository's subscription state for one scan/sync event type (REPO-7.2, #2800).\n\nEvery event REPO-7.2 defines is reported, whether or not the repository has a stored\npreference for it: a repository with no rows at all is subscribed to everything, which\nis what a freshly registered repository should be."
+      },
+      "RepositoryNotificationPreferenceUpdate": {
+        "properties": {
+          "eventType": {
+            "type": "string",
+            "title": "Eventtype",
+            "description": "The event type to mute or restore. Must be one of the REPO-7.2 'repository.refresh.*' events; anything else is rejected with 400.",
+            "example": "example"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "False mutes this event for this repository; True restores it.",
+            "example": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "eventType",
+          "enabled"
+        ],
+        "title": "RepositoryNotificationPreferenceUpdate",
+        "description": "A single per-event opt-out change (REPO-7.2, #2800)."
+      },
+      "RepositoryNotificationPreferencesResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true,
+            "description": "Success.",
+            "example": false
+          },
+          "repositoryId": {
+            "type": "string",
+            "title": "Repositoryid",
+            "description": "The repository these preferences belong to.",
+            "example": "example"
+          },
+          "throttleWindowSeconds": {
+            "type": "integer",
+            "title": "Throttlewindowseconds",
+            "description": "The quiet window applied per repository per event type. At most one notification is delivered per window (3600 = one per hour).",
+            "example": 1
+          },
+          "preferences": {
+            "items": {
+              "$ref": "#/components/schemas/RepositoryNotificationPreferenceOut"
+            },
+            "type": "array",
+            "title": "Preferences",
+            "description": "One entry per event type, in a stable order.",
+            "maxItems": 1000
+          }
+        },
+        "type": "object",
+        "required": [
+          "repositoryId",
+          "throttleWindowSeconds",
+          "preferences"
+        ],
+        "title": "RepositoryNotificationPreferencesResponse",
+        "description": "Envelope for a repository's notification preferences (REPO-7.2, #2800)."
+      },
+      "RepositoryNotificationPreferencesUpdate": {
+        "properties": {
+          "preferences": {
+            "items": {
+              "$ref": "#/components/schemas/RepositoryNotificationPreferenceUpdate"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Preferences",
+            "description": "The preference changes to apply. At least one; duplicates of the same event type are rejected with 400 rather than resolved by write order."
+          }
+        },
+        "type": "object",
+        "required": [
+          "preferences"
+        ],
+        "title": "RepositoryNotificationPreferencesUpdate",
+        "description": "Set one or more of a repository's per-event opt-outs (REPO-7.2, #2800).\n\nA partial update: event types absent from the request keep whatever state they already\nhad, so a client that knows about fewer events than the server cannot silently reset the\nones it does not render."
+      },
       "RepositoryPollingQuotaOut": {
         "properties": {
           "pollsPerHour": {
@@ -102495,7 +102851,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-01T03:07:10Z"
+            "example": "2026-08-01T03:43:42Z"
           }
         },
         "additionalProperties": false,
@@ -115194,14 +115550,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-01T03:07:10Z"
+            "example": "2026-08-01T03:43:42Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-01T03:07:10Z"
+            "example": "2026-08-01T03:43:42Z"
           },
           "outcome": {
             "anyOf": [

@@ -436,21 +436,34 @@ def test_healthy_success_skips_reset_write():
     assert db.failures_recorded == []
 
 
+def _capture_repository_notifications(monkeypatch):
+    """Record the REPO-7.2 notification entrypoints the sweep calls, without delivering.
+
+    Returns a ``{event_name: [kwargs, ...]}`` dict populated as the sweep runs.
+    """
+    import app.repository_event_notifications as notifications
+
+    captured = {"auto_paused": [], "repeated_failures": []}
+    for name, key in (
+        ("notify_repository_auto_paused", "auto_paused"),
+        ("notify_repository_repeated_failures", "repeated_failures"),
+    ):
+        monkeypatch.setattr(
+            notifications,
+            name,
+            lambda db, _bucket=captured[key], **kwargs: _bucket.append(kwargs) or [],
+        )
+    return captured
+
+
 def test_auto_pause_transition_fires_notification_once(monkeypatch):
-    """newly_paused=True fires the RAR-5.4 auto-pause notification exactly once."""
-    import app.repository_refresh_notifications as notifications
+    """newly_paused=True fires the REPO-7.2 auto-pause notification exactly once."""
 
     def _boom(db, repo_row, branch):
         raise ValueError("bad credentials")
 
     monkeypatch.setattr(sweep, "scan_repository_branch_into_index", _boom)
-
-    notified = []
-    monkeypatch.setattr(
-        notifications,
-        "notify_refresh_auto_paused",
-        lambda db, **kwargs: notified.append(kwargs) or [],
-    )
+    captured = _capture_repository_notifications(monkeypatch)
 
     db = FakeDB(
         due=[
@@ -473,6 +486,7 @@ def test_auto_pause_transition_fires_notification_once(monkeypatch):
 
     process_repository_refresh_sweep(db)
 
+    notified = captured["auto_paused"]
     assert len(notified) == 1
     assert notified[0]["repository_id"] == "r1"
     assert notified[0]["tenant_id"] == "t1"
@@ -481,21 +495,105 @@ def test_auto_pause_transition_fires_notification_once(monkeypatch):
     assert "bad credentials" in notified[0]["error"]
 
 
+def test_a_newly_paused_repository_is_not_also_warned_about_repeated_failures(monkeypatch):
+    """The pause is the stronger statement; pairing it with the warning is just noise."""
+
+    def _boom(db, repo_row, branch):
+        raise ValueError("bad credentials")
+
+    monkeypatch.setattr(sweep, "scan_repository_branch_into_index", _boom)
+    captured = _capture_repository_notifications(monkeypatch)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1", "refresh_consecutive_failures": 7}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): []},
+    )
+    db.failure_outcome = {
+        "consecutive_failures": 8,
+        "backoff_seconds": 9600,
+        "paused": True,
+        "newly_paused": True,
+    }
+
+    process_repository_refresh_sweep(db)
+
+    assert captured["repeated_failures"] == []
+
+
+def test_repeated_failures_warn_before_the_pause(monkeypatch):
+    """An unpaused repository past the warning threshold gets the REPO-7.2 warning shot; the
+    hourly throttle is what keeps it from firing on every tick."""
+
+    def _boom(db, repo_row, branch):
+        raise ValueError("clone timed out")
+
+    monkeypatch.setattr(sweep, "scan_repository_branch_into_index", _boom)
+    captured = _capture_repository_notifications(monkeypatch)
+
+    db = FakeDB(
+        due=[
+            {
+                "id": "r1",
+                "tenant_id": "t1",
+                "repository_full_name": "octocat/Hello-World",
+                "refresh_consecutive_failures": 2,
+            }
+        ],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): []},
+    )
+    db.failure_outcome = {
+        "consecutive_failures": 3,
+        "backoff_seconds": 600,
+        "paused": False,
+        "newly_paused": False,
+    }
+
+    process_repository_refresh_sweep(db)
+
+    warned = captured["repeated_failures"]
+    assert len(warned) == 1
+    assert warned[0]["consecutive_failures"] == 3
+    assert warned[0]["repository_full_name"] == "octocat/Hello-World"
+    assert captured["auto_paused"] == []
+
+
+def test_a_first_failure_is_not_worth_telling_anyone_about(monkeypatch):
+    """Below the threshold a failure is a provider blip; the RAR-3.4 backoff handles it."""
+
+    def _boom(db, repo_row, branch):
+        raise ValueError("transient")
+
+    monkeypatch.setattr(sweep, "scan_repository_branch_into_index", _boom)
+    captured = _capture_repository_notifications(monkeypatch)
+
+    db = FakeDB(
+        due=[{"id": "r1", "tenant_id": "t1"}],
+        branches={"r1": ["main"]},
+        candidates={("r1", "main"): []},
+    )
+    db.failure_outcome = {
+        "consecutive_failures": 1,
+        "backoff_seconds": 60,
+        "paused": False,
+        "newly_paused": False,
+    }
+
+    process_repository_refresh_sweep(db)
+
+    assert captured["repeated_failures"] == []
+    assert captured["auto_paused"] == []
+
+
 def test_already_paused_failure_does_not_renotify(monkeypatch):
-    """paused=True but newly_paused=False (renewal) stays silent."""
-    import app.repository_refresh_notifications as notifications
+    """paused=True but newly_paused=False (renewal) stays silent on both events."""
 
     def _boom(db, repo_row, branch):
         raise ValueError("still broken")
 
     monkeypatch.setattr(sweep, "scan_repository_branch_into_index", _boom)
-
-    notified = []
-    monkeypatch.setattr(
-        notifications,
-        "notify_refresh_auto_paused",
-        lambda db, **kwargs: notified.append(kwargs) or [],
-    )
+    captured = _capture_repository_notifications(monkeypatch)
 
     db = FakeDB(
         due=[{"id": "r1", "tenant_id": "t1"}],
@@ -511,7 +609,8 @@ def test_already_paused_failure_does_not_renotify(monkeypatch):
 
     process_repository_refresh_sweep(db)
 
-    assert notified == []
+    assert captured["auto_paused"] == []
+    assert captured["repeated_failures"] == []
     assert len(db.failures_recorded) == 1
 
 

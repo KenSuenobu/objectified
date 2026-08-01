@@ -7520,6 +7520,114 @@ class RepositoryWebhookReceiptResponse(BaseModel):
     jobs_enqueued: int = Field(0, alias="jobsEnqueued")
 
 
+class RepositoryNotificationPreferenceOut(BaseModel):
+    """One repository's subscription state for one scan/sync event type (REPO-7.2, #2800).
+
+    Every event REPO-7.2 defines is reported, whether or not the repository has a stored
+    preference for it: a repository with no rows at all is subscribed to everything, which
+    is what a freshly registered repository should be.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    event_type: str = Field(
+        alias="eventType",
+        description=(
+            "The push-webhook event type this entry governs, e.g. "
+            "'repository.refresh.auto_paused'."
+        ),
+    )
+    enabled: bool = Field(
+        description=(
+            "Whether this repository notifies on this event. True unless an operator has "
+            "explicitly opted out."
+        ),
+    )
+    description: str = Field(
+        description="One sentence describing what muting this event would stop you hearing about.",
+    )
+    last_notified_at: Optional[str] = Field(
+        None,
+        alias="lastNotifiedAt",
+        description=(
+            "When this repository last notified on this event. Null when it never has. The "
+            "throttle allows at most one notification per hour from this timestamp."
+        ),
+    )
+    suppressed_count: int = Field(
+        0,
+        alias="suppressedCount",
+        description=(
+            "How many notifications the hourly throttle has swallowed for this repository "
+            "and event. Distinguishes 'nothing happened' from 'we muffled it'."
+        ),
+    )
+    updated_at: Optional[str] = Field(
+        None,
+        alias="updatedAt",
+        description="When the opt-out was last changed. Null when none has ever been stored.",
+    )
+
+
+class RepositoryNotificationPreferencesResponse(BaseModel):
+    """Envelope for a repository's notification preferences (REPO-7.2, #2800)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    success: bool = True
+    repository_id: str = Field(
+        alias="repositoryId",
+        description="The repository these preferences belong to.",
+    )
+    throttle_window_seconds: int = Field(
+        alias="throttleWindowSeconds",
+        description=(
+            "The quiet window applied per repository per event type. At most one "
+            "notification is delivered per window (3600 = one per hour)."
+        ),
+    )
+    preferences: List[RepositoryNotificationPreferenceOut] = Field(
+        description="One entry per event type, in a stable order.",
+    )
+
+
+class RepositoryNotificationPreferenceUpdate(BaseModel):
+    """A single per-event opt-out change (REPO-7.2, #2800)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    event_type: str = Field(
+        alias="eventType",
+        description=(
+            "The event type to mute or restore. Must be one of the REPO-7.2 "
+            "'repository.refresh.*' events; anything else is rejected with 400."
+        ),
+    )
+    enabled: bool = Field(
+        description="False mutes this event for this repository; True restores it.",
+    )
+
+
+class RepositoryNotificationPreferencesUpdate(BaseModel):
+    """Set one or more of a repository's per-event opt-outs (REPO-7.2, #2800).
+
+    A partial update: event types absent from the request keep whatever state they already
+    had, so a client that knows about fewer events than the server cannot silently reset the
+    ones it does not render.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    preferences: List[RepositoryNotificationPreferenceUpdate] = Field(
+        min_length=1,
+        max_length=32,
+        description=(
+            "The preference changes to apply. At least one; duplicates of the same event "
+            "type are rejected with 400 rather than resolved by write order."
+        ),
+    )
+
+
 class RepositoryPollingQuotaOut(BaseModel):
     """A tenant's repository polling quota and its usage this window (REPO-4.6, #2784).
 
