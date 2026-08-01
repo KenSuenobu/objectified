@@ -7243,6 +7243,53 @@ class TenantRepositoryCreate(BaseModel):
         return self
 
 
+class RepositoryHealthFactorOut(BaseModel):
+    """One reason contributing to a repository's health badge (REPO-6.5, #2798)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    #: Stable machine code (``scan-failing``, ``parse-errors``, ``token-expired``, …).
+    #: Part of the API contract: codes are added, never repurposed.
+    code: str
+    #: How severely this factor alone rates the repository: ``warnings`` or ``error``.
+    level: str
+    #: One-sentence, operator-facing explanation; safe to render verbatim in a tooltip.
+    summary: str
+    #: When the factor was most recently observed, when that is knowable. Null for a
+    #: standing condition with no event behind it (a token that has not expired yet).
+    observed_at: Optional[str] = None
+
+
+class RepositoryHealthOut(BaseModel):
+    """At-a-glance health of one registered repository (REPO-6.5, #2798).
+
+    Rolls the repository's scan success rate over the trailing window, its discovered-spec
+    parse errors, and its linked-account token health (REPO-7.4) into one three-valued
+    badge. Token problems always leave the repository at ``warnings`` or worse.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    #: ``healthy`` | ``warnings`` | ``error`` — what the badge renders.
+    level: str
+    #: 0-100 weighted roll-up of the three components; informational, not the badge.
+    score: int
+    #: Trailing window the scan success rate was measured over, in days.
+    window_days: int
+    #: Finished (succeeded or failed) scan jobs in the window.
+    scans_attempted: int
+    #: Of those, how many succeeded.
+    scans_succeeded: int
+    #: ``scans_succeeded / scans_attempted``; null when no scan finished in the window.
+    scan_success_rate: Optional[float] = None
+    #: Discovered specs on the default branch that could not be parsed or scored.
+    parse_error_count: int = 0
+    #: The most recently observed contributing factor — what the tooltip leads with.
+    primary_factor: Optional[RepositoryHealthFactorOut] = None
+    #: Every contributing factor, most severe first. Empty when the repository is healthy.
+    factors: List[RepositoryHealthFactorOut] = Field(default_factory=list)
+
+
 class TenantRepositoryRecord(BaseModel):
     """Single repository row returned to the UI (snake_case keys for the dashboard)."""
 
@@ -7276,6 +7323,9 @@ class TenantRepositoryRecord(BaseModel):
     refresh_backoff_until: Optional[str] = None
     refresh_paused_at: Optional[str] = None
     refresh_pause_reason: Optional[str] = None
+    # At-a-glance health badge (REPO-6.5, #2798). Null only when the health signals could
+    # not be read at all — the badge is then simply not rendered, never guessed.
+    health: Optional[RepositoryHealthOut] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 

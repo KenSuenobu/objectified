@@ -52,6 +52,7 @@ import {
   repositoryStatusNeedsPolling,
 } from "@/app/components/ade/dashboard/repositories/repositoryStoreUi";
 import { RepositoryRowMenu } from "@/app/components/ade/dashboard/repositories/RepositoryRowMenu";
+import { RepositoryHealthBadge } from "@/app/components/ade/dashboard/repositories/RepositoryHealthBadge";
 
 const VIEW_STORAGE = "apiome-dashboard-repositories-view";
 
@@ -453,6 +454,7 @@ export default function RepositoriesPage() {
                       <th className={cn(dashboardThClass, "align-middle")}>Provider</th>
                       <th className={cn(dashboardThClass, "align-middle")}>Branch</th>
                       <th className={cn(dashboardThRightClass, "align-middle")}>Files</th>
+                      <th className={cn(dashboardThClass, "align-middle")}>Health</th>
                       <th className={cn(dashboardThClass, "align-middle")}>Status</th>
                       <th className={cn(dashboardThClass, "align-middle")}>Last scan</th>
                       <th className={cn(dashboardThClass, "align-middle")}>Importable</th>
@@ -505,6 +507,15 @@ export default function RepositoriesPage() {
                         </td>
                         <td className="px-6 py-3 align-middle text-right font-mono text-xs">
                           {(repo.total_files ?? 0).toLocaleString()}
+                        </td>
+                        <td className="px-6 py-3 align-middle">
+                          {repo.health ? (
+                            <RepositoryHealthBadge health={repo.health} />
+                          ) : (
+                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                              —
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-3 align-middle">
                           <span

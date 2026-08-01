@@ -13815,6 +13815,96 @@ class Database:
         rows = self.execute_query(q, (repository_id, tenant_id))
         return dict(rows[0]) if rows else None
 
+    def get_repository_health_signals(
+        self,
+        tenant_id: str,
+        repository_ids: Optional[List[str]] = None,
+        *,
+        window_days: int = 30,
+    ) -> List[Dict[str, Any]]:
+        """Read the inputs behind the per-repository health badge (REPO-6.5, #2798).
+
+        One row per live repository carrying the three signals
+        :func:`repository_health.compute_repository_health` rolls up:
+
+        * **Scan reliability** — finished scan jobs in the trailing ``window_days``
+          window, split into attempted vs succeeded, plus when the most recent finished
+          and failed scans landed. Only terminal jobs count: a job still ``queued`` or
+          ``running`` has no outcome to be right or wrong about.
+        * **Parse errors** — discovered specs on the repository's default branch whose
+          REPO-2.8 quality attempt errored or could not parse the document, plus when the
+          most recent such attempt ran. Matches the V231 partial index exactly, so a
+          healthy repository reads no rows.
+        * **Token health (REPO-7.4)** — for a ``linked_account`` repository, whether the
+          linked account still exists, still holds a non-empty access token, and when
+          that token expires. The token *value* is never selected, only its presence.
+
+        Both aggregates are correlated laterals, so the whole batch is one round trip
+        regardless of how many repositories the tenant has.
+
+        Args:
+            tenant_id: Tenant whose repositories to read; every row is scoped to it.
+            repository_ids: Optional subset of repository ids (the detail view passes
+                one). ``None`` or an empty list reads every live repository.
+            window_days: Trailing window for the scan success rate, in days. Clamped to
+                at least 1 so a bad caller cannot produce an empty or reversed window.
+
+        Returns:
+            One dict per repository with ``repository_id``, ``scans_attempted``,
+            ``scans_succeeded``, ``last_scan_finished_at``, ``last_scan_failed_at``,
+            ``parse_error_count``, ``last_parse_error_at``, ``token_required``,
+            ``linked_account_present``, ``has_access_token`` and ``token_expires_at``.
+        """
+        window = max(1, int(window_days or 1))
+        params: List[Any] = [window, tenant_id]
+        id_clause = ""
+        if repository_ids:
+            id_clause = " AND r.id = ANY(%s::uuid[])"
+            params.append([str(rid) for rid in repository_ids])
+
+        q = f"""
+            SELECT r.id AS repository_id,
+                   (r.source = 'linked_account') AS token_required,
+                   (eap.id IS NOT NULL) AS linked_account_present,
+                   (eap.access_token IS NOT NULL AND btrim(eap.access_token) <> '')
+                       AS has_access_token,
+                   eap.token_expires_at AS token_expires_at,
+                   COALESCE(s.scans_attempted, 0) AS scans_attempted,
+                   COALESCE(s.scans_succeeded, 0) AS scans_succeeded,
+                   s.last_scan_finished_at,
+                   s.last_scan_failed_at,
+                   COALESCE(q.parse_error_count, 0) AS parse_error_count,
+                   q.last_parse_error_at
+            FROM apiome.tenant_repositories r
+            LEFT JOIN apiome.external_auth_providers eap
+                   ON eap.id = r.linked_account_id
+            LEFT JOIN LATERAL (
+                SELECT COUNT(*) FILTER (WHERE j.status IN ('succeeded', 'failed'))
+                           AS scans_attempted,
+                       COUNT(*) FILTER (WHERE j.status = 'succeeded')
+                           AS scans_succeeded,
+                       MAX(COALESCE(j.finished_at, j.created_at))
+                           FILTER (WHERE j.status IN ('succeeded', 'failed'))
+                           AS last_scan_finished_at,
+                       MAX(COALESCE(j.finished_at, j.created_at))
+                           FILTER (WHERE j.status = 'failed')
+                           AS last_scan_failed_at
+                FROM apiome.tenant_repository_file_scan_jobs j
+                WHERE j.repository_id = r.id
+                  AND j.created_at >= CURRENT_TIMESTAMP - make_interval(days => %s)
+            ) s ON TRUE
+            LEFT JOIN LATERAL (
+                SELECT COUNT(*) AS parse_error_count,
+                       MAX(f.quality_scored_at) AS last_parse_error_at
+                FROM apiome.tenant_repository_files f
+                WHERE f.repository_id = r.id
+                  AND f.branch = COALESCE(NULLIF(r.default_branch, ''), 'main')
+                  AND (f.quality_status = 'error' OR f.quality_reason = 'parse-failed')
+            ) q ON TRUE
+            WHERE r.tenant_id = %s::uuid AND r.deleted_at IS NULL{id_clause}
+        """
+        return self.execute_query(q, tuple(params))
+
     def list_due_repositories(
         self,
         *,

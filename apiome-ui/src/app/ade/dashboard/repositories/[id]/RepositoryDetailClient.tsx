@@ -46,6 +46,7 @@ import {
   repoInitials,
   repositoryStatusNeedsPolling,
 } from '@/app/components/ade/dashboard/repositories/repositoryStoreUi';
+import { RepositoryHealthBadge } from '@/app/components/ade/dashboard/repositories/RepositoryHealthBadge';
 import { RepositoryFilesBrowser } from '@/app/components/ade/dashboard/repositories/RepositoryFilesBrowser';
 import { RepositorySpecsTab } from '@/app/components/ade/dashboard/repositories/RepositorySpecsTab';
 
@@ -478,6 +479,9 @@ export function RepositoryDetailClient() {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="truncate text-2xl font-bold">{repo.name}</h1>
+                  {/* REPO-6.5: health leads the header pills — "is it fine?" before "what
+                      is it doing?" — and its tooltip names the most recent problem. */}
+                  <RepositoryHealthBadge health={repo.health} />
                   {statusPill(repo.status)}
                   <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 font-mono text-[11px] text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                     {repo.provider === 'github' ? (

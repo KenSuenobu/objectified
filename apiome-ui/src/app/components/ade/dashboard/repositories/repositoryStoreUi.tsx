@@ -7,6 +7,8 @@ import { SiBitbucket } from 'react-icons/si';
 import { cn } from '@lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/app/components/ui/Tooltip';
 import { RepositoryRowMenu } from './RepositoryRowMenu';
+import { RepositoryHealthBadge } from './RepositoryHealthBadge';
+import { type RepositoryHealth, parseRepositoryHealth } from './repositoryHealth';
 
 export type RepositoryProvider = 'github' | 'gitlab' | 'bitbucket' | 'public_url';
 export type RepositoryStatus = 'pending' | 'scanning' | 'ready' | 'error' | 'archived';
@@ -44,6 +46,12 @@ export interface DashboardRepository {
   branch_count?: number | null;
   /** Per-repo auto-refresh opt-out (RAR-3.3). True (default) = sweep may refresh this repo. */
   auto_refresh_enabled?: boolean;
+  /**
+   * At-a-glance health badge (REPO-6.5). Null when the API returned none — an older
+   * payload, or a repository whose health signals could not be read — in which case no
+   * badge is rendered rather than a guessed one.
+   */
+  health?: RepositoryHealth | null;
   clone_url?: string | null;
   source?: string | null;
   created_at?: string | null;
@@ -118,6 +126,7 @@ export function dashboardRepositoryFromApi(x: unknown): DashboardRepository | nu
       const v = o.auto_refresh_enabled ?? (o as { autoRefreshEnabled?: unknown }).autoRefreshEnabled;
       return v == null ? true : Boolean(v);
     })(),
+    health: parseRepositoryHealth(o.health),
     clone_url: o.clone_url != null ? String(o.clone_url) : null,
     source: o.source != null ? String(o.source) : null,
     created_at: o.created_at != null ? String(o.created_at) : null,
@@ -497,6 +506,10 @@ export function RepositoryCard({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          {/* Health sits before the lifecycle status: "is it fine?" is read first. */}
+          <div className="pointer-events-auto" onPointerDown={(e) => e.stopPropagation()}>
+            <RepositoryHealthBadge health={repo.health} compact />
+          </div>
           <span
             className={cn(
               'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',

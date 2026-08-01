@@ -26,6 +26,7 @@ from .models import (
     RefreshHistoryEntryOut,
     RefreshHistoryPageResponse,
     RefreshHistoryPaginationOut,
+    RepositoryHealthOut,
     RepositoryImportSpecRead,
     RepositoryPollingQuotaOut,
     RepositoryPollingQuotaResponse,
@@ -52,6 +53,7 @@ from .models import (
     TenantRepositoryUpdate,
     TenantRepositoriesListResponse,
 )
+from .repository_health import health_payloads_for_rows
 from .repository_refresh_audit import RefreshOutcome, RefreshTrigger
 from .repository_spec_catalog import (
     SPEC_FORMAT_LABELS,
@@ -199,7 +201,40 @@ def _ts(value: Any) -> Optional[str]:
     return str(value)
 
 
-def _row_to_record(row: Dict[str, Any]) -> TenantRepositoryRecord:
+def _repository_health_by_id(
+    tenant_id: str,
+    repository_ids: Optional[List[str]] = None,
+) -> Dict[str, Dict[str, Any]]:
+    """Compute the REPO-6.5 health badge for a tenant's repositories, keyed by id.
+
+    One query for the whole batch, so the repositories list costs the same round trip
+    whether the tenant has one repository or fifty.
+
+    A health roll-up is a decoration on a listing, never its point of failure: if the
+    signal query cannot run (an older schema, a transient database problem) this logs and
+    returns an empty mapping, and the affected rows simply carry no badge.
+
+    Args:
+        tenant_id: Tenant whose repositories to read.
+        repository_ids: Optional subset (the detail view passes exactly one).
+
+    Returns:
+        ``{repository_id: health payload}``; empty when the signals could not be read.
+    """
+    try:
+        rows = db.get_repository_health_signals(tenant_id, repository_ids)
+    except Exception:
+        _logger.warning(
+            "repository health signals unavailable tenant_id=%s", tenant_id, exc_info=True
+        )
+        return {}
+    return health_payloads_for_rows(rows)
+
+
+def _row_to_record(
+    row: Dict[str, Any],
+    health: Optional[Dict[str, Any]] = None,
+) -> TenantRepositoryRecord:
     full = (row.get("repository_full_name") or "").strip()
     name = full.rsplit("/", 1)[-1] if full else "repository"
     if not name:
@@ -228,6 +263,8 @@ def _row_to_record(row: Dict[str, Any]) -> TenantRepositoryRecord:
         refresh_pause_reason=(
             str(row["refresh_pause_reason"]) if row.get("refresh_pause_reason") else None
         ),
+        # REPO-6.5 badge; omitted (null) when health signals could not be read.
+        health=RepositoryHealthOut(**health) if health else None,
         created_at=_ts(row.get("created_at")),
         updated_at=_ts(row.get("updated_at")),
     )
@@ -328,12 +365,22 @@ async def list_tenant_repositories(
     tenant_slug: str,
     auth_data: Dict[str, Any] = Depends(validate_authentication),
 ) -> TenantRepositoriesListResponse:
+    """List the tenant's registered repositories, each with its REPO-6.5 health badge.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        Every live repository for the tenant, newest registration first.
+    """
     _ = tenant_slug
     tenant_id = str(auth_data["tenant_id"])
     rows = db.list_tenant_repositories(tenant_id)
+    health = _repository_health_by_id(tenant_id) if rows else {}
     return TenantRepositoriesListResponse(
         success=True,
-        repositories=[_row_to_record(r) for r in rows],
+        repositories=[_row_to_record(r, health.get(str(r.get("id")))) for r in rows],
     )
 
 
@@ -346,12 +393,29 @@ async def get_tenant_repository(
     repository_id: uuid.UUID,
     auth_data: Dict[str, Any] = Depends(validate_authentication),
 ) -> TenantRepositoryGetResponse:
+    """Read one registered repository, with its REPO-6.5 health badge.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        repository_id: The repository to read.
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        The repository record.
+
+    Raises:
+        HTTPException: 404 when the repository does not exist in this tenant.
+    """
     _ = tenant_slug
     tenant_id = str(auth_data["tenant_id"])
     row = db.get_tenant_repository(tenant_id, str(repository_id))
     if not row:
         raise HTTPException(status_code=404, detail="repository not found")
-    return TenantRepositoryGetResponse(success=True, repository=_row_to_record(row))
+    health = _repository_health_by_id(tenant_id, [str(repository_id)])
+    return TenantRepositoryGetResponse(
+        success=True,
+        repository=_row_to_record(row, health.get(str(repository_id))),
+    )
 
 
 @router.get(
@@ -997,7 +1061,10 @@ async def update_tenant_repository(
     row = db.get_tenant_repository(tenant_id, rid)
     if not row:
         raise HTTPException(status_code=404, detail="repository not found")
-    return TenantRepositoryGetResponse(success=True, repository=_row_to_record(row))
+    health = _repository_health_by_id(tenant_id, [rid])
+    return TenantRepositoryGetResponse(
+        success=True, repository=_row_to_record(row, health.get(rid))
+    )
 
 
 @router.post(
@@ -1047,7 +1114,10 @@ async def resume_tenant_repository_refresh(
     row = db.get_tenant_repository(tenant_id, rid)
     if not row:
         raise HTTPException(status_code=404, detail="repository not found")
-    return TenantRepositoryGetResponse(success=True, repository=_row_to_record(row))
+    health = _repository_health_by_id(tenant_id, [rid])
+    return TenantRepositoryGetResponse(
+        success=True, repository=_row_to_record(row, health.get(rid))
+    )
 
 
 @router.get(
