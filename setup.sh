@@ -109,6 +109,50 @@ generate_secret() {
   fi
 }
 
+# Base64 encoding of N random bytes. Unlike generate_secret, the full base64 alphabet is
+# preserved: AUTH_CONFIG_ENC_KEY has to decode back to exactly 32 bytes, so stripping "/+="
+# would produce a key apiome-rest rejects.
+generate_base64_secret() {
+  local bytes="${1:-32}"
+  if command -v openssl >/dev/null 2>&1; then
+    # openssl wraps its base64 output at 64 columns; join it back into one line.
+    openssl rand -base64 "$bytes" | tr -d '\n'
+  else
+    python3 -c 'import base64, os, sys; print(base64.b64encode(os.urandom(int(sys.argv[1]))).decode())' "$bytes"
+  fi
+}
+
+# True when the value is a usable AUTH_CONFIG_ENC_KEY: base64 of exactly 32 bytes (AES-256),
+# or the JSON {key id: base64 key} rotation map apiome-rest also accepts.
+is_valid_enc_key() {
+  python3 - "$1" >/dev/null 2>&1 <<'PY'
+import base64, binascii, json, sys
+
+
+def is_kek(value):
+    try:
+        return len(base64.b64decode(value, validate=True)) == 32
+    except (binascii.Error, ValueError):
+        return False
+
+
+raw = sys.argv[1].strip()
+try:
+    parsed = json.loads(raw)
+except ValueError:
+    parsed = None
+
+if isinstance(parsed, dict):
+    valid = bool(parsed) and all(
+        isinstance(k, str) and k.strip() and isinstance(v, str) and is_kek(v)
+        for k, v in parsed.items()
+    )
+    sys.exit(0 if valid else 1)
+
+sys.exit(0 if is_kek(raw) else 1)
+PY
+}
+
 urlencode() {
   python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$1"
 }
@@ -221,6 +265,42 @@ else
       break
     fi
     warn "BETTER_AUTH_SECRET is required."
+  done
+fi
+
+printf '\n'
+info "Sign-in provider config store (OLO-8.3/8.5)"
+printf '%bAUTH_CONFIG_ENC_KEY (apiome-rest) seals the OAuth client secrets saved from the admin\n' "$DIM"
+printf 'screen — unset, saving a secret returns 503. INTERNAL_SERVICE_TOKEN gates the login-time\n'
+printf 'read of that config and must match byte for byte in apiome-rest and apiome-ui — unset on\n'
+printf 'either side, sign-in silently falls back to the *_ID/*_SECRET env vars.%b\n' "$RESET"
+
+prompt_yes_no use_generated_enc_key "Generate AUTH_CONFIG_ENC_KEY automatically?" "y"
+if [[ "$use_generated_enc_key" == true ]]; then
+  AUTH_CONFIG_ENC_KEY="$(generate_base64_secret 32)"
+  ok "  generated AUTH_CONFIG_ENC_KEY (base64 32-byte AES-256 key)"
+else
+  while true; do
+    prompt_secret AUTH_CONFIG_ENC_KEY "AUTH_CONFIG_ENC_KEY (base64 32-byte key)"
+    if is_valid_enc_key "$AUTH_CONFIG_ENC_KEY"; then
+      break
+    fi
+    warn "Must be base64 of exactly 32 bytes (openssl rand -base64 32),"
+    warn "or a JSON {\"key id\": \"base64 key\"} rotation map."
+  done
+fi
+
+prompt_yes_no use_generated_service_token "Generate INTERNAL_SERVICE_TOKEN automatically?" "y"
+if [[ "$use_generated_service_token" == true ]]; then
+  INTERNAL_SERVICE_TOKEN="$(generate_base64_secret 48)"
+  ok "  generated INTERNAL_SERVICE_TOKEN (shared by apiome-rest and apiome-ui)"
+else
+  while true; do
+    prompt_secret INTERNAL_SERVICE_TOKEN "INTERNAL_SERVICE_TOKEN (min 32 characters)"
+    if [[ ${#INTERNAL_SERVICE_TOKEN} -ge 32 ]]; then
+      break
+    fi
+    warn "Token must be at least 32 characters."
   done
 fi
 
@@ -339,6 +419,14 @@ RELOAD=$(format_env_value "$REST_RELOAD")
 # JWT Authentication (must match apiome-ui BETTER_AUTH_SECRET)
 BETTER_AUTH_SECRET=$(format_env_value "$BETTER_AUTH_SECRET")
 
+# Auth-provider secret encryption-at-rest (OLO-8.3): base64 32-byte AES-256 KEK sealing the
+# client secrets saved from the admin screen. Unset => saving a secret returns 503.
+AUTH_CONFIG_ENC_KEY=$(format_env_value "$AUTH_CONFIG_ENC_KEY")
+
+# Shared token gating GET /v1/internal/auth-providers/resolved (OLO-8.5), the login-time read
+# apiome-ui merges over env. Must match apiome-ui INTERNAL_SERVICE_TOKEN byte for byte.
+INTERNAL_SERVICE_TOKEN=$(format_env_value "$INTERNAL_SERVICE_TOKEN")
+
 # Public mock runtime URL (must match apiome-ui and apiome-browse)
 APIOME_MOCK_PUBLIC_BASE_URL=$(format_env_value "$APIOME_MOCK_PUBLIC_BASE_URL")
 EOF
@@ -366,6 +454,11 @@ DATABASE_URL=$(format_env_value "$DATABASE_URL")
 NEXT_PUBLIC_BROWSE_URL=$(format_env_value "$NEXT_PUBLIC_BROWSE_URL")
 BETTER_AUTH_URL=$(format_env_value "$BETTER_AUTH_URL")
 BETTER_AUTH_SECRET=$(format_env_value "$BETTER_AUTH_SECRET")
+
+# Shared service token for the DB-over-env auth-provider merge resolver (OLO-8.5). Must match
+# apiome-rest INTERNAL_SERVICE_TOKEN (which holds the decryption key) byte for byte.
+# AUTH_CONFIG_ENC_KEY is deliberately absent here: only apiome-rest seals/opens those secrets.
+INTERNAL_SERVICE_TOKEN=$(format_env_value "$INTERNAL_SERVICE_TOKEN")
 
 # Beta Mode - Set to any value to enable beta indicator on login screen
 NEXT_PUBLIC_BETA_MODE=$(format_env_value "$NEXT_PUBLIC_BETA_MODE")
@@ -491,6 +584,11 @@ POSTGRES_USER=$(format_env_value "$POSTGRES_USER")
 POSTGRES_PASSWORD=$(format_env_value "$POSTGRES_PASSWORD")
 POSTGRES_DB=$(format_env_value "$POSTGRES_DB")
 POSTGRES_PUBLISH_PORT=$(format_env_value "$POSTGRES_PORT")
+
+# Sign-in provider config store (OLO-8.3/8.5). docker-compose.yml passes both through to the
+# rest service; they must match the values in apiome-rest/.env and apiome-ui/.env.
+AUTH_CONFIG_ENC_KEY=$(format_env_value "$AUTH_CONFIG_ENC_KEY")
+INTERNAL_SERVICE_TOKEN=$(format_env_value "$INTERNAL_SERVICE_TOKEN")
 
 APIOME_MCP_HTTP_PORT=$(format_env_value "$APIOME_MCP_HTTP_PORT")
 APIOME_MCP_INTERNAL_SECRET=$(format_env_value "$APIOME_MCP_INTERNAL_SECRET")
