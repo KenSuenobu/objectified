@@ -31,13 +31,37 @@ function logError(scope: string, err: unknown) {
 }
 
 /**
+ * Protocol / source-format roll-up for the browse facets (MFI-6.1).
+ *
+ * Both columns live on `apiome.versions` (MFI-7.1) and are recorded by the import adapters, so an
+ * entry's facet values are the distinct values across the published public versions it owns. They
+ * are lower-cased and blank-folded here so a chip, a stored row, and a filter all compare in one
+ * form — the same normalization `app/browse_facets.py` applies on the API side. Versions imported
+ * before the columns existed carry NULL and simply contribute no chip.
+ */
+const FACET_ROLLUP_SQL = `COALESCE(
+           array_agg(DISTINCT NULLIF(LOWER(TRIM(COALESCE(v.protocol, ''))), ''))
+             FILTER (WHERE NULLIF(TRIM(COALESCE(v.protocol, '')), '') IS NOT NULL),
+           ARRAY[]::text[]
+         ) AS protocols,
+         COALESCE(
+           array_agg(DISTINCT NULLIF(LOWER(TRIM(COALESCE(v.source_format, ''))), ''))
+             FILTER (WHERE NULLIF(TRIM(COALESCE(v.source_format, '')), '') IS NOT NULL),
+           ARRAY[]::text[]
+         ) AS formats`;
+
+/**
  * Get all tenants that have at least one published public version.
+ *
+ * Each row also carries the distinct protocols/formats the organization publishes, so the
+ * directory can be filtered by facet without a second round trip.
  */
 export async function getPublicTenants() {
   noStore();
   try {
     const result = await connectionPool.query(
-      `SELECT DISTINCT t.id, t.name, t.slug, t.description, t.created_at
+      `SELECT t.id, t.name, t.slug, t.description, t.created_at,
+              ${FACET_ROLLUP_SQL}
        FROM apiome.tenants t
        JOIN apiome.projects p ON t.id = p.tenant_id
        JOIN apiome.versions v ON p.id = v.project_id
@@ -46,6 +70,7 @@ export async function getPublicTenants() {
          AND t.deleted_at IS NULL
          AND p.deleted_at IS NULL
          AND v.deleted_at IS NULL
+       GROUP BY t.id, t.name, t.slug, t.description, t.created_at
        ORDER BY t.name ASC`
     );
     return result.rows;
@@ -57,11 +82,15 @@ export async function getPublicTenants() {
 
 /**
  * Get all projects for a tenant that have at least one published public version.
+ *
+ * Each row also carries the distinct protocols/formats across its published public versions, which
+ * is what the tenant page's protocol/format facets count and filter on (MFI-6.1).
  */
 export async function getPublicProjectsForTenant(tenantSlug: string) {
   try {
     const result = await connectionPool.query(
-      `SELECT DISTINCT p.id, p.name, p.slug, p.description, p.created_at
+      `SELECT p.id, p.name, p.slug, p.description, p.created_at,
+              ${FACET_ROLLUP_SQL}
        FROM apiome.projects p
        JOIN apiome.tenants t ON p.tenant_id = t.id
        JOIN apiome.versions v ON p.id = v.project_id
@@ -71,6 +100,7 @@ export async function getPublicProjectsForTenant(tenantSlug: string) {
          AND t.deleted_at IS NULL
          AND p.deleted_at IS NULL
          AND v.deleted_at IS NULL
+       GROUP BY p.id, p.name, p.slug, p.description, p.created_at
        ORDER BY p.name ASC`,
       [tenantSlug]
     );

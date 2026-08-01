@@ -8511,6 +8511,34 @@ class BrowseDirectoryStats(BaseModel):
     version_count: int
 
 
+class BrowseFacetCount(BaseModel):
+    """One selectable value on a browse facet axis, with how many entries carry it (MFI-6.1)."""
+
+    value: str = Field(
+        description="The stored facet value to send back as a filter (e.g. ``data_schema``, ``openapi-3.1``)."
+    )
+    label: str = Field(description="Display label for the value (e.g. ``Data schema``, ``OpenAPI 3.1``).")
+    count: int = Field(description="How many entries in the current listing scope carry this value.")
+
+
+class BrowseFacets(BaseModel):
+    """Protocol and format facet counts for a browse listing (MFI-6.1).
+
+    Counts are computed over the listing's *other* filters (search/domain) but ignore the
+    ``protocol``/``format`` selection itself, so a chip row always shows what else could be picked
+    rather than collapsing to the current selection.
+    """
+
+    protocols: List[BrowseFacetCount] = Field(
+        default_factory=list,
+        description="Counts per canonical paradigm, in canonical order (REST, RPC, event, graph, data schema, agent).",
+    )
+    formats: List[BrowseFacetCount] = Field(
+        default_factory=list,
+        description="Counts per specific source format, most common first.",
+    )
+
+
 class BrowsePublicTenantRow(BaseModel):
     """One tenant row in the public browse directory."""
 
@@ -8520,6 +8548,14 @@ class BrowsePublicTenantRow(BaseModel):
     published_versions: int
     latest_version: Optional[str] = None
     latest_activity_at: Optional[datetime] = None
+    protocols: List[str] = Field(
+        default_factory=list,
+        description="Distinct protocols this tenant publishes, ascending (MFI-6.1).",
+    )
+    formats: List[str] = Field(
+        default_factory=list,
+        description="Distinct source formats this tenant publishes, ascending (MFI-6.1).",
+    )
 
 
 class BrowsePublicTenantsResponse(BaseModel):
@@ -8528,6 +8564,10 @@ class BrowsePublicTenantsResponse(BaseModel):
     directory_stats: BrowseDirectoryStats
     tenants: List[BrowsePublicTenantRow]
     filtered_count: int
+    facets: BrowseFacets = Field(
+        default_factory=BrowseFacets,
+        description="Protocol/format facet counts across the directory, honouring ``search`` (MFI-6.1).",
+    )
 
 
 class BrowsePublicProjectRow(BaseModel):
@@ -8539,6 +8579,14 @@ class BrowsePublicProjectRow(BaseModel):
     published_versions: int
     latest_version: Optional[str] = None
     latest_published_at: Optional[datetime] = None
+    protocols: List[str] = Field(
+        default_factory=list,
+        description="Distinct protocols across this project's listed versions, ascending (MFI-6.1).",
+    )
+    formats: List[str] = Field(
+        default_factory=list,
+        description="Distinct source formats across this project's listed versions, ascending (MFI-6.1).",
+    )
 
 
 class BrowsePublicProjectsResponse(BaseModel):
@@ -8548,6 +8596,10 @@ class BrowsePublicProjectsResponse(BaseModel):
     tenant_name: str
     projects: List[BrowsePublicProjectRow]
     filtered_count: int
+    facets: BrowseFacets = Field(
+        default_factory=BrowseFacets,
+        description="Protocol/format facet counts for this tenant, honouring ``search``/``domain`` (MFI-6.1).",
+    )
 
 
 class BrowsePublicVersionRow(BaseModel):
@@ -8560,6 +8612,14 @@ class BrowsePublicVersionRow(BaseModel):
     changes_summary: Optional[str] = None
     description: Optional[str] = None
     change_log: Optional[str] = None
+    protocol: Optional[str] = Field(
+        None,
+        description="Canonical paradigm this revision was imported as, when recorded (MFI-7.1/6.1).",
+    )
+    source_format: Optional[str] = Field(
+        None,
+        description="Source format key this revision was imported from, when recorded (MFI-7.1/6.1).",
+    )
 
 
 class BrowsePublicVersionsResponse(BaseModel):

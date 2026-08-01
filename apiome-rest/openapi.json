@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.97.0",
+    "version": "1.98.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -57,6 +57,46 @@
               "title": "Sort"
             },
             "description": "Sort order: name (default), projects (desc), or latest activity (desc)."
+          },
+          {
+            "name": "protocol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "List Public Browse Tenantsprotocol schema."
+                },
+                {
+                  "type": "null",
+                  "description": "List Public Browse Tenantsprotocol schema."
+                }
+              ],
+              "description": "Filter by canonical paradigm: rest, rpc, event, graph, data_schema, agent. Punctuation-insensitive (``data-schema`` works) and unknown values simply match nothing.",
+              "title": "Protocol"
+            },
+            "description": "Filter by canonical paradigm: rest, rpc, event, graph, data_schema, agent. Punctuation-insensitive (``data-schema`` works) and unknown values simply match nothing."
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "List Public Browse Tenantsformat schema."
+                },
+                {
+                  "type": "null",
+                  "description": "List Public Browse Tenantsformat schema."
+                }
+              ],
+              "description": "Filter by specific source format key as captured at import (e.g. openapi-3.1, protobuf, graphql). Case-insensitive; unknown values simply match nothing.",
+              "title": "Format"
+            },
+            "description": "Filter by specific source format key as captured at import (e.g. openapi-3.1, protobuf, graphql). Case-insensitive; unknown values simply match nothing."
           }
         ],
         "responses": {
@@ -155,6 +195,46 @@
               "title": "Has Published"
             },
             "description": "Only include projects with at least one published version (visibility rules apply)."
+          },
+          {
+            "name": "protocol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "List Public Browse Projectsprotocol schema."
+                },
+                {
+                  "type": "null",
+                  "description": "List Public Browse Projectsprotocol schema."
+                }
+              ],
+              "description": "Filter by canonical paradigm: rest, rpc, event, graph, data_schema, agent. Punctuation-insensitive (``data-schema`` works) and unknown values simply match nothing.",
+              "title": "Protocol"
+            },
+            "description": "Filter by canonical paradigm: rest, rpc, event, graph, data_schema, agent. Punctuation-insensitive (``data-schema`` works) and unknown values simply match nothing."
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "List Public Browse Projectsformat schema."
+                },
+                {
+                  "type": "null",
+                  "description": "List Public Browse Projectsformat schema."
+                }
+              ],
+              "description": "Filter by specific source format key as captured at import (e.g. openapi-3.1, protobuf, graphql). Case-insensitive; unknown values simply match nothing.",
+              "title": "Format"
+            },
+            "description": "Filter by specific source format key as captured at import (e.g. openapi-3.1, protobuf, graphql). Case-insensitive; unknown values simply match nothing."
           },
           {
             "name": "authorization",
@@ -65636,6 +65716,61 @@
         "title": "BrowseDirectoryStats",
         "description": "Aggregate counts for published public specs (browse directory home)."
       },
+      "BrowseFacetCount": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "description": "The stored facet value to send back as a filter (e.g. ``data_schema``, ``openapi-3.1``).",
+            "example": "example"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Display label for the value (e.g. ``Data schema``, ``OpenAPI 3.1``).",
+            "example": "example"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "How many entries in the current listing scope carry this value.",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "label",
+          "count"
+        ],
+        "title": "BrowseFacetCount",
+        "description": "One selectable value on a browse facet axis, with how many entries carry it (MFI-6.1)."
+      },
+      "BrowseFacets": {
+        "properties": {
+          "protocols": {
+            "items": {
+              "$ref": "#/components/schemas/BrowseFacetCount"
+            },
+            "type": "array",
+            "title": "Protocols",
+            "description": "Counts per canonical paradigm, in canonical order (REST, RPC, event, graph, data schema, agent).",
+            "maxItems": 1000
+          },
+          "formats": {
+            "items": {
+              "$ref": "#/components/schemas/BrowseFacetCount"
+            },
+            "type": "array",
+            "title": "Formats",
+            "description": "Counts per specific source format, most common first.",
+            "maxItems": 1000
+          }
+        },
+        "type": "object",
+        "title": "BrowseFacets",
+        "description": "Protocol and format facet counts for a browse listing (MFI-6.1).\n\nCounts are computed over the listing's *other* filters (search/domain) but ignore the\n``protocol``/``format`` selection itself, so a chip row always shows what else could be picked\nrather than collapsing to the current selection."
+      },
       "BrowsePublicProjectRow": {
         "properties": {
           "slug": {
@@ -65690,6 +65825,24 @@
             ],
             "title": "Latest Published At",
             "description": "Latest Published At timestamp (ISO 8601)."
+          },
+          "protocols": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Protocols",
+            "description": "Distinct protocols across this project's listed versions, ascending (MFI-6.1).",
+            "maxItems": 1000
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Formats",
+            "description": "Distinct source formats across this project's listed versions, ascending (MFI-6.1).",
+            "maxItems": 1000
           }
         },
         "type": "object",
@@ -65730,6 +65883,10 @@
             "title": "Filtered Count",
             "description": "Number of filtered.",
             "example": 1
+          },
+          "facets": {
+            "$ref": "#/components/schemas/BrowseFacets",
+            "description": "Protocol/format facet counts for this tenant, honouring ``search``/``domain`` (MFI-6.1)."
           }
         },
         "type": "object",
@@ -65796,6 +65953,24 @@
             ],
             "title": "Latest Activity At",
             "description": "Latest Activity At timestamp (ISO 8601)."
+          },
+          "protocols": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Protocols",
+            "description": "Distinct protocols this tenant publishes, ascending (MFI-6.1).",
+            "maxItems": 1000
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Formats",
+            "description": "Distinct source formats this tenant publishes, ascending (MFI-6.1).",
+            "maxItems": 1000
           }
         },
         "type": "object",
@@ -65828,6 +66003,10 @@
             "title": "Filtered Count",
             "description": "Number of filtered.",
             "example": 1
+          },
+          "facets": {
+            "$ref": "#/components/schemas/BrowseFacets",
+            "description": "Protocol/format facet counts across the directory, honouring ``search`` (MFI-6.1)."
           }
         },
         "type": "object",
@@ -65918,6 +66097,34 @@
             ],
             "title": "Change Log",
             "description": "Change Log."
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Browse Public Version Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Browse Public Version Row schema."
+              }
+            ],
+            "title": "Protocol",
+            "description": "Canonical paradigm this revision was imported as, when recorded (MFI-7.1/6.1)."
+          },
+          "source_format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Browse Public Version Row schema."
+              },
+              {
+                "type": "null",
+                "description": "Browse Public Version Row schema."
+              }
+            ],
+            "title": "Source Format",
+            "description": "Source format key this revision was imported from, when recorded (MFI-7.1/6.1)."
           }
         },
         "type": "object",
@@ -104684,7 +104891,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-01T20:08:32Z"
+            "example": "2026-08-01T23:12:21Z"
           }
         },
         "additionalProperties": false,
@@ -117404,14 +117611,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-01T20:08:32Z"
+            "example": "2026-08-01T23:12:21Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-01T20:08:32Z"
+            "example": "2026-08-01T23:12:21Z"
           },
           "outcome": {
             "anyOf": [

@@ -1,10 +1,22 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import type { BrowseFacetAxis, BrowseFacetSelection } from '../../../../lib/browseFacets';
+import {
+  NO_FACET_SELECTION,
+  computeFacetOptions,
+  describeFacetSelection,
+  filterByFacets,
+  formatLabel,
+  hasFacetSelection,
+  protocolLabel,
+  toggleFacet,
+} from '../../../../lib/browseFacets';
 import { AppShell } from '../../components/AppShell';
 import { Breadcrumb } from '../../components/Breadcrumb';
 import { DataTable } from '../../components/DataTable';
 import { EntityHeader } from '../../components/EntityHeader';
+import { FacetFilter, FacetValueChips } from '../../components/FacetFilter';
 import { SpecCard } from '../../components/SpecCard';
 import { sanitizeSearchInput, SAFE_SEARCH_HTML_PATTERN } from '../../utils/searchValidation';
 
@@ -22,6 +34,10 @@ interface Project {
   slug: string;
   description?: string;
   created_at?: string;
+  /** Distinct protocols across the project's published public versions (MFI-6.1). */
+  protocols?: string[] | null;
+  /** Distinct source formats across the project's published public versions (MFI-6.1). */
+  formats?: string[] | null;
 }
 
 interface TenantClientProps {
@@ -49,9 +65,27 @@ function monogram(name: string): string {
   return parts.map((p) => p[0]?.toUpperCase() ?? '').join('') || name[0]?.toUpperCase() || '?';
 }
 
+/**
+ * The protocol/format chips a project card shows, so a visitor can see what a project *is* without
+ * opening it — and recognise why it matched the active facet (MFI-6.1).
+ */
+function projectFacetMeta(project: Project): { label: string; value?: string }[] {
+  const meta: { label: string; value?: string }[] = [];
+  const protocols = project.protocols ?? [];
+  const formats = project.formats ?? [];
+  if (protocols.length > 0) {
+    meta.push({ label: 'Protocol', value: protocols.map(protocolLabel).join(', ') });
+  }
+  if (formats.length > 0) {
+    meta.push({ label: 'Format', value: formats.map(formatLabel).join(', ') });
+  }
+  return meta;
+}
+
 export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps) {
   const [layout, setLayout] = useState<LayoutMode>(readLayoutPreference);
   const [query, setQuery] = useState('');
+  const [facets, setFacets] = useState<BrowseFacetSelection>(NO_FACET_SELECTION);
 
   const updateLayout = (next: LayoutMode) => {
     setLayout(next);
@@ -62,7 +96,15 @@ export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps
     }
   };
 
-  const filteredProjects = useMemo(() => {
+  const onToggleFacet = useCallback((axis: BrowseFacetAxis, value: string) => {
+    setFacets((current) => toggleFacet(current, axis, value));
+  }, []);
+
+  const onClearFacets = useCallback(() => setFacets(NO_FACET_SELECTION), []);
+
+  // Text search first: the facet chips count what the current search left on screen, and the
+  // counts ignore the facet selection itself so the row always shows what else can be picked.
+  const searchedProjects = useMemo(() => {
     if (!query.trim()) return projects;
     const q = query.toLowerCase();
     return projects.filter(
@@ -72,6 +114,28 @@ export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps
         (p.description ?? '').toLowerCase().includes(q)
     );
   }, [projects, query]);
+
+  const protocolOptions = useMemo(
+    () => computeFacetOptions(searchedProjects, 'protocol'),
+    [searchedProjects]
+  );
+  const formatOptions = useMemo(
+    () => computeFacetOptions(searchedProjects, 'format'),
+    [searchedProjects]
+  );
+
+  const filteredProjects = useMemo(
+    () => filterByFacets(searchedProjects, facets),
+    [searchedProjects, facets]
+  );
+
+  // The table view keeps its own search box, so it only takes the facet narrowing.
+  const facetedProjects = useMemo(() => filterByFacets(projects, facets), [projects, facets]);
+
+  const facetsActive = hasFacetSelection(facets);
+  const emptyFilterSummary = [query.trim() ? `"${query.trim()}"` : '', describeFacetSelection(facets)]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <AppShell containerSize="wide">
@@ -103,7 +167,13 @@ export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps
                 Projects
               </h2>
               <p className="mt-0.5 text-[13px] text-zinc-500 dark:text-zinc-400">
-                {projects.length} project{projects.length === 1 ? '' : 's'} with at least one published version.
+                {facetsActive
+                  ? `${facetedProjects.length} of ${projects.length} project${
+                      projects.length === 1 ? '' : 's'
+                    } match the selected protocol/format.`
+                  : `${projects.length} project${
+                      projects.length === 1 ? '' : 's'
+                    } with at least one published version.`}
               </p>
             </div>
 
@@ -156,6 +226,17 @@ export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps
             </div>
           </header>
 
+          {projects.length > 0 && (
+            <FacetFilter
+              protocolOptions={protocolOptions}
+              formatOptions={formatOptions}
+              selection={facets}
+              onToggle={onToggleFacet}
+              onClear={onClearFacets}
+              entityLabel="projects"
+            />
+          )}
+
           {projects.length === 0 ? (
             <div className="rounded-xl border border-dashed border-zinc-300 bg-white/40 p-10 text-center dark:border-zinc-700 dark:bg-zinc-900/40">
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -165,7 +246,7 @@ export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps
           ) : layout === 'grid' ? (
             filteredProjects.length === 0 ? (
               <div className="rounded-xl border border-dashed border-zinc-300 bg-white/40 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-500">
-                No projects match {`"${query}"`}.
+                No projects match {emptyFilterSummary || 'the current filters'}.
               </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -177,29 +258,34 @@ export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps
                     title={p.name}
                     subtitle={`/${p.slug}`}
                     description={p.description}
-                    meta={
-                      p.created_at
+                    meta={[
+                      ...projectFacetMeta(p),
+                      ...(p.created_at
                         ? [
                             {
                               label: 'Created',
                               value: new Date(p.created_at).toLocaleDateString(),
                             },
                           ]
-                        : undefined
-                    }
+                        : []),
+                    ]}
                   />
                 ))}
               </div>
             )
           ) : (
             <DataTable
-              data={projects}
+              data={facetedProjects}
               keyField="id"
               getRowHref={(project) => `/tenant/${tenantSlug}/${project.slug}`}
               searchable={true}
               searchPlaceholder="Search projects..."
               searchFields={['name', 'slug', 'description']}
-              emptyMessage="No projects with published versions available."
+              emptyMessage={
+                facetsActive
+                  ? 'No projects match the selected protocol/format.'
+                  : 'No projects with published versions available.'
+              }
               columns={[
                 {
                   key: 'name',
@@ -230,6 +316,14 @@ export function TenantClient({ tenant, projects, tenantSlug }: TenantClientProps
                     <span className="line-clamp-2 text-zinc-600 dark:text-zinc-400">
                       {project.description || '—'}
                     </span>
+                  ),
+                },
+                {
+                  key: 'protocols',
+                  header: 'Protocol / Format',
+                  width: 'w-48',
+                  render: (project) => (
+                    <FacetValueChips protocols={project.protocols} formats={project.formats} />
                   ),
                 },
                 {

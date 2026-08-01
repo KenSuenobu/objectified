@@ -1,10 +1,20 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import type { BrowseFacetAxis, BrowseFacetSelection } from '../../lib/browseFacets';
+import {
+  NO_FACET_SELECTION,
+  computeFacetOptions,
+  describeFacetSelection,
+  filterByFacets,
+  hasFacetSelection,
+  toggleFacet,
+} from '../../lib/browseFacets';
 import { AppShell } from './components/AppShell';
 import { DataTable } from './components/DataTable';
 import { DiscoveryRail } from './components/DiscoveryRail';
+import { FacetFilter, FacetValueChips } from './components/FacetFilter';
 import { SpecCard } from './components/SpecCard';
 import { sanitizeSearchInput } from './utils/searchValidation';
 
@@ -14,6 +24,10 @@ interface Tenant {
   slug: string;
   description?: string;
   created_at?: string;
+  /** Distinct protocols this organization publishes (MFI-6.1). */
+  protocols?: string[] | null;
+  /** Distinct source formats this organization publishes (MFI-6.1). */
+  formats?: string[] | null;
 }
 
 interface RecentVersion {
@@ -76,6 +90,20 @@ export function HomeClient({
 }: HomeClientProps) {
   const router = useRouter();
   const [query, setQuery] = useState('');
+  const [facets, setFacets] = useState<BrowseFacetSelection>(NO_FACET_SELECTION);
+
+  const onToggleFacet = useCallback((axis: BrowseFacetAxis, value: string) => {
+    setFacets((current) => toggleFacet(current, axis, value));
+  }, []);
+
+  const onClearFacets = useCallback(() => setFacets(NO_FACET_SELECTION), []);
+
+  // Counts are over the whole directory and ignore the current selection, so the chip row always
+  // shows what else is available to pick (the same contract the /v1/browse API's facets have).
+  const protocolOptions = useMemo(() => computeFacetOptions(tenants, 'protocol'), [tenants]);
+  const formatOptions = useMemo(() => computeFacetOptions(tenants, 'format'), [tenants]);
+  const filteredTenants = useMemo(() => filterByFacets(tenants, facets), [tenants, facets]);
+  const facetsActive = hasFacetSelection(facets);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,19 +269,38 @@ export function HomeClient({
                   All organizations
                 </h2>
                 <p className="mt-0.5 text-[13px] text-zinc-500 dark:text-zinc-400">
-                  {tenants.length} organization{tenants.length === 1 ? '' : 's'} with at least one published public specification.
+                  {facetsActive
+                    ? `${filteredTenants.length} of ${tenants.length} organization${
+                        tenants.length === 1 ? '' : 's'
+                      } publish ${describeFacetSelection(facets)}.`
+                    : `${tenants.length} organization${
+                        tenants.length === 1 ? '' : 's'
+                      } with at least one published public specification.`}
                 </p>
               </div>
             </header>
 
+            <FacetFilter
+              protocolOptions={protocolOptions}
+              formatOptions={formatOptions}
+              selection={facets}
+              onToggle={onToggleFacet}
+              onClear={onClearFacets}
+              entityLabel="organizations"
+            />
+
             <DataTable
-              data={tenants}
+              data={filteredTenants}
               keyField="id"
               getRowHref={(tenant) => `/tenant/${tenant.slug}`}
               searchable={true}
               searchPlaceholder="Filter organizations..."
               searchFields={['name', 'slug', 'description']}
-              emptyMessage="No organizations with published specifications available."
+              emptyMessage={
+                facetsActive
+                  ? 'No organizations publish the selected protocol/format.'
+                  : 'No organizations with published specifications available.'
+              }
               columns={[
                 {
                   key: 'name',
@@ -282,6 +329,14 @@ export function HomeClient({
                     <span className="line-clamp-2 text-zinc-600 dark:text-zinc-400">
                       {tenant.description || '—'}
                     </span>
+                  ),
+                },
+                {
+                  key: 'protocols',
+                  header: 'Publishes',
+                  width: 'w-48',
+                  render: (tenant) => (
+                    <FacetValueChips protocols={tenant.protocols} formats={tenant.formats} />
                   ),
                 },
                 {

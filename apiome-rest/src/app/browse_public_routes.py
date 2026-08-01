@@ -8,17 +8,25 @@ Mirrors the data surfaced by ``apiome-browse`` ``getPublicTenants`` and
 from __future__ import annotations
 
 import re
-from functools import cmp_to_key
 from datetime import datetime
+from functools import cmp_to_key
 from typing import Any, Dict, List, Literal
 
 from fastapi import APIRouter, Header, HTTPException, Query
 
 from .auth import resolve_optional_tenant_member_auth
 from .browse_change_summary import browse_version_changes_summary
+from .browse_facets import (
+    normalize_format_filter,
+    normalize_protocol_filter,
+    sort_format_counts,
+    sort_protocol_counts,
+)
 from .database import db
 from .models import (
     BrowseDirectoryStats,
+    BrowseFacetCount,
+    BrowseFacets,
     BrowsePublicProjectRow,
     BrowsePublicProjectsResponse,
     BrowsePublicTenantRow,
@@ -105,6 +113,80 @@ def _sort_versions_semver_desc(rows: List[Dict[str, Any]]) -> List[Dict[str, Any
     )
 
 
+#: Shared documentation for the two facet query parameters, so every browse listing describes them
+#: identically (MFI-6.1).
+_PROTOCOL_QUERY_DESCRIPTION = (
+    "Filter by canonical paradigm: rest, rpc, event, graph, data_schema, agent. "
+    "Punctuation-insensitive (``data-schema`` works) and unknown values simply match nothing."
+)
+_FORMAT_QUERY_DESCRIPTION = (
+    "Filter by specific source format key as captured at import (e.g. openapi-3.1, protobuf, "
+    "graphql). Case-insensitive; unknown values simply match nothing."
+)
+
+
+def _facet_value(value: Any) -> str | None:
+    """Normalize a single stored facet value for the response (lower-case, blanks become null).
+
+    Args:
+        value: A raw ``protocol`` / ``source_format`` column value, possibly None.
+
+    Returns:
+        The normalized value, or None when it is absent or blank — matching how the facet counts
+        and filters treat an unrecorded value.
+    """
+    if value is None:
+        return None
+    text = str(value).strip().lower()
+    return text or None
+
+
+def _string_list(value: Any) -> List[str]:
+    """Coerce a database array column into a list of non-empty strings.
+
+    Args:
+        value: The raw column value — a list from psycopg, or None for a row with no values.
+
+    Returns:
+        The values as strings, blanks dropped; an empty list for anything non-list.
+    """
+    if not isinstance(value, list):
+        return []
+    return [str(v) for v in value if v is not None and str(v).strip()]
+
+
+def _build_facets(counts: Any) -> BrowseFacets:
+    """Turn a database facet-count mapping into the ordered, labelled response model.
+
+    Args:
+        counts: ``{"protocols": {value: count}, "formats": {value: count}}`` as returned by the
+            ``db.*_facets*`` accessors. A malformed or missing axis degrades to empty — a facet row
+            is navigational sugar and must never break a listing.
+
+    Returns:
+        The facet chips: protocols in canonical paradigm order, formats by descending count.
+    """
+    protocols: dict = {}
+    formats: dict = {}
+    if isinstance(counts, dict):
+        raw_protocols = counts.get("protocols")
+        raw_formats = counts.get("formats")
+        if isinstance(raw_protocols, dict):
+            protocols = {str(k): int(v) for k, v in raw_protocols.items() if k}
+        if isinstance(raw_formats, dict):
+            formats = {str(k): int(v) for k, v in raw_formats.items() if k}
+    return BrowseFacets(
+        protocols=[
+            BrowseFacetCount(value=value, label=label, count=count)
+            for value, label, count in sort_protocol_counts(protocols)
+        ],
+        formats=[
+            BrowseFacetCount(value=value, label=label, count=count)
+            for value, label, count in sort_format_counts(formats)
+        ],
+    )
+
+
 def _browse_project_domain_label(metadata: Any) -> str:
     """Human-facing domain/category cell (matches CLI ``domainDisplay`` semantics)."""
     if not metadata or not isinstance(metadata, dict):
@@ -132,14 +214,31 @@ async def list_public_browse_tenants(
         "name",
         description="Sort order: name (default), projects (desc), or latest activity (desc).",
     ),
+    protocol: str | None = Query(None, description=_PROTOCOL_QUERY_DESCRIPTION),
+    source_format: str | None = Query(None, alias="format", description=_FORMAT_QUERY_DESCRIPTION),
 ) -> BrowsePublicTenantsResponse:
+    protocol_filter = normalize_protocol_filter(protocol)
+    format_filter = normalize_format_filter(source_format)
+
     stats = db.get_public_browse_directory_stats()
-    rows = db.list_public_browse_tenants(search=search, sort=sort)
-    tenants = [BrowsePublicTenantRow.model_validate(r) for r in rows]
+    rows = db.list_public_browse_tenants(
+        search=search,
+        sort=sort,
+        protocol=protocol_filter,
+        source_format=format_filter,
+    )
+    tenants = [
+        BrowsePublicTenantRow.model_validate(
+            {**r, "protocols": _string_list(r.get("protocols")), "formats": _string_list(r.get("formats"))}
+        )
+        for r in rows
+    ]
+    facets = _build_facets(db.get_public_browse_tenant_facets(search=search))
     return BrowsePublicTenantsResponse(
         directory_stats=BrowseDirectoryStats.model_validate(stats),
         tenants=tenants,
         filtered_count=len(tenants),
+        facets=facets,
     )
 
 
@@ -166,6 +265,8 @@ async def list_public_browse_projects(
         False,
         description="Only include projects with at least one published version (visibility rules apply).",
     ),
+    protocol: str | None = Query(None, description=_PROTOCOL_QUERY_DESCRIPTION),
+    source_format: str | None = Query(None, alias="format", description=_FORMAT_QUERY_DESCRIPTION),
     authorization: str | None = Header(None),
     x_api_key: str | None = Header(None, alias="X-API-Key"),
 ) -> BrowsePublicProjectsResponse:
@@ -179,6 +280,8 @@ async def list_public_browse_projects(
         x_api_key=x_api_key,
     )
     tenant_id = tenant["id"]
+    protocol_filter = normalize_protocol_filter(protocol)
+    format_filter = normalize_format_filter(source_format)
 
     if is_member:
         raw_rows = db.list_member_browse_projects_for_tenant(
@@ -186,6 +289,13 @@ async def list_public_browse_projects(
             search=search,
             domain=domain,
             require_published=has_published,
+            protocol=protocol_filter,
+            source_format=format_filter,
+        )
+        facet_counts = db.get_member_browse_project_facets_for_tenant(
+            tenant_id,
+            search=search,
+            domain=domain,
         )
     else:
         raw_rows = db.list_public_browse_projects_for_tenant(
@@ -193,6 +303,13 @@ async def list_public_browse_projects(
             search=search,
             domain=domain,
             require_published=has_published,
+            protocol=protocol_filter,
+            source_format=format_filter,
+        )
+        facet_counts = db.get_public_browse_project_facets_for_tenant(
+            tenant_id,
+            search=search,
+            domain=domain,
         )
 
     projects = [
@@ -203,6 +320,8 @@ async def list_public_browse_projects(
             published_versions=int(row["published_versions"] or 0),
             latest_version=row.get("latest_version"),
             latest_published_at=row.get("latest_published_at"),
+            protocols=_string_list(row.get("protocols")),
+            formats=_string_list(row.get("formats")),
         )
         for row in raw_rows
     ]
@@ -212,6 +331,7 @@ async def list_public_browse_projects(
         tenant_name=str(tenant["name"]),
         projects=projects,
         filtered_count=len(projects),
+        facets=_build_facets(facet_counts),
     )
 
 
@@ -286,6 +406,8 @@ async def list_public_browse_versions(
                 changes_summary=summary,
                 description=str(desc) if desc is not None else None,
                 change_log=str(clog) if clog is not None else None,
+                protocol=_facet_value(row.get("protocol")),
+                source_format=_facet_value(row.get("source_format")),
             )
         )
 
