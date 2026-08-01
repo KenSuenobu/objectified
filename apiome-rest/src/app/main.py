@@ -118,7 +118,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.95.0",
+    version="1.96.0",
 )
 
 
@@ -391,6 +391,7 @@ _mcp_catalog_digest_task: asyncio.Task | None = None
 _lint_waiver_expiry_task: asyncio.Task | None = None
 _async_job_retention_task: asyncio.Task | None = None
 _repository_webhook_secret_task: asyncio.Task | None = None
+_repository_webhook_ip_range_task: asyncio.Task | None = None
 
 
 @app.on_event("startup")
@@ -699,6 +700,45 @@ async def startup_event():
             except Exception:
                 log.exception("repository webhook secret rotation sweep")
 
+    async def _repository_webhook_ip_range_sweep() -> None:
+        """Keep the cached provider webhook IP ranges fresh (REPO-7.6, #2804).
+
+        The allowlist filters on ranges the providers publish and periodically change, so a
+        cache nobody refreshes becomes a filter that rejects legitimate deliveries. The tick
+        is hourly and the *cadence* is daily (``APIOME_REPOSITORY_WEBHOOK_IP_REFRESH_INTERVAL
+        _SECONDS``): due-ness is measured from each provider's last **success**, so a healthy
+        provider is fetched once a day while one whose endpoint is failing is retried within
+        the hour rather than tomorrow.
+
+        The first tick runs shortly after startup rather than an hour in, so a fresh
+        deployment has ranges to filter on before an operator turns enforcement on. Runs on a
+        dedicated DB connection like the other sweeps.
+        """
+        log = logging.getLogger(__name__)
+        # Enough of a delay that startup is not competing with an outbound fetch, short
+        # enough that a new deployment is populated in the first minute.
+        await asyncio.sleep(20)
+        while True:
+            try:
+
+                def _run_ip_refresh() -> Any:
+                    thread_db = Database()
+                    try:
+                        from .repository_webhook_ip_allowlist import (
+                            refresh_due_provider_ip_ranges,
+                        )
+
+                        return refresh_due_provider_ip_ranges(thread_db)
+                    finally:
+                        thread_db.close()
+
+                await asyncio.to_thread(_run_ip_refresh)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                log.exception("repository webhook IP range refresh sweep")
+            await asyncio.sleep(3600)
+
     global _webhook_delivery_task
     _webhook_delivery_task = asyncio.create_task(_webhook_delivery_sweep())
     global _repository_file_scan_task
@@ -718,6 +758,10 @@ async def startup_event():
     global _repository_webhook_secret_task
     _repository_webhook_secret_task = asyncio.create_task(
         _repository_webhook_secret_sweep()
+    )
+    global _repository_webhook_ip_range_task
+    _repository_webhook_ip_range_task = asyncio.create_task(
+        _repository_webhook_ip_range_sweep()
     )
 
 
@@ -796,6 +840,14 @@ async def shutdown_event():
         except asyncio.CancelledError:
             pass
         _repository_webhook_secret_task = None
+    global _repository_webhook_ip_range_task
+    if _repository_webhook_ip_range_task is not None:
+        _repository_webhook_ip_range_task.cancel()
+        try:
+            await _repository_webhook_ip_range_task
+        except asyncio.CancelledError:
+            pass
+        _repository_webhook_ip_range_task = None
     db.close()
 
 

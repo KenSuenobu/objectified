@@ -15935,6 +15935,413 @@ class Database:
             q, (tenant_id, repository_id, max(1, min(200, requested)))
         )
 
+    # --- REPO-7.6 (#2804): webhook source-IP allowlist ---------------------------------
+
+    def list_repository_webhook_tenant_ids(
+        self, provider: str, repo_full_name: str
+    ) -> List[str]:
+        """Tenants that have registered the repository a delivery names (REPO-7.6).
+
+        The lean sibling of :meth:`find_repository_webhook_subscriptions`. The IP guard needs
+        only "whose repositories could this delivery be about", so that this tenant's own
+        additional ranges are consulted and no other tenant's are. It must not select
+        ``secret_enc``: the guard runs *before* verification, and a query that fetched a
+        secret on a path that never verifies would be one refactor away from using it.
+
+        Args:
+            provider: Normalized provider id.
+            repo_full_name: Lowercased ``owner/name`` from the payload.
+
+        Returns:
+            Distinct tenant ids, oldest registration first (possibly empty).
+        """
+        q = """
+            SELECT DISTINCT s.tenant_id
+            FROM apiome.repository_webhook_subscription s
+            INNER JOIN apiome.tenant_repositories r ON r.id = s.repository_id
+            WHERE s.provider = %s AND s.repo_full_name = %s AND r.deleted_at IS NULL
+        """
+        return [str(row["tenant_id"]) for row in self.execute_query(q, (provider, repo_full_name))]
+
+    def list_webhook_provider_ip_ranges(self, provider: str) -> List[Dict[str, Any]]:
+        """Read one provider's cached published ranges (REPO-7.6).
+
+        Args:
+            provider: Normalized provider id.
+
+        Returns:
+            One dict per range with ``cidr``, ``family``, ``source`` and ``refreshed_at``,
+            ordered by family then CIDR so the admin panel renders deterministically.
+        """
+        q = """
+            SELECT cidr, family, source, refreshed_at
+            FROM apiome.webhook_provider_ip_range
+            WHERE provider = %s
+            ORDER BY family ASC, cidr ASC
+        """
+        return self.execute_query(q, (provider,))
+
+    def replace_webhook_provider_ip_ranges(
+        self, provider: str, ranges: List[Dict[str, Any]]
+    ) -> int:
+        """Replace one provider's cached ranges in a single transaction (REPO-7.6).
+
+        Replace, not merge: a range the provider has stopped publishing must stop being
+        allowed, and an append-only cache would keep a decommissioned address range trusted
+        indefinitely. Delete-then-insert inside one transaction is what keeps the guard from
+        ever observing a moment where the provider has no ranges — a window in which strict
+        mode would reject every delivery.
+
+        Rows already present are upserted rather than deleted and re-inserted, so
+        ``created_at`` keeps meaning "first seen" while ``refreshed_at`` tracks "last
+        confirmed".
+
+        Args:
+            provider: Normalized provider id.
+            ranges: Dicts with ``cidr``, ``family`` and ``source``. Must be non-empty; the
+                caller treats an empty fetch as a failure precisely so this method is never
+                asked to empty the cache.
+
+        Returns:
+            How many stale rows were removed.
+
+        Raises:
+            ValueError: When ``ranges`` is empty.
+        """
+        if not ranges:
+            raise ValueError("refusing to empty the provider range cache")
+
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                keep = [str(entry["cidr"]) for entry in ranges]
+                cursor.execute(
+                    """
+                    DELETE FROM apiome.webhook_provider_ip_range
+                    WHERE provider = %s AND cidr <> ALL(%s)
+                    """,
+                    (provider, keep),
+                )
+                removed = cursor.rowcount or 0
+                for entry in ranges:
+                    cursor.execute(
+                        """
+                        INSERT INTO apiome.webhook_provider_ip_range
+                          (provider, cidr, family, source, refreshed_at)
+                        VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                        ON CONFLICT (provider, cidr) DO UPDATE
+                          SET family = EXCLUDED.family,
+                              source = EXCLUDED.source,
+                              refreshed_at = CURRENT_TIMESTAMP
+                        """,
+                        (
+                            provider,
+                            str(entry["cidr"]),
+                            int(entry["family"]),
+                            str(entry.get("source") or "provider"),
+                        ),
+                    )
+            conn.commit()
+            return int(removed)
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def record_webhook_provider_ip_refresh(
+        self,
+        provider: str,
+        *,
+        outcome: str,
+        error: Optional[str] = None,
+        range_count: Optional[int] = None,
+    ) -> None:
+        """Record one provider range refresh attempt (REPO-7.6).
+
+        ``last_attempt_at`` moves on every call; ``last_success_at`` and ``range_count`` move
+        only on a success. That separation is the staleness signal the admin panel reads: an
+        attempt timestamp advancing while the success timestamp does not is a provider
+        endpoint that has been failing, which a single ``refreshed_at`` column could not say.
+
+        Args:
+            provider: Normalized provider id.
+            outcome: ``success`` | ``failure`` | ``skipped``.
+            error: Failure detail, or a fetch error that a configured-ranges fallback
+                survived. Cleared on a clean success.
+            range_count: Ranges stored, on success only.
+        """
+        succeeded = outcome == "success"
+        q = """
+            INSERT INTO apiome.webhook_provider_ip_refresh
+              (provider, last_attempt_at, last_success_at, last_outcome, last_error, range_count)
+            VALUES (
+                %s,
+                CURRENT_TIMESTAMP,
+                CASE WHEN %s::boolean THEN CURRENT_TIMESTAMP ELSE NULL END,
+                %s, %s, COALESCE(%s::integer, 0)
+            )
+            ON CONFLICT (provider) DO UPDATE
+              SET last_attempt_at = CURRENT_TIMESTAMP,
+                  last_success_at = CASE
+                      WHEN %s::boolean THEN CURRENT_TIMESTAMP
+                      ELSE apiome.webhook_provider_ip_refresh.last_success_at
+                  END,
+                  last_outcome = EXCLUDED.last_outcome,
+                  last_error = EXCLUDED.last_error,
+                  range_count = CASE
+                      WHEN %s::boolean THEN EXCLUDED.range_count
+                      ELSE apiome.webhook_provider_ip_refresh.range_count
+                  END,
+                  updated_at = CURRENT_TIMESTAMP
+        """
+        self._execute_write(
+            q,
+            (
+                provider,
+                succeeded,
+                outcome,
+                error,
+                (int(range_count) if range_count is not None else None),
+                succeeded,
+                succeeded,
+            ),
+        )
+
+    def list_webhook_provider_ip_refresh(self) -> List[Dict[str, Any]]:
+        """Read every provider's range-refresh state (REPO-7.6).
+
+        Returns:
+            One dict per provider that has ever been refreshed, with ``provider``,
+            ``last_attempt_at``, ``last_success_at``, ``last_outcome``, ``last_error`` and
+            ``range_count``. A provider absent from the result has never been attempted.
+        """
+        q = """
+            SELECT provider, last_attempt_at, last_success_at, last_outcome,
+                   last_error, range_count
+            FROM apiome.webhook_provider_ip_refresh
+            ORDER BY provider ASC
+        """
+        return self.execute_query(q)
+
+    def list_tenant_webhook_ip_allowlist(
+        self, tenant_id: str, enabled_only: bool = False
+    ) -> List[Dict[str, Any]]:
+        """Read one tenant's additional allowlist entries (REPO-7.6).
+
+        Args:
+            tenant_id: Owning tenant id (scopes the read for isolation).
+            enabled_only: True on the delivery path, where a disabled entry must not match;
+                False in the admin panel, which has to show disabled entries in order to let
+                anyone re-enable them.
+
+        Returns:
+            Entry rows, oldest first.
+        """
+        q = """
+            SELECT id, cidr, family, description, enabled, created_by, created_at, updated_at
+            FROM apiome.tenant_webhook_ip_allowlist
+            WHERE tenant_id = %s::uuid
+              AND (%s::boolean IS FALSE OR enabled IS TRUE)
+            ORDER BY created_at ASC
+        """
+        return self.execute_query(q, (tenant_id, bool(enabled_only)))
+
+    def add_tenant_webhook_ip_allowlist_entry(
+        self,
+        tenant_id: str,
+        *,
+        cidr: str,
+        family: int,
+        description: Optional[str] = None,
+        created_by: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Add one additional allowlist entry for a tenant (REPO-7.6).
+
+        Adding a CIDR the tenant already has is treated as an update of that row rather than
+        a conflict: the operator's intent — "this range should be allowed, and here is why" —
+        is satisfied either way, and a 409 on a re-submitted form is a worse answer than a
+        refreshed description. Re-adding an entry also re-enables it, which is the only way
+        the "add" action could otherwise appear to do nothing.
+
+        Args:
+            tenant_id: Owning tenant id.
+            cidr: Canonical CIDR text (normalized by the caller).
+            family: 4 or 6.
+            description: Why the entry exists.
+            created_by: The tenant administrator adding it.
+
+        Returns:
+            The stored row.
+        """
+        q = """
+            INSERT INTO apiome.tenant_webhook_ip_allowlist
+              (tenant_id, cidr, family, description, created_by)
+            VALUES (%s::uuid, %s, %s, %s, %s::uuid)
+            ON CONFLICT (tenant_id, cidr) DO UPDATE
+              SET description = EXCLUDED.description,
+                  family = EXCLUDED.family,
+                  enabled = TRUE,
+                  updated_at = CURRENT_TIMESTAMP
+            RETURNING id, cidr, family, description, enabled, created_by,
+                      created_at, updated_at
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    q,
+                    (
+                        tenant_id,
+                        cidr,
+                        int(family),
+                        description,
+                        (str(created_by) if created_by else None),
+                    ),
+                )
+                row = cursor.fetchone()
+                conn.commit()
+                return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def set_tenant_webhook_ip_allowlist_entry_enabled(
+        self, tenant_id: str, entry_id: str, enabled: bool
+    ) -> Optional[Dict[str, Any]]:
+        """Enable or disable one allowlist entry (REPO-7.6).
+
+        Scoped by tenant as well as by id, so one tenant can never toggle another's entry
+        by guessing a UUID.
+
+        Args:
+            tenant_id: Owning tenant id.
+            entry_id: The entry to toggle.
+            enabled: The new state.
+
+        Returns:
+            The updated row, or ``None`` when no entry matched the tenant and id.
+        """
+        q = """
+            UPDATE apiome.tenant_webhook_ip_allowlist
+            SET enabled = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s::uuid AND tenant_id = %s::uuid
+            RETURNING id, cidr, family, description, enabled, created_by,
+                      created_at, updated_at
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(q, (bool(enabled), entry_id, tenant_id))
+                row = cursor.fetchone()
+                conn.commit()
+                return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def delete_tenant_webhook_ip_allowlist_entry(
+        self, tenant_id: str, entry_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Remove one allowlist entry (REPO-7.6).
+
+        Returns the removed row rather than a boolean, because the audit record has to name
+        the CIDR that stopped being allowed and the row is gone by the time the caller could
+        read it back.
+
+        Args:
+            tenant_id: Owning tenant id (scopes the delete).
+            entry_id: The entry to remove.
+
+        Returns:
+            The deleted row, or ``None`` when no entry matched.
+        """
+        q = """
+            DELETE FROM apiome.tenant_webhook_ip_allowlist
+            WHERE id = %s::uuid AND tenant_id = %s::uuid
+            RETURNING id, cidr, family, description, enabled, created_by,
+                      created_at, updated_at
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(q, (entry_id, tenant_id))
+                row = cursor.fetchone()
+                conn.commit()
+                return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def get_tenant_webhook_ip_policy(self, tenant_id: str) -> Optional[Dict[str, Any]]:
+        """Read one tenant's allowlist enforcement policy (REPO-7.6).
+
+        Args:
+            tenant_id: The tenant to read.
+
+        Returns:
+            The policy row, or ``None`` when the tenant has never changed it — which means
+            "enforced with the deployment default", not "unknown".
+        """
+        q = """
+            SELECT tenant_id, enforcement_enabled, bypass_reason, updated_by, updated_at
+            FROM apiome.tenant_webhook_ip_policy
+            WHERE tenant_id = %s::uuid
+        """
+        rows = self.execute_query(q, (tenant_id,))
+        return dict(rows[0]) if rows else None
+
+    def set_tenant_webhook_ip_policy(
+        self,
+        tenant_id: str,
+        *,
+        enforcement_enabled: bool,
+        bypass_reason: Optional[str] = None,
+        updated_by: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Set one tenant's allowlist enforcement policy (REPO-7.6).
+
+        The bypass. Writable only by a tenant administrator — enforced in the API layer, where
+        the authenticated principal lives — and every call is audited by the caller, because
+        "who turned the filter off, and when" is the first question a review asks.
+
+        Args:
+            tenant_id: The tenant whose policy is being set.
+            enforcement_enabled: False bypasses the allowlist for this tenant's repositories.
+            bypass_reason: Why. Kept on the row so the panel can show it next to the switch.
+            updated_by: The administrator making the change.
+
+        Returns:
+            The stored policy row.
+        """
+        q = """
+            INSERT INTO apiome.tenant_webhook_ip_policy
+              (tenant_id, enforcement_enabled, bypass_reason, updated_by)
+            VALUES (%s::uuid, %s, %s, %s::uuid)
+            ON CONFLICT (tenant_id) DO UPDATE
+              SET enforcement_enabled = EXCLUDED.enforcement_enabled,
+                  bypass_reason = EXCLUDED.bypass_reason,
+                  updated_by = EXCLUDED.updated_by,
+                  updated_at = CURRENT_TIMESTAMP
+            RETURNING tenant_id, enforcement_enabled, bypass_reason, updated_by, updated_at
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    q,
+                    (
+                        tenant_id,
+                        bool(enforcement_enabled),
+                        bypass_reason,
+                        (str(updated_by) if updated_by else None),
+                    ),
+                )
+                row = cursor.fetchone()
+                conn.commit()
+                return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
     def enqueue_repository_file_scan_job_if_idle(
         self, tenant_id: str, repository_id: str, branch: str
     ) -> Optional[str]:

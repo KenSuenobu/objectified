@@ -7813,6 +7813,211 @@ class RepositoryQuotaTelemetryResponse(BaseModel):
     telemetry: RepositoryQuotaTelemetryOut
 
 
+class RepositoryIpRangeOut(BaseModel):
+    """One CIDR in a provider's cached webhook source ranges (REPO-7.6, #2804)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    cidr: str = Field(description="The range, in canonical CIDR notation.")
+    family: int = Field(description="IP version: 4 or 6.")
+    source: str = Field(
+        description=(
+            "`provider` when fetched from the provider's published endpoint, `configured` "
+            "when supplied by this deployment's settings."
+        ),
+    )
+    refreshed_at: Optional[str] = Field(
+        default=None,
+        alias="refreshedAt",
+        description="When this range was last confirmed present at the source (ISO 8601).",
+    )
+
+
+class RepositoryIpProviderOut(BaseModel):
+    """One provider's cached ranges and the health of the refresh that fills them."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    provider: str = Field(description="github | gitlab | bitbucket.")
+    source_url: Optional[str] = Field(
+        default=None,
+        alias="sourceUrl",
+        description=(
+            "The published endpoint the ranges are fetched from, or null for a provider that "
+            "publishes none (GitLab.com) and is configuration-only."
+        ),
+    )
+    note: str = Field(
+        description="One line explaining where this provider's ranges come from.",
+    )
+    range_count: int = Field(
+        alias="rangeCount", description="How many ranges are currently cached."
+    )
+    ranges: List[RepositoryIpRangeOut] = Field(
+        description="The cached ranges, ordered by family then CIDR.",
+    )
+    last_attempt_at: Optional[str] = Field(
+        default=None,
+        alias="lastAttemptAt",
+        description="When a refresh was last attempted (ISO 8601), successful or not.",
+    )
+    last_success_at: Optional[str] = Field(
+        default=None,
+        alias="lastSuccessAt",
+        description=(
+            "When a refresh last stored ranges (ISO 8601). Separate from lastAttemptAt so a "
+            "failing endpoint is distinguishable from a fresh cache."
+        ),
+    )
+    last_outcome: str = Field(
+        alias="lastOutcome",
+        description="pending | success | failure | skipped.",
+    )
+    last_error: Optional[str] = Field(
+        default=None,
+        alias="lastError",
+        description="Failure detail from the last attempt, when there was one.",
+    )
+    stale: bool = Field(
+        description=(
+            "True when no successful refresh has landed within two refresh cadences — i.e. "
+            "one has actually been missed, rather than merely run late."
+        ),
+    )
+
+
+class RepositoryIpAllowlistEntryOut(BaseModel):
+    """One tenant-managed additional allowlist entry (REPO-7.6, #2804)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    cidr: str = Field(description="The range, in canonical CIDR notation.")
+    family: int = Field(description="IP version: 4 or 6.")
+    description: Optional[str] = Field(
+        default=None, description="Why this entry exists."
+    )
+    enabled: bool = Field(
+        description="False leaves the entry in place but stops it matching deliveries.",
+    )
+    created_at: Optional[str] = Field(default=None, alias="createdAt")
+    updated_at: Optional[str] = Field(default=None, alias="updatedAt")
+
+
+class RepositoryWebhookIpAllowlistResponse(BaseModel):
+    """The webhook source-IP allowlist as a tenant administrator sees it (REPO-7.6, #2804).
+
+    Returned by the read *and* by every mutation, so a panel re-renders from the same shape it
+    loaded and can never drift from the stored state after an edit.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    success: bool = True
+    enforcement_enabled: bool = Field(
+        alias="enforcementEnabled",
+        description=(
+            "Deployment-wide switch. False means the filter is not enforced anywhere, "
+            "whatever this tenant's own policy says."
+        ),
+    )
+    strict: bool = Field(
+        description=(
+            "True when a provider with no cached ranges blocks its deliveries instead of "
+            "allowing them with a warning."
+        ),
+    )
+    refresh_interval_seconds: int = Field(
+        alias="refreshIntervalSeconds",
+        description="How often the provider ranges are refreshed.",
+    )
+    trusted_proxy_hops: int = Field(
+        alias="trustedProxyHops",
+        description=(
+            "How many reverse proxies the deployment reads X-Forwarded-For through. 0 means "
+            "the header is ignored and only the socket peer is trusted."
+        ),
+    )
+    tenant_enforcement_enabled: bool = Field(
+        alias="tenantEnforcementEnabled",
+        description=(
+            "False is this tenant's bypass: its repositories accept deliveries from any "
+            "address. Changing it requires the tenant-administrator role."
+        ),
+    )
+    bypass_reason: Optional[str] = Field(
+        default=None,
+        alias="bypassReason",
+        description="Why enforcement was turned off for this tenant.",
+    )
+    policy_updated_at: Optional[str] = Field(
+        default=None,
+        alias="policyUpdatedAt",
+        description="When this tenant's policy was last changed (ISO 8601).",
+    )
+    providers: List[RepositoryIpProviderOut] = Field(
+        description="Cached provider ranges, one entry per supported provider.",
+    )
+    entries: List[RepositoryIpAllowlistEntryOut] = Field(
+        description="This tenant's additional ranges, oldest first.",
+    )
+
+
+class RepositoryWebhookIpAllowlistEntryCreate(BaseModel):
+    """Add (or refresh) one additional allowlist entry (REPO-7.6, #2804)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    cidr: str = Field(
+        description=(
+            "The range to allow. A bare address is accepted and stored as its single-host "
+            "network; a value with host bits set (10.0.0.1/24) is rejected rather than "
+            "silently widened."
+        ),
+    )
+    description: Optional[str] = Field(
+        default=None,
+        max_length=255,
+        description=(
+            "Why this range should be allowed. Required in practice — an allowlist nobody "
+            "can explain is one nobody dares prune."
+        ),
+    )
+
+
+class RepositoryWebhookIpAllowlistEntryUpdate(BaseModel):
+    """Enable or disable one existing allowlist entry (REPO-7.6, #2804)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    enabled: bool = Field(
+        description="False stops the entry matching deliveries without deleting it.",
+    )
+
+
+class RepositoryWebhookIpPolicyUpdate(BaseModel):
+    """Set this tenant's allowlist enforcement policy (REPO-7.6, #2804)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    enforcement_enabled: bool = Field(
+        alias="enforcementEnabled",
+        description=(
+            "False bypasses the allowlist for this tenant's repositories. Tenant "
+            "administrators only."
+        ),
+    )
+    bypass_reason: Optional[str] = Field(
+        default=None,
+        alias="bypassReason",
+        max_length=255,
+        description=(
+            "Why enforcement is being turned off. Required when disabling; ignored when "
+            "re-enabling."
+        ),
+    )
+
+
 class TenantRepositoriesListResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
