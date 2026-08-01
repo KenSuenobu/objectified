@@ -24,6 +24,7 @@ import { cn } from '@lib/utils';
 import { RepositoryFileDetail } from '@/app/components/ade/dashboard/repositories/RepositoryFileDetail';
 import { RepositoryFileImportMapping } from '@/app/components/ade/dashboard/repositories/RepositoryFileImportMapping';
 import { repositoryFileQualityBadge } from '@/app/utils/repository-file-quality';
+import { repositoryDisplayKindPillClass } from '@/app/components/ade/dashboard/repositories/repositorySpecFormat';
 import type { RepositoryFileStagedImportTarget } from '@/app/components/ade/dashboard/repositories/repositoryFileStagedImport';
 
 export type RepositoryFileApiRow = {
@@ -98,28 +99,8 @@ function escapeRegexPath(path: string): string {
   return path.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
 }
 
-function kindPillClass(displayKind: string): string {
-  const k = displayKind.toLowerCase();
-  if (k.includes('openapi')) {
-    return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
-  }
-  if (k.includes('arazzo')) {
-    return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300';
-  }
-  if (k.includes('asyncapi')) {
-    return 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300';
-  }
-  if (k.includes('json schema')) {
-    return 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300';
-  }
-  if (k.includes('graphql')) {
-    return 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300';
-  }
-  if (k.includes('protobuf') || k.includes('postman') || k.includes('sql')) {
-    return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200';
-  }
-  return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
-}
+/** Pill classes for a row's display kind — shared with the cross-repo catalog (REPO-6.4). */
+const kindPillClass = repositoryDisplayKindPillClass;
 
 function confidenceBadge(conf: string): { label: string; className: string } {
   const c = conf.toLowerCase();
