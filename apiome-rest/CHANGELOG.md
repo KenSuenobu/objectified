@@ -5,6 +5,47 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.228.0] - 2026-07-31
+
+### Added
+- **Per-repository health badge (REPO-6.5, #2798)** — the repository surface exposed plenty of
+  individual signals (scan job outcomes, per-spec quality attempts, the linked account a private
+  repository authenticates with) but nothing that answered an operator's first question at a
+  glance: *is this repository fine?* Every repository now carries one three-valued badge, on the
+  repositories list rows (REPO-6.1) and the repository detail header (REPO-6.2).
+  - **Three inputs, three levels.** `healthy` / `warnings` / `error` is rolled up from the scan
+    success rate over the last 30 days, the count of discovered specs on the default branch whose
+    REPO-2.8 quality attempt errored or could not parse, and the health of the linked account's
+    access token (REPO-7.4). Below 50% of scans succeeding is an `error`, below 90% a `warnings`;
+    parse errors are a `warnings` until ten of them, at which point the repository is not usable
+    as an import source; a disconnected account, a missing token or an expired one is an `error`,
+    and a token expiring within seven days is a `warnings`.
+  - **Token issues always demote to at least `warnings`.** A repository Apiome can no longer
+    authenticate to never reads as healthy, however spotless its scan history. Every token factor
+    is emitted at warnings-or-worse and the roll-up clamps as well, so the guarantee survives a
+    future factor being added at the wrong level.
+  - **A tooltip that says what changed.** Each contributing factor carries a stable machine code,
+    a level, a one-sentence operator-facing summary and — where an event lies behind it — when it
+    was last observed. `primary_factor` is the *most recently observed* factor, which is what the
+    badge tooltip leads with; the full list is ordered most severe first. A standing condition
+    with no event behind it ("this token expires soon") never displaces something that actually
+    happened.
+  - **No signal is not a problem.** A repository registered a minute ago has no scans, no scored
+    files and (for a public clone URL) no token to expire; it reads as `healthy` rather than
+    manufacturing an alarm out of missing data. Public-URL repositories are read anonymously and
+    so always have perfect token health.
+  - **One query per page, not one per row.** `Database.get_repository_health_signals` answers the
+    whole batch with two correlated laterals, and V231 indexes both: `(repository_id, created_at
+    DESC) INCLUDE (status, finished_at)` on the scan queue turns the trailing window into a
+    bounded range scan, and a partial index on the file table holding only rows that actually
+    failed to parse — empty on a healthy monorepo. The migration adds indexes only.
+  - **Decoration, never a point of failure.** The badge is computed by a pure, side-effect-free
+    module that cannot raise; if the signal query itself fails, the affected rows carry no badge
+    and the listing is unaffected. The access token's *value* is never selected — only whether
+    one exists — so a credential cannot leak through a listing response.
+  - `GET /v1/tenants/{slug}/repositories` and `GET /v1/tenants/{slug}/repositories/{id}` (and the
+    PATCH / refresh-resume reads that return the same record) gain a `health` object.
+
 ## [1.227.0] - 2026-07-31
 
 ### Added

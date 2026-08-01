@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.91.0
+  version: 1.92.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -33572,6 +33572,11 @@ paths:
       tags:
       - tenant-repositories
       summary: List Tenant Repositories
+      description: "List the tenant's registered repositories, each with its REPO-6.5\
+        \ health badge.\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping\
+        \ comes from the token).\n    auth_data: Authenticated principal; supplies\
+        \ the tenant scope.\n\nReturns:\n    Every live repository for the tenant,\
+        \ newest registration first."
       operationId: list_tenant_repositories_v1_tenants__tenant_slug__repositories_get
       parameters:
       - name: tenant_slug
@@ -33689,6 +33694,12 @@ paths:
       tags:
       - tenant-repositories
       summary: Get Tenant Repository
+      description: "Read one registered repository, with its REPO-6.5 health badge.\n\
+        \nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the\
+        \ token).\n    repository_id: The repository to read.\n    auth_data: Authenticated\
+        \ principal; supplies the tenant scope.\n\nReturns:\n    The repository record.\n\
+        \nRaises:\n    HTTPException: 404 when the repository does not exist in this\
+        \ tenant."
       operationId: get_tenant_repository_v1_tenants__tenant_slug__repositories__repository_id__get
       parameters:
       - name: tenant_slug
@@ -75736,6 +75747,109 @@ components:
       - message
       title: ReleaseSourceBody
       description: Where the release was built from.
+    RepositoryHealthFactorOut:
+      properties:
+        code:
+          type: string
+          title: Code
+          description: Code.
+          example: example
+        level:
+          type: string
+          title: Level
+          description: Level.
+          example: example
+        summary:
+          type: string
+          title: Summary
+          description: Short summary suitable for navigation and reference docs.
+          example: List pets
+        observed_at:
+          anyOf:
+          - type: string
+            description: Response payload for repository health factor.
+          - type: 'null'
+            description: Response payload for repository health factor.
+          title: Observed At
+          description: Observed At timestamp (ISO 8601).
+      type: object
+      required:
+      - code
+      - level
+      - summary
+      title: RepositoryHealthFactorOut
+      description: 'One reason contributing to a repository''s health badge (REPO-6.5,
+        #2798).'
+    RepositoryHealthOut:
+      properties:
+        level:
+          type: string
+          title: Level
+          description: Level.
+          example: example
+        score:
+          type: integer
+          title: Score
+          description: Score.
+          example: 98
+        window_days:
+          type: integer
+          title: Window Days
+          description: Window Days.
+          example: 1
+        scans_attempted:
+          type: integer
+          title: Scans Attempted
+          description: Scans Attempted.
+          example: 1
+        scans_succeeded:
+          type: integer
+          title: Scans Succeeded
+          description: Scans Succeeded.
+          example: 1
+        scan_success_rate:
+          anyOf:
+          - type: number
+            description: Response payload for repository health.
+          - type: 'null'
+            description: Response payload for repository health.
+          title: Scan Success Rate
+          description: Scan Success Rate.
+        parse_error_count:
+          type: integer
+          title: Parse Error Count
+          default: 0
+          description: Number of parse error.
+          example: 1
+        primary_factor:
+          anyOf:
+          - $ref: '#/components/schemas/RepositoryHealthFactorOut'
+          - type: 'null'
+            description: Response payload for repository health.
+          description: Primary Factor.
+        factors:
+          items:
+            $ref: '#/components/schemas/RepositoryHealthFactorOut'
+          type: array
+          title: Factors
+          description: Factors.
+          maxItems: 1000
+      type: object
+      required:
+      - level
+      - score
+      - window_days
+      - scans_attempted
+      - scans_succeeded
+      title: RepositoryHealthOut
+      description: 'At-a-glance health of one registered repository (REPO-6.5, #2798).
+
+
+        Rolls the repository''s scan success rate over the trailing window, its discovered-spec
+
+        parse errors, and its linked-account token health (REPO-7.4) into one three-valued
+
+        badge. Token problems always leave the repository at ``warnings`` or worse.'
     RepositoryImportSpecRead:
       properties:
         spec_schema_version:
@@ -76990,7 +77104,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-01T02:49:24Z'
+          example: '2026-08-01T03:07:10Z'
       additionalProperties: false
       type: object
       required:
@@ -84170,6 +84284,12 @@ components:
             description: Tenant Repository schema.
           title: Refresh Pause Reason
           description: Refresh Pause Reason.
+        health:
+          anyOf:
+          - $ref: '#/components/schemas/RepositoryHealthOut'
+          - type: 'null'
+            description: Tenant Repository schema.
+          description: Health.
         created_at:
           anyOf:
           - type: string
@@ -86801,13 +86921,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-01T02:49:24Z'
+          example: '2026-08-01T03:07:10Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-01T02:49:24Z'
+          example: '2026-08-01T03:07:10Z'
         outcome:
           anyOf:
           - type: string
