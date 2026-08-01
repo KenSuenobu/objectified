@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.94.0
+  version: 1.95.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -33649,6 +33649,117 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for get tenant repository quota telemetryresponse422.
+  /v1/tenants/{tenant_slug}/repository-audit-export:
+    get:
+      tags:
+      - tenant-repositories
+      summary: Export Tenant Repository Audit
+      description: "Export the tenant's repository audit ledger for compliance (REPO-7.5,\
+        \ #2803).\n\nStreams every ``repository.*`` row of ``apiome.workflow_audit``\
+        \ in the requested\n``created_at`` range, oldest first, as CSV or JSON — the\
+        \ structured, dateable\nartifact a SOC 2 / ISO 27001 review asks for. Rows\
+        \ are read in keyset batches, so\nan export far beyond 10k rows streams in\
+        \ constant memory. The response is served\nas an attachment with a range-stamped\
+        \ filename.\n\nAdmin-only: requires a signed-in tenant administrator (API\
+        \ keys are rejected),\nsince the ledger spans every repository and actor in\
+        \ the workspace. The export\nitself is appended to the same ledger as ``repository.audit_exported``\
+        \ —\n``success`` with the exact row count when the stream completes, ``failure``\
+        \ with\nthe partial count when it aborts — so exports are evidence too, and\
+        \ appear in\nthe very next export.\n\nArgs:\n    tenant_slug: Tenant slug\
+        \ from the path (scoping comes from the token).\n    from_: Inclusive ISO\
+        \ 8601 lower bound; omit for \"from the beginning\".\n    to: Inclusive ISO\
+        \ 8601 upper bound; omit for \"up to now\".\n    export_format: ``csv`` or\
+        \ ``json`` (default ``json``).\n    auth_data: Authenticated principal; must\
+        \ resolve to a tenant administrator.\n\nReturns:\n    The streamed export\
+        \ document.\n\nRaises:\n    HTTPException: 403 for non-administrators or API-key\
+        \ auth; 400 for an\n        unknown format, a malformed bound, or an inverted\
+        \ range."
+      operationId: export_tenant_repository_audit_v1_tenants__tenant_slug__repository_audit_export_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Export Tenant Repository Auditfrom schema.
+          - type: 'null'
+            description: Export Tenant Repository Auditfrom schema.
+          description: Inclusive lower bound on the row's createdAt (ISO 8601).
+          title: From
+        description: Inclusive lower bound on the row's createdAt (ISO 8601).
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Export Tenant Repository Auditto schema.
+          - type: 'null'
+            description: Export Tenant Repository Auditto schema.
+          description: Inclusive upper bound on the row's createdAt (ISO 8601).
+          title: To
+        description: Inclusive upper bound on the row's createdAt (ISO 8601).
+      - name: format
+        in: query
+        required: false
+        schema:
+          type: string
+          description: 'Export format: csv or json (default json).'
+          default: json
+          title: Format
+        description: 'Export format: csv or json (default json).'
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Export Tenant Repository Auditauthorization schema.
+          - type: 'null'
+            description: Export Tenant Repository Auditauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Export Tenant Repository Audit Xapikey schema.
+          - type: 'null'
+            description: Export Tenant Repository Audit Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: The export document, streamed. `format=json` yields one JSON
+            object (`export` metadata envelope, `entries` array, trailing `rowCount`);
+            `format=csv` yields a header line plus one row per entry with `detail`
+            JSON-encoded in its cell.
+          content:
+            application/json:
+              schema:
+                description: Response payload for export tenant repository auditresponse200.
+            text/csv: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for export tenant repository auditresponse422.
   /v1/tenants/{tenant_slug}/repositories:
     get:
       tags:
@@ -77666,7 +77777,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-01T04:17:49Z'
+          example: '2026-08-01T04:55:33Z'
       additionalProperties: false
       type: object
       required:
@@ -87483,13 +87594,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-01T04:17:49Z'
+          example: '2026-08-01T04:55:33Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-01T04:17:49Z'
+          example: '2026-08-01T04:55:33Z'
         outcome:
           anyOf:
           - type: string

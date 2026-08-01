@@ -8781,6 +8781,66 @@ class Database:
             params.append(offset)
         return self.execute_query(q, tuple(params))
 
+    def list_workflow_audit_for_export(
+        self,
+        tenant_id: str,
+        *,
+        action_prefix: str,
+        since=None,
+        until=None,
+        batch_size: int = 1000,
+        cursor_created_at=None,
+        cursor_id: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """One batch of an action-prefix ledger export, oldest first (REPO-7.5, #2803).
+
+        Selects tenant rows whose ``action`` starts with ``action_prefix`` (e.g.
+        ``repository.``) within an inclusive ``created_at`` range, ordered
+        ``created_at ASC, id ASC``. ``(cursor_created_at, cursor_id)`` is the keyset
+        position of the last row of the previous batch — keyset, not OFFSET, so every
+        batch of a large export costs the same and concurrent appends cannot shift
+        rows between batches.
+
+        Args:
+            tenant_id: Owning tenant.
+            action_prefix: Literal action prefix; LIKE wildcards in it are escaped.
+            since: Inclusive lower ``created_at`` bound, or ``None``.
+            until: Inclusive upper ``created_at`` bound, or ``None``.
+            batch_size: Maximum rows returned.
+            cursor_created_at: ``created_at`` of the last row already exported.
+            cursor_id: ``id`` of the last row already exported.
+
+        Returns:
+            Up to ``batch_size`` rows; fewer signals the final batch.
+        """
+        escaped_prefix = (
+            str(action_prefix)
+            .replace("\\", "\\\\")
+            .replace("%", "\\%")
+            .replace("_", "\\_")
+        )
+        clauses = ["wa.tenant_id = %s", "wa.action LIKE %s"]
+        params: List[Any] = [tenant_id, escaped_prefix + "%"]
+        if since is not None:
+            clauses.append("wa.created_at >= %s")
+            params.append(since)
+        if until is not None:
+            clauses.append("wa.created_at <= %s")
+            params.append(until)
+        if cursor_created_at is not None and cursor_id is not None:
+            clauses.append("(wa.created_at, wa.id) > (%s, %s::uuid)")
+            params.extend([cursor_created_at, cursor_id])
+        q = f"""
+            SELECT wa.id, wa.tenant_id, wa.project_id, wa.version_id, wa.action, wa.outcome,
+                   wa.actor_id, wa.detail, wa.created_at
+            FROM apiome.workflow_audit wa
+            WHERE {' AND '.join(clauses)}
+            ORDER BY wa.created_at ASC, wa.id ASC
+            LIMIT %s
+        """
+        params.append(batch_size)
+        return self.execute_query(q, tuple(params))
+
     def insert_registry_audit(
         self,
         tenant_id: str,
