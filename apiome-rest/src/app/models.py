@@ -7470,6 +7470,87 @@ class RepositoryWebhookReceiptResponse(BaseModel):
     jobs_enqueued: int = Field(0, alias="jobsEnqueued")
 
 
+class RepositoryPollingQuotaOut(BaseModel):
+    """A tenant's repository polling quota and its usage this window (REPO-4.6, #2784).
+
+    The quota bounds how many poll (refresh) jobs the auto-refresh scheduler may enqueue for
+    one tenant per rolling window, so a single noisy tenant cannot starve the scheduler for
+    everyone else. Exceeded repositories are *deferred* to a later tick — logged, never counted
+    as a refresh failure.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    polls_per_hour: int = Field(
+        alias="pollsPerHour",
+        description=(
+            "The tenant's configured maximum poll jobs per window, as persisted. 0 means the "
+            "tenant is explicitly unlimited."
+        ),
+    )
+    effective_polls_per_hour: Optional[int] = Field(
+        None,
+        alias="effectivePollsPerHour",
+        description=(
+            "The bound the scheduler actually applies right now, after the deployment "
+            "fallback and kill switch are taken into account. Null means no bound is being "
+            "enforced for this tenant."
+        ),
+    )
+    window_seconds: int = Field(
+        alias="windowSeconds",
+        description="Length of the rolling quota window in seconds (default 3600, i.e. per hour).",
+    )
+    used_this_window: int = Field(
+        alias="usedThisWindow",
+        description="Poll jobs this tenant has already enqueued inside the current window.",
+    )
+    remaining_this_window: Optional[int] = Field(
+        None,
+        alias="remainingThisWindow",
+        description=(
+            "Poll jobs the tenant may still enqueue before deferrals begin. Null when the "
+            "tenant is unlimited."
+        ),
+    )
+    enforced: bool = Field(
+        description=(
+            "Whether the scheduler is bounding this tenant at all. False when the tenant is "
+            "set to 0 (unlimited) or quotas are disabled deployment-wide."
+        ),
+    )
+
+
+class RepositoryPollingQuotaResponse(BaseModel):
+    """Envelope for a tenant's polling-quota read or update (REPO-4.6, #2784)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    success: bool = True
+    quota: RepositoryPollingQuotaOut
+
+
+class RepositoryPollingQuotaUpdate(BaseModel):
+    """Set a tenant's repository polling quota (REPO-4.6, #2784).
+
+    ``0`` is a meaningful value, not an unset one: it marks the tenant as unlimited. The upper
+    bound is a sanity rail — a five-figure quota is indistinguishable from unlimited in
+    practice, and asking for one is far more likely a typo than an intent.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    polls_per_hour: int = Field(
+        alias="pollsPerHour",
+        ge=0,
+        le=100000,
+        description=(
+            "Maximum poll jobs this tenant may enqueue per rolling window. 0 = unlimited. "
+            "Defaults are 60 for a standard tenant and 600 for the elevated/enterprise plan."
+        ),
+    )
+
+
 class TenantRepositoriesListResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 

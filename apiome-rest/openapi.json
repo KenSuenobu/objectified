@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.89.0",
+    "version": "1.90.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -46333,6 +46333,190 @@
         }
       }
     },
+    "/v1/tenants/{tenant_slug}/repository-polling-quota": {
+      "get": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Get Tenant Repository Polling Quota",
+        "description": "Report this tenant's repository polling quota and window usage (REPO-4.6, #2784).\n\nThe quota bounds how many poll (refresh) jobs the auto-refresh scheduler may enqueue for\nthe tenant per rolling window, so one noisy tenant cannot starve the scheduler for\neveryone else. This is the read an operator makes to answer \"are we being deferred, and\nhow close to the ceiling are we?\" \u2014 it reports the persisted bound, the bound actually\nbeing enforced (which differs when quotas are disabled deployment-wide), and how much of\nthe current window is already spent.\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    auth_data: Authenticated principal; supplies the tenant scope.\n\nReturns:\n    The tenant's quota projection.",
+        "operationId": "get_tenant_repository_polling_quota_v1_tenants__tenant_slug__repository_polling_quota_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Get Tenant Repository Polling Quotaauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Get Tenant Repository Polling Quotaauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Get Tenant Repository Polling Quota Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Get Tenant Repository Polling Quota Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for get tenant repository polling quota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryPollingQuotaResponse",
+                  "description": "Response payload for get tenant repository polling quotaresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for get tenant repository polling quotaresponse422."
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "tenant-repositories"
+        ],
+        "summary": "Set Tenant Repository Polling Quota",
+        "description": "Configure this tenant's repository polling quota (REPO-4.6, #2784).\n\nPersists ``tenants.repository_polls_per_hour``, which the scheduler reads once per tick.\n``0`` marks the tenant unlimited. The change takes effect on the next sweep tick; it does\nnot retroactively release repositories already deferred in the current one, and it never\ntouches any repository's failure bookkeeping.\n\nArgs:\n    tenant_slug: Tenant slug from the path (scoping comes from the token).\n    payload: The new quota.\n    auth_data: Authenticated principal; supplies the tenant scope.\n\nReturns:\n    The tenant's quota projection after the update.\n\nRaises:\n    HTTPException: 404 when the authenticated tenant no longer exists.",
+        "operationId": "set_tenant_repository_polling_quota_v1_tenants__tenant_slug__repository_polling_quota_put",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Set Tenant Repository Polling Quotaauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Set Tenant Repository Polling Quotaauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Set Tenant Repository Polling Quota Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Set Tenant Repository Polling Quota Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepositoryPollingQuotaUpdate",
+                "description": "Request body for set tenant repository polling quotarequest."
+              }
+            }
+          },
+          "description": "Request body for set tenant repository polling quota."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for set tenant repository polling quota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryPollingQuotaResponse",
+                  "description": "Response payload for set tenant repository polling quotaresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for set tenant repository polling quotaresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/tenants/{tenant_slug}/repositories": {
       "get": {
         "tags": [
@@ -61572,6 +61756,100 @@
           },
           "503": {
             "description": "A secret was supplied but secret encryption is not configured."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin-auth-providers"
+        ],
+        "summary": "Delete Auth Provider",
+        "description": "Remove one provider's stored configuration entirely (OLO-8.7).\n\nDrops the whole ``auth_provider_config`` row, returning the provider to env-only governance\n(OLO-8.5) as if it had never been configured \u2014 including its ``enabled`` override, so sign-in\nenablement is once again derived from the environment. **The sealed client secret is destroyed\nwith the row and cannot be recovered**; re-configuring the provider means re-entering it.\n\nDeleting is **idempotent**: a provider with no stored row is already in the requested end\nstate, so it succeeds rather than 404ing. The ``404`` is reserved for a slug that is not in the\nregistry at all, matching PUT \u2014 that is a caller error, not an absent row.\n\nReturns the provider's post-delete view (rather than ``204``) for two reasons: it matches what\nPUT returns, so the admin UI can swap one view for another without a re-fetch; and an empty\n``204`` body would force every JSON-parsing client on the path \u2014 notably the apiome-ui proxy \u2014\nto special-case this route.\n\nArgs:\n    provider_id: Provider slug from the path; must exist in the registry.\n\nReturns:\n    The provider's masked view after removal \u2014 every field reported as env-fallback.\n\nRaises:\n    HTTPException: ``404`` when the provider id is not in the registry.",
+        "operationId": "delete_auth_provider_v1_admin_auth_providers__provider_id__delete",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider Id",
+              "description": "Provider Id schema."
+            },
+            "description": "Path parameter identifying the provider id segment."
+          },
+          {
+            "name": "X-Admin-Session",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Delete Auth Provider Xadmin Session schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Delete Auth Provider Xadmin Session schema."
+                }
+              ],
+              "title": "X-Admin-Session",
+              "description": "X-Admin-Session schema."
+            },
+            "description": "Header parameter: X Admin Session."
+          },
+          {
+            "name": "admin_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Delete Auth Provideradminsession schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Delete Auth Provideradminsession schema."
+                }
+              ],
+              "title": "Admin Session",
+              "description": "Admin Session schema."
+            },
+            "description": "Cookie parameter: admin session."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for delete auth provider.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderConfigView",
+                  "description": "Response payload for delete auth providerresponse200."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No super-admin session presented."
+          },
+          "403": {
+            "description": "Super-admin session invalid or expired."
+          },
+          "404": {
+            "description": "Unknown provider id (not in the registry)."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for delete auth providerresponse422."
+                }
+              }
+            }
           }
         }
       }
@@ -100410,6 +100688,110 @@
         "title": "RepositoryImportSpecRead",
         "description": "Current-shape import spec returned by the read endpoint (RAR-1.5).\n\nThe response surface for ``GET \u2026/repository-imports/{id}/spec`` (and its\n``?path=`` lookup variant). It exposes the captured source descriptor and the\nfull ``SpecImportOptions`` payload, upgraded on read to the current envelope\nshape, so the refresh worker, the UI status surface, and the CLI can replay\nthe user's original import request. ``spec_schema_version`` always reports the\ncurrent envelope version because ``options`` has already been migrated forward."
       },
+      "RepositoryPollingQuotaOut": {
+        "properties": {
+          "pollsPerHour": {
+            "type": "integer",
+            "title": "Pollsperhour",
+            "description": "The tenant's configured maximum poll jobs per window, as persisted. 0 means the tenant is explicitly unlimited.",
+            "example": 1
+          },
+          "effectivePollsPerHour": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Response payload for repository polling quota."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository polling quota."
+              }
+            ],
+            "title": "Effectivepollsperhour",
+            "description": "The bound the scheduler actually applies right now, after the deployment fallback and kill switch are taken into account. Null means no bound is being enforced for this tenant."
+          },
+          "windowSeconds": {
+            "type": "integer",
+            "title": "Windowseconds",
+            "description": "Length of the rolling quota window in seconds (default 3600, i.e. per hour).",
+            "example": 1
+          },
+          "usedThisWindow": {
+            "type": "integer",
+            "title": "Usedthiswindow",
+            "description": "Poll jobs this tenant has already enqueued inside the current window.",
+            "example": 1
+          },
+          "remainingThisWindow": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Response payload for repository polling quota."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for repository polling quota."
+              }
+            ],
+            "title": "Remainingthiswindow",
+            "description": "Poll jobs the tenant may still enqueue before deferrals begin. Null when the tenant is unlimited."
+          },
+          "enforced": {
+            "type": "boolean",
+            "title": "Enforced",
+            "description": "Whether the scheduler is bounding this tenant at all. False when the tenant is set to 0 (unlimited) or quotas are disabled deployment-wide.",
+            "example": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "pollsPerHour",
+          "windowSeconds",
+          "usedThisWindow",
+          "enforced"
+        ],
+        "title": "RepositoryPollingQuotaOut",
+        "description": "A tenant's repository polling quota and its usage this window (REPO-4.6, #2784).\n\nThe quota bounds how many poll (refresh) jobs the auto-refresh scheduler may enqueue for\none tenant per rolling window, so a single noisy tenant cannot starve the scheduler for\neveryone else. Exceeded repositories are *deferred* to a later tick \u2014 logged, never counted\nas a refresh failure."
+      },
+      "RepositoryPollingQuotaResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true,
+            "description": "Success.",
+            "example": false
+          },
+          "quota": {
+            "$ref": "#/components/schemas/RepositoryPollingQuotaOut",
+            "description": "Quota."
+          }
+        },
+        "type": "object",
+        "required": [
+          "quota"
+        ],
+        "title": "RepositoryPollingQuotaResponse",
+        "description": "Envelope for a tenant's polling-quota read or update (REPO-4.6, #2784)."
+      },
+      "RepositoryPollingQuotaUpdate": {
+        "properties": {
+          "pollsPerHour": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Pollsperhour",
+            "description": "Maximum poll jobs this tenant may enqueue per rolling window. 0 = unlimited. Defaults are 60 for a standard tenant and 600 for the elevated/enterprise plan.",
+            "example": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "pollsPerHour"
+        ],
+        "title": "RepositoryPollingQuotaUpdate",
+        "description": "Set a tenant's repository polling quota (REPO-4.6, #2784).\n\n``0`` is a meaningful value, not an unset one: it marks the tenant as unlimited. The upper\nbound is a sanity rail \u2014 a five-figure quota is indistinguishable from unlimited in\npractice, and asking for one is far more likely a typo than an intent."
+      },
       "RepositoryRefreshNowRequest": {
         "properties": {
           "path": {
@@ -101709,7 +102091,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-07-31T21:38:04Z"
+            "example": "2026-08-01T01:40:55Z"
           }
         },
         "additionalProperties": false,
@@ -113970,14 +114352,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-07-31T21:38:04Z"
+            "example": "2026-08-01T01:40:55Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-07-31T21:38:04Z"
+            "example": "2026-08-01T01:40:55Z"
           },
           "outcome": {
             "anyOf": [

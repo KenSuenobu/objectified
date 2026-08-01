@@ -342,13 +342,18 @@ class Settings(BaseSettings):
         ),
     )
 
-    # Per-tenant refresh quotas / fairness (RAR-3.5, #3526), extending REPO-4.6
-    # to the refresh loop. The sweep round-robins due repos across tenants and
-    # bounds the refresh jobs one tenant may enqueue per rolling window; a
-    # tenant over its quota has its remaining due repos deferred (not failed)
-    # until the window rolls. A quota of 0 or below disables the bound
-    # (fairness interleaving still applies). Manual "Refresh Now" (RAR-5.2)
-    # is never quota-limited.
+    # Per-tenant polling quotas / fairness (REPO-4.6 #2784, RAR-3.5 #3526). The
+    # sweep round-robins due repos across tenants and bounds the poll (refresh)
+    # jobs one tenant may enqueue per rolling window; a tenant over its quota
+    # has its remaining due repos deferred (not failed) until the window rolls.
+    #
+    # The bound itself is persisted per tenant on
+    # apiome.tenants.repository_polls_per_hour (default 60, elevated/enterprise
+    # 600, 0 = that tenant is unlimited). APIOME_REFRESH_TENANT_QUOTA is the
+    # deployment-wide fallback for tenants whose row cannot be read, and the
+    # kill switch: 0 or below disables quota enforcement everywhere (fairness
+    # interleaving still applies). Manual "Refresh Now" (RAR-5.2) is never
+    # quota-limited.
     refresh_tenant_quota_jobs: int = Field(
         default=60,
         validation_alias=AliasChoices(

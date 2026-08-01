@@ -37,15 +37,19 @@ A successful tick resets the counter so recovered repos return to their normal
 cadence. All of this bookkeeping is best-effort: a failure recording problem never
 aborts the sweep.
 
-Per-tenant quotas + fairness (RAR-3.5, #3526, extending REPO-4.6): the sweep
+Per-tenant quotas + fairness (REPO-4.6 #2784, RAR-3.5 #3526): the sweep
 round-robins the due list across tenants (one repo per tenant per round, via
 :func:`repository_refresh_quota.interleave_due_rows_by_tenant`) and bounds the
-refresh jobs each tenant may enqueue per rolling window
-(``APIOME_REFRESH_TENANT_QUOTA`` / ``APIOME_REFRESH_TENANT_QUOTA_WINDOW``). A
-tenant over its quota has its remaining due repos *deferred*: skipped without
-advancing the cadence anchor and without counting as a failure, so they stay
-due and are picked up once the window rolls. Manual "Refresh Now" (RAR-5.2)
-bypasses the sweep and is never quota-limited.
+poll (refresh) jobs each tenant may enqueue per rolling window. The bound is
+persisted per tenant on ``apiome.tenants.repository_polls_per_hour`` (default
+60, elevated/enterprise 600, ``0`` = unlimited), with
+``APIOME_REFRESH_TENANT_QUOTA`` as the deployment fallback and kill switch and
+``APIOME_REFRESH_TENANT_QUOTA_WINDOW`` as the window length. A tenant over its
+quota has its remaining due repos *deferred*: skipped without advancing the
+cadence anchor and without counting as a failure, so they stay due and are
+picked up once the window rolls. Every dispatch and deferral is counted in
+:mod:`app.repository_polling_telemetry` for the REPO-7.3 dashboard. Manual
+"Refresh Now" (RAR-5.2) bypasses the sweep and is never quota-limited.
 """
 
 from __future__ import annotations
@@ -107,8 +111,9 @@ def enqueue_stale_files_for_branch(
             branch.
         max_enqueues: When set, at most this many jobs are inserted; further
             stale + newer candidates are counted as ``deferred`` instead
-            (RAR-3.5 per-tenant quota). ``None`` (the manual-refresh default)
-            applies no bound.
+            (REPO-4.6 per-tenant polling quota). ``None`` (the manual-refresh
+            default, and the value used for an unlimited tenant) applies no
+            bound.
 
     Returns:
         A :class:`BranchEnqueueResult` with the enqueued, skipped, and deferred
@@ -150,7 +155,7 @@ def enqueue_stale_files_for_branch(
             continue
 
         if max_enqueues is not None and enqueued >= max_enqueues:
-            # Tenant quota budget spent (RAR-3.5): the candidate stays stale
+            # Tenant quota budget spent (REPO-4.6): the candidate stays stale
             # and a later tick enqueues it once the window rolls.
             deferred += 1
             continue
@@ -190,7 +195,7 @@ class RepositoryRefreshResult(NamedTuple):
             failed refresh for the RAR-3.4 backoff/auto-pause bookkeeping.
         error: A short diagnostic from the last branch failure (pause reason).
         deferred: Stale + newer files not enqueued because the tenant's quota
-            budget ran out mid-repo (RAR-3.5). Deferral is a scheduling
+            budget ran out mid-repo (REPO-4.6). Deferral is a scheduling
             decision, never a failure: the files stay stale and a later tick
             enqueues them once the quota window rolls.
     """
@@ -213,8 +218,9 @@ def _refresh_one_repository(
         db: Database handle.
         due_row: A row from ``list_due_repositories``.
         max_enqueues: Remaining tenant quota budget for this repo's tick
-            (RAR-3.5); at most this many jobs are enqueued across all branches,
-            further stale files are deferred. ``None`` applies no bound.
+            (REPO-4.6); at most this many jobs are enqueued across all branches,
+            further stale files are deferred. ``None`` applies no bound (an
+            unlimited tenant, or quotas disabled deployment-wide).
 
     Returns:
         A :class:`RepositoryRefreshResult` with the enqueued / deferred counts
@@ -252,7 +258,7 @@ def _refresh_one_repository(
                 # the job once the tenant's window rolls.
                 _logger.info(
                     "repository refresh skipping remaining branches "
-                    "(tenant quota spent, RAR-3.5) repository_id=%s branch=%s",
+                    "(tenant quota spent, REPO-4.6) repository_id=%s branch=%s",
                     repository_id,
                     branch,
                 )
@@ -273,18 +279,64 @@ def _refresh_one_repository(
                 repository_id,
                 branch,
             )
-    if deferred:
-        _logger.info(
-            "repository refresh deferred stale files (tenant quota, RAR-3.5) "
-            "repository_id=%s tenant_id=%s deferred=%s enqueued=%s",
-            repository_id,
-            tenant_id,
-            deferred,
-            enqueued,
-        )
     return RepositoryRefreshResult(
         enqueued=enqueued, failed=failed, error=last_error, deferred=deferred
     )
+
+
+def _record_poll_telemetry(
+    quota: Any, due_row: Dict[str, Any], result: RepositoryRefreshResult
+) -> None:
+    """Count one polled repository for the REPO-4.6 / REPO-7.3 dashboard.
+
+    Emits a ``poll_dispatched`` event for the poll itself and, when the tenant's
+    budget ran out part-way through the repo, a ``files_deferred`` event for the
+    stale files left unenqueued.
+
+    Best-effort by contract, like the RAR-3.4 bookkeeping beside it: a counter
+    problem is logged and swallowed. Telemetry must never be able to turn a
+    healthy poll into a recorded refresh failure.
+
+    Args:
+        quota: The tick's :class:`repository_refresh_quota.TenantRefreshQuotaTracker`,
+            or None when quotas are disabled for this tick.
+        due_row: The repository's row from ``list_due_repositories``.
+        result: The tick outcome from :func:`_refresh_one_repository`.
+    """
+    from .repository_polling_telemetry import (
+        KIND_FILES_DEFERRED,
+        KIND_POLL_DISPATCHED,
+        polling_telemetry,
+    )
+
+    tenant_id = str(due_row["tenant_id"])
+    repository_id = str(due_row["id"])
+    tenant_quota = quota.quota_for(tenant_id) if quota is not None else None
+
+    try:
+        polling_telemetry.record(
+            KIND_POLL_DISPATCHED,
+            tenant_id=tenant_id,
+            repository_id=repository_id,
+            quota=tenant_quota,
+            remaining=quota.remaining(tenant_id) if quota is not None else None,
+            jobs=result.enqueued,
+        )
+        if result.deferred:
+            # Budget ran out part-way through this repo: the stale files stay
+            # stale (never a failure) and a later tick enqueues them.
+            polling_telemetry.record(
+                KIND_FILES_DEFERRED,
+                tenant_id=tenant_id,
+                repository_id=repository_id,
+                quota=tenant_quota,
+                remaining=0,
+                jobs=result.deferred,
+            )
+    except Exception:
+        _logger.exception(
+            "repository polling telemetry failed repository_id=%s", repository_id
+        )
 
 
 def _record_refresh_outcome(
@@ -370,16 +422,21 @@ def process_repository_refresh_sweep(db: Database) -> int:
     failure counter. Paused / backed-off repos are excluded by
     ``list_due_repositories`` until resumed / due again.
 
-    Per-tenant quotas + fairness (RAR-3.5): the due list is round-robin
+    Per-tenant quotas + fairness (REPO-4.6): the due list is round-robin
     interleaved across tenants so one tenant's backlog cannot occupy the head
-    of every tick, and each tenant's refresh jobs are bounded per rolling
-    window by the ``APIOME_REFRESH_TENANT_QUOTA`` /
-    ``APIOME_REFRESH_TENANT_QUOTA_WINDOW`` settings. A repo whose tenant is
-    over quota is *deferred*: skipped before its lock is taken, without
-    advancing its cadence anchor and without touching the RAR-3.4 failure
-    bookkeeping, so it stays due and a later tick picks it up once the window
-    rolls. The quota is best-effort protective: if the window usage cannot be
-    read the tick proceeds unlimited rather than halting refresh.
+    of every tick, and each tenant's poll (refresh) jobs are bounded per rolling
+    window by its persisted ``apiome.tenants.repository_polls_per_hour``
+    (``APIOME_REFRESH_TENANT_QUOTA`` is the fallback and the deployment-wide
+    kill switch; ``APIOME_REFRESH_TENANT_QUOTA_WINDOW`` sets the window). A repo
+    whose tenant is over quota is *deferred*: skipped before its lock is taken,
+    without advancing its cadence anchor and without touching the RAR-3.4
+    failure bookkeeping, so it stays due and a later tick picks it up once the
+    window rolls. The quota is best-effort protective: if the window usage
+    cannot be read the tick proceeds unlimited rather than halting refresh.
+
+    Every dispatch and deferral is recorded in
+    :mod:`app.repository_polling_telemetry` — the counters REPO-7.3 renders —
+    so quota pressure is visible without reading sweep logs line by line.
 
     Args:
         db: Database handle for this tick (one connection holds the advisory
@@ -398,6 +455,10 @@ def process_repository_refresh_sweep(db: Database) -> int:
         )
         return 0
 
+    from .repository_polling_telemetry import (
+        KIND_REPOSITORY_DEFERRED,
+        polling_telemetry,
+    )
     from .repository_refresh_quota import (
         interleave_due_rows_by_tenant,
         load_tenant_refresh_quota_tracker,
@@ -406,23 +467,30 @@ def process_repository_refresh_sweep(db: Database) -> int:
     quota = load_tenant_refresh_quota_tracker(db)
 
     enqueued_total = 0
-    quota_logged_tenants: set[str] = set()
     for due_row in interleave_due_rows_by_tenant(db.list_due_repositories()):
         repository_id = str(due_row["id"])
         tenant_id = str(due_row["tenant_id"])
 
         if quota is not None and quota.is_exhausted(tenant_id):
-            # Tenant over its refresh-job quota (RAR-3.5): defer this repo —
-            # no lock, no anchor advance, no failure bookkeeping — so it stays
-            # due and is retried once the window rolls. Logged once per tenant
-            # per tick to keep a large backlog from flooding the log.
-            if tenant_id not in quota_logged_tenants:
-                quota_logged_tenants.add(tenant_id)
-                _logger.info(
-                    "repository refresh deferred (tenant quota exhausted) "
-                    "tenant_id=%s quota=%s",
-                    tenant_id,
-                    quota.quota,
+            # Tenant over its polling quota (REPO-4.6): defer this repo — no
+            # lock, no anchor advance, no failure bookkeeping — so it stays due
+            # and is retried once the window rolls. The telemetry record carries
+            # the structured log line, so the deferral is visible per repo
+            # without a second hand-rolled log statement. Counting is
+            # best-effort: a telemetry problem must not change what the sweep
+            # does with the repository.
+            try:
+                polling_telemetry.record(
+                    KIND_REPOSITORY_DEFERRED,
+                    tenant_id=tenant_id,
+                    repository_id=repository_id,
+                    quota=quota.quota_for(tenant_id),
+                    remaining=0,
+                )
+            except Exception:
+                _logger.exception(
+                    "repository polling telemetry failed repository_id=%s",
+                    repository_id,
                 )
             continue
 
@@ -445,6 +513,7 @@ def process_repository_refresh_sweep(db: Database) -> int:
             enqueued_total += result.enqueued
             if quota is not None:
                 quota.consume(tenant_id, result.enqueued)
+            _record_poll_telemetry(quota, due_row, result)
         except Exception as exc:
             # A repo-level error (candidate query, branch listing, …) counts as a
             # failed tick for the RAR-3.4 bookkeeping, like a branch rescan error.

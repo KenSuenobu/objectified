@@ -27,6 +27,9 @@ from .models import (
     RefreshHistoryPageResponse,
     RefreshHistoryPaginationOut,
     RepositoryImportSpecRead,
+    RepositoryPollingQuotaOut,
+    RepositoryPollingQuotaResponse,
+    RepositoryPollingQuotaUpdate,
     repository_import_spec_read_from_row,
     RepositoryRefreshNowRequest,
     RepositoryRefreshNowResponse,
@@ -46,6 +49,7 @@ from .models import (
     TenantRepositoriesListResponse,
 )
 from .repository_refresh_audit import RefreshOutcome, RefreshTrigger
+from .repository_refresh_quota import describe_tenant_polling_quota
 from .repository_file_scan import _github_owner_repo, fetch_github_repository_file_text
 from .repository_webhook_rotation import (
     RotationError,
@@ -224,6 +228,86 @@ def _require_jwt_user(auth_data: Dict[str, Any]) -> str:
             detail="JWT authentication is required to register repositories",
         )
     return str(uid)
+
+
+@router.get(
+    "/{tenant_slug}/repository-polling-quota",
+    response_model=RepositoryPollingQuotaResponse,
+    response_model_by_alias=True,
+)
+async def get_tenant_repository_polling_quota(
+    tenant_slug: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryPollingQuotaResponse:
+    """Report this tenant's repository polling quota and window usage (REPO-4.6, #2784).
+
+    The quota bounds how many poll (refresh) jobs the auto-refresh scheduler may enqueue for
+    the tenant per rolling window, so one noisy tenant cannot starve the scheduler for
+    everyone else. This is the read an operator makes to answer "are we being deferred, and
+    how close to the ceiling are we?" — it reports the persisted bound, the bound actually
+    being enforced (which differs when quotas are disabled deployment-wide), and how much of
+    the current window is already spent.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        The tenant's quota projection.
+    """
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.VIEW)
+    _ = tenant_slug
+    tenant_id = str(auth_data["tenant_id"])
+    return RepositoryPollingQuotaResponse(
+        success=True,
+        quota=RepositoryPollingQuotaOut(**describe_tenant_polling_quota(db, tenant_id)),
+    )
+
+
+@router.put(
+    "/{tenant_slug}/repository-polling-quota",
+    response_model=RepositoryPollingQuotaResponse,
+    response_model_by_alias=True,
+)
+async def set_tenant_repository_polling_quota(
+    tenant_slug: str,
+    payload: RepositoryPollingQuotaUpdate,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> RepositoryPollingQuotaResponse:
+    """Configure this tenant's repository polling quota (REPO-4.6, #2784).
+
+    Persists ``tenants.repository_polls_per_hour``, which the scheduler reads once per tick.
+    ``0`` marks the tenant unlimited. The change takes effect on the next sweep tick; it does
+    not retroactively release repositories already deferred in the current one, and it never
+    touches any repository's failure bookkeeping.
+
+    Args:
+        tenant_slug: Tenant slug from the path (scoping comes from the token).
+        payload: The new quota.
+        auth_data: Authenticated principal; supplies the tenant scope.
+
+    Returns:
+        The tenant's quota projection after the update.
+
+    Raises:
+        HTTPException: 404 when the authenticated tenant no longer exists.
+    """
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.EDIT)
+    _ = tenant_slug
+    tenant_id = str(auth_data["tenant_id"])
+
+    stored = db.set_tenant_repository_polls_per_hour(tenant_id, payload.polls_per_hour)
+    if stored is None:
+        raise HTTPException(status_code=404, detail="tenant not found")
+    _logger.info(
+        "repository polling quota updated tenant_id=%s polls_per_hour=%s",
+        tenant_id,
+        stored,
+    )
+    return RepositoryPollingQuotaResponse(
+        success=True,
+        quota=RepositoryPollingQuotaOut(**describe_tenant_polling_quota(db, tenant_id)),
+    )
 
 
 @router.get("/{tenant_slug}/repositories", response_model=TenantRepositoriesListResponse)
