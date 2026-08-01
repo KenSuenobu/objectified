@@ -12935,6 +12935,34 @@ class Database:
             for row in self.execute_query(q, (tenant_id,))
         ]
 
+    def list_active_push_webhook_subscription_channels(
+        self, tenant_id: str
+    ) -> List[Dict[str, Any]]:
+        """Return every active (non-deleted) subscription's id and destination URL.
+
+        Used by the REPO-7.2 (#2800) repository-event dispatcher to resolve a tenant's
+        notification channels and classify each one by destination: a Slack incoming webhook
+        needs a Slack-shaped body, every other endpoint takes the structured payload as-is.
+        No secret material is selected — only what is needed to route.
+
+        Args:
+            tenant_id: Owning tenant id.
+
+        Returns:
+            A list of ``{"id": str, "url": Optional[str]}`` dicts (possibly empty), newest
+            first.
+        """
+        q = """
+            SELECT id, url
+            FROM apiome.push_webhook_subscriptions
+            WHERE tenant_id = %s::uuid AND active = true AND deleted_at IS NULL
+            ORDER BY created_at DESC
+        """
+        return [
+            {"id": str(row["id"]), "url": row.get("url")}
+            for row in self.execute_query(q, (tenant_id,))
+        ]
+
     def get_push_webhook_subscription(
         self, tenant_id: str, subscription_id: str
     ) -> Optional[Dict[str, Any]]:
@@ -14305,6 +14333,200 @@ class Database:
         except Exception as e:
             conn.rollback()
             raise e
+
+    # --- REPO-7.2 (#2800): repository notification policy ------------------------------
+
+    def list_repository_notification_preferences(
+        self, tenant_id: str, repository_id: str
+    ) -> List[Dict[str, Any]]:
+        """List the stored notification preferences for one repository (REPO-7.2).
+
+        Only rows an operator has explicitly written are returned. Every event type with no
+        row is subscribed; the API layer fills those in so a caller sees the full picture.
+
+        Args:
+            tenant_id: Owning tenant id (scopes the read for isolation).
+            repository_id: The repository whose preferences are being read.
+
+        Returns:
+            One dict per stored preference with ``event_type``, ``enabled`` and
+            ``updated_at``, ordered by event type.
+        """
+        q = """
+            SELECT event_type, enabled, updated_at
+            FROM apiome.repository_notification_preference
+            WHERE tenant_id = %s::uuid AND repository_id = %s::uuid
+            ORDER BY event_type
+        """
+        return self.execute_query(q, (tenant_id, repository_id))
+
+    def list_muted_repository_notification_events(
+        self, tenant_id: str, repository_id: str
+    ) -> List[str]:
+        """Return the event types explicitly muted for one repository (REPO-7.2).
+
+        The dispatcher's gate read. Only ``enabled = FALSE`` rows are selected, matching the
+        partial index V232 creates, so the read stays cheap on a deployment where opt-outs
+        are rare.
+
+        Args:
+            tenant_id: Owning tenant id (scopes the read for isolation).
+            repository_id: The repository whose opt-outs are being read.
+
+        Returns:
+            The muted event-type strings (possibly empty).
+        """
+        q = """
+            SELECT event_type
+            FROM apiome.repository_notification_preference
+            WHERE tenant_id = %s::uuid
+              AND repository_id = %s::uuid
+              AND enabled = FALSE
+        """
+        return [str(row["event_type"]) for row in self.execute_query(q, (tenant_id, repository_id))]
+
+    def set_repository_notification_preference(
+        self,
+        tenant_id: str,
+        repository_id: str,
+        event_type: str,
+        enabled: bool,
+    ) -> Optional[Dict[str, Any]]:
+        """Set one repository's opt-out for one event type (REPO-7.2).
+
+        Upserts on ``(repository_id, event_type)`` so repeated writes converge rather than
+        accumulating rows. The repository is verified to belong to the tenant first, so a
+        preference can never be written against another tenant's repository — the foreign
+        key alone would not catch that.
+
+        Args:
+            tenant_id: Owning tenant id.
+            repository_id: The repository the preference applies to.
+            event_type: The event type being muted or unmuted. Must be one of the values the
+                V232 CHECK constraint permits.
+            enabled: ``False`` mutes the event; ``True`` restores it.
+
+        Returns:
+            The stored row (``event_type``, ``enabled``, ``updated_at``), or ``None`` when no
+            live repository matched the tenant + id.
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT id FROM apiome.tenant_repositories
+                    WHERE id = %s::uuid AND tenant_id = %s::uuid AND deleted_at IS NULL
+                    """,
+                    (repository_id, tenant_id),
+                )
+                if cursor.fetchone() is None:
+                    conn.commit()
+                    return None
+                cursor.execute(
+                    """
+                    INSERT INTO apiome.repository_notification_preference
+                      (tenant_id, repository_id, event_type, enabled)
+                    VALUES (%s::uuid, %s::uuid, %s, %s)
+                    ON CONFLICT (repository_id, event_type) DO UPDATE
+                      SET enabled = EXCLUDED.enabled,
+                          updated_at = CURRENT_TIMESTAMP
+                    RETURNING event_type, enabled, updated_at
+                    """,
+                    (tenant_id, repository_id, event_type, enabled),
+                )
+                row = cursor.fetchone()
+                conn.commit()
+                return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def claim_repository_notification_slot(
+        self,
+        tenant_id: str,
+        repository_id: str,
+        event_type: str,
+        window_seconds: int = 3600,
+    ) -> bool:
+        """Atomically claim the throttle slot for one (repository, event type) pair (REPO-7.2).
+
+        The decision and the timestamp write are one conditional upsert: the insert wins the
+        first time the pair is ever seen, and afterwards ``DO UPDATE`` only fires when the
+        stored ``last_notified_at`` is already outside the window. Two sweep workers racing
+        on the same repository therefore cannot both win — the second one's ``RETURNING``
+        comes back empty, and it bumps the suppression counter instead.
+
+        Args:
+            tenant_id: Owning tenant id.
+            repository_id: The repository the event is about.
+            event_type: The event type being throttled.
+            window_seconds: The quiet window in seconds (default 3600, i.e. one per hour).
+                A non-positive window disables throttling: every claim wins.
+
+        Returns:
+            ``True`` when the slot was claimed and the notification may be delivered.
+        """
+        window = int(window_seconds)
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO apiome.repository_notification_throttle AS t
+                      (tenant_id, repository_id, event_type, last_notified_at)
+                    VALUES (%s::uuid, %s::uuid, %s, CURRENT_TIMESTAMP)
+                    ON CONFLICT (repository_id, event_type) DO UPDATE
+                      SET last_notified_at = CURRENT_TIMESTAMP,
+                          updated_at = CURRENT_TIMESTAMP
+                      WHERE %s <= 0
+                         OR t.last_notified_at <= CURRENT_TIMESTAMP - make_interval(secs => %s)
+                    RETURNING id
+                    """,
+                    (tenant_id, repository_id, event_type, window, window),
+                )
+                claimed = cursor.fetchone() is not None
+                if not claimed:
+                    # The claim lost: record that a notification was swallowed, so "quiet"
+                    # can later be told apart from "muffled".
+                    cursor.execute(
+                        """
+                        UPDATE apiome.repository_notification_throttle
+                        SET suppressed_count = suppressed_count + 1,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE repository_id = %s::uuid AND event_type = %s
+                        """,
+                        (repository_id, event_type),
+                    )
+                conn.commit()
+                return claimed
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+    def get_repository_notification_throttle(
+        self, tenant_id: str, repository_id: str
+    ) -> List[Dict[str, Any]]:
+        """Read one repository's throttle state, per event type (REPO-7.2).
+
+        Answers "when did this last notify, and how much have we been suppressing" for the
+        preferences API and for support reads. Never claims a slot.
+
+        Args:
+            tenant_id: Owning tenant id (scopes the read for isolation).
+            repository_id: The repository whose throttle state is being read.
+
+        Returns:
+            One dict per event type with a throttle row, carrying ``event_type``,
+            ``last_notified_at`` and ``suppressed_count``.
+        """
+        q = """
+            SELECT event_type, last_notified_at, suppressed_count
+            FROM apiome.repository_notification_throttle
+            WHERE tenant_id = %s::uuid AND repository_id = %s::uuid
+            ORDER BY event_type
+        """
+        return self.execute_query(q, (tenant_id, repository_id))
 
     def try_acquire_repository_refresh_lock(self, repository_id: str) -> bool:
         """Try to take the per-repo auto-refresh advisory lock (RAR-3.2).

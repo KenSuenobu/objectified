@@ -5,6 +5,44 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.229.0] - 2026-07-31
+
+### Added
+- **Notifications on scan / sync events (REPO-7.2, #2800)** — RAR-5.4 gave the auto-refresh loop
+  a voice, but no off switch and no volume control: a repository stuck in a failure loop could
+  page the same on-call every sweep tick, and nobody could ask it to stop. Repository
+  notifications now go through a policy layer before a single channel is resolved.
+  - **Three operator-facing events**, all inside the `repository.refresh.*` namespace subscribers
+    already route on: `auto_paused` (scheduled refresh has stopped and must be resumed by hand),
+    `breaking_change` (a sync produced a version whose change report classifies as breaking), and
+    `repeated_failures` (the warning shot — failing repeatedly but not paused yet).
+  - **Per-repository, per-event-type opt-out.** `apiome.repository_notification_preference` holds
+    exceptions, not enrolments: a repository with no rows is subscribed to everything, and only an
+    explicit `enabled = FALSE` mutes an event, so a partial preference set fails *open*. A
+    preference read that errors mutes nothing — failing closed would silence a repository during
+    the incident that broke the read.
+  - **At most one notification per repository per event type per hour.** The slot claim is a
+    single conditional upsert on `apiome.repository_notification_throttle`, so the decision and
+    the timestamp write are the same statement and two sweep workers racing on one repository
+    cannot both win. A losing claim bumps `suppressed_count` instead, which is how "quiet because
+    nothing happened" is later told apart from "quiet because we muffled 400 of them". A tenant
+    with no channels does not burn its hourly slot.
+  - **Channels are resolved per tenant** from the existing push-webhook subscriptions, with their
+    retry and dead-letter semantics unchanged, and each is shaped for its destination: a Slack
+    incoming webhook receives a Slack `text`/`blocks` message (Slack rejects a body without
+    `text`), every other endpoint receives the structured JSON. One dead channel never takes the
+    rest of the fan-out down with it.
+  - **Wired into the refresh sweep.** An auto-pause transition sends the auto-pause event; an
+    unpaused repository past three consecutive failures sends the repeated-failures warning on
+    every tick, which the hourly throttle makes safe. A newly paused repository sends only the
+    pause — pairing it with a warning about the same failures is just noise.
+  - `GET`/`PUT /v1/tenants/{slug}/repositories/{id}/notification-preferences` report and set the
+    opt-outs. The read always lists every event type, with a one-sentence description of what
+    muting it would cost and the throttle state for that pair. The write is partial (events it
+    does not mention keep their state) and rejects unknown or repeated event types with a 400
+    rather than returning 200 for an opt-out that mutes nothing.
+  - V232 adds the two policy tables. Indexes and tables only; no existing data is touched.
+
 ## [1.228.0] - 2026-07-31
 
 ### Added
