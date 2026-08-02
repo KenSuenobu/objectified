@@ -819,6 +819,49 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Schema test suites (IXH-5.7, #5119). Suites persist payloads plus expected verdicts
+    # and re-run them per revision, so both halves are bounded: content (payloads per suite,
+    # 256 KiB per payload via the V240 CHECK, findings persisted per result) and history
+    # (runs per suite pruned on write beyond the cap; runs older than the retention window
+    # pruned by the IXH-6.3 sweep tick, always keeping each suite's newest ``keep_min`` so
+    # a rarely-run suite never loses its regression baseline). retention_days of 0 or below
+    # keeps runs forever; the per-suite cap still applies.
+    schema_suite_max_payloads: int = Field(
+        default=50,
+        validation_alias=AliasChoices(
+            "APIOME_SCHEMA_SUITE_MAX_PAYLOADS",
+            "schema_suite_max_payloads",
+        ),
+    )
+    schema_suite_result_findings_cap: int = Field(
+        default=20,
+        validation_alias=AliasChoices(
+            "APIOME_SCHEMA_SUITE_RESULT_FINDINGS_CAP",
+            "schema_suite_result_findings_cap",
+        ),
+    )
+    schema_suite_run_retention_days: int = Field(
+        default=180,
+        validation_alias=AliasChoices(
+            "APIOME_SCHEMA_SUITE_RUN_RETENTION_DAYS",
+            "schema_suite_run_retention_days",
+        ),
+    )
+    schema_suite_run_keep_min: int = Field(
+        default=20,
+        validation_alias=AliasChoices(
+            "APIOME_SCHEMA_SUITE_RUN_KEEP_MIN",
+            "schema_suite_run_keep_min",
+        ),
+    )
+    schema_suite_run_max_per_suite: int = Field(
+        default=200,
+        validation_alias=AliasChoices(
+            "APIOME_SCHEMA_SUITE_RUN_MAX_PER_SUITE",
+            "schema_suite_run_max_per_suite",
+        ),
+    )
+
     # Global auto-refresh kill switch (RAR-3.3, #3524). When False, the refresh
     # sweep halts entirely (no repository is auto-refreshed) regardless of per-repo
     # auto_refresh_enabled. Intended for incident response. Manual "Refresh Now"

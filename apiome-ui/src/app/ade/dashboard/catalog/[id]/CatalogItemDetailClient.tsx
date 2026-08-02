@@ -65,6 +65,7 @@ import { ConversionPreviewDialog } from '@/app/components/ade/dashboard/catalog/
 import { FormatPill } from '@/app/components/ui/catalog/FormatPill';
 import { ProtocolPill } from '@/app/components/ui/catalog/ProtocolPill';
 import { SourceBadge } from '@/app/components/ui/catalog/SourceBadge';
+import { SuiteRegressionBadge } from '@/app/components/ade/dashboard/SuiteRegressionBadge';
 import { resolveCatalogSource } from '@/app/utils/catalog-format-registry';
 import {
   catalogCardGradientClass,
@@ -769,6 +770,8 @@ export function CatalogItemDetailClient({ itemId }: { itemId: string }) {
                 <FormatPill format={item.sourceFormat} />
                 <ProtocolPill protocol={item.protocol} />
                 {resolvedSource ? <SourceBadge source={resolvedSource} /> : null}
+                {/* IXH-5.7: appears only when a saved test suite's newest run regressed. */}
+                <SuiteRegressionBadge surface="catalog" artifact={item.slug || item.id} />
               </div>
             </div>
 

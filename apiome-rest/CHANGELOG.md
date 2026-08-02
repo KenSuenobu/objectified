@@ -5,6 +5,36 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.245.0] - 2026-08-02
+
+### Added
+- **Saved schema test suites and regression tracking (IXH-5.7, #5119)** —
+  A payload validated once is worth keeping. `/v1/tenants/{tenant}/schema-suites` persists
+  named, tenant-scoped suites — payloads plus expected verdicts in the IXH-1.1
+  `validity_class` vocabulary — attached to a stable schema reference that survives
+  revisions (`{kind}/{artifact}[/{type}]`; a 5.1-shaped reference's version segment is
+  discarded; `registry/…` is rejected because it has no revisions to regress across).
+  - **Runs** (`POST …/{id}/runs`) execute every payload through the IXH-5.1 validator
+    against one revision — resolved once and pinned, so a moving `latest` cannot split a
+    run — judge each verdict exactly like the CLI (`passed`/`failed`/`error`), and record
+    the run plus per-payload results (apiome-db V240). An unresolvable reference records a
+    `status: error` run: that history is the product, not an exception.
+  - **Regression tracking**: each result is diffed by payload name against the suite's
+    previous completed run, whatever revision it targeted. `passed → failed` flags the
+    result and the run; `passed → error` deliberately does not (no verdict was produced),
+    staying visible via `previous_status`. Listings carry each suite's newest run summary
+    so the catalog and version detail surfaces can badge regressions from one query.
+  - **Corpus round trip**: `GET …/{id}/export` produces an IXH-1.1 corpus manifest plus
+    payload files, directly consumable by `apiome schema test --suite` once materialized;
+    `POST …/schema-suites/import` reads the same envelope back losslessly.
+  - **Bounded and documented** (`docs/schema_test_suites.md`): payloads per suite
+    (`APIOME_SCHEMA_SUITE_MAX_PAYLOADS`, 50), 256 KiB per payload (V240 CHECK), findings
+    per result (`APIOME_SCHEMA_SUITE_RESULT_FINDINGS_CAP`, 20); run history pruned on
+    write beyond `APIOME_SCHEMA_SUITE_RUN_MAX_PER_SUITE` (200) and by age on the IXH-6.3
+    retention tick (`APIOME_SCHEMA_SUITE_RUN_RETENTION_DAYS`, 180) — always keeping each
+    suite's newest `APIOME_SCHEMA_SUITE_RUN_KEEP_MIN` (20) so a rarely-run suite never
+    loses its regression baseline.
+
 ## [1.244.0] - 2026-08-02
 
 ### Added

@@ -127,6 +127,7 @@ import { ExternalCompatEvidencePanel } from '../../../components/ade/dashboard/E
 import { VersionChangeReportPanel } from './VersionChangeReportPanel';
 import { VersionChangesPanel } from './VersionChangesPanel';
 import { SchemaTestBench } from '@/app/components/ade/dashboard/test-bench/SchemaTestBench';
+import { SuiteRegressionBadge } from '@/app/components/ade/dashboard/SuiteRegressionBadge';
 import {
   breakingStableIds,
   changelogMatchesComparedPair,
@@ -3212,6 +3213,10 @@ const Versions = () => {
               >
                 <FlaskConical className="h-4 w-4 shrink-0" aria-hidden />
                 Test Bench
+                {/* IXH-5.7: appears only when a saved test suite's newest run regressed. */}
+                {selectedProject?.slug ? (
+                  <SuiteRegressionBadge surface="project" artifact={selectedProject.slug} />
+                ) : null}
               </button>
             ) : null}
             {showConversionTab ? (
