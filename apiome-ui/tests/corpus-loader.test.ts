@@ -10,6 +10,7 @@
 import {
   CorpusEntry,
   corpusFilePath,
+  effectiveOrigin,
   listCorpusFiles,
   loadCorpus,
   loadManifest,
@@ -124,6 +125,45 @@ describe('corpus manifest loader', () => {
     expect(loadCorpus({ format: 'no-such-format' })).toEqual([]);
     expect(loadCorpus({ feature: 'no-such-feature' })).toEqual([]);
     expect(loadCorpus({ adapterKey: 'no-such-adapter' })).toEqual([]);
+  });
+
+  it('declares provenance on every entry (IXH-1.9)', () => {
+    // The approved-license allowlist is owned by scripts/check_corpus_provenance.py;
+    // the Python suite asserts the two agree, so this mirrors it as a shape check.
+    for (const entry of loadCorpus()) {
+      expect(entry.source.length).toBeGreaterThan(0);
+      expect(entry.license.length).toBeGreaterThan(0);
+      expect(entry.provenance.length).toBeGreaterThan(0);
+      if (effectiveOrigin(entry) === 'derived') {
+        expect(entry.source_url).toMatch(/^https?:\/\//);
+      }
+      if (effectiveOrigin(entry) === 'captured') {
+        expect(entry.anonymization?.length ?? 0).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('defaults an omitted origin to hand-authored', () => {
+    const entries = loadCorpus();
+    const undeclared = entries.filter((entry) => entry.origin === undefined);
+    expect(undeclared.length).toBeGreaterThan(0);
+    for (const entry of undeclared) {
+      expect(effectiveOrigin(entry)).toBe('hand-authored');
+      expect(entry.source).toBe('hand-authored');
+    }
+  });
+
+  it('filters by origin', () => {
+    const handAuthored = loadCorpus({ origin: 'hand-authored' });
+    expect(handAuthored.length).toBeGreaterThan(0);
+    for (const entry of handAuthored) {
+      expect(effectiveOrigin(entry)).toBe('hand-authored');
+    }
+    const total =
+      handAuthored.length +
+      loadCorpus({ origin: 'derived' }).length +
+      loadCorpus({ origin: 'captured' }).length;
+    expect(total).toBe(loadCorpus().length);
   });
 
   it('resolves and reads entry files', () => {

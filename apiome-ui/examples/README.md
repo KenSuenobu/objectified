@@ -4,6 +4,8 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Generated file — do not edit.** This README is the human index of [`corpus.manifest.json`](corpus.manifest.json) (schema: [`corpus.schema.json`](corpus.schema.json)). Edit the manifest, then run `python3 scripts/generate_examples_readme.py` from the repo root; CI fails on drift.
 
+> **Adding an example?** Read the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the ladder, every manifest field, the licensing rules for documents derived from third-party specs, the anonymization rule for captured payloads, and the review checklist. `python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI.
+
 The corpus holds **491 files** across **40 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
@@ -968,6 +970,14 @@ Rungs that do not apply to an adapter's format, with the manifest-recorded justi
 | `xmlrpc` | multi-file | XmlRpcImportSource.parse_fileset parses only the root member and XML-RPC has no cross-file reference mechanism, so a genuine multi-file set is not importable. |
 | `xsd` | multi-file | parse_fileset in xsd_import_source.py parses only the root member; xs:include/xs:import across members is never resolved (verified in source), so a multi-file set adds no coverage. |
 | `zosconnect` | multi-file | The zosconnect adapter's parse_fileset only parses the root member and resolves no cross-file references (copybook structures are name references only), so a multi-file set exercises nothing. |
+
+## Provenance and licensing
+
+Every entry declares where its bytes came from (`origin`), under what license, and — for payloads captured from a real system — how they were anonymized. See the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md); `scripts/check_corpus_provenance.py` enforces the rules in CI.
+
+| Origin | Files | Licenses |
+| --- | --- | --- |
+| `hand-authored` | 491 | `Apache-2.0` |
 
 ## Trying an import
 

@@ -1,0 +1,66 @@
+name: Corpus Provenance
+
+# Provenance, licensing and generated-index gate for the import example corpus (IXH-1.9, #5095).
+#
+# The corpus lives under apiome-ui/examples/, so a manifest-only change does not trigger the
+# apiome-rest test workflow that owns the rest of the corpus contract. This workflow closes that
+# gap: it is stdlib-only Python, needs no database and no package install, and fails a pull request
+# that adds an example without a license, contradicts its declared origin, or commits a captured
+# payload with no anonymization statement.
+#
+# Contributor documentation for the rules enforced here: docs/CORPUS_CONTRIBUTOR_GUIDE.md
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'apiome-ui/examples/**'
+      - 'scripts/check_corpus_provenance.py'
+      - 'scripts/generate_examples_readme.py'
+      - 'docs/CORPUS_CONTRIBUTOR_GUIDE.md'
+      - '.github/workflows/corpus-provenance.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'apiome-ui/examples/**'
+      - 'scripts/check_corpus_provenance.py'
+      - 'scripts/generate_examples_readme.py'
+      - 'docs/CORPUS_CONTRIBUTOR_GUIDE.md'
+      - '.github/workflows/corpus-provenance.yml'
+  workflow_dispatch:
+
+jobs:
+  provenance:
+    name: Corpus provenance and licensing
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Check corpus provenance and licensing
+        id: provenance
+        run: python3 scripts/check_corpus_provenance.py
+
+      - name: Check the generated examples README is current
+        run: python3 scripts/generate_examples_readme.py --check
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo '### Corpus provenance'
+            echo ''
+            if [ "${{ steps.provenance.outcome }}" = "success" ]; then
+              echo 'Every corpus entry declares an approved license, an origin consistent with its'
+              echo 'source, and — for captured payloads — how it was anonymized.'
+            else
+              echo 'Provenance violations were found. Run `python3 scripts/check_corpus_provenance.py`'
+              echo 'locally and see [the contributor guide](docs/CORPUS_CONTRIBUTOR_GUIDE.md).'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

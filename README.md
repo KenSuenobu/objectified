@@ -56,6 +56,11 @@ See the .github/skills directory.
 Fork the project, and off you go.  Please feel free to contribute to the project in the form of pull requests,
 bug reports, fixes, and so on.  We encourage users to contribute!
 
+Adding an example to the import corpus (`apiome-ui/examples/`)?  Read the
+[corpus contributor guide](docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the manifest fields,
+the licensing rules for documents derived from third-party specs, the anonymization rule for
+captured payloads, and the review checklist.
+
 ## Donations
 
 Donations to help with the Anthropic Claude, Cursor, and GitHub Copilot token budget are always appreciated.
