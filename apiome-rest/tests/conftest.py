@@ -17,6 +17,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     ``--update-roundtrip-matrix`` regenerates the IXH-1.7 round-trip matrix
     artifact (``tests/golden/roundtrip/matrix.json``); ``UPDATE_ROUNDTRIP_MATRIX=1``
     does the same.
+
+    ``--scale`` opts this run into the IXH-1.5 scale benchmark suite, which is
+    otherwise skipped because it costs minutes and hundreds of megabytes;
+    ``RUN_SCALE_SUITE=1`` does the same. ``--update-scale-budgets`` rewrites its
+    committed baseline (``tests/scale/scale_budgets.json``) from the run instead of
+    asserting against it.
     """
     parser.addoption(
         "--update-golden",
@@ -36,6 +42,53 @@ def pytest_addoption(parser: pytest.Parser) -> None:
             "(tests/golden/roundtrip/matrix.json) instead of asserting against it."
         ),
     )
+    parser.addoption(
+        "--scale",
+        action="store_true",
+        default=False,
+        help=(
+            "Run the IXH-1.5 scale benchmark suite (tests/test_scale_corpus.py), "
+            "which is opt-in because it costs minutes and hundreds of megabytes."
+        ),
+    )
+    parser.addoption(
+        "--update-scale-budgets",
+        action="store_true",
+        default=False,
+        help=(
+            "Rewrite the committed scale budgets (tests/scale/scale_budgets.json) "
+            "from this run instead of asserting against them."
+        ),
+    )
+
+
+#: Test module holding the opt-in IXH-1.5 scale benchmark suite (#5091).
+_SCALE_SUITE_MODULE = "test_scale_corpus.py"
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list) -> None:
+    """Skip the opt-in scale benchmark suite unless this run asked for it.
+
+    The IXH-1.5 suite builds multi-megabyte documents and runs minutes of real
+    pipeline work, so by acceptance criterion it is opt-in locally (``--scale`` /
+    ``RUN_SCALE_SUITE=1``) and scheduled — not per-PR — in CI. The decision lives
+    here rather than in the module because pytest only honours collection hooks from
+    ``conftest.py`` and plugins.
+
+    Args:
+        config: The pytest config carrying the ``--scale`` option.
+        items: The collected test items, mutated in place.
+    """
+    from scale_corpus_spec import scale_suite_enabled
+
+    if scale_suite_enabled(config):
+        return
+    skip = pytest.mark.skip(
+        reason="scale suite is opt-in: run with --scale or RUN_SCALE_SUITE=1"
+    )
+    for item in items:
+        if item.nodeid.split("::", 1)[0].endswith(_SCALE_SUITE_MODULE):
+            item.add_marker(skip)
 
 
 @pytest.fixture(autouse=True)

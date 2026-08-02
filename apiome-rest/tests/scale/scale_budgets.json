@@ -1,0 +1,291 @@
+{
+  "budget_version": 1,
+  "fixtures": {
+    "data-schema-avro-registry.avsc": {
+      "paradigm": "data_schema",
+      "source_bytes": 1567976,
+      "stages": {
+        "analyze-fidelity": {
+          "peak_bytes": 265173699,
+          "wall_ms": 1925.9
+        },
+        "emit": {
+          "peak_bytes": 4065400,
+          "wall_ms": 50.3
+        },
+        "fingerprint": {
+          "peak_bytes": 14064342,
+          "wall_ms": 167.8
+        },
+        "lint": {
+          "peak_bytes": 22200,
+          "wall_ms": 8.6
+        },
+        "load-source": {
+          "peak_bytes": 50632989,
+          "wall_ms": 4967.8
+        },
+        "normalize": {
+          "peak_bytes": 45441521,
+          "wall_ms": 363.4
+        },
+        "package": {
+          "peak_bytes": 1442878,
+          "wall_ms": 176.2
+        },
+        "parse": {
+          "peak_bytes": 8246613,
+          "wall_ms": 2911.0
+        },
+        "persist": {
+          "peak_bytes": 3362,
+          "wall_ms": 487.4
+        },
+        "validate": {
+          "peak_bytes": 373857,
+          "wall_ms": 13.7
+        }
+      }
+    },
+    "event-cloudevents-large.json": {
+      "paradigm": "event",
+      "source_bytes": 1444169,
+      "stages": {
+        "analyze-fidelity": {
+          "peak_bytes": 1296886,
+          "wall_ms": 12.9
+        },
+        "emit": {
+          "peak_bytes": 3281259,
+          "wall_ms": 56.4
+        },
+        "fingerprint": {
+          "peak_bytes": 24290751,
+          "wall_ms": 327.3
+        },
+        "lint": {
+          "peak_bytes": 22406351,
+          "wall_ms": 249.2
+        },
+        "load-source": {
+          "peak_bytes": 84000850,
+          "wall_ms": 5127.5
+        },
+        "normalize": {
+          "peak_bytes": 77917219,
+          "wall_ms": 578.8
+        },
+        "package": {
+          "peak_bytes": 2387759,
+          "wall_ms": 3.6
+        },
+        "parse": {
+          "peak_bytes": 7527924,
+          "wall_ms": 2937.4
+        },
+        "persist": {
+          "peak_bytes": 3404,
+          "wall_ms": 597.0
+        },
+        "validate": {
+          "peak_bytes": 7246,
+          "wall_ms": 0.3
+        }
+      }
+    },
+    "mainframe-cobol-copybook-large.cpy": {
+      "paradigm": "data_schema",
+      "source_bytes": 350025,
+      "stages": {
+        "analyze-fidelity": {
+          "peak_bytes": 135379580,
+          "wall_ms": 889.1
+        },
+        "emit": {
+          "peak_bytes": 1353079,
+          "wall_ms": 47.1
+        },
+        "fingerprint": {
+          "peak_bytes": 24623071,
+          "wall_ms": 274.3
+        },
+        "lint": {
+          "peak_bytes": 121223,
+          "wall_ms": 5.5
+        },
+        "load-source": {
+          "peak_bytes": 43186277,
+          "wall_ms": 455.2
+        },
+        "normalize": {
+          "peak_bytes": 40365962,
+          "wall_ms": 305.0
+        },
+        "package": {
+          "peak_bytes": 629913,
+          "wall_ms": 1.0
+        },
+        "parse": {
+          "peak_bytes": 3185305,
+          "wall_ms": 141.4
+        },
+        "persist": {
+          "peak_bytes": 2681,
+          "wall_ms": 154.5
+        },
+        "validate": {
+          "peak_bytes": 3166996,
+          "wall_ms": 147.8
+        }
+      }
+    },
+    "message-edi-x12-interchange.edi": {
+      "paradigm": "message",
+      "source_bytes": 576193,
+      "stages": {
+        "analyze-fidelity": {
+          "peak_bytes": 230520,
+          "wall_ms": 38.3
+        },
+        "emit": {
+          "peak_bytes": 5462,
+          "wall_ms": 0.2
+        },
+        "fingerprint": {
+          "peak_bytes": 49143052,
+          "wall_ms": 648.9
+        },
+        "lint": {
+          "peak_bytes": 24021,
+          "wall_ms": 0.5
+        },
+        "load-source": {
+          "peak_bytes": 86922425,
+          "wall_ms": 1439.3
+        },
+        "normalize": {
+          "peak_bytes": 58574358,
+          "wall_ms": 501.6
+        },
+        "package": {
+          "peak_bytes": 303235,
+          "wall_ms": 0.2
+        },
+        "parse": {
+          "peak_bytes": 31740349,
+          "wall_ms": 902.7
+        },
+        "persist": {
+          "peak_bytes": 2697,
+          "wall_ms": 193.8
+        },
+        "validate": {
+          "peak_bytes": 42413,
+          "wall_ms": 0.7
+        }
+      }
+    },
+    "rest-openapi-large.json": {
+      "paradigm": "rest",
+      "source_bytes": 1545684,
+      "stages": {
+        "analyze-fidelity": {
+          "peak_bytes": 13102510,
+          "wall_ms": 110.1
+        },
+        "emit": {
+          "peak_bytes": 7375735,
+          "wall_ms": 80.2
+        },
+        "fingerprint": {
+          "peak_bytes": 13647274,
+          "wall_ms": 180.6
+        },
+        "lint": {
+          "peak_bytes": 11659314,
+          "wall_ms": 256.5
+        },
+        "load-source": {
+          "peak_bytes": 58487425,
+          "wall_ms": 2884.7
+        },
+        "normalize": {
+          "peak_bytes": 53404510,
+          "wall_ms": 413.9
+        },
+        "package": {
+          "peak_bytes": 3955986,
+          "wall_ms": 88.9
+        },
+        "parse": {
+          "peak_bytes": 6198983,
+          "wall_ms": 2415.4
+        },
+        "persist": {
+          "peak_bytes": 3498,
+          "wall_ms": 589.6
+        },
+        "validate": {
+          "peak_bytes": 71678873,
+          "wall_ms": 14615.4
+        }
+      }
+    },
+    "rpc-openrpc-large.json": {
+      "paradigm": "rpc",
+      "source_bytes": 1456538,
+      "stages": {
+        "analyze-fidelity": {
+          "peak_bytes": 82213998,
+          "wall_ms": 757.9
+        },
+        "emit": {
+          "peak_bytes": 7579931,
+          "wall_ms": 100.1
+        },
+        "fingerprint": {
+          "peak_bytes": 15978330,
+          "wall_ms": 186.0
+        },
+        "lint": {
+          "peak_bytes": 6426003,
+          "wall_ms": 72.4
+        },
+        "load-source": {
+          "peak_bytes": 43458390,
+          "wall_ms": 2903.8
+        },
+        "normalize": {
+          "peak_bytes": 38954960,
+          "wall_ms": 306.4
+        },
+        "package": {
+          "peak_bytes": 2116328,
+          "wall_ms": 3.2
+        },
+        "parse": {
+          "peak_bytes": 8592239,
+          "wall_ms": 2544.6
+        },
+        "persist": {
+          "peak_bytes": 3402,
+          "wall_ms": 515.8
+        },
+        "validate": {
+          "peak_bytes": 7474,
+          "wall_ms": 0.3
+        }
+      }
+    }
+  },
+  "measured_on": {
+    "cpu_count": 20,
+    "machine": "x86_64",
+    "platform": "Linux-6.17.0-20-generic-x86_64-with-glibc2.39",
+    "python": "3.14.4"
+  },
+  "memory_margin": 1.5,
+  "peak_floor_bytes": 16777216,
+  "regression_margin": 1.6,
+  "wall_floor_ms": 100.0
+}

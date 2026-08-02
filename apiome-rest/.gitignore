@@ -56,3 +56,7 @@ Thumbs.db
 coverage.xml
 htmlcov/
 .pytest_cache/
+
+# Scale benchmark report artifact (IXH-1.5); the committed baseline lives in
+# tests/scale/scale_budgets.json, the per-run report is generated output.
+reports/

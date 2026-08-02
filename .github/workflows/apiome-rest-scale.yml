@@ -1,0 +1,122 @@
+name: Apiome REST Scale Benchmarks
+
+# Runs the IXH-1.5 scale corpus benchmarks (#5091): every generated large document is
+# driven through the ten import and export stages, and each stage's wall-clock and peak
+# memory is held to the committed baseline in
+# apiome-rest/tests/scale/scale_budgets.json with a configurable regression margin.
+#
+# Scheduled, not per-PR — by acceptance criterion. The suite runs for about a minute of
+# real pipeline work per fixture and allocates hundreds of megabytes, and its numbers are
+# only comparable between runs on the same machine, so gating every PR on it would be both
+# slow and noisy. The per-PR gate is tests/test_scale_harness.py, which runs in the normal
+# suite and keeps the spec, the baseline, and the comparison rules honest.
+#
+# Refreshing the baseline: run the workflow manually with update_baseline = true, download
+# the scale-baseline artifact, and commit it — or, locally,
+#   RUN_SCALE_SUITE=1 uv run pytest tests/test_scale_corpus.py --update-scale-budgets
+
+on:
+  schedule:
+    # 04:15 UTC on Mondays — after the week's merges, before anyone needs the answer.
+    - cron: '15 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      regression_margin:
+        description: 'Wall-clock regression margin (multiplier over the baseline).'
+        required: false
+        default: ''
+      memory_margin:
+        description: 'Peak-memory regression margin (multiplier over the baseline).'
+        required: false
+        default: ''
+      update_baseline:
+        description: 'Rewrite the committed baseline from this run and upload it.'
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  scale:
+    name: scale corpus benchmarks
+    runs-on: self-hosted
+    # The suite never touches the database (persistence is measured up to the row write,
+    # see tests/scale_benchmark.py); clearing this keeps a host DATABASE_URL out of the run.
+    env:
+      DATABASE_URL: ""
+      RUN_SCALE_SUITE: "1"
+      SCALE_REGRESSION_MARGIN: ${{ inputs.regression_margin }}
+      SCALE_MEMORY_MARGIN: ${{ inputs.memory_margin }}
+    defaults:
+      run:
+        working-directory: apiome-rest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies (incl. dev/test group)
+        run: uv sync
+
+      - name: Run the scale benchmarks
+        run: |
+          uv run pytest tests/test_scale_corpus.py -v \
+            ${{ inputs.update_baseline && '--update-scale-budgets' || '' }} \
+            --junitxml=scale-report.xml
+
+      - name: Benchmark summary
+        if: always()
+        run: |
+          {
+            echo '### apiome-rest scale benchmarks'
+            echo ''
+            echo '| fixture | stage | wall (ms) | vs budget | peak (MiB) | vs budget |'
+            echo '| --- | --- | ---: | ---: | ---: | ---: |'
+            uv run python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = Path("reports/scale-benchmark.json")
+          if not report.exists():
+              print('| _no report artifact_ | | | | | |')
+              raise SystemExit(0)
+          payload = json.loads(report.read_text())
+          for fixture in payload["fixtures"]:
+              for stage, values in fixture["stages"].items():
+                  wall_ratio = values.get("wall_ratio")
+                  peak_ratio = values.get("peak_ratio")
+                  print(
+                      f'| {fixture["name"]} | {stage} | {values["wall_ms"]:.1f} | '
+                      f'{"—" if wall_ratio is None else f"{wall_ratio:.2f}x"} | '
+                      f'{values["peak_bytes"] / 1024 / 1024:.1f} | '
+                      f'{"—" if peak_ratio is None else f"{peak_ratio:.2f}x"} |'
+                  )
+          PY
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload benchmark report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apiome-rest-scale-report
+          path: |
+            apiome-rest/reports/scale-benchmark.json
+            apiome-rest/scale-report.xml
+          if-no-files-found: warn
+
+      - name: Upload refreshed baseline
+        if: always() && inputs.update_baseline
+        uses: actions/upload-artifact@v4
+        with:
+          name: apiome-rest-scale-baseline
+          path: apiome-rest/tests/scale/scale_budgets.json
+          if-no-files-found: warn
