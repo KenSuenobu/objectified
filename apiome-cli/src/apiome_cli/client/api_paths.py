@@ -191,6 +191,39 @@ def tenant_repository_file_content(
     return f"{tenant_repository_files(tenant_slug, repository_id)}/{file_id}/content"
 
 
+def tenant_repository_refresh(tenant_slug: str, repository_id: str | UUID) -> str:
+    """One-shot manual "Refresh Now" for a repository or a single file (RAR-5.2).
+
+    ``POST`` with an optional ``{"path": …, "branch": …}`` body: a spec-faithful
+    re-import that honours the freshness gate and the divergence guard but bypasses
+    the auto-refresh cadence and opt-outs.
+    """
+    return f"{tenant_repository(tenant_slug, repository_id)}/refresh"
+
+
+def tenant_repository_refresh_history(tenant_slug: str, repository_id: str | UUID) -> str:
+    """Refresh-cycle audit history for a repository (RAR-5.3).
+
+    ``GET`` newest-first, offset-paginated; ``?path=`` narrows it to one file lineage.
+    """
+    return f"{tenant_repository(tenant_slug, repository_id)}/refresh-history"
+
+
+def tenant_repository_spec_catalog(tenant_slug: str) -> str:
+    """Tenant-wide catalog of discovered specs (REPO-6.4), filterable by repository."""
+    return f"{V1}/tenants/{tenant_slug}/repository-files"
+
+
+def tenant_repository_import_spec(tenant_slug: str, import_id: str | UUID) -> str:
+    """Stored import spec and materialized refresh status for one file lineage (RAR-1.5).
+
+    ``import_id`` is the import-spec row id by default; with ``?path=`` it is
+    reinterpreted as the *repository* id and the lineage is resolved by path
+    (optionally scoped with ``&branch=``).
+    """
+    return f"{V1}/tenants/{tenant_slug}/repository-imports/{import_id}/spec"
+
+
 def tenant_mcp_policy(tenant_slug: str) -> str:
     """Tenant MCP governance policy (GET/PUT; MTG-3.1 / MTG-5.3)."""
     return f"{V1}/tenants/{tenant_slug}/mcp-policy"

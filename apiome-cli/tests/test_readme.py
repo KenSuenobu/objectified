@@ -149,3 +149,30 @@ def test_readme_documents_mock_commands(readme: str) -> None:
 
     assert "--days" in mock_section
     assert "published" in mock_section
+
+
+def test_readme_documents_repository_refresh_commands(readme: str) -> None:
+    """README documents the repository auto-refresh commands (RAR-5.6)."""
+    assert "### Repository auto-refresh" in readme
+    section = readme[readme.index("### Repository auto-refresh") :]
+
+    assert "#### `repository refresh`" in section
+    assert "#### `repository refresh status`" in section
+
+    for command in (
+        "apiome repository refresh acme/api",
+        "apiome repository refresh acme/api --path openapi.yaml",
+        "apiome repository refresh acme/api --no-wait",
+        "apiome repository refresh status acme/api",
+        "apiome repository refresh status acme/api --all-branches",
+        "apiome --json repository refresh acme/api",
+    ):
+        assert command in section, f"missing repository refresh example: {command}"
+
+    for flag in ("--branch", "--poll-interval", "--refresh-timeout", "--limit"):
+        assert flag in section, f"missing repository refresh flag: {flag}"
+
+    # The gates and the exit-code contract must stay documented.
+    assert "freshness gate" in section
+    assert "divergence guard" in section
+    assert "exits `1`" in section

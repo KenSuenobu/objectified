@@ -825,6 +825,38 @@ apiome repos imports <repository-uuid> --version-id <version-uuid> --format json
 apiome repos imports <repository-uuid> --actor <user-uuid> --since 2026-06-01T00:00:00Z
 ```
 
+### Repository auto-refresh
+
+Trigger and inspect the repository auto-refresh loop from the CLI — the same "Refresh now" action and per-file state the Repositories → Specs tab shows. `REPO` is a repository UUID **or** a repository name (`acme/api` is matched against the repository's full name, then its display name).
+
+#### `repository refresh`
+
+Run a **spec-faithful** refresh (`POST …/repositories/{id}/refresh`): every enqueued job replays that file's stored import spec instead of importer defaults, only files newer than the last import are enqueued (freshness gate), and a hand-edited version is held rather than clobbered (divergence guard). It runs even when scheduled auto-refresh is switched off. Omit `--path` to refresh the whole repository; add `--branch` to scope one branch.
+
+By default the command waits until the refreshed files settle, then prints their final state and any recorded refresh cycles. It exits `1` when a file ends in the `failed` state or a refresh cycle failed; a file held by the divergence guard is reported prominently but is **not** a failure.
+
+```bash
+apiome repository refresh acme/api
+apiome repository refresh acme/api --path openapi.yaml
+apiome repository refresh acme/api --path openapi.yaml --branch release
+apiome repository refresh acme/api --no-wait
+apiome repository refresh acme/api --poll-interval 2 --refresh-timeout 300
+apiome --json repository refresh acme/api
+apiome repository refresh <repository-uuid> --format json
+```
+
+#### `repository refresh status`
+
+List per-file refresh state for a repository: each imported file lineage with its materialized status — `up-to-date`, `stale`, `refreshing`, `failed`, `diverged`, or `unknown` when no stored spec could be read. Reads the discovered-spec catalog for the repository and each lineage's stored import spec (`GET …/repository-imports/{id}/spec?path=`).
+
+```bash
+apiome repository refresh status acme/api
+apiome repository refresh status acme/api --path openapi.yaml
+apiome repository refresh status acme/api --all-branches
+apiome repository refresh status acme/api --branch release --limit 200
+apiome repository refresh status acme/api --format json
+```
+
 ### MCP catalog
 
 Register, list, and inspect external MCP servers in your tenant's catalog. These commands
