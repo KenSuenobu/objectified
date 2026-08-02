@@ -1,0 +1,38 @@
+# Apiome contract gate for Bitbucket Pipelines (CTG-2.4 / #4474).
+#
+# Copy this file to your repository root as `bitbucket-pipelines.yml`, or merge
+# the `apiome-contract-gate` step into your existing pipeline.
+#
+# Required repository variables (Repository settings -> Repository variables,
+# check "Secured"):
+#   APIOME_API_KEY    Apiome API key, ideally a CI token scoped to `diff:read`
+#   APIOME_TENANT_ID  tenant slug or UUID
+#
+# Bitbucket runs its own shell inside the container, so the image entrypoint is
+# bypassed and the job configuration lives in the step's script.
+
+# Pin a version tag or digest in real pipelines - `latest` drifts.
+image: ghcr.io/apiome/diff-action:latest
+
+definitions:
+  steps:
+    - step: &apiome-contract-gate
+        name: Apiome contract gate
+        script:
+          - 'export APIOME_SPEC="${APIOME_SPEC:-openapi.yaml}"'
+          - 'export APIOME_PROJECT="${APIOME_PROJECT:-payments-api@latest}"'
+          - 'export APIOME_FAIL_ON="${APIOME_FAIL_ON:-breaking}"'
+          - 'export APIOME_BASE_URL="${APIOME_BASE_URL:-https://api.apiome.dev}"'
+          - 'export APIOME_LOAD_DOTENV=0'
+          - 'test -n "$APIOME_API_KEY" || { echo "APIOME_API_KEY is not set - add it as a secured repository variable" >&2; exit 2; }'
+          - 'test -n "$APIOME_TENANT_ID" || { echo "APIOME_TENANT_ID is not set - add it as a secured repository variable" >&2; exit 2; }'
+          - 'apiome diff "$APIOME_SPEC" --against "$APIOME_PROJECT" --fail-on "$APIOME_FAIL_ON" --format md > apiome-changelog.md || gate=$?'
+          - 'cat apiome-changelog.md'
+          - 'exit ${gate:-0}'
+        artifacts:
+          - apiome-changelog.md
+
+pipelines:
+  pull-requests:
+    '**':
+      - step: *apiome-contract-gate

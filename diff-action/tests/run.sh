@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "${ROOT}"
 
-chmod +x entrypoint.sh sticky_comment.sh tests/*.sh 2>/dev/null || true
+chmod +x entrypoint.sh ci_entrypoint.sh sticky_comment.sh tests/*.sh 2>/dev/null || true
 
 fail=0
 for t in tests/test_*.sh; do

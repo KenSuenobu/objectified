@@ -62,6 +62,11 @@ Set `comment: false` to skip the comment and only fail/pass the check.
 `warn` fails on non-breaking **and** breaking changes. Docs-only changes alone
 never fail the gate.
 
+## Not on GitHub?
+
+The same container image backs copy-paste **GitLab CI** and **Bitbucket Pipelines** recipes —
+see [ci-gitlab-bitbucket.md](ci-gitlab-bitbucket.md).
+
 ## CLI equivalent
 
 ```bash
@@ -74,5 +79,6 @@ apiome diff ./openapi.yaml --against payments-api@latest --fail-on breaking --fo
 ## Related
 
 - Action source: [`diff-action/`](../../diff-action/)
+- GitLab / Bitbucket recipes: [ci-gitlab-bitbucket.md](ci-gitlab-bitbucket.md)
 - CLI quick-start: [cli-quickstart.md](cli-quickstart.md)
 - Classified diff details: [`apiome-cli` README](../../apiome-cli/README.md#classified-diff-ci-gate)
