@@ -1,0 +1,57 @@
+// Paired-intake fixture (IXH-7.5, #5130): the .proto SOURCE side of the binary-intake pair.
+// protobuf/08-inventory-descriptor-set.binpb (a serialized FileDescriptorSet) and
+// protobuf/09-inventory-buf-image.binpb (a buf image) are compiled from exactly this file,
+// and the paired corpus test asserts all three import to the same canonical model.
+// Deliberately self-contained: no imports, so the descriptor set carries this one file and
+// the source-tree vs. descriptor-set target/import distinction cannot skew the pairing.
+syntax = "proto3";
+
+package examples.inventory.v1;
+
+// Warehouse inventory service: lookup, listing, and stock adjustment.
+service InventoryService {
+  // Fetch a single item by its stock-keeping unit.
+  rpc GetItem(GetItemRequest) returns (Item);
+  // Page through the catalog, optionally filtered by status.
+  rpc ListItems(ListItemsRequest) returns (ListItemsResponse);
+  // Apply a stock delta and return the updated item.
+  rpc AdjustStock(AdjustStockRequest) returns (Item);
+}
+
+// Lifecycle status of a stocked item.
+enum ItemStatus {
+  ITEM_STATUS_UNSPECIFIED = 0;
+  ITEM_STATUS_ACTIVE = 1;
+  ITEM_STATUS_BACKORDERED = 2;
+  ITEM_STATUS_DISCONTINUED = 3;
+}
+
+// One stocked item.
+message Item {
+  string sku = 1;
+  string name = 2;
+  ItemStatus status = 3;
+  int64 quantity = 4;
+  map<string, string> labels = 5;
+}
+
+message GetItemRequest {
+  string sku = 1;
+}
+
+message ListItemsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  ItemStatus status_filter = 3;
+}
+
+message ListItemsResponse {
+  repeated Item items = 1;
+  string next_page_token = 2;
+}
+
+message AdjustStockRequest {
+  string sku = 1;
+  sint64 delta = 2;
+  string reason = 3;
+}

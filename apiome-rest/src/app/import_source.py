@@ -217,6 +217,11 @@ class DetectionInput:
     already-parsed ``document``, plus filename/content-type/URL hints. An adapter
     reads only what it needs; auto-detection (MFI-1.5) passes the same input to
     every adapter and keeps the highest-confidence match.
+
+    ``data`` carries the *undecoded* upload bytes for adapters that recognize a
+    binary artifact (IXH-7.5: a serialized protobuf ``FileDescriptorSet`` / buf
+    image). It is optional — callers that only have text omit it, and text-format
+    adapters ignore it.
     """
 
     text: Optional[str] = None
@@ -224,6 +229,7 @@ class DetectionInput:
     filename: Optional[str] = None
     content_type: Optional[str] = None
     url: Optional[str] = None
+    data: Optional[bytes] = None
 
 
 @dataclass(frozen=True)
@@ -613,6 +619,52 @@ class ImportSource(ABC):
         _ = fileset, source_label
         raise ImportSourceError(
             f"The {self.label!r} source does not accept multi-document fileset input."
+        )
+
+    def accepts_bytes(self, raw: bytes, *, filename: Optional[str] = None) -> bool:
+        """Whether this adapter wants ``raw`` routed to :meth:`parse_bytes` (IXH-7.5).
+
+        The intake pipeline consults this before decoding an upload to text: an adapter
+        that imports a *binary* artifact (a serialized protobuf ``FileDescriptorSet`` /
+        buf image) claims the bytes here, and the pipeline then calls
+        :meth:`parse_bytes` instead of :meth:`parse`. Like :meth:`detect`, this must be
+        cheap and must never raise. The default declines, so text-only adapters are
+        unaffected.
+
+        Args:
+            raw: The undecoded upload bytes.
+            filename: Optional filename/label hint (a conventional binary suffix may
+                claim the bytes even when they are malformed, so the failure is
+                reported by the binary parser's taxonomy code).
+
+        Returns:
+            ``True`` when the bytes should be parsed via :meth:`parse_bytes`.
+        """
+        _ = raw, filename
+        return False
+
+    def parse_bytes(self, raw: bytes, *, source_label: Optional[str] = None) -> Any:
+        """Parse a binary document into this format's native parse tree (IXH-7.5).
+
+        The binary counterpart to :meth:`parse`, called by the pipeline only when
+        :meth:`accepts_bytes` claimed the payload. Adapters with a binary artifact form
+        (the gRPC adapter's descriptor-set / buf-image intake) override this; the
+        default rejects, so single-format text adapters fail fast with a clear message.
+
+        Args:
+            raw: The undecoded upload bytes.
+            source_label: Optional label (filename/URL) for error messages.
+
+        Returns:
+            The format's native AST.
+
+        Raises:
+            ImportSourceError: When this adapter does not accept binary input, or the
+                bytes cannot be parsed (with a taxonomy ``code`` when classifiable).
+        """
+        _ = raw, source_label
+        raise ImportSourceError(
+            f"The {self.label!r} source does not accept binary document input."
         )
 
     @abstractmethod

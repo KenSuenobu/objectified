@@ -8339,6 +8339,77 @@
       "fileset_role": "member"
     },
     {
+      "path": "protobuf/07-inventory-source.proto",
+      "format": "protobuf",
+      "adapter_key": "grpc",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "protobuf",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "proto3",
+        "service",
+        "rpc",
+        "message",
+        "enum",
+        "map",
+        "package",
+        "binary-pair",
+        "binary-pair-source"
+      ],
+      "expected_outcome": "imports",
+      "provenance": "Authored in-repo as the .proto source side of the IXH-7.5 binary-intake pair; protobuf/08 and protobuf/09 are compiled from this file.",
+      "rung": "typical",
+      "notes": "Paired fixture (IXH-7.5): the descriptor-set and buf-image entries compiled from this source must import to the same canonical model."
+    },
+    {
+      "path": "protobuf/08-inventory-descriptor-set.binpb",
+      "format": "protobuf",
+      "adapter_key": "grpc",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "protobuf",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "binary",
+        "descriptor-set",
+        "binary-pair",
+        "binary-pair-descriptor-set"
+      ],
+      "expected_outcome": "imports",
+      "provenance": "Serialized google.protobuf.FileDescriptorSet compiled from protobuf/07-inventory-source.proto with the bundled buf (buf build --as-file-descriptor-set).",
+      "rung": "typical",
+      "notes": "Paired fixture (IXH-7.5): must import to the same canonical model as protobuf/07-inventory-source.proto."
+    },
+    {
+      "path": "protobuf/09-inventory-buf-image.binpb",
+      "format": "protobuf",
+      "adapter_key": "grpc",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "protobuf",
+        "min_confidence": 0.9
+      },
+      "features": [
+        "binary",
+        "buf-image",
+        "binary-pair",
+        "binary-pair-buf-image"
+      ],
+      "expected_outcome": "imports",
+      "provenance": "Buf image built from protobuf/07-inventory-source.proto with the bundled buf (buf build -o image.binpb); a FileDescriptorSet superset carrying buf's per-file extensions.",
+      "rung": "typical",
+      "notes": "Paired fixture (IXH-7.5): must import to the same canonical model as protobuf/07-inventory-source.proto."
+    },
+    {
       "path": "protobuf/negative/01-syntactic-unclosed-message.proto",
       "format": "protobuf",
       "adapter_key": "grpc",
@@ -8442,6 +8513,50 @@
       "provenance": "Hand-authored valid proto3 message encoded as UTF-16 with BOM so the UTF-8 decode yields replacement characters.",
       "failure_class": "encoding",
       "expected_error_code": "INPUT_ENCODING_INVALID"
+    },
+    {
+      "path": "protobuf/negative/06-truncated-descriptor-set.binpb",
+      "format": "protobuf",
+      "adapter_key": "grpc",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "protobuf",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "binary",
+        "descriptor-set"
+      ],
+      "expected_outcome": "rejects",
+      "provenance": "First 60% of protobuf/08-inventory-descriptor-set.binpb, cut mid-file-entry so the top-level wire stream ends inside a declared length.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_TRUNCATED"
+    },
+    {
+      "path": "protobuf/negative/07-garbage-descriptor-set.binpb",
+      "format": "protobuf",
+      "adapter_key": "grpc",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "protobuf",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "syntactic",
+        "binary",
+        "descriptor-set"
+      ],
+      "expected_outcome": "rejects",
+      "provenance": "Hand-crafted bytes whose outer wire framing is length-consistent but whose file entries are not parseable FileDescriptorProto messages.",
+      "failure_class": "syntactic",
+      "expected_error_code": "INPUT_MALFORMED"
     },
     {
       "path": "raml/01-simple-api.raml",

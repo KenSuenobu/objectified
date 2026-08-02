@@ -1642,6 +1642,7 @@ async def run_adapter_import_job(
     # --- parse ----------------------------------------------------------------
     intake: Optional[_ResolvedIntake] = None
     remote_refs: Optional[_RemoteRefResolution] = None
+    used_binary = False
     tenant_id = payload.get("tenant_id")
     profile = resolve_guard_profile(
         tenant_id=str(tenant_id) if isinstance(tenant_id, str) else None
@@ -1664,12 +1665,23 @@ async def run_adapter_import_job(
             )
         _phase_timing("remote-refs", phase_started)
         current_phase, phase_started = "parse", time.monotonic()
+        # IXH-7.5: a binary artifact (a serialized protobuf FileDescriptorSet / buf image)
+        # must not be parsed through its lossy errors="replace" text decode — the adapter
+        # claims the raw bytes and parses them directly, under the same stage guards.
+        used_binary = (
+            intake.fileset is None
+            and adapter.accepts_bytes(intake.raw_bytes, filename=stage_label)
+        )
         with stage_wall_clock("parse", limits=profile, source_label=stage_label):
             with stage_memory_tracker(limits=profile, source_label=stage_label):
                 if intake.fileset is not None:
                     native_ast = adapter.parse_fileset(
                         (remote_refs.fileset if remote_refs else None) or intake.fileset,
                         source_label=source_label,
+                    )
+                elif used_binary:
+                    native_ast = adapter.parse_bytes(
+                        intake.raw_bytes, source_label=source_label
                     )
                 else:
                     assert intake.text is not None
@@ -1682,13 +1694,16 @@ async def run_adapter_import_job(
         _phase_timing(current_phase, phase_started, outcome="failed")
         # A resource-limit or unsafe-construct rejection (IXH-1.4 / IXH-6.5) already knows
         # its taxonomy code and must not be re-classified as a malformed document.
+        # A binary-intake failure classifies over no text: its decoded form is mojibake by
+        # construction, and reporting that as an encoding fault would be wrong.
+        classify_text = (
+            None if used_binary else (intake.text if intake is not None else None)
+        )
         error_code = (
             resolve_intake_error_code(getattr(exc, "code", None))
             if isinstance(exc, (IntakeLimitError, SecureXmlError))
             else None
-        ) or _classify_parse_failure(
-            exc, adapter, intake.text if intake is not None else None, source_label
-        )
+        ) or _classify_parse_failure(exc, adapter, classify_text, source_label)
         state.event("PARSE_ERROR", str(exc), level="error", context={"error_code": error_code})
         cleanup_intake_tempfile(payload.get("document_path"))
         return state.snapshot(

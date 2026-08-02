@@ -5,6 +5,37 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.247.0] - 2026-08-02
+
+### Added
+- **Protobuf descriptor set / buf image binary intake (IXH-7.5, #5130)** — Real gRPC
+  deployments distribute a serialized `FileDescriptorSet` (or a buf image), not a `.proto`
+  source tree; the gRPC adapter now imports that artifact directly.
+  - **Binary parse seam** (`ImportSource.accepts_bytes` / `parse_bytes`): the import
+    pipeline consults the adapter before decoding an upload to text and routes claimed
+    binary payloads to `parse_bytes` under the same IXH-6.5 size/time/memory stage guards
+    (the raw-bytes ceiling applies before the parse ever runs). Text-only adapters are
+    unaffected (default declines).
+  - **gRPC adapter**: `parse_bytes` decodes a `FileDescriptorSet` / buf image with the
+    pure MFI-9.1 read layer — dependencies resolve from within the set, with no
+    filesystem, network, or `buf` toolchain access — and feeds the existing Protobuf
+    normalizer. Payloads are claimed by content sniff (`sniff_file_descriptor_set`) or by
+    conventional suffix (`.binpb`/`.desc`/`.protoset`), so malformed descriptor uploads
+    fail with descriptor-specific taxonomy codes (`INPUT_MALFORMED`, or `INPUT_TRUNCATED`
+    when the wire stream is cut off mid-element via a top-level wire walk) instead of
+    `INPUT_ENCODING_INVALID`. The Connect-RPC adapter delegates the same seam.
+  - **Detection**: `DetectionInput` gains optional undecoded `data` bytes; the gRPC
+    adapter and the registry sniffer claim descriptor-set bytes at 0.9 confidence, so
+    binary uploads auto-detect and pre-flight routes them to the `grpc` importer.
+  - **Paired corpus contract**: `protobuf/07-inventory-source.proto` and the descriptor
+    set / buf image compiled from it (`08`/`09-*.binpb`) must import to the same
+    canonical model and fingerprint; binary negatives assert the truncated/malformed
+    codes through the real pipeline. The corpus harness reads binary entries as bytes and
+    drives `parse_bytes`.
+  - gRPC server reflection discovery through the SSRF-guarded fetcher already shipped in
+    MFI-9.3 and is unchanged; `parse_bytes` completes the pairing by importing the same
+    descriptor bytes reflection returns.
+
 ## [1.246.0] - 2026-08-02
 
 ### Added
