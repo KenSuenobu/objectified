@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.107.0
+  version: 1.109.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -32700,6 +32700,808 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for listtheschemasarevisionoffersasvalidatioresponse422.
+  /v1/tenants/{tenant_slug}/schema-suites:
+    post:
+      tags:
+      - schema-test-suites
+      summary: Create a saved schema test suite
+      description: 'Persist a named set of payloads plus expected verdicts, attached
+        to a stable schema reference (IXH-5.7). The reference survives revisions:
+        either the stable form ``{kind}/{artifact}``, or a full IXH-5.1 reference
+        whose version segment is discarded (``{kind}/{artifact}/{version}[/{type}]``).
+        ``registry/…`` is rejected — registry types have no revisions to track a regression
+        across. Payload expectations use the IXH-1.1 corpus vocabulary: a ``valid``
+        payload must validate, every other class must not.'
+      operationId: create_schema_test_suite_v1_tenants__tenant_slug__schema_suites_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Createasavedschematestsuiteauthorization schema.
+          - type: 'null'
+            description: Createasavedschematestsuiteauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Createasavedschematestsuite Xapikey schema.
+          - type: 'null'
+            description: Createasavedschematestsuite Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaTestSuiteCreateRequest'
+              description: Request body for createasavedschematestsuiterequest.
+        description: Request body for create a saved schema test suite.
+      responses:
+        '201':
+          description: Successful response for create a saved schema test suite.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaTestSuiteModel'
+                description: Response payload for createasavedschematestsuiteresponse201.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for createasavedschematestsuiteresponse422.
+    get:
+      tags:
+      - schema-test-suites
+      summary: List saved schema test suites
+      description: Suites for the authenticated tenant, newest first, each carrying
+        its newest run summary — including the ``regression`` flag the version and
+        catalog detail surfaces badge on. ``ref`` narrows to the suites attached to
+        one artifact (``{kind}/{artifact}`` — a version or type segment is tolerated
+        and ignored).
+      operationId: list_schema_test_suites_v1_tenants__tenant_slug__schema_suites_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: ref
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listsavedschematestsuitesref schema.
+          - type: 'null'
+            description: Listsavedschematestsuitesref schema.
+          description: Narrow to one artifact's suites.
+          title: Ref
+        description: Narrow to one artifact's suites.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listsavedschematestsuitesauthorization schema.
+          - type: 'null'
+            description: Listsavedschematestsuitesauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Listsavedschematestsuites Xapikey schema.
+          - type: 'null'
+            description: Listsavedschematestsuites Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for list saved schema test suites.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SchemaTestSuiteModel'
+                title: Response List Schema Test Suites V1 Tenants  Tenant Slug  Schema
+                  Suites Get
+                description: Response List Schema Test Suites V1 Tenants  Tenant Slug  Schema
+                  Suites Get schema.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for listsavedschematestsuitesresponse422.
+  /v1/tenants/{tenant_slug}/schema-suites/import:
+    post:
+      tags:
+      - schema-test-suites
+      summary: Import a suite from an IXH-1.1 corpus manifest
+      description: 'Create a suite from a corpus manifest plus its payload files —
+        the inverse of the export endpoint, and the same reading the CLI''s ``--suite``
+        mode performs: entries carrying the ``instance-payload`` feature become payloads,
+        expected verdicts derive from ``validity_class``, and non-payload entries
+        are ignored.'
+      operationId: import_schema_test_suite_v1_tenants__tenant_slug__schema_suites_import_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Importasuitefroman Ixh11corpusmanifestauthorization schema.
+          - type: 'null'
+            description: Importasuitefroman Ixh11corpusmanifestauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Importasuitefroman Ixh11corpusmanifest Xapikey schema.
+          - type: 'null'
+            description: Importasuitefroman Ixh11corpusmanifest Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuiteImportRequest'
+              description: Request body for importasuitefroman ixh11corpusmanifestrequest.
+        description: Request body for import a suite from an ixh-1.1 corpus manifest.
+      responses:
+        '201':
+          description: Successful response for import a suite from an ixh-1.1 corpus
+            manifest.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaTestSuiteModel'
+                description: Response payload for importasuitefroman ixh11corpusmanifestresponse201.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for importasuitefroman ixh11corpusmanifestresponse422.
+  /v1/tenants/{tenant_slug}/schema-suites/{suite_id}:
+    get:
+      tags:
+      - schema-test-suites
+      summary: One suite with its payloads
+      description: "Read one suite in full.\n\nRaises:\n    HTTPException: 403 without\
+        \ ``types:view``, 404 when the suite is not visible."
+      operationId: get_schema_test_suite_v1_tenants__tenant_slug__schema_suites__suite_id__get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: suite_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Suite Id
+          description: Suite Id schema.
+        description: Path parameter identifying the suite id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Onesuitewithitspayloadsauthorization schema.
+          - type: 'null'
+            description: Onesuitewithitspayloadsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Onesuitewithitspayloads Xapikey schema.
+          - type: 'null'
+            description: Onesuitewithitspayloads Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for one suite with its payloads.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaTestSuiteModel'
+                description: Response payload for onesuitewithitspayloadsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for onesuitewithitspayloadsresponse422.
+    patch:
+      tags:
+      - schema-test-suites
+      summary: Rename or re-describe a suite
+      description: "Apply a metadata patch (payload edits use the payloads route).\n\
+        \nRaises:\n    HTTPException: 403 without ``types:edit``, 404 when not visible,\
+        \ 409 for a\n        duplicate name."
+      operationId: update_schema_test_suite_v1_tenants__tenant_slug__schema_suites__suite_id__patch
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: suite_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Suite Id
+          description: Suite Id schema.
+        description: Path parameter identifying the suite id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Renameorredescribeasuiteauthorization schema.
+          - type: 'null'
+            description: Renameorredescribeasuiteauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Renameorredescribeasuite Xapikey schema.
+          - type: 'null'
+            description: Renameorredescribeasuite Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaTestSuiteUpdateRequest'
+              description: Request body for renameorredescribeasuiterequest.
+        description: Request body for rename or re-describe a suite.
+      responses:
+        '200':
+          description: Successful response for rename or re-describe a suite.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaTestSuiteModel'
+                description: Response payload for renameorredescribeasuiteresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for renameorredescribeasuiteresponse422.
+    delete:
+      tags:
+      - schema-test-suites
+      summary: Delete a suite and its history
+      description: "Delete a suite; payloads, runs and results follow.\n\nRaises:\n\
+        \    HTTPException: 403 without ``types:delete``, 404 when the suite is not\
+        \ visible."
+      operationId: delete_schema_test_suite_v1_tenants__tenant_slug__schema_suites__suite_id__delete
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: suite_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Suite Id
+          description: Suite Id schema.
+        description: Path parameter identifying the suite id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Deleteasuiteanditshistoryauthorization schema.
+          - type: 'null'
+            description: Deleteasuiteanditshistoryauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Deleteasuiteanditshistory Xapikey schema.
+          - type: 'null'
+            description: Deleteasuiteanditshistory Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '204':
+          description: Successful response for delete a suite and its history.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for deleteasuiteanditshistoryresponse422.
+  /v1/tenants/{tenant_slug}/schema-suites/{suite_id}/payloads:
+    put:
+      tags:
+      - schema-test-suites
+      summary: Replace a suite's payload set
+      description: 'Replace-all semantics, bumping ``suite_version`` so every run
+        can state which content version it executed. Partial edits are a client-side
+        concern: read, modify, put back.'
+      operationId: replace_schema_test_suite_payloads_v1_tenants__tenant_slug__schema_suites__suite_id__payloads_put
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: suite_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Suite Id
+          description: Suite Id schema.
+        description: Path parameter identifying the suite id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Replaceasuitespayloadsetauthorization schema.
+          - type: 'null'
+            description: Replaceasuitespayloadsetauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Replaceasuitespayloadset Xapikey schema.
+          - type: 'null'
+            description: Replaceasuitespayloadset Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuitePayloadsReplaceRequest'
+              description: Request body for replaceasuitespayloadsetrequest.
+        description: Request body for replace a suite's payload set.
+      responses:
+        '200':
+          description: Successful response for replace a suite's payload set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaTestSuiteModel'
+                description: Response payload for replaceasuitespayloadsetresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for replaceasuitespayloadsetresponse422.
+  /v1/tenants/{tenant_slug}/schema-suites/{suite_id}/runs:
+    post:
+      tags:
+      - schema-test-suites
+      summary: Run a suite against a revision
+      description: 'Execute every payload against the schema the suite is attached
+        to, at the requested ``version`` (a label, a revision id, or ``latest``),
+        judge each verdict against its expectation, and record the run. The reference
+        is resolved once and pinned to the resolved revision, so a moving ``latest``
+        cannot split a run across revisions. Each verdict is diffed against the suite''s
+        previous completed run: a payload that passed there and failed here is flagged
+        as a **regression**, on the result and on the run. An unresolvable reference
+        records a run with ``status: error`` — that the suite could not run against
+        a revision is history, not an exception.
+
+
+        Gated on ``types:view``, like the 5.1 validate endpoint this run repeats payload
+        by payload: the run reads schemas and leaves bookkeeping about that read behind.'
+      operationId: run_schema_test_suite_v1_tenants__tenant_slug__schema_suites__suite_id__runs_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: suite_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Suite Id
+          description: Suite Id schema.
+        description: Path parameter identifying the suite id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Runasuiteagainstarevisionauthorization schema.
+          - type: 'null'
+            description: Runasuiteagainstarevisionauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Runasuiteagainstarevision Xapikey schema.
+          - type: 'null'
+            description: Runasuiteagainstarevision Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuiteRunRequest'
+              description: Request body for runasuiteagainstarevisionrequest.
+        description: Request body for run a suite against a revision.
+      responses:
+        '201':
+          description: Successful response for run a suite against a revision.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuiteRunDetailModel'
+                description: Response payload for runasuiteagainstarevisionresponse201.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for runasuiteagainstarevisionresponse422.
+    get:
+      tags:
+      - schema-test-suites
+      summary: A suite's run history
+      description: Newest first. ``limit`` is clamped to 1..100.
+      operationId: list_schema_test_suite_runs_v1_tenants__tenant_slug__schema_suites__suite_id__runs_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: suite_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Suite Id
+          description: Suite Id schema.
+        description: Path parameter identifying the suite id segment.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Limit
+          description: Limit schema.
+        description: Maximum number of rows to return.
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+          description: Offset schema.
+        description: Number of rows to skip before returning results.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Asuitesrunhistoryauthorization schema.
+          - type: 'null'
+            description: Asuitesrunhistoryauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Asuitesrunhistory Xapikey schema.
+          - type: 'null'
+            description: Asuitesrunhistory Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for a suite's run history.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SuiteRunSummaryModel'
+                title: Response List Schema Test Suite Runs V1 Tenants  Tenant Slug  Schema
+                  Suites  Suite Id  Runs Get
+                description: Response List Schema Test Suite Runs V1 Tenants  Tenant
+                  Slug  Schema Suites  Suite Id  Runs Get schema.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for asuitesrunhistoryresponse422.
+  /v1/tenants/{tenant_slug}/schema-suites/{suite_id}/runs/{run_id}:
+    get:
+      tags:
+      - schema-test-suites
+      summary: One run with its per-payload results
+      description: 'The full verdict record: per payload, the expectation, the tri-state
+        validation outcome, the judged status, the previous run''s status for the
+        same payload, the regression flag, and the capped findings.'
+      operationId: get_schema_test_suite_run_v1_tenants__tenant_slug__schema_suites__suite_id__runs__run_id__get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: suite_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Suite Id
+          description: Suite Id schema.
+        description: Path parameter identifying the suite id segment.
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Run Id
+          description: Run Id schema.
+        description: Path parameter identifying the run id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Onerunwithitsperpayloadresultsauthorization schema.
+          - type: 'null'
+            description: Onerunwithitsperpayloadresultsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Onerunwithitsperpayloadresults Xapikey schema.
+          - type: 'null'
+            description: Onerunwithitsperpayloadresults Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for one run with its per-payload results.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuiteRunDetailModel'
+                description: Response payload for onerunwithitsperpayloadresultsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for onerunwithitsperpayloadresultsresponse422.
+  /v1/tenants/{tenant_slug}/schema-suites/{suite_id}/export:
+    get:
+      tags:
+      - schema-test-suites
+      summary: Export a suite in the IXH-1.1 corpus manifest format
+      description: 'The suite as a corpus manifest plus payload files. Materialize
+        each ``files[*].content`` at its ``files[*].path`` next to a ``manifest.json``
+        holding ``manifest``, and the set runs in CI unchanged: ``apiome schema test
+        --schema <ref> --suite manifest.json``.'
+      operationId: export_schema_test_suite_v1_tenants__tenant_slug__schema_suites__suite_id__export_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: suite_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Suite Id
+          description: Suite Id schema.
+        description: Path parameter identifying the suite id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Exportasuiteinthe Ixh11corpusmanifestformauthorization schema.
+          - type: 'null'
+            description: Exportasuiteinthe Ixh11corpusmanifestformauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Exportasuiteinthe Ixh11corpusmanifestform Xapikey schema.
+          - type: 'null'
+            description: Exportasuiteinthe Ixh11corpusmanifestform Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for export a suite in the ixh-1.1 corpus
+            manifest format.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuiteExportEnvelope'
+                description: Response payload for exportasuiteinthe ixh11corpusmanifestformresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for exportasuiteinthe ixh11corpusmanifestformresponse422.
   /v1/import/sources:
     get:
       tags:
@@ -54954,7 +55756,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-02T18:45:41Z'
+          example: '2026-08-02T20:04:40Z'
         envelope:
           additionalProperties: true
           type: object
@@ -81467,7 +82269,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-02T18:45:41Z'
+          example: '2026-08-02T20:04:40Z'
       additionalProperties: false
       type: object
       required:
@@ -82266,6 +83068,189 @@ components:
       - source
       title: SchemaTargetsResponse
       description: Everything one revision offers the Test Bench to validate against.
+    SchemaTestSuiteCreateRequest:
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+          description: Suite name, unique per tenant.
+          example: Pet
+        description:
+          anyOf:
+          - type: string
+            description: Request body for schema test suite create.
+          - type: 'null'
+            description: Request body for schema test suite create.
+          title: Description
+          description: Optional description.
+        ref:
+          type: string
+          title: Ref
+          description: 'The schema reference the suite is attached to. Either the
+            stable form ``{kind}/{artifact}[/latest/{type}]`` or a full IXH-5.1 reference
+            ``{kind}/{artifact}/{version}[/{type}]`` — the version segment is discarded,
+            because a suite outlives any one revision. ``registry/…`` is rejected:
+            registry types have no revisions, so there is nothing to track a regression
+            across.'
+          example: example
+        payloads:
+          items:
+            $ref: '#/components/schemas/SuitePayloadModel'
+          type: array
+          title: Payloads
+          description: Payloads.
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - ref
+      title: SchemaTestSuiteCreateRequest
+      description: 'A new suite: a name, a stable schema reference, and optional initial
+        payloads.'
+    SchemaTestSuiteModel:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        name:
+          type: string
+          title: Name
+          description: Human-readable name.
+          example: Pet
+        description:
+          anyOf:
+          - type: string
+            description: Schema Test Suite Model schema.
+          - type: 'null'
+            description: Schema Test Suite Model schema.
+          title: Description
+          description: Free-text description.
+        ref:
+          type: string
+          title: Ref
+          description: 'The stable reference: ``{kind}/{artifact}[/{type}]``.'
+          example: example
+        ref_kind:
+          type: string
+          enum:
+          - project
+          - catalog
+          title: Ref Kind
+          description: Ref Kind.
+          example: project
+        ref_artifact:
+          type: string
+          title: Ref Artifact
+          description: Ref Artifact.
+          example: example
+        ref_artifact_id:
+          anyOf:
+          - type: string
+            description: Schema Test Suite Model schema.
+          - type: 'null'
+            description: Schema Test Suite Model schema.
+          title: Ref Artifact Id
+          description: Ref Artifact ID.
+        ref_type:
+          anyOf:
+          - type: string
+            description: Schema Test Suite Model schema.
+          - type: 'null'
+            description: Schema Test Suite Model schema.
+          title: Ref Type
+          description: Ref Type.
+        suite_version:
+          type: integer
+          title: Suite Version
+          description: Suite Version.
+          example: 1
+        payload_count:
+          type: integer
+          title: Payload Count
+          default: 0
+          description: Number of payload.
+          example: 1
+        payloads:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/SuitePayloadModel'
+            type: array
+            description: Schema Test Suite Model schema.
+          - type: 'null'
+            description: Schema Test Suite Model schema.
+          title: Payloads
+          description: Populated on detail reads; omitted from listings.
+        latest_run:
+          anyOf:
+          - $ref: '#/components/schemas/SuiteRunSummaryModel'
+          - type: 'null'
+            description: Schema Test Suite Model schema.
+          description: The newest run, so listings can feed the regression badge.
+        created_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Schema Test Suite Model schema.
+          - type: 'null'
+            description: Schema Test Suite Model schema.
+          title: Created At
+          description: Creation timestamp (ISO 8601).
+        updated_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Schema Test Suite Model schema.
+          - type: 'null'
+            description: Schema Test Suite Model schema.
+          title: Updated At
+          description: Last update timestamp (ISO 8601).
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - name
+      - ref
+      - ref_kind
+      - ref_artifact
+      - suite_version
+      title: SchemaTestSuiteModel
+      description: A suite as every read returns it.
+    SchemaTestSuiteUpdateRequest:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+            description: Request body for schema test suite update.
+          - type: 'null'
+            description: Request body for schema test suite update.
+          title: Name
+          description: Human-readable name.
+        description:
+          anyOf:
+          - type: string
+            description: Request body for schema test suite update.
+          - type: 'null'
+            description: Request body for schema test suite update.
+          title: Description
+          description: Free-text description.
+        clear_description:
+          type: boolean
+          title: Clear Description
+          description: Set the description to null (distinct from omitting it).
+          default: false
+          example: false
+      additionalProperties: false
+      type: object
+      title: SchemaTestSuiteUpdateRequest
+      description: 'A metadata patch: rename and/or re-describe. Payload edits use
+        the payloads route.'
     SchemasChangeSection:
       properties:
         added:
@@ -87290,6 +88275,61 @@ components:
       title: SuiteApiInfo
       description: Identity of the API the suite was compiled from, as the canonical
         model states it.
+    SuiteExportEnvelope:
+      properties:
+        suite:
+          $ref: '#/components/schemas/SchemaTestSuiteModel'
+          description: Suite.
+        manifest:
+          additionalProperties: true
+          type: object
+          title: Manifest
+          description: An IXH-1.1 corpus manifest document.
+        files:
+          items:
+            $ref: '#/components/schemas/SuiteFileModel'
+          type: array
+          title: Files
+          description: Files.
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - suite
+      - manifest
+      title: SuiteExportEnvelope
+      description: 'A suite in the IXH-1.1 corpus manifest format: the manifest plus
+        the payload files.
+
+
+        Materialize ``files[*].content`` at ``files[*].path`` next to a ``manifest.json``
+        holding
+
+        ``manifest`` and the set runs in CI unchanged: ``apiome schema test --schema
+        <ref> --suite
+
+        manifest.json``.'
+    SuiteFileModel:
+      properties:
+        path:
+          type: string
+          minLength: 1
+          title: Path
+          description: Path relative to the manifest, POSIX separators.
+          example: /resources/{id}
+        content:
+          type: string
+          title: Content
+          description: The payload text.
+          example: example
+      additionalProperties: false
+      type: object
+      required:
+      - path
+      - content
+      title: SuiteFileModel
+      description: 'One exported payload file: the manifest entry''s path plus its
+        content.'
     SuiteFinding:
       properties:
         code:
@@ -87332,6 +88372,48 @@ components:
       title: SuiteFinding
       description: Something the compiler could not express, or expressed more weakly
         than the contract.
+    SuiteImportRequest:
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+          description: Name for the created suite.
+          example: Pet
+        description:
+          anyOf:
+          - type: string
+            description: Request body for suite import.
+          - type: 'null'
+            description: Request body for suite import.
+          title: Description
+          description: Free-text description.
+        ref:
+          type: string
+          title: Ref
+          description: The schema reference to attach the suite to (create-form grammar).
+          example: example
+        manifest:
+          additionalProperties: true
+          type: object
+          title: Manifest
+          description: An IXH-1.1 corpus manifest document.
+        files:
+          items:
+            $ref: '#/components/schemas/SuiteFileModel'
+          type: array
+          title: Files
+          description: Files.
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - ref
+      - manifest
+      title: SuiteImportRequest
+      description: A suite to create from a corpus manifest plus its payload files.
     SuiteOperation:
       properties:
         key:
@@ -87398,6 +88480,439 @@ components:
       - case_count
       title: SuiteOperation
       description: One operation the suite covers, and how much of it was compiled.
+    SuitePayloadModel:
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+          description: Payload name, unique within the suite.
+          example: Pet
+        payload_text:
+          type: string
+          title: Payload Text
+          description: The instance document text (JSON or XML).
+          example: example
+        media_type:
+          type: string
+          enum:
+          - application/json
+          - application/xml
+          title: Media Type
+          description: How the payload text should be read.
+          default: application/json
+          example: application/json
+        validity_class:
+          type: string
+          enum:
+          - valid
+          - invalid
+          - adversarial
+          - scale
+          title: Validity Class
+          description: 'IXH-1.1 corpus class. The expected verdict derives from it:
+            ``valid`` payloads must validate; every other class must not.'
+          default: valid
+          example: valid
+        synthetic:
+          type: boolean
+          title: Synthetic
+          description: Whether the payload came from IXH-5.2 synthesis.
+          default: false
+          example: false
+        notes:
+          anyOf:
+          - type: string
+            description: Suite Payload Model schema.
+          - type: 'null'
+            description: Suite Payload Model schema.
+          title: Notes
+          description: Free-text notes, carried to export.
+        position:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Suite Payload Model schema.
+          - type: 'null'
+            description: Suite Payload Model schema.
+          title: Position
+          description: Execution order; defaults to list order.
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - payload_text
+      title: SuitePayloadModel
+      description: 'One payload of a suite: the instance text plus its expected verdict.'
+    SuitePayloadsReplaceRequest:
+      properties:
+        payloads:
+          items:
+            $ref: '#/components/schemas/SuitePayloadModel'
+          type: array
+          title: Payloads
+          description: Payloads.
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      title: SuitePayloadsReplaceRequest
+      description: The full replacement payload set; applying it bumps ``suite_version``.
+    SuiteRunDetailModel:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        suite_version:
+          type: integer
+          title: Suite Version
+          description: Suite content version the run executed.
+          example: 1
+        requested_ref:
+          type: string
+          title: Requested Ref
+          description: The concrete reference the run was asked to target.
+          example: example
+        resolved_revision_id:
+          anyOf:
+          - type: string
+            description: Suite Run Detail Model schema.
+          - type: 'null'
+            description: Suite Run Detail Model schema.
+          title: Resolved Revision Id
+          description: The pinned revision; null when resolution failed.
+        resolved_version_label:
+          anyOf:
+          - type: string
+            description: Suite Run Detail Model schema.
+          - type: 'null'
+            description: Suite Run Detail Model schema.
+          title: Resolved Version Label
+          description: Resolved Version Label.
+        trigger:
+          type: string
+          enum:
+          - manual
+          - revision
+          title: Trigger
+          description: Trigger.
+          example: manual
+        status:
+          type: string
+          enum:
+          - completed
+          - error
+          title: Status
+          description: completed = every payload judged; error = the run could not
+            execute.
+          example: completed
+        total:
+          type: integer
+          title: Total
+          description: Total.
+          example: 1
+        passed:
+          type: integer
+          title: Passed
+          description: Passed.
+          example: 1
+        failed:
+          type: integer
+          title: Failed
+          description: Failed.
+          example: 1
+        errored:
+          type: integer
+          title: Errored
+          description: Errored.
+          example: 1
+        regression:
+          type: boolean
+          title: Regression
+          description: True when any payload previously passed and now failed.
+          example: false
+        baseline_run_id:
+          anyOf:
+          - type: string
+            description: Suite Run Detail Model schema.
+          - type: 'null'
+            description: Suite Run Detail Model schema.
+          title: Baseline Run Id
+          description: The prior completed run the verdict diff was computed against.
+        message:
+          anyOf:
+          - type: string
+            description: Suite Run Detail Model schema.
+          - type: 'null'
+            description: Suite Run Detail Model schema.
+          title: Message
+          description: Message.
+        created_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Suite Run Detail Model schema.
+          - type: 'null'
+            description: Suite Run Detail Model schema.
+          title: Created At
+          description: Creation timestamp (ISO 8601).
+        results:
+          items:
+            $ref: '#/components/schemas/SuiteRunResultModel'
+          type: array
+          title: Results
+          description: Results.
+          maxItems: 100
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - suite_version
+      - requested_ref
+      - trigger
+      - status
+      - total
+      - passed
+      - failed
+      - errored
+      - regression
+      title: SuiteRunDetailModel
+      description: A run with its per-payload results.
+    SuiteRunRequest:
+      properties:
+        version:
+          type: string
+          minLength: 1
+          title: Version
+          description: A version label, a revision id, or ``latest``.
+          default: latest
+          example: 1.0.0
+        trigger:
+          type: string
+          enum:
+          - manual
+          - revision
+          title: Trigger
+          description: '``manual`` for a user-initiated run; ``revision`` when fired
+            for a new revision.'
+          default: manual
+          example: manual
+        max_findings:
+          type: integer
+          minimum: 0.0
+          title: Max Findings
+          description: Findings persisted per payload; 0 uses the server default (``APIOME_SCHEMA_SUITE_RESULT_FINDINGS_CAP``).
+          default: 0
+          example: 1
+      additionalProperties: false
+      type: object
+      title: SuiteRunRequest
+      description: What to run a suite against.
+    SuiteRunResultModel:
+      properties:
+        payload_id:
+          anyOf:
+          - type: string
+            description: Suite Run Result Model schema.
+          - type: 'null'
+            description: Suite Run Result Model schema.
+          title: Payload Id
+          description: Source payload id; null once deleted.
+        payload_name:
+          type: string
+          title: Payload Name
+          description: Payload name at run time (the regression join key).
+          example: Example
+        expected_valid:
+          type: boolean
+          title: Expected Valid
+          description: The expected verdict, derived from validity_class.
+          example: false
+        valid:
+          anyOf:
+          - type: boolean
+            description: Suite Run Result Model schema.
+          - type: 'null'
+            description: Suite Run Result Model schema.
+          title: Valid
+          description: IXH-5.1 tri-state outcome; null when no validator ran.
+        validated:
+          type: boolean
+          title: Validated
+          description: Whether a validator actually executed.
+          example: false
+        status:
+          type: string
+          enum:
+          - passed
+          - failed
+          - error
+          title: Status
+          description: The judged verdict.
+          example: passed
+        previous_status:
+          anyOf:
+          - type: string
+            enum:
+            - passed
+            - failed
+            - error
+            description: Suite Run Result Model schema.
+          - type: 'null'
+            description: Suite Run Result Model schema.
+          title: Previous Status
+          description: The same payload's verdict in the baseline run, when it had
+            one.
+        regression:
+          type: boolean
+          title: Regression
+          description: True iff the payload passed in the baseline run and failed
+            in this one.
+          example: false
+        findings:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Findings
+          description: Capped copy of the IXH-5.1 findings.
+          maxItems: 1000
+        message:
+          anyOf:
+          - type: string
+            description: Suite Run Result Model schema.
+          - type: 'null'
+            description: Suite Run Result Model schema.
+          title: Message
+          description: Human-readable judgement.
+      additionalProperties: false
+      type: object
+      required:
+      - payload_name
+      - expected_valid
+      - validated
+      - status
+      - regression
+      title: SuiteRunResultModel
+      description: One payload's verdict in one run, with its diff against the baseline
+        run.
+    SuiteRunSummaryModel:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Stable resource identifier.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        suite_version:
+          type: integer
+          title: Suite Version
+          description: Suite content version the run executed.
+          example: 1
+        requested_ref:
+          type: string
+          title: Requested Ref
+          description: The concrete reference the run was asked to target.
+          example: example
+        resolved_revision_id:
+          anyOf:
+          - type: string
+            description: Suite Run Summary Model schema.
+          - type: 'null'
+            description: Suite Run Summary Model schema.
+          title: Resolved Revision Id
+          description: The pinned revision; null when resolution failed.
+        resolved_version_label:
+          anyOf:
+          - type: string
+            description: Suite Run Summary Model schema.
+          - type: 'null'
+            description: Suite Run Summary Model schema.
+          title: Resolved Version Label
+          description: Resolved Version Label.
+        trigger:
+          type: string
+          enum:
+          - manual
+          - revision
+          title: Trigger
+          description: Trigger.
+          example: manual
+        status:
+          type: string
+          enum:
+          - completed
+          - error
+          title: Status
+          description: completed = every payload judged; error = the run could not
+            execute.
+          example: completed
+        total:
+          type: integer
+          title: Total
+          description: Total.
+          example: 1
+        passed:
+          type: integer
+          title: Passed
+          description: Passed.
+          example: 1
+        failed:
+          type: integer
+          title: Failed
+          description: Failed.
+          example: 1
+        errored:
+          type: integer
+          title: Errored
+          description: Errored.
+          example: 1
+        regression:
+          type: boolean
+          title: Regression
+          description: True when any payload previously passed and now failed.
+          example: false
+        baseline_run_id:
+          anyOf:
+          - type: string
+            description: Suite Run Summary Model schema.
+          - type: 'null'
+            description: Suite Run Summary Model schema.
+          title: Baseline Run Id
+          description: The prior completed run the verdict diff was computed against.
+        message:
+          anyOf:
+          - type: string
+            description: Suite Run Summary Model schema.
+          - type: 'null'
+            description: Suite Run Summary Model schema.
+          title: Message
+          description: Message.
+        created_at:
+          anyOf:
+          - type: string
+            format: date-time
+            description: Suite Run Summary Model schema.
+          - type: 'null'
+            description: Suite Run Summary Model schema.
+          title: Created At
+          description: Creation timestamp (ISO 8601).
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - suite_version
+      - requested_ref
+      - trigger
+      - status
+      - total
+      - passed
+      - failed
+      - errored
+      - regression
+      title: SuiteRunSummaryModel
+      description: One run of a suite, without its per-payload results.
     SuiteSourceInfo:
       properties:
         kind:
@@ -92022,13 +93537,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-02T18:45:41Z'
+          example: '2026-08-02T20:04:40Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-02T18:45:41Z'
+          example: '2026-08-02T20:04:40Z'
         outcome:
           anyOf:
           - type: string

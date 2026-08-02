@@ -61,6 +61,7 @@ import { BenchPayloadEditor, type BenchPayloadEditorHandle } from './BenchPayloa
 import { BenchFindingsList } from './BenchFindingsList';
 import { BenchGeneratedPanel } from './BenchGeneratedPanel';
 import { BenchSavedPayloads } from './BenchSavedPayloads';
+import { BenchSuitesPanel } from './BenchSuitesPanel';
 
 const REST_API_BASE_URL = process.env.NEXT_PUBLIC_REST_API_BASE_URL || 'http://localhost:8000/v1';
 
@@ -574,6 +575,17 @@ export function SchemaTestBench({
         onSave={handleSave}
         onLoad={handleLoadSaved}
         onDelete={handleDeleteSaved}
+      />
+
+      {/* Server-persisted suites (IXH-5.7): payloads + expected verdicts, run per revision,
+          with regression tracking. Additive next to the browser-local saved payloads. */}
+      <BenchSuitesPanel
+        surface={surface}
+        artifact={artifact}
+        version={version}
+        payloadText={payloadText}
+        syntheticContent={syntheticContent}
+        active={active}
       />
     </section>
   );

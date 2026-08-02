@@ -190,6 +190,9 @@ function mockFetch(overrides: { validate?: unknown; synthesize?: unknown; target
     const respond = (body: unknown) =>
       ({ ok: true, status: 200, json: async () => body }) as Response;
     if (url.startsWith('/api/schemas/targets')) return respond(overrides.targets ?? TARGETS_PAYLOAD);
+    // The suites panel (IXH-5.7) loads alongside the bench; its own behavior is covered in
+    // schema-suites-panel.test.tsx — here it just needs an empty list to render quietly.
+    if (url.startsWith('/api/schemas/suites')) return respond({ success: true, items: [] });
     if (url === '/api/primitives') return respond(PRIMITIVES_PAYLOAD);
     if (url === '/api/schemas/validate') return respond(overrides.validate ?? INVALID_VALIDATION);
     if (url === '/api/schemas/synthesize') return respond(overrides.synthesize ?? SYNTHESIS_PAYLOAD);
@@ -433,12 +436,10 @@ describe('SchemaTestBench', () => {
   });
 
   it('surfaces a targets addressing fault instead of an empty picker', async () => {
-    mockFetch();
-    (global.fetch as jest.Mock).mockImplementationOnce(async () => ({
-      ok: false,
-      status: 404,
-      json: async () => ({ success: false, detail: { message: 'No catalog named x is visible.' } }),
-    }));
+    // Routed by endpoint, not call order: the suites panel (IXH-5.7) also fetches on mount.
+    mockFetch({
+      targets: { success: false, detail: { message: 'No catalog named x is visible.' } },
+    });
     renderBench();
 
     await waitFor(() =>

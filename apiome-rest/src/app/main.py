@@ -90,6 +90,7 @@ from .slate_insights_routes import router as slate_insights_router
 from .slate_routes import router as slate_router
 from .slate_security_routes import router as slate_security_router
 from .source_review_routes import router as source_review_router
+from .schema_suite_routes import router as schema_suite_router
 from .schema_synthesis_routes import router as schema_synthesis_router
 from .schema_targets_routes import router as schema_targets_router
 from .schema_validation_routes import router as schema_validation_router
@@ -118,7 +119,7 @@ app = FastAPI(
         "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, "
         "catalog items, imports, exports, governance, and MCP catalog surfaces."
     ),
-    version="1.107.0",
+    version="1.109.0",
 )
 
 
@@ -340,6 +341,9 @@ app.include_router(bulk_import_router)
 app.include_router(schema_validation_router)
 app.include_router(schema_synthesis_router)
 app.include_router(schema_targets_router)
+# Saved schema test suites (IXH-5.7, #5119): /v1/tenants/{tenant}/schema-suites — persist the
+# payloads the 5.1/5.3 surfaces validate, re-run them per revision, and track regressions.
+app.include_router(schema_suite_router)
 app.include_router(import_sources_router)
 # Multi-format export (MFX-2.5, #3842): tenant-scoped fidelity report surfacing — per-target
 # fidelity badges (/export/{tenant}/targets) and the dry-run preview (/export/{tenant}/preview).

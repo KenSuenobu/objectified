@@ -5030,6 +5030,584 @@ class Database:
             (older_than,),
         )
 
+    # -----------------------------------------------------------------------
+    # Schema test suites (IXH-5.7, #5119)
+    # -----------------------------------------------------------------------
+
+    #: Column list every suite read returns, so rows are shaped identically everywhere.
+    _SCHEMA_SUITE_COLUMNS = (
+        "id, tenant_id, name, description, ref_kind, ref_artifact, ref_artifact_id, "
+        "ref_type, suite_version, created_at, updated_at"
+    )
+    #: Column list every payload read returns.
+    _SCHEMA_SUITE_PAYLOAD_COLUMNS = (
+        "id, suite_id, tenant_id, name, payload_text, media_type, validity_class, "
+        "synthetic, notes, position, created_at"
+    )
+    #: Column list every run read returns.
+    _SCHEMA_SUITE_RUN_COLUMNS = (
+        "id, suite_id, tenant_id, suite_version, requested_ref, resolved_revision_id, "
+        "resolved_version_label, trigger, status, total, passed, failed, errored, "
+        "regression, baseline_run_id, message, created_at"
+    )
+    #: Column list every run-result read returns.
+    _SCHEMA_SUITE_RESULT_COLUMNS = (
+        "id, run_id, payload_id, payload_name, expected_valid, valid, validated, "
+        "status, previous_status, regression, findings, message, position"
+    )
+
+    def create_schema_test_suite(
+        self,
+        *,
+        tenant_id: str,
+        name: str,
+        description: Optional[str],
+        ref_kind: str,
+        ref_artifact: str,
+        ref_artifact_id: Optional[str],
+        ref_type: Optional[str],
+        payloads: List[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
+        """Insert a suite and its payloads in one transaction (IXH-5.7, #5119).
+
+        Args:
+            tenant_id: Owning tenant (a non-UUID returns ``None``).
+            name: Suite name, unique per tenant — a duplicate raises the driver's
+                ``UniqueViolation``, which the store maps to a 409.
+            description: Optional free-text description.
+            ref_kind: ``project`` | ``catalog``.
+            ref_artifact: Artifact segment of the reference, exactly as given.
+            ref_artifact_id: Best-effort resolved artifact id, or ``None``.
+            ref_type: Optional type segment, or ``None`` for a whole-revision suite.
+            payloads: Payload dicts with ``name``, ``payload_text``, ``media_type``,
+                ``validity_class``, ``synthetic``, ``notes`` and ``position`` keys.
+
+        Returns:
+            The inserted suite row, or ``None`` when ``tenant_id`` is not a UUID.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        conn = self.connect()
+        prev_autocommit = self._begin_tx(conn)
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    f"""
+                    INSERT INTO apiome.schema_test_suites (
+                        tenant_id, name, description, ref_kind, ref_artifact,
+                        ref_artifact_id, ref_type
+                    ) VALUES (%s::uuid, %s, %s, %s, %s, %s::uuid, %s)
+                    RETURNING {self._SCHEMA_SUITE_COLUMNS}
+                    """,
+                    (
+                        tenant_id,
+                        name,
+                        description,
+                        ref_kind,
+                        ref_artifact,
+                        ref_artifact_id if ref_artifact_id and is_uuid_string(str(ref_artifact_id)) else None,
+                        ref_type,
+                    ),
+                )
+                suite = dict(cursor.fetchone())
+                self._insert_suite_payload_rows(cursor, str(suite["id"]), tenant_id, payloads)
+            conn.commit()
+            return suite
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.autocommit = prev_autocommit
+
+    @staticmethod
+    def _insert_suite_payload_rows(
+        cursor, suite_id: str, tenant_id: str, payloads: List[Dict[str, Any]]
+    ) -> None:
+        """Insert payload rows for a suite inside the caller's open transaction."""
+        for index, payload in enumerate(payloads):
+            cursor.execute(
+                """
+                INSERT INTO apiome.schema_test_suite_payloads (
+                    suite_id, tenant_id, name, payload_text, media_type,
+                    validity_class, synthetic, notes, position
+                ) VALUES (%s::uuid, %s::uuid, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    suite_id,
+                    tenant_id,
+                    payload["name"],
+                    payload["payload_text"],
+                    payload.get("media_type") or "application/json",
+                    payload.get("validity_class") or "valid",
+                    bool(payload.get("synthetic")),
+                    payload.get("notes"),
+                    int(payload.get("position", index)),
+                ),
+            )
+
+    def list_schema_test_suites(
+        self,
+        tenant_id: str,
+        *,
+        ref_kind: Optional[str] = None,
+        ref_artifact: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Suites for a tenant, each joined with its newest run (IXH-5.7, #5119).
+
+        One query feeds both the suite list and the regression badge: every row carries the
+        suite columns plus the newest run's summary columns prefixed ``latest_run_``.
+
+        Args:
+            tenant_id: Tenant scope (a non-UUID returns ``[]``).
+            ref_kind: Restrict to one reference kind; ``None`` spans both.
+            ref_artifact: Restrict to one artifact segment; ``None`` spans the tenant.
+
+        Returns:
+            The matching rows, newest suite first.
+        """
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        clauses = ["s.tenant_id = %s::uuid"]
+        params: List[Any] = [tenant_id]
+        if ref_kind:
+            clauses.append("s.ref_kind = %s")
+            params.append(ref_kind)
+        if ref_artifact:
+            clauses.append("s.ref_artifact = %s")
+            params.append(ref_artifact)
+        suite_cols = ", ".join(f"s.{col.strip()}" for col in self._SCHEMA_SUITE_COLUMNS.split(","))
+        return self.execute_query(
+            f"""
+            SELECT {suite_cols},
+                   (SELECT COUNT(*) FROM apiome.schema_test_suite_payloads p
+                     WHERE p.suite_id = s.id) AS payload_count,
+                   lr.id AS latest_run_id,
+                   lr.suite_version AS latest_run_suite_version,
+                   lr.requested_ref AS latest_run_requested_ref,
+                   lr.resolved_revision_id AS latest_run_resolved_revision_id,
+                   lr.resolved_version_label AS latest_run_resolved_version_label,
+                   lr.trigger AS latest_run_trigger,
+                   lr.status AS latest_run_status,
+                   lr.total AS latest_run_total,
+                   lr.passed AS latest_run_passed,
+                   lr.failed AS latest_run_failed,
+                   lr.errored AS latest_run_errored,
+                   lr.regression AS latest_run_regression,
+                   lr.baseline_run_id AS latest_run_baseline_run_id,
+                   lr.message AS latest_run_message,
+                   lr.created_at AS latest_run_created_at
+            FROM apiome.schema_test_suites s
+            LEFT JOIN LATERAL (
+                SELECT * FROM apiome.schema_test_suite_runs r
+                WHERE r.suite_id = s.id
+                ORDER BY r.created_at DESC, r.id DESC
+                LIMIT 1
+            ) lr ON TRUE
+            WHERE {' AND '.join(clauses)}
+            ORDER BY s.created_at DESC, s.id DESC
+            """,
+            tuple(params),
+        )
+
+    def get_schema_test_suite(self, tenant_id: str, suite_id: str) -> Optional[Dict[str, Any]]:
+        """One suite by id, tenant-scoped (IXH-5.7, #5119). Non-UUID ids return ``None``."""
+        if not (tenant_id and is_uuid_string(str(tenant_id))):
+            return None
+        if not (suite_id and is_uuid_string(str(suite_id))):
+            return None
+        rows = self.execute_query(
+            f"""
+            SELECT {self._SCHEMA_SUITE_COLUMNS}
+            FROM apiome.schema_test_suites
+            WHERE tenant_id = %s::uuid AND id = %s::uuid
+            """,
+            (tenant_id, suite_id),
+        )
+        return rows[0] if rows else None
+
+    def list_schema_test_suite_payloads(
+        self, tenant_id: str, suite_id: str
+    ) -> List[Dict[str, Any]]:
+        """Payloads of one suite in execution order (IXH-5.7, #5119)."""
+        if not (tenant_id and is_uuid_string(str(tenant_id))):
+            return []
+        if not (suite_id and is_uuid_string(str(suite_id))):
+            return []
+        return self.execute_query(
+            f"""
+            SELECT {self._SCHEMA_SUITE_PAYLOAD_COLUMNS}
+            FROM apiome.schema_test_suite_payloads
+            WHERE tenant_id = %s::uuid AND suite_id = %s::uuid
+            ORDER BY position ASC, created_at ASC, id ASC
+            """,
+            (tenant_id, suite_id),
+        )
+
+    def update_schema_test_suite_meta(
+        self,
+        tenant_id: str,
+        suite_id: str,
+        *,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        clear_description: bool = False,
+    ) -> Optional[Dict[str, Any]]:
+        """Rename or re-describe a suite (IXH-5.7, #5119).
+
+        Args:
+            tenant_id: Tenant scope.
+            suite_id: The suite to update.
+            name: New name, or ``None`` to keep the current one.
+            description: New description, or ``None`` to keep the current one.
+            clear_description: Set the description to NULL (an explicit ``null`` in the
+                PATCH body, distinct from the field being absent).
+
+        Returns:
+            The updated row, or ``None`` when nothing matched.
+        """
+        if not (tenant_id and is_uuid_string(str(tenant_id))):
+            return None
+        if not (suite_id and is_uuid_string(str(suite_id))):
+            return None
+        rows = self.execute_query(
+            f"""
+            UPDATE apiome.schema_test_suites
+            SET name = COALESCE(%s, name),
+                description = CASE WHEN %s THEN NULL ELSE COALESCE(%s, description) END,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE tenant_id = %s::uuid AND id = %s::uuid
+            RETURNING {self._SCHEMA_SUITE_COLUMNS}
+            """,
+            (name, bool(clear_description), description, tenant_id, suite_id),
+        )
+        return rows[0] if rows else None
+
+    def delete_schema_test_suite(self, tenant_id: str, suite_id: str) -> int:
+        """Delete a suite; payloads, runs and results follow via CASCADE (IXH-5.7, #5119)."""
+        if not (tenant_id and is_uuid_string(str(tenant_id))):
+            return 0
+        if not (suite_id and is_uuid_string(str(suite_id))):
+            return 0
+        return self._execute_write(
+            "DELETE FROM apiome.schema_test_suites WHERE tenant_id = %s::uuid AND id = %s::uuid",
+            (tenant_id, suite_id),
+        )
+
+    def replace_schema_test_suite_payloads(
+        self, tenant_id: str, suite_id: str, payloads: List[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
+        """Replace a suite's payload set and bump its content version (IXH-5.7, #5119).
+
+        Delete + reinsert + ``suite_version + 1`` in one transaction, so a reader never sees
+        half a payload set and every run can state exactly which content version it executed.
+
+        Returns:
+            The updated suite row, or ``None`` when the suite was not found.
+        """
+        if not (tenant_id and is_uuid_string(str(tenant_id))):
+            return None
+        if not (suite_id and is_uuid_string(str(suite_id))):
+            return None
+        conn = self.connect()
+        prev_autocommit = self._begin_tx(conn)
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    f"""
+                    UPDATE apiome.schema_test_suites
+                    SET suite_version = suite_version + 1, updated_at = CURRENT_TIMESTAMP
+                    WHERE tenant_id = %s::uuid AND id = %s::uuid
+                    RETURNING {self._SCHEMA_SUITE_COLUMNS}
+                    """,
+                    (tenant_id, suite_id),
+                )
+                row = cursor.fetchone()
+                if row is None:
+                    conn.rollback()
+                    return None
+                suite = dict(row)
+                cursor.execute(
+                    "DELETE FROM apiome.schema_test_suite_payloads WHERE suite_id = %s::uuid",
+                    (suite_id,),
+                )
+                self._insert_suite_payload_rows(cursor, suite_id, tenant_id, payloads)
+            conn.commit()
+            return suite
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.autocommit = prev_autocommit
+
+    def get_latest_completed_schema_suite_run(
+        self, tenant_id: str, suite_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """The newest ``completed`` run of a suite — the regression baseline (IXH-5.7, #5119)."""
+        if not (tenant_id and is_uuid_string(str(tenant_id))):
+            return None
+        if not (suite_id and is_uuid_string(str(suite_id))):
+            return None
+        rows = self.execute_query(
+            f"""
+            SELECT {self._SCHEMA_SUITE_RUN_COLUMNS}
+            FROM apiome.schema_test_suite_runs
+            WHERE tenant_id = %s::uuid AND suite_id = %s::uuid AND status = 'completed'
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+            """,
+            (tenant_id, suite_id),
+        )
+        return rows[0] if rows else None
+
+    def insert_schema_test_suite_run(
+        self,
+        *,
+        suite_id: str,
+        tenant_id: str,
+        suite_version: int,
+        requested_ref: str,
+        resolved_revision_id: Optional[str],
+        resolved_version_label: Optional[str],
+        trigger: str,
+        status: str,
+        total: int,
+        passed: int,
+        failed: int,
+        errored: int,
+        regression: bool,
+        baseline_run_id: Optional[str],
+        message: Optional[str],
+        results: List[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
+        """Insert a run and its per-payload results in one transaction (IXH-5.7, #5119).
+
+        Args:
+            suite_id: The executed suite.
+            tenant_id: Owning tenant.
+            suite_version: Suite content version that executed.
+            requested_ref: The concrete reference the caller asked for.
+            resolved_revision_id: The pinned revision, or ``None`` when resolution failed.
+            resolved_version_label: Its human version label, when known.
+            trigger: ``manual`` | ``revision``.
+            status: ``completed`` | ``error``.
+            total: Payloads in the run.
+            passed: Verdicts matching the expectation.
+            failed: Verdicts contradicting the expectation.
+            errored: Payloads that produced no verdict.
+            regression: Whether any result is a regression.
+            baseline_run_id: The run the verdict diff was computed against, or ``None``.
+            message: Run-level error message, when ``status`` is ``error``.
+            results: Result dicts with ``payload_id``, ``payload_name``, ``expected_valid``,
+                ``valid``, ``validated``, ``status``, ``previous_status``, ``regression``,
+                ``findings`` (JSON-able list) and ``message`` keys.
+
+        Returns:
+            The inserted run row, or ``None`` when an id is not a UUID.
+        """
+        if not (tenant_id and is_uuid_string(str(tenant_id))):
+            return None
+        if not (suite_id and is_uuid_string(str(suite_id))):
+            return None
+        conn = self.connect()
+        prev_autocommit = self._begin_tx(conn)
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    f"""
+                    INSERT INTO apiome.schema_test_suite_runs (
+                        suite_id, tenant_id, suite_version, requested_ref,
+                        resolved_revision_id, resolved_version_label, trigger, status,
+                        total, passed, failed, errored, regression, baseline_run_id, message
+                    ) VALUES (
+                        %s::uuid, %s::uuid, %s, %s, %s::uuid, %s, %s, %s,
+                        %s, %s, %s, %s, %s, %s::uuid, %s
+                    )
+                    RETURNING {self._SCHEMA_SUITE_RUN_COLUMNS}
+                    """,
+                    (
+                        suite_id,
+                        tenant_id,
+                        int(suite_version),
+                        requested_ref,
+                        resolved_revision_id
+                        if resolved_revision_id and is_uuid_string(str(resolved_revision_id))
+                        else None,
+                        resolved_version_label,
+                        trigger,
+                        status,
+                        int(total),
+                        int(passed),
+                        int(failed),
+                        int(errored),
+                        bool(regression),
+                        baseline_run_id
+                        if baseline_run_id and is_uuid_string(str(baseline_run_id))
+                        else None,
+                        message,
+                    ),
+                )
+                run = dict(cursor.fetchone())
+                for index, result in enumerate(results):
+                    payload_id = result.get("payload_id")
+                    cursor.execute(
+                        """
+                        INSERT INTO apiome.schema_test_suite_run_results (
+                            run_id, payload_id, payload_name, expected_valid, valid,
+                            validated, status, previous_status, regression, findings,
+                            message, position
+                        ) VALUES (
+                            %s::uuid, %s::uuid, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                        )
+                        """,
+                        (
+                            str(run["id"]),
+                            payload_id if payload_id and is_uuid_string(str(payload_id)) else None,
+                            result["payload_name"],
+                            bool(result["expected_valid"]),
+                            result.get("valid"),
+                            bool(result.get("validated")),
+                            result["status"],
+                            result.get("previous_status"),
+                            bool(result.get("regression")),
+                            Json(result.get("findings") or []),
+                            result.get("message"),
+                            int(result.get("position", index)),
+                        ),
+                    )
+            conn.commit()
+            return run
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.autocommit = prev_autocommit
+
+    def list_schema_test_suite_runs(
+        self,
+        tenant_id: str,
+        suite_id: str,
+        *,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> List[Dict[str, Any]]:
+        """Run history of one suite, newest first (IXH-5.7, #5119).
+
+        Args:
+            tenant_id: Tenant scope.
+            suite_id: The suite whose history is read.
+            limit: Page size, clamped to 1..100.
+            offset: Page start, clamped to >= 0.
+
+        Returns:
+            The matching run rows.
+        """
+        if not (tenant_id and is_uuid_string(str(tenant_id))):
+            return []
+        if not (suite_id and is_uuid_string(str(suite_id))):
+            return []
+        return self.execute_query(
+            f"""
+            SELECT {self._SCHEMA_SUITE_RUN_COLUMNS}
+            FROM apiome.schema_test_suite_runs
+            WHERE tenant_id = %s::uuid AND suite_id = %s::uuid
+            ORDER BY created_at DESC, id DESC
+            LIMIT %s OFFSET %s
+            """,
+            (tenant_id, suite_id, max(1, min(int(limit), 100)), max(0, int(offset))),
+        )
+
+    def get_schema_test_suite_run(
+        self, tenant_id: str, suite_id: str, run_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """One run by id, scoped to its suite and tenant (IXH-5.7, #5119)."""
+        if not (tenant_id and is_uuid_string(str(tenant_id))):
+            return None
+        if not (suite_id and is_uuid_string(str(suite_id))):
+            return None
+        if not (run_id and is_uuid_string(str(run_id))):
+            return None
+        rows = self.execute_query(
+            f"""
+            SELECT {self._SCHEMA_SUITE_RUN_COLUMNS}
+            FROM apiome.schema_test_suite_runs
+            WHERE tenant_id = %s::uuid AND suite_id = %s::uuid AND id = %s::uuid
+            """,
+            (tenant_id, suite_id, run_id),
+        )
+        return rows[0] if rows else None
+
+    def list_schema_suite_run_results(self, run_id: str) -> List[Dict[str, Any]]:
+        """Per-payload results of one run, in payload order (IXH-5.7, #5119)."""
+        if not (run_id and is_uuid_string(str(run_id))):
+            return []
+        return self.execute_query(
+            f"""
+            SELECT {self._SCHEMA_SUITE_RESULT_COLUMNS}
+            FROM apiome.schema_test_suite_run_results
+            WHERE run_id = %s::uuid
+            ORDER BY position ASC, id ASC
+            """,
+            (run_id,),
+        )
+
+    def prune_schema_suite_runs_over_cap(self, suite_id: str, max_per_suite: int) -> int:
+        """Delete a suite's oldest runs beyond ``max_per_suite`` (IXH-5.7, #5119).
+
+        The prune-on-write half of the retention story: called after every run insert, so
+        one suite's history can never outgrow the cap. Result rows follow via CASCADE.
+
+        Returns:
+            The number of runs deleted.
+        """
+        if not (suite_id and is_uuid_string(str(suite_id))):
+            return 0
+        if max_per_suite <= 0:
+            return 0
+        return self._execute_write(
+            """
+            DELETE FROM apiome.schema_test_suite_runs
+            WHERE suite_id = %s::uuid AND id IN (
+                SELECT id FROM apiome.schema_test_suite_runs
+                WHERE suite_id = %s::uuid
+                ORDER BY created_at DESC, id DESC
+                OFFSET %s
+            )
+            """,
+            (suite_id, suite_id, int(max_per_suite)),
+        )
+
+    def prune_schema_suite_runs_by_age(self, older_than: datetime, keep_min: int) -> int:
+        """Delete runs older than ``older_than``, keeping each suite's newest (IXH-5.7, #5119).
+
+        The age half of the retention story, driven by the IXH-6.3 sweep tick. The newest
+        ``keep_min`` runs of every suite are immune regardless of age, so the regression
+        baseline of a rarely-run suite is never pruned away.
+
+        Args:
+            older_than: Exclusive cutoff — older runs beyond the immune set are removed.
+            keep_min: Newest runs per suite kept regardless of age (clamped to >= 0).
+
+        Returns:
+            The number of runs deleted.
+        """
+        return self._execute_write(
+            """
+            DELETE FROM apiome.schema_test_suite_runs
+            WHERE id IN (
+                SELECT id FROM (
+                    SELECT id, created_at,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY suite_id
+                               ORDER BY created_at DESC, id DESC
+                           ) AS newest_rank
+                    FROM apiome.schema_test_suite_runs
+                ) ranked
+                WHERE ranked.newest_rank > %s AND ranked.created_at < %s
+            )
+            """,
+            (max(0, int(keep_min)), older_than),
+        )
+
     def get_effective_role_slug(self, tenant_id: str, user_id: str) -> Optional[str]:
         """The user's effective RBAC role slug in a tenant (IXH-2.3, #5098).
 

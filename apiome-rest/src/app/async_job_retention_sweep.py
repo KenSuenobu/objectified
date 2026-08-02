@@ -16,6 +16,9 @@ unbounded table. This sweep:
 5. Prunes ``quality_rank_observations`` rows older than ``quality_rank_retention_days``
    (IXH-2.7, #5102) — the same reasoning as step 4: grade observations accrue with import and
    export traffic, and this tick is the one retention worker they belong on.
+6. Prunes ``schema_test_suite_runs`` rows older than ``schema_suite_run_retention_days``
+   (IXH-5.7, #5119), always keeping each suite's newest ``schema_suite_run_keep_min`` so a
+   rarely-run suite never loses its regression baseline. Result rows CASCADE with their run.
 
 Exactly-once / multi-instance safety comes from the claim (SKIP LOCKED), not the scheduler —
 every instance runs the tick; only one wins each row. Failures log and retry next interval.
@@ -30,6 +33,7 @@ from typing import Dict, Optional, Tuple
 from .config import settings
 from .database import Database
 from .quality_rank_telemetry import prune_quality_rank_observations
+from .schema_suite_store import prune_schema_suite_runs
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +88,8 @@ def process_async_job_retention_sweep(
     history_retention_days: Optional[int] = None,
     quota_window_retention_days: Optional[int] = None,
     quality_rank_retention_days: Optional[int] = None,
+    schema_suite_run_retention_days: Optional[int] = None,
+    schema_suite_run_keep_min: Optional[int] = None,
 ) -> Dict[str, int]:
     """Run one retention tick: reap artifacts, delete expired jobs, prune history.
 
@@ -99,10 +105,14 @@ def process_async_job_retention_sweep(
             forever, which is the documented way to disable this prune.
         quality_rank_retention_days: IXH-2.7 grade-observation prune window; defaults to
             ``settings.quality_rank_retention_days``. ``<= 0`` keeps observations forever.
+        schema_suite_run_retention_days: IXH-5.7 suite-run prune window; defaults to
+            ``settings.schema_suite_run_retention_days``. ``<= 0`` keeps runs forever.
+        schema_suite_run_keep_min: Newest runs per suite immune to the age prune; defaults
+            to ``settings.schema_suite_run_keep_min``.
 
     Returns:
         Counts: ``artifacts_reaped``, ``jobs_deleted``, ``history_pruned``,
-        ``quota_windows_pruned``, ``quality_ranks_pruned``.
+        ``quota_windows_pruned``, ``quality_ranks_pruned``, ``suite_runs_pruned``.
     """
     limit = (
         batch_size
@@ -180,21 +190,33 @@ def process_async_job_retention_sweep(
         database, now=clock, retention_days=quality_rank_days
     )
 
+    # Schema test suite runs (IXH-5.7) prune themselves the same way, through the suite
+    # store's helper so the keep-newest-N baseline protection lives with the tables it guards.
+    suite_runs_pruned = prune_schema_suite_runs(
+        database,
+        now=clock,
+        retention_days=schema_suite_run_retention_days,
+        keep_min=schema_suite_run_keep_min,
+    )
+
     if (
         artifacts_reaped
         or jobs_deleted
         or history_pruned
         or quota_windows_pruned
         or quality_ranks_pruned
+        or suite_runs_pruned
     ):
         logger.info(
             "async job retention sweep: artifacts_reaped=%d jobs_deleted=%d "
-            "history_pruned=%d quota_windows_pruned=%d quality_ranks_pruned=%d",
+            "history_pruned=%d quota_windows_pruned=%d quality_ranks_pruned=%d "
+            "suite_runs_pruned=%d",
             artifacts_reaped,
             jobs_deleted,
             history_pruned,
             quota_windows_pruned,
             quality_ranks_pruned,
+            suite_runs_pruned,
         )
     return {
         "artifacts_reaped": artifacts_reaped,
@@ -202,4 +224,5 @@ def process_async_job_retention_sweep(
         "history_pruned": history_pruned,
         "quota_windows_pruned": quota_windows_pruned,
         "quality_ranks_pruned": quality_ranks_pruned,
+        "suite_runs_pruned": suite_runs_pruned,
     }
