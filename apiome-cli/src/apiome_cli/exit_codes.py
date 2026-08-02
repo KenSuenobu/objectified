@@ -36,3 +36,10 @@ EXIT_QUALITY_GATE = 4
 #: be parsed at all (``ok: false``), or an export whose every ranked target is blocked or
 #: unavailable. Nothing the caller can grade — there is no artifact to gate.
 EXIT_PREFLIGHT_UNUSABLE = 5
+
+#: ``apiome schema test`` (IXH-5.5) ran its cases and at least one **failed**: a payload
+#: expected to satisfy the schema did not (or vice versa), or a generated mutant did not
+#: violate the constraint it was built to violate. Distinct from :data:`EXIT_ERROR`
+#: (transport/5xx) and :data:`EXIT_USAGE` (auth or an unresolvable schema reference — any
+#: 4xx) so CI can tell "the tests failed" apart from "the tests could not run".
+EXIT_SCHEMA_TEST_FAILED = 6
