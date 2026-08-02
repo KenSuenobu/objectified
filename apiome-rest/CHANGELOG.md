@@ -5,6 +5,47 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.238.0] - 2026-08-02
+
+### Added
+- **Scale corpus and import/export performance budgets (IXH-1.5, #5091)** —
+  nothing in the corpus approached the size of the specs teams actually hold, so import and
+  export timings were unmeasured and a regression in normalization or fidelity analysis would
+  have shipped unnoticed. There is now a measured, gated scale tier.
+  - **The corpus.** `scripts/generate_scale_corpus.py` is a committed spec of six large,
+    deterministic, *valid* documents — one per paradigm and one for the mainframe half: a
+    550-path OpenAPI 3.1 spec, a 1500-method OpenRPC service, a CloudEvents envelope with a
+    15000-attribute payload, a 900-type Avro snapshot, a 1500-transaction-set X12 interchange,
+    and a 7500-item COBOL copybook. The bytes are built at test time, so repository size stays
+    flat (the IXH-1.4 rule). Every fixture stays under the 10 MiB intake ceiling and uses an
+    adapter with no external toolchain, so none of them can silently skip.
+  - **Ten measured stages.** `tests/scale_benchmark.py` drives each fixture through
+    `parse → normalize → fingerprint → lint → persist` and
+    `load-source → analyze-fidelity → emit → validate → package`, calling the same functions
+    the running pipelines call, and records per-stage wall-clock plus peak allocation
+    (`tracemalloc`, which is attributable per stage) alongside the process peak RSS. The two
+    database-straddling stages are measured up to the row write — `persist` is the source
+    capture and secret scrub, `load-source` the full re-parse/re-normalize — because a
+    Postgres round-trip's cost cannot be attributed to a code change.
+  - **Budgets with a margin, not a threshold.** `tests/scale/scale_budgets.json` is the one
+    committed baseline, carrying the margins, the noise floors, and the machine it was measured
+    on. A stage fails only when it is both over `baseline × margin` *and* over an absolute
+    floor, so a 2 ms stage tripling is ignored while a 30 % slowdown of a two-second stage
+    fails. `SCALE_REGRESSION_MARGIN` / `SCALE_MEMORY_MARGIN` override per run, and absolute
+    ceilings (180 s, 1 GiB per stage) fail regardless of any baseline. Refresh with
+    `pytest tests/test_scale_corpus.py --update-scale-budgets`.
+  - **Opt-in locally, scheduled in CI.** `tests/test_scale_corpus.py` runs only under
+    `--scale` / `RUN_SCALE_SUITE=1`; `.github/workflows/apiome-rest-scale.yml` runs it weekly
+    and on dispatch, uploading `reports/scale-benchmark.json` — a machine-readable per-stage
+    report with each budget, ratio, and the environment measured in. `tests/test_scale_harness.py`
+    runs on every PR and keeps the spec, the baseline, and the comparison rules honest between
+    scheduled runs.
+  - **First findings, for IXH-6.5.** Fidelity analysis is the memory hot spot at roughly
+    300 KiB per canonical type (~265 MiB for the 900-type Avro snapshot); OpenAPI export
+    validation dominates wall-clock at ~15 s for a 1.5 MiB spec; exporting a revision costs
+    about what importing it did, because the canonical model is rebuilt from the captured
+    source. See `docs/scale_benchmarks.md`.
+
 ## [1.237.0] - 2026-08-01
 
 ### Added

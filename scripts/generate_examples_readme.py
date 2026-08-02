@@ -147,6 +147,16 @@ def build_readme(manifest: Dict[str, Any]) -> str:
     )
     out("")
     out(
+        "The `scale` tier is **not committed here**: documents that size would bloat the "
+        "repository permanently, so `scripts/generate_scale_corpus.py` builds one large "
+        "document per paradigm at test time and "
+        "`apiome-rest/tests/test_scale_corpus.py` (IXH-1.5) holds each import and export "
+        "stage to the budgets in `apiome-rest/tests/scale/scale_budgets.json`. The large "
+        "`adversarial` fixtures are generated the same way, by "
+        "`scripts/generate_adversarial_corpus.py`."
+    )
+    out("")
+    out(
         "Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic "
         "service · `composition` inheritance/refs/imports · `stress` less common grammar · "
         "`real-world` public spec or faithful reconstruction · `multi-file` a set imported "
