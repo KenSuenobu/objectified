@@ -303,6 +303,17 @@ describe('ExportMappingGraphPanel — selection and evidence', () => {
     );
   });
 
+  it('yields the evidence drawer when another surface owns it (IXH-4.3)', async () => {
+    // The Review step renders the loss heatmap over the same manifest and the same
+    // selection; only the surface the user selected from draws the evidence.
+    await renderPanel({ selectedEntityKey: 'GET /users/{id}', showEvidence: false });
+    expect(screen.queryByTestId('projection-detail')).not.toBeInTheDocument();
+    // The node still reads as the selected one.
+    expect(
+      screen.getByTestId(`export-mapping-node-${mappingRowId('GET /users/{id}')}`),
+    ).toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('prints the emitter/registry provenance from the manifest’s target block', async () => {
     await renderPanel({ selectedEntityKey: 'user/signedup' });
     expect(screen.getByTestId('projection-detail-provenance')).toHaveTextContent(

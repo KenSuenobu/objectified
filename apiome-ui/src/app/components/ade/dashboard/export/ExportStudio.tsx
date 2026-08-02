@@ -45,6 +45,7 @@ import { ArtifactPreviewCard } from './ArtifactPreviewCard';
 import { BundleExplorer } from './BundleExplorer';
 import { ExportManifestPanel } from './ExportManifestPanel';
 import { ExportMappingGraphPanel } from './ExportMappingGraphPanel';
+import { FidelityLossHeatmapPanel } from './FidelityLossHeatmapPanel';
 import { useExportPreviewManifest } from './useExportPreviewManifest';
 import type { EntityRevealRequest, ExportManifestEntity } from './exportPreviewManifest';
 import { OriginalSourceOption } from './OriginalSourceOption';
@@ -219,6 +220,14 @@ export function ExportStudio({
   const [selectedEntityKey, setSelectedEntityKey] = useState<string | null>(null);
   /** A pending "reveal this entity in the code" request (a manifest tree click). */
   const [entityReveal, setEntityReveal] = useState<EntityRevealRequest | null>(null);
+  /**
+   * Which Review-step surface owns the evidence drawer for the shared entity selection
+   * (IXH-4.3). The mapping graph and the loss heatmap render over the same manifest and the
+   * same selection, so the evidence has to appear beside the one the user selected from —
+   * otherwise one selection opens two identical drawers. The mapping graph owns it by
+   * default; every other selection path (the explorer tree, a code-line click) hands it back.
+   */
+  const [evidenceSurface, setEvidenceSurface] = useState<'mapping' | 'heatmap'>('mapping');
   /** Monotonic nonce so re-selecting the same entity still re-triggers the reveal. */
   const entityRevealNonce = useRef(0);
   const [error, setError] = useState<string | null>(null);
@@ -754,8 +763,12 @@ export function ExportStudio({
     setEntityReveal(null);
   }, [artifact, version, selectedKey]);
 
-  /** Tree-side selection (IXH-4.1): record it and reveal a located entity in the viewer. */
+  /**
+   * Tree-side selection (IXH-4.1): record it and reveal a located entity in the viewer. The
+   * mapping graph is the evidence surface for every selection except the heatmap's own.
+   */
   const selectEntity = useCallback((entity: ExportManifestEntity) => {
+    setEvidenceSurface('mapping');
     setSelectedEntityKey(entity.key);
     if (entity.location?.line != null) {
       entityRevealNonce.current += 1;
@@ -763,8 +776,18 @@ export function ExportStudio({
     }
   }, []);
 
+  /** Heatmap-side selection (IXH-4.3): the same selection, with the evidence drawn there. */
+  const selectEntityFromHeatmap = useCallback(
+    (entity: ExportManifestEntity) => {
+      selectEntity(entity);
+      setEvidenceSurface('heatmap');
+    },
+    [selectEntity],
+  );
+
   /** Viewer-side selection (IXH-4.1): a code line click highlights its entity in the tree. */
   const handleEntityLineClick = useCallback((entity: ExportManifestEntity) => {
+    setEvidenceSurface('mapping');
     setSelectedEntityKey(entity.key);
   }, []);
 
@@ -794,6 +817,31 @@ export function ExportStudio({
       selectedEntityKey={selectedEntityKey}
       onSelectEntity={selectEntity}
       onClearSelection={clearEntitySelection}
+      showEvidence={evidenceSurface === 'mapping'}
+      onChangeTarget={() => setStep('target')}
+      onChangeOptions={() => setStep('options')}
+    />
+  ) : null;
+
+  /**
+   * The ranked fidelity-loss heatmap (IXH-4.3), rendered under the mapping graph. It reads
+   * the same manifest walk — so the aggregate ring, the map, and this ranking describe one
+   * snapshot — and shares the same entity selection, so selecting a cell or a ranked
+   * finding opens the same evidence drawer and reveals the entity in the code viewer.
+   */
+  const lossHeatmap = selected ? (
+    <FidelityLossHeatmapPanel
+      page={manifestPage}
+      entities={manifestEntities}
+      loading={manifestLoading}
+      error={manifestError}
+      complete={manifestComplete}
+      onLoadMore={manifestLoadMore}
+      targetLabel={selected.entry.descriptor.label}
+      selectedEntityKey={selectedEntityKey}
+      onSelectEntity={selectEntityFromHeatmap}
+      onClearSelection={clearEntitySelection}
+      showEvidence={evidenceSurface === 'heatmap'}
       onChangeTarget={() => setStep('target')}
       onChangeOptions={() => setStep('options')}
     />
@@ -1170,6 +1218,8 @@ export function ExportStudio({
                   </div>
                   {/* IXH-4.2: what became of each canonical entity in this bundle. */}
                   {mappingGraph}
+                  {/* IXH-4.3: the same findings ranked by what they cost. */}
+                  {lossHeatmap}
                 </div>
               ) : emitted ? (
                 <div className="flex min-h-0 flex-col gap-2">
@@ -1211,6 +1261,8 @@ export function ExportStudio({
                   </div>
                   {/* IXH-4.2: what became of each canonical entity in this document. */}
                   {mappingGraph}
+                  {/* IXH-4.3: the same findings ranked by what they cost. */}
+                  {lossHeatmap}
                 </div>
               ) : job && jobStatus ? (
                 jobCompleted ? (

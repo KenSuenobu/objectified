@@ -108,6 +108,14 @@ export interface ExportMappingGraphPanelProps {
   onSelectEntity: (entity: ExportManifestEntity) => void;
   /** Clear the shared entity selection — what closing the evidence drawer does. */
   onClearSelection: () => void;
+  /**
+   * Whether this panel owns the evidence drawer for the shared selection (IXH-4.3). The
+   * Review step renders more than one surface over the same manifest and the same
+   * selection; the evidence belongs beside the surface the user actually selected from, so
+   * the step hands ownership to that one. Defaults to true — a panel rendered on its own
+   * always shows its evidence.
+   */
+  showEvidence?: boolean;
   /** Navigate back to the target choice — the drawer's safe remediation for a format limit. */
   onChangeTarget?: () => void;
   /** Navigate back to the export options — the drawer's safe remediation for an exclusion. */
@@ -134,6 +142,7 @@ export function ExportMappingGraphPanel({
   selectedEntityKey,
   onSelectEntity,
   onClearSelection,
+  showEvidence = true,
   onChangeTarget,
   onChangeOptions,
   aggregationThreshold,
@@ -178,8 +187,8 @@ export function ExportMappingGraphPanel({
   const selectedKey =
     selectedAggregateKey ?? (selectedEntityKey ? mappingRowId(selectedEntityKey) : null);
   const selectedEntry = useMemo(
-    () => view.entries.find((entry) => entry.key === selectedKey) ?? null,
-    [view.entries, selectedKey],
+    () => (showEvidence ? (view.entries.find((entry) => entry.key === selectedKey) ?? null) : null),
+    [showEvidence, view.entries, selectedKey],
   );
 
   // The reviewed reason explanations + remediation the drawer prints (EFP-1.2/2.3) —
