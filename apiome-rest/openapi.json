@@ -72153,6 +72153,62 @@
         "title": "CompatibilityRulesPayload",
         "description": "Optional toggles for backward-compatibility checks (defaults are strict)."
       },
+      "ConformanceFailure": {
+        "properties": {
+          "instance_id": {
+            "type": "string",
+            "title": "Instance Id",
+            "description": "Stable id of the synthesized instance (``minimal``, ``full``, ``branch:\u2026``), reproducible from the same revision and seed.",
+            "example": "instance_01h2xcejqtf3fz5y5j0v8k9m2p"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "transcode",
+              "conformance"
+            ],
+            "title": "Kind",
+            "description": "``conformance`` \u2014 the emitted schema rejected the instance; ``transcode`` \u2014 the instance could not be represented on the target wire format, so the schema never judged it.",
+            "example": "transcode"
+          },
+          "constraint": {
+            "type": "string",
+            "title": "Constraint",
+            "description": "For ``conformance``: the target-side constraint that rejected the instance (a JSON Schema keyword, an Avro field path, a protobuf field, a GraphQL input coordinate, an XSD rule) \u2014 the constraint whose source counterpart was lost in translation. For ``transcode``: the wire rule that failed (``base64``, ``xml-structure``, \u2026).",
+            "example": "example"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable failure description.",
+            "example": "Example validation message."
+          },
+          "pointer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Conformance Failure schema."
+              },
+              {
+                "type": "null",
+                "description": "Conformance Failure schema."
+              }
+            ],
+            "title": "Pointer",
+            "description": "JSON Pointer (or target-side path) to the offending value, when the validator reports one."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "instance_id",
+          "kind",
+          "constraint",
+          "message"
+        ],
+        "title": "ConformanceFailure",
+        "description": "One instance check that failed against one emitted target schema.\n\n``kind`` separates the two failure channels the acceptance criteria demand be kept\napart: a ``conformance`` row means the target's validator ran and rejected the\ninstance; a ``transcode`` row means the instance never reached the validator because\nit has no representation on the target's wire format."
+      },
       "ConnectionBody": {
         "properties": {
           "id": {
@@ -74288,7 +74344,7 @@
             "type": "string",
             "title": "Generated At",
             "description": "Statement timestamp (ISO-8601, UTC).",
-            "example": "2026-08-02T17:32:05Z"
+            "example": "2026-08-02T18:45:41Z"
           },
           "envelope": {
             "additionalProperties": true,
@@ -75424,6 +75480,67 @@
         ],
         "title": "EmitterDescriptor",
         "description": "Self-description of an export target for UI/CLI/REST enumeration (MFX-1.1)."
+      },
+      "EntityTargetConformance": {
+        "properties": {
+          "entity": {
+            "type": "string",
+            "title": "Entity",
+            "description": "Canonical type key of the entity (``acme.Pet``).",
+            "example": "example"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail",
+              "transcode_failed",
+              "missing",
+              "skipped"
+            ],
+            "title": "Status",
+            "description": "``pass`` \u2014 every checked instance validated; ``fail`` \u2014 the emitted schema rejected at least one source-valid instance; ``transcode_failed`` \u2014 no conformance failures, but at least one instance had no wire representation; ``missing`` \u2014 the emitted schema does not define this entity at all; ``skipped`` \u2014 no source-valid instance could be checked (see ``reason``).",
+            "example": "pass"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Entity Target Conformance schema."
+              },
+              {
+                "type": "null",
+                "description": "Entity Target Conformance schema."
+              }
+            ],
+            "title": "Reason",
+            "description": "Why the entity was skipped or reported missing. ``None`` when checked."
+          },
+          "instances_checked": {
+            "type": "integer",
+            "title": "Instances Checked",
+            "description": "How many source-valid instances actually reached this target's validator (transcode failures are excluded \u2014 those instances were never judged).",
+            "default": 0,
+            "example": 1
+          },
+          "failures": {
+            "items": {
+              "$ref": "#/components/schemas/ConformanceFailure"
+            },
+            "type": "array",
+            "title": "Failures",
+            "description": "Every failed check, in instance order. Empty when the entity passed.",
+            "maxItems": 1000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "entity",
+          "status"
+        ],
+        "title": "EntityTargetConformance",
+        "description": "Instance-level conformance of one entity against one emitted target schema."
       },
       "EnvironmentResponse": {
         "properties": {
@@ -77163,6 +77280,13 @@
             "description": "When false, the source lint verdict is returned without its ranked finding list (score, grade, and tallies are always present). Lets a target-grid caller skip the findings payload it does not render.",
             "default": true,
             "example": false
+          },
+          "include_conformance": {
+            "type": "boolean",
+            "title": "Include Conformance",
+            "description": "When true, run the IXH-5.6 instance-conformance check per ranked target: source-valid instances (IXH-5.2) are validated against each target's actually-emitted schema, the per-target verdict is attached beside the fidelity envelope, and a ``ready`` target whose emitted schema rejected instances is demoted to ``caution``. Off by default because it emits every ranked target for real \u2014 heavier than the prediction-only pre-flight.",
+            "default": false,
+            "example": false
           }
         },
         "additionalProperties": false,
@@ -77248,6 +77372,18 @@
           "policy": {
             "$ref": "#/components/schemas/ImportPreflightPolicy",
             "description": "The tenant's export quality policy verdict for this source and target (IXH-2.3). Shares the import pre-flight's verdict shape \u2014 one policy engine, one response shape \u2014 and names its own ``scope`` (``export``)."
+          },
+          "conformance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TargetConformance"
+              },
+              {
+                "type": "null",
+                "description": "Export Preflight Target schema."
+              }
+            ],
+            "description": "The IXH-5.6 instance-level conformance verdict for this target \u2014 source-valid instances validated against the *actually emitted* schema \u2014 reported alongside the structural fidelity envelope. ``None`` unless the pre-flight was requested with ``include_conformance``."
           }
         },
         "additionalProperties": false,
@@ -107695,7 +107831,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-02T17:32:05Z"
+            "example": "2026-08-02T18:45:41Z"
           }
         },
         "additionalProperties": false,
@@ -116493,6 +116629,116 @@
         "title": "TargetAuthReference",
         "description": "How a runner obtains the credential for a target \u2014 a pointer, never the secret.\n\n``kind`` selects the mechanism and ``ref`` names the credential within it:\n\n* ``none``   \u2014 an anonymous target. Every other field must be absent.\n* ``env``    \u2014 ``ref`` is an **environment variable name** the runner reads from its own\n  environment (``APIOME_STAGING_TOKEN``). The platform stores the name and never sees the\n  value, which is what makes a self-hosted CI run work without handing the platform a secret.\n* ``stored`` \u2014 ``ref`` is the **id** of a row in the encrypted credential vault\n  (``apiome.mcp_endpoint_credentials``). The ciphertext and its key version stay there.\n\n``scheme`` says how the resolved value is presented (``Authorization: Bearer \u2026``, a named\nheader, or HTTP Basic) and ``header_name`` names the header for the ``header`` scheme. Both\nare shapes rather than secrets."
       },
+      "TargetConformance": {
+        "properties": {
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "The emit format key checked (``proto3``).",
+            "example": "example"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The target's registry key (``protobuf``).",
+            "example": "example"
+          },
+          "applicable": {
+            "type": "boolean",
+            "title": "Applicable",
+            "description": "Whether this target's schema language has an instance validator this check can run (JSON Schema, Avro, protobuf, GraphQL input types, XSD). ``False`` targets are reported as not-applicable, never as passing.",
+            "example": false
+          },
+          "validated": {
+            "type": "boolean",
+            "title": "Validated",
+            "description": "Whether instance validation actually ran. ``False`` when the target is not applicable, the emit failed, a required toolchain (``buf``, ``xmllint``) is unavailable, or the emitted schema itself could not be loaded \u2014 ``detail`` says which.",
+            "example": false
+          },
+          "valid": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Target Conformance schema."
+              },
+              {
+                "type": "null",
+                "description": "Target Conformance schema."
+              }
+            ],
+            "title": "Valid",
+            "description": "``True`` \u2014 every checked instance remained valid against the emitted schema; ``False`` \u2014 at least one conformance failure (or a missing entity); ``None`` \u2014 no verdict, because validation did not run or no instance reached the validator."
+          },
+          "wire_transcoding": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Target Conformance schema."
+              },
+              {
+                "type": "null",
+                "description": "Target Conformance schema."
+              }
+            ],
+            "title": "Wire Transcoding",
+            "description": "The explicit wire-format transcoding applied before validation, stated so a reader never has to guess what stood between the JSON instance and the target validator. ``None`` for not-applicable targets."
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Target Conformance schema."
+              },
+              {
+                "type": "null",
+                "description": "Target Conformance schema."
+              }
+            ],
+            "title": "Detail",
+            "description": "Why validation did not run, or why no verdict was reached. ``None`` when instances were checked."
+          },
+          "entities": {
+            "items": {
+              "$ref": "#/components/schemas/EntityTargetConformance"
+            },
+            "type": "array",
+            "title": "Entities",
+            "description": "Per-entity results, sorted by entity key. Empty when validation did not run.",
+            "maxItems": 1000
+          },
+          "instances_checked": {
+            "type": "integer",
+            "title": "Instances Checked",
+            "description": "Total instances that reached this target's validator.",
+            "default": 0,
+            "example": 1
+          },
+          "conformance_failures": {
+            "type": "integer",
+            "title": "Conformance Failures",
+            "description": "Total ``conformance`` failure rows across entities (missing entities contribute one row each).",
+            "default": 0,
+            "example": 1
+          },
+          "transcode_failures": {
+            "type": "integer",
+            "title": "Transcode Failures",
+            "description": "Total ``transcode`` failure rows across entities.",
+            "default": 0,
+            "example": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "target",
+          "key",
+          "applicable",
+          "validated"
+        ],
+        "title": "TargetConformance",
+        "description": "The instance-conformance verdict for one emit target.\n\nReads alongside :class:`app.export_fidelity.TargetFidelity` \u2014 the structural prediction\nsays what should survive; this says what a real emitted schema actually accepted.\n``applicable`` / ``validated`` / ``valid`` follow the same honesty contract as\n:class:`app.export_validation.EmittedArtifactValidation`: a target without a validatable\nschema language is *not applicable* (never passing), and a missing toolchain means the\ncheck *did not run* (never a verdict)."
+      },
       "TargetFidelity": {
         "properties": {
           "tier": {
@@ -121180,14 +121426,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-02T17:32:05Z"
+            "example": "2026-08-02T18:45:41Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-02T17:32:05Z"
+            "example": "2026-08-02T18:45:41Z"
           },
           "outcome": {
             "anyOf": [
