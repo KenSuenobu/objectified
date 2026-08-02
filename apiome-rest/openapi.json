@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.105.0",
+    "version": "1.106.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -43644,6 +43644,105 @@
         }
       }
     },
+    "/v1/tenants/{tenant_slug}/import/bundle-inventory": {
+      "post": {
+        "tags": [
+          "spec-import"
+        ],
+        "summary": "Per-file inventory of a multi-file / archive candidate (no write)",
+        "description": "Explain a **bundle** import file by file (IXH-3.5). An uploaded archive or a packed git selection (MFI-29.1/29.2/29.3) is dozens of files, and a single grade plus a single entity tree cannot say which one failed, which was never read, or which supplied the entry point. This endpoint unpacks the candidate through the same archive intake the commit uses and returns, per file: its **role** (entry-point, dependency, unreferenced, ignored, unreadable \u2014 an ignored file always states *why*), its **verdict** and the parse diagnostic naming it, its resolved **import/include edges** and incoming references, and the **canonical entities it appears to contribute** (by declaration scan \u2014 the response carries the `attribution` method so the evidence quality is never overstated).\n\nAlongside the files it returns every **unresolved** reference *with the search paths that were tried, in order*, and the ranked **entry-point candidates**. Overriding the detected entry point is a plain re-run: send the chosen member as `archive_root` and the pre-flight, preview manifest, and this inventory all re-derive from it.\n\nA payload that is not an archive is **not an error**: the response is `ok: true` with `kind: single-document` and no inventory. `ok` is false only when the archive itself could not be unpacked, and then `error` carries the stable intake-taxonomy code. An ambiguous root or a failed parse still returns the **complete file list** \u2014 that is exactly the bundle this panel exists for. Files are cursor-paginated and nothing is persisted.",
+        "operationId": "inventory_import_bundle_v1_tenants__tenant_slug__import_bundle_inventory_post",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Perfileinventoryofamultifilearchivecandiauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Perfileinventoryofamultifilearchivecandiauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Perfileinventoryofamultifilearchivecandi Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Perfileinventoryofamultifilearchivecandi Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportBundleInventoryRequest",
+                "description": "Request body for perfileinventoryofamultifilearchivecandirequest."
+              }
+            }
+          },
+          "description": "Request body for per-file inventory of a multi-file / archive candidate (no write)."
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response for per-file inventory of a multi-file / archive candidate (no write).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportBundleInventoryResponse",
+                  "description": "Response payload for perfileinventoryofamultifilearchivecandiresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for perfileinventoryofamultifilearchivecandiresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/tenants/{tenant_slug}/imports": {
       "get": {
         "tags": [
@@ -68263,6 +68362,256 @@
         "title": "BulkImportStatusSummary",
         "description": "Counted roll-up of a batch's jobs."
       },
+      "BundleFileEntry": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Bundle-relative path (POSIX, never absolute).",
+            "example": "/resources/{id}"
+          },
+          "role": {
+            "$ref": "#/components/schemas/BundleFileRole",
+            "description": "entry-point, dependency, unreferenced, ignored, or unreadable."
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/BundleFileVerdict",
+            "description": "analysed, failed (a parse diagnostic names this file), or not-analysed."
+          },
+          "bytes": {
+            "type": "integer",
+            "title": "Bytes",
+            "description": "Size of the decoded member in UTF-8 bytes; 0 for an ignored entry.",
+            "example": 1
+          },
+          "lines": {
+            "type": "integer",
+            "title": "Lines",
+            "description": "Line count of the decoded member; 0 when it was not analysed.",
+            "example": 1
+          },
+          "ignored_reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Bundle File Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Bundle File Entry schema."
+              }
+            ],
+            "title": "Ignored Reason",
+            "description": "Why an ignored file was excluded (resource-fork, vcs-metadata, os-metadata, hidden-file, not-a-regular-file). Always set when role is 'ignored'."
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Bundle File Entry schema."
+              },
+              {
+                "type": "null",
+                "description": "Bundle File Entry schema."
+              }
+            ],
+            "title": "Error",
+            "description": "The parse diagnostic naming this file, or why an unreadable file could not be read. Null when the file has no fault of its own."
+          },
+          "imports": {
+            "items": {
+              "$ref": "#/components/schemas/BundleImportEdge"
+            },
+            "type": "array",
+            "title": "Imports",
+            "description": "Outgoing import/include references this file declares.",
+            "maxItems": 1000
+          },
+          "imported_by": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Imported By",
+            "description": "Bundle members whose resolved references point at this file.",
+            "maxItems": 1000
+          },
+          "entity_keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Entity Keys",
+            "description": "Canonical entity keys attributed to this file, capped at 100; entity_count is always the exact total.",
+            "maxItems": 1000
+          },
+          "entity_count": {
+            "type": "integer",
+            "title": "Entity Count",
+            "description": "Exact number of canonical entities attributed to this file.",
+            "default": 0,
+            "example": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "path",
+          "role",
+          "verdict",
+          "bytes",
+          "lines"
+        ],
+        "title": "BundleFileEntry",
+        "description": "One file the bundle contained, with its role, verdict, and contribution."
+      },
+      "BundleFileRole": {
+        "type": "string",
+        "enum": [
+          "entry-point",
+          "dependency",
+          "unreferenced",
+          "ignored",
+          "unreadable"
+        ],
+        "title": "BundleFileRole",
+        "description": "What one file *is* within the bundle.\n\n``ENTRY_POINT``\n    The root document the import parses from \u2014 detected, or pinned by the caller.\n``DEPENDENCY``\n    Reachable from the entry point through resolved import/include edges.\n``UNREFERENCED``\n    Readable, but neither the entry point nor reachable from it. Not an error:\n    several adapters (gRPC among them) compile *every* member of their format, so\n    an unreferenced file may still contribute. It is reported because \"nothing\n    points at this\" is the fact behind most \"why is my type missing?\" questions.\n``IGNORED``\n    Excluded before it ever became a member (resource fork, VCS metadata, dotfile).\n    Always carries the reason it was excluded.\n``UNREADABLE``\n    Decoded but not text \u2014 a binary member, or one whose bytes are not UTF-8."
+      },
+      "BundleFileVerdict": {
+        "type": "string",
+        "enum": [
+          "analysed",
+          "failed",
+          "not-analysed"
+        ],
+        "title": "BundleFileVerdict",
+        "description": "What happened to one file when the bundle was analysed.\n\n``ANALYSED``\n    The file was read and its import/include directives extracted.\n``FAILED``\n    The parse of this bundle reported a diagnostic naming this file. The file's\n    ``error`` carries the diagnostic verbatim.\n``NOT_ANALYSED``\n    Never read \u2014 an ignored or unreadable member."
+      },
+      "BundleImportEdge": {
+        "properties": {
+          "from_path": {
+            "type": "string",
+            "title": "From Path",
+            "description": "Bundle-relative path of the file declaring the reference.",
+            "example": "example"
+          },
+          "directive": {
+            "type": "string",
+            "title": "Directive",
+            "description": "The directive as the format names it (import, include, $ref, \u2026).",
+            "example": "example"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "The reference exactly as the source document wrote it.",
+            "example": "example"
+          },
+          "to_path": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Bundle Import Edge schema."
+              },
+              {
+                "type": "null",
+                "description": "Bundle Import Edge schema."
+              }
+            ],
+            "title": "To Path",
+            "description": "The bundle member it resolved to, when it resolved to one."
+          },
+          "resolution": {
+            "$ref": "#/components/schemas/IntakeBundleGraphImportResolution",
+            "description": "member (resolved inside the bundle), provided (supplied by the format's own toolchain, e.g. the protobuf well-known types), or unresolved."
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Bundle Import Edge schema."
+              },
+              {
+                "type": "null",
+                "description": "Bundle Import Edge schema."
+              }
+            ],
+            "title": "Provider",
+            "description": "What supplies a 'provided' reference; null for every other resolution."
+          },
+          "search_paths": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Search Paths",
+            "description": "Every bundle-relative path tried, in the order tried. This is the answer to 'where did you look?' for an unresolved reference.",
+            "maxItems": 1000
+          },
+          "line": {
+            "type": "integer",
+            "title": "Line",
+            "description": "1-based line of the directive within its file.",
+            "example": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "from_path",
+          "directive",
+          "target",
+          "resolution",
+          "line"
+        ],
+        "title": "BundleImportEdge",
+        "description": "One import/include reference a bundle file declares, and how it resolved."
+      },
+      "BundleRootCandidate": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Bundle-relative member path.",
+            "example": "/resources/{id}"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Bundle Root Candidate schema."
+              },
+              {
+                "type": "null",
+                "description": "Bundle Root Candidate schema."
+              }
+            ],
+            "title": "Format",
+            "description": "Detected format key, when recognised."
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence",
+            "description": "Detection confidence for this member, 0\u20131.",
+            "example": 1.0
+          },
+          "selected": {
+            "type": "boolean",
+            "title": "Selected",
+            "description": "Whether this candidate is the entry point in use.",
+            "example": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "path",
+          "confidence",
+          "selected"
+        ],
+        "title": "BundleRootCandidate",
+        "description": "One member that could serve as the bundle's entry point."
+      },
       "CacheKeyEffectBody": {
         "properties": {
           "key": {
@@ -73812,7 +74161,7 @@
             "type": "string",
             "title": "Generated At",
             "description": "Statement timestamp (ISO-8601, UTC).",
-            "example": "2026-08-02T15:33:23Z"
+            "example": "2026-08-02T16:15:54Z"
           },
           "envelope": {
             "additionalProperties": true,
@@ -79485,6 +79834,362 @@
         "title": "ImportAdapterReference",
         "description": "The adapter that produced the manifest, with its capability references (CLX-2.4)."
       },
+      "ImportBundleInventory": {
+        "properties": {
+          "entry_point": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Bundle Inventory schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Bundle Inventory schema."
+              }
+            ],
+            "title": "Entry Point",
+            "description": "The root document the import parses from, or null when no root could be resolved (entry_point_error then says why)."
+          },
+          "entry_point_pinned": {
+            "type": "boolean",
+            "title": "Entry Point Pinned",
+            "description": "True when the request named the entry point (archive_root); false when it was auto-detected.",
+            "example": false
+          },
+          "entry_point_error": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Bundle Inventory schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Bundle Inventory schema."
+              }
+            ],
+            "title": "Entry Point Error",
+            "description": "Why root resolution failed \u2014 an ambiguous bundle, or one with no recognisable document. The file list is still complete."
+          },
+          "entry_point_candidates": {
+            "items": {
+              "$ref": "#/components/schemas/BundleRootCandidate"
+            },
+            "type": "array",
+            "title": "Entry Point Candidates",
+            "description": "Ranked members that could be the entry point, best first \u2014 the same ranking auto-detection uses, capped at 25.",
+            "maxItems": 1000
+          },
+          "attribution": {
+            "type": "string",
+            "title": "Attribution",
+            "description": "How per-file entity contribution was derived. 'declaration-scan' means the file declares a symbol matching the entity's name \u2014 evidence, not parser provenance.",
+            "example": "example"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/BundleFileEntry"
+            },
+            "type": "array",
+            "title": "Files",
+            "description": "This page of the file list, in path order.",
+            "maxItems": 1000
+          },
+          "total_files": {
+            "type": "integer",
+            "title": "Total Files",
+            "description": "Files in the whole bundle (members plus ignored entries).",
+            "example": 1
+          },
+          "role_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Role Counts",
+            "description": "Whole-bundle tally per role, zero-filled."
+          },
+          "verdict_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Verdict Counts",
+            "description": "Whole-bundle tally per verdict, zero-filled."
+          },
+          "unresolved": {
+            "items": {
+              "$ref": "#/components/schemas/BundleImportEdge"
+            },
+            "type": "array",
+            "title": "Unresolved",
+            "description": "Unresolved import/include references, capped at 200 and carried on the first page only.",
+            "maxItems": 1000
+          },
+          "total_unresolved": {
+            "type": "integer",
+            "title": "Total Unresolved",
+            "description": "Unresolved references in the whole bundle.",
+            "example": 1
+          },
+          "total_edges": {
+            "type": "integer",
+            "title": "Total Edges",
+            "description": "Import/include references in the whole bundle.",
+            "example": 1
+          },
+          "total_entities": {
+            "type": "integer",
+            "title": "Total Entities",
+            "description": "Canonical entities the import would create.",
+            "example": 1
+          },
+          "unattributed_entities": {
+            "type": "integer",
+            "title": "Unattributed Entities",
+            "description": "Canonical entities no file's declarations matched. Non-zero is normal for synthesized names \u2014 it is stated rather than hidden.",
+            "example": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "The applied (clamped) page size.",
+            "example": 50
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Import Bundle Inventory schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Bundle Inventory schema."
+              }
+            ],
+            "title": "Next Cursor",
+            "description": "Opaque cursor for the next page, or null on the last page."
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated",
+            "description": "True whenever this response omits part of the inventory.",
+            "example": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "entry_point_pinned",
+          "attribution",
+          "total_files",
+          "total_unresolved",
+          "total_edges",
+          "total_entities",
+          "unattributed_entities",
+          "page_size",
+          "truncated"
+        ],
+        "title": "ImportBundleInventory",
+        "description": "One page of the bundle inventory (IXH-3.5)."
+      },
+      "ImportBundleInventoryRequest": {
+        "properties": {
+          "document_base64": {
+            "type": "string",
+            "title": "Document Base64",
+            "description": "Standard base64 (RFC 4648) of the candidate document's bytes; no data: URL prefix.",
+            "example": "eyJvcGVuYXBpIjoiMy4xLjAifQ=="
+          },
+          "source_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for import bundle inventory."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import bundle inventory."
+              }
+            ],
+            "title": "Source Kind",
+            "description": "Importer discriminator to pre-flight against (for example openapi, asyncapi, protobuf). When omitted the format is auto-detected and the winning adapter is used; the detection verdict is reported either way."
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for import bundle inventory."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import bundle inventory."
+              }
+            ],
+            "title": "Filename",
+            "description": "Original filename for format sniffing when bytes alone are ambiguous."
+          },
+          "content_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for import bundle inventory."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import bundle inventory."
+              }
+            ],
+            "title": "Content Type",
+            "description": "Optional MIME type hint (for example application/yaml or application/json)."
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for import bundle inventory."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import bundle inventory."
+              }
+            ],
+            "title": "Url",
+            "description": "Source URL the document was fetched from, when the intake kind is 'url'."
+          },
+          "input_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "file",
+                  "url",
+                  "paste",
+                  "discovery",
+                  "fileset"
+                ],
+                "description": "Request body for import bundle inventory."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import bundle inventory."
+              }
+            ],
+            "title": "Input Kind",
+            "description": "How the document reached the importer; recorded on the report for parity with the import job's option of the same name."
+          },
+          "import_target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "catalog",
+                  "types",
+                  "project"
+                ],
+                "description": "Request body for import bundle inventory."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import bundle inventory."
+              }
+            ],
+            "title": "Import Target",
+            "description": "Destination the commit would request (MFI-26.8). Consulted only for JSON Schema, exactly as on the import job, so the reported routing decision matches what the commit would do."
+          },
+          "archive_root": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for import bundle inventory."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import bundle inventory."
+              }
+            ],
+            "title": "Archive Root",
+            "description": "Explicit module-relative root document inside an uploaded archive (.zip/.tar.gz); auto-selected when omitted."
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for import bundle inventory."
+              },
+              {
+                "type": "null",
+                "description": "Request body for import bundle inventory."
+              }
+            ],
+            "title": "Cursor",
+            "description": "Opaque cursor from a previous page; omit for the first page."
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "Files per page (default 250, max 1000).",
+            "default": 250,
+            "example": 50
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document_base64"
+        ],
+        "title": "ImportBundleInventoryRequest",
+        "description": "The candidate to inventory: the IXH-2.1 pre-flight intake payload plus paging."
+      },
+      "ImportBundleInventoryResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "True when an inventory was produced; false only when the archive could not be unpacked.",
+            "example": false
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "'archive' for a bundle payload, 'single-document' otherwise.",
+            "example": "example"
+          },
+          "inventory": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImportBundleInventory"
+              },
+              {
+                "type": "null",
+                "description": "Response payload for import bundle inventory."
+              }
+            ],
+            "description": "The inventory page; null when ok is false or kind is single-document."
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpecImportJobError"
+              },
+              {
+                "type": "null",
+                "description": "Response payload for import bundle inventory."
+              }
+            ],
+            "description": "Stable intake-taxonomy error when the archive could not be unpacked."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ok",
+          "kind"
+        ],
+        "title": "ImportBundleInventoryResponse",
+        "description": "The bundle-inventory endpoint's response (IXH-3.5).\n\n``kind`` is the first thing a client reads: a single document is not a bundle, and\nsaying so is not an error \u2014 the panel simply has nothing to show. ``ok`` is false\nonly when an archive could not be unpacked at all, in which case ``error`` carries\nthe intake-taxonomy code."
+      },
       "ImportPreflightCache": {
         "properties": {
           "hit": {
@@ -81108,34 +81813,6 @@
         ],
         "title": "ImportReimportDelta",
         "description": "What re-importing this candidate would change on an existing catalog item.\n\nComputed **before** the commit, per request (never cached \u2014 the item's current\nrevision can move between requests), from the two canonical models by stable key. A\n``noop`` delta (identical fingerprints, empty ``entries``) tells the client the\ncommit would create an empty revision, so it can offer to skip it."
-      },
-      "ImportResolution": {
-        "properties": {
-          "action": {
-            "type": "string",
-            "title": "Action",
-            "default": "keep",
-            "description": "Action.",
-            "example": "example"
-          },
-          "new_name": {
-            "anyOf": [
-              {
-                "type": "string",
-                "description": "Import Resolution schema."
-              },
-              {
-                "type": "null",
-                "description": "Import Resolution schema."
-              }
-            ],
-            "title": "New Name",
-            "description": "New Name."
-          }
-        },
-        "type": "object",
-        "title": "ImportResolution",
-        "description": "How to resolve one conflicting type during import (#3464).\n\nKeyed by definition name in :attr:`PrimitiveImportRequest.resolutions`. Applies only to a\ntype the review classified as a **Conflict** (an existing type with the same registry\nidentity but a different schema); New and Identical types ignore any resolution."
       },
       "ImportSourceDescriptor": {
         "properties": {
@@ -98875,7 +99552,7 @@
             "anyOf": [
               {
                 "additionalProperties": {
-                  "$ref": "#/components/schemas/ImportResolution"
+                  "$ref": "#/components/schemas/ModelsImportResolution"
                 },
                 "type": "object",
                 "description": "Import one or more JSON Schema definitions into the primitives registry, with optional deduplication and per-type conflict resolutions."
@@ -106591,7 +107268,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-02T15:33:23Z"
+            "example": "2026-08-02T16:15:54Z"
           }
         },
         "additionalProperties": false,
@@ -120076,14 +120753,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-02T15:33:23Z"
+            "example": "2026-08-02T16:15:54Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-02T15:33:23Z"
+            "example": "2026-08-02T16:15:54Z"
           },
           "outcome": {
             "anyOf": [
@@ -125774,6 +126451,44 @@
         ],
         "title": "MockScenarioRuleSpec",
         "description": "One declarative rule: request predicates plus the response(s) they select (#4744 PMR-2.1)."
+      },
+      "IntakeBundleGraphImportResolution": {
+        "type": "string",
+        "enum": [
+          "member",
+          "provided",
+          "unresolved"
+        ],
+        "title": "ImportResolution",
+        "description": "How one declared import/include edge resolved.\n\n``MEMBER``\n    Resolved to another member of this bundle.\n``PROVIDED``\n    Not in the bundle, and not missing: the format's own toolchain supplies it\n    (protobuf well-known types, Cap'n Proto builtins).\n``UNRESOLVED``\n    Nothing was found. The edge carries every search path that was tried."
+      },
+      "ModelsImportResolution": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "default": "keep",
+            "description": "Action.",
+            "example": "example"
+          },
+          "new_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Models Import Resolution schema."
+              },
+              {
+                "type": "null",
+                "description": "Models Import Resolution schema."
+              }
+            ],
+            "title": "New Name",
+            "description": "New Name."
+          }
+        },
+        "type": "object",
+        "title": "ImportResolution",
+        "description": "How to resolve one conflicting type during import (#3464).\n\nKeyed by definition name in :attr:`PrimitiveImportRequest.resolutions`. Applies only to a\ntype the review classified as a **Conflict** (an existing type with the same registry\nidentity but a different schema); New and Identical types ignore any resolution."
       },
       "SlateCacheAuditEntryBody": {
         "properties": {

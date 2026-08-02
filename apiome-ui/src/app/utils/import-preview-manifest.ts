@@ -538,10 +538,14 @@ export function buildPreviewTreeRows(
  * Find the next row whose label starts with the type-ahead buffer, ARIA-tree style: the search
  * starts *after* `fromIndex`, wraps around, and is case-insensitive.
  *
+ * Generic over the row shape (it reads nothing but `label`), so every windowed ARIA tree in the
+ * preview step — the entity explorer and the IXH-3.5 bundle file tree — shares one implementation
+ * of the type-ahead rule instead of each re-deriving the wrap-around arithmetic.
+ *
  * @returns The matching row index, or `null` when the buffer is empty or nothing matches.
  */
-export function findTypeaheadIndex(
-  rows: PreviewTreeRow[],
+export function findTypeaheadIndex<Row extends { label: string }>(
+  rows: Row[],
   fromIndex: number,
   buffer: string,
 ): number | null {

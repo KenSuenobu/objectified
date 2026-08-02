@@ -5,6 +5,41 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.242.0] - 2026-08-02
+
+### Added
+- **Multi-file and archive intake explorer (IXH-3.5, #5107)** —
+  MFI-29.1/29.2 made a single import dozens of files, but the preview still showed one grade and
+  one entity tree for all of them: which file failed, which was never read, which import could not
+  be resolved, and whether the detected entry point was even right were all unanswerable. That is
+  the failure mode that makes multi-file gRPC imports frustrating.
+  - `POST /v1/tenants/{tenant}/import/bundle-inventory` unpacks the candidate through the *same*
+    MFI-29.1 archive intake the commit uses and runs the *same* IXH-2.1 pre-flight the quality step
+    already ran (so it rides that cached run rather than parsing the bundle twice), then returns per
+    file: its **role** (entry-point / dependency / unreferenced / ignored — always with the reason —
+    / unreadable), its **verdict** plus the parse diagnostic naming it, its resolved
+    **import/include edges** and incoming references, and the **canonical entities it appears to
+    contribute**.
+  - Every **unresolved** reference lists *the search paths that were tried, in order*. Imports the
+    format's own toolchain supplies (protobuf well-known types, Cap'n Proto builtins) resolve as
+    `provided` instead of being reported missing.
+  - `app/intake_bundle_graph.py` holds the pure half: a per-suffix directive table (proto, Thrift,
+    FlatBuffers, Cap'n Proto, TypeSpec, GraphQL, RAML, Avro IDL, JSON/YAML `$ref`, XSD/WSDL/EDMX),
+    include-root resolution, role classification, and the declaration-scan attribution — whose
+    method is carried on the response (`attribution`) so its evidence quality is never overstated
+    as parser provenance.
+  - Ranked **entry-point candidates** come from the same ranking `resolve_fileset_root` decides
+    with; overriding is a plain re-run against `archive_root`. An ambiguous root and a failed parse
+    both still return the complete file list.
+  - Archive unpack can now report *what it skipped and why* (`unpack_archive_members(ignored=…)`),
+    and its skip normalisation is fixed: `lstrip("./")` stripped characters, so `.git/` internals
+    and a top-level `.DS_Store` were never actually being skipped despite both rules existing.
+  - Bounded: files are cursor-paginated, unresolved references ride the first page with the full
+    total stated, and a per-process LRU keeps the built inventory so paging never re-unpacks.
+  - UI: a **Bundle files** tab in the import wizard's quality step (mounted only for a bundle
+    candidate) with a windowed ARIA file tree, role legend, per-file detail, unresolved-imports
+    list, and an entry-point picker that re-runs the whole pre-flight.
+
 ## [1.241.0] - 2026-08-02
 
 ### Added

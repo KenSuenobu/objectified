@@ -51,7 +51,12 @@ from .archive_intake import (
     resolve_fileset_root,
 )
 from .format_detection import FormatDetection
-from .intake_paths import IntakePathError, normalised_member_name, validated_intake_path
+from .intake_paths import (
+    BINARY_SUFFIXES,
+    IntakePathError,
+    normalised_member_name,
+    validated_intake_path,
+)
 from .repository_validation import parse_github_owner_repo_from_url
 
 __all__ = [
@@ -85,14 +90,9 @@ _GITHUB_API = "https://api.github.com"
 #: Extensions never worth downloading as spec text (images, binaries, archives).
 #: A curated archive upload contains what the user chose; a repository directory
 #: also contains logos and fonts, so these are skipped (and reported) rather than
-#: failing the whole selection.
-_BINARY_SUFFIXES: Tuple[str, ...] = (
-    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".webp", ".svgz",
-    ".pdf", ".zip", ".gz", ".tgz", ".bz2", ".xz", ".7z", ".jar", ".war",
-    ".woff", ".woff2", ".ttf", ".otf", ".eot",
-    ".so", ".dylib", ".dll", ".exe", ".class", ".pyc", ".wasm",
-    ".mp3", ".mp4", ".mov", ".avi", ".webm",
-)
+#: failing the whole selection. The list is shared with the bundle explorer
+#: (IXH-3.5) and therefore lives in :mod:`app.intake_paths`.
+_BINARY_SUFFIXES: Tuple[str, ...] = BINARY_SUFFIXES
 
 #: Path segments never ingested from a repository tree (VCS/tooling noise).
 _SKIP_SEGMENTS: Tuple[str, ...] = (".git", ".github", "node_modules", "vendor", "__pycache__")

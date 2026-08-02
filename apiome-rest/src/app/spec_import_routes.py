@@ -32,6 +32,11 @@ from pydantic import ValidationError
 
 from .auth import get_authenticated_user_id, validate_authentication
 from .database import db
+from .import_bundle_explorer import (
+    ImportBundleInventoryRequest,
+    ImportBundleInventoryResponse,
+    run_import_bundle_inventory,
+)
 from .import_export_quality_policy import QualityGateError, enforce_import_quality_gate
 from .import_preflight import run_import_preflight
 from .import_preview_manifest import (
@@ -227,6 +232,49 @@ async def preview_import_manifest(
         )
     except ValueError as exc:
         # A malformed pagination cursor is a client error, not a pre-flight verdict.
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.post(
+    "/{tenant_slug}/import/bundle-inventory",
+    response_model=ImportBundleInventoryResponse,
+    summary="Per-file inventory of a multi-file / archive candidate (no write)",
+    description=(
+        "Explain a **bundle** import file by file (IXH-3.5). An uploaded archive or a packed "
+        "git selection (MFI-29.1/29.2/29.3) is dozens of files, and a single grade plus a single "
+        "entity tree cannot say which one failed, which was never read, or which supplied the "
+        "entry point. This endpoint unpacks the candidate through the same archive intake the "
+        "commit uses and returns, per file: its **role** (entry-point, dependency, unreferenced, "
+        "ignored, unreadable — an ignored file always states *why*), its **verdict** and the parse "
+        "diagnostic naming it, its resolved **import/include edges** and incoming references, and "
+        "the **canonical entities it appears to contribute** (by declaration scan — the response "
+        "carries the `attribution` method so the evidence quality is never overstated).\n\n"
+        "Alongside the files it returns every **unresolved** reference *with the search paths that "
+        "were tried, in order*, and the ranked **entry-point candidates**. Overriding the detected "
+        "entry point is a plain re-run: send the chosen member as `archive_root` and the pre-flight, "
+        "preview manifest, and this inventory all re-derive from it.\n\n"
+        "A payload that is not an archive is **not an error**: the response is `ok: true` with "
+        "`kind: single-document` and no inventory. `ok` is false only when the archive itself could "
+        "not be unpacked, and then `error` carries the stable intake-taxonomy code. An ambiguous "
+        "root or a failed parse still returns the **complete file list** — that is exactly the "
+        "bundle this panel exists for. Files are cursor-paginated and nothing is persisted."
+    ),
+)
+async def inventory_import_bundle(
+    tenant_slug: str,
+    body: ImportBundleInventoryRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> ImportBundleInventoryResponse:
+    # Same gate as the pre-flight and the preview manifest: this is a step of the import
+    # flow, and a caller who may not import has no use for it. It writes nothing itself.
+    enforce_permission(db, auth_data, Resource.IMPORTS, Action.CREATE)
+    tenant_id, user_id = _require_tenant_and_user(auth_data)
+    try:
+        return await run_import_bundle_inventory(
+            body, tenant_id=tenant_id, tenant_slug=tenant_slug, user_id=user_id
+        )
+    except ValueError as exc:
+        # A malformed pagination cursor is a client error, not an inventory verdict.
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 

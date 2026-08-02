@@ -20,7 +20,10 @@
  *  - the **policy comparison** — score against the tenant threshold (IXH-2.3 populates it);
  *  - the **entity preview** (IXH-3.2, #5104) — `CatalogImportPreviewPanel`, the structural
  *    explorer of what the import would create, whose source-location links drive the same raw
- *    viewer the findings link into.
+ *    viewer the findings link into;
+ *  - the **bundle files** tab (IXH-3.5, #5107) — `CatalogImportBundlePanel`, mounted only for a
+ *    multi-file candidate, giving every file in the archive a role, a verdict, its resolved
+ *    imports, and an entry-point picker that re-runs this step against the chosen root.
  *
  * Layout: the gate facts (grade, tally, style guide, threshold, verdict, waiver) are pinned, and the
  * two tall exploration surfaces — ranked findings + linked source viewer, and the entity preview —
@@ -66,6 +69,7 @@ import {
   FINDINGS_VIRTUALIZE_ABOVE,
   RAW_VIEWER_CONTEXT,
 } from '@/app/utils/preview-budgets';
+import { CatalogImportBundlePanel } from './CatalogImportBundlePanel';
 import { CatalogImportPreviewPanel } from './CatalogImportPreviewPanel';
 import { CatalogDetailTabs, panelElementId, tabElementId, type DetailTab } from './CatalogDetailTabs';
 
@@ -93,7 +97,7 @@ const LIST_HEIGHT = 380;
  * other. Everything the gate itself depends on — grade, tally, verdict, waiver — stays pinned above
  * the bar, so tabbing can never hide the reason an import is blocked.
  */
-type QualityTabId = 'findings' | 'preview';
+type QualityTabId = 'findings' | 'preview' | 'bundle';
 
 /** Element-id prefix wiring the tab buttons to their panels (`aria-controls`/`aria-labelledby`). */
 const QUALITY_TABS_ID_PREFIX = 'import-quality';
@@ -114,6 +118,13 @@ export interface CatalogImportQualityStepProps {
    * MFI-29.1 / MFI-29.3). Forwarded so the pre-flight scores the same root the commit imports.
    */
   archiveRoot?: string | null;
+  /**
+   * Re-select the bundle's root document (IXH-3.5). The wizard owns `archiveRoot`, so the bundle
+   * panel's entry-point picker calls this and the pre-flight, the preview manifest, and the
+   * inventory all re-derive against the chosen member. Omitted where the host cannot re-run, which
+   * renders the picker read-only rather than as a dead control.
+   */
+  onArchiveRootChange?: (path: string) => void;
   /** Raw source text for the viewer and the finding→line resolution; empty for archives. */
   rawSource: string;
   /**
@@ -276,6 +287,7 @@ export function CatalogImportQualityStep({
   inputKind,
   url,
   archiveRoot,
+  onArchiveRootChange,
   rawSource,
   autoAdvance,
   skipPreference,
@@ -365,12 +377,16 @@ export function CatalogImportQualityStep({
   );
   // The findings tab carries its count in the label, so the split never hides *how much* is on the
   // other side of a tab — the one thing a tabbed layout can otherwise cost you.
+  // The bundle tab only exists for a bundle candidate — a single document has no file inventory to
+  // explore, and an empty third tab would be a dead end rather than an explanation.
+  const isBundle = inputKind === 'fileset' || Boolean(archiveRoot);
   const qualityTabs = useMemo<readonly DetailTab[]>(
     () => [
       { id: 'findings', label: findings.length > 0 ? `Findings (${findings.length})` : 'Findings' },
       { id: 'preview', label: 'What this import adds' },
+      ...(isBundle ? [{ id: 'bundle', label: 'Bundle files' }] : []),
     ],
-    [findings.length],
+    [findings.length, isBundle],
   );
   // The preview panel's link wins until a finding is selected again (selecting one clears it).
   const selectedLine = previewLine ?? findingLines[selectedIndex] ?? null;
@@ -864,6 +880,23 @@ export function CatalogImportQualityStep({
                 onSkipCommit={onCancel}
               />
             </section>
+
+            {isBundle ? (
+              <section
+                role="tabpanel"
+                id={panelElementId(QUALITY_TABS_ID_PREFIX, 'bundle')}
+                aria-labelledby={tabElementId(QUALITY_TABS_ID_PREFIX, 'bundle')}
+                tabIndex={0}
+                hidden={activeTab !== 'bundle'}
+                data-testid="import-quality-bundle-panel"
+                className="focus:outline-none"
+              >
+                <CatalogImportBundlePanel
+                  request={request}
+                  onEntryPointChange={onArchiveRootChange}
+                />
+              </section>
+            ) : null}
           </div>
         </div>
       )}

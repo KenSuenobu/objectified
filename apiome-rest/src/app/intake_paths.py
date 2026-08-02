@@ -11,12 +11,33 @@ from pathlib import PurePosixPath
 from typing import Optional, Sequence, Tuple
 
 __all__ = [
+    "BINARY_SUFFIXES",
     "IntakePathError",
+    "is_binary_suffix",
     "validated_intake_path",
 ]
 
 #: Default maximum directory depth (``a/b/c/file.ext`` → 3 components).
 DEFAULT_MAX_PATH_DEPTH = 32
+
+#: File extensions that are never spec text (images, binaries, archives, media).
+#: Owned here because two intake surfaces need the same list: git intake skips them
+#: rather than downloading them (MFI-29.3), and the bundle explorer reports an archive
+#: member with one of these suffixes as *unreadable* rather than pretending its
+#: replacement-character text is a document (IXH-3.5).
+BINARY_SUFFIXES: Tuple[str, ...] = (
+    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".webp", ".svgz",
+    ".pdf", ".zip", ".gz", ".tgz", ".bz2", ".xz", ".7z", ".jar", ".war",
+    ".woff", ".woff2", ".ttf", ".otf", ".eot",
+    ".so", ".dylib", ".dll", ".exe", ".class", ".pyc", ".wasm",
+    ".mp3", ".mp4", ".mov", ".avi", ".webm",
+)
+
+
+def is_binary_suffix(path: str) -> bool:
+    """Return whether *path* ends in a known-binary extension (:data:`BINARY_SUFFIXES`)."""
+    lower = path.lower()
+    return lower.endswith(BINARY_SUFFIXES)
 
 
 class IntakePathError(ValueError):
