@@ -42,6 +42,15 @@ from app.canonical_model import (
 )
 from app.config import settings
 from app.emitter import EmitResult, EmittedFile
+from app.export_delivery_gate import (
+    DeliveryDecision,
+    DeliveryDimension,
+    DeliveryGateReport,
+    DeliveryOverride,
+    DeliveryReason,
+    DeliveryReasonCode,
+    DeliverySeverity,
+)
 from app.export_job_engine import (
     ExportJobStartRequest,
     _jobs,
@@ -57,6 +66,7 @@ from app.export_job_engine import (
 )
 from app.export_source import ExportSource, ExportSourceError
 from app.export_validation import EmittedArtifactValidation
+from app.models import ImportPreflightPolicy
 
 TENANT_SLUG = "acme"
 TENANT_ID = "550e8400-e29b-41d4-a716-446655440000"
@@ -315,7 +325,8 @@ async def test_job_runs_end_to_end_to_completed():
     assert result["fidelity"]["summary"]["preserved_percent"] == 100
     assert result["fidelity"]["advisory"] is not None
 
-    # Phase events are sequenced and cover the whole pipeline.
+    # Phase events are sequenced and cover the whole pipeline. IXH-2.5 adds the delivery gate's
+    # decision line and the attestation line between validation and completion.
     codes = [e["code"] for e in status["events"]]
     assert codes == [
         "EXPORT_STARTED",
@@ -323,9 +334,18 @@ async def test_job_runs_end_to_end_to_completed():
         "FIDELITY_COMPUTED",
         "EMITTED",
         "ARTIFACT_VALIDATED",
+        "DELIVERY_GATE_DECIDED",
+        "DELIVERY_ATTESTED",
         "EXPORT_COMPLETED",
     ]
-    assert [e["id"] for e in status["events"]] == [f"export-{i}" for i in range(1, 7)]
+    assert [e["id"] for e in status["events"]] == [f"export-{i}" for i in range(1, 9)]
+
+    # IXH-2.5: the completed delivery carries its decision and a signed-or-not attestation whose
+    # subject is the artifact the download route serves.
+    delivery = result["delivery"]
+    assert delivery["decision"] in {"allow", "allow_with_warning"}
+    assert delivery["blocks_delivery"] is False
+    assert delivery["attestation"]["predicate_type"].endswith("/export-delivery/v1")
 
     # The raw emit result is retained for the delivery epics.
     emit_result = get_export_job_emit_result(TENANT_SLUG, accepted.job_id)
@@ -1191,3 +1211,100 @@ async def test_object_store_stub_fails_when_above_db_threshold():
     assert "object-store" in status["error"]["message"].lower() or "not configured" in status[
         "error"
     ]["message"].lower()
+
+
+async def test_policy_blocked_delivery_fails_before_any_artifact_is_stored():
+    """IXH-2.5: a delivery the tenant's export policy refuses never reaches the artifact store."""
+    blocked = DeliveryGateReport(
+        decision=DeliveryDecision.BLOCK,
+        blocks_delivery=True,
+        warns=False,
+        headline="Delivery blocked",
+        message="Quality policy blocks this export: only 42% of the source survives.",
+        reasons=[
+            DeliveryReason(
+                code=DeliveryReasonCode.FIDELITY_BELOW_FLOOR,
+                dimension=DeliveryDimension.FIDELITY,
+                severity=DeliverySeverity.BLOCKING,
+                message="Only 42% of the source survives this conversion.",
+            )
+        ],
+        target="openapi-3.1",
+        policy=ImportPreflightPolicy(
+            verdict="block", blocking=True, scope="export", reason="fidelity floor missed"
+        ),
+        override=DeliveryOverride(
+            available=True,
+            endpoint=f"/v1/tenants/{TENANT_SLUG}/governance/quality-waivers",
+            subject_key="rev-uuid-1",
+            format_key="openapi",
+            roles=["owner", "admin"],
+            instructions="Record an export waiver for this revision.",
+        ),
+    )
+
+    def _must_not_store(*_args, **_kwargs):
+        raise AssertionError("a blocked delivery must not persist artifact bytes")
+
+    request = ExportJobStartRequest(artifact="artifact-1", target="openapi")
+    with patch("app.export_job_engine.load_export_source", return_value=_source()), patch(
+        "app.export_job_engine.evaluate_delivery", return_value=blocked
+    ), patch("app.export_artifact_store.put_export_artifact", side_effect=_must_not_store):
+        accepted = await schedule_export_job(TENANT_SLUG, TENANT_ID, request)
+        status = await _wait_terminal(accepted.job_id)
+
+    assert status["state"] == "failed"
+    assert status["result"] is None
+    assert status["error"]["code"] == "EXPORT_DELIVERY_BLOCKED"
+    assert status["error"]["category"] == "policy"
+    assert status["error"]["retriable"] is False
+    delivery = status["error"]["context"]["delivery"]
+    assert delivery["reasons"][0]["code"] == "DELIVERY_FIDELITY_BELOW_FLOOR"
+    assert delivery["override"]["available"] is True
+    assert delivery["override"]["roles"] == ["owner", "admin"]
+    codes = [e["code"] for e in status["events"]]
+    assert codes[-1] == "EXPORT_DELIVERY_BLOCKED"
+    assert "EXPORT_COMPLETED" not in codes
+    # No artifact is retained, so the download route has nothing to serve.
+    assert get_export_job_emit_result(TENANT_SLUG, accepted.job_id) is None
+
+
+async def test_delivery_warnings_are_logged_and_carried_on_the_result():
+    """An allowed-with-warning delivery ships, annotated: one warn event per warning reason."""
+    warned = DeliveryGateReport(
+        decision=DeliveryDecision.ALLOW_WITH_WARNING,
+        blocks_delivery=False,
+        warns=True,
+        headline="Delivered with warnings",
+        message="Delivered with 1 advisory reason.",
+        reasons=[
+            DeliveryReason(
+                code=DeliveryReasonCode.SOURCE_ERRORS_OPEN,
+                dimension=DeliveryDimension.LINT,
+                severity=DeliverySeverity.WARNING,
+                message="The source revision has 2 open error-severity lint findings.",
+            )
+        ],
+        target="openapi-3.1",
+        policy=ImportPreflightPolicy(
+            verdict="pass", blocking=False, scope="export", reason="no floor configured"
+        ),
+        override=DeliveryOverride(
+            available=False, instructions="No override is needed."
+        ),
+    )
+
+    request = ExportJobStartRequest(artifact="artifact-1", target="openapi")
+    with patch("app.export_job_engine.load_export_source", return_value=_source()), patch(
+        "app.export_job_engine.evaluate_delivery", return_value=warned
+    ):
+        accepted = await schedule_export_job(TENANT_SLUG, TENANT_ID, request)
+        status = await _wait_terminal(accepted.job_id)
+
+    assert status["state"] == "completed"
+    result = status["result"]
+    assert result["delivery"]["decision"] == "allow_with_warning"
+    assert result["delivery"]["attestation"]["predicate_type"].endswith("/export-delivery/v1")
+    warn_events = [e for e in status["events"] if e["level"] == "warn"]
+    assert [e["code"] for e in warn_events] == ["DELIVERY_SOURCE_ERRORS_OPEN"]
+    assert result["download_path"].endswith("/download")

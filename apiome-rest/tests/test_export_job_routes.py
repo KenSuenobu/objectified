@@ -505,3 +505,69 @@ def test_download_of_expired_artifact_is_410():
     dl = client.get(f"/v1/export/acme/jobs/{job_id}/download")
     assert dl.status_code == 410
     assert "expired" in dl.json()["detail"]
+
+
+# ---------------------------------------------------------------------------
+# Delivery attestation — IXH-2.5 (#5100)
+# ---------------------------------------------------------------------------
+def test_openapi_lists_the_attestation_path():
+    spec = app.openapi()
+    path = "/v1/export/{tenant_slug}/jobs/{job_id}/attestation"
+    assert path in spec["paths"]
+    assert "get" in spec["paths"][path]
+
+
+def test_attestation_requires_auth():
+    app.dependency_overrides.pop(validate_authentication, None)
+    assert client.get("/v1/export/acme/jobs/nope/attestation").status_code == 401
+
+
+def test_delivered_artifact_exposes_a_verifiable_attestation():
+    """The download points at the attestation, whose subject digests the served bytes."""
+    import base64
+    import hashlib
+    import json
+
+    with patch("app.export_job_engine.load_export_source", return_value=_source()):
+        r = client.post(
+            "/v1/export/acme/jobs",
+            json={"artifact": "artifact-1", "target": "openapi"},
+        )
+        job_id = r.json()["job_id"]
+        body = _wait_terminal(job_id)
+
+    attestation_path = f"/v1/export/acme/jobs/{job_id}/attestation"
+    dl = client.get(body["result"]["download_path"])
+    assert dl.headers["x-apiome-delivery-attestation-path"] == attestation_path
+
+    response = client.get(attestation_path)
+    assert response.status_code == 200, response.text
+    attestation = response.json()
+    assert attestation["predicate_type"].endswith("/export-delivery/v1")
+
+    statement = json.loads(
+        base64.b64decode(attestation["envelope"]["payload"], validate=True)
+    )
+    assert statement["_type"] == "https://in-toto.io/Statement/v1"
+    assert statement["subject"][0]["digest"]["sha256"] == hashlib.sha256(dl.content).hexdigest()
+    assert statement["predicate"]["delivery"]["jobId"] == job_id
+    assert statement["predicate"]["decision"]["decision"] in {"allow", "allow_with_warning"}
+
+
+def test_attestation_of_a_dry_run_job_is_409():
+    """A dry-run delivers nothing, so there is nothing to attest to."""
+    with patch("app.export_job_engine.load_export_source", return_value=_source()):
+        r = client.post(
+            "/v1/export/acme/jobs",
+            json={"artifact": "artifact-1", "target": "openapi", "dry_run": True},
+        )
+        job_id = r.json()["job_id"]
+        _wait_terminal(job_id)
+
+    response = client.get(f"/v1/export/acme/jobs/{job_id}/attestation")
+    assert response.status_code == 409
+    assert "attestation" in response.json()["detail"]
+
+
+def test_attestation_of_unknown_job_is_404():
+    assert client.get("/v1/export/acme/jobs/does-not-exist/attestation").status_code == 404

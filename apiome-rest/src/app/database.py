@@ -4462,6 +4462,7 @@ class Database:
         id::text AS id, tenant_id::text AS tenant_id, version_number, content_fingerprint,
         import_min_grade, import_min_score, import_block_on_severity, import_enforcement,
         export_min_grade, export_min_score, export_block_on_severity, export_enforcement,
+        export_min_fidelity,
         format_overrides, allow_override, override_roles, waiver_ttl_hours,
         actor_user_id::text AS actor_user_id, actor_label, created_at
     """
@@ -4522,6 +4523,7 @@ class Database:
         export_min_score: Optional[int],
         export_block_on_severity: Optional[str],
         export_enforcement: str,
+        export_min_fidelity: Optional[int],
         format_overrides: Dict[str, Any],
         allow_override: bool,
         override_roles: List[str],
@@ -4546,6 +4548,7 @@ class Database:
             export_min_score: Export score floor, or ``None``.
             export_block_on_severity: Export severity floor, or ``None``.
             export_enforcement: ``advisory`` | ``block``.
+            export_min_fidelity: Export projected-fidelity floor (0-100), or ``None`` (IXH-2.5).
             format_overrides: Per-format override map.
             allow_override: Whether a blocking verdict may be waived.
             override_roles: Role slugs permitted to waive.
@@ -4563,12 +4566,13 @@ class Database:
                 tenant_id, version_number, content_fingerprint,
                 import_min_grade, import_min_score, import_block_on_severity, import_enforcement,
                 export_min_grade, export_min_score, export_block_on_severity, export_enforcement,
+                export_min_fidelity,
                 format_overrides, allow_override, override_roles, waiver_ttl_hours,
                 actor_user_id, actor_label
             )
             SELECT %s::uuid,
                    COALESCE(MAX(version_number), 0) + 1,
-                   %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                   %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                    %s::jsonb, %s, %s::jsonb, %s, %s::uuid, %s
             FROM apiome.import_export_quality_policies
             WHERE tenant_id = %s::uuid
@@ -4585,6 +4589,7 @@ class Database:
             export_min_score,
             export_block_on_severity,
             export_enforcement,
+            export_min_fidelity,
             json.dumps(format_overrides or {}, sort_keys=True),
             allow_override,
             json.dumps(list(override_roles or [])),

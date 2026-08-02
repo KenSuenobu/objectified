@@ -57,6 +57,7 @@ def _row(**overrides: Any) -> Dict[str, Any]:
         "export_min_grade": None,
         "export_min_score": None,
         "export_block_on_severity": None,
+        "export_min_fidelity": None,
         "export_enforcement": "advisory",
         "format_overrides": {},
         "allow_override": True,
@@ -650,3 +651,72 @@ def test_thresholds_merge_only_the_fields_an_override_states():
         QualityThresholds(min_score=90), override_fields=["min_score"]
     )
     assert merged == QualityThresholds(min_grade="B", min_score=90, enforcement="block")
+
+
+# ---------------------------------------------------------------------------
+# Export fidelity floor (IXH-2.5, #5100)
+# ---------------------------------------------------------------------------
+
+
+def test_export_fidelity_floor_is_read_from_the_policy_row():
+    """V238's ``export_min_fidelity`` becomes the export scope's fidelity floor."""
+    policy = policy_from_row(_row(export_min_fidelity=80))
+
+    assert policy.export_thresholds.min_fidelity == 80
+    assert policy.export_thresholds.has_floor is True
+    # The floor is export-only: an import has no target to project fidelity against.
+    assert policy.import_thresholds.min_fidelity is None
+    assert policy.import_thresholds.has_floor is False
+
+
+def test_a_pre_v238_policy_row_simply_has_no_fidelity_floor():
+    """Rows written before the column existed keep their exact recorded behaviour."""
+    row = _row()
+    row.pop("export_min_fidelity", None)
+
+    assert policy_from_row(row).export_thresholds.min_fidelity is None
+
+
+def test_fidelity_floor_only_fails_when_a_measurement_is_supplied():
+    policy = policy_from_row(_row(export_min_fidelity=80, export_enforcement="block"))
+
+    missed = evaluate_quality(
+        policy=policy,
+        scope=SCOPE_EXPORT,
+        format_key="openapi",
+        score=None,
+        grade=None,
+        preserved_percent=42,
+    )
+    assert missed.verdict == "block"
+    assert [f["kind"] for f in missed.failures] == ["fidelity"]
+    assert missed.preserved_percent == 42
+    assert missed.threshold_fidelity == 80
+    assert "42% preserved is below the required 80%" in missed.reason
+
+    unmeasured = evaluate_quality(
+        policy=policy,
+        scope=SCOPE_EXPORT,
+        format_key="openapi",
+        score=None,
+        grade=None,
+        preserved_percent=None,
+    )
+    assert unmeasured.verdict == "pass"
+
+
+def test_a_format_override_may_state_only_the_fidelity_floor():
+    """``minFidelity`` merges like every other override field, inheriting the rest."""
+    policy = policy_from_row(
+        _row(
+            export_min_score=70,
+            export_enforcement="block",
+            format_overrides={"grpc": {"export": {"minFidelity": 95}}},
+        )
+    )
+    thresholds, source = resolve_thresholds(policy, scope=SCOPE_EXPORT, format_key="grpc")
+
+    assert source == "format_override"
+    assert thresholds.min_fidelity == 95
+    assert thresholds.min_score == 70  # inherited, not reset
+    assert thresholds.enforcement == "block"

@@ -38,6 +38,8 @@ and load the source model version-scoped through :func:`app.export_source.load_e
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import time
 from enum import Enum
@@ -47,15 +49,23 @@ import yaml
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field
 
+from . import __version__ as APIOME_VERSION
 from .auth import validate_authentication
-from .capability_registry import CapabilityRegistrySnapshot, REGISTRY_VERSION, registry_snapshot
+from .capability_registry import REGISTRY_VERSION, CapabilityRegistrySnapshot, registry_snapshot
 from .emitter import (
     CapabilityProfile,
     EmitterDescriptor,
     describe_emit_targets,
     get_emitter,
 )
-from .export_dispatch import dispatch_export, dispatch_from_source
+from .export_delivery_gate import (
+    DeliveryGateReport,
+    build_delivery_attestation,
+    delivery_tool_versions,
+    evaluate_delivery,
+    lint_delivery_source,
+)
+from .export_dispatch import dispatch_from_source
 from .export_fidelity import (
     ExportFidelity,
     ExportFidelityTier,
@@ -63,6 +73,7 @@ from .export_fidelity import (
     build_export_fidelity,
     build_target_fidelity,
 )
+from .export_job_engine import serialize_file_content
 from .export_preflight import (
     ExportPreflightReport,
     ExportPreflightRequest,
@@ -85,7 +96,13 @@ from .export_projection import (
     paginate_evidence,
     summarize_manifest,
 )
-from .export_service import ExportError, ExportPersistenceContext, emit_canonical, resolve_emitter
+from .export_service import (
+    ExportError,
+    ExportPersistenceContext,
+    emit_canonical,
+    resolve_emit_format,
+    resolve_emitter,
+)
 from .export_source import ExportSourceError, load_export_source
 from .export_validation import validate_emitted_artifact
 from .export_validation_gate import EmittedValidationReport, build_validation_report
@@ -93,7 +110,6 @@ from .lossiness import LossinessSeverity
 from .projection_manifest_cache import build_manifest_cache_key, manifest_cache
 from .projection_telemetry import ALLOWED_METRIC_KINDS, ALLOWED_REASON_CATEGORIES, projection_telemetry
 from .transcoding_guards import TranscodeGuard, TranscodeGuardError, classify_transcode
-from . import __version__ as APIOME_VERSION
 
 router = APIRouter(prefix="/v1/export", tags=["export"])
 
@@ -382,6 +398,12 @@ class ExportDispatchResponse(BaseModel):
     media_type: Optional[str] = Field(
         default=None,
         description="The bundle's primary media type; null for a dry-run.",
+    )
+    delivery: Optional[DeliveryGateReport] = Field(
+        default=None,
+        description="The delivery gate decision for this dispatch (IXH-2.5) with its named "
+        "reasons and the signed attestation for the returned artifact. Null for a dry-run "
+        "(nothing is delivered).",
     )
 
 
@@ -1050,6 +1072,183 @@ def _document_filename(base_path: str, *, yaml_serialization: bool) -> str:
     return name
 
 
+# ===========================================================================
+# Delivery gate for the synchronous export routes (IXH-2.5)
+# ===========================================================================
+
+#: Largest base64 attestation a synchronous document download carries as a response header.
+#: Beyond it the header is omitted (and said so) rather than risking a proxy's header limit —
+#: the same delivery attested through the async job path is always retrievable in full.
+_ATTESTATION_HEADER_CAP = 6 * 1024
+
+
+def _delivery_gate_for_source(
+    source: Any,
+    *,
+    tenant_id: str,
+    tenant_slug: str,
+    target_format: str,
+    target_key: Optional[str],
+    preserved_percent: Optional[int],
+    validation: Optional[EmittedValidationReport] = None,
+) -> DeliveryGateReport:
+    """Run the IXH-2.5 delivery gate for one synchronous export, raising 409 when it blocks.
+
+    A policy enforced only on the async job path is not enforced: the CLI and any script reach
+    ``…/document`` and ``…/dispatch`` directly, so both are gated here with the same engine the
+    job uses. The **source lint** is the pre-flight's linter (so the grade this gate judges is the
+    grade the pre-flight showed), and the fidelity floor is measured against the projected
+    preserved percentage the caller already computed.
+
+    The **emitted-artifact validation** dimension is only folded in when the caller ran it: the
+    synchronous document route deliberately does not re-parse its own output (that is what
+    ``POST …/verify`` and the async job are for), so its decision spans the lint, fidelity, and
+    policy dimensions and reports ``validationVerdict: null``.
+
+    Args:
+        source: The loaded :class:`~app.export_source.ExportSource`.
+        tenant_id: The authenticated tenant.
+        tenant_slug: The tenant slug, for the override path's waiver endpoint.
+        target_format: The resolved target format key.
+        target_key: The target's registry key for policy override resolution.
+        preserved_percent: The conversion's projected preserved-construct percentage.
+        validation: The emitted-artifact validation report, when the caller computed one.
+
+    Returns:
+        The non-blocking :class:`~app.export_delivery_gate.DeliveryGateReport`.
+
+    Raises:
+        HTTPException: 409 when the gate blocks the delivery — the body carries the decision, its
+            named reasons, and the override path, and **no artifact bytes are returned**.
+    """
+    lint = lint_delivery_source(
+        source.api, tenant_id=tenant_id, project_id=source.artifact_id
+    )
+    decision = evaluate_delivery(
+        tenant_id=tenant_id,
+        tenant_slug=tenant_slug,
+        target_format=target_format,
+        target_key=target_key or target_format,
+        version_record_id=source.version_record_id,
+        validation=validation,
+        lint=lint,
+        preserved_percent=preserved_percent,
+    )
+    if decision.blocks_delivery:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": decision.message,
+                "delivery": decision.model_dump(mode="json", exclude_none=True),
+            },
+        )
+    return decision
+
+
+def _attest_sync_delivery(
+    decision: DeliveryGateReport,
+    source: Any,
+    *,
+    tenant_id: str,
+    tenant_slug: str,
+    target_format: str,
+    filename: str,
+    body: bytes,
+    media_type: Optional[str],
+    validation: Optional[EmittedValidationReport] = None,
+) -> DeliveryGateReport:
+    """Attach the delivery attestation for a synchronous export's exact returned bytes.
+
+    Args:
+        decision: The allowed decision from :func:`_delivery_gate_for_source`.
+        source: The loaded export source (for the delivery identity).
+        tenant_id: The authenticated tenant.
+        tenant_slug: The tenant slug.
+        target_format: The resolved target format key.
+        filename: The artifact's download filename.
+        body: The exact bytes handed back, which the attestation subject digests.
+        media_type: The artifact's media type.
+        validation: The emitted-artifact validation report, for the validator identity.
+
+    Returns:
+        The decision with its :class:`~app.export_delivery_gate.DeliveryAttestation` attached.
+    """
+    return build_delivery_attestation(
+        decision,
+        tenant_id=tenant_id,
+        delivery={
+            "tenantSlug": tenant_slug,
+            "artifactId": source.artifact_id,
+            "versionRecordId": source.version_record_id,
+            "versionLabel": source.version_label,
+            "target": target_format,
+            "channel": "synchronous",
+        },
+        artifact={
+            "filename": filename,
+            "contentSha256": hashlib.sha256(body).hexdigest(),
+            "sizeBytes": len(body),
+            "mediaType": media_type,
+        },
+        tools=delivery_tool_versions(
+            target_format=target_format,
+            apiome_version=APIOME_VERSION,
+            validation=validation,
+        ),
+    )
+
+
+def _disposition_filename(response: Response) -> str:
+    """The download filename a rendered document response advertises.
+
+    Read back off the response rather than re-derived, so the attestation names the artifact by
+    exactly the filename the client receives.
+
+    Args:
+        response: The rendered document response.
+
+    Returns:
+        The ``Content-Disposition`` filename, or ``export-artifact`` when it carries none.
+    """
+    disposition = response.headers.get("Content-Disposition") or ""
+    marker = 'filename="'
+    start = disposition.find(marker)
+    if start < 0:
+        return "export-artifact"
+    start += len(marker)
+    end = disposition.find('"', start)
+    return disposition[start:end] if end > start else "export-artifact"
+
+
+def _attestation_headers(decision: DeliveryGateReport) -> Dict[str, str]:
+    """Response headers carrying a synchronous delivery's decision and attestation.
+
+    A raw-bytes download has no body to put the attestation in, so it rides as a base64 header —
+    the same DSSE envelope, just transport-encoded. An envelope that would exceed
+    :data:`_ATTESTATION_HEADER_CAP` is omitted with ``X-Apiome-Delivery-Attestation-Omitted:
+    size`` rather than emitting a header a proxy may truncate or reject.
+
+    Args:
+        decision: The allowed delivery decision, ideally already attested.
+
+    Returns:
+        The headers to merge into the download response.
+    """
+    headers: Dict[str, str] = {"X-Apiome-Delivery-Decision": decision.decision.value}
+    if decision.attestation is None:
+        return headers
+    encoded = base64.b64encode(
+        json.dumps(decision.attestation.envelope, sort_keys=True, separators=(",", ":")).encode(
+            "utf-8"
+        )
+    ).decode("ascii")
+    if len(encoded) > _ATTESTATION_HEADER_CAP:
+        headers["X-Apiome-Delivery-Attestation-Omitted"] = "size"
+        return headers
+    headers["X-Apiome-Delivery-Attestation"] = encoded
+    return headers
+
+
 def render_emitted_document(
     api: Any,
     target: str,
@@ -1153,7 +1352,9 @@ async def emit_export_document(
     Raises:
         HTTPException: 404 when the artifact/version is unknown; 422 when the revision has no
             reconstructable source or the emitter produced no document; 400 when the target,
-            source format, or options are unsupported.
+            source format, or options are unsupported; 409 when the tenant's export quality
+            policy blocks the delivery (IXH-2.5) — the body carries the reasons and the override
+            path, and no document bytes are returned.
     """
     tenant_id = auth_data["tenant_id"]
     try:
@@ -1161,7 +1362,25 @@ async def emit_export_document(
     except ExportSourceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
-    return render_emitted_document(
+    # The delivery gate runs *before* the emit, so a blocked delivery never even produces bytes
+    # to withhold. The projected fidelity comes from the same cheap summary builder the export
+    # pre-flight ranks targets with, so the floor is measured identically on both surfaces.
+    try:
+        target_format = resolve_emit_format(request.target)
+        emitter_cls = get_emitter(target_format)
+    except ExportError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+    fidelity = build_target_fidelity(source.api, emitter_cls)
+    decision = _delivery_gate_for_source(
+        source,
+        tenant_id=str(tenant_id),
+        tenant_slug=tenant_slug,
+        target_format=target_format,
+        target_key=emitter_cls.key or target_format,
+        preserved_percent=fidelity.preserved_percent,
+    )
+
+    response = render_emitted_document(
         source.api,
         request.target,
         request.options,
@@ -1171,6 +1390,18 @@ async def emit_export_document(
             artifact_id=source.artifact_id,
         ),
     )
+    decision = _attest_sync_delivery(
+        decision,
+        source,
+        tenant_id=str(tenant_id),
+        tenant_slug=tenant_slug,
+        target_format=target_format,
+        filename=_disposition_filename(response),
+        body=bytes(response.body or b""),
+        media_type=response.media_type,
+    )
+    response.headers.update(_attestation_headers(decision))
+    return response
 
 
 @router.post(
@@ -1206,22 +1437,47 @@ async def dispatch_export_document(
         HTTPException: 404 when the artifact/version is unknown; 422 when the revision has no
             reconstructable source or the emitter produced no document; 400 when the target or
             source format is unsupported; 422 when the emit options are invalid for the target;
-            409 when the conversion is severe (MFX-3.3) and ``confirm`` was not set.
+            409 when the conversion is severe (MFX-3.3) and ``confirm`` was not set, or when the
+            tenant's export quality policy blocks the delivery (IXH-2.5).
     """
     tenant_id = str(auth_data["tenant_id"])
     try:
-        dispatch = dispatch_export(
-            tenant_id,
-            request.artifact,
-            request.version,
+        source = load_export_source(tenant_id, request.artifact, request.version)
+    except ExportSourceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+
+    # Gate the delivery *before* the emit (IXH-2.5). Emitting first would both waste the work and
+    # write proto3 field-identity rows for an artifact that is never delivered; a dry-run delivers
+    # nothing, so it is not gated (the same rule the async job's dry-run gate applies).
+    decision: Optional[DeliveryGateReport] = None
+    if not request.dry_run:
+        try:
+            target_format = resolve_emit_format(request.target)
+            emitter_cls = get_emitter(target_format)
+        except ExportError as exc:
+            raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+        projected = build_target_fidelity(source.api, emitter_cls)
+        decision = _delivery_gate_for_source(
+            source,
+            tenant_id=tenant_id,
+            tenant_slug=tenant_slug,
+            target_format=target_format,
+            target_key=emitter_cls.key or target_format,
+            preserved_percent=projected.preserved_percent,
+        )
+
+    try:
+        dispatch = dispatch_from_source(
+            source,
             request.target,
             options=request.options,
             min_severity=request.min_severity,
             dry_run=request.dry_run,
             confirm=request.confirm,
+            persistence=ExportPersistenceContext(
+                tenant_id=tenant_id, artifact_id=source.artifact_id
+            ),
         )
-    except ExportSourceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
     except ExportError as exc:
         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
     except TranscodeGuardError as exc:
@@ -1245,6 +1501,26 @@ async def dispatch_export_document(
             )
             for f in dispatch.emit.files
         ]
+        if decision is not None:
+            # The attestation's subject is the artifact this response actually carries, so it is
+            # digested over the canonical serialization of the inline files — the bytes a client
+            # would write to disk, in a stable order.
+            inline = json.dumps(
+                [{"path": f.path, "content": serialize_file_content(f.content)}
+                 for f in dispatch.emit.files],
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+            decision = _attest_sync_delivery(
+                decision,
+                source,
+                tenant_id=tenant_id,
+                tenant_slug=tenant_slug,
+                target_format=dispatch.target,
+                filename=dispatch.emit.files[0].path,
+                body=inline,
+                media_type=media_type,
+            )
 
     return ExportDispatchResponse(
         artifact=dispatch.artifact,
@@ -1257,6 +1533,7 @@ async def dispatch_export_document(
         guard=dispatch.guard,
         files=files,
         media_type=media_type,
+        delivery=decision,
     )
 
 

@@ -37,6 +37,99 @@ export type ExportJobStageKey =
   | 'validating'
   | 'packaging';
 
+/** The export delivery gate's single verdict (mirrors Python `DeliveryDecision`, IXH-2.5). */
+export type DeliveryDecision = 'allow' | 'allow_with_warning' | 'block';
+
+/** Which of the gate's four inputs a reason came from (mirrors `DeliveryDimension`). */
+export type DeliveryDimension = 'validation' | 'lint' | 'fidelity' | 'policy';
+
+/** How much a delivery reason weighs on the decision (mirrors `DeliverySeverity`). */
+export type DeliverySeverity = 'info' | 'warning' | 'blocking';
+
+/**
+ * One named contribution to the delivery decision (mirrors Python `DeliveryReason`). Branch on
+ * {@link code} — a stable, additive-only string — never on the message.
+ */
+export interface DeliveryReason {
+  /** Stable reason code, e.g. `DELIVERY_FIDELITY_BELOW_FLOOR`. */
+  code: string;
+  /** The input that produced the reason. */
+  dimension: DeliveryDimension;
+  /** Whether the reason blocked the delivery, warned about it, or is context only. */
+  severity: DeliverySeverity;
+  /** Ready-to-render sentence explaining this reason. */
+  message: string;
+  /** Structured backing (the missed floor and the actual value), when the server attaches any. */
+  detail?: Record<string, unknown> | null;
+}
+
+/** The path a blocked delivery may be unblocked through (mirrors `DeliveryOverride`). */
+export interface DeliveryOverride {
+  /** False when nothing is blocked, policy forbids overrides, or the artifact is invalid. */
+  available: boolean;
+  /** Relative URL a waiver is `POST`ed to, when one may be recorded. */
+  endpoint?: string | null;
+  /** The gate scope a waiver must be recorded under (always `export` here). */
+  scope?: string;
+  /** The subject key the waiver must carry — the source revision id. */
+  subject_key?: string | null;
+  /** The export target the waiver must name. */
+  format_key?: string | null;
+  /** Effective role slugs permitted to record the waiver. */
+  roles?: string[];
+  /** One sentence telling the user what to do next — render verbatim. */
+  instructions: string;
+}
+
+/** The signed evidence attached to a delivered artifact (mirrors `DeliveryAttestation`). */
+export interface DeliveryAttestation {
+  /** The in-toto predicate type of the wrapped statement. */
+  predicate_type: string;
+  /** False when the server has no signing secret configured (still well-formed, not verifiable). */
+  signed: boolean;
+  /** The key id a verifier uses to select the shared secret. */
+  key_id?: string | null;
+  /** Statement timestamp (ISO-8601, UTC). */
+  generated_at: string;
+  /** The DSSE envelope: `payloadType` / base64 `payload` / `signatures`. */
+  envelope: Record<string, unknown>;
+}
+
+/**
+ * The delivery gate decision for one export (mirrors Python `DeliveryGateReport`, IXH-2.5).
+ *
+ * One verdict over four dimensions — the emitted-artifact validation, the source's lint grade,
+ * the projected fidelity floor, and the tenant's export quality policy — with the named reasons
+ * that produced it. A completed job carries it on `result.delivery`; a blocked one carries it on
+ * `error.context.delivery`, where {@link deliveryReportFromError} reads it.
+ */
+export interface DeliveryGateReport {
+  /** The single delivery verdict. */
+  decision: DeliveryDecision;
+  /** True only for `block` — the one flag a delivery surface branches on. */
+  blocks_delivery: boolean;
+  /** True for `allow_with_warning`. */
+  warns: boolean;
+  /** Short banner heading for the gate. */
+  headline: string;
+  /** The full, ready-to-display sentence. */
+  message: string;
+  /** Every named contribution, blocking reasons first. */
+  reasons: DeliveryReason[];
+  /** The resolved target format key the decision applies to. */
+  target: string;
+  /** The source revision's lint grade, when it was graded. */
+  source_grade?: string | null;
+  /** The source revision's lint score, when it was graded. */
+  source_score?: number | null;
+  /** The projected preserved-construct percentage the fidelity floor was measured against. */
+  preserved_percent?: number | null;
+  /** The override path, or its absence. */
+  override: DeliveryOverride;
+  /** The signed attestation for the delivered artifact; null on a blocked delivery. */
+  attestation?: DeliveryAttestation | null;
+}
+
 /** A structured job log line (mirrors Python `ExportJobEvent`). */
 export interface ExportJobEvent {
   /** Per-job sequence id, e.g. `export-3`. */
@@ -101,6 +194,8 @@ export interface ExportJobResult {
   fidelity?: ExportFidelityEnvelope | null;
   /** The emitted-output validation gate + report, set on a completed real export. */
   validation?: EmittedValidationReport | null;
+  /** The delivery gate decision + attestation (IXH-2.5); null for a dry-run. */
+  delivery?: DeliveryGateReport | null;
   /** Manifest of emitted files; empty for a dry-run. */
   files: ExportJobFile[];
   /** The bundle's primary media type; null for a dry-run. */
@@ -226,6 +321,9 @@ export function failedStageForCode(code: string | null | undefined): ExportJobSt
     case 'EMPTY_EMIT':
       return 'emitting';
     case 'EMITTED_ARTIFACT_INVALID':
+    // The delivery gate (IXH-2.5) consumes the validation verdict, so it decides at the end of
+    // the validating stage — before anything is packaged.
+    case 'EXPORT_DELIVERY_BLOCKED':
       return 'validating';
     case 'PACKAGING_FAILED':
       return 'packaging';
@@ -306,6 +404,7 @@ export type ExportFailureClass =
   | 'stale-preview'
   | 'emitter'
   | 'validation'
+  | 'policy'
   | 'packaging'
   | 'delivery'
   | 'canceled'
@@ -320,7 +419,9 @@ export type ExportFailureClass =
  * - `acknowledge-and-retry` — a severe conversion the guard blocked; acknowledge, then re-submit
  *   with confirmation;
  * - `fix-in-verify` — the emitted artifact failed the validation gate; route back to the Verify
- *   lenses with the validator's findings loaded so the user sees exactly what was rejected.
+ *   lenses with the validator's findings loaded so the user sees exactly what was rejected;
+ * - `request-waiver` — the tenant's export quality policy blocked the delivery (IXH-2.5); show
+ *   the named reasons and the override path so a permitted role can record a waiver.
  */
 export type ExportRecoveryAction =
   | 'retry'
@@ -328,6 +429,7 @@ export type ExportRecoveryAction =
   | 'reconfigure-options'
   | 'acknowledge-and-retry'
   | 'fix-in-verify'
+  | 'request-waiver'
   | 'refresh-preview';
 
 /** The presentation of a job failure: class, stage, copy, and the recovery action + label. */
@@ -476,6 +578,20 @@ export function classifyExportFailure(
         },
         error,
       );
+    case 'EXPORT_DELIVERY_BLOCKED':
+      return applyTaxonomyCopy(
+        {
+          class: 'policy',
+          stage: 'validating',
+          title: 'Delivery blocked by quality policy',
+          description:
+            "This tenant's export quality policy refused the delivery. Review the reasons below, then either raise the source's quality (or pick a higher-fidelity target), or ask a permitted role to record an export waiver.",
+          action: 'request-waiver',
+          actionLabel: 'How to unblock this',
+          retriable: false,
+        },
+        error,
+      );
     case 'PACKAGING_FAILED':
       return applyTaxonomyCopy(
         {
@@ -538,6 +654,43 @@ export function validationReportFromError(
   const report = raw as Partial<EmittedValidationReport>;
   if (typeof report.verdict !== 'string') return null;
   return raw as EmittedValidationReport;
+}
+
+/**
+ * Read the delivery gate decision back off a failed job's structured error (IXH-2.5).
+ *
+ * A blocked delivery carries its whole decision — reasons and override path — on
+ * `error.context.delivery`, exactly as a completed job carries it on `result.delivery`, so one
+ * panel renders both. Returns null for any other failure, or a context whose shape does not
+ * match (a server older than IXH-2.5).
+ *
+ * @param error The job's structured terminal error, or null.
+ * @returns The delivery gate decision, or null.
+ */
+export function deliveryReportFromError(
+  error: ExportJobError | null | undefined,
+): DeliveryGateReport | null {
+  const raw = error?.context?.delivery;
+  if (!raw || typeof raw !== 'object') return null;
+  const report = raw as Partial<DeliveryGateReport>;
+  if (typeof report.decision !== 'string' || !Array.isArray(report.reasons)) return null;
+  return raw as DeliveryGateReport;
+}
+
+/**
+ * The delivery gate decision worth showing for a job, from whichever terminal shape carries it.
+ *
+ * A completed job's decision is only worth surfacing when it warns — a clean allow has nothing
+ * to say — while a failed job's decision is the reason it failed.
+ *
+ * @param status The job poll payload.
+ * @returns The decision to render, or null when there is nothing to say.
+ */
+export function deliveryReportFor(status: ExportJobStatus): DeliveryGateReport | null {
+  if (status.state === 'failed') return deliveryReportFromError(status.error);
+  const delivery = status.result?.delivery;
+  if (!delivery) return null;
+  return delivery.decision === 'allow' ? null : delivery;
 }
 
 /**

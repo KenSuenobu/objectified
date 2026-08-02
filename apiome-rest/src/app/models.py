@@ -1569,17 +1569,23 @@ class ImportPreflightPolicyFailure(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    kind: Literal["score", "grade", "severity"] = Field(
-        description="Which floor was missed: the score floor, the grade floor, or the severity floor."
+    kind: Literal["score", "grade", "severity", "fidelity"] = Field(
+        description=(
+            "Which floor was missed: the score floor, the grade floor, the severity floor, or "
+            "(export only) the projected-fidelity floor."
+        )
     )
     required: Union[int, str, None] = Field(
-        None, description="What policy requires (a score, a grade, or a severity name)."
+        None,
+        description=(
+            "What policy requires (a score, a grade, a severity name, or a preserved percentage)."
+        ),
     )
     actual: Union[int, str, None] = Field(
         None,
         description=(
-            "What the candidate has: its score, its grade, or — for a severity floor — how many "
-            "findings sit at or above that severity."
+            "What the candidate has: its score, its grade, its preserved percentage, or — for a "
+            "severity floor — how many findings sit at or above that severity."
         ),
     )
 
@@ -1627,6 +1633,20 @@ class ImportPreflightPolicy(BaseModel):
     )
     min_grade: Optional[str] = Field(
         None, description="Minimum letter grade policy requires, or null when no grade floor applies."
+    )
+    min_fidelity: Optional[int] = Field(
+        None,
+        description=(
+            "Minimum projected preserved-construct percentage policy requires for a delivery "
+            "(export scope, IXH-2.5), or null when no fidelity floor applies."
+        ),
+    )
+    preserved_percent: Optional[int] = Field(
+        None,
+        description=(
+            "The projected preserved-construct percentage the verdict was measured against, or "
+            "null when the caller supplied none (every import verdict)."
+        ),
     )
     block_on_severity: Optional[str] = Field(
         None,
@@ -4796,6 +4816,18 @@ class QualityPolicyThresholdsOut(BaseModel):
         validation_alias=AliasChoices("blockOnSeverity", "block_on_severity"),
         serialization_alias="blockOnSeverity",
         description="Severity at or above which findings are unacceptable; null = not gated.",
+    )
+    min_fidelity: Optional[int] = Field(
+        None,
+        ge=0,
+        le=100,
+        validation_alias=AliasChoices("minFidelity", "min_fidelity"),
+        serialization_alias="minFidelity",
+        description=(
+            "Lowest acceptable projected preserved-construct percentage for a delivery "
+            "(IXH-2.5); null = no fidelity floor. Only the export scope measures fidelity, so "
+            "the floor is inert in the import scope."
+        ),
     )
     enforcement: Literal["advisory", "block"] = Field(
         "advisory",

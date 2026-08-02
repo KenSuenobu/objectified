@@ -10,7 +10,9 @@ Pins the route contract:
   emit options (422) map to the right HTTP status.
 
 The source loader is faked (its own DB-backed logic is exercised in ``test_export_source.py``),
-so these tests pin only the route wiring; the emitter path runs the real registry/SPI.
+so these tests pin only the route wiring; the emitter path runs the real registry/SPI. The route
+loads the source itself (rather than through ``dispatch_export``) since IXH-2.5, so that it can
+run the delivery gate before any emit — hence the loader is patched on ``app.export_routes``.
 """
 
 from __future__ import annotations
@@ -87,7 +89,7 @@ def test_dispatch_returns_document_and_fidelity_together():
     """A real dispatch returns the emitted document inline plus the full fidelity envelope."""
     app.dependency_overrides[validate_authentication] = _override_auth
     try:
-        with patch("app.export_dispatch.load_export_source", return_value=_source()):
+        with patch("app.export_routes.load_export_source", return_value=_source()):
             response = client.post(
                 "/v1/export/test-tenant/dispatch",
                 json={"artifact": "artifact-1", "version": "1.0.0", "target": "openapi"},
@@ -119,7 +121,7 @@ def test_dispatch_dry_run_returns_report_without_artifact():
     """``dry_run`` returns the fidelity report and no files (the /preview shape)."""
     app.dependency_overrides[validate_authentication] = _override_auth
     try:
-        with patch("app.export_dispatch.load_export_source", return_value=_source()):
+        with patch("app.export_routes.load_export_source", return_value=_source()):
             response = client.post(
                 "/v1/export/test-tenant/dispatch",
                 json={"artifact": "artifact-1", "target": "openapi", "dry_run": True},
@@ -140,7 +142,7 @@ def test_dispatch_404_when_source_not_found():
     app.dependency_overrides[validate_authentication] = _override_auth
     try:
         with patch(
-            "app.export_dispatch.load_export_source",
+            "app.export_routes.load_export_source",
             side_effect=ExportSourceError("Artifact 'nope' was not found.", status_code=404),
         ):
             response = client.post(
@@ -158,7 +160,7 @@ def test_dispatch_422_when_source_has_no_reconstructable_model():
     app.dependency_overrides[validate_authentication] = _override_auth
     try:
         with patch(
-            "app.export_dispatch.load_export_source",
+            "app.export_routes.load_export_source",
             side_effect=ExportSourceError("no captured source", status_code=422),
         ):
             response = client.post(
@@ -174,7 +176,7 @@ def test_dispatch_400_when_target_unknown():
     """An unknown target maps to a 400."""
     app.dependency_overrides[validate_authentication] = _override_auth
     try:
-        with patch("app.export_dispatch.load_export_source", return_value=_source()):
+        with patch("app.export_routes.load_export_source", return_value=_source()):
             response = client.post(
                 "/v1/export/test-tenant/dispatch",
                 json={"artifact": "artifact-1", "target": "does-not-exist"},
@@ -188,7 +190,7 @@ def test_dispatch_422_when_options_invalid():
     """Invalid per-target emit options map to a 422."""
     app.dependency_overrides[validate_authentication] = _override_auth
     try:
-        with patch("app.export_dispatch.load_export_source", return_value=_source()):
+        with patch("app.export_routes.load_export_source", return_value=_source()):
             response = client.post(
                 "/v1/export/test-tenant/dispatch",
                 json={

@@ -114,6 +114,15 @@ DELIVERY_ERROR_TAXONOMY: Dict[str, DeliveryErrorDescriptor] = {
             "findings, adjust the source or options, and try again.",
         ),
         _d(
+            "EXPORT_DELIVERY_BLOCKED",
+            JobErrorCategory.POLICY,
+            False,
+            "The tenant's export quality policy refused this delivery. Review the named "
+            "reasons, then either raise the source's quality (or pick a higher-fidelity "
+            "target) and export again, or ask a permitted role to record an export waiver "
+            "for this revision.",
+        ),
+        _d(
             "EXPORT_ARTIFACT_TOO_LARGE",
             JobErrorCategory.RESOURCE,
             False,

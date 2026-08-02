@@ -17,7 +17,8 @@ style guide, and then for **every registered target**:
 * the **capability verdict** — which construct classes this source actually uses vs. which the
   target's :class:`~app.emitter.CapabilityProfile` declares it can carry;
 * the **policy verdict** — the tenant's export quality policy (IXH-2.3) evaluated against the
-  source's grade for that target, honouring an active waiver;
+  source's grade *and* this target's projected fidelity (the IXH-2.5 fidelity floor), honouring
+  an active waiver;
 * a composite **readiness** score, a band, a rank, and a one-line rationale.
 
 Nothing is emitted and nothing is written: no export job, no artifact, no field-identity rows.
@@ -674,12 +675,16 @@ def rank_export_targets(
             available=available,
             unavailable_reason=descriptor.unavailable_reason,
         )
+        # The projected preserved percentage is the fidelity floor's input (IXH-2.5): the
+        # pre-flight answers it from the prediction, the delivery gate from the job's own
+        # envelope — the same number, so a target banded ``blocked`` here is refused there.
         verdict = evaluate_export_quality(
             tenant_id=tenant_id,
             target_key=descriptor.key,
             score=lint.score,
             grade=lint.grade,
             severity_counts=dict(lint.severity_counts),
+            preserved_percent=fidelity.preserved_percent,
             subject_key=subject_key,
             policy=policy,
         )

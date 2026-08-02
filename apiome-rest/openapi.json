@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.103.0",
+    "version": "1.104.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -46832,6 +46832,104 @@
         }
       }
     },
+    "/v1/export/{tenant_slug}/jobs/{job_id}/attestation": {
+      "get": {
+        "tags": [
+          "export-jobs"
+        ],
+        "summary": "Fetch a delivered artifact's signed delivery attestation",
+        "description": "The delivery attestation for a completed export job (IXH-2.5): an **in-toto Statement v1** in a **DSSE envelope**, HMAC-SHA256 signed with the shared attestation secret (``APIOME_LINT_ATTESTATION_SIGNING_SECRET`` \u2014 the same key the CLX-4.2 lint gate attestations use, so a verifier needs no new configuration).\n\nThe statement's subject is the delivered artifact, digested with a plain ``sha256`` over the exact bytes the download route serves, so ``sha256sum`` on the downloaded file is enough to tie the two together. Its predicate records the delivery identity, the tool versions, the source lint fingerprint, the policy version and content fingerprint that were applied, any waiver the decision honoured, and the delivery decision with its named reasons \u2014 everything needed to reproduce the verdict offline. ``apiome lint verify-attestation`` verifies it as-is.\n\n404 when the job is unknown for this tenant; 409 when the job produced no attested delivery (still running, canceled, failed, or a dry-run).",
+        "operationId": "get_export_job_attestation_v1_export__tenant_slug__jobs__job_id__attestation_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id",
+              "description": "Job Id schema."
+            },
+            "description": "Asynchronous job identifier."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Fetchadeliveredartifactssigneddeliveryatauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Fetchadeliveredartifactssigneddeliveryatauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Fetchadeliveredartifactssigneddeliveryat Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Fetchadeliveredartifactssigneddeliveryat Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for fetch a delivered artifact's signed delivery attestation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryAttestation",
+                  "description": "Response payload for fetchadeliveredartifactssigneddeliveryatresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for fetchadeliveredartifactssigneddeliveryatresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/tenants/{tenant_slug}/repository-polling-quota": {
       "get": {
         "tags": [
@@ -73521,6 +73619,58 @@
         "title": "DeleteVariantResponse",
         "description": "The outcome of removing a variant."
       },
+      "DeliveryAttestation": {
+        "properties": {
+          "predicate_type": {
+            "type": "string",
+            "title": "Predicate Type",
+            "description": "The in-toto predicate type of the wrapped statement.",
+            "example": "example"
+          },
+          "signed": {
+            "type": "boolean",
+            "title": "Signed",
+            "description": "Whether the envelope carries a signature. False when no attestation signing secret is configured on this server \u2014 the document is still well-formed, just not verifiable.",
+            "example": false
+          },
+          "key_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Delivery Attestation schema."
+              },
+              {
+                "type": "null",
+                "description": "Delivery Attestation schema."
+              }
+            ],
+            "title": "Key Id",
+            "description": "The key id a verifier uses to select the shared secret."
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At",
+            "description": "Statement timestamp (ISO-8601, UTC).",
+            "example": "2026-08-02T05:47:15Z"
+          },
+          "envelope": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Envelope",
+            "description": "The DSSE envelope: ``payloadType`` / base64 ``payload`` / ``signatures``. Verifiable offline with the shared secret and the standard library alone."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "predicate_type",
+          "signed",
+          "generated_at",
+          "envelope"
+        ],
+        "title": "DeliveryAttestation",
+        "description": "The signed evidence attached to a delivered artifact."
+      },
       "DeliveryBody": {
         "properties": {
           "dispatched": {
@@ -73543,6 +73693,331 @@
         ],
         "title": "DeliveryBody",
         "description": "Whether anything was actually evicted."
+      },
+      "DeliveryDecision": {
+        "type": "string",
+        "enum": [
+          "allow",
+          "allow_with_warning",
+          "block"
+        ],
+        "title": "DeliveryDecision",
+        "description": "The gate's single verdict for one delivery.\n\n``allow`` \u2014 nothing to say; the artifact is delivered as before.\n``allow_with_warning`` \u2014 delivered, but with at least one reason the consumer should read\n(validation could not run, the source carries open errors, an advisory floor was missed, or\na waiver is carrying the delivery).\n``block`` \u2014 refused: no artifact bytes are produced or served."
+      },
+      "DeliveryDimension": {
+        "type": "string",
+        "enum": [
+          "validation",
+          "lint",
+          "fidelity",
+          "policy"
+        ],
+        "title": "DeliveryDimension",
+        "description": "Which of the four inputs a reason came from."
+      },
+      "DeliveryGateReport": {
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/DeliveryDecision",
+            "description": "The single delivery verdict."
+          },
+          "blocks_delivery": {
+            "type": "boolean",
+            "title": "Blocks Delivery",
+            "description": "True only for ``block``. The one flag a delivery path branches on.",
+            "example": false
+          },
+          "warns": {
+            "type": "boolean",
+            "title": "Warns",
+            "description": "True for ``allow_with_warning``.",
+            "example": false
+          },
+          "headline": {
+            "type": "string",
+            "title": "Headline",
+            "description": "Short banner heading for the gate.",
+            "example": "example"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "The full, ready-to-display sentence. Render verbatim.",
+            "example": "Example validation message."
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/DeliveryReason"
+            },
+            "type": "array",
+            "title": "Reasons",
+            "description": "Every named contribution, blocking reasons first. Empty on a clean allow.",
+            "maxItems": 1000
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "The resolved target format key the decision applies to.",
+            "example": "example"
+          },
+          "validation_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ValidationVerdict"
+              },
+              {
+                "type": "null",
+                "description": "Delivery Gate Report schema."
+              }
+            ],
+            "description": "The emitted-artifact validation band the decision folded in, when one ran."
+          },
+          "source_score": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Delivery Gate Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Delivery Gate Report schema."
+              }
+            ],
+            "title": "Source Score",
+            "description": "The source revision's lint score, when it was graded."
+          },
+          "source_grade": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Delivery Gate Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Delivery Gate Report schema."
+              }
+            ],
+            "title": "Source Grade",
+            "description": "The source revision's lint grade, when it was graded."
+          },
+          "source_report_fingerprint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Delivery Gate Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Delivery Gate Report schema."
+              }
+            ],
+            "title": "Source Report Fingerprint",
+            "description": "Fingerprint of the source lint report the decision used \u2014 the same value the attestation records, so a verdict can be tied to an exact lint run."
+          },
+          "preserved_percent": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Delivery Gate Report schema."
+              },
+              {
+                "type": "null",
+                "description": "Delivery Gate Report schema."
+              }
+            ],
+            "title": "Preserved Percent",
+            "description": "The projected preserved-construct percentage the fidelity floor was measured against; null when the caller measured none."
+          },
+          "policy": {
+            "$ref": "#/components/schemas/ImportPreflightPolicy",
+            "description": "The tenant's export quality-policy verdict, in the one shape every import/export policy surface returns."
+          },
+          "override": {
+            "$ref": "#/components/schemas/DeliveryOverride",
+            "description": "The override path, or its absence."
+          },
+          "attestation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryAttestation"
+              },
+              {
+                "type": "null",
+                "description": "Delivery Gate Report schema."
+              }
+            ],
+            "description": "The signed delivery attestation. Attached once the artifact bytes exist (:func:`build_delivery_attestation`); always null on a blocked delivery, which has no artifact to attest to."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "decision",
+          "blocks_delivery",
+          "warns",
+          "headline",
+          "message",
+          "target",
+          "policy",
+          "override"
+        ],
+        "title": "DeliveryGateReport",
+        "description": "The delivery gate's decision for one export, with everything that produced it."
+      },
+      "DeliveryOverride": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "description": "Whether an override exists at all. False when nothing is blocked, when the policy forbids overrides, or when the block came from the validator (an artifact that is illegal in its target format cannot be waived).",
+            "example": false
+          },
+          "endpoint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Delivery Override schema."
+              },
+              {
+                "type": "null",
+                "description": "Delivery Override schema."
+              }
+            ],
+            "title": "Endpoint",
+            "description": "Relative URL a waiver is recorded at (``POST``), when one may be recorded."
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "description": "The gate scope a waiver must be recorded under.",
+            "default": "export",
+            "example": "example"
+          },
+          "subject_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Delivery Override schema."
+              },
+              {
+                "type": "null",
+                "description": "Delivery Override schema."
+              }
+            ],
+            "title": "Subject Key",
+            "description": "The subject key the waiver must carry \u2014 the source revision id, matching what the export pre-flight reported."
+          },
+          "format_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Delivery Override schema."
+              },
+              {
+                "type": "null",
+                "description": "Delivery Override schema."
+              }
+            ],
+            "title": "Format Key",
+            "description": "The export target the waiver must name; a waiver for one target never covers another."
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles",
+            "description": "Effective role slugs permitted to record the waiver.",
+            "maxItems": 1000
+          },
+          "instructions": {
+            "type": "string",
+            "title": "Instructions",
+            "description": "One sentence telling the user what to do next \u2014 rendered verbatim.",
+            "example": "example"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "available",
+          "instructions"
+        ],
+        "title": "DeliveryOverride",
+        "description": "The path a blocked delivery may be unblocked through, if any."
+      },
+      "DeliveryReason": {
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/DeliveryReasonCode",
+            "description": "Stable reason code (additive-only); branch on this, never on the message."
+          },
+          "dimension": {
+            "$ref": "#/components/schemas/DeliveryDimension",
+            "description": "Which input produced the reason: validation, lint, fidelity, or policy."
+          },
+          "severity": {
+            "$ref": "#/components/schemas/DeliverySeverity",
+            "description": "``blocking`` refuses the delivery; ``warning`` annotates it; ``info`` is context only."
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Ready-to-render sentence explaining this reason.",
+            "example": "Example validation message."
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object",
+                "description": "Delivery Reason schema."
+              },
+              {
+                "type": "null",
+                "description": "Delivery Reason schema."
+              }
+            ],
+            "title": "Detail",
+            "description": "Structured backing for the reason (the missed floor and the actual value, the validation verdict, the finding tally). Rendered by clients that drill in."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "dimension",
+          "severity",
+          "message"
+        ],
+        "title": "DeliveryReason",
+        "description": "One named contribution to the delivery decision."
+      },
+      "DeliveryReasonCode": {
+        "type": "string",
+        "enum": [
+          "DELIVERY_ARTIFACT_INVALID",
+          "DELIVERY_VALIDATION_SKIPPED",
+          "DELIVERY_VALIDATION_NOT_APPLICABLE",
+          "DELIVERY_SOURCE_ERRORS_OPEN",
+          "DELIVERY_SOURCE_UNGRADED",
+          "DELIVERY_SOURCE_BELOW_FLOOR",
+          "DELIVERY_FIDELITY_BELOW_FLOOR",
+          "DELIVERY_POLICY_BLOCKED",
+          "DELIVERY_POLICY_WAIVED"
+        ],
+        "title": "DeliveryReasonCode",
+        "description": "Stable, additive-only reason codes. A shipped code is never repurposed."
+      },
+      "DeliverySeverity": {
+        "type": "string",
+        "enum": [
+          "info",
+          "warning",
+          "blocking"
+        ],
+        "title": "DeliverySeverity",
+        "description": "How much a reason weighs on the decision."
       },
       "DestinationAvailability": {
         "type": "string",
@@ -74942,6 +75417,18 @@
             ],
             "title": "Media Type",
             "description": "The bundle's primary media type; null for a dry-run."
+          },
+          "delivery": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryGateReport"
+              },
+              {
+                "type": "null",
+                "description": "Response payload for export dispatch."
+              }
+            ],
+            "description": "The delivery gate decision for this dispatch (IXH-2.5) with its named reasons and the signed attestation for the returned artifact. Null for a dry-run (nothing is delivered)."
           }
         },
         "additionalProperties": false,
@@ -75513,6 +76000,18 @@
               }
             ],
             "description": "The emitted-artifact validation gate + report (MFX-5.3). Set on a completed real export after the MFX-5.1 re-parse; null for a dry-run (no artifact)."
+          },
+          "delivery": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryGateReport"
+              },
+              {
+                "type": "null",
+                "description": "Export Job schema."
+              }
+            ],
+            "description": "The delivery gate decision (IXH-2.5): the single ``allow`` / ``allow_with_warning`` / ``block`` verdict over the emitted validation, the source's lint grade, the projected fidelity floor, and the tenant's export policy \u2014 with its named reasons and the signed attestation attached to the delivered artifact. Null for a dry-run (nothing is delivered)."
           },
           "files": {
             "items": {
@@ -79324,6 +79823,34 @@
             "title": "Min Grade",
             "description": "Minimum letter grade policy requires, or null when no grade floor applies."
           },
+          "min_fidelity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Import Preflight Policy schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Policy schema."
+              }
+            ],
+            "title": "Min Fidelity",
+            "description": "Minimum projected preserved-construct percentage policy requires for a delivery (export scope, IXH-2.5), or null when no fidelity floor applies."
+          },
+          "preserved_percent": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Import Preflight Policy schema."
+              },
+              {
+                "type": "null",
+                "description": "Import Preflight Policy schema."
+              }
+            ],
+            "title": "Preserved Percent",
+            "description": "The projected preserved-construct percentage the verdict was measured against, or null when the caller supplied none (every import verdict)."
+          },
           "block_on_severity": {
             "anyOf": [
               {
@@ -79439,10 +79966,11 @@
             "enum": [
               "score",
               "grade",
-              "severity"
+              "severity",
+              "fidelity"
             ],
             "title": "Kind",
-            "description": "Which floor was missed: the score floor, the grade floor, or the severity floor.",
+            "description": "Which floor was missed: the score floor, the grade floor, the severity floor, or (export only) the projected-fidelity floor.",
             "example": "score"
           },
           "required": {
@@ -79461,7 +79989,7 @@
               }
             ],
             "title": "Required",
-            "description": "What policy requires (a score, a grade, or a severity name)."
+            "description": "What policy requires (a score, a grade, a severity name, or a preserved percentage)."
           },
           "actual": {
             "anyOf": [
@@ -79479,7 +80007,7 @@
               }
             ],
             "title": "Actual",
-            "description": "What the candidate has: its score, its grade, or \u2014 for a severity floor \u2014 how many findings sit at or above that severity."
+            "description": "What the candidate has: its score, its grade, its preserved percentage, or \u2014 for a severity floor \u2014 how many findings sit at or above that severity."
           }
         },
         "additionalProperties": false,
@@ -101268,6 +101796,22 @@
             "title": "Blockonseverity",
             "description": "Severity at or above which findings are unacceptable; null = not gated."
           },
+          "minFidelity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "description": "Response payload for quality policy thresholds."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for quality policy thresholds."
+              }
+            ],
+            "title": "Minfidelity",
+            "description": "Lowest acceptable projected preserved-construct percentage for a delivery (IXH-2.5); null = no fidelity floor. Only the export scope measures fidelity, so the floor is inert in the import scope."
+          },
           "enforcement": {
             "type": "string",
             "enum": [
@@ -105555,7 +106099,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-02T04:51:22Z"
+            "example": "2026-08-02T05:47:15Z"
           }
         },
         "additionalProperties": false,
@@ -119040,14 +119584,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-02T04:51:22Z"
+            "example": "2026-08-02T05:47:15Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-02T04:51:22Z"
+            "example": "2026-08-02T05:47:15Z"
           },
           "outcome": {
             "anyOf": [

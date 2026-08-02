@@ -8,6 +8,7 @@ import {
   CircleDashed,
   Loader2,
   RefreshCw,
+  ScrollText,
   ShieldAlert,
   SlidersHorizontal,
   FileOutput,
@@ -15,8 +16,10 @@ import {
 } from 'lucide-react';
 import { Button } from '../../../ui/Button';
 import { Badge } from '../../../ui/Badge';
+import { DeliveryGatePanel } from './DeliveryGatePanel';
 import {
   classifyExportFailure,
+  deliveryReportFor,
   EXPORT_JOB_STAGES,
   stageStatusFor,
   validationReportFromError,
@@ -48,6 +51,12 @@ export interface GenerateProgressProps {
   onFixInVerify: (validation: EmittedValidationReport | null) => void;
   /** Route back to Verify to re-run preview/acknowledgement after STALE_PREVIEW (EFP-3.1). */
   onRefreshPreview: () => void;
+  /**
+   * Open the tenant's quality-waiver flow for a policy-blocked delivery (`request-waiver`,
+   * IXH-2.5). Optional: recording a waiver is a governance action, so when no host wires it the
+   * panel's override instructions stand on their own and no primary button is offered.
+   */
+  onRequestWaiver?: () => void;
 }
 
 /**
@@ -75,6 +84,7 @@ export function GenerateProgress({
   onAcknowledgeAndRetry,
   onFixInVerify,
   onRefreshPreview,
+  onRequestWaiver,
 }: GenerateProgressProps) {
   const { state, percent } = status;
   const inFlight = state === 'queued' || state === 'running';
@@ -180,6 +190,7 @@ export function GenerateProgress({
           onAcknowledgeAndRetry={onAcknowledgeAndRetry}
           onFixInVerify={onFixInVerify}
           onRefreshPreview={onRefreshPreview}
+          onRequestWaiver={onRequestWaiver}
         />
       )}
     </div>
@@ -270,6 +281,7 @@ interface FailureSurfaceProps {
   onAcknowledgeAndRetry: () => void;
   onFixInVerify: (validation: EmittedValidationReport | null) => void;
   onRefreshPreview: () => void;
+  onRequestWaiver?: () => void;
 }
 
 /** The structured failure surface: class heading, message, class detail, and the recovery action. */
@@ -283,8 +295,10 @@ function FailureSurface({
   onAcknowledgeAndRetry,
   onFixInVerify,
   onRefreshPreview,
+  onRequestWaiver,
 }: FailureSurfaceProps) {
   const validation = validationReportFromError(status.error);
+  const delivery = deliveryReportFor(status);
   const reasons = guardReasonsFrom(status.error?.context);
 
   const runRecovery = (action: ExportRecoveryAction) => {
@@ -304,6 +318,9 @@ function FailureSurface({
       case 'refresh-preview':
         onRefreshPreview();
         break;
+      case 'request-waiver':
+        onRequestWaiver?.();
+        break;
       case 'retry':
       default:
         onRetry();
@@ -312,6 +329,9 @@ function FailureSurface({
   };
 
   const Icon = failure.class === 'validation' ? ShieldAlert : AlertTriangle;
+  // A policy block has no in-app recovery unless the host wires the waiver flow: the delivery
+  // panel already states the override path, so offering a dead button would be worse than none.
+  const showPrimaryAction = failure.action !== 'request-waiver' || Boolean(onRequestWaiver);
 
   return (
     <div
@@ -352,6 +372,10 @@ function FailureSurface({
         </ul>
       )}
 
+      {/* The delivery gate's named reasons + override path (IXH-2.5), whenever the server
+          attached a decision — a policy block, or a validation block the gate also judged. */}
+      {delivery && <DeliveryGatePanel delivery={delivery} />}
+
       {/* Validation-gate summary — the full findings render in the Verify lens after routing. */}
       {failure.class === 'validation' && validation && (
         <p className="ml-8 text-xs text-rose-800 dark:text-rose-200" data-testid="generate-validation-summary">
@@ -369,14 +393,16 @@ function FailureSurface({
             Retry export
           </Button>
         )}
-        <Button
-          data-testid="generate-failure-action"
-          onClick={() => runRecovery(failure.action)}
-          disabled={submitting || (failure.action === 'retry' && !failure.retriable)}
-        >
-          {recoveryIcon(failure.action)}
-          {failure.actionLabel}
-        </Button>
+        {showPrimaryAction && (
+          <Button
+            data-testid="generate-failure-action"
+            onClick={() => runRecovery(failure.action)}
+            disabled={submitting || (failure.action === 'retry' && !failure.retriable)}
+          >
+            {recoveryIcon(failure.action)}
+            {failure.actionLabel}
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -391,6 +417,8 @@ function recoveryIcon(action: ExportRecoveryAction) {
       return <SlidersHorizontal className="h-4 w-4" aria-hidden />;
     case 'fix-in-verify':
       return <ShieldAlert className="h-4 w-4" aria-hidden />;
+    case 'request-waiver':
+      return <ScrollText className="h-4 w-4" aria-hidden />;
     case 'refresh-preview':
     case 'acknowledge-and-retry':
     case 'retry':

@@ -12,6 +12,7 @@ The route layout and status contract deliberately mirror the spec-import surface
 * ``GET    /v1/export/{tenant_slug}/jobs``          → summary list (in-memory, per process)
 * ``GET    /v1/export/{tenant_slug}/jobs/{job_id}`` → ``{job_id, state, percent, events, progress, result, error}``
 * ``GET    /v1/export/{tenant_slug}/jobs/{job_id}/download`` → the emitted artifact, streamed (MFX-4.1/4.2; 4.3)
+* ``GET    /v1/export/{tenant_slug}/jobs/{job_id}/attestation`` → the delivery attestation (IXH-2.5)
 * ``DELETE /v1/export/{tenant_slug}/jobs/{job_id}`` → 204 cancel request
 
 All routes are tenant-scoped (JWT or API key) via :func:`app.auth.validate_authentication`,
@@ -27,6 +28,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import StreamingResponse
 
 from .auth import validate_authentication
+from .export_delivery_gate import DeliveryAttestation
 from .export_job_engine import (
     ExportJobAccepted,
     ExportJobListResponse,
@@ -231,11 +233,77 @@ async def download_export_job_artifact(
 
         headers["Digest"] = digest_header_value(artifact.content_sha256)
         headers["X-Content-SHA256"] = content_sha256_hex_only(artifact.content_sha256)
+    # The delivery attestation (IXH-2.5) is a JSON document of its own, so the download points at
+    # it rather than inlining it: a consumer fetches the envelope, verifies the signature offline,
+    # and matches its subject digest against the ``Digest`` header above.
+    headers["X-Apiome-Delivery-Attestation-Path"] = _attestation_path(tenant_slug, job_id)
     return StreamingResponse(
         iter_download_chunks(artifact),
         media_type=artifact.media_type,
         headers=headers,
     )
+
+
+def _attestation_path(tenant_slug: str, job_id: str) -> str:
+    """Relative URL of a completed job's delivery attestation (IXH-2.5)."""
+    return f"/v1/export/{tenant_slug}/jobs/{job_id}/attestation"
+
+
+@router.get(
+    "/{tenant_slug}/jobs/{job_id}/attestation",
+    response_model=DeliveryAttestation,
+    summary="Fetch a delivered artifact's signed delivery attestation",
+    description=(
+        "The delivery attestation for a completed export job (IXH-2.5): an **in-toto Statement "
+        "v1** in a **DSSE envelope**, HMAC-SHA256 signed with the shared attestation secret "
+        "(``APIOME_LINT_ATTESTATION_SIGNING_SECRET`` — the same key the CLX-4.2 lint gate "
+        "attestations use, so a verifier needs no new configuration).\n\n"
+        "The statement's subject is the delivered artifact, digested with a plain ``sha256`` "
+        "over the exact bytes the download route serves, so ``sha256sum`` on the downloaded "
+        "file is enough to tie the two together. Its predicate records the delivery identity, "
+        "the tool versions, the source lint fingerprint, the policy version and content "
+        "fingerprint that were applied, any waiver the decision honoured, and the delivery "
+        "decision with its named reasons — everything needed to reproduce the verdict offline. "
+        "``apiome lint verify-attestation`` verifies it as-is.\n\n"
+        "404 when the job is unknown for this tenant; 409 when the job produced no attested "
+        "delivery (still running, canceled, failed, or a dry-run)."
+    ),
+)
+async def get_export_job_attestation(
+    tenant_slug: str,
+    job_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> DeliveryAttestation:
+    """Return the signed delivery attestation for a completed export job.
+
+    Args:
+        tenant_slug: The tenant slug the job was submitted under.
+        job_id: The job id from the 202 acceptance payload.
+        auth_data: Authenticated tenant context (JWT or API key).
+
+    Returns:
+        The job's :class:`~app.export_delivery_gate.DeliveryAttestation`.
+
+    Raises:
+        HTTPException: 404 when the job is unknown for this tenant; 409 when the job carries no
+            attestation (not completed, a dry-run, or a server with attestation disabled).
+    """
+    _ = auth_data
+    status = await engine_get_export_job_status(tenant_slug, job_id)
+    attestation = (
+        status.result.delivery.attestation
+        if status.result and status.result.delivery
+        else None
+    )
+    if attestation is None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Export job {job_id} has no delivery attestation: only a completed, non-dry-run "
+                "export delivers an attested artifact."
+            ),
+        )
+    return attestation
 
 
 @router.delete(
