@@ -30,6 +30,7 @@ from .database import db
 from .import_export_quality_policy import (
     DEFAULT_OVERRIDE_ROLES,
     DEFAULT_WAIVER_TTL_HOURS,
+    SCOPE_EXPORT,
     SCOPE_IMPORT,
     QualityPolicy,
     QualityThresholds,
@@ -91,6 +92,7 @@ def _thresholds_out(thresholds: QualityThresholds) -> QualityPolicyThresholdsOut
         min_grade=thresholds.min_grade,
         min_score=thresholds.min_score,
         block_on_severity=thresholds.block_on_severity,
+        min_fidelity=thresholds.min_fidelity,
         enforcement=thresholds.enforcement,
     )
 
@@ -200,8 +202,35 @@ def _merged_thresholds(
         min_grade=requested.min_grade,
         min_score=requested.min_score,
         block_on_severity=requested.block_on_severity,
+        min_fidelity=requested.min_fidelity,
         enforcement=requested.enforcement,
     )
+
+
+def _thresholds_body(thresholds: QualityThresholds, *, scope: str) -> Dict[str, Any]:
+    """The canonical body fragment for one scope — the fingerprint and audit input.
+
+    ``minFidelity`` is emitted **only when set** and **only for the export scope**: the floor is
+    export-only (an import has no target to project fidelity against), and omitting an unset floor
+    keeps the fingerprint of a policy that does not use it byte-identical to what pre-IXH-2.5
+    saves produced, so re-saving an unchanged policy does not read as a content change.
+
+    Args:
+        thresholds: The resolved thresholds for the scope.
+        scope: ``import`` | ``export``.
+
+    Returns:
+        The camelCase body fragment.
+    """
+    body: Dict[str, Any] = {
+        "minGrade": thresholds.min_grade,
+        "minScore": thresholds.min_score,
+        "blockOnSeverity": thresholds.block_on_severity,
+        "enforcement": thresholds.enforcement,
+    }
+    if scope != SCOPE_IMPORT and thresholds.min_fidelity is not None:
+        body["minFidelity"] = thresholds.min_fidelity
+    return body
 
 
 def _validate_format_overrides(overrides: Dict[str, Any]) -> Dict[str, Any]:
@@ -297,20 +326,12 @@ async def put_quality_policy(
         else (current.waiver_ttl_hours or DEFAULT_WAIVER_TTL_HOURS)
     )
 
+    import_body = _thresholds_body(import_thresholds, scope=SCOPE_IMPORT)
+    export_body = _thresholds_body(export_thresholds, scope=SCOPE_EXPORT)
     fingerprint = policy_content_fingerprint(
         {
-            "import": {
-                "minGrade": import_thresholds.min_grade,
-                "minScore": import_thresholds.min_score,
-                "blockOnSeverity": import_thresholds.block_on_severity,
-                "enforcement": import_thresholds.enforcement,
-            },
-            "export": {
-                "minGrade": export_thresholds.min_grade,
-                "minScore": export_thresholds.min_score,
-                "blockOnSeverity": export_thresholds.block_on_severity,
-                "enforcement": export_thresholds.enforcement,
-            },
+            "import": import_body,
+            "export": export_body,
             "formatOverrides": overrides,
             "allowOverride": allow_override,
             "overrideRoles": sorted(override_roles),
@@ -330,6 +351,7 @@ async def put_quality_policy(
             export_min_score=export_thresholds.min_score,
             export_block_on_severity=export_thresholds.block_on_severity,
             export_enforcement=export_thresholds.enforcement,
+            export_min_fidelity=export_thresholds.min_fidelity,
             format_overrides=overrides,
             allow_override=allow_override,
             override_roles=override_roles,
@@ -354,18 +376,8 @@ async def put_quality_policy(
         detail={
             "versionNumber": saved.version_number,
             "contentFingerprint": saved.content_fingerprint,
-            "import": {
-                "minGrade": import_thresholds.min_grade,
-                "minScore": import_thresholds.min_score,
-                "blockOnSeverity": import_thresholds.block_on_severity,
-                "enforcement": import_thresholds.enforcement,
-            },
-            "export": {
-                "minGrade": export_thresholds.min_grade,
-                "minScore": export_thresholds.min_score,
-                "blockOnSeverity": export_thresholds.block_on_severity,
-                "enforcement": export_thresholds.enforcement,
-            },
+            "import": import_body,
+            "export": export_body,
             "formatOverrides": overrides,
             "allowOverride": allow_override,
             "overrideRoles": override_roles,

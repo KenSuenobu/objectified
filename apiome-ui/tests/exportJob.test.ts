@@ -7,12 +7,15 @@
 import {
   EXPORT_JOB_STAGES,
   classifyExportFailure,
+  deliveryReportFor,
+  deliveryReportFromError,
   exportJobStatusLine,
   failedStageForCode,
   failedStageForStatus,
   isTerminalExportState,
   stageStatusFor,
   validationReportFromError,
+  type DeliveryGateReport,
   type ExportJobError,
   type ExportJobStageKey,
   type ExportJobStatus,
@@ -211,5 +214,113 @@ describe('exportJob — exportJobStatusLine', () => {
     ).toMatch(/failed: boom/i);
     expect(exportJobStatusLine(status({ state: 'canceled' }), 'OpenAPI 3.1')).toMatch(/canceled/i);
     expect(exportJobStatusLine(status({ state: 'running', percent: 55 }), 'OpenAPI 3.1')).toMatch(/55%/);
+  });
+});
+
+describe('exportJob — delivery gate (IXH-2.5)', () => {
+  /** A blocked delivery decision as the server puts it on `error.context.delivery`. */
+  function blockedDelivery(): DeliveryGateReport {
+    return {
+      decision: 'block',
+      blocks_delivery: true,
+      warns: false,
+      headline: 'Delivery blocked',
+      message: 'Only 42% of the source survives this conversion.',
+      reasons: [
+        {
+          code: 'DELIVERY_FIDELITY_BELOW_FLOOR',
+          dimension: 'fidelity',
+          severity: 'blocking',
+          message: 'Only 42% of the source survives, below the 80% floor.',
+        },
+      ],
+      target: 'openapi-3.1',
+      override: {
+        available: true,
+        endpoint: '/v1/tenants/acme/governance/quality-waivers',
+        subject_key: 'rev-1',
+        format_key: 'openapi',
+        roles: ['owner'],
+        instructions: 'Record an export waiver for this revision.',
+      },
+    };
+  }
+
+  it('attributes a blocked delivery to the validating stage', () => {
+    expect(failedStageForCode('EXPORT_DELIVERY_BLOCKED')).toBe('validating');
+  });
+
+  it('classifies a policy block with the waiver recovery and no same-request retry', () => {
+    const failure = classifyExportFailure({
+      code: 'EXPORT_DELIVERY_BLOCKED',
+      category: 'policy',
+      message: 'Quality policy blocks this export.',
+      retriable: false,
+    });
+    expect(failure.class).toBe('policy');
+    expect(failure.stage).toBe('validating');
+    expect(failure.action).toBe('request-waiver');
+    expect(failure.retriable).toBe(false);
+  });
+
+  it('reads the decision back off a blocked job error', () => {
+    const report = deliveryReportFromError({
+      code: 'EXPORT_DELIVERY_BLOCKED',
+      message: 'blocked',
+      context: { delivery: blockedDelivery() as unknown as Record<string, unknown> },
+    });
+    expect(report?.decision).toBe('block');
+    expect(report?.reasons[0].code).toBe('DELIVERY_FIDELITY_BELOW_FLOOR');
+    expect(report?.override.roles).toEqual(['owner']);
+  });
+
+  it('ignores a context that carries no usable decision (a pre-IXH-2.5 server)', () => {
+    expect(deliveryReportFromError({ code: 'EMIT_FAILED', message: 'x' })).toBeNull();
+    expect(
+      deliveryReportFromError({ code: 'X', message: 'x', context: { delivery: 42 } }),
+    ).toBeNull();
+    expect(
+      deliveryReportFromError({ code: 'X', message: 'x', context: { delivery: { decision: 'block' } } }),
+    ).toBeNull();
+    expect(deliveryReportFromError(null)).toBeNull();
+  });
+
+  it('surfaces a failed job decision and a completed job only when it warns', () => {
+    const failed = status({
+      state: 'failed',
+      error: {
+        code: 'EXPORT_DELIVERY_BLOCKED',
+        message: 'blocked',
+        context: { delivery: blockedDelivery() as unknown as Record<string, unknown> },
+      },
+    });
+    expect(deliveryReportFor(failed)?.decision).toBe('block');
+
+    const warned = status({
+      state: 'completed',
+      result: {
+        artifact: 'a',
+        version_record_id: 'rev-1',
+        target: 'openapi-3.1',
+        dry_run: false,
+        files: [],
+        delivery: { ...blockedDelivery(), decision: 'allow_with_warning', blocks_delivery: false, warns: true },
+      },
+    });
+    expect(deliveryReportFor(warned)?.decision).toBe('allow_with_warning');
+
+    const clean = status({
+      state: 'completed',
+      result: {
+        artifact: 'a',
+        version_record_id: 'rev-1',
+        target: 'openapi-3.1',
+        dry_run: false,
+        files: [],
+        delivery: { ...blockedDelivery(), decision: 'allow', blocks_delivery: false, reasons: [] },
+      },
+    });
+    expect(deliveryReportFor(clean)).toBeNull();
+    expect(deliveryReportFor(status({ state: 'running' }))).toBeNull();
   });
 });

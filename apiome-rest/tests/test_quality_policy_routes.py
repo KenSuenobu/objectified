@@ -121,9 +121,13 @@ def test_tenant_without_a_policy_reads_the_advisory_default():
         "minGrade": None,
         "minScore": None,
         "blockOnSeverity": None,
+        # The IXH-2.5 fidelity floor is reported on both scopes for one wire shape, but only the
+        # export gate ever measures fidelity, so it is inert here.
+        "minFidelity": None,
         "enforcement": "advisory",
     }
     assert body["export"]["enforcement"] == "advisory"
+    assert body["export"]["minFidelity"] is None
     assert body["allowOverride"] is True
     assert body["waiverTtlHours"] == 168
 

@@ -28,6 +28,8 @@ import { useExportTargets } from './useExportTargets';
 import { useExportVerify } from './useExportVerify';
 import { useExportJob } from './useExportJob';
 import { GenerateProgress } from './GenerateProgress';
+import { DeliveryGatePanel } from './DeliveryGatePanel';
+import { deliveryReportFor } from './exportJob';
 import { RecentAsyncJobsPanel } from '../asyncJobs/RecentAsyncJobsPanel';
 import { useCatalogSourceContext } from './useCatalogSourceContext';
 import type { EmittedValidationReport } from './exportVerify';
@@ -308,6 +310,9 @@ export function ExportStudio({
   const jobStatus = job?.status ?? null;
   const jobState = jobStatus?.state ?? null;
   const jobCompleted = jobState === 'completed' && !jobStatus?.result?.dry_run;
+  // The delivery gate's decision, when it has something to say (IXH-2.5): a warning on a delivered
+  // artifact, or the reasons a blocked delivery was refused. A clean allow yields null.
+  const deliveryDecision = jobStatus ? deliveryReportFor(jobStatus) : null;
 
   // When the Verify step is showing a validation-gate override, the last verify verdict no longer
   // reflects reality: present it as `invalid` and re-lock Generate until the user re-verifies.
@@ -1173,6 +1178,13 @@ export function ExportStudio({
                     Generated <strong>{emitted.filename}</strong>. Review it below, then download the
                     file or a .zip bundle.
                   </p>
+                  {/* IXH-2.5: a delivered artifact that carries warnings (or an attestation worth
+                      naming) says so before the user downloads it. */}
+                  {deliveryDecision && (
+                    <div className="shrink-0">
+                      <DeliveryGatePanel delivery={deliveryDecision} />
+                    </div>
+                  )}
                   {/* IXH-4.1: same explorer beside the single-document viewer. */}
                   <div className="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[minmax(18rem,22rem)_1fr]">
                     <ExportManifestPanel

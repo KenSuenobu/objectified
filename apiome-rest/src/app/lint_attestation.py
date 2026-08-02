@@ -1,8 +1,19 @@
-"""Attestable lint gate evidence summaries (CLX-4.2, #4860).
+"""Attestable gate evidence summaries (CLX-4.2, #4860; extended by IXH-2.5, #5100).
 
-Wraps a lint gate payload in an **in-toto Statement v1** signed as a **DSSE envelope** so a
-release pipeline can prove, offline, exactly which input, scanners, policy pack, and reports
-produced a gate verdict:
+Wraps a gate payload in an **in-toto Statement v1** signed as a **DSSE envelope** so a release
+pipeline can prove, offline, exactly which input, scanners, policy pack, and reports produced a
+gate verdict. Two statement flavours share this one format, one signer, and one verifier:
+
+* :func:`build_attestation_statement` — the **lint gate** statement (CLX-4.2);
+* :func:`build_delivery_attestation_statement` — the **export delivery gate** statement
+  (IXH-2.5), whose subject is the delivered artifact itself.
+
+They differ only in ``predicateType`` and predicate shape, which is exactly what in-toto
+predicate types are for; everything below the statement — canonical JSON, PAEv1, HMAC-SHA256,
+the envelope, and :func:`verify_attestation_envelope` — is shared, so a verifier that can check
+one can check the other without new code.
+
+For the lint gate statement:
 
 * Statement subjects are the contributing scanners, identified by their immutable
   ``report_fingerprint`` (the custom digest algorithm name ``apiome-report-fingerprint`` —
@@ -31,20 +42,29 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Mapping, Optional
 
 __all__ = [
+    "DELIVERY_PREDICATE_TYPE",
     "PAYLOAD_TYPE",
     "PREDICATE_TYPE",
     "STATEMENT_TYPE",
     "attestation_envelope",
     "build_attestation_statement",
+    "build_delivery_attestation_statement",
     "verify_attestation_envelope",
 ]
 
 STATEMENT_TYPE = "https://in-toto.io/Statement/v1"
 PREDICATE_TYPE = "https://apiome.dev/attestations/lint-gate/v1"
+#: Predicate type for an export delivery attestation (IXH-2.5) — the same envelope and signature
+#: as a lint gate attestation, a different predicate body.
+DELIVERY_PREDICATE_TYPE = "https://apiome.dev/attestations/export-delivery/v1"
 PAYLOAD_TYPE = "application/vnd.in-toto+json"
 
 #: Digest algorithm label for subjects — report fingerprints are opaque Apiome content ids.
 DIGEST_ALGORITHM = "apiome-report-fingerprint"
+
+#: Digest algorithm for a delivery subject: a real SHA-256 over the artifact bytes, so a holder
+#: of the downloaded file can recompute it without any Apiome-specific knowledge.
+CONTENT_DIGEST_ALGORITHM = "sha256"
 
 
 def _canonical_json(value: Any) -> str:
@@ -91,6 +111,59 @@ def build_attestation_statement(
             "evaluation": dict(gate_payload.get("evaluation") or {}),
             "gate": dict(gate_payload.get("gate") or {}),
             "counts": dict(gate_payload.get("counts") or {}),
+            "generatedAt": stamp,
+        },
+    }
+
+
+def build_delivery_attestation_statement(
+    delivery_payload: Mapping[str, Any],
+    *,
+    generated_at: Optional[datetime] = None,
+) -> Dict[str, Any]:
+    """Build the in-toto Statement for one export **delivery** gate decision (IXH-2.5).
+
+    The subject is the delivered artifact, named by its bundle filename and digested with a plain
+    ``sha256`` over the exact bytes the download route serves — so a holder of the file can tie it
+    to this statement with ``sha256sum`` alone. The predicate records everything a verifier needs
+    to reproduce the decision without the server: the delivery identity (tenant, job, artifact,
+    revision, target, snapshot), the tool versions that produced it, the lint fingerprint the
+    source quality was judged from, the policy version and content fingerprint applied, any waiver
+    the decision honoured, and the decision itself with its named contributing reasons.
+
+    Fingerprints, versions and verdicts only — never source text, artifact bytes, or credentials.
+
+    Args:
+        delivery_payload: The gate's attestation payload
+            (:meth:`app.export_delivery_gate.DeliveryGateReport.attestation_payload`).
+        generated_at: Statement timestamp; defaults to now (UTC). Pass a fixed value for
+            deterministic output in tests.
+
+    Returns:
+        An in-toto Statement v1 dict (unsigned) — wrap it with :func:`attestation_envelope`.
+    """
+    artifact = dict(delivery_payload.get("artifact") or {})
+    digest = str(artifact.get("contentSha256") or "")
+    subjects = [
+        {
+            "name": str(artifact.get("filename") or "export-artifact"),
+            "digest": {CONTENT_DIGEST_ALGORITHM: digest},
+        }
+    ]
+    stamp = (generated_at or datetime.now(timezone.utc)).isoformat()
+    return {
+        "_type": STATEMENT_TYPE,
+        "subject": subjects,
+        "predicateType": DELIVERY_PREDICATE_TYPE,
+        "predicate": {
+            "tenantId": delivery_payload.get("tenantId"),
+            "delivery": dict(delivery_payload.get("delivery") or {}),
+            "artifact": artifact,
+            "decision": dict(delivery_payload.get("decision") or {}),
+            "inputs": dict(delivery_payload.get("inputs") or {}),
+            "policy": dict(delivery_payload.get("policy") or {}),
+            "waiver": dict(delivery_payload.get("waiver") or {}) or None,
+            "tools": dict(delivery_payload.get("tools") or {}),
             "generatedAt": stamp,
         },
     }

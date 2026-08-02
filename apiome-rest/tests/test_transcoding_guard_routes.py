@@ -130,7 +130,7 @@ def test_dispatch_blocks_severe_conversion_with_409():
     """A severe conversion without ``confirm`` is refused with 409 and the guard in the body."""
     app.dependency_overrides[validate_authentication] = _override_auth
     try:
-        with patch("app.export_dispatch.load_export_source", return_value=_event_source()):
+        with patch("app.export_routes.load_export_source", return_value=_event_source()):
             response = client.post(
                 "/v1/export/test-tenant/dispatch",
                 json={"artifact": "artifact-2", "target": "protobuf"},
@@ -153,7 +153,7 @@ def test_dispatch_emits_severe_conversion_when_confirmed():
     """
     app.dependency_overrides[validate_authentication] = _override_auth
     try:
-        with patch("app.export_dispatch.load_export_source", return_value=_event_source()):
+        with patch("app.export_routes.load_export_source", return_value=_event_source()):
             response = client.post(
                 "/v1/export/test-tenant/dispatch",
                 json={"artifact": "artifact-2", "target": "graphql", "confirm": True},
@@ -173,7 +173,7 @@ def test_dispatch_dry_run_never_blocks_a_severe_conversion():
     """A dry-run of a severe conversion returns the report + guard, never 409."""
     app.dependency_overrides[validate_authentication] = _override_auth
     try:
-        with patch("app.export_dispatch.load_export_source", return_value=_event_source()):
+        with patch("app.export_routes.load_export_source", return_value=_event_source()):
             response = client.post(
                 "/v1/export/test-tenant/dispatch",
                 json={"artifact": "artifact-2", "target": "protobuf", "dry_run": True},
@@ -192,7 +192,7 @@ def test_dispatch_near_empty_conversion_warns_but_does_not_block():
     """Operations → Avro dispatches (no gate) and carries the near-empty warning guard."""
     app.dependency_overrides[validate_authentication] = _override_auth
     try:
-        with patch("app.export_dispatch.load_export_source", return_value=_rest_source()):
+        with patch("app.export_routes.load_export_source", return_value=_rest_source()):
             response = client.post(
                 "/v1/export/test-tenant/dispatch",
                 json={"artifact": "artifact-1", "target": "avro"},

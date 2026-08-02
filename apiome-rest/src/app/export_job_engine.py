@@ -19,7 +19,14 @@ and then runs through the export pipeline in the background:
    MFX-5.1): feed the emitted output back through its matching MFI import parser. A buggy
    emitter's illegal output fails the job here (``EMITTED_ARTIFACT_INVALID``) before delivery;
    a format whose parser needs an unavailable toolchain is reported *skipped*, not failed;
-6. **package** — the MFX-EPIC-4 seam (:func:`build_result_manifest`): reduce the emitted
+6. **delivery gate** — the IXH-2.5 check (:func:`app.export_delivery_gate.evaluate_delivery`):
+   fold that validation verdict together with the *source's* lint grade, the projected fidelity
+   floor, and the tenant's export quality policy into one delivery decision. A blocked delivery
+   fails here (``EXPORT_DELIVERY_BLOCKED``, or ``EMITTED_ARTIFACT_INVALID`` when the validator
+   was the blocker) **before any artifact bytes are packaged or stored**, so the download route
+   has nothing to serve. An allowed delivery carries the decision — and, once the bytes exist, a
+   signed attestation naming them — on ``result.delivery``;
+7. **package** — the MFX-EPIC-4 seam (:func:`build_result_manifest`): reduce the emitted
    files to a download manifest. The raw :class:`~app.emitter.EmitResult` stays on the
    in-memory job record (:func:`get_export_job_emit_result`) so the delivery routes can
    serve bytes without re-emitting — a single file inline (MFX-4.1) or, for a multi-file
@@ -76,6 +83,15 @@ from pydantic import BaseModel, ConfigDict, Field
 from .config import settings
 from .delivery_error_taxonomy import delivery_error_fields
 from .emitter import EmitResult
+from .export_delivery_gate import (
+    DeliveryDimension,
+    DeliveryGateReport,
+    DeliverySeverity,
+    build_delivery_attestation,
+    delivery_tool_versions,
+    evaluate_delivery,
+    lint_delivery_source,
+)
 from .export_fidelity import ExportFidelity, build_export_fidelity
 from .export_service import (
     ExportError,
@@ -112,6 +128,7 @@ __all__ = [
     "cancel_export_job",
     "get_export_job_emit_result",
     "build_validation_events",
+    "build_delivery_events",
     "build_result_manifest",
     "build_bundle_manifest",
     "build_export_zip",
@@ -285,6 +302,14 @@ class ExportJobResult(BaseModel):
         default=None,
         description="The emitted-artifact validation gate + report (MFX-5.3). Set on a "
         "completed real export after the MFX-5.1 re-parse; null for a dry-run (no artifact).",
+    )
+    delivery: Optional[DeliveryGateReport] = Field(
+        default=None,
+        description="The delivery gate decision (IXH-2.5): the single ``allow`` / "
+        "``allow_with_warning`` / ``block`` verdict over the emitted validation, the source's "
+        "lint grade, the projected fidelity floor, and the tenant's export policy — with its "
+        "named reasons and the signed attestation attached to the delivered artifact. Null for "
+        "a dry-run (nothing is delivered).",
     )
     files: List[ExportJobFile] = Field(
         default_factory=list,
@@ -733,8 +758,8 @@ def build_validation_events(validation: EmittedArtifactValidation) -> List[_Even
     * **not applicable** — no importer matches the format (the sample no-op target).
 
     Args:
-        validation: A validation whose :attr:`~app.export_validation.EmittedArtifactValidation.failed`
-            is ``False``.
+        validation: A validation whose
+            :attr:`~app.export_validation.EmittedArtifactValidation.failed` is ``False``.
 
     Returns:
         A single event tuple ``(level, code, message, context)`` for the job's event log.
@@ -762,6 +787,89 @@ def build_validation_events(validation: EmittedArtifactValidation) -> List[_Even
         f"The emitted {target!r} artifact re-parsed cleanly through its matching import parser.",
         {"target": target},
     )]
+
+
+def build_delivery_events(delivery: DeliveryGateReport) -> List[_EventTuple]:
+    """Translate a **non-blocking** delivery gate decision into job event tuples (IXH-2.5).
+
+    A blocked delivery is a terminal ``EXPORT_DELIVERY_BLOCKED`` failure handled by the pipeline,
+    never here. This logs the decision the job survives so the event log records *why* an artifact
+    shipped annotated rather than silently:
+
+    * ``allow`` — one ``info`` line naming the decision;
+    * ``allow_with_warning`` — one ``warn`` line per warning reason, each carrying its stable
+      reason code, plus the decision line.
+
+    Args:
+        delivery: A decision whose :attr:`~app.export_delivery_gate.DeliveryGateReport.blocks_delivery`
+            is ``False``.
+
+    Returns:
+        Event tuples ``(level, code, message, context)`` for the job's event log.
+    """
+    events: List[_EventTuple] = [(
+        "info",
+        "DELIVERY_GATE_DECIDED",
+        delivery.message,
+        {
+            "decision": delivery.decision.value,
+            "target": delivery.target,
+            "policy_verdict": delivery.policy.verdict,
+            "reasons": [reason.code.value for reason in delivery.reasons],
+        },
+    )]
+    for reason in delivery.reasons:
+        if reason.severity is not DeliverySeverity.WARNING:
+            continue
+        events.append((
+            "warn",
+            reason.code.value,
+            reason.message,
+            {"dimension": reason.dimension.value, "target": delivery.target},
+        ))
+    return events
+
+
+async def _fail_delivery(
+    job_id: str,
+    delivery: DeliveryGateReport,
+    validation: EmittedArtifactValidation,
+    target_format: str,
+) -> None:
+    """Fail a job the delivery gate blocked, with the reasons and the override path (IXH-2.5).
+
+    The taxonomy code is chosen from the *leading* blocking reason so an existing client keeps
+    its recovery workflow: a validator rejection stays ``EMITTED_ARTIFACT_INVALID`` (route the
+    user to the Verify lenses), while a policy refusal is the new ``EXPORT_DELIVERY_BLOCKED``
+    (show the reasons and the waiver path). No artifact is packaged or persisted either way.
+
+    Args:
+        job_id: The job to fail.
+        delivery: The blocking decision.
+        validation: The emitted-artifact validation, for the findings a validator rejection
+            carries.
+        target_format: The resolved target format key.
+    """
+    blocking = [
+        reason for reason in delivery.reasons if reason.severity is DeliverySeverity.BLOCKING
+    ]
+    invalid_artifact = any(
+        reason.dimension is DeliveryDimension.VALIDATION for reason in blocking
+    )
+    context: Dict[str, Any] = {
+        "target": target_format,
+        "delivery": delivery.model_dump(mode="json", exclude_none=True),
+    }
+    if invalid_artifact:
+        context.update(
+            {
+                "errors": validation.errors,
+                "findings": [f.model_dump(exclude_none=True) for f in validation.findings],
+                "validation": build_validation_report(validation).model_dump(exclude_none=True),
+            }
+        )
+    code = "EMITTED_ARTIFACT_INVALID" if invalid_artifact else "EXPORT_DELIVERY_BLOCKED"
+    await _fail(job_id, code, delivery.message, context)
 
 
 def serialize_file_content(content: Any) -> str:
@@ -1141,21 +1249,36 @@ async def _drive_export_job(job_id: str) -> None:
         # format whose parser needs an unavailable toolchain is reported skipped (not failed).
         validation = await validate_emitted_artifact(target_format, emit_result, api=source.api)
         validation_report = build_validation_report(validation)
-        if validation_report.blocks_delivery:
-            findings_payload = [f.model_dump(exclude_none=True) for f in validation_report.findings]
-            await _fail(
-                job_id,
-                "EMITTED_ARTIFACT_INVALID",
-                validation_report.message,
-                {
-                    "target": target_format,
-                    "errors": validation.errors,
-                    "findings": findings_payload,
-                    "validation": validation_report.model_dump(exclude_none=True),
-                },
-            )
+
+        # --- Stage 4b: the delivery gate (IXH-2.5) ----------------------------------
+        # One decision over four dimensions — the emitted-validation verdict, the *source's*
+        # lint grade, the projected fidelity floor, and the tenant's export policy. It runs
+        # before packaging, so a blocked delivery never materializes artifact bytes and its
+        # download route has nothing to serve.
+        source_lint = await asyncio.to_thread(
+            lint_delivery_source,
+            source.api,
+            tenant_id=tenant_id,
+            project_id=source.artifact_id,
+        )
+        delivery = await asyncio.to_thread(
+            evaluate_delivery,
+            tenant_id=tenant_id,
+            tenant_slug=tenant_slug,
+            target_format=target_format,
+            target_key=fidelity.target.key or target_format,
+            version_record_id=source.version_record_id,
+            validation=validation_report,
+            lint=source_lint,
+            preserved_percent=fidelity.summary.preserved_percent,
+        )
+        if delivery.blocks_delivery:
+            await _fail_delivery(job_id, delivery, validation, target_format)
             return
         for level, code, message, context in build_validation_events(validation):
+            if not await _publish(job_id, event=(level, code, message, context)):
+                return
+        for level, code, message, context in build_delivery_events(delivery):
             if not await _publish(job_id, event=(level, code, message, context)):
                 return
 
@@ -1190,6 +1313,7 @@ async def _drive_export_job(job_id: str) -> None:
                 ExportArtifactStoreNotConfigured,
                 ExportArtifactTooLarge,
                 body_as_bytes,
+                content_sha256_hex_only,
                 put_export_artifact,
             )
 
@@ -1229,6 +1353,58 @@ async def _drive_export_job(job_id: str) -> None:
             )
             return
 
+        # The artifact now exists and has a content digest, so the delivery can be attested to
+        # (IXH-2.5): the statement names the exact bytes the download route will serve.
+        delivery = build_delivery_attestation(
+            delivery,
+            tenant_id=tenant_id,
+            delivery={
+                "jobId": job_id,
+                "tenantSlug": tenant_slug,
+                "artifactId": source.artifact_id,
+                "versionRecordId": source.version_record_id,
+                "versionLabel": source.version_label,
+                "target": target_format,
+                "snapshotHash": snapshot_hash,
+                "options": request.options,
+                "downloadPath": _download_path(tenant_slug, job_id),
+            },
+            artifact={
+                "filename": download.filename,
+                # Plain hex, not the ``sha256:`` prefixed store form: an in-toto subject digest
+                # is the bare value a consumer gets from ``sha256sum`` on the downloaded file.
+                "contentSha256": content_sha256_hex_only(stored.content_sha256),
+                "sizeBytes": stored.size_bytes,
+                "mediaType": download.media_type,
+                "files": [f.path for f in emit_result.files],
+            },
+            tools=delivery_tool_versions(
+                target_format=target_format,
+                emitter_version=fidelity.projection.target.emitter_version,
+                registry_version=fidelity.projection.target.registry_version,
+                apiome_version=fidelity.projection.target.apiome_version,
+                validation=validation_report,
+            ),
+        )
+        if delivery.attestation is not None:
+            if not await _publish(
+                job_id,
+                event=(
+                    "info",
+                    "DELIVERY_ATTESTED",
+                    "Attached a signed delivery attestation to the artifact."
+                    if delivery.attestation.signed
+                    else "Attached an unsigned delivery attestation (no signing secret is "
+                    "configured on this server).",
+                    {
+                        "predicate_type": delivery.attestation.predicate_type,
+                        "signed": delivery.attestation.signed,
+                        "content_sha256": content_sha256_hex_only(stored.content_sha256),
+                    },
+                ),
+            ):
+                return
+
         result = ExportJobResult(
             artifact=source.artifact_id,
             version_record_id=source.version_record_id,
@@ -1240,6 +1416,7 @@ async def _drive_export_job(job_id: str) -> None:
             fidelity=fidelity,
             guard=guard,
             validation=validation_report,
+            delivery=delivery,
             files=manifest,
             media_type=emit_result.media_type,
             download_path=_download_path(tenant_slug, job_id),

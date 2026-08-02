@@ -20,6 +20,9 @@ logic is exercised in ``test_export_source.py`` — so these tests pin only the 
 
 from __future__ import annotations
 
+import base64
+import hashlib
+import json
 from unittest.mock import patch
 
 import yaml
@@ -38,8 +41,18 @@ from app.canonical_model import (
     TypeKind,
     TypeRef,
 )
+from app.export_delivery_gate import (
+    DeliveryDecision,
+    DeliveryDimension,
+    DeliveryGateReport,
+    DeliveryOverride,
+    DeliveryReason,
+    DeliveryReasonCode,
+    DeliverySeverity,
+)
 from app.export_source import ExportSource, ExportSourceError
 from app.main import app
+from app.models import ImportPreflightPolicy
 
 client = TestClient(app)
 
@@ -370,3 +383,162 @@ def test_document_422_when_source_unreconstructable():
     finally:
         app.dependency_overrides.clear()
     assert response.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Delivery gate on the synchronous export routes — IXH-2.5 (#5100)
+# ---------------------------------------------------------------------------
+def _blocking_delivery() -> DeliveryGateReport:
+    """A delivery decision blocked by the tenant's export policy, with its override path."""
+    return DeliveryGateReport(
+        decision=DeliveryDecision.BLOCK,
+        blocks_delivery=True,
+        warns=False,
+        headline="Delivery blocked",
+        message="Quality policy blocks this export: score 40 is below the required 90.",
+        reasons=[
+            DeliveryReason(
+                code=DeliveryReasonCode.SOURCE_BELOW_FLOOR,
+                dimension=DeliveryDimension.LINT,
+                severity=DeliverySeverity.BLOCKING,
+                message="The source lint score is 40, below the required 90.",
+            )
+        ],
+        target="asyncapi-3",
+        policy=ImportPreflightPolicy(
+            verdict="block", blocking=True, scope="export", reason="score floor missed"
+        ),
+        override=DeliveryOverride(
+            available=True,
+            endpoint="/v1/tenants/test-tenant/governance/quality-waivers",
+            subject_key="rev-uuid-1",
+            format_key="asyncapi",
+            roles=["owner"],
+            instructions="Record an export waiver for this revision.",
+        ),
+    )
+
+
+def test_document_attaches_a_signed_delivery_attestation_header():
+    """An allowed delivery names its decision and carries the attestation for its exact bytes."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.export_routes.load_export_source", return_value=_source()):
+            response = client.post(
+                "/v1/export/test-tenant/document",
+                json={"artifact": "artifact-1", "target": "openapi"},
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.headers["X-Apiome-Delivery-Decision"] in {"allow", "allow_with_warning"}
+
+    envelope = json.loads(
+        base64.b64decode(response.headers["X-Apiome-Delivery-Attestation"], validate=True)
+    )
+    statement = json.loads(base64.b64decode(envelope["payload"], validate=True))
+    assert statement["predicateType"].endswith("/export-delivery/v1")
+    # The subject digests the bytes the client actually received.
+    assert statement["subject"][0]["digest"]["sha256"] == hashlib.sha256(
+        response.content
+    ).hexdigest()
+    assert statement["subject"][0]["name"] == "openapi.json"
+    assert statement["predicate"]["delivery"]["versionRecordId"] == "rev-uuid-1"
+
+
+def test_document_409_when_the_delivery_gate_blocks_and_emits_nothing():
+    """A blocked delivery returns the reasons and the override path — and never emits."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+
+    def _must_not_emit(*_args, **_kwargs):
+        raise AssertionError("a blocked delivery must not emit an artifact")
+
+    try:
+        with patch("app.export_routes.load_export_source", return_value=_source()), patch(
+            "app.export_routes.emit_canonical", side_effect=_must_not_emit
+        ), patch(
+            "app.export_routes.evaluate_delivery", return_value=_blocking_delivery()
+        ):
+            response = client.post(
+                "/v1/export/test-tenant/document",
+                json={"artifact": "artifact-1", "target": "asyncapi"},
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 409
+    detail = response.json()["detail"]
+    assert detail["delivery"]["decision"] == "block"
+    assert detail["delivery"]["reasons"][0]["code"] == "DELIVERY_SOURCE_BELOW_FLOOR"
+    assert detail["delivery"]["override"]["available"] is True
+    assert detail["delivery"]["override"]["subject_key"] == "rev-uuid-1"
+    assert "X-Apiome-Delivery-Attestation" not in response.headers
+
+
+def test_dispatch_carries_the_delivery_decision_and_attestation():
+    """A dispatched export returns its decision inline, attested over the inline files."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+    try:
+        with patch("app.export_routes.load_export_source", return_value=_source()):
+            response = client.post(
+                "/v1/export/test-tenant/dispatch",
+                json={"artifact": "artifact-1", "target": "openapi"},
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200, response.text
+    delivery = response.json()["delivery"]
+    assert delivery["decision"] in {"allow", "allow_with_warning"}
+    assert delivery["blocks_delivery"] is False
+    assert delivery["attestation"]["predicate_type"].endswith("/export-delivery/v1")
+
+
+def test_dispatch_409_when_the_delivery_gate_blocks_and_never_runs_the_emitter():
+    """The gate runs before the dispatch, so no emit (and no field-identity write) happens."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+
+    def _must_not_dispatch(*_args, **_kwargs):
+        raise AssertionError("a blocked delivery must not run the emitter")
+
+    try:
+        with patch("app.export_routes.load_export_source", return_value=_source()), patch(
+            "app.export_routes.dispatch_from_source", side_effect=_must_not_dispatch
+        ), patch(
+            "app.export_routes.evaluate_delivery", return_value=_blocking_delivery()
+        ):
+            response = client.post(
+                "/v1/export/test-tenant/dispatch",
+                json={"artifact": "artifact-1", "target": "openapi"},
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 409
+    assert response.json()["detail"]["delivery"]["blocks_delivery"] is True
+
+
+def test_dispatch_dry_run_is_not_gated():
+    """A dry-run delivers nothing, so it is neither gated nor attested."""
+    app.dependency_overrides[validate_authentication] = _override_auth
+
+    def _must_not_gate(*_args, **_kwargs):
+        raise AssertionError("a dry-run must not run the delivery gate")
+
+    try:
+        with patch("app.export_routes.load_export_source", return_value=_source()), patch(
+            "app.export_routes.evaluate_delivery", side_effect=_must_not_gate
+        ):
+            response = client.post(
+                "/v1/export/test-tenant/dispatch",
+                json={"artifact": "artifact-1", "target": "openapi", "dry_run": True},
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["dry_run"] is True
+    assert body["delivery"] is None
+    assert body["files"] == []

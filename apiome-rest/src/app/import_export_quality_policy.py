@@ -8,13 +8,16 @@ resolution rules, its verdict, and the waiver that lets a named role proceed any
 
 What the policy says
 --------------------
-Per scope (``import`` / ``export``) a policy carries three independent floors and one
-enforcement mode:
+Per scope (``import`` / ``export``) a policy carries independent floors and one enforcement
+mode:
 
 * ``min_grade`` — the lowest acceptable letter grade (A is best, F worst).
 * ``min_score`` — the lowest acceptable 0-100 lint score.
 * ``block_on_severity`` — the severity at or above which findings are unacceptable at all
   (``error`` alone, ``warning`` and worse, or ``info`` and worse).
+* ``min_fidelity`` — **export only** (IXH-2.5): the lowest acceptable projected
+  preserved-construct percentage for a delivery. An import has no target and therefore no
+  projected fidelity, so the floor is simply never exercised in the import scope.
 * ``enforcement`` — ``advisory`` reports a shortfall as a **warn** verdict and lets the work
   proceed; ``block`` refuses it.
 
@@ -49,8 +52,9 @@ Where it is used
 * :func:`enforce_import_quality_gate` runs at the REST import-start endpoint, so the gate is
   **server-side**: a client that ignores the pre-flight verdict is refused anyway.
 * :func:`evaluate_export_quality` is the export half: :mod:`app.export_preflight` (IXH-2.4) calls
-  it once per ranked target with the source revision's lint roll-up, and the IXH-2.5 delivery gate
-  will call it for the delivery itself.
+  it once per ranked target with the source revision's lint roll-up and that target's projected
+  fidelity, and :mod:`app.export_delivery_gate` (IXH-2.5) calls it for the delivery itself — so a
+  target the pre-flight banded ``blocked`` is the same target the delivery gate refuses.
 * :func:`verdict_response_model` adapts a verdict into the one API shape every surface returns, so
   the import pre-flight, the export pre-flight, and the delivery gate cannot describe the same
   policy differently.
@@ -151,12 +155,15 @@ class QualityThresholds:
         min_score: Lowest acceptable 0-100 score, or ``None`` for no score floor.
         block_on_severity: Severity at or above which findings are unacceptable, or ``None``
             when severity is not gated.
+        min_fidelity: Lowest acceptable projected preserved-construct percentage for a delivery
+            (export scope, IXH-2.5), or ``None`` for no fidelity floor.
         enforcement: ``advisory`` (report only) or ``block`` (refuse).
     """
 
     min_grade: Optional[str] = None
     min_score: Optional[int] = None
     block_on_severity: Optional[str] = None
+    min_fidelity: Optional[int] = None
     enforcement: str = "advisory"
 
     @property
@@ -166,6 +173,7 @@ class QualityThresholds:
             self.min_grade is not None
             or self.min_score is not None
             or self.block_on_severity is not None
+            or self.min_fidelity is not None
         )
 
     def merged_with(self, override: "QualityThresholds", *, override_fields: Sequence[str]) -> "QualityThresholds":
@@ -245,6 +253,8 @@ class QualityVerdict:
             pass.
         score: The candidate's score, when it had one.
         grade: The candidate's grade, when it had one.
+        preserved_percent: The delivery's projected preserved-construct percentage, when the
+            caller measured one (export scope only).
         allow_override: Whether policy permits waiving this verdict.
         override_roles: Role slugs allowed to waive it.
         policy_version_id: Policy version applied, or ``None`` for the default.
@@ -263,6 +273,7 @@ class QualityVerdict:
     failures: Tuple[Dict[str, Any], ...] = ()
     score: Optional[int] = None
     grade: Optional[str] = None
+    preserved_percent: Optional[int] = None
     allow_override: bool = True
     override_roles: Tuple[str, ...] = DEFAULT_OVERRIDE_ROLES
     policy_version_id: Optional[str] = None
@@ -275,6 +286,11 @@ class QualityVerdict:
         """The score floor applied, for the "82 / needs 90" strip in the wizard."""
         return self.thresholds.min_score
 
+    @property
+    def threshold_fidelity(self) -> Optional[int]:
+        """The fidelity floor applied, for the "62% / needs 80%" strip on a delivery."""
+        return self.thresholds.min_fidelity
+
     def as_dict(self) -> Dict[str, Any]:
         """Serialize the verdict for API payloads and audit detail."""
         return {
@@ -286,11 +302,13 @@ class QualityVerdict:
             "reason": self.reason,
             "min_grade": self.thresholds.min_grade,
             "threshold_score": self.thresholds.min_score,
+            "min_fidelity": self.thresholds.min_fidelity,
             "block_on_severity": self.thresholds.block_on_severity,
             "enforcement": self.thresholds.enforcement,
             "failures": [dict(f) for f in self.failures],
             "score": self.score,
             "grade": self.grade,
+            "preserved_percent": self.preserved_percent,
             "allow_override": self.allow_override,
             "override_roles": list(self.override_roles),
             "policy_version_id": self.policy_version_id,
@@ -360,6 +378,15 @@ def _clean_grade(value: Any) -> Optional[str]:
     return grade if grade in GRADE_ORDER else None
 
 
+def _clean_percent(value: Any) -> Optional[int]:
+    """Normalize a stored 0-100 percentage floor; anything out of range or unparseable is ``None``.
+
+    Shares :func:`_clean_score`'s rules — the fidelity floor is on the same 0-100 scale as a lint
+    score — but is kept as its own name so a future divergence has somewhere to live.
+    """
+    return _clean_score(value)
+
+
 def _clean_score(value: Any) -> Optional[int]:
     """Normalize a stored score into 0-100, or ``None`` when absent/uninterpretable."""
     if value in (None, ""):
@@ -384,12 +411,17 @@ def _clean_enforcement(value: Any, *, default: str = "advisory") -> str:
 
 
 def _thresholds_from_row(row: Mapping[str, Any], scope: str) -> QualityThresholds:
-    """Build one scope's tenant-tier thresholds from a policy row."""
+    """Build one scope's tenant-tier thresholds from a policy row.
+
+    ``min_fidelity`` is export-only (V238): the import scope has no column to read, so the lookup
+    misses and the floor stays ``None`` — the same answer a pre-V238 row gives for either scope.
+    """
     prefix = "import" if scope == SCOPE_IMPORT else "export"
     return QualityThresholds(
         min_grade=_clean_grade(row.get(f"{prefix}_min_grade")),
         min_score=_clean_score(row.get(f"{prefix}_min_score")),
         block_on_severity=_clean_severity(row.get(f"{prefix}_block_on_severity")),
+        min_fidelity=_clean_percent(row.get(f"{prefix}_min_fidelity")),
         enforcement=_clean_enforcement(row.get(f"{prefix}_enforcement")),
     )
 
@@ -467,6 +499,7 @@ _OVERRIDE_FIELDS: Mapping[str, str] = {
     "minGrade": "min_grade",
     "minScore": "min_score",
     "blockOnSeverity": "block_on_severity",
+    "minFidelity": "min_fidelity",
     "enforcement": "enforcement",
 }
 
@@ -522,6 +555,8 @@ def resolve_thresholds(
             values[field] = _clean_grade(raw)
         elif field == "min_score":
             values[field] = _clean_score(raw)
+        elif field == "min_fidelity":
+            values[field] = _clean_percent(raw)
         elif field == "block_on_severity":
             values[field] = _clean_severity(raw)
         else:
@@ -543,8 +578,14 @@ def _failures(
     score: Optional[int],
     grade: Optional[str],
     severity_counts: Mapping[str, int],
+    preserved_percent: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
-    """Every floor the candidate falls short of, in the order the UI reads them."""
+    """Every floor the candidate falls short of, in the order the UI reads them.
+
+    A floor whose measurement is missing never fails: an unscored lint report cannot miss a score
+    floor, and a candidate with no projected fidelity (every import, and any export evaluated
+    before its target is known) cannot miss a fidelity floor.
+    """
     failures: List[Dict[str, Any]] = []
     if thresholds.min_score is not None and score is not None and score < thresholds.min_score:
         failures.append({"kind": "score", "required": thresholds.min_score, "actual": score})
@@ -556,6 +597,14 @@ def _failures(
             failures.append(
                 {"kind": "severity", "required": thresholds.block_on_severity, "actual": hits}
             )
+    if (
+        thresholds.min_fidelity is not None
+        and preserved_percent is not None
+        and preserved_percent < thresholds.min_fidelity
+    ):
+        failures.append(
+            {"kind": "fidelity", "required": thresholds.min_fidelity, "actual": preserved_percent}
+        )
     return failures
 
 
@@ -573,6 +622,11 @@ def _describe(failures: Sequence[Mapping[str, Any]]) -> str:
             parts.append(
                 f"{failure['actual']} finding(s) at or above {failure['required']} severity"
             )
+        elif kind == "fidelity":
+            parts.append(
+                f"fidelity {failure['actual']}% preserved is below the required "
+                f"{failure['required']}%"
+            )
     return "; ".join(parts)
 
 
@@ -584,6 +638,7 @@ def evaluate_quality(
     score: Optional[int],
     grade: Optional[str],
     severity_counts: Optional[Mapping[str, int]] = None,
+    preserved_percent: Optional[int] = None,
     waiver: Optional[Mapping[str, Any]] = None,
 ) -> QualityVerdict:
     """Evaluate one candidate against a policy.
@@ -605,6 +660,8 @@ def evaluate_quality(
         score: The candidate's 0-100 lint score, or ``None`` when unscored.
         grade: The candidate's letter grade, or ``None`` when ungraded.
         severity_counts: The candidate's per-severity finding tally.
+        preserved_percent: The delivery's projected preserved-construct percentage (export scope,
+            IXH-2.5), or ``None`` when unmeasured — a missing measurement never fails a floor.
         waiver: An active waiver row that covers this subject, or ``None``.
 
     Returns:
@@ -619,6 +676,7 @@ def evaluate_quality(
         "thresholds": thresholds,
         "score": score,
         "grade": grade,
+        "preserved_percent": preserved_percent,
         "allow_override": policy.allow_override,
         "override_roles": policy.override_roles,
         "policy_version_id": policy.policy_version_id,
@@ -637,7 +695,13 @@ def evaluate_quality(
             **common,
         )
 
-    failures = _failures(thresholds, score=score, grade=grade, severity_counts=counts)
+    failures = _failures(
+        thresholds,
+        score=score,
+        grade=grade,
+        severity_counts=counts,
+        preserved_percent=preserved_percent,
+    )
     if not failures:
         return QualityVerdict(
             verdict="pass",
@@ -696,6 +760,7 @@ def evaluate_export_quality(
     score: Optional[int],
     grade: Optional[str],
     severity_counts: Optional[Mapping[str, int]] = None,
+    preserved_percent: Optional[int] = None,
     subject_key: Optional[str] = None,
     policy: Optional[QualityPolicy] = None,
 ) -> QualityVerdict:
@@ -712,6 +777,10 @@ def evaluate_export_quality(
         score: The source revision's lint score.
         grade: The source revision's lint grade.
         severity_counts: The source revision's per-severity tally.
+        preserved_percent: The projected preserved-construct percentage for this target — the
+            pre-flight passes the predicted envelope's value, the delivery gate the one the job
+            computed, so both answer the fidelity floor the same way. ``None`` leaves the floor
+            unexercised.
         subject_key: Identity of the delivery subject (:func:`subject_key_for_export`), for the
             waiver match. ``None`` skips the waiver entirely.
         policy: A pre-loaded policy to evaluate against, so a caller ranking *many* targets for
@@ -729,6 +798,7 @@ def evaluate_export_quality(
         score=score,
         grade=grade,
         severity_counts=severity_counts,
+        preserved_percent=preserved_percent,
         waiver=None,
     )
     # A waiver only ever downgrades a *blocking* verdict (:func:`evaluate_quality` ignores it
@@ -752,6 +822,7 @@ def evaluate_export_quality(
         score=score,
         grade=grade,
         severity_counts=severity_counts,
+        preserved_percent=preserved_percent,
         waiver=waiver,
     )
 
@@ -785,6 +856,8 @@ def verdict_response_model(verdict: QualityVerdict) -> "ImportPreflightPolicy":
         scope=verdict.scope,
         format_key=verdict.format_key,
         min_grade=verdict.thresholds.min_grade,
+        min_fidelity=verdict.thresholds.min_fidelity,
+        preserved_percent=verdict.preserved_percent,
         block_on_severity=verdict.thresholds.block_on_severity,
         enforcement=verdict.thresholds.enforcement,
         failures=[
