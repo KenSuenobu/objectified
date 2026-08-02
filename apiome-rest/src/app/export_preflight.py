@@ -54,6 +54,7 @@ from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple
 from pydantic import BaseModel, ConfigDict, Field
 
 from .canonical_model import CanonicalApi, TypeKind
+from .cross_format_conformance import TargetConformance, check_cross_format_conformance
 from .emitter import CapabilityProfile, Emitter, EmitterDescriptor, describe_emit_targets, get_emitter
 from .export_fidelity import TargetFidelity, build_target_fidelity
 from .export_source import ExportSource
@@ -86,6 +87,7 @@ __all__ = [
     "ExportPreflightRequest",
     "ExportPreflightTarget",
     "SourceCapabilityDemand",
+    "apply_instance_conformance",
     "capability_verdict",
     "lint_export_source",
     "rank_export_targets",
@@ -160,6 +162,15 @@ class ExportPreflightRequest(BaseModel):
         description="When false, the source lint verdict is returned without its ranked finding "
         "list (score, grade, and tallies are always present). Lets a target-grid caller skip the "
         "findings payload it does not render.",
+    )
+    include_conformance: bool = Field(
+        default=False,
+        description="When true, run the IXH-5.6 instance-conformance check per ranked target: "
+        "source-valid instances (IXH-5.2) are validated against each target's actually-emitted "
+        "schema, the per-target verdict is attached beside the fidelity envelope, and a "
+        "``ready`` target whose emitted schema rejected instances is demoted to ``caution``. "
+        "Off by default because it emits every ranked target for real — heavier than the "
+        "prediction-only pre-flight.",
     )
 
 
@@ -246,6 +257,13 @@ class ExportPreflightTarget(BaseModel):
         description="The tenant's export quality policy verdict for this source and target "
         "(IXH-2.3). Shares the import pre-flight's verdict shape — one policy engine, one "
         "response shape — and names its own ``scope`` (``export``).",
+    )
+    conformance: Optional[TargetConformance] = Field(
+        default=None,
+        description="The IXH-5.6 instance-level conformance verdict for this target — "
+        "source-valid instances validated against the *actually emitted* schema — reported "
+        "alongside the structural fidelity envelope. ``None`` unless the pre-flight was "
+        "requested with ``include_conformance``.",
     )
 
 
@@ -794,3 +812,66 @@ def run_export_preflight(
     # the helper swallows and logs its own failures, so telemetry never fails a pre-flight.
     observe_export_preflight(report, tenant_id=tenant_id, project_id=source.artifact_id)
     return report
+
+
+async def apply_instance_conformance(
+    report: ExportPreflightReport,
+    api: CanonicalApi,
+    *,
+    seed: int = 0,
+) -> ExportPreflightReport:
+    """Attach IXH-5.6 instance-conformance verdicts and fold them into the ranking.
+
+    Runs :func:`app.cross_format_conformance.check_cross_format_conformance` once over the
+    report's ranked target formats, attaches each :class:`TargetConformance` beside that
+    target's structural fidelity envelope, and **feeds the result into the rank**: a target
+    banded ``ready`` whose validator ran and rejected source-valid instances is demoted to
+    ``caution`` (the band is the ranking's primary key, so the demotion reorders the list),
+    with the failure counts appended to its rationale. The readiness *score* is untouched —
+    it remains the weighted prediction mix — and so are ``blocked``/``unavailable`` bands,
+    which already sit below ``caution``. Transcode failures never demote: they mean an
+    instance could not be represented on the target wire, not that the emitted schema
+    rejected it.
+
+    Args:
+        report: The assembled pre-flight report to enrich.
+        api: The source canonical model the report was ranked from (instances are emitted
+            and validated against this model's targets for real).
+        seed: Synthesis seed forwarded to the conformance check.
+
+    Returns:
+        A new :class:`ExportPreflightReport` with per-target ``conformance``, re-sorted
+        ranks, and a recomputed ``ranking_fingerprint``.
+    """
+    conformance = await check_cross_format_conformance(
+        api, targets=[target.format for target in report.targets], seed=seed
+    )
+    by_format = {entry.target: entry for entry in conformance.targets}
+
+    rows: List[Tuple[Tuple[int, int, str], ExportPreflightTarget]] = []
+    for target in report.targets:
+        entry = by_format.get(target.format)
+        band = target.band
+        rationale = target.rationale
+        if entry is not None and entry.failed and band == "ready":
+            band = "caution"
+            rationale = (
+                f"{rationale} Instance conformance: the emitted schema rejected "
+                f"{entry.conformance_failures} check(s) across "
+                f"{entry.instances_checked} source-valid instance(s)."
+            )
+        updated = target.model_copy(
+            update={"conformance": entry, "band": band, "rationale": rationale}
+        )
+        # The same total order rank_export_targets uses: band, then composite descending,
+        # then key — so the demotion feeds the rank exactly like any other band change.
+        rows.append(((_BAND_ORDER.index(band), -updated.readiness, updated.key), updated))
+
+    rows.sort(key=lambda row: row[0])
+    ranked = [
+        target.model_copy(update={"rank": position})
+        for position, (_, target) in enumerate(rows, start=1)
+    ]
+    return report.model_copy(
+        update={"targets": ranked, "ranking_fingerprint": _ranking_fingerprint(ranked)}
+    )

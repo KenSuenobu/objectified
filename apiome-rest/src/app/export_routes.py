@@ -77,6 +77,7 @@ from .export_job_engine import serialize_file_content
 from .export_preflight import (
     ExportPreflightReport,
     ExportPreflightRequest,
+    apply_instance_conformance,
     run_export_preflight,
 )
 from .export_preview_manifest import (
@@ -1820,4 +1821,10 @@ async def preflight_export(
     except ExportSourceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
-    return run_export_preflight(source, request, tenant_id=tenant_id)
+    report = run_export_preflight(source, request, tenant_id=tenant_id)
+    if request.include_conformance:
+        # IXH-5.6: validate source-valid instances against each target's actually-emitted
+        # schema, attach the verdicts beside the fidelity envelopes, and demote ``ready``
+        # targets whose emitted schema rejected instances. Opt-in — it emits for real.
+        report = await apply_instance_conformance(report, source.api)
+    return report

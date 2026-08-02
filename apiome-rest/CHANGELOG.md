@@ -5,6 +5,35 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.244.0] - 2026-08-02
+
+### Added
+- **Cross-format schema conformance, canonical → target (IXH-5.6, #5118)** —
+  Fidelity reporting describes *structural* loss; it never answered the question that
+  actually breaks a consumer at runtime: does a payload that is valid against the source
+  schema remain valid against the emitted target schema? `app/cross_format_conformance.py`
+  answers it empirically, per emit target and per entity.
+  - For every target with a validatable schema language — JSON Schema
+    (`validate_json_instance`), Avro (`fastavro`), protobuf (`buf` compile +
+    `json_format.ParseDict`), GraphQL input types (`graphql-core` input coercion), and XSD
+    (`xmllint`) — the IXH-5.2 source-valid instances (minimal, full, branch; never mutants)
+    are validated against the **actually emitted** schema. Failures are reported per entity
+    with the target-side constraint that rejected the instance.
+  - **Wire-format transcoding is explicit** (`app/conformance_transcoding.py`): base64 →
+    Avro binary, canonical-model-driven JSON → XML documents mirroring the emitted XSD
+    grammar, and the proto3 canonical JSON mapping. Transcode failures are a separate
+    failure kind — they never masquerade as a pass or a conformance verdict.
+  - Targets without a validatable schema language are reported **not applicable, never
+    passing**; a missing toolchain (`buf`, `xmllint`) reports *not validated* with the
+    reason, mirroring the `export_validation` honesty contract.
+  - **Feeds the IXH-2.4 readiness rank**: `POST …/export/preflight` accepts
+    `include_conformance`, attaches each target's verdict beside its structural fidelity
+    envelope, demotes a `ready` target to `caution` when its emitted schema rejected
+    source-valid instances, re-ranks, and refreshes the ranking fingerprint.
+  - Covered across the IXH-1.7 grid: every corpus source-format representative × every
+    production emit target asserts the applicability split and that no target ever reads
+    as passing without instances actually judged.
+
 ## [1.243.0] - 2026-08-02
 
 ### Added
