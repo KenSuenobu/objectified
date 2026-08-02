@@ -16,11 +16,14 @@ import {
   POLICY_DOCS_PAGE,
 } from '@/app/utils/lint-axis-ui';
 import {
+  BREAKING_PUBLISH_POLICY_OPTIONS,
+  DEFAULT_BREAKING_PUBLISH_POLICY,
   DEFAULT_GUIDE_CI_OUTCOMES,
   POLICY_COVERAGE_AXES,
   POLICY_GRADE_OPTIONS,
   styleGuidesApi,
   truncatePolicyFingerprint,
+  type BreakingPublishPolicyLevel,
   type GuideCiOutcomes,
   type GuidePolicySettings,
   type GuidePolicyVersion,
@@ -35,6 +38,7 @@ interface PolicyDraft {
   axisGates: GuidePolicySettings['axisGates'];
   requiredCoverage: string[];
   ciOutcomes: GuideCiOutcomes;
+  breakingPublishPolicy: BreakingPublishPolicyLevel;
 }
 
 /** Normalize API policy settings into editable draft state. */
@@ -43,6 +47,7 @@ function toDraft(settings: GuidePolicySettings): PolicyDraft {
     axisGates: { ...settings.axisGates },
     requiredCoverage: [...settings.requiredCoverage],
     ciOutcomes: { ...DEFAULT_GUIDE_CI_OUTCOMES, ...settings.ciOutcomes },
+    breakingPublishPolicy: settings.breakingPublishPolicy ?? DEFAULT_BREAKING_PUBLISH_POLICY,
   };
 }
 
@@ -60,6 +65,7 @@ function isDraftDirty(draft: PolicyDraft, baseline: PolicyDraft): boolean {
   const baselineGrade = baseline.axisGates.quality?.minGrade ?? '';
   if (qualityGrade !== baselineGrade) return true;
   if (!coverageEqual(draft.requiredCoverage, baseline.requiredCoverage)) return true;
+  if (draft.breakingPublishPolicy !== baseline.breakingPublishPolicy) return true;
   return (
     draft.ciOutcomes.failOnUnwaivedErrors !== baseline.ciOutcomes.failOnUnwaivedErrors ||
     draft.ciOutcomes.failOnRequiredCoverage !== baseline.ciOutcomes.failOnRequiredCoverage ||
@@ -138,6 +144,10 @@ export default function PolicyTab({ guideId, readOnly }: { guideId: string; read
     });
   };
 
+  const setBreakingPublishPolicy = (level: BreakingPublishPolicyLevel) => {
+    setDraft((prev) => (prev ? { ...prev, breakingPublishPolicy: level } : prev));
+  };
+
   const setCiOutcome = (key: keyof GuideCiOutcomes, checked: boolean) => {
     setDraft((prev) =>
       prev
@@ -159,6 +169,7 @@ export default function PolicyTab({ guideId, readOnly }: { guideId: string; read
           axisGates: draft.axisGates,
           requiredCoverage: draft.requiredCoverage,
           ciOutcomes: draft.ciOutcomes,
+          breakingPublishPolicy: draft.breakingPublishPolicy,
           snapshot: true,
         }),
       });
@@ -256,6 +267,36 @@ export default function PolicyTab({ guideId, readOnly }: { guideId: string; read
               ))}
             </ul>
           </fieldset>
+
+          <div>
+            <label
+              htmlFor="breaking-publish-policy"
+              className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+            >
+              Breaking-change publishes
+            </label>
+            <select
+              id="breaking-publish-policy"
+              aria-label="Breaking-change publish policy"
+              value={draft.breakingPublishPolicy}
+              disabled={readOnly || saving}
+              onChange={(e) =>
+                setBreakingPublishPolicy(e.target.value as BreakingPublishPolicyLevel)
+              }
+              className={`${inputClasses} min-w-48 disabled:opacity-50`}
+            >
+              {BREAKING_PUBLISH_POLICY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {BREAKING_PUBLISH_POLICY_OPTIONS.find(
+                (o) => o.value === draft.breakingPublishPolicy,
+              )?.description}
+            </p>
+          </div>
 
           <fieldset>
             <legend className="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">

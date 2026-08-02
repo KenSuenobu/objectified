@@ -4582,6 +4582,14 @@ class StyleGuidePolicySettingsOut(BaseModel):
         default_factory=StyleGuideCiOutcomesOut,
         serialization_alias="ciOutcomes",
     )
+    breaking_publish_policy: Literal["off", "warn", "block"] = Field(
+        default="warn",
+        serialization_alias="breakingPublishPolicy",
+        description=(
+            "Guardrail applied when a publish is breaking without a semver major bump "
+            "(CTG-3.4): off, warn (default), or block."
+        ),
+    )
 
 
 class StyleGuidePolicySettingsPutRequest(BaseModel):
@@ -4603,6 +4611,12 @@ class StyleGuidePolicySettingsPutRequest(BaseModel):
         default=None,
         validation_alias=AliasChoices("ciOutcomes", "ci_outcomes"),
         serialization_alias="ciOutcomes",
+    )
+    breaking_publish_policy: Optional[Literal["off", "warn", "block"]] = Field(
+        default=None,
+        validation_alias=AliasChoices("breakingPublishPolicy", "breaking_publish_policy"),
+        serialization_alias="breakingPublishPolicy",
+        description="Breaking-publish guardrail level (CTG-3.4); omit to leave unchanged.",
     )
     snapshot: bool = Field(
         default=True,
@@ -5108,6 +5122,78 @@ class VerificationPolicyDecisionOut(BaseModel):
     warnings: List[Dict[str, Any]] = Field(default_factory=list)
     purpose: str
     skipped: bool = False
+
+
+class BreakingPublishChangeOut(BaseModel):
+    """One breaking change listed by the publish guardrail (CTG-3.4, #4478)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    pointer: str
+    rule_id: str = Field(..., validation_alias=AliasChoices("ruleId", "rule_id"), serialization_alias="ruleId")
+    path_group: str = Field(
+        ..., validation_alias=AliasChoices("pathGroup", "path_group"), serialization_alias="pathGroup"
+    )
+    summary: str
+
+
+class BreakingPublishGuardrailOut(BaseModel):
+    """Breaking-publish guardrail assessment for a candidate publish (CTG-3.4, #4478).
+
+    Shared verbatim by the preflight endpoint, the blocked-publish 422 body, and the audit
+    trail, so the dialog, the API error, and the audit row can never disagree.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    policy: str = Field(description="Resolved guardrail level: off | warn | block.")
+    status: str = Field(
+        description="disabled | no-baseline | ok | warning | blocked | unavailable."
+    )
+    triggered: bool = Field(description="The guardrail has a warning or a block to report.")
+    blocked: bool = Field(description="Publish is refused unless force-published.")
+    breaking: bool = Field(description="Head classifies breaking against the baseline.")
+    major_bumped: Optional[bool] = Field(
+        None,
+        validation_alias=AliasChoices("majorBumped", "major_bumped"),
+        serialization_alias="majorBumped",
+        description="Null when a version label is not semver (unknown, never assumed).",
+    )
+    from_version: Optional[str] = Field(
+        None, validation_alias=AliasChoices("fromVersion", "from_version"), serialization_alias="fromVersion"
+    )
+    to_version: Optional[str] = Field(
+        None, validation_alias=AliasChoices("toVersion", "to_version"), serialization_alias="toVersion"
+    )
+    baseline_revision_id: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices("baselineRevisionId", "baseline_revision_id"),
+        serialization_alias="baselineRevisionId",
+    )
+    breaking_changes: List[BreakingPublishChangeOut] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("breakingChanges", "breaking_changes"),
+        serialization_alias="breakingChanges",
+    )
+    breaking_count: int = Field(
+        0,
+        validation_alias=AliasChoices("breakingCount", "breaking_count"),
+        serialization_alias="breakingCount",
+    )
+    truncated: bool = Field(
+        False, description="Listed changes omit some of breakingCount."
+    )
+    counts: Dict[str, int] = Field(default_factory=dict)
+    max_severity: Optional[str] = Field(
+        None, validation_alias=AliasChoices("maxSeverity", "max_severity"), serialization_alias="maxSeverity"
+    )
+    recommended_version: Optional[str] = Field(
+        None,
+        validation_alias=AliasChoices("recommendedVersion", "recommended_version"),
+        serialization_alias="recommendedVersion",
+    )
+    detail: Optional[str] = None
+    message: str
 
 
 class VerificationPolicyEvaluationOut(BaseModel):

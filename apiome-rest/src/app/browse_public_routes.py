@@ -7,7 +7,6 @@ Mirrors the data surfaced by ``apiome-browse`` ``getPublicTenants`` and
 
 from __future__ import annotations
 
-import re
 from datetime import datetime
 from functools import cmp_to_key
 from typing import Any, Dict, List, Literal
@@ -34,24 +33,9 @@ from .models import (
     BrowsePublicVersionRow,
     BrowsePublicVersionsResponse,
 )
+from .semver_version import parse_semver as _parse_semver
 
 router = APIRouter(prefix="/v1/browse", tags=["browse"])
-
-
-_SEMVER_RE = re.compile(
-    r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
-    r"(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?"
-    r"(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$"
-)
-
-
-def _parse_semver(version_slug: str) -> tuple[int, int, int, tuple[str, ...]] | None:
-    s = (version_slug or "").strip().lstrip("vV")
-    m = _SEMVER_RE.match(s)
-    if not m:
-        return None
-    prerelease = tuple((m.group(4) or "").split(".")) if m.group(4) else ()
-    return (int(m.group(1)), int(m.group(2)), int(m.group(3)), prerelease)
 
 
 def _cmp_prerelease(a: tuple[str, ...], b: tuple[str, ...]) -> int:

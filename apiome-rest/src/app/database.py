@@ -3691,6 +3691,7 @@ class Database:
         axis_gates: Optional[Dict[str, Any]] = None,
         required_coverage: Optional[List[Any]] = None,
         ci_outcomes: Optional[Dict[str, Any]] = None,
+        breaking_publish_policy: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """Update draft policy gate settings on a custom style guide (CLX-1.3, #4850).
 
@@ -3703,6 +3704,9 @@ class Database:
             axis_gates: New axis gates object, or ``None`` to leave unchanged.
             required_coverage: New required-coverage list, or ``None`` to leave unchanged.
             ci_outcomes: New CI outcome toggles, or ``None`` to leave unchanged.
+            breaking_publish_policy: New breaking-publish guardrail level (CTG-3.4, #4478) —
+                ``off`` / ``warn`` / ``block`` — or ``None`` to leave unchanged. The caller
+                normalizes; the V237 check constraint is the backstop.
 
         Returns:
             The updated guide row (subset of columns), or ``None`` when no custom guide matched.
@@ -3714,10 +3718,12 @@ class Database:
             SET axis_gates = COALESCE(%s::jsonb, axis_gates),
                 required_coverage = COALESCE(%s::jsonb, required_coverage),
                 ci_outcomes = COALESCE(%s::jsonb, ci_outcomes),
+                breaking_publish_policy = COALESCE(%s, breaking_publish_policy),
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = %s AND tenant_id = %s AND source <> 'builtin'
             RETURNING id, name, description, source, is_default,
-                      axis_gates, required_coverage, ci_outcomes, created_at, updated_at
+                      axis_gates, required_coverage, ci_outcomes,
+                      breaking_publish_policy, created_at, updated_at
         """
         rows = self.execute_query(
             query,
@@ -3725,6 +3731,7 @@ class Database:
                 Json(axis_gates) if axis_gates is not None else None,
                 Json(required_coverage) if required_coverage is not None else None,
                 Json(ci_outcomes) if ci_outcomes is not None else None,
+                breaking_publish_policy,
                 guide_id,
                 tenant_id,
             ),
@@ -5432,9 +5439,9 @@ class Database:
                 (e.g. a slug) simply skips the project tier.
 
         Returns:
-            A dict with ``id`` / ``name`` / ``source`` for the winning guide, or ``None``
-            when the tenant has no assignment and no default guide (the caller then falls
-            back to the in-code defaults).
+            A dict with ``id`` / ``name`` / ``source`` / ``breaking_publish_policy`` for the
+            winning guide, or ``None`` when the tenant has no assignment and no default guide
+            (the caller then falls back to the in-code defaults).
         """
         if not tenant_id or not is_uuid_string(str(tenant_id)):
             return None
@@ -5442,7 +5449,7 @@ class Database:
             str(project_id) if project_id and is_uuid_string(str(project_id)) else None
         )
         query = """
-            SELECT g.id, g.name, g.source
+            SELECT g.id, g.name, g.source, g.breaking_publish_policy
             FROM (
                 SELECT a.guide_id, 0 AS precedence
                 FROM apiome.style_guide_assignments a
@@ -5577,7 +5584,8 @@ class Database:
 
         Returns:
             The guide row (``id`` / ``name`` / ``description`` / ``source`` /
-            ``is_default`` / ``created_at`` / ``updated_at``), or ``None``.
+            ``is_default`` / policy gate columns / ``created_at`` / ``updated_at``), or
+            ``None``.
         """
         if not guide_id or not is_uuid_string(str(guide_id)):
             return None
@@ -5586,6 +5594,7 @@ class Database:
         query = """
             SELECT id, name, description, source, is_default,
                    axis_gates, required_coverage, ci_outcomes,
+                   breaking_publish_policy,
                    external_lint_profile,
                    created_at, updated_at
             FROM apiome.style_guides

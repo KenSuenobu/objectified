@@ -937,3 +937,77 @@ def test_get_revision_missing_404s():
     ), patch("app.style_guide_routes.db.get_style_guide_revision", return_value=None):
         r = client.get(f"/v1/style-guides/acme/{GUIDE_ID}/revisions/{REVISION_ID}")
     assert r.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Breaking-publish guardrail policy (CTG-3.4, #4478)
+# ---------------------------------------------------------------------------
+
+
+def test_get_policy_defaults_the_breaking_publish_level_to_warn():
+    """A guide predating V237 (or with a NULL column) reads as the documented default."""
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id",
+        return_value=_custom_row(breaking_publish_policy=None),
+    ):
+        r = client.get(f"/v1/style-guides/acme/{GUIDE_ID}/policy")
+
+    assert r.status_code == 200
+    assert r.json()["breakingPublishPolicy"] == "warn"
+
+
+def test_get_policy_returns_the_stored_breaking_publish_level():
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id",
+        return_value=_custom_row(breaking_publish_policy="block"),
+    ):
+        r = client.get(f"/v1/style-guides/acme/{GUIDE_ID}/policy")
+
+    assert r.status_code == 200
+    assert r.json()["breakingPublishPolicy"] == "block"
+
+
+def test_put_policy_persists_the_breaking_publish_level(governance):
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch(
+        "app.style_guide_routes.db.update_style_guide_policy_settings",
+        return_value=_custom_row(breaking_publish_policy="block"),
+    ) as update, patch("app.style_guide_routes.snapshot_style_guide_policy"):
+        r = client.put(
+            f"/v1/style-guides/acme/{GUIDE_ID}/policy",
+            json={"breakingPublishPolicy": "block", "snapshot": False},
+        )
+
+    assert r.status_code == 200
+    assert r.json()["breakingPublishPolicy"] == "block"
+    assert update.call_args.kwargs["breaking_publish_policy"] == "block"
+    assert governance.record.call_args.kwargs["change_kind"] == "policy_changed"
+
+
+def test_put_policy_leaves_the_breaking_publish_level_unchanged_when_omitted():
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch(
+        "app.style_guide_routes.db.update_style_guide_policy_settings",
+        return_value=_custom_row(breaking_publish_policy="warn"),
+    ) as update, patch("app.style_guide_routes.snapshot_style_guide_policy"):
+        r = client.put(
+            f"/v1/style-guides/acme/{GUIDE_ID}/policy",
+            json={"requiredCoverage": ["quality"], "snapshot": False},
+        )
+
+    assert r.status_code == 200
+    assert update.call_args.kwargs["breaking_publish_policy"] is None
+
+
+def test_put_policy_rejects_an_unknown_breaking_publish_level():
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ):
+        r = client.put(
+            f"/v1/style-guides/acme/{GUIDE_ID}/policy",
+            json={"breakingPublishPolicy": "explode", "snapshot": False},
+        )
+
+    assert r.status_code == 422

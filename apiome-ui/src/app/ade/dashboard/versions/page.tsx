@@ -161,7 +161,12 @@ import {
 } from '@/app/utils/versions-dashboard-sort';
 import { VersionMockCell, type VersionMockChange } from '../../../components/ade/dashboard/VersionMockCell';
 import { PublishGuideViolationsPanel } from '../../../components/ade/dashboard/PublishGuideViolationsPanel';
+import { BreakingPublishGuardrailPanel } from '../../../components/ade/dashboard/BreakingPublishGuardrailPanel';
 import VerificationPolicyDecisionPanel from '../../../components/ade/dashboard/VerificationPolicyDecisionPanel';
+import {
+  guardrailBlocksPublish,
+  type BreakingPublishGuardrail,
+} from '@/app/utils/breaking-publish-guardrail';
 import type { VersionLintReport } from '@/app/utils/version-lint-report';
 import type { VerificationPolicyDecision } from '../style-guides/verification-policy-api';
 import { useMockUsage } from '@/app/hooks/useMockUsage';
@@ -449,6 +454,9 @@ const Versions = () => {
   const [publishLintReport, setPublishLintReport] = useState<VersionLintReport | null>(null);
   const [publishVerificationDecision, setPublishVerificationDecision] =
     useState<VerificationPolicyDecision | null>(null);
+  /** Breaking-publish guardrail assessment for this revision (CTG-3.4). */
+  const [publishBreakingGuardrail, setPublishBreakingGuardrail] =
+    useState<BreakingPublishGuardrail | null>(null);
   /** Publication change report baseline (CR): mirrors REST publish-preview / publish bodies. */
   const [publishChangeReportBaselineMode, setPublishChangeReportBaselineMode] = useState<
     'auto' | 'initial' | 'manual'
@@ -1408,6 +1416,7 @@ const Versions = () => {
     setPublishForceReason('');
     setPublishLintReport(null);
     setPublishVerificationDecision(null);
+    setPublishBreakingGuardrail(null);
     setPublishPreview(null);
     setPublishPreviewError(null);
     setShowPublishDialog(true);
@@ -1508,6 +1517,10 @@ const Versions = () => {
     publishVerificationDecision.enforcement === 'block' &&
     !publishVerificationDecision.passed &&
     !publishForce;
+  const publishBlockedByBreakingGuardrail = guardrailBlocksPublish(
+    publishBreakingGuardrail,
+    publishForce,
+  );
   const publishForceReasonMissing = publishForce && !publishForceReason.trim();
 
   const handlePublishConfirm = async () => {
@@ -1551,6 +1564,16 @@ const Versions = () => {
       await alertDialog({
         message:
           'Resolve verification-policy gates or enable force publish with a reason.',
+        variant: 'error',
+      });
+      return;
+    }
+    if (publishBlockedByBreakingGuardrail) {
+      await alertDialog({
+        message:
+          `This revision has breaking changes without a major-version bump. Publish as ` +
+          `${publishBreakingGuardrail?.recommendedVersion ?? 'the next major version'} ` +
+          'or enable force publish with a reason.',
         variant: 'error',
       });
       return;
@@ -4459,6 +4482,12 @@ const Versions = () => {
                     versionId={publishVersionId}
                     onReportChange={(report) => setPublishLintReport(report)}
                   />
+                  <BreakingPublishGuardrailPanel
+                    projectId={publishVersion.project_id}
+                    versionId={publishVersionId}
+                    enabled={showPublishDialog}
+                    onGuardrailChange={(guardrail) => setPublishBreakingGuardrail(guardrail)}
+                  />
                   <VerificationPolicyDecisionPanel
                     projectId={publishVersion.project_id}
                     versionId={publishVersionId}
@@ -4487,8 +4516,9 @@ const Versions = () => {
                 <>
                   <Alert variant="warning" className="text-sm">
                     Publish prechecks will be bypassed — missing class descriptions, OpenAPI build,
-                    backward-compatibility gates, style-guide error violations, and evidence-backed
-                    verification policy are not enforced.
+                    backward-compatibility gates, style-guide error violations, the
+                    breaking-change guardrail, and evidence-backed verification policy are not
+                    enforced.
                     A reason is required and recorded in the audit trail.
                   </Alert>
                   <div className="space-y-2">
@@ -4606,6 +4636,7 @@ const Versions = () => {
               disabled={
                 publishBlockedByGuideErrors ||
                 publishBlockedByVerificationPolicy ||
+                publishBlockedByBreakingGuardrail ||
                 publishForceReasonMissing
               }
             >

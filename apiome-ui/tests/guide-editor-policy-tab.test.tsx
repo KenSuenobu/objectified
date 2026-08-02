@@ -24,6 +24,7 @@ const POLICY = {
     failOnRequiredCoverage: true,
     failOnAxisGates: true,
   },
+  breakingPublishPolicy: 'warn',
 };
 
 const VERSIONS = {
@@ -67,6 +68,7 @@ function mockFetch() {
         axisGates: typeof POLICY.axisGates;
         requiredCoverage: string[];
         ciOutcomes: typeof POLICY.ciOutcomes;
+        breakingPublishPolicy: typeof POLICY.breakingPublishPolicy;
         snapshot: boolean;
       };
       return jsonResponse({
@@ -76,6 +78,7 @@ function mockFetch() {
           axisGates: put.axisGates,
           requiredCoverage: put.requiredCoverage,
           ciOutcomes: put.ciOutcomes,
+          breakingPublishPolicy: put.breakingPublishPolicy,
         },
       });
     }
@@ -138,8 +141,50 @@ describe('PolicyTab', () => {
         failOnRequiredCoverage: true,
         failOnAxisGates: false,
       },
+      breakingPublishPolicy: 'warn',
       snapshot: true,
     });
+  });
+
+  it('renders the breaking-publish guardrail level with its explanation', async () => {
+    await renderPolicyTab();
+
+    const select = screen.getByLabelText('Breaking-change publish policy');
+    expect(select).toHaveValue('warn');
+    expect(
+      screen.getByText(/Warn when a publish is breaking without a major-version bump/),
+    ).toBeInTheDocument();
+  });
+
+  it('saves an escalation to block and explains what it does', async () => {
+    await renderPolicyTab();
+
+    fireEvent.change(screen.getByLabelText('Breaking-change publish policy'), {
+      target: { value: 'block' },
+    });
+    expect(
+      screen.getByText(/Refuse the publish until the major version is bumped/),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Save'));
+
+    await waitFor(() => {
+      expect(calls.find((c) => c.method === 'PUT')).toBeDefined();
+    });
+    const put = calls.find((c) => c.method === 'PUT');
+    expect((put!.body as { breakingPublishPolicy: string }).breakingPublishPolicy).toBe('block');
+  });
+
+  it('keeps Save disabled until the guardrail level actually changes', async () => {
+    await renderPolicyTab();
+
+    const save = screen.getByText('Save');
+    expect(save).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Breaking-change publish policy'), {
+      target: { value: 'off' },
+    });
+    expect(save).not.toBeDisabled();
   });
 
   it('hides Save when read-only', async () => {
@@ -147,5 +192,6 @@ describe('PolicyTab', () => {
 
     expect(screen.queryByText('Save')).toBeNull();
     expect(screen.getByLabelText('Fail on unwaived errors')).toBeDisabled();
+    expect(screen.getByLabelText('Breaking-change publish policy')).toBeDisabled();
   });
 });
