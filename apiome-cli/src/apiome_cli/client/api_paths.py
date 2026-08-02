@@ -459,6 +459,27 @@ def contract_run(tenant_slug: str, version_ref: str) -> str:
     return f"{V1}/tenants/{tenant_slug}/contracts/{version_ref}/run"
 
 
+def schema_validate(tenant_slug: str, schema_ref: str) -> str:
+    """POST one payload for validation against a cataloged schema (IXH-5.1).
+
+    ``schema_ref`` is the path-shaped schema reference — ``project/{slug}/{version}[/{type}]``,
+    ``catalog/{item}/{version}[/{type}]``, or ``registry/{namespace}/{name}`` — carried as
+    multiple path segments, which is why it is interpolated rather than escaped (the server
+    route uses a ``:path`` converter; a ``%2F``-encoded reference would be split apart again
+    by the ASGI server before routing).
+    """
+    return f"{V1}/tenants/{tenant_slug}/schemas/{schema_ref}/validate"
+
+
+def schema_synthesize(tenant_slug: str, schema_ref: str) -> str:
+    """POST a sample-payload synthesis request for a cataloged schema (IXH-5.2).
+
+    ``schema_ref`` uses the same path-shaped grammar as :func:`schema_validate`, so a
+    payload can be generated and then validated against the very same reference.
+    """
+    return f"{V1}/tenants/{tenant_slug}/schemas/{schema_ref}/synthesize"
+
+
 def verification_run_export(tenant_slug: str, run_id: str) -> str:
     """GET one verification run as JSON or JUnit (ECA-1.3 export; used by ECA-2.2 CLI).
 

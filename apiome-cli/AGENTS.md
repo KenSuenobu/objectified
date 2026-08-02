@@ -40,6 +40,7 @@ Key REST surfaces used by the CLI:
 | Hosted mock | `PUT /v1/versions/{tenant}/{project}/{version_record_id}/mock` (SIM-2.1 toggle; published versions only), `GET /v1/versions/{tenant}/{project}/{version_record_id}` (mock state via `mockEnabled`/`mockBaseUrl`), `GET /v1/mocks/{tenant}/usage?days=&project_slug=&version_label=` (SIM-1.5 usage; best-effort) |
 | Contract assurance | `POST /v1/tenants/{tenant_slug}/contracts/{version_ref}/suite` (ECA-1.1); `POST /v1/tenants/{tenant_slug}/contracts/{version_ref}/run` (ECA-2.1 — compile → resolve target → execute → record evidence); `GET /v1/tenants/{tenant_slug}/verification-runs/{run_id}/export?format=json\|junit` (ECA-1.3 artifact export). `version_ref` is the schema-reference grammar without a type segment (`project/{slug}/{version}`, `catalog/{item}/{version}`). Suite/run: a version that yields no suite is a 200 with `ok: false`; successful runs return 201 with evidence (200 on idempotent replay) |
 | Classified diff | `POST /v1/diff/{tenant_slug}/classified` (CTG-1.2 / CTG-2.1); inline candidate vs stored base; `Accept: text/markdown` returns CTG-1.3 changelog |
+| Schema testing | `POST /v1/tenants/{tenant_slug}/schemas/{schema_ref}/validate` (IXH-5.1 instance validation) and `POST …/schemas/{schema_ref}/synthesize` (IXH-5.2 payload synthesis, `verify: true`). `schema_ref` is the path-shaped reference (`project/{slug}/{version}[/{type}]`, `catalog/{item}/{version}[/{type}]`, `registry/{namespace}/{name}`) carried as multiple path segments — never percent-encode it. Unserviceable payloads are a 200 with `ok: false` + taxonomy `error`; only addressing faults are HTTP errors (400/404/422) |
 
 Tier 2 commands require `X-API-Key` (see **Auth** below). Tier 1 `GET /health` does not.
 
@@ -48,7 +49,7 @@ Tier 2 commands require `X-API-Key` (see **Auth** below). Tier 1 `GET /health` d
 Follow [Command Line Interface Guidelines](https://clig.dev/):
 
 - **Help:** `-h` / `--help` on every command; concise default help when invoked with no subcommand (`main.py` → `echo_concise_help()`).
-- **Exit codes:** `exit_codes.py` — `0` success, `1` error, `2` usage (`EXIT_SUCCESS`, `EXIT_ERROR`, `EXIT_USAGE`). Map HTTP 4xx → usage, 5xx → error (`client/errors.py`). The pre-flight surface adds three gate codes used **only** by `import preflight` / `export preflight` and the `--min-grade` / `--fail-on` flags (IXH-2.6): `3` `EXIT_POLICY_BLOCKED` (tenant quality policy refuses the payload), `4` `EXIT_QUALITY_GATE` (a caller-supplied threshold was missed), `5` `EXIT_PREFLIGHT_UNUSABLE` (nothing gradable). They exist so CI can tell a bad spec apart from a bad network (`1`) or bad credentials (`2`). Failed import/export **jobs** also map taxonomy categories via `taxonomy_exit.py` (IXH-6.4): `policy` → 3, `input`/`format`/`capability`/`resource` → 2, `transport`/`internal` → 1; stderr prints `[CODE] message — remediation`.
+- **Exit codes:** `exit_codes.py` — `0` success, `1` error, `2` usage (`EXIT_SUCCESS`, `EXIT_ERROR`, `EXIT_USAGE`). Map HTTP 4xx → usage, 5xx → error (`client/errors.py`). The pre-flight surface adds three gate codes used **only** by `import preflight` / `export preflight` and the `--min-grade` / `--fail-on` flags (IXH-2.6): `3` `EXIT_POLICY_BLOCKED` (tenant quality policy refuses the payload), `4` `EXIT_QUALITY_GATE` (a caller-supplied threshold was missed), `5` `EXIT_PREFLIGHT_UNUSABLE` (nothing gradable). They exist so CI can tell a bad spec apart from a bad network (`1`) or bad credentials (`2`). Failed import/export **jobs** also map taxonomy categories via `taxonomy_exit.py` (IXH-6.4): `policy` → 3, `input`/`format`/`capability`/`resource` → 2, `transport`/`internal` → 1; stderr prints `[CODE] message — remediation`. `schema test` adds `6` `EXIT_SCHEMA_TEST_FAILED` (IXH-5.5): at least one schema-test case failed — kept distinct from `1` (could not run) and `2` (auth/reference rejected) so CI can gate on the verdict.
 - **Streams:** human tables and JSON on **stdout**; diagnostics, progress spinners, and tracebacks (with `--verbose`) on **stderr**.
 - **Machine output:** global `--json` emits raw API JSON on stdout.
 - **Configuration precedence** (highest first): CLI flags → `APIOME_*` env → dotenv files (default package + cwd `.env`, or `--env-file`) → `~/.config/apiome/config.toml` → defaults. Document new settings in `.env.example` and `README.md`.
@@ -64,7 +65,7 @@ Follow [Command Line Interface Guidelines](https://clig.dev/):
 | `src/apiome_cli/run_interactive.py` | Interactive prompt and stdin batch runner used by `run.sh` |
 | `src/apiome_cli/cli_context.py` | Resolve settings, timeout, `--json`, `--no-progress`, `--insecure` from context |
 | `src/apiome_cli/config.py` | `CliSettings`, TOML user config, env/flag overrides |
-| `src/apiome_cli/exit_codes.py` | Process exit codes (0–5) |
+| `src/apiome_cli/exit_codes.py` | Process exit codes (0–6) |
 | `src/apiome_cli/taxonomy_exit.py` | Map intake/delivery taxonomy categories → exit codes + stderr format (IXH-6.4) |
 | `src/apiome_cli/client/http.py` | `RestClient` (httpx sync), auth headers |
 | `src/apiome_cli/client/pagination.py` | Offset/limit pagination for list commands |
@@ -84,9 +85,10 @@ Follow [Command Line Interface Guidelines](https://clig.dev/):
 | `src/apiome_cli/client/browse_scope.py` | Resolve tenant/project/version slugs for browse spec export |
 | `src/apiome_cli/client/mock_settings.py` | Hosted-mock toggle/status client and output for `mock` (SIM-2.4) |
 | `src/apiome_cli/client/contract_verify.py` | Pure helpers for `verify contract`: request body, exit gate, failure lines (ECA-2.2) |
+| `src/apiome_cli/schema_test.py` | Pure logic for `schema test`: suite discovery, case judging, verdict/exit rules, JUnit + JSON + human renderings (IXH-5.5). No HTTP, no typer |
 | `src/apiome_cli/client/spec_download.py` | Browse spec and import-source HTTP download helpers |
 | `src/apiome_cli/spec_output.py` | Write document bytes; emit metadata on stdout/stderr per clig.dev |
-| `src/apiome_cli/commands/` | Typer subcommands (`auth`, `api-keys`, `integrations`, `config`, `doctor`, `health`, `projects`, `properties`, `schemas`, `types`, `tokens`, `versions`, `paths`, `operations`, `workflows`, `spec`, `import`, `export`, `convert`, `diff`, `contract`, `verify`, `repos`, `repository`, `mcp`, `mcp_governance`, `mock`) |
+| `src/apiome_cli/commands/` | Typer subcommands (`auth`, `api-keys`, `integrations`, `config`, `doctor`, `health`, `projects`, `properties`, `schema`, `schemas`, `types`, `tokens`, `versions`, `paths`, `operations`, `workflows`, `spec`, `import`, `export`, `convert`, `diff`, `contract`, `verify`, `repos`, `repository`, `mcp`, `mcp_governance`, `mock`) |
 | `src/apiome_cli/output_diff.py` | Against-ref parse, `--fail-on` threshold, text/json formatting for `diff` (CTG-2.1) |
 | `src/apiome_cli/client/conversion_output.py` | Fidelity summary + mandatory-warning formatting and low-tier detection for `convert` (MFI-22.6) |
 | `src/apiome_cli/client/export_registry.py` | Emitter-registry export client: targets discovery (`GET /export/targets`) + dry-run fidelity preview (`POST /export/preview`) + projection evidence paging (`POST /export/projection-evidence`, EFP-2.1) + target resolution for generic export (MFX-9.4 / MFX-8.1) |
@@ -123,6 +125,7 @@ Registered in `main.py`:
 | `health` | Print health JSON |
 | `projects` | `list`, `get` |
 | `properties` | `list`, `get` |
+| `schema` | `test` runs schema tests server-side and gates on the verdicts (IXH-5.5, #5117): `--schema REF` (path-shaped IXH-5.1 reference), case sources `--payload FILE` (repeatable, expected valid; `*.xml` sent as XML), `--generate` (IXH-5.2 set — valid instances + single-constraint mutants — via `POST …/synthesize` with `verify: true`; `--seed` reproduces it), and `--suite PATH` (a directory of saved payload files, or an IXH-1.1 corpus manifest whose `instance-payload` entries run with expectations from `validity_class`; suite mode also runs the generated set unless `--no-generate`). Emits a stable report under global `--json` and JUnit XML via `--junit FILE\|-`; every mutant is reported with its intended keyword and whether it violated it, and server-rejected mutant candidates surface as `rejected_mutants`. Exit codes (this command): `0` all passed, `6` a case failed, `1` a case could not be checked / transport / empty run, `2` usage/auth/reference rejection (any 4xx). API key + tenant scope |
 | `schemas` | `list`, `get` |
 | `types` | `list`, `show`, `search` (public `GET /types`; no API key), `publish`, `unpublish` (master tenant API key) |
 | `versions` | `list`, `get` (REST path `project-versions`) |

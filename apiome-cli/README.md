@@ -494,6 +494,73 @@ For GitHub pull requests, prefer the copy-paste Action
 exit `1`, surfaces exit `2` distinctly, and upserts one sticky PR comment with `--format md`.
 See [CI contract gate](../docs/guide/ci-diff-gate.md).
 
+### Schema tests in CI (`schema test`)
+
+Run the Schema Test Bench's validation (IXH-5.1/5.2) from a pipeline, against the same
+path-shaped schema reference the bench and the REST API use: a Project revision
+(`project/{slug}/{version}/{type}`), a Catalog revision (`catalog/{item}/{version}/{type}`),
+or a type-registry type (`registry/{namespace}/{name}`). The trailing `/{type}` segment is
+optional when the revision defines exactly one type; `{version}` is a version label, a
+revision id, or `latest`. Validation runs server-side — the CLI never re-implements it.
+
+```bash
+# Validate one payload (expected valid); *.xml files are sent as XML:
+apiome schema test --schema project/payments-api/1.0.0/Payment --payload ./payment.json
+
+# Run the generated set: valid instances + single-constraint mutants, verified server-side.
+# The same schema and seed generate byte-identical payloads:
+apiome schema test --schema catalog/billing-events/latest/Invoice --generate --seed 7
+
+# Suite mode: run a saved payload set exported from the Test Bench (a directory of
+# payload files, or an IXH-1.1 corpus manifest whose instance-payload entries are run),
+# plus the generated set (skip it with --no-generate):
+apiome schema test --schema project/payments-api/1.0.0/Payment --suite ./payload-suite/
+apiome schema test --schema registry/acme/Money --suite ./corpus.manifest.json --no-generate
+
+# CI artifacts: stable JSON on stdout, JUnit XML to a file (or '-' for stdout):
+apiome --json schema test --schema project/payments-api/1.0.0/Payment --generate > report.json
+apiome schema test --schema project/payments-api/1.0.0/Payment --generate --junit report.xml
+```
+
+**Case sources and expectations.** `--payload` files and directory-suite files are
+expected **valid**. A corpus-manifest suite takes each entry's expectation from its
+`validity_class` (`valid` → expected valid; `invalid` / `adversarial` → expected invalid)
+and runs only entries carrying the `instance-payload` feature — the shape the Test
+Bench's *copy as fixture* action exports. Generated instances carry their own
+expectation, and every generated **mutant** is reported with the keyword it was intended
+to violate and whether it did (`intended to violate 'type' — violated (reported 'type')`);
+mutant candidates the server rejected for failing with the wrong keyword are surfaced as
+a `rejected_mutants` count, never hidden.
+
+**`--json` report (stable).** One object: `command`, `schema_ref`, `seed`, `summary`
+(`total`/`passed`/`failed`/`errors`), `cases`, `rejected_mutants`, `source` (what the
+reference resolved to), and `diagnostics`. Each case carries `id`, `name`, `source`
+(`payload` | `suite` | `generated`), `kind` (`payload` | `minimal` | `full` | `branch` |
+`mutant`), `path`, `expected_valid`, `valid`, `validated`, `status`
+(`passed` | `failed` | `error`), `message`, `findings` (the server's findings, verbatim),
+and `mutation` (mutants only: `kind`, `keyword`, `reported_keyword`, `pointer`,
+`description`).
+
+**`--junit` artifact (stable).** One `<testsuite name="apiome.schema-test">` with
+`tests`/`failures`/`errors`/`skipped` counts, `schema_ref` and `seed` as suite
+properties, and one `<testcase>` per case (`classname` = `{schema_ref}.{source}`,
+`name` = the case id). A failed case carries a `<failure>` with the verdict message and
+one line per finding; a case that could not be checked carries an `<error>`. Nothing is
+ever emitted as skipped.
+
+**Exit codes (this command only).** A case *fails* when a validator ran and its verdict
+did not match the expectation; it is an *error* when no verdict exists (`ok: false`, or
+`valid: null` because no validator ran — an unchecked payload is never a pass):
+
+| Code | Meaning |
+|------|---------|
+| `0` | Every case passed. |
+| `1` | Transport failure or server error, a case that could not be checked, or an empty run. |
+| `2` | Bad invocation, rejected credentials, or a schema reference the server refused (any 4xx). |
+| `6` | At least one case **failed** — a wrong verdict, or a mutant that did not violate its intended constraint. |
+
+Requires API key + tenant scope.
+
 ### Inspect paths and operations
 
 List flattened path/operation rows for a project version (filters: `--method`, `--tag`, `--q`):
