@@ -708,6 +708,18 @@ export function CatalogImportDialog({
     persistImportQualityPreferences({ skipQualityStep: value });
   }, []);
 
+  /**
+   * Re-select the bundle's root document from the quality step's bundle explorer (IXH-3.5).
+   *
+   * The wizard owns `archiveRoot` for exactly this reason: it is the one value the pre-flight, the
+   * preview manifest, the bundle inventory, *and* the eventual commit all read, so changing it here
+   * re-runs every one of them against the chosen member — there is no second "preview root" that
+   * could disagree with what the import would actually do.
+   */
+  const handleArchiveRootChange = useCallback((path: string) => {
+    setArchiveRoot(path.trim() || null);
+  }, []);
+
   const stepIndex = STEP_ORDER.indexOf(step);
   const detected = detection?.detected;
 
@@ -1223,6 +1235,7 @@ export function CatalogImportDialog({
             sourceKind={commitSourceKind}
             inputKind={sourceMethod === 'git' ? 'fileset' : sourceMethod}
             archiveRoot={archiveRoot}
+            onArchiveRootChange={handleArchiveRootChange}
             url={sourceMethod === 'url' ? fileName : null}
             rawSource={content}
             autoAdvance={skipQualityStep}

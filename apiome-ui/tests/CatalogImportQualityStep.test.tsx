@@ -108,6 +108,56 @@ function mockPreflight(
               }),
           });
     }
+    // IXH-3.5: the bundle explorer's own endpoint, answered before the `failWith` short-circuit so
+    // the bundle tab settles even in the transport-failure cases.
+    if (String(url).includes('/api/import/bundle-inventory')) {
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            success: true,
+            ok: true,
+            kind: 'archive',
+            inventory: {
+              entry_point: 'schema.graphql',
+              entry_point_pinned: false,
+              entry_point_error: null,
+              entry_point_candidates: [
+                { path: 'schema.graphql', format: 'graphql', confidence: 0.95, selected: true },
+                { path: 'types.graphql', format: 'graphql', confidence: 0.9, selected: false },
+              ],
+              attribution: 'declaration-scan',
+              files: [
+                {
+                  path: 'schema.graphql',
+                  role: 'entry-point',
+                  verdict: 'analysed',
+                  bytes: 120,
+                  lines: 6,
+                  ignored_reason: null,
+                  error: null,
+                  imports: [],
+                  imported_by: [],
+                  entity_keys: [],
+                  entity_count: 0,
+                },
+              ],
+              total_files: 1,
+              role_counts: {},
+              verdict_counts: {},
+              unresolved: [],
+              total_unresolved: 0,
+              total_edges: 0,
+              total_entities: 0,
+              unattributed_entities: 0,
+              page_size: 1000,
+              next_cursor: null,
+              truncated: false,
+            },
+            error: null,
+          }),
+      });
+    }
     if ('failWith' in response) {
       return Promise.resolve({
         ok: false,
@@ -788,5 +838,49 @@ describe('CatalogImportQualityStep — entity preview integration (IXH-3.2)', ()
     await waitFor(() =>
       expect(screen.getByTestId('import-quality-raw-line-active')).toHaveTextContent('}'),
     );
+  });
+});
+
+describe('CatalogImportQualityStep — bundle files tab (IXH-3.5)', () => {
+  beforeEach(() => window.localStorage.clear());
+  afterEach(() => jest.restoreAllMocks());
+
+  it('offers no bundle tab for a single-document candidate', async () => {
+    await renderStep(buildReport());
+
+    expect(screen.queryByRole('tab', { name: /bundle files/i })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('import-quality-bundle-panel')).not.toBeInTheDocument();
+  });
+
+  it('mounts the bundle explorer for a fileset candidate', async () => {
+    await renderStep(buildReport(), { inputKind: 'fileset' });
+
+    fireEvent.click(screen.getByRole('tab', { name: /bundle files/i }));
+
+    await waitFor(() => expect(screen.getByTestId('bundle-panel')).toBeInTheDocument());
+    expect(screen.getByTestId('import-quality-bundle-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('bundle-entry-point-select')).toHaveValue('schema.graphql');
+  });
+
+  it('mounts the bundle explorer for an archive pinned to a root document', async () => {
+    await renderStep(buildReport(), { archiveRoot: 'schema.graphql' });
+
+    expect(screen.getByRole('tab', { name: /bundle files/i })).toBeInTheDocument();
+  });
+
+  it('hands an entry-point re-selection back to the wizard', async () => {
+    const onArchiveRootChange = jest.fn();
+    await renderStep(buildReport(), {
+      inputKind: 'fileset',
+      onArchiveRootChange: onArchiveRootChange as unknown as (path: string) => void,
+    });
+
+    fireEvent.click(screen.getByRole('tab', { name: /bundle files/i }));
+    await waitFor(() => expect(screen.getByTestId('bundle-entry-point-select')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('bundle-entry-point-select'), {
+      target: { value: 'types.graphql' },
+    });
+
+    expect(onArchiveRootChange).toHaveBeenCalledWith('types.graphql');
   });
 });

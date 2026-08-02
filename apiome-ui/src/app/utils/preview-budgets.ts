@@ -23,6 +23,7 @@
  * `apiome-ui/docs/IMPORT_PREVIEW_BUDGETS_AND_A11Y.md`.
  */
 
+import { BUNDLE_PAGE_SIZE } from './import-bundle-inventory';
 import { PREVIEW_PAGE_SIZE } from './import-preview-manifest';
 import { GRAPH_AGGREGATION_THRESHOLD } from '../components/ade/dashboard/export/projectionGraph';
 import { CONVERSION_PROJECTION_PAGE_LIMIT } from './conversion-projection';
@@ -30,6 +31,7 @@ import { PROJECTION_PAGES_PER_WINDOW } from '../components/ade/dashboard/catalog
 
 // Re-exported so budget consumers (and the registry test) reach every bound through this
 // module, while the constants stay owned by their contract modules.
+export { BUNDLE_PAGE_SIZE } from './import-bundle-inventory';
 export { PREVIEW_PAGE_SIZE } from './import-preview-manifest';
 export { GRAPH_AGGREGATION_THRESHOLD } from '../components/ade/dashboard/export/projectionGraph';
 export { CONVERSION_PROJECTION_PAGE_LIMIT } from './conversion-projection';
@@ -40,6 +42,21 @@ export const TREE_VIRTUALIZE_ABOVE = 50;
 
 /** Ranked lint findings (IXH-2.2 list) beyond this count are windowed, not all mounted. */
 export const FINDINGS_VIRTUALIZE_ABOVE = 50;
+
+/**
+ * Bundle file-tree rows (IXH-3.5 explorer) beyond this count are windowed, not all mounted. Its
+ * own budget rather than a share of {@link TREE_VIRTUALIZE_ABOVE}: the bundle tree opens with every
+ * directory expanded (a bundle is useless with its files hidden), so its row count is the file
+ * count from the first paint — a different worst case from the entity explorer's.
+ */
+export const BUNDLE_TREE_VIRTUALIZE_ABOVE = 50;
+
+/**
+ * Unresolved import/include references listed at once (IXH-3.5). Above it the list states
+ * "showing X of Y unresolved references"; the server caps its own page at the same idea, so a
+ * bundle with thousands of broken references still states the real total.
+ */
+export const BUNDLE_UNRESOLVED_LIST_LIMIT = 50;
 
 /**
  * Export artifact-explorer tree rows (IXH-4.1) beyond this count are windowed, not all
@@ -166,6 +183,34 @@ export const PREVIEW_BUDGETS: readonly PreviewBudget[] = [
     mechanism: 'truncated',
     aboveBudget: 'The walk pauses; the banner stays up with the loaded-of-total counts.',
     fullDataPath: 'Click "Load more entities" again to walk the next pages.',
+  },
+  {
+    id: 'BUNDLE_TREE_VIRTUALIZE_ABOVE',
+    surface: 'Bundle file tree (IXH-3.5 archive explorer)',
+    budget: BUNDLE_TREE_VIRTUALIZE_ABOVE,
+    unit: 'visible tree rows',
+    mechanism: 'windowed',
+    aboveBudget:
+      'Rows are windowed around the viewport ("windowed" note shown); the focused row is pinned so it never unmounts.',
+    fullDataPath: 'Scroll the tree — every loaded file is reachable; the header states the bundle’s full file count.',
+  },
+  {
+    id: 'BUNDLE_PAGE_SIZE',
+    surface: 'Bundle inventory payload (IXH-3.5 pages)',
+    budget: BUNDLE_PAGE_SIZE,
+    unit: 'files per request',
+    mechanism: 'truncated',
+    aboveBudget: 'The truncation banner states "showing X of Y files — this inventory is truncated."',
+    fullDataPath: 'The banner’s "Load all files" button walks the cursor pages.',
+  },
+  {
+    id: 'BUNDLE_UNRESOLVED_LIST_LIMIT',
+    surface: 'Unresolved imports list (IXH-3.5)',
+    budget: BUNDLE_UNRESOLVED_LIST_LIMIT,
+    unit: 'unresolved references shown',
+    mechanism: 'truncated',
+    aboveBudget: 'The list states "showing X of Y unresolved references".',
+    fullDataPath: 'Filter the file tree by the importing file, or read the full list from the REST endpoint.',
   },
   {
     id: 'EXPORT_MANIFEST_TREE_VIRTUALIZE_ABOVE',

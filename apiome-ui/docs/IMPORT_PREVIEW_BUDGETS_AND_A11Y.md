@@ -35,6 +35,9 @@ Two mechanisms appear below, with different obligations:
 | Test Bench payload editor (IXH-5.3) | 1,000,000 UTF-8 bytes (`TEST_BENCH_PAYLOAD_MAX_BYTES`) | Truncated | Validation is refused with the payload size stated against the bound | **Copy as curl** — the REST endpoint handles any size the import guards allow |
 | Test Bench findings list (IXH-5.3) | 50 rows (`TEST_BENCH_FINDINGS_VIRTUALIZE_ABOVE`) | Windowed | Rows window ("windowed" note); the focused row is pinned | Scroll — every returned finding is reachable |
 | Test Bench validation request (IXH-5.3) | 200 findings/validation (`TEST_BENCH_MAX_FINDINGS`) | Truncated | "Showing X of Y findings — the report was truncated" | **Copy as curl** and raise `max_findings` on the REST call |
+| Bundle file tree (IXH-3.5) | 50 rows (`BUNDLE_TREE_VIRTUALIZE_ABOVE`) | Windowed | Rows window around the viewport ("windowed" note); the focused row is pinned | Scroll — every loaded file is reachable; the header states the bundle's full file count |
+| Bundle inventory payload (IXH-3.5) | 1000 files/request (`BUNDLE_PAGE_SIZE`) | Truncated | Banner: "showing X of Y files — this inventory is truncated" | The banner's **Load all files** walks the cursor pages |
+| Unresolved imports list (IXH-3.5) | 50 references (`BUNDLE_UNRESOLVED_LIST_LIMIT`) | Truncated | "showing X of Y unresolved references" | Filter the file tree by the importing file, or read the full list from the REST endpoint |
 | Catalog **Format details** native-analysis tree (CPDO-2.1) | 50 rows (`ANALYSIS_TREE_VIRTUALIZE_ABOVE`) | Windowed | Rows window ("windowed" note); the focused row is pinned | Scroll — every node of the stored analysis is reachable. Nodes the analyzer's own 5000-node budget dropped are a *separate* statement (see below) |
 
 The last row is not an import-preview surface: it belongs to the catalog item detail screen
@@ -136,8 +139,15 @@ document big enough to window — e.g. a generated 6000-type GraphQL schema):
 9. **Tab** to the **ranked findings** (one Tab stop). **↓/↑/Home/End** move selection
    and the raw viewer follows; after **End** on a windowed list the focused row is
    visible and focused.
-10. Verify all exits (**Cancel / Back / Retry / Import anyway / Import**) are reachable
+10. For a **bundle** candidate (upload a `.zip` of a multi-file proto tree), **Tab** to the
+    **Bundle files** tab and activate it. **Tab** into the file tree (one Tab stop): move
+    with **↓/↑**, expand/collapse directories with **→/←**, and type a filename prefix
+    (type-ahead). Verify the selected file's detail strip announces its role, its imports,
+    and — for an unresolved import — the search paths that were tried. **Tab** to the
+    **Entry point** select, choose another candidate with the keyboard, and verify the whole
+    step re-runs its pre-flight against the new root.
+11. Verify all exits (**Cancel / Back / Retry / Import anyway / Import**) are reachable
     and operable with **Enter**, and that the blocked state's justification field is
     labelled and reachable.
-11. With **prefers-reduced-motion: reduce** enabled in the OS, reload: verify no spinner
+12. With **prefers-reduced-motion: reduce** enabled in the OS, reload: verify no spinner
     rotation and no chevron/row animation anywhere in the step.

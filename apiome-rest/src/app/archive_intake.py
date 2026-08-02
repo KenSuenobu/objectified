@@ -26,11 +26,15 @@ __all__ = [
     "ARCHIVE_SUFFIXES",
     "ArchiveIntakeError",
     "ArchivePolicy",
+    "IgnoredMember",
+    "RootCandidate",
     "UnpackedArchive",
     "archive_policy_from_settings",
     "detect_archive_format",
     "is_archive_filename",
     "is_archive_payload",
+    "member_skip_reason",
+    "rank_root_candidates",
     "resolve_fileset_root",
     "unpack_archive",
     "unpack_archive_members",
@@ -38,8 +42,9 @@ __all__ = [
 
 ARCHIVE_SUFFIXES: Tuple[str, ...] = (".zip", ".tar.gz", ".tgz", ".tar")
 
-# Archive members we never ingest (resource forks, VCS metadata).
-_SKIP_PREFIXES: Tuple[str, ...] = ("__MACOSX/", ".git/")
+# Archive members we never ingest (resource forks, VCS metadata), each mapped to the
+# stable reason the bundle explorer reports for it (IXH-3.5).
+_SKIP_PREFIX_REASONS: Dict[str, str] = {"__MACOSX/": "resource-fork", ".git/": "vcs-metadata"}
 _SKIP_BASENAMES: Tuple[str, ...] = (".DS_Store", "Thumbs.db")
 
 # Extensions worth sniffing when auto-detecting a root document inside an archive.
@@ -92,6 +97,44 @@ class UnpackedArchive:
     ambiguous_roots: Tuple[str, ...] = ()
 
 
+@dataclass(frozen=True)
+class IgnoredMember:
+    """One archive entry intake dropped before it became a member (IXH-3.5).
+
+    Unpacking silently skips resource forks, VCS metadata, hidden files, and
+    non-regular entries. Silence is fine for the import itself but not for the bundle
+    explorer, whose whole point is that a file the user put in the archive is never
+    unaccounted for — so the unpackers can now *record* what they skip and why.
+
+    Attributes:
+        path: The entry name as the archive declared it (never validated/normalised —
+            an ignored entry is not a member).
+        reason: Stable machine reason from :func:`member_skip_reason`, or
+            ``"not-a-regular-file"`` for a tar entry that is not a file.
+    """
+
+    path: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class RootCandidate:
+    """One member that could serve as a fileset's root document (IXH-3.5).
+
+    Attributes:
+        path: Module-relative member path.
+        format: Detected format key, when detection recognised one.
+        confidence: Detection confidence, before the entrypoint boost.
+        score: Ranking score — ``confidence`` plus the proto entrypoint boost. The
+            list :func:`rank_root_candidates` returns is sorted by this, descending.
+    """
+
+    path: str
+    format: Optional[str]
+    confidence: float
+    score: float
+
+
 def archive_policy_from_settings() -> ArchivePolicy:
     """Build the active policy from deployment settings."""
     return ArchivePolicy(
@@ -126,19 +169,59 @@ def is_archive_payload(raw: bytes, filename: Optional[str] = None) -> bool:
     return False
 
 
-def _should_skip_member(name: str) -> bool:
-    normalised = name.replace("\\", "/").lstrip("./")
+def member_skip_reason(name: str) -> Optional[str]:
+    """Return why *name* is skipped during unpack, or ``None`` when it is ingestible.
+
+    The reasons are stable machine strings (the bundle explorer, IXH-3.5, renders them
+    as the "why was this ignored?" answer), so they are additive-only:
+
+    * ``directory-entry`` — a directory, not a file.
+    * ``resource-fork`` — a macOS ``__MACOSX/`` sidecar.
+    * ``vcs-metadata`` — a ``.git/`` internal.
+    * ``os-metadata`` — ``.DS_Store`` / ``Thumbs.db``.
+    * ``hidden-file`` — a dotfile (``.editorconfig``, ``.gitignore``, …).
+
+    Args:
+        name: The raw entry name from the archive.
+
+    Returns:
+        The reason string, or ``None`` when the entry should be unpacked.
+    """
+    # Only a leading "./" is stripped. `lstrip("./")` would strip *characters*, turning
+    # ".git/config" into "git/config" and ".DS_Store" into "DS_Store" — which is why
+    # neither was actually being skipped despite both rules existing.
+    normalised = name.replace("\\", "/")
+    while normalised.startswith("./"):
+        normalised = normalised[2:]
     if not normalised or normalised.endswith("/"):
-        return True
-    for prefix in _SKIP_PREFIXES:
+        return "directory-entry"
+    for prefix, reason in _SKIP_PREFIX_REASONS.items():
         if normalised.startswith(prefix):
-            return True
+            return reason
     base = normalised.rsplit("/", 1)[-1]
-    if base.startswith("."):
-        return True
     if base in _SKIP_BASENAMES:
-        return True
-    return False
+        return "os-metadata"
+    if base.startswith("."):
+        return "hidden-file"
+    return None
+
+
+def _should_skip_member(name: str) -> bool:
+    """Whether unpacking drops *name* (the boolean view of :func:`member_skip_reason`)."""
+    return member_skip_reason(name) is not None
+
+
+def _record_ignored(
+    ignored: Optional[List[IgnoredMember]], path: str, reason: str
+) -> None:
+    """Append one skipped entry to an optional collector, ignoring directory noise.
+
+    Directory entries are structural, not files a user "put in the archive", so they
+    are never reported — listing them would bury the entries that matter.
+    """
+    if ignored is None or reason == "directory-entry":
+        return
+    ignored.append(IgnoredMember(path=path, reason=reason))
 
 
 def _validate_member_path(name: str, *, max_depth: int, label: str) -> str:
@@ -213,6 +296,7 @@ def _unpack_zip(
     *,
     policy: ArchivePolicy,
     where: str,
+    ignored: Optional[List[IgnoredMember]] = None,
 ) -> Dict[str, str]:
     try:
         archive = zipfile.ZipFile(io.BytesIO(raw))
@@ -233,7 +317,9 @@ def _unpack_zip(
             if info.is_dir():
                 continue
             raw_name = info.filename
-            if _should_skip_member(raw_name):
+            skip_reason = member_skip_reason(raw_name)
+            if skip_reason is not None:
+                _record_ignored(ignored, raw_name, skip_reason)
                 continue
             # Reject symlink / external attributes that indicate non-regular files.
             if info.external_attr & 0o170000 == 0o120000:
@@ -330,6 +416,7 @@ def _unpack_tar(
     *,
     policy: ArchivePolicy,
     where: str,
+    ignored: Optional[List[IgnoredMember]] = None,
 ) -> Dict[str, str]:
     mode = "r:gz" if raw[:2] == b"\x1f\x8b" else "r:"
     try:
@@ -351,9 +438,13 @@ def _unpack_tar(
             try:
                 filtered = _tar_extract_filter(tarinfo, "")
             except _SkipTarMemberError:
+                if not tarinfo.isdir():
+                    _record_ignored(ignored, tarinfo.name, "not-a-regular-file")
                 continue
             raw_name = filtered.name
-            if _should_skip_member(raw_name):
+            skip_reason = member_skip_reason(raw_name)
+            if skip_reason is not None:
+                _record_ignored(ignored, raw_name, skip_reason)
                 continue
             name = _validate_member_path(raw_name, max_depth=policy.max_depth, label="Archive member")
             if name in members:
@@ -407,6 +498,7 @@ def unpack_archive_members(
     *,
     source_label: Optional[str] = None,
     policy: Optional[ArchivePolicy] = None,
+    ignored: Optional[List[IgnoredMember]] = None,
 ) -> Dict[str, str]:
     """Unpack a zip/tar archive into validated text members, without choosing a root.
 
@@ -420,6 +512,10 @@ def unpack_archive_members(
         raw: Raw archive bytes.
         source_label: Optional archive filename for clearer errors.
         policy: Sandbox limits; defaults to :func:`archive_policy_from_settings`.
+        ignored: Optional collector; when given, every entry the unpack skips is
+            appended to it as an :class:`IgnoredMember` (IXH-3.5). Purely an
+            out-parameter — the unpack never reads it, so collecting cannot change
+            what an import ingests.
 
     Returns:
         Member text keyed by module-relative path.
@@ -437,9 +533,9 @@ def unpack_archive_members(
         )
 
     if raw[:2] == b"PK":
-        members = _unpack_zip(raw, policy=active, where=where)
+        members = _unpack_zip(raw, policy=active, where=where, ignored=ignored)
     else:
-        members = _unpack_tar(raw, policy=active, where=where)
+        members = _unpack_tar(raw, policy=active, where=where, ignored=ignored)
 
     # Compression ratio: uncompressed UTF-8 member bytes vs compressed archive size.
     uncompressed = sum(len(text.encode("utf-8", errors="replace")) for text in members.values())
@@ -503,10 +599,24 @@ def _member_import_boost(path: str, text: str, members: Mapping[str, str]) -> fl
     return boost
 
 
-def _root_candidates(members: Mapping[str, str]) -> List[str]:
-    paths = sorted(members)
-    scored: List[Tuple[float, str]] = []
-    for path in paths:
+def rank_root_candidates(members: Mapping[str, str]) -> List[RootCandidate]:
+    """Rank every member that could serve as the fileset's root, best first.
+
+    The ranking rule is the one :func:`resolve_fileset_root` decides with: detection
+    confidence, plus a boost for proto entrypoints that define services and import
+    siblings. Exposed as its own function so the bundle explorer's entry-point picker
+    (IXH-3.5) offers the *same* ordered candidates the auto-selection considered,
+    rather than a second, lookalike heuristic.
+
+    Args:
+        members: Member text keyed by module-relative path.
+
+    Returns:
+        The candidates sorted by score descending, then path ascending. Empty when no
+        member has a recognisable importable format.
+    """
+    scored: List[RootCandidate] = []
+    for path in sorted(members):
         lower = path.lower()
         if not any(lower.endswith(suffix) for suffix in _ROOT_CANDIDATE_SUFFIXES):
             continue
@@ -515,12 +625,22 @@ def _root_candidates(members: Mapping[str, str]) -> List[str]:
         )
         if not detection.matched or detection.detected is None:
             continue
-        score = detection.detected.confidence + _member_import_boost(
-            path, members[path], members
+        confidence = detection.detected.confidence
+        scored.append(
+            RootCandidate(
+                path=path,
+                format=detection.detected.format,
+                confidence=confidence,
+                score=confidence + _member_import_boost(path, members[path], members),
+            )
         )
-        scored.append((score, path))
-    scored.sort(key=lambda item: (-item[0], item[1]))
-    return [path for _, path in scored]
+    scored.sort(key=lambda candidate: (-candidate.score, candidate.path))
+    return scored
+
+
+def _root_candidates(members: Mapping[str, str]) -> List[str]:
+    """The ranked root-candidate paths (the path-only view of :func:`rank_root_candidates`)."""
+    return [candidate.path for candidate in rank_root_candidates(members)]
 
 
 def resolve_fileset_root(
