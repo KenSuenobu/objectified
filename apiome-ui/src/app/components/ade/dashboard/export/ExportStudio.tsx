@@ -46,6 +46,8 @@ import { BundleExplorer } from './BundleExplorer';
 import { ExportManifestPanel } from './ExportManifestPanel';
 import { ExportMappingGraphPanel } from './ExportMappingGraphPanel';
 import { FidelityLossHeatmapPanel } from './FidelityLossHeatmapPanel';
+import { RoundtripComparisonPanel } from './RoundtripComparisonPanel';
+import { useExportRoundtrip } from './useExportRoundtrip';
 import { useExportPreviewManifest } from './useExportPreviewManifest';
 import type { EntityRevealRequest, ExportManifestEntity } from './exportPreviewManifest';
 import { OriginalSourceOption } from './OriginalSourceOption';
@@ -310,6 +312,14 @@ export function ExportStudio({
     auto: autoVerify && step === 'verify',
   });
   const verifyVerdict = verifyResult ? deriveVerifyVerdict(verifyResult) : null;
+
+  // The on-demand round-trip comparison (IXH-4.4): emit → re-import → diff → reconcile with
+  // the fidelity report, run only when the Review step's panel action asks for it (there is
+  // deliberately no auto mode — the loop is a real emit *plus* a real re-import). Results are
+  // keyed by the same (source, target, options) configuration a verify verdict is, so a
+  // changed option drops the comparison on its own and re-entering a configuration measured
+  // earlier in the session restores it instantly.
+  const roundtrip = useExportRoundtrip(artifact, version, selectedKey, changedOpts);
 
   // The async export job (MFX-46.2): Generate submits a job that runs the emit → fidelity →
   // validate → package pipeline and reports staged progress. The tracker keeps polling across
@@ -847,6 +857,25 @@ export function ExportStudio({
     />
   ) : null;
 
+  /**
+   * The on-demand round-trip comparison (IXH-4.4), rendered under the loss heatmap. Where
+   * the graph and the heatmap *predict* the export's fidelity, this panel checks the
+   * prediction empirically — emit, re-import, diff — but only when its explicit action is
+   * clicked; it never runs as part of showing the Review step.
+   */
+  const roundtripPanel = selected ? (
+    <RoundtripComparisonPanel
+      result={roundtrip.result}
+      running={roundtrip.running}
+      hasRun={roundtrip.hasRun}
+      error={roundtrip.error}
+      fromCache={roundtrip.fromCache}
+      onRun={roundtrip.run}
+      targetLabel={selected.entry.descriptor.label}
+      options={changedOpts}
+    />
+  ) : null;
+
   /** Whether the current step permits advancing to the next one. */
   const canAdvance = useMemo(() => {
     switch (step) {
@@ -1220,6 +1249,8 @@ export function ExportStudio({
                   {mappingGraph}
                   {/* IXH-4.3: the same findings ranked by what they cost. */}
                   {lossHeatmap}
+                  {/* IXH-4.4: check the prediction empirically — emit, re-import, diff. */}
+                  {roundtripPanel}
                 </div>
               ) : emitted ? (
                 <div className="flex min-h-0 flex-col gap-2">
@@ -1263,6 +1294,8 @@ export function ExportStudio({
                   {mappingGraph}
                   {/* IXH-4.3: the same findings ranked by what they cost. */}
                   {lossHeatmap}
+                  {/* IXH-4.4: check the prediction empirically — emit, re-import, diff. */}
+                  {roundtripPanel}
                 </div>
               ) : job && jobStatus ? (
                 jobCompleted ? (

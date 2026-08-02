@@ -96,6 +96,11 @@ from .export_projection import (
     paginate_evidence,
     summarize_manifest,
 )
+from .export_roundtrip import (
+    ExportRoundtripRequest,
+    ExportRoundtripResponse,
+    run_export_roundtrip,
+)
 from .export_service import (
     ExportError,
     ExportPersistenceContext,
@@ -1703,6 +1708,66 @@ async def verify_export(
         files=files,
         truncated=truncated,
     )
+
+
+@router.post(
+    "/{tenant_slug}/roundtrip",
+    response_model=ExportRoundtripResponse,
+    summary="On-demand round-trip comparison: emit → re-import → diff → reconcile with fidelity",
+    description=(
+        "The Export Studio's round-trip evidence action (IXH-4.4): emit the source revision to "
+        "``target`` in a **temporary buffer**, re-import the emitted artifact through the matching "
+        "import adapter, diff the re-imported canonical model against the source with "
+        "``canonical_diff``, and reconcile every difference against the fidelity report — the "
+        "same loop the IXH-1.7 conformance matrix runs in CI, applied to the user's own document "
+        "on demand. Differences the report explains come back ``matched`` (expected loss); "
+        "``unexplained`` differences and ``overclaims`` flag a fidelity bug worth reporting, with "
+        "reproduction provenance (fingerprints + emitter/registry/apiome versions) inline. When "
+        "no import adapter can re-ingest the emit format the comparison is **skipped with the "
+        "matrix's own explanation** (``status: unsupported``), never silently. The run is "
+        "explicit and bounded — one emit, one re-import, nothing persisted (no artifact, no job "
+        "row, no field-identity rows) — and is rate-limited by the global per-tenant middleware. "
+        "A severe conversion (MFX-3.3) is measured, not blocked: the round-trip exists precisely "
+        "to show what a lossy conversion does."
+    ),
+)
+async def roundtrip_export(
+    tenant_slug: str,
+    request: ExportRoundtripRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> ExportRoundtripResponse:
+    """Run one explicit round-trip comparison for a (source revision, target) pair.
+
+    Args:
+        tenant_slug: The tenant slug (scopes the artifact lookup).
+        request: Source coordinates + chosen target + per-emit options.
+
+    Returns:
+        The round-trip verdict (``pass`` / ``fail`` / ``unsupported``) with differences grouped
+        into explained (``matched``), ``unexplained``, and ``overclaims``, plus reproduction
+        provenance. Nothing is persisted.
+
+    Raises:
+        HTTPException: 404 when the artifact/version is unknown; 422 when the revision has no
+            reconstructable source, the emit options are invalid, or the emitter produced no
+            document; 400 when the target is unsupported.
+    """
+    tenant_id = auth_data["tenant_id"]
+    try:
+        source = load_export_source(tenant_id, request.artifact, request.version)
+    except ExportSourceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+
+    try:
+        return run_export_roundtrip(
+            source,
+            request.target,
+            version=request.version,
+            options=request.options,
+            min_severity=request.min_severity,
+        )
+    except ExportError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
 
 @tenant_router.post(

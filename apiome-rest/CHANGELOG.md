@@ -5,6 +5,31 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.243.0] - 2026-08-02
+
+### Added
+- **On-demand export round-trip comparison (IXH-4.4, #5112)** —
+  The strongest possible answer to "is this export honest?" is empirical: emit the artifact,
+  re-import it through the matching import adapter, and diff the re-imported canonical model
+  against the source. The IXH-1.7 conformance matrix proves this in CI over the corpus; the
+  user had no way to see it for their own document.
+  - `POST /v1/export/{tenant}/roundtrip` runs the same loop, on demand, for one
+    (source revision, target, options): a read-only emit via the dispatch primitive (so the
+    verdict and the Studio's fidelity surfaces describe one snapshot), re-import through the
+    matrix's own adapter join, `canonical_diff` against the source, and the matrix's
+    `reconcile` against the fidelity report. Nothing is persisted — no artifact, no job row,
+    no field-identity rows.
+  - Differences come back **grouped**: `matched` (each explained difference paired with the
+    fidelity finding covering it — expected loss), `unexplained`, and `overclaims` (`ok`
+    findings reality contradicts) — the latter two flagging a fidelity bug worth reporting,
+    with reproduction provenance (model fingerprints + emitter/apiome/registry versions,
+    never source content) inline.
+  - A target with no import adapter is **skipped with the matrix's own explanation**
+    (`status: unsupported`), never silently; a re-import failure is reported as a `fail`
+    verdict rather than a 500. `app/export_roundtrip.py` holds the composition; the verdict
+    vocabulary is the 1.7 matrix's, so Studio results reconcile with the published grid for
+    corpus entries.
+
 ## [1.242.0] - 2026-08-02
 
 ### Added

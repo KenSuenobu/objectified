@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.106.0
+  version: 1.107.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -33600,6 +33600,88 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for onecallpregenerationverifyfidelityvalidaresponse422.
+  /v1/export/{tenant_slug}/roundtrip:
+    post:
+      tags:
+      - export
+      summary: 'On-demand round-trip comparison: emit → re-import → diff → reconcile
+        with fidelity'
+      description: 'The Export Studio''s round-trip evidence action (IXH-4.4): emit
+        the source revision to ``target`` in a **temporary buffer**, re-import the
+        emitted artifact through the matching import adapter, diff the re-imported
+        canonical model against the source with ``canonical_diff``, and reconcile
+        every difference against the fidelity report — the same loop the IXH-1.7 conformance
+        matrix runs in CI, applied to the user''s own document on demand. Differences
+        the report explains come back ``matched`` (expected loss); ``unexplained``
+        differences and ``overclaims`` flag a fidelity bug worth reporting, with reproduction
+        provenance (fingerprints + emitter/registry/apiome versions) inline. When
+        no import adapter can re-ingest the emit format the comparison is **skipped
+        with the matrix''s own explanation** (``status: unsupported``), never silently.
+        The run is explicit and bounded — one emit, one re-import, nothing persisted
+        (no artifact, no job row, no field-identity rows) — and is rate-limited by
+        the global per-tenant middleware. A severe conversion (MFX-3.3) is measured,
+        not blocked: the round-trip exists precisely to show what a lossy conversion
+        does.'
+      operationId: roundtrip_export_v1_export__tenant_slug__roundtrip_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Ondemandroundtripcomparisonemitreimportdauthorization schema.
+          - type: 'null'
+            description: Ondemandroundtripcomparisonemitreimportdauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Ondemandroundtripcomparisonemitreimportd Xapikey schema.
+          - type: 'null'
+            description: Ondemandroundtripcomparisonemitreimportd Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRoundtripRequest'
+              description: Request body for ondemandroundtripcomparisonemitreimportdrequest.
+        description: 'Request body for on-demand round-trip comparison: emit → re-import
+          → diff → reconcile with fidelity.'
+      responses:
+        '200':
+          description: 'Successful response for on-demand round-trip comparison: emit
+            → re-import → diff → reconcile with fidelity.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportRoundtripResponse'
+                description: Response payload for ondemandroundtripcomparisonemitreimportdresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for ondemandroundtripcomparisonemitreimportdresponse422.
   /v1/tenants/{tenant_slug}/export/preflight:
     post:
       tags:
@@ -50624,6 +50706,28 @@ components:
       - message
       title: CacheWarningBody
       description: A concern that does not block the write.
+    CanonicalDiffEntry:
+      properties:
+        entity:
+          type: string
+          title: Entity
+          description: 'Entity family: root/service/operation/type/channel.'
+          example: example
+        key:
+          type: string
+          title: Key
+          description: The entity's stable key (empty for ``root``).
+          example: example
+        change:
+          $ref: '#/components/schemas/DiffChangeKind'
+          description: Change.
+      type: object
+      required:
+      - entity
+      - key
+      - change
+      title: CanonicalDiffEntry
+      description: One identity-keyed change between two canonical models.
     CanonicalProjectionSupport:
       properties:
         coverage:
@@ -54788,7 +54892,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-02T16:15:54Z'
+          example: '2026-08-02T17:32:05Z'
         envelope:
           additionalProperties: true
           type: object
@@ -57893,6 +57997,229 @@ components:
       - kind
       title: ExportProjectionMetricResponse
       description: Acknowledgement that a privacy-safe metric was recorded.
+    ExportRoundtripRequest:
+      properties:
+        artifact:
+          type: string
+          title: Artifact
+          description: The artifact (project) id to round-trip.
+          example: example
+        version:
+          anyOf:
+          - type: string
+            description: Request body for export roundtrip.
+          - type: 'null'
+            description: Request body for export roundtrip.
+          title: Version
+          description: Revision UUID, version label (``1.0.0``), or null for the latest
+            revision.
+        target:
+          type: string
+          title: Target
+          description: Target emitter key (``openapi``) or format key (``openapi-3.1``).
+          example: example
+        options:
+          anyOf:
+          - additionalProperties: true
+            type: object
+            description: Request body for export roundtrip.
+          - type: 'null'
+            description: Request body for export roundtrip.
+          title: Options
+          description: Per-target emit options (MFX-1.4); null or empty applies the
+            target defaults.
+        min_severity:
+          $ref: '#/components/schemas/LossinessSeverity'
+          description: Lowest loss severity that raises the advisory (MFX-2.4); does
+            not affect the round-trip verdict, the report, or the reconciliation.
+          default: info
+      additionalProperties: false
+      type: object
+      required:
+      - artifact
+      - target
+      title: ExportRoundtripRequest
+      description: 'A round-trip comparison request: source revision + chosen target
+        + options.'
+    ExportRoundtripResponse:
+      properties:
+        artifact:
+          type: string
+          title: Artifact
+          description: The artifact (project) id the round-trip ran for.
+          example: example
+        version:
+          anyOf:
+          - type: string
+            description: Response payload for export roundtrip.
+          - type: 'null'
+            description: Response payload for export roundtrip.
+          title: Version
+          description: The version selector as requested (label, UUID, or null).
+        version_record_id:
+          type: string
+          title: Version Record Id
+          description: The resolved revision (``versions.id``).
+          example: version_01h2xcejqtf3fz5y5j0v8k9m2p
+        version_label:
+          anyOf:
+          - type: string
+            description: Response payload for export roundtrip.
+          - type: 'null'
+            description: Response payload for export roundtrip.
+          title: Version Label
+          description: The resolved revision's version label (e.g. ``1.0.0``).
+        target:
+          type: string
+          title: Target
+          description: The resolved target format key (e.g. ``openapi-3.1``).
+          example: example
+        emit_key:
+          type: string
+          title: Emit Key
+          description: The resolved emitter registry key (e.g. ``openapi``).
+          example: example
+        adapter_key:
+          anyOf:
+          - type: string
+            description: Response payload for export roundtrip.
+          - type: 'null'
+            description: Response payload for export roundtrip.
+          title: Adapter Key
+          description: 'The import-adapter registry key that re-imported the emitted
+            artifact; null when the comparison was skipped (``status: unsupported``).'
+        status:
+          $ref: '#/components/schemas/MatrixCellStatus'
+          description: The round-trip verdict (``pass`` / ``fail`` / ``unsupported``),
+            in the IXH-1.7 matrix's vocabulary.
+        reason:
+          anyOf:
+          - type: string
+            description: Response payload for export roundtrip.
+          - type: 'null'
+            description: Response payload for export roundtrip.
+          title: Reason
+          description: 'Human-readable explanation for a non-``pass`` status: why
+            the comparison was skipped, what failed to re-import, or which differences
+            are unaccounted for.'
+        diff_count:
+          type: integer
+          title: Diff Count
+          description: Total empirical differences between source and re-import.
+          default: 0
+          example: 1
+        matched_count:
+          type: integer
+          title: Matched Count
+          description: Differences the fidelity report explains (expected loss).
+          default: 0
+          example: 1
+        matched:
+          items:
+            $ref: '#/components/schemas/MatchedDiff'
+          type: array
+          title: Matched
+          description: Each explained difference paired with the fidelity finding
+            that explains it.
+          maxItems: 1000
+        unexplained:
+          items:
+            $ref: '#/components/schemas/CanonicalDiffEntry'
+          type: array
+          title: Unexplained
+          description: Differences no fidelity finding accounts for — a fidelity bug
+            the user should report.
+          maxItems: 1000
+        overclaims:
+          items:
+            $ref: '#/components/schemas/LossItem'
+          type: array
+          title: Overclaims
+          description: '``OK`` findings whose construct empirically changed or vanished
+            — the report over-claimed preservation.'
+          maxItems: 1000
+        loss_drop:
+          type: integer
+          title: Loss Drop
+          description: '``drop`` findings in the fidelity report.'
+          default: 0
+          example: 1
+        loss_approx:
+          type: integer
+          title: Loss Approx
+          description: '``approx`` findings in the fidelity report.'
+          default: 0
+          example: 1
+        loss_synth:
+          type: integer
+          title: Loss Synth
+          description: '``synth`` findings in the fidelity report.'
+          default: 0
+          example: 1
+        loss_ok:
+          type: integer
+          title: Loss Ok
+          description: '``ok`` findings in the fidelity report.'
+          default: 0
+          example: 1
+        source_fingerprint:
+          type: string
+          title: Source Fingerprint
+          description: Deterministic fingerprint of the source canonical model (reproduction
+            coordinate for issue reports; carries no source content).
+          example: a1b2c3d4e5f6789012345678901234ab
+        reimported_fingerprint:
+          anyOf:
+          - type: string
+            description: Response payload for export roundtrip.
+          - type: 'null'
+            description: Response payload for export roundtrip.
+          title: Reimported Fingerprint
+          description: Fingerprint of the re-imported canonical model; equals ``source_fingerprint``
+            for a byte-honest round-trip. Null when the loop did not close.
+        emitter_version:
+          type: string
+          title: Emitter Version
+          description: The emitter implementation version.
+          example: 1.0.0
+        apiome_version:
+          type: string
+          title: Apiome Version
+          description: The apiome-rest package version that ran the loop.
+          example: 1.0.0
+        registry_version:
+          type: string
+          title: Registry Version
+          description: The capability-registry snapshot version.
+          example: 1.0.0
+      additionalProperties: false
+      type: object
+      required:
+      - artifact
+      - version_record_id
+      - target
+      - emit_key
+      - status
+      - source_fingerprint
+      - emitter_version
+      - apiome_version
+      - registry_version
+      title: ExportRoundtripResponse
+      description: "The round-trip comparison result the Export Studio renders (IXH-4.4).\n\
+        \n``status`` speaks the IXH-1.7 matrix's vocabulary so a Studio run over a\
+        \ corpus\nentry reconciles with the published matrix cell:\n\n* ``pass`` —\
+        \ every empirical difference is explained by the fidelity report and\n  nothing\
+        \ over-claims preservation;\n* ``fail`` — at least one unexplained difference\
+        \ or over-claim (a fidelity bug\n  worth reporting), or the emitted artifact\
+        \ could not be re-imported at all;\n* ``unsupported`` — the comparison was\
+        \ **skipped with an explanation** (no import\n  adapter can re-ingest the\
+        \ emit format, or the emitter is unavailable here).\n\nThe three difference\
+        \ groups are exactly the reconciliation's: ``matched``\n(explained by the\
+        \ report — expected loss), ``unexplained`` (the report does not\naccount for\
+        \ them), and ``overclaims`` (the report claimed preservation reality\ncontradicts).\
+        \ The provenance fields (`emitter_version` / `apiome_version` /\n`registry_version`\
+        \ / fingerprints) give an unexplained difference's issue report\nits reproduction\
+        \ coordinates without shipping any source bytes."
     ExportTargetFidelity:
       properties:
         descriptor:
@@ -64326,6 +64653,32 @@ components:
       title: ManifestTarget
       description: The target descriptor + version provenance a manifest was built
         for (EFP-1.1).
+    MatchedDiff:
+      properties:
+        entry:
+          $ref: '#/components/schemas/CanonicalDiffEntry'
+          description: Entry.
+        finding:
+          $ref: '#/components/schemas/LossItem'
+          description: Finding.
+      additionalProperties: false
+      type: object
+      required:
+      - entry
+      - finding
+      title: MatchedDiff
+      description: One empirical diff entry paired with the fidelity finding that
+        explains it.
+    MatrixCellStatus:
+      type: string
+      enum:
+      - pass
+      - fail
+      - unsupported
+      - skipped
+      - xfail
+      title: MatrixCellStatus
+      description: Outcome of one ``(source_format × emit_target)`` matrix cell.
     McpAnnotationCoverageOut:
       properties:
         tool_count:
@@ -80976,7 +81329,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-02T16:15:54Z'
+          example: '2026-08-02T17:32:05Z'
       additionalProperties: false
       type: object
       required:
@@ -91421,13 +91774,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-02T16:15:54Z'
+          example: '2026-08-02T17:32:05Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-02T16:15:54Z'
+          example: '2026-08-02T17:32:05Z'
         outcome:
           anyOf:
           - type: string
