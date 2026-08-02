@@ -806,6 +806,19 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Quality-rank telemetry retention (IXH-2.7, #5102). Every grade an import or export
+    # produces appends one apiome.quality_rank_observations row, so the table grows with
+    # traffic. The default window is comfortably wider than the widest window the trends
+    # API will aggregate (quality_rank_telemetry.MAX_WINDOW_DAYS), so retention can never
+    # truncate a supported read. 0 or below keeps observations forever.
+    quality_rank_retention_days: int = Field(
+        default=180,
+        validation_alias=AliasChoices(
+            "APIOME_QUALITY_RANK_RETENTION_DAYS",
+            "quality_rank_retention_days",
+        ),
+    )
+
     # Global auto-refresh kill switch (RAR-3.3, #3524). When False, the refresh
     # sweep halts entirely (no repository is auto-refreshed) regardless of per-repo
     # auto_refresh_enabled. Intended for incident response. Manual "Refresh Now"

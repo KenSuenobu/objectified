@@ -6,6 +6,7 @@ The persistent triage surface over the CLX-1.x substrate:
 * ``GET  /v1/lint/workspace/findings``       — cross-catalog findings queue (filters, facets).
 * ``GET  /v1/lint/workspace/summary``        — tenant posture rollup (grades, axes, coverage).
 * ``GET  /v1/lint/workspace/trends``         — daily remediation-vs-policy series.
+* ``GET  /v1/lint/workspace/quality-ranks``  — per-format import/export grade drift (IXH-2.7).
 * ``POST /v1/lint/workspace/decisions/bulk`` — authorized, audited, reversible bulk actions.
 * ``GET/POST/PATCH/DELETE …/views``          — per-user saved workspace views.
 
@@ -54,11 +55,21 @@ from .models import (
     LintWorkspaceSavedViewUpdate,
     LintWorkspaceSummaryResponse,
     LintWorkspaceTrendsResponse,
+    QualityRankSeriesResponse,
     lint_workspace_finding_out_from_row,
     lint_workspace_saved_view_out_from_row,
 )
 from .permissions import Action, Resource, enforce_permission, has_permission
 from .policy_evaluate import match_decision_for_fingerprint
+from .quality_rank_telemetry import (
+    MAX_WINDOW_DAYS,
+    SCOPE_EXPORT,
+    SCOPE_IMPORT,
+    STAGE_COMMITTED,
+    STAGE_PREFLIGHT,
+    build_quality_rank_series,
+    load_quality_rank_observations,
+)
 
 router = APIRouter(prefix="/v1/lint/workspace", tags=["lint-workspace"])
 
@@ -202,6 +213,49 @@ async def workspace_trends(
     inputs = load_trend_inputs(tenant_id, project_id=project_id, since=since)
     trends = build_trends(days=days, **inputs)
     return LintWorkspaceTrendsResponse(**trends)
+
+
+@router.get("/quality-ranks", response_model=QualityRankSeriesResponse)
+async def workspace_quality_ranks(
+    days: int = Query(default=30, ge=1, le=MAX_WINDOW_DAYS),
+    scope: Optional[str] = Query(
+        default=None, description="import | export (both when omitted)"
+    ),
+    stage: Optional[str] = Query(
+        default=None, description="preflight | committed (both when omitted)"
+    ),
+    project_id: Optional[str] = Query(default=None, alias="projectId"),
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> QualityRankSeriesResponse:
+    """Per-format import/export grade distribution and drift over a window (IXH-2.7, #5102).
+
+    Scores are captured per revision, but a single revision's grade cannot show that a team's
+    imports are trending downward or that one format grades low because its *adapter* is
+    incomplete. This series answers both: grades are grouped by ``(scope, format)`` and each
+    group reports its distribution, its drift (``scoreDelta`` — newest scored observation minus
+    the oldest in the window), the style-guide versions that produced those grades, and the
+    **attribution split** that separates adapter-attributable findings from spec-attributable
+    ones. Export readiness ranks ride the same series, so a target whose readiness is sliding
+    shows up beside the specs feeding it.
+
+    The window is bounded (``days`` ≤ 180, matching the retention default) and the response
+    describes at most 24 format groups, stating ``truncated`` when it dropped any.
+    """
+    tenant_id = str(auth_data["tenant_id"])
+    if scope is not None and scope not in (SCOPE_IMPORT, SCOPE_EXPORT):
+        raise HTTPException(
+            status_code=400, detail="scope must be import or export"
+        )
+    if stage is not None and stage not in (STAGE_PREFLIGHT, STAGE_COMMITTED):
+        raise HTTPException(
+            status_code=400, detail="stage must be preflight or committed"
+        )
+    now = datetime.now(timezone.utc)
+    since = now - timedelta(days=days)
+    rows = load_quality_rank_observations(
+        tenant_id, since=since, project_id=project_id, scope=scope, stage=stage
+    )
+    return QualityRankSeriesResponse(**build_quality_rank_series(rows, days=days, now=now))
 
 
 @router.post("/decisions/bulk", response_model=LintWorkspaceBulkDecisionResponse)

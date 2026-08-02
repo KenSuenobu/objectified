@@ -129,6 +129,51 @@ export interface LintWorkspaceTrends {
   series: LintWorkspaceTrendPoint[];
 }
 
+/** One day of one format's grade series (IXH-2.7). Null averages are gaps, not zeroes. */
+export interface QualityRankPoint {
+  date: string;
+  observations: number;
+  averageScore: number | null;
+  averageReadiness: number | null;
+  gradeDistribution: Record<string, number>;
+}
+
+/** One (scope, format) group's grade rollup, attribution split and trend (IXH-2.7). */
+export interface QualityRankFormat {
+  scope: string;
+  formatKey: string;
+  adapterKeys: string[];
+  styleGuideVersions: string[];
+  observations: number;
+  gradeDistribution: Record<string, number>;
+  averageScore: number | null;
+  averageReadiness: number | null;
+  latestScore: number | null;
+  latestGrade: string | null;
+  scoreDelta: number | null;
+  outcomes: Record<string, number>;
+  blockedCount: number;
+  bestRank: number | null;
+  adapterFindingCount: number;
+  specFindingCount: number;
+  declaredParserLimits: number;
+  attribution: { adapter: Record<string, number>; spec: Record<string, number> };
+  points: QualityRankPoint[];
+}
+
+/** The quality-rank series response (IXH-2.7). */
+export interface QualityRankSeries {
+  days: number;
+  windowStart: string;
+  windowEnd: string;
+  observationCount: number;
+  truncated: boolean;
+  formatLimit: number;
+  stages: Record<string, number>;
+  outcomes: Record<string, number>;
+  formats: QualityRankFormat[];
+}
+
 export interface LintWorkspaceSavedView {
   id: string;
   name: string;
@@ -286,6 +331,79 @@ export function lintWorkspaceTrendsFromPayload(v: unknown): LintWorkspaceTrends 
       };
     }),
   };
+}
+
+/** Nullable 0-100 measurement: absent or non-numeric reads as a gap, never as zero. */
+const gauge = (v: unknown): number | null =>
+  typeof v === 'number' && Number.isFinite(v) ? v : null;
+
+/** Coerce the quality-rank series payload (IXH-2.7). */
+export function qualityRankSeriesFromPayload(v: unknown): QualityRankSeries {
+  const p = rec(v);
+  return {
+    days: num(p.days),
+    windowStart: str(p.windowStart) ?? '',
+    windowEnd: str(p.windowEnd) ?? '',
+    observationCount: num(p.observationCount),
+    truncated: bool(p.truncated),
+    formatLimit: num(p.formatLimit),
+    stages: countMap(p.stages),
+    outcomes: countMap(p.outcomes),
+    formats: (Array.isArray(p.formats) ? p.formats : []).map((entry) => {
+      const f = rec(entry);
+      const attribution = rec(f.attribution);
+      return {
+        scope: str(f.scope) ?? '',
+        formatKey: str(f.formatKey) ?? 'unknown',
+        adapterKeys: (Array.isArray(f.adapterKeys) ? f.adapterKeys : [])
+          .map((k) => str(k))
+          .filter((k): k is string => k !== null),
+        styleGuideVersions: (Array.isArray(f.styleGuideVersions) ? f.styleGuideVersions : [])
+          .map((k) => str(k))
+          .filter((k): k is string => k !== null),
+        observations: num(f.observations),
+        gradeDistribution: countMap(f.gradeDistribution),
+        averageScore: gauge(f.averageScore),
+        averageReadiness: gauge(f.averageReadiness),
+        latestScore: gauge(f.latestScore),
+        latestGrade: str(f.latestGrade),
+        scoreDelta: gauge(f.scoreDelta),
+        outcomes: countMap(f.outcomes),
+        blockedCount: num(f.blockedCount),
+        bestRank: gauge(f.bestRank),
+        adapterFindingCount: num(f.adapterFindingCount),
+        specFindingCount: num(f.specFindingCount),
+        declaredParserLimits: num(f.declaredParserLimits),
+        attribution: {
+          adapter: countMap(attribution.adapter),
+          spec: countMap(attribution.spec),
+        },
+        points: (Array.isArray(f.points) ? f.points : []).map((raw) => {
+          const point = rec(raw);
+          return {
+            date: str(point.date) ?? '',
+            observations: num(point.observations),
+            averageScore: gauge(point.averageScore),
+            averageReadiness: gauge(point.averageReadiness),
+            gradeDistribution: countMap(point.gradeDistribution),
+          };
+        }),
+      };
+    }),
+  };
+}
+
+/**
+ * Share of a format's findings the *adapter* is answerable for, 0-100.
+ *
+ * The number the panel leads with: a format grading low with a high adapter share is an adapter
+ * gap, not a spec problem, and the two call for entirely different work. Returns null when the
+ * format produced no findings at all — a share of nothing is not zero percent.
+ */
+export function adapterAttributionShare(entry: QualityRankFormat): number | null {
+  const total = entry.adapterFindingCount + entry.specFindingCount;
+  if (total <= 0) return null;
+  return Math.round((entry.adapterFindingCount / total) * 100);
 }
 
 /** Coerce one saved view row. */

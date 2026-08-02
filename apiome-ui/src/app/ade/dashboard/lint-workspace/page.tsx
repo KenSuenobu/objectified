@@ -7,7 +7,8 @@
  * a filterable findings queue with bulk actions (assign / acknowledge / fix / waiver
  * request-review, all server-authorized and audited, with Undo built from returned
  * beforeStates), a finding detail dialog linking revision / evidence / policy / history,
- * a remediation-vs-policy trends tab, and per-user saved views. Filter state lives in the
+ * a remediation-vs-policy trends tab, a per-format quality-rank & grade-drift tab (IXH-2.7),
+ * and per-user saved views. Filter state lives in the
  * URL (shareable); tenant scope comes from the session, project scope from ?projectId=.
  */
 
@@ -27,6 +28,7 @@ import LintWorkspaceQueueTable from '@/app/components/ade/dashboard/lint/workspa
 import LintWorkspaceBulkActionBar from '@/app/components/ade/dashboard/lint/workspace/LintWorkspaceBulkActionBar';
 import LintWorkspaceFindingDetailDialog from '@/app/components/ade/dashboard/lint/workspace/LintWorkspaceFindingDetailDialog';
 import LintWorkspaceTrendsPanel from '@/app/components/ade/dashboard/lint/workspace/LintWorkspaceTrendsPanel';
+import LintWorkspaceQualityRanksPanel from '@/app/components/ade/dashboard/lint/workspace/LintWorkspaceQualityRanksPanel';
 import LintWorkspaceSavedViewsBar from '@/app/components/ade/dashboard/lint/workspace/LintWorkspaceSavedViewsBar';
 import {
   EMPTY_WORKSPACE_FILTERS,
@@ -40,6 +42,7 @@ import {
   lintWorkspaceSummaryFromPayload,
   lintWorkspaceTrendsFromPayload,
   parseWorkspaceFilters,
+  qualityRankSeriesFromPayload,
   savedViewToFilters,
   selectionKey,
   type BulkActionSet,
@@ -48,10 +51,14 @@ import {
   type LintWorkspaceSavedView,
   type LintWorkspaceSummary,
   type LintWorkspaceTrends,
+  type QualityRankSeries,
   type WorkspaceFilters,
 } from '@/app/utils/lint-workspace';
 
 const PAGE_SIZE = 50;
+
+/** Default window for the quality-rank series, in days (the server caps the range at 180). */
+const DEFAULT_QUALITY_RANK_DAYS = 30;
 
 function LintWorkspacePageInner() {
   const { data: session } = useAuthSession();
@@ -69,6 +76,8 @@ function LintWorkspacePageInner() {
   const [page, setPage] = useState<LintWorkspaceFindingsPage | null>(null);
   const [summary, setSummary] = useState<LintWorkspaceSummary | null>(null);
   const [trends, setTrends] = useState<LintWorkspaceTrends | null>(null);
+  const [qualityRanks, setQualityRanks] = useState<QualityRankSeries | null>(null);
+  const [qualityRankDays, setQualityRankDays] = useState(DEFAULT_QUALITY_RANK_DAYS);
   const [views, setViews] = useState<LintWorkspaceSavedView[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -142,6 +151,21 @@ function LintWorkspacePageInner() {
     }
   }, [filters.projectId]);
 
+  const loadQualityRanks = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({ days: String(qualityRankDays) });
+      if (filters.projectId) params.set('projectId', filters.projectId);
+      const res = await fetch(`/api/lint/workspace/quality-ranks?${params.toString()}`, {
+        credentials: 'include',
+        cache: 'no-store',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) setQualityRanks(qualityRankSeriesFromPayload(data));
+    } catch {
+      // The grade series is supplementary; the tab shows its empty state on failure.
+    }
+  }, [filters.projectId, qualityRankDays]);
+
   const loadViews = useCallback(async () => {
     try {
       const res = await fetch('/api/lint/workspace/views', {
@@ -173,11 +197,19 @@ function LintWorkspacePageInner() {
     void loadViews();
   }, [currentTenantId, loadSummary, loadTrends, loadViews]);
 
+  // Its own effect: changing the quality-rank window must not re-fetch the queue, the summary,
+  // the trends and the saved views alongside it.
+  useEffect(() => {
+    if (!currentTenantId) return;
+    void loadQualityRanks();
+  }, [currentTenantId, loadQualityRanks]);
+
   const refreshAll = useCallback(() => {
     void loadQueue();
     void loadSummary();
     void loadTrends();
-  }, [loadQueue, loadSummary, loadTrends]);
+    void loadQualityRanks();
+  }, [loadQueue, loadSummary, loadTrends, loadQualityRanks]);
 
   const runBulk = useCallback(
     async (body: { items: Array<Record<string, string>>; set: Record<string, string> }) => {
@@ -383,6 +415,9 @@ function LintWorkspacePageInner() {
               <TabsTrigger value="trends" data-testid="tab-trends">
                 Trends
               </TabsTrigger>
+              <TabsTrigger value="quality-ranks" data-testid="tab-quality-ranks">
+                Quality ranks
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="queue" className="space-y-4">
               <LintWorkspaceFilters
@@ -428,6 +463,20 @@ function LintWorkspacePageInner() {
                 <EmptyState
                   title="No trend data yet"
                   description="Trends appear once lint evidence accumulates across scans."
+                />
+              )}
+            </TabsContent>
+            <TabsContent value="quality-ranks">
+              {qualityRanks ? (
+                <LintWorkspaceQualityRanksPanel
+                  series={qualityRanks}
+                  days={qualityRankDays}
+                  onDaysChange={setQualityRankDays}
+                />
+              ) : (
+                <EmptyState
+                  title="No quality-rank data yet"
+                  description="Grades appear here once imports and exports are pre-flighted or committed."
                 />
               )}
             </TabsContent>

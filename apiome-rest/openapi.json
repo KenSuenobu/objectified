@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.104.0",
+    "version": "1.105.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -11608,6 +11608,167 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError",
                   "description": "Response payload for workspace trendsresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/lint/workspace/quality-ranks": {
+      "get": {
+        "tags": [
+          "lint-workspace"
+        ],
+        "summary": "Workspace Quality Ranks",
+        "description": "Per-format import/export grade distribution and drift over a window (IXH-2.7, #5102).\n\nScores are captured per revision, but a single revision's grade cannot show that a team's\nimports are trending downward or that one format grades low because its *adapter* is\nincomplete. This series answers both: grades are grouped by ``(scope, format)`` and each\ngroup reports its distribution, its drift (``scoreDelta`` \u2014 newest scored observation minus\nthe oldest in the window), the style-guide versions that produced those grades, and the\n**attribution split** that separates adapter-attributable findings from spec-attributable\nones. Export readiness ranks ride the same series, so a target whose readiness is sliding\nshows up beside the specs feeding it.\n\nThe window is bounded (``days`` \u2264 180, matching the retention default) and the response\ndescribes at most 24 format groups, stating ``truncated`` when it dropped any.",
+        "operationId": "workspace_quality_ranks_v1_lint_workspace_quality_ranks_get",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 180,
+              "minimum": 1,
+              "default": 30,
+              "title": "Days",
+              "description": "Days schema."
+            },
+            "description": "Query parameter: days."
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Workspace Quality Ranksscope schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Workspace Quality Ranksscope schema."
+                }
+              ],
+              "description": "import | export (both when omitted)",
+              "title": "Scope"
+            },
+            "description": "import | export (both when omitted)"
+          },
+          {
+            "name": "stage",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Workspace Quality Ranksstage schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Workspace Quality Ranksstage schema."
+                }
+              ],
+              "description": "preflight | committed (both when omitted)",
+              "title": "Stage"
+            },
+            "description": "preflight | committed (both when omitted)"
+          },
+          {
+            "name": "projectId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Workspace Quality Ranksproject ID schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Workspace Quality Ranksproject ID schema."
+                }
+              ],
+              "title": "Projectid",
+              "description": "Projectid schema."
+            },
+            "description": "Query parameter: project id."
+          },
+          {
+            "name": "tenant_slug",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Workspace Quality Ranksauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Workspace Quality Ranksauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Workspace Quality Ranks Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Workspace Quality Ranks Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for workspace quality ranks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityRankSeriesResponse",
+                  "description": "Response payload for workspace quality ranksresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for workspace quality ranksresponse422."
                 }
               }
             }
@@ -73651,7 +73812,7 @@
             "type": "string",
             "title": "Generated At",
             "description": "Statement timestamp (ISO-8601, UTC).",
-            "example": "2026-08-02T05:47:15Z"
+            "example": "2026-08-02T15:33:23Z"
           },
           "envelope": {
             "additionalProperties": true,
@@ -101851,6 +102012,337 @@
         "title": "QualityPolicyVersionListResponse",
         "description": "The tenant's saved policy versions, newest first (IXH-2.3, #5098)."
       },
+      "QualityRankFormatOut": {
+        "properties": {
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "description": "import | export \u2014 which half produced these grades.",
+            "example": "example"
+          },
+          "formatKey": {
+            "type": "string",
+            "title": "Formatkey",
+            "description": "Source format (import) or target format (export).",
+            "example": "openapi"
+          },
+          "adapterKeys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Adapterkeys",
+            "description": "Adapter/emitter registry keys observed for this format in the window.",
+            "maxItems": 1000
+          },
+          "styleGuideVersions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Styleguideversions",
+            "description": "Style-guide content fingerprints the grades were produced under. More than one means the scoring rules changed inside the window, which moves grades without anything about the specs changing.",
+            "maxItems": 1000
+          },
+          "observations": {
+            "type": "integer",
+            "title": "Observations",
+            "description": "Grades recorded in the window.",
+            "default": 0,
+            "example": 1
+          },
+          "gradeDistribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Gradedistribution",
+            "description": "A-F plus 'ungraded' counts over the window."
+          },
+          "averageScore": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Response payload for quality rank format."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for quality rank format."
+              }
+            ],
+            "title": "Averagescore",
+            "description": "Average Score."
+          },
+          "averageReadiness": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Response payload for quality rank format."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for quality rank format."
+              }
+            ],
+            "title": "Averagereadiness",
+            "description": "Mean export readiness composite; null for import groups."
+          },
+          "latestScore": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Response payload for quality rank format."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for quality rank format."
+              }
+            ],
+            "title": "Latestscore",
+            "description": "Latest Score."
+          },
+          "latestGrade": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for quality rank format."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for quality rank format."
+              }
+            ],
+            "title": "Latestgrade",
+            "description": "Latest Grade."
+          },
+          "scoreDelta": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Response payload for quality rank format."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for quality rank format."
+              }
+            ],
+            "title": "Scoredelta",
+            "description": "Newest scored observation minus the oldest one in the window \u2014 the drift. Negative means grades are trending down."
+          },
+          "outcomes": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Outcomes",
+            "description": "Gate outcome tally: pass / warn / block / error."
+          },
+          "blockedCount": {
+            "type": "integer",
+            "title": "Blockedcount",
+            "default": 0,
+            "description": "Number of blocked.",
+            "example": 1
+          },
+          "bestRank": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Response payload for quality rank format."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for quality rank format."
+              }
+            ],
+            "title": "Bestrank",
+            "description": "Best export readiness rank this target reached; null for imports."
+          },
+          "adapterFindingCount": {
+            "type": "integer",
+            "title": "Adapterfindingcount",
+            "description": "Findings attributable to the adapter (intake could not read or resolve part of the source) \u2014 an adapter gap, not a spec defect.",
+            "default": 0,
+            "example": 1
+          },
+          "specFindingCount": {
+            "type": "integer",
+            "title": "Specfindingcount",
+            "description": "Findings attributable to the specification itself.",
+            "default": 0,
+            "example": 1
+          },
+          "declaredParserLimits": {
+            "type": "integer",
+            "title": "Declaredparserlimits",
+            "description": "Constructs the adapter *declares* it does not read yet. A declaration, deliberately never counted as a finding.",
+            "default": 0,
+            "example": 50
+          },
+          "attribution": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Attribution",
+            "description": "Per-class breakdown: {'adapter': {class: count}, 'spec': {class: count}}."
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/QualityRankPointOut"
+            },
+            "type": "array",
+            "title": "Points",
+            "description": "Daily series, oldest day first.",
+            "maxItems": 1000
+          }
+        },
+        "type": "object",
+        "required": [
+          "scope",
+          "formatKey"
+        ],
+        "title": "QualityRankFormatOut",
+        "description": "One (scope, format) group's grade rollup and trend (IXH-2.7, #5102)."
+      },
+      "QualityRankPointOut": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "The day, ISO-8601 (UTC).",
+            "example": "example"
+          },
+          "observations": {
+            "type": "integer",
+            "title": "Observations",
+            "description": "Grades recorded that day.",
+            "default": 0,
+            "example": 1
+          },
+          "averageScore": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Response payload for quality rank point."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for quality rank point."
+              }
+            ],
+            "title": "Averagescore",
+            "description": "Mean 0-100 lint score over that day's *scored* observations."
+          },
+          "averageReadiness": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Response payload for quality rank point."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for quality rank point."
+              }
+            ],
+            "title": "Averagereadiness",
+            "description": "Mean export readiness composite; null for import-only days."
+          },
+          "gradeDistribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Gradedistribution",
+            "description": "A-F plus 'ungraded' counts for that day."
+          }
+        },
+        "type": "object",
+        "required": [
+          "date"
+        ],
+        "title": "QualityRankPointOut",
+        "description": "One day of one format's grade series (IXH-2.7, #5102).\n\n``averageScore`` / ``averageReadiness`` are ``null`` on a day with no observation \u2014 a gap,\nnever a zero, so a format nobody imported that day does not read as a crash to nothing."
+      },
+      "QualityRankSeriesResponse": {
+        "properties": {
+          "days": {
+            "type": "integer",
+            "title": "Days",
+            "description": "Window size actually aggregated, in days.",
+            "example": 1
+          },
+          "windowStart": {
+            "type": "string",
+            "title": "Windowstart",
+            "description": "Window Start.",
+            "example": "example"
+          },
+          "windowEnd": {
+            "type": "string",
+            "title": "Windowend",
+            "description": "Window End.",
+            "example": "example"
+          },
+          "observationCount": {
+            "type": "integer",
+            "title": "Observationcount",
+            "description": "Observations folded into this response.",
+            "default": 0,
+            "example": 1
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated",
+            "description": "True when more formats were observed than the response describes.",
+            "default": false,
+            "example": false
+          },
+          "formatLimit": {
+            "type": "integer",
+            "title": "Formatlimit",
+            "description": "Most format groups this response will describe.",
+            "default": 0,
+            "example": 50
+          },
+          "stages": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Stages",
+            "description": "Observation tally by stage: preflight / committed."
+          },
+          "outcomes": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Outcomes",
+            "description": "Observation tally by gate outcome: pass / warn / block / error."
+          },
+          "formats": {
+            "items": {
+              "$ref": "#/components/schemas/QualityRankFormatOut"
+            },
+            "type": "array",
+            "title": "Formats",
+            "description": "Format groups, busiest first.",
+            "maxItems": 1000
+          }
+        },
+        "type": "object",
+        "required": [
+          "days",
+          "windowStart",
+          "windowEnd"
+        ],
+        "title": "QualityRankSeriesResponse",
+        "description": "Per-format quality-grade distribution and drift over a window (IXH-2.7, #5102)."
+      },
       "QualityWaiverCreateRequest": {
         "properties": {
           "scope": {
@@ -106099,7 +106591,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-02T05:47:15Z"
+            "example": "2026-08-02T15:33:23Z"
           }
         },
         "additionalProperties": false,
@@ -119584,14 +120076,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-02T05:47:15Z"
+            "example": "2026-08-02T15:33:23Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-02T05:47:15Z"
+            "example": "2026-08-02T15:33:23Z"
           },
           "outcome": {
             "anyOf": [

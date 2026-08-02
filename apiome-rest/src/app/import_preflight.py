@@ -83,6 +83,7 @@ from .models import (
     ImportPreflightRequest,
     ImportPreflightStyleGuide,
 )
+from .quality_rank_telemetry import observe_import_preflight
 from .scanner_rule_transparency import get_blocking_meta
 from .schema_lint import PER_RULE_PENALTY_CAP, SEVERITY_PENALTY
 from .style_guide_engine import resolve_style_guide
@@ -718,6 +719,11 @@ async def run_import_preflight(
             ),
         ),
     )
+    # Append the grade to the quality-rank series (IXH-2.7). Only a *real* run is recorded —
+    # the cache-hit path above returns before this — so re-scoring the same bytes in a wizard
+    # session contributes one observation, not one per keystroke. Best-effort by contract: the
+    # helper swallows and logs its own failures, so telemetry can never fail a pre-flight.
+    observe_import_preflight(report, tenant_id=tenant_id)
     return report
 
 

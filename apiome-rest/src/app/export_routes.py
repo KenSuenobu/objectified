@@ -109,6 +109,7 @@ from .export_validation_gate import EmittedValidationReport, build_validation_re
 from .lossiness import LossinessSeverity
 from .projection_manifest_cache import build_manifest_cache_key, manifest_cache
 from .projection_telemetry import ALLOWED_METRIC_KINDS, ALLOWED_REASON_CATEGORIES, projection_telemetry
+from .quality_rank_telemetry import observe_delivery
 from .transcoding_guards import TranscodeGuard, TranscodeGuardError, classify_transcode
 
 router = APIRouter(prefix="/v1/export", tags=["export"])
@@ -1133,6 +1134,17 @@ def _delivery_gate_for_source(
         validation=validation,
         lint=lint,
         preserved_percent=preserved_percent,
+    )
+    # Append the delivery grade to the quality-rank series (IXH-2.7). Recorded *before* the
+    # block is raised, so a refused delivery is in the series too — a tenant whose exports are
+    # increasingly blocked is exactly the drift the series exists to show.
+    observe_delivery(
+        decision,
+        tenant_id=tenant_id,
+        lint=lint,
+        adapter_key=target_key or target_format,
+        project_id=source.artifact_id,
+        version_record_id=source.version_record_id,
     )
     if decision.blocks_delivery:
         raise HTTPException(
