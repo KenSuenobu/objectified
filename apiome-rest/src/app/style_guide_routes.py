@@ -20,6 +20,10 @@ drives:
   built-in rule set (enable flags + severity overrides) in one transactional replace.
 * **Custom rules** (GOV-2.3, #4435) — the guide editor's custom-rules tab: read/write the
   guide's Spectral-compatible YAML document and dry-run draft rules against a project revision.
+* **Revisions & audit** (GOV-1.6, #4432) — every create/edit appends an immutable revision
+  (:mod:`app.style_guide_revisions`) that lint results pin to, readable at
+  ``GET …/{guideId}/revisions`` and ``GET …/{guideId}/revisions/{revisionId}``; create, edit
+  and assign additionally emit ``style_guide.*`` events into the tenant's access-audit ledger.
 
 Reads require tenant authentication; every mutation requires a **tenant administrator**
 user session — governance is the buyer-admin persona's surface, and API keys cannot
@@ -59,18 +63,40 @@ from .models import (
     StyleGuidePolicyVersionOut,
     StyleGuideProjectAssignmentOut,
     StyleGuideRuleOut,
+    StyleGuideRevisionDetailOut,
+    StyleGuideRevisionListResponse,
     StyleGuideRulesPutRequest,
     StyleGuideRulesResponse,
     StyleGuideUpdateRequest,
     LintFindingOut,
     style_guide_ci_outcomes_from_raw,
     style_guide_policy_version_out_from_row,
+    style_guide_revision_detail_from_row,
+    style_guide_revision_out_from_row,
 )
 from .lint_policy_service import snapshot_style_guide_policy
 from .policy_evaluate import (
     default_axis_gates,
     default_ci_outcomes,
     default_required_coverage,
+)
+from .style_guide_revisions import (
+    AUDIT_ASSIGNED,
+    AUDIT_CREATED,
+    AUDIT_CUSTOM_RULES_UPDATED,
+    AUDIT_DELETED,
+    AUDIT_POLICY_UPDATED,
+    AUDIT_RULES_UPDATED,
+    AUDIT_UNASSIGNED,
+    AUDIT_UPDATED,
+    CHANGE_CREATED,
+    CHANGE_CUSTOM_RULES_CHANGED,
+    CHANGE_EDITED,
+    CHANGE_POLICY_CHANGED,
+    CHANGE_RULES_CHANGED,
+    audit_style_guide_event,
+    ensure_guide_revision,
+    record_guide_revision,
 )
 
 router = APIRouter(prefix="/v1/style-guides", tags=["style-guides"])
@@ -104,6 +130,64 @@ def _require_tenant_admin(auth_data: Dict[str, Any]) -> str:
             detail="Only tenant administrators can manage style guides",
         )
     return tenant_id
+
+
+def _actor(auth_data: Dict[str, Any]) -> tuple:
+    """Return ``(user_id, label)`` for the caller — the actor stamped on history and audit."""
+    user_id = get_authenticated_user_id(auth_data)
+    label = auth_data.get("email") or auth_data.get("username") or user_id
+    return user_id, label
+
+
+def _audit(
+    auth_data: Dict[str, Any],
+    tenant_id: str,
+    action: str,
+    target: Optional[str],
+    detail: Dict[str, Any],
+) -> None:
+    """Emit one ``style_guide.*`` governance audit event (GOV-1.6, #4432).
+
+    Thin wrapper over :func:`app.style_guide_revisions.audit_style_guide_event` that fills the
+    actor from the request's auth context. Best-effort by contract: an audit failure is logged
+    there and never surfaces to the caller.
+    """
+    user_id, label = _actor(auth_data)
+    audit_style_guide_event(
+        tenant_id=tenant_id,
+        action=action,
+        actor_user_id=user_id,
+        actor_label=label,
+        target=target,
+        detail=detail,
+    )
+
+
+def _capture_before_edit(guide_id: str, tenant_id: str) -> None:
+    """Record the guide's pre-edit state as a revision when it is not already recorded.
+
+    Guides created before GOV-1.6 have no history; capturing here means the state an edit
+    replaces is always preserved, so "prior revisions are immutable and queryable" holds even
+    for guides that predate the feature. A guide already in sync is untouched.
+    """
+    ensure_guide_revision(guide_id, tenant_id)
+
+
+def _record_edit(
+    guide_id: str,
+    tenant_id: str,
+    change_kind: str,
+    auth_data: Dict[str, Any],
+) -> None:
+    """Append the post-edit revision for a completed guide mutation."""
+    user_id, label = _actor(auth_data)
+    record_guide_revision(
+        guide_id,
+        tenant_id,
+        change_kind=change_kind,
+        actor_user_id=user_id,
+        actor_label=label,
+    )
 
 
 def _guide_out(
@@ -214,6 +298,19 @@ async def create_style_guide(
         raise _name_conflict()
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    # GOV-1.6: the guide's first immutable revision, then the audit event.
+    _record_edit(str(row["id"]), tenant_id, CHANGE_CREATED, auth_data)
+    _audit(
+        auth_data,
+        tenant_id,
+        AUDIT_CREATED,
+        str(row["id"]),
+        {
+            "name": name,
+            "sourceGuideId": body.source_guide_id or None,
+            "ruleCount": rule_count,
+        },
+    )
     return _guide_out({**row, "rule_count": rule_count, "enabled_rule_count": rule_count})
 
 
@@ -242,6 +339,7 @@ async def update_style_guide(
         profile = normalize_profile(body.external_lint_profile)
         if profile not in VALIDATION_PROFILES:
             raise HTTPException(status_code=400, detail="Invalid externalLintProfile")
+    _capture_before_edit(str(guide["id"]), tenant_id)
     try:
         row = db.update_style_guide(
             str(guide["id"]),
@@ -254,6 +352,14 @@ async def update_style_guide(
         raise _name_conflict()
     if not row:
         raise HTTPException(status_code=404, detail="Style guide not found")
+    _record_edit(str(row["id"]), tenant_id, CHANGE_EDITED, auth_data)
+    _audit(
+        auth_data,
+        tenant_id,
+        AUDIT_UPDATED,
+        str(row["id"]),
+        {"name": row["name"], "previousName": guide["name"]},
+    )
     rules = db.get_style_guide_rules(str(row["id"]), tenant_id)
     return _guide_out(
         {
@@ -277,6 +383,15 @@ async def delete_style_guide(
     _reject_builtin(guide, "deleted")
     if not db.delete_style_guide(str(guide["id"]), tenant_id):
         raise HTTPException(status_code=404, detail="Style guide not found")
+    # The guide's revisions cascade away with it, so the audit ledger is what remains as
+    # evidence the guide ever existed — record the name, not just the id.
+    _audit(
+        auth_data,
+        tenant_id,
+        AUDIT_DELETED,
+        str(guide["id"]),
+        {"name": guide["name"], "wasDefault": bool(guide.get("is_default"))},
+    )
     return {"status": "deleted", "id": str(guide["id"])}
 
 
@@ -369,6 +484,7 @@ async def put_style_guide_rules(
         {"rule_id": r.rule_id, "enabled": r.enabled, "severity": r.severity}
         for r in body.rules
     ]
+    _capture_before_edit(str(guide["id"]), tenant_id)
     if not db.replace_style_guide_builtin_rules(str(guide["id"]), tenant_id, rows):
         raise HTTPException(status_code=404, detail="Style guide not found")
     actor = get_authenticated_user_id(auth_data)
@@ -377,6 +493,18 @@ async def put_style_guide_rules(
         tenant_id,
         actor_user_id=actor,
         actor_label=actor,
+    )
+    _record_edit(str(guide["id"]), tenant_id, CHANGE_RULES_CHANGED, auth_data)
+    _audit(
+        auth_data,
+        tenant_id,
+        AUDIT_RULES_UPDATED,
+        str(guide["id"]),
+        {
+            "name": guide["name"],
+            "ruleCount": len(rows),
+            "enabledRuleCount": sum(1 for r in rows if r["enabled"]),
+        },
     )
     return _rules_view(guide, db.get_style_guide_rules(str(guide["id"]), tenant_id))
 
@@ -482,6 +610,7 @@ async def put_style_guide_custom_rules(
         }
         for rule in ruleset.rules
     ]
+    _capture_before_edit(str(guide["id"]), tenant_id)
     if not db.replace_style_guide_custom_rules(str(guide["id"]), tenant_id, rows):
         raise HTTPException(status_code=404, detail="Style guide not found")
     actor = get_authenticated_user_id(auth_data)
@@ -490,6 +619,14 @@ async def put_style_guide_custom_rules(
         tenant_id,
         actor_user_id=actor,
         actor_label=actor,
+    )
+    _record_edit(str(guide["id"]), tenant_id, CHANGE_CUSTOM_RULES_CHANGED, auth_data)
+    _audit(
+        auth_data,
+        tenant_id,
+        AUDIT_CUSTOM_RULES_UPDATED,
+        str(guide["id"]),
+        {"name": guide["name"], "customRuleCount": len(rows)},
     )
     return _custom_rules_view(guide, db.get_style_guide_rules(str(guide["id"]), tenant_id))
 
@@ -567,6 +704,13 @@ async def set_tenant_default(
     row = db.set_style_guide_tenant_default(guide_id, tenant_id)
     if not row:
         raise HTTPException(status_code=404, detail="Style guide not found")
+    _audit(
+        auth_data,
+        tenant_id,
+        AUDIT_ASSIGNED,
+        str(row["id"]),
+        {"name": row["name"], "scope": "tenant"},
+    )
     rules = db.get_style_guide_rules(str(row["id"]), tenant_id)
     return _guide_out(
         {
@@ -591,9 +735,16 @@ async def assign_project(
     order, so the project's next lint run scores under this guide.
     """
     tenant_id = _require_tenant_admin(auth_data)
-    _load_guide_or_404(guide_id, tenant_id)
+    guide = _load_guide_or_404(guide_id, tenant_id)
     if not db.assign_style_guide_to_project(guide_id, tenant_id, project_id):
         raise HTTPException(status_code=404, detail="Project not found")
+    _audit(
+        auth_data,
+        tenant_id,
+        AUDIT_ASSIGNED,
+        f"{guide_id}:{project_id}",
+        {"name": guide["name"], "scope": "project", "projectId": project_id},
+    )
     return {"status": "assigned", "guideId": guide_id, "projectId": project_id}
 
 
@@ -607,7 +758,76 @@ async def unassign_project(
     tenant_id = _require_tenant_admin(auth_data)
     if not db.unassign_style_guide_from_project(tenant_id, project_id):
         raise HTTPException(status_code=404, detail="No assignment found for this project")
+    _audit(
+        auth_data,
+        tenant_id,
+        AUDIT_UNASSIGNED,
+        project_id,
+        {"scope": "project", "projectId": project_id},
+    )
     return {"status": "unassigned", "projectId": project_id}
+
+
+@router.get(
+    "/{tenant_slug}/{guide_id}/revisions",
+    response_model=StyleGuideRevisionListResponse,
+)
+async def list_style_guide_revisions(
+    tenant_slug: str,
+    guide_id: str,
+    limit: int = 100,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> StyleGuideRevisionListResponse:
+    """The guide's immutable revision history, newest first (GOV-1.6, #4432).
+
+    One entry per edit — create, rename, rule-catalog save, custom-rule save, policy-gate
+    change — with the change kind, the actor, and the fingerprints a lint result pins to.
+    Saves that changed nothing are not entries: the history is real changes only.
+
+    Reading self-heals a guide with no history yet (created before GOV-1.6, or seeded by the
+    V159 migration): its current state is captured as revision 1 rather than showing an empty
+    list for a guide that demonstrably exists. Readable by any tenant member — compliance
+    review is not an admin-only activity.
+    """
+    _ = tenant_slug
+    tenant_id = _tenant_id(auth_data)
+    guide = _load_guide_or_404(guide_id, tenant_id)
+    ensure_guide_revision(str(guide["id"]), tenant_id)
+    rows = db.list_style_guide_revisions(
+        str(guide["id"]), tenant_id, limit=max(1, min(int(limit), 500))
+    )
+    revisions = [style_guide_revision_out_from_row(row) for row in rows]
+    return StyleGuideRevisionListResponse(
+        guide_id=str(guide["id"]),
+        guide_name=guide["name"],
+        revisions=revisions,
+        count=len(revisions),
+    )
+
+
+@router.get(
+    "/{tenant_slug}/{guide_id}/revisions/{revision_id}",
+    response_model=StyleGuideRevisionDetailOut,
+)
+async def get_style_guide_revision(
+    tenant_slug: str,
+    guide_id: str,
+    revision_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> StyleGuideRevisionDetailOut:
+    """One immutable revision with the rules and policy gates it froze (GOV-1.6, #4432).
+
+    This is what makes a past lint result defendable: a report carries ``guideRevisionId``, and
+    this endpoint returns exactly the ruleset that produced it — including custom rule
+    definitions — no matter how the live guide has changed since.
+    """
+    _ = tenant_slug
+    tenant_id = _tenant_id(auth_data)
+    _load_guide_or_404(guide_id, tenant_id)
+    row = db.get_style_guide_revision(revision_id, tenant_id)
+    if not row or str(row.get("guide_id")) != str(guide_id):
+        raise HTTPException(status_code=404, detail="Style guide revision not found")
+    return style_guide_revision_detail_from_row(row)
 
 
 def _policy_settings_out(guide: Dict[str, Any]) -> StyleGuidePolicySettingsOut:
@@ -661,6 +881,7 @@ async def put_style_guide_policy_settings(
             "failOnAxisGates": body.ci_outcomes.fail_on_axis_gates,
         }
 
+    _capture_before_edit(str(guide["id"]), tenant_id)
     updated = db.update_style_guide_policy_settings(
         str(guide["id"]),
         tenant_id,
@@ -670,6 +891,14 @@ async def put_style_guide_policy_settings(
     )
     if not updated:
         raise HTTPException(status_code=404, detail="Style guide not found")
+    _record_edit(str(guide["id"]), tenant_id, CHANGE_POLICY_CHANGED, auth_data)
+    _audit(
+        auth_data,
+        tenant_id,
+        AUDIT_POLICY_UPDATED,
+        str(guide["id"]),
+        {"name": guide["name"], "snapshot": bool(body.snapshot)},
+    )
 
     if body.snapshot:
         actor = get_authenticated_user_id(auth_data)

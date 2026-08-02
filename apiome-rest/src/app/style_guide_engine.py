@@ -57,6 +57,7 @@ __all__ = [
     "builtin_fallback_guide",
     "compile_style_guide",
     "resolve_style_guide",
+    "rules_content_fingerprint",
     "guided_lint_openapi_spec",
     "apply_style_guide_to_lint_report",
 ]
@@ -211,6 +212,26 @@ def _rows_cache_key(rows: Sequence[Mapping[str, Any]]) -> str:
     return json.dumps(canonical, sort_keys=True, separators=(",", ":"))
 
 
+def rules_content_fingerprint(rows: Sequence[Mapping[str, Any]]) -> str:
+    """Return the content fingerprint of a guide's rule rows.
+
+    The **one** definition of "what this guide's rules are": SHA-256 over the canonical JSON
+    of the rows (sorted by rule id, sorted keys, no separator whitespace). It is exactly the
+    fingerprint :func:`compile_style_guide` stamps on a :class:`CompiledStyleGuide`, so a
+    stored guide revision (GOV-1.6) whose ``content_fingerprint`` matches a compiled guide's
+    ``fingerprint`` is provably the same ruleset — which is how a lint result pins itself to
+    the revision that produced it.
+
+    Args:
+        rows: ``style_guide_rules`` rows as mappings with ``rule_id`` / ``enabled`` /
+            ``severity`` / ``custom_def`` keys. Order is irrelevant.
+
+    Returns:
+        The 64-character lowercase hex digest.
+    """
+    return hashlib.sha256(_rows_cache_key(rows).encode("utf-8")).hexdigest()
+
+
 def compile_style_guide(
     guide_id: Optional[str],
     name: str,
@@ -243,6 +264,8 @@ def _compile_cached(
     ages out of the LRU.
     """
     rows: List[Dict[str, Any]] = json.loads(rows_key)
+    # Hash the canonical key itself, so the compiled fingerprint and
+    # :func:`rules_content_fingerprint` can never drift apart (GOV-1.6 pins on this equality).
     fingerprint = hashlib.sha256(rows_key.encode("utf-8")).hexdigest()
 
     reserved = frozenset(builtin_rule_ids())

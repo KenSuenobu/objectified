@@ -5,6 +5,44 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.236.0] - 2026-08-01
+
+### Added
+- **Guide versioning & audit (GOV-1.6, #4432)** —
+  style guides were edited in place, so a lint score recorded last month named the guide that
+  produced it but not *what that guide contained*: once the guide changed, the result could no
+  longer be explained or defended. Guides now keep an immutable history, lint results pin the
+  revision they ran against, and governance changes land in the tenant's audit ledger.
+  - **A revision per edit, and only per edit.** `apiome.style_guide_revisions` (migration V236)
+    is append-only and write-once (the shared V128 UPDATE-forbid trigger). Creating a guide,
+    renaming it, saving the rule catalog, saving the custom-rules YAML, or changing policy gates
+    each append one row carrying the guide's whole state — name, description, external lint
+    profile, every rule row (enable flag, severity, custom definition) and the draft gates —
+    plus a `changeKind` and the actor. A save that changed nothing appends nothing: the two
+    fingerprints on each revision separate "the rules moved" (`contentFingerprint`) from
+    "anything moved" (`snapshotFingerprint`). Assigning a guide changes no content and is
+    therefore an audit event, not a revision.
+  - **Lint results pin their ruleset.** `GET …/{versionRecordId}/lint` now returns
+    `guideRevisionId` alongside `guideId` / `guideName`, and every immutable lint evidence row
+    (`lint_evidence_runs.guide_revision_id`) records the same pin at capture time, so
+    import-time scores are as explainable as live recomputes. The pin is exact rather than
+    heuristic: a revision's `contentFingerprint` is produced by the *same* function that stamps
+    the compiled guide's fingerprint, so matching content is provably the same ruleset.
+  - **History is readable, and self-heals.** `GET /v1/style-guides/{tenantSlug}/{guideId}/revisions`
+    lists the history newest-first with rule rollups; `GET …/revisions/{revisionId}` returns the
+    frozen rules and gates behind any past score. Both are readable by any tenant member —
+    compliance review is not an admin-only activity. Guides that predate this feature are
+    captured on first read/edit/lint, and every edit path captures the **pre-edit** state first,
+    so what an edit replaced is preserved rather than lost.
+  - **Audit events on create / edit / assign.** `style_guide.created`, `.updated`, `.deleted`,
+    `.rules_updated`, `.custom_rules_updated`, `.policy_updated`, `.assigned` and `.unassigned`
+    append to the existing hash-chained `apiome.access_audit` ledger — one ledger for a
+    reviewer to read — filterable with `GET /v1/access/{tenantSlug}/audit?filter=styleGuide`.
+    Only changes that actually happened are recorded, and history/audit capture is best-effort
+    by contract: a ledger or capture failure can never fail the guide change it describes.
+  - Documented in `docs/guide/style-guide-revisions.md`; 48 tests across
+    `test_style_guide_revisions.py` and `test_style_guide_routes.py`.
+
 ## [1.235.0] - 2026-08-01
 
 ### Added

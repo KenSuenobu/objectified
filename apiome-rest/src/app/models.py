@@ -4046,6 +4046,16 @@ class LintReportResponse(BaseModel):
         serialization_alias="guideSource",
         description="Origin of the applied guide: builtin | custom | fallback (in-code defaults).",
     )
+    guide_revision_id: Optional[str] = Field(
+        default=None,
+        serialization_alias="guideRevisionId",
+        description=(
+            "Immutable revision of the applied style guide (GOV-1.6) — the exact ruleset this "
+            "report was scored against, queryable at "
+            "`GET /v1/style-guides/{tenantSlug}/{guideId}/revisions/{revisionId}`. Null when "
+            "the in-code default guide applied or no revision could be resolved."
+        ),
+    )
     algorithm_id: Optional[str] = Field(
         default=None,
         serialization_alias="algorithmId",
@@ -4366,6 +4376,14 @@ class LintEvidenceRunOut(BaseModel):
         serialization_alias="envelopeVersion",
         description="Version of the finding-envelope contract the findings conform to.",
     )
+    guide_revision_id: Optional[str] = Field(
+        default=None,
+        serialization_alias="guideRevisionId",
+        description=(
+            "Immutable style-guide revision this run was scored under (GOV-1.6). Null for "
+            "runs from scanners no guide governs, and for runs recorded before GOV-1.6."
+        ),
+    )
     recorded_at: Optional[str] = Field(
         default=None,
         serialization_alias="recordedAt",
@@ -4623,6 +4641,116 @@ class StyleGuidePolicyVersionListResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     versions: List[StyleGuidePolicyVersionOut] = Field(default_factory=list)
+    count: int = 0
+
+
+class StyleGuideRevisionOut(BaseModel):
+    """One immutable style-guide revision, without its full rule snapshot (GOV-1.6, #4432).
+
+    The history-list projection: what changed, when, by whom, and how large the resulting
+    ruleset was. The frozen rules themselves are served by the single-revision endpoint
+    (:class:`StyleGuideRevisionDetailOut`) so a long history stays cheap to render.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str = Field(description="Revision id — what a lint result pins to.")
+    guide_id: str = Field(
+        serialization_alias="guideId", description="The guide this revision belongs to."
+    )
+    revision_number: int = Field(
+        serialization_alias="revisionNumber",
+        description="Monotonic revision number within the guide (starts at 1).",
+    )
+    change_kind: str = Field(
+        serialization_alias="changeKind",
+        description=(
+            "What produced the revision: created | edited | rules_changed | "
+            "custom_rules_changed | policy_changed | imported."
+        ),
+    )
+    name: str = Field(description="Guide name at the time of this revision.")
+    description: Optional[str] = Field(
+        default=None, description="Guide description at the time of this revision."
+    )
+    external_lint_profile: Optional[str] = Field(
+        default=None,
+        serialization_alias="externalLintProfile",
+        description="External validation profile at the time of this revision (CLX-2.2).",
+    )
+    rule_count: int = Field(
+        default=0,
+        serialization_alias="ruleCount",
+        description="Number of rule rows frozen into this revision.",
+    )
+    enabled_rule_count: int = Field(
+        default=0,
+        serialization_alias="enabledRuleCount",
+        description="How many of those rules were enabled.",
+    )
+    custom_rule_count: int = Field(
+        default=0,
+        serialization_alias="customRuleCount",
+        description="How many of those rules carried a custom definition (GOV-1.3).",
+    )
+    content_fingerprint: str = Field(
+        serialization_alias="contentFingerprint",
+        description=(
+            "SHA-256 of the frozen rule rows — identical to the fingerprint the linter stamps "
+            "on the compiled guide, which is how lint results resolve their revision."
+        ),
+    )
+    snapshot_fingerprint: str = Field(
+        serialization_alias="snapshotFingerprint",
+        description=(
+            "SHA-256 of the whole snapshot (identity + rules + policy gates). Equal "
+            "fingerprints mean an edit changed nothing, and no revision is appended."
+        ),
+    )
+    actor_user_id: Optional[str] = Field(
+        default=None,
+        serialization_alias="actorUserId",
+        description="User who made the change; null for system captures or deleted users.",
+    )
+    actor_label: Optional[str] = Field(
+        default=None,
+        serialization_alias="actorLabel",
+        description="Human-readable actor label recorded at the time of the change.",
+    )
+    created_at: Optional[str] = Field(
+        default=None,
+        serialization_alias="createdAt",
+        description="When the revision was recorded (rows are write-once).",
+    )
+
+
+class StyleGuideRevisionDetailOut(StyleGuideRevisionOut):
+    """A style-guide revision including its frozen rules and policy gates (GOV-1.6, #4432)."""
+
+    rules: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description=(
+            "The guide's rule rows as they were, sorted by rule id: `ruleId`-equivalent "
+            "`rule_id`, `enabled`, `severity`, and `custom_def` for custom rules."
+        ),
+    )
+    policy: Dict[str, Any] = Field(
+        default_factory=dict,
+        description=(
+            "Draft policy gates at the time of this revision: `axisGates`, "
+            "`requiredCoverage`, `ciOutcomes` (CLX-1.3)."
+        ),
+    )
+
+
+class StyleGuideRevisionListResponse(BaseModel):
+    """A style guide's immutable revision history, newest first (GOV-1.6, #4432)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    guide_id: str = Field(serialization_alias="guideId")
+    guide_name: str = Field(serialization_alias="guideName")
+    revisions: List[StyleGuideRevisionOut] = Field(default_factory=list)
     count: int = 0
 
 
@@ -5525,6 +5653,53 @@ def style_guide_policy_version_out_from_row(
     )
 
 
+def _style_guide_revision_fields(row: Mapping[str, Any]) -> Dict[str, Any]:
+    """Shared field mapping for the list and detail projections of a revision row."""
+    from .style_guide_revisions import revision_rule_counts
+
+    rules = row.get("rules")
+    rules_list = [r for r in rules if isinstance(r, Mapping)] if isinstance(rules, list) else []
+    return {
+        "id": str(row["id"]),
+        "guide_id": str(row["guide_id"]),
+        "revision_number": int(row["revision_number"]),
+        "change_kind": str(row["change_kind"]),
+        "name": str(row.get("name") or ""),
+        "description": row.get("description"),
+        "external_lint_profile": row.get("external_lint_profile"),
+        "content_fingerprint": str(row.get("content_fingerprint") or ""),
+        "snapshot_fingerprint": str(row.get("snapshot_fingerprint") or ""),
+        "actor_user_id": str(row["actor_user_id"]) if row.get("actor_user_id") else None,
+        "actor_label": row.get("actor_label"),
+        "created_at": _iso_or_none(row.get("created_at")),
+        **revision_rule_counts(rules_list),
+    }
+
+
+def style_guide_revision_out_from_row(row: Mapping[str, Any]) -> StyleGuideRevisionOut:
+    """Shape a ``style_guide_revisions`` row into its list projection (GOV-1.6, #4432)."""
+    return StyleGuideRevisionOut(**_style_guide_revision_fields(row))
+
+
+def style_guide_revision_detail_from_row(
+    row: Mapping[str, Any],
+) -> StyleGuideRevisionDetailOut:
+    """Shape a ``style_guide_revisions`` row into its full projection (GOV-1.6, #4432).
+
+    Adds the frozen rule rows and policy gates the list projection omits, so a reviewer can
+    read exactly what the guide contained when a lint result was pinned to this revision.
+    """
+    rules = row.get("rules")
+    policy = row.get("policy")
+    return StyleGuideRevisionDetailOut(
+        **_style_guide_revision_fields(row),
+        rules=[dict(r) for r in rules if isinstance(r, Mapping)]
+        if isinstance(rules, list)
+        else [],
+        policy=dict(policy) if isinstance(policy, Mapping) else {},
+    )
+
+
 def lint_finding_decision_out_from_row(row: Mapping[str, Any]) -> LintFindingDecisionOut:
     """Shape a ``lint_finding_decisions`` row into its API projection."""
     return LintFindingDecisionOut(
@@ -6025,6 +6200,9 @@ def lint_evidence_run_out_from_row(row: Mapping[str, Any]) -> LintEvidenceRunOut
         findings=findings,
         coverage=coverage if isinstance(coverage, dict) else {},
         envelope_version=int(row.get("envelope_version") or 1),
+        guide_revision_id=(
+            str(row["guide_revision_id"]) if row.get("guide_revision_id") else None
+        ),
         recorded_at=_iso_or_none(row.get("created_at")),
     )
 

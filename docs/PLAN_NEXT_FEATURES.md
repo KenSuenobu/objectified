@@ -62,7 +62,7 @@ Housekeeping that Phase 0 of this plan called for is **done**:
 | Catalog & MCP lint excellence | CLX | All CLX-1…4 epics closed (2026-07-14/15) |
 | Export fidelity projection | EFP | All EFP issues closed (2026-07-15) |
 | Hosted mock + Try-It | SIM **#4411 closed** | Children closed; portable work continues under PMR #4945 |
-| Style guides MVP | GOV | GOV-2.x / GOV-EPIC-2 closed; #4431/#4432 + GOV-3.x remain (RC5/Future) |
+| Style guides MVP | GOV | GOV-2.x / GOV-EPIC-2 closed; #4431/#4432 shipped; GOV-3.x remains (Future) |
 | Breaking-change CI MVP | CTG | CTG-1.x / CTG-EPIC-1 closed; CI/publish leftovers on RC5; CTG-4.x Future |
 | Designer workbench MVP | DCW (private-suite) | DCW-0.1–0.4 and DCW-1.1–3.3 closed |
 
@@ -139,7 +139,7 @@ Phases are dependency-ordered. Within a phase, **MVP tickets ship before v2**. P
 | 0.4 | Ensure `mvp` / `v2` labels on every open issue | **Done** |
 | 0.5 | Create ECA / PMR / GNC / SGD epic parents | **Done** (#4941–#4952) |
 
-Remaining open leftovers intentionally **not** closed: MTG-EPIC-5 #4764, GOV-1.6/3.x (GOV-1.5 #4431 shipped), CTG-2.4/3.4/4.x, MFX studio polish (RC4), long-tail MFX/MFI (Future).
+Remaining open leftovers intentionally **not** closed: MTG-EPIC-5 #4764, GOV-3.x (GOV-1.5 #4431 and GOV-1.6 #4432 shipped), CTG-2.4/3.4/4.x, MFX studio polish (RC4), long-tail MFX/MFI (Future).
 
 ---
 
@@ -296,7 +296,7 @@ Only start after Phases 5–6 have a stable mock + verify loop (generators reuse
 | Collaboration MVP | COL #4508 / #4513–#4522 | **RC5** | Durable review before Git sync |
 | Git-native collaboration | GNC #4949 / #4737–#4740 | **RC5** | Depends on COL + three-way sync risk |
 | Agent Experience | AGX #4503 / #4529–#4540 | **RC5** | Needs PMR, secrets, quotas; MTG ceilings already shipped |
-| GOV leftovers | #4431–#4432; GOV-3 #4438–#4442 | **RC5** / **Future** | Spectral import near-term; cross-format after CPDO |
+| GOV leftovers | GOV-3 #4438–#4442 (#4431/#4432 shipped) | **Future** | Cross-format after CPDO |
 | CTG leftovers | #4474, #4478; CTG-4.x | **RC5** / **Future** | Recipes/guardrail near-term; consumer/live later |
 | MFX delivery/batch/MCP export | #4327–#4341 | **Future** | After Studio MVP polish |
 | MFI drift & collections | #4386, #4387 | **Future** | After intake safety + ECA alerting |

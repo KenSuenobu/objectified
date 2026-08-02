@@ -84,7 +84,9 @@ severity (`error` ≫ `warning` ≫ `info`) in the same capped scoring formula a
 nothing assigned, scores and grades are exactly what they were before style guides existed.
 Custom rules in the guide are evaluated against the raw document and their findings merged.
 The lint response reports the applied guide in `guideId` / `guideName` / `guideSource`
-(`builtin`, `custom`, or `fallback` for the in-code defaults). At publish time the precheck also
+(`builtin`, `custom`, or `fallback` for the in-code defaults) and, in `guideRevisionId`, the
+[immutable revision](style-guide-revisions.md) of that guide the score was computed
+against — so the result stays explainable after the guide is edited. At publish time the precheck also
 computes the guide's **error-level violation count**, the signal the upcoming publish quality
 gate (GOV-2.5) will enforce.
 

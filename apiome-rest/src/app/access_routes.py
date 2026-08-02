@@ -494,6 +494,8 @@ _AUDIT_FILTERS = {
     "permission": "permission.",
     "member": "member.",
     "admin": "admin.",
+    # Style-guide governance: create / edit / assign of style guides (GOV-1.6, #4432).
+    "styleGuide": "style_guide.",
 }
 
 
@@ -504,7 +506,12 @@ async def list_audit(
     limit: int = Query(200, ge=1, le=1000),
     auth_data: Dict[str, Any] = Depends(validate_authentication),
 ) -> List[Dict[str, Any]]:
-    """List access-audit entries for the tenant, newest first, with an optional category filter."""
+    """List access-audit entries for the tenant, newest first, with an optional category filter.
+
+    Categories are `all`, `role`, `permission`, `member`, `admin` and `styleGuide`
+    (style-guide governance: create / edit / assign, GOV-1.6). An unknown value is treated
+    as `all`.
+    """
     enforce_permission(db, auth_data, Resource.MEMBERS, Action.VIEW)
     prefix = _AUDIT_FILTERS.get(filter, None)
     return db.list_access_audit(auth_data["tenant_id"], action_prefix=prefix, limit=limit)

@@ -73,6 +73,7 @@ from .spectral_import import (
     import_spectral_ruleset,
 )
 from .style_guide_engine import guided_lint_openapi_spec
+from .style_guide_revisions import pin_guide_revision_id
 
 router = APIRouter(prefix="/v1/versions", tags=["lint"])
 decisions_router = APIRouter(prefix="/v1/lint/decisions", tags=["lint-decisions"])
@@ -605,6 +606,9 @@ async def build_lint_report(
         guide_id=guide.guide_id,
         guide_name=guide.name,
         guide_source=guide.source,
+        # GOV-1.6: pin the report to the immutable revision of the guide that scored it, so
+        # the result stays explainable after the guide is edited.
+        guide_revision_id=pin_guide_revision_id(guide, tenant_id),
         **lint_axis_fields_from_evaluation(catalog_axis_evaluation(axis_report).as_dict()),
     )
 

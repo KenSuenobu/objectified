@@ -3298,6 +3298,7 @@ class Database:
         grade: str,
         report_fingerprint: Optional[str] = None,
         quality_report: Optional[Dict[str, Any]] = None,
+        guide_revision_id: Optional[str] = None,
     ) -> bool:
         """Persist the captured quality/lint score onto a revision (#3609 follow-up).
 
@@ -3306,6 +3307,17 @@ class Database:
         tallies, categories) is stored alongside the headline score/grade/fingerprint so lint
         routes can serve the import-time report without recomputing. Returns True when a row was
         updated.
+
+        Args:
+            version_record_id: The scored revision (``versions.id``).
+            tenant_id: The tenant that must own the revision (via its project).
+            score: The 0-100 quality score to persist.
+            grade: The A-F grade to persist.
+            report_fingerprint: Fingerprint of the report being persisted.
+            quality_report: The full report JSON, when the caller has it.
+            guide_revision_id: The immutable style-guide revision that scored the report
+                (GOV-1.6). When omitted, it is resolved from the revision's project so every
+                capture seam pins its evidence without having to thread the guide through.
         """
         report_json = Json(quality_report if quality_report is not None else {})
         query = """
@@ -3320,17 +3332,35 @@ class Database:
               AND v.project_id = p.id
               AND p.tenant_id = %s
               AND v.deleted_at IS NULL
-            RETURNING v.id
+            RETURNING v.id, v.project_id
         """
         rows = self.execute_query(
             query,
             (score, grade, report_fingerprint, report_json, version_record_id, tenant_id),
         )
         if rows and quality_report and quality_report.get("report_fingerprint"):
+            # GOV-1.6 (#4432): pin the evidence to the immutable guide revision that scored
+            # it, so the result stays explainable after the guide is edited. Best-effort and
+            # self-healing — an unresolvable revision simply leaves the pin NULL.
+            if guide_revision_id is None:
+                try:
+                    from .style_guide_revisions import resolve_guide_revision_id
+
+                    guide_revision_id = resolve_guide_revision_id(
+                        tenant_id, str(rows[0].get("project_id") or "") or None
+                    )
+                except Exception:  # noqa: BLE001 - pinning never breaks scoring
+                    guide_revision_id = None
             # CLX-1.1 (#4848): every persisted native report is also represented in the
             # immutable evidence substrate. Best-effort: evidence must never break scoring.
             try:
-                self.record_lint_evidence_run(native_evidence_run(version_record_id, quality_report))
+                self.record_lint_evidence_run(
+                    native_evidence_run(
+                        version_record_id,
+                        quality_report,
+                        guide_revision_id=guide_revision_id,
+                    )
+                )
             except Exception:  # noqa: BLE001 - evidence capture is strictly additive
                 _logger.warning(
                     "Failed to record lint evidence for revision %s",
@@ -3365,7 +3395,9 @@ class Database:
         Args:
             run: Column-name -> value dict built by :func:`app.lint_evidence.native_evidence_run`
                 or :func:`app.lint_evidence.mcp_evidence_run`. ``findings`` / ``coverage`` are
-                plain Python structures and are JSONB-wrapped here.
+                plain Python structures and are JSONB-wrapped here. An optional
+                ``guide_revision_id`` pins the run to the style-guide revision that scored it
+                (GOV-1.6); it is stored on insert only, since evidence rows are write-once.
 
         Returns:
             The new run's id, or ``None`` when an identical report was already evidenced.
@@ -3375,10 +3407,10 @@ class Database:
                 subject_type, version_record_id, mcp_version_id, scanner_id, scanner_version,
                 adapter_version, profile, started_at, finished_at, outcome, input_fingerprint,
                 source_fingerprint, config_fingerprint, raw_artifact_ref, report_fingerprint,
-                findings, coverage, envelope_version
+                findings, coverage, envelope_version, guide_revision_id
             )
             SELECT %s, %s::uuid, %s::uuid, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                   %s::jsonb, %s::jsonb, %s
+                   %s::jsonb, %s::jsonb, %s, %s::uuid
             WHERE NOT EXISTS (
                 SELECT 1 FROM apiome.lint_evidence_runs r
                 WHERE r.scanner_id = %s
@@ -3413,6 +3445,7 @@ class Database:
                 Json(run.get("findings") or []),
                 Json(run.get("coverage") or {"state": "unknown"}),
                 run.get("envelope_version", 1),
+                run.get("guide_revision_id"),
                 run["scanner_id"],
                 run.get("report_fingerprint"),
                 version_record_id,
@@ -3494,7 +3527,7 @@ class Database:
             r.scanner_version, r.adapter_version, r.profile, r.started_at, r.finished_at,
             r.outcome, r.input_fingerprint, r.source_fingerprint, r.config_fingerprint,
             r.raw_artifact_ref, r.report_fingerprint, r.findings, r.coverage,
-            r.envelope_version, r.created_at
+            r.envelope_version, r.guide_revision_id, r.created_at
     """
 
     def list_lint_evidence_runs_for_version(
@@ -6024,6 +6057,186 @@ class Database:
         """
         rows = self.execute_query(query, (tenant_id, project_id))
         return bool(rows)
+
+    # ---- Style-guide revisions (immutable edit history, GOV-1.6, #4432) -------------
+
+    #: Columns every ``style_guide_revisions`` read returns, in one place so the list, single
+    #: and lookup queries can never disagree about the row shape.
+    _STYLE_GUIDE_REVISION_COLUMNS = """
+        id, guide_id, tenant_id, revision_number, change_kind,
+        name, description, external_lint_profile, rules, policy,
+        content_fingerprint, snapshot_fingerprint,
+        actor_user_id, actor_label, created_at
+    """
+
+    def insert_style_guide_revision(
+        self,
+        *,
+        guide_id: str,
+        tenant_id: str,
+        change_kind: str,
+        name: str,
+        description: Optional[str],
+        external_lint_profile: Optional[str],
+        rules: List[Dict[str, Any]],
+        policy: Dict[str, Any],
+        content_fingerprint: str,
+        snapshot_fingerprint: str,
+        actor_user_id: Optional[str] = None,
+        actor_label: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Append one immutable revision of a style guide (GOV-1.6, #4432).
+
+        Assigns the next monotonic ``revision_number`` for the guide in the same statement, so
+        concurrent edits cannot mint the same number (the ``UNIQUE (guide_id, revision_number)``
+        constraint is the backstop).
+
+        Args:
+            guide_id: The guide this revision snapshots.
+            tenant_id: The owning tenant.
+            change_kind: What produced it — ``created`` | ``edited`` | ``rules_changed`` |
+                ``custom_rules_changed`` | ``policy_changed`` | ``imported``.
+            name: Guide name at snapshot time.
+            description: Guide description at snapshot time.
+            external_lint_profile: CLX-2.2 profile at snapshot time.
+            rules: Frozen rule rows (``rule_id`` / ``enabled`` / ``severity`` / ``custom_def``).
+            policy: Frozen draft gates (``axisGates`` / ``requiredCoverage`` / ``ciOutcomes``).
+            content_fingerprint: SHA-256 of the canonical rule rows (compiled-guide parity).
+            snapshot_fingerprint: SHA-256 of the whole snapshot (no-op suppression).
+            actor_user_id: The acting user, when a user session made the change.
+            actor_label: Human-readable actor label.
+
+        Returns:
+            The inserted revision row, or ``None`` when the ids are not UUIDs.
+        """
+        if not guide_id or not is_uuid_string(str(guide_id)):
+            return None
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        actor = (
+            str(actor_user_id)
+            if actor_user_id and is_uuid_string(str(actor_user_id))
+            else None
+        )
+        query = f"""
+            INSERT INTO apiome.style_guide_revisions (
+                guide_id, tenant_id, revision_number, change_kind,
+                name, description, external_lint_profile, rules, policy,
+                content_fingerprint, snapshot_fingerprint, actor_user_id, actor_label
+            )
+            SELECT %s::uuid, %s::uuid,
+                   COALESCE((
+                       SELECT MAX(rev.revision_number)
+                       FROM apiome.style_guide_revisions rev
+                       WHERE rev.guide_id = %s::uuid
+                   ), 0) + 1,
+                   %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s, %s, %s::uuid, %s
+            RETURNING {self._STYLE_GUIDE_REVISION_COLUMNS}
+        """
+        rows = self.execute_query(
+            query,
+            (
+                guide_id,
+                tenant_id,
+                guide_id,
+                change_kind,
+                name,
+                description,
+                external_lint_profile,
+                Json(rules),
+                Json(policy),
+                content_fingerprint,
+                snapshot_fingerprint,
+                actor,
+                actor_label,
+            ),
+        )
+        return rows[0] if rows else None
+
+    def list_style_guide_revisions(
+        self, guide_id: str, tenant_id: str, *, limit: int = 100
+    ) -> List[Dict[str, Any]]:
+        """List a guide's revisions, newest first (GOV-1.6, #4432).
+
+        Args:
+            guide_id: The guide whose history to read. Non-UUID values return ``[]``.
+            tenant_id: The tenant that must own the guide.
+            limit: Maximum rows to return, clamped to 1..500.
+
+        Returns:
+            Revision rows, highest ``revision_number`` first.
+        """
+        if not guide_id or not is_uuid_string(str(guide_id)):
+            return []
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return []
+        query = f"""
+            SELECT {self._STYLE_GUIDE_REVISION_COLUMNS}
+            FROM apiome.style_guide_revisions
+            WHERE guide_id = %s AND tenant_id = %s
+            ORDER BY revision_number DESC
+            LIMIT %s
+        """
+        return self.execute_query(
+            query, (guide_id, tenant_id, max(1, min(int(limit), 500)))
+        )
+
+    def get_style_guide_revision(
+        self, revision_id: str, tenant_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Fetch one revision, scoped to its owning tenant (GOV-1.6, #4432)."""
+        if not revision_id or not is_uuid_string(str(revision_id)):
+            return None
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        query = f"""
+            SELECT {self._STYLE_GUIDE_REVISION_COLUMNS}
+            FROM apiome.style_guide_revisions
+            WHERE id = %s AND tenant_id = %s
+        """
+        rows = self.execute_query(query, (revision_id, tenant_id))
+        return rows[0] if rows else None
+
+    def get_latest_style_guide_revision(
+        self, guide_id: str, tenant_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Return a guide's newest revision, or ``None`` when it has no history yet."""
+        rows = self.list_style_guide_revisions(guide_id, tenant_id, limit=1)
+        return rows[0] if rows else None
+
+    def get_style_guide_revision_by_content(
+        self, guide_id: str, tenant_id: str, content_fingerprint: str
+    ) -> Optional[Dict[str, Any]]:
+        """Return the newest revision of a guide whose rules match ``content_fingerprint``.
+
+        The lint-run pin lookup (GOV-1.6): a compiled guide's fingerprint identifies its rule
+        content exactly, so the newest revision carrying that fingerprint is the revision the
+        run scored under. Newest wins because a later no-rule change (a rename, a gate edit)
+        appends a revision with the same rule content, and the run happened under that one.
+
+        Args:
+            guide_id: The guide being linted under.
+            tenant_id: The tenant that must own the guide.
+            content_fingerprint: The compiled guide's ``fingerprint``.
+
+        Returns:
+            The matching revision row, or ``None`` when no revision has that rule content.
+        """
+        if not guide_id or not is_uuid_string(str(guide_id)):
+            return None
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        if not content_fingerprint:
+            return None
+        query = f"""
+            SELECT {self._STYLE_GUIDE_REVISION_COLUMNS}
+            FROM apiome.style_guide_revisions
+            WHERE guide_id = %s AND tenant_id = %s AND content_fingerprint = %s
+            ORDER BY revision_number DESC
+            LIMIT 1
+        """
+        rows = self.execute_query(query, (guide_id, tenant_id, content_fingerprint))
+        return rows[0] if rows else None
 
     def get_project_by_id(
         self, project_id: str, tenant_id: str, *, include_deleted: bool = False

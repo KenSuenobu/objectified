@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.99.0
+  version: 1.100.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -9809,6 +9809,183 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for unassign projectresponse422.
+  /v1/style-guides/{tenant_slug}/{guide_id}/revisions:
+    get:
+      tags:
+      - style-guides
+      summary: List Style Guide Revisions
+      description: 'The guide''s immutable revision history, newest first (GOV-1.6,
+        #4432).
+
+
+        One entry per edit — create, rename, rule-catalog save, custom-rule save,
+        policy-gate
+
+        change — with the change kind, the actor, and the fingerprints a lint result
+        pins to.
+
+        Saves that changed nothing are not entries: the history is real changes only.
+
+
+        Reading self-heals a guide with no history yet (created before GOV-1.6, or
+        seeded by the
+
+        V159 migration): its current state is captured as revision 1 rather than showing
+        an empty
+
+        list for a guide that demonstrably exists. Readable by any tenant member —
+        compliance
+
+        review is not an admin-only activity.'
+      operationId: list_style_guide_revisions_v1_style_guides__tenant_slug___guide_id__revisions_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: guide_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Guide Id
+          description: Guide Id schema.
+        description: Style guide identifier.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 100
+          title: Limit
+          description: Limit schema.
+        description: Maximum number of rows to return.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Style Guide Revisionsauthorization schema.
+          - type: 'null'
+            description: List Style Guide Revisionsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Style Guide Revisions Xapikey schema.
+          - type: 'null'
+            description: List Style Guide Revisions Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for list style guide revisions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StyleGuideRevisionListResponse'
+                description: Response payload for list style guide revisionsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for list style guide revisionsresponse422.
+  /v1/style-guides/{tenant_slug}/{guide_id}/revisions/{revision_id}:
+    get:
+      tags:
+      - style-guides
+      summary: Get Style Guide Revision
+      description: 'One immutable revision with the rules and policy gates it froze
+        (GOV-1.6, #4432).
+
+
+        This is what makes a past lint result defendable: a report carries ``guideRevisionId``,
+        and
+
+        this endpoint returns exactly the ruleset that produced it — including custom
+        rule
+
+        definitions — no matter how the live guide has changed since.'
+      operationId: get_style_guide_revision_v1_style_guides__tenant_slug___guide_id__revisions__revision_id__get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: guide_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Guide Id
+          description: Guide Id schema.
+        description: Style guide identifier.
+      - name: revision_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Revision Id
+          description: Revision Id schema.
+        description: Revision UUID (``versions.id``).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Style Guide Revisionauthorization schema.
+          - type: 'null'
+            description: Get Style Guide Revisionauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Style Guide Revision Xapikey schema.
+          - type: 'null'
+            description: Get Style Guide Revision Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get style guide revision.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StyleGuideRevisionDetailOut'
+                description: Response payload for get style guide revisionresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get style guide revisionresponse422.
   /v1/style-guides/{tenant_slug}/{guide_id}/policy:
     get:
       tags:
@@ -36933,8 +37110,16 @@ paths:
       tags:
       - access
       summary: List Audit
-      description: List access-audit entries for the tenant, newest first, with an
+      description: 'List access-audit entries for the tenant, newest first, with an
         optional category filter.
+
+
+        Categories are `all`, `role`, `permission`, `member`, `admin` and `styleGuide`
+
+        (style-guide governance: create / edit / assign, GOV-1.6). An unknown value
+        is treated
+
+        as `all`.'
       operationId: list_audit_v1_access__tenant_slug__audit_get
       parameters:
       - name: tenant_slug
@@ -60712,6 +60897,16 @@ components:
           description: Version of the finding-envelope contract the findings conform
             to.
           example: 1
+        guideRevisionId:
+          anyOf:
+          - type: string
+            description: Response payload for lint evidence run.
+          - type: 'null'
+            description: Response payload for lint evidence run.
+          title: Guiderevisionid
+          description: Immutable style-guide revision this run was scored under (GOV-1.6).
+            Null for runs from scanners no guide governs, and for runs recorded before
+            GOV-1.6.
         recordedAt:
           anyOf:
           - type: string
@@ -61339,6 +61534,16 @@ components:
           title: Guidesource
           description: 'Origin of the applied guide: builtin | custom | fallback (in-code
             defaults).'
+        guideRevisionId:
+          anyOf:
+          - type: string
+            description: Response payload for lint report.
+          - type: 'null'
+            description: Response payload for lint report.
+          title: Guiderevisionid
+          description: Immutable revision of the applied style guide (GOV-1.6) — the
+            exact ruleset this report was scored against, queryable at `GET /v1/style-guides/{tenantSlug}/{guideId}/revisions/{revisionId}`.
+            Null when the in-code default guide applied or no revision could be resolved.
         algorithmId:
           anyOf:
           - type: string
@@ -79146,7 +79351,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-02T00:49:45Z'
+          example: '2026-08-02T01:28:47Z'
       additionalProperties: false
       type: object
       required:
@@ -84383,6 +84588,286 @@ components:
       - projectName
       title: StyleGuideProjectAssignmentOut
       description: 'One project-level style-guide assignment (GOV-2.1, #4433).'
+    StyleGuideRevisionDetailOut:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Revision id — what a lint result pins to.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        guideId:
+          type: string
+          title: Guideid
+          description: The guide this revision belongs to.
+          example: example
+        revisionNumber:
+          type: integer
+          title: Revisionnumber
+          description: Monotonic revision number within the guide (starts at 1).
+          example: 1
+        changeKind:
+          type: string
+          title: Changekind
+          description: 'What produced the revision: created | edited | rules_changed
+            | custom_rules_changed | policy_changed | imported.'
+          example: example
+        name:
+          type: string
+          title: Name
+          description: Guide name at the time of this revision.
+          example: Pet
+        description:
+          anyOf:
+          - type: string
+            description: Response payload for style guide revision detail.
+          - type: 'null'
+            description: Response payload for style guide revision detail.
+          title: Description
+          description: Guide description at the time of this revision.
+        externalLintProfile:
+          anyOf:
+          - type: string
+            description: Response payload for style guide revision detail.
+          - type: 'null'
+            description: Response payload for style guide revision detail.
+          title: Externallintprofile
+          description: External validation profile at the time of this revision (CLX-2.2).
+        ruleCount:
+          type: integer
+          title: Rulecount
+          description: Number of rule rows frozen into this revision.
+          default: 0
+          example: 1
+        enabledRuleCount:
+          type: integer
+          title: Enabledrulecount
+          description: How many of those rules were enabled.
+          default: 0
+          example: 1
+        customRuleCount:
+          type: integer
+          title: Customrulecount
+          description: How many of those rules carried a custom definition (GOV-1.3).
+          default: 0
+          example: 1
+        contentFingerprint:
+          type: string
+          title: Contentfingerprint
+          description: SHA-256 of the frozen rule rows — identical to the fingerprint
+            the linter stamps on the compiled guide, which is how lint results resolve
+            their revision.
+          example: a1b2c3d4e5f6789012345678901234ab
+        snapshotFingerprint:
+          type: string
+          title: Snapshotfingerprint
+          description: SHA-256 of the whole snapshot (identity + rules + policy gates).
+            Equal fingerprints mean an edit changed nothing, and no revision is appended.
+          example: a1b2c3d4e5f6789012345678901234ab
+        actorUserId:
+          anyOf:
+          - type: string
+            description: Response payload for style guide revision detail.
+          - type: 'null'
+            description: Response payload for style guide revision detail.
+          title: Actoruserid
+          description: User who made the change; null for system captures or deleted
+            users.
+        actorLabel:
+          anyOf:
+          - type: string
+            description: Response payload for style guide revision detail.
+          - type: 'null'
+            description: Response payload for style guide revision detail.
+          title: Actorlabel
+          description: Human-readable actor label recorded at the time of the change.
+        createdAt:
+          anyOf:
+          - type: string
+            description: Response payload for style guide revision detail.
+          - type: 'null'
+            description: Response payload for style guide revision detail.
+          title: Createdat
+          description: When the revision was recorded (rows are write-once).
+        rules:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Rules
+          description: 'The guide''s rule rows as they were, sorted by rule id: `ruleId`-equivalent
+            `rule_id`, `enabled`, `severity`, and `custom_def` for custom rules.'
+          maxItems: 1000
+        policy:
+          additionalProperties: true
+          type: object
+          title: Policy
+          description: 'Draft policy gates at the time of this revision: `axisGates`,
+            `requiredCoverage`, `ciOutcomes` (CLX-1.3).'
+      type: object
+      required:
+      - id
+      - guideId
+      - revisionNumber
+      - changeKind
+      - name
+      - contentFingerprint
+      - snapshotFingerprint
+      title: StyleGuideRevisionDetailOut
+      description: 'A style-guide revision including its frozen rules and policy gates
+        (GOV-1.6, #4432).'
+    StyleGuideRevisionListResponse:
+      properties:
+        guideId:
+          type: string
+          title: Guideid
+          description: Guide ID.
+          example: example
+        guideName:
+          type: string
+          title: Guidename
+          description: Guide Name.
+          example: Example
+        revisions:
+          items:
+            $ref: '#/components/schemas/StyleGuideRevisionOut'
+          type: array
+          title: Revisions
+          description: Revisions.
+          maxItems: 1000
+        count:
+          type: integer
+          title: Count
+          default: 0
+          description: Number of count.
+          example: 1
+      type: object
+      required:
+      - guideId
+      - guideName
+      title: StyleGuideRevisionListResponse
+      description: 'A style guide''s immutable revision history, newest first (GOV-1.6,
+        #4432).'
+    StyleGuideRevisionOut:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Revision id — what a lint result pins to.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        guideId:
+          type: string
+          title: Guideid
+          description: The guide this revision belongs to.
+          example: example
+        revisionNumber:
+          type: integer
+          title: Revisionnumber
+          description: Monotonic revision number within the guide (starts at 1).
+          example: 1
+        changeKind:
+          type: string
+          title: Changekind
+          description: 'What produced the revision: created | edited | rules_changed
+            | custom_rules_changed | policy_changed | imported.'
+          example: example
+        name:
+          type: string
+          title: Name
+          description: Guide name at the time of this revision.
+          example: Pet
+        description:
+          anyOf:
+          - type: string
+            description: Response payload for style guide revision.
+          - type: 'null'
+            description: Response payload for style guide revision.
+          title: Description
+          description: Guide description at the time of this revision.
+        externalLintProfile:
+          anyOf:
+          - type: string
+            description: Response payload for style guide revision.
+          - type: 'null'
+            description: Response payload for style guide revision.
+          title: Externallintprofile
+          description: External validation profile at the time of this revision (CLX-2.2).
+        ruleCount:
+          type: integer
+          title: Rulecount
+          description: Number of rule rows frozen into this revision.
+          default: 0
+          example: 1
+        enabledRuleCount:
+          type: integer
+          title: Enabledrulecount
+          description: How many of those rules were enabled.
+          default: 0
+          example: 1
+        customRuleCount:
+          type: integer
+          title: Customrulecount
+          description: How many of those rules carried a custom definition (GOV-1.3).
+          default: 0
+          example: 1
+        contentFingerprint:
+          type: string
+          title: Contentfingerprint
+          description: SHA-256 of the frozen rule rows — identical to the fingerprint
+            the linter stamps on the compiled guide, which is how lint results resolve
+            their revision.
+          example: a1b2c3d4e5f6789012345678901234ab
+        snapshotFingerprint:
+          type: string
+          title: Snapshotfingerprint
+          description: SHA-256 of the whole snapshot (identity + rules + policy gates).
+            Equal fingerprints mean an edit changed nothing, and no revision is appended.
+          example: a1b2c3d4e5f6789012345678901234ab
+        actorUserId:
+          anyOf:
+          - type: string
+            description: Response payload for style guide revision.
+          - type: 'null'
+            description: Response payload for style guide revision.
+          title: Actoruserid
+          description: User who made the change; null for system captures or deleted
+            users.
+        actorLabel:
+          anyOf:
+          - type: string
+            description: Response payload for style guide revision.
+          - type: 'null'
+            description: Response payload for style guide revision.
+          title: Actorlabel
+          description: Human-readable actor label recorded at the time of the change.
+        createdAt:
+          anyOf:
+          - type: string
+            description: Response payload for style guide revision.
+          - type: 'null'
+            description: Response payload for style guide revision.
+          title: Createdat
+          description: When the revision was recorded (rows are write-once).
+      type: object
+      required:
+      - id
+      - guideId
+      - revisionNumber
+      - changeKind
+      - name
+      - contentFingerprint
+      - snapshotFingerprint
+      title: StyleGuideRevisionOut
+      description: 'One immutable style-guide revision, without its full rule snapshot
+        (GOV-1.6, #4432).
+
+
+        The history-list projection: what changed, when, by whom, and how large the
+        resulting
+
+        ruleset was. The frozen rules themselves are served by the single-revision
+        endpoint
+
+        (:class:`StyleGuideRevisionDetailOut`) so a long history stays cheap to render.'
     StyleGuideRuleOut:
       properties:
         ruleId:
@@ -89288,13 +89773,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-02T00:49:45Z'
+          example: '2026-08-02T01:28:47Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-02T00:49:45Z'
+          example: '2026-08-02T01:28:47Z'
         outcome:
           anyOf:
           - type: string

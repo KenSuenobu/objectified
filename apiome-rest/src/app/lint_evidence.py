@@ -234,6 +234,7 @@ def native_evidence_run(
     input_fingerprint: Optional[str] = None,
     source_fingerprint: Optional[str] = None,
     config: Optional[Mapping[str, Any]] = None,
+    guide_revision_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Build the evidence-run row for a native catalog-revision lint report.
 
@@ -244,6 +245,8 @@ def native_evidence_run(
         input_fingerprint: Fingerprint of the exact document the engine consumed, when known.
         source_fingerprint: Fingerprint of the upstream source, when distinct from the input.
         config: Non-persisted scanner configuration; only its redacted fingerprint is stored.
+        guide_revision_id: The immutable style-guide revision the report was scored under
+            (GOV-1.6), pinning the result to the exact ruleset that produced it.
 
     Returns:
         A column-name -> value dict ready for the persistence layer (JSONB values are plain
@@ -258,6 +261,7 @@ def native_evidence_run(
         input_fingerprint=input_fingerprint,
         source_fingerprint=source_fingerprint,
         config=config,
+        guide_revision_id=guide_revision_id,
     )
 
 
@@ -269,6 +273,7 @@ def mcp_evidence_run(
     input_fingerprint: Optional[str] = None,
     source_fingerprint: Optional[str] = None,
     config: Optional[Mapping[str, Any]] = None,
+    guide_revision_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Build the evidence-run row for a native MCP surface lint report.
 
@@ -279,6 +284,8 @@ def mcp_evidence_run(
         input_fingerprint: Fingerprint of the surface consumed (e.g. ``surface_fingerprint``).
         source_fingerprint: Fingerprint of the upstream source, when distinct from the input.
         config: Non-persisted scanner configuration; only its redacted fingerprint is stored.
+        guide_revision_id: The immutable style-guide revision governing the run (GOV-1.6),
+            when one applies.
 
     Returns:
         A column-name -> value dict ready for the persistence layer.
@@ -292,6 +299,7 @@ def mcp_evidence_run(
         input_fingerprint=input_fingerprint,
         source_fingerprint=source_fingerprint,
         config=config,
+        guide_revision_id=guide_revision_id,
     )
 
 
@@ -430,6 +438,7 @@ def _evidence_run(
     input_fingerprint: Optional[str],
     source_fingerprint: Optional[str],
     config: Optional[Mapping[str, Any]],
+    guide_revision_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Shared builder behind the two subject-specific evidence-run constructors."""
     subject_column = (
@@ -453,6 +462,7 @@ def _evidence_run(
         "findings": normalize_native_findings(report.get("findings") or []),
         "coverage": {"state": COVERAGE_FULL},
         "envelope_version": ENVELOPE_VERSION,
+        "guide_revision_id": guide_revision_id,
     }
 
 
