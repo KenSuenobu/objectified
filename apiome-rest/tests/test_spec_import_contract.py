@@ -748,3 +748,140 @@ def test_adversarial_corpus_never_yields_5xx_through_job_api():
         else:
             assert final["state"] == "completed", f"{entry.path}: reached {final['state']}"
             assert (final["summary"] or {}).get("secret_scrub", {}).get("scrubbed") is True
+
+
+# ---------------------------------------------------------------------------
+# IXH-6.6: observability — stage metrics, failure counters, correlation ids
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def _reset_import_export_metrics():
+    from app.import_export_metrics import import_export_metrics
+
+    import_export_metrics.reset()
+    yield import_export_metrics
+    import_export_metrics.reset()
+
+
+def test_import_job_records_stage_and_job_metrics_and_correlation(
+    _reset_import_export_metrics,
+):
+    """An in-process import feeds the stage/job metrics, and the polled status carries
+    the correlation id the submitting response echoed as X-Request-ID (AC1/AC3)."""
+    registry = _reset_import_export_metrics
+    body = {
+        "metadata": {
+            "source_kind": "sample",
+            "project": {"name": "Sample", "slug": "sample-api"},
+            "version": {"version_id": "1.0.0"},
+            "options": {},
+        },
+        "document_base64": "aGVsbG8gc2FtcGxl",
+        "filename": "sample.txt",
+    }
+    started = client.post("/v1/tenants/acme/imports", json=body)
+    assert started.status_code == 202, started.text
+    request_id = started.headers["X-Request-ID"]
+    job_id = started.json()["job_id"]
+
+    final = _wait_completed(job_id)
+    assert final["state"] == "completed"
+    # AC3: request → job: the poll payload names the submitting request.
+    assert final["correlation_id"] == request_id
+
+    snap = registry.snapshot()
+    stages = snap["stages"]["import"]
+    for stage in ("intake", "parse", "normalize", "lint", "finalize"):
+        assert stages[stage]["completed"]["count"] >= 1, stage
+        assert stages[stage]["completed"]["total_duration_ms"] >= 0
+    # AC1: the terminal job total is keyed by the adapter, with the source bytes.
+    job_cell = snap["jobs"]["import"]["sample"]["sample"]["completed"]
+    assert job_cell["count"] == 1
+    assert job_cell["bytes_in_total"] == len(b"hello sample")
+    assert job_cell["total_duration_ms"] > 0
+
+
+def test_failed_import_counts_the_taxonomy_code_and_returns_the_correlation_id(
+    _reset_import_export_metrics,
+):
+    """A failed import increments failures.import.<code>.<adapter> and the error the
+    caller polls carries the correlation id (AC2/AC3)."""
+    registry = _reset_import_export_metrics
+    body = {
+        "metadata": {
+            "source_kind": "asyncapi",
+            "project": {"name": "Broken", "slug": "broken-api"},
+            "version": {"version_id": "1.0.0"},
+            "options": {},
+        },
+        # "hello sample" — not an AsyncAPI document in any encoding.
+        "document_base64": "aGVsbG8gc2FtcGxl",
+        "filename": "broken.yaml",
+    }
+    started = client.post("/v1/tenants/acme/imports", json=body)
+    assert started.status_code == 202, started.text
+    request_id = started.headers["X-Request-ID"]
+
+    final = _wait_completed(started.json()["job_id"])
+    assert final["state"] == "failed"
+    error = final["error"]
+    assert error is not None
+
+    from app.intake_error_taxonomy import INTAKE_ERROR_TAXONOMY
+
+    assert error["code"] in INTAKE_ERROR_TAXONOMY
+    # AC3: the failure names the submitting request, structurally.
+    assert error["correlation_id"] == request_id
+    assert final["correlation_id"] == request_id
+
+    # AC2: the failure counter is keyed by taxonomy code and adapter.
+    failures = registry.snapshot()["failures"]["import"]
+    assert failures[error["code"]]["asyncapi"] == 1
+
+
+async def test_worker_phase_timings_are_ingested_once_despite_redelivery(
+    _reset_import_export_metrics,
+):
+    """A worker PHASE_TIMING event streamed twice (partial snapshot + final snapshot)
+    lands in the stage metrics exactly once — the event-id dedupe is the metrics seam
+    (AC1, no double counting)."""
+    from app import spec_import_engine as sie
+    from app.models import SpecImportJobStatus
+
+    registry = _reset_import_export_metrics
+    job_id = "test-worker-job"
+    sie._jobs[job_id] = sie._JobRecord(
+        tenant_slug="acme",
+        job_id=job_id,
+        state="running",
+        status=SpecImportJobStatus(job_id=job_id, state="running", percent=10),
+        correlation_id="req-worker-1",
+    )
+    snapshot = {
+        "job_id": job_id,
+        "state": "running",
+        "percent": 40,
+        "events": [
+            {
+                "id": "w-1",
+                "ts": 0,
+                "level": "info",
+                "code": "PHASE_TIMING",
+                "message": "Phase phase:importPaths completed in 12.5ms",
+                "context": {"phase": "phase:importPaths", "ms": 12.5},
+            }
+        ],
+    }
+    from unittest.mock import AsyncMock, patch
+
+    with patch.object(sie, "_mirror_job", new=AsyncMock()):
+        await sie._apply_streaming_spec_import_status(job_id, snapshot)
+        # Redelivery: the final snapshot carries the same event id again.
+        await sie._apply_streaming_spec_import_status(job_id, snapshot)
+
+    cell = registry.snapshot()["stages"]["import"]["phase:importPaths"]["completed"]
+    assert cell["count"] == 1
+    assert cell["total_duration_ms"] == 12.5
+    # The engine stamped the correlation id onto the worker-produced status.
+    assert sie._jobs[job_id].status.correlation_id == "req-worker-1"

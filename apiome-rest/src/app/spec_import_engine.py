@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import shutil
+import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -33,6 +34,7 @@ from .import_source_pipeline import (
     build_job_error,
     run_adapter_import_job,
 )
+from .logging_config import bind_contextvars
 from .models import (
     SpecImportCommitResponse,
     SpecImportEvent,
@@ -96,6 +98,11 @@ def _log_import_events(events: List[SpecImportEvent], job_id: str) -> None:
 
     Phase/milestone and benchmark events go to INFO; warnings/errors to their level; the
     high-cardinality per-row DEBUG_* events go to DEBUG to keep the running log readable.
+
+    ``PHASE_TIMING`` events additionally feed the IXH-6.6 stage metrics here — this is
+    the one seam every fresh event passes exactly once (``_take_new_import_events``
+    dedupes across streamed snapshots), so the worker path and the in-process adapter
+    path converge on the same per-stage aggregates without double counting.
     """
     for ev in events:
         code = ev.code or ""
@@ -108,6 +115,30 @@ def _log_import_events(events: List[SpecImportEvent], job_id: str) -> None:
             logger.info(line)
         else:
             logger.debug(line)
+        if code == "PHASE_TIMING":
+            _record_phase_timing_metric(ev)
+
+
+def _record_phase_timing_metric(ev: SpecImportEvent) -> None:
+    """Feed one ``PHASE_TIMING`` event into the stage metrics (best-effort)."""
+    context = ev.context if isinstance(ev.context, dict) else None
+    if not context:
+        return
+    try:
+        duration_ms = float(context.get("ms"))
+    except (TypeError, ValueError):
+        return
+    try:
+        from .import_export_metrics import import_export_metrics
+
+        import_export_metrics.record_stage(
+            kind="import",
+            stage=str(context.get("phase") or ""),
+            duration_ms=duration_ms,
+            outcome=str(context.get("outcome") or "completed"),
+        )
+    except Exception:  # noqa: BLE001 - metrics must never affect the job
+        logger.debug("Failed to record import stage metric", exc_info=True)
 
 
 def _capture_version_quality_score(
@@ -311,6 +342,33 @@ class _JobRecord:
     rollback_response: Optional[SpecImportRollbackResponse] = None
     # IDs of import events already written to the REST log (dedupe across streamed snapshots).
     logged_event_ids: set = field(default_factory=set)
+    # IXH-6.6: correlation id of the request that started the job (the middleware-minted
+    # request id), stamped onto every stored status so pollers and log lines agree.
+    correlation_id: Optional[str] = None
+    # IXH-6.6: whole-job wall clock + source size for the terminal job metrics.
+    started_monotonic: float = 0.0
+    bytes_in: Optional[int] = None
+
+
+def _set_status(
+    rec: _JobRecord, status: SpecImportJobStatus, *, state: Optional[str] = None
+) -> None:
+    """Store a status on the record, stamping the job's correlation id (IXH-6.6).
+
+    Statuses are rebuilt wholesale by the in-process pipeline and by the tsx worker —
+    neither of which knows the REST correlation id — so the engine stamps it at the one
+    place every status passes before a poller or the shared-store mirror can see it.
+
+    Args:
+        rec: The in-memory job record (caller holds ``_jobs_lock``).
+        status: The new poll payload.
+        state: Optional state override (e.g. ``canceled`` while the status says else).
+    """
+    status.correlation_id = rec.correlation_id
+    if status.error is not None and not status.error.correlation_id:
+        status.error.correlation_id = rec.correlation_id
+    rec.state = state or status.state
+    rec.status = status
 
 
 _jobs: Dict[str, _JobRecord] = {}
@@ -447,7 +505,10 @@ def _build_worker_payload(
 
 
 def _default_result_status(
-    job_id: str, message: str, code: str = "WORKER_ERROR"
+    job_id: str,
+    message: str,
+    code: str = "WORKER_ERROR",
+    correlation_id: Optional[str] = None,
 ) -> SpecImportJobStatus:
     return SpecImportJobStatus(
         job_id=job_id,
@@ -464,8 +525,9 @@ def _default_result_status(
             }
         ],
         # IXH-1.3: every terminal failure carries a stable taxonomy code +
-        # remediation, keyed off the engine's legacy event code.
-        error=build_job_error(code, message, correlation_id=job_id),
+        # remediation, keyed off the engine's legacy event code. The request
+        # correlation id (IXH-6.6) rides along when known; job id otherwise.
+        error=build_job_error(code, message, correlation_id=correlation_id or job_id),
     )
 
 
@@ -504,8 +566,7 @@ async def _apply_streaming_spec_import_status(job_id: str, status_raw: Dict[str,
         rec = _jobs.get(job_id)
         if rec is None or rec.cancel_requested:
             return
-        rec.state = status.state
-        rec.status = status
+        _set_status(rec, status)
         fresh_events = _take_new_import_events(rec, status)
     # Log outside the lock (logging handlers can block); surfaces benchmark phases live.
     _log_import_events(fresh_events, job_id)
@@ -673,8 +734,7 @@ async def _run_inprocess_adapter_job(
             rec = _jobs.get(job_id)
             if rec is None or rec.cancel_requested:
                 return
-            rec.state = status.state
-            rec.status = status
+            _set_status(rec, status)
             fresh = _take_new_import_events(rec, status)
         _log_import_events(fresh, job_id)
         await _mirror_job(job_id)
@@ -693,8 +753,13 @@ async def _run_inprocess_adapter_job(
             rec = _jobs.get(job_id)
             if rec is None:
                 return
-            rec.state = "failed"
-            rec.status = _default_result_status(job_id, str(e), code="ADAPTER_EXCEPTION")
+            _set_status(
+                rec,
+                _default_result_status(
+                    job_id, str(e), code="ADAPTER_EXCEPTION",
+                    correlation_id=rec.correlation_id,
+                ),
+            )
         return
 
     async with _jobs_lock:
@@ -702,28 +767,90 @@ async def _run_inprocess_adapter_job(
         if rec is None:
             return
         if rec.cancel_requested and final.state != "canceled":
-            rec.state = "canceled"
-            rec.status = SpecImportJobStatus(job_id=job_id, state="canceled", percent=0)
+            _set_status(
+                rec, SpecImportJobStatus(job_id=job_id, state="canceled", percent=0)
+            )
             return
-        rec.state = final.state
-        rec.status = final
+        _set_status(rec, final)
         rec.commit_response = _maybe_build_commit_response(job_id, final)
         fresh = _take_new_import_events(rec, final)
     _log_import_events(fresh, job_id)
 
 
 async def _drive_job(job_id: str, payload: Dict[str, Any]) -> None:
+    """Drive a job to a terminal state, then record its IXH-6.6 job metrics.
+
+    The wrapper (not the pipeline) owns the whole-job wall clock and the terminal
+    metrics because it is the one seam every path exits through — worker faults,
+    in-process failures, engine faults, and cancels alike.
+    """
+    rec = _jobs.get(job_id)
+    if rec is not None:
+        # Deterministic log correlation: the create_task context snapshot already
+        # carries the request contextvars, but an explicit bind survives refactors.
+        bind_contextvars(request_id=rec.correlation_id, import_job_id=job_id)
+        rec.started_monotonic = time.monotonic()
+    try:
+        await _drive_job_inner(job_id, payload)
+    finally:
+        _record_terminal_import_metrics(job_id, payload)
+
+
+def _record_terminal_import_metrics(job_id: str, payload: Dict[str, Any]) -> None:
+    """Record the terminal job total (and failure counter) for one import (best-effort)."""
+    try:
+        rec = _jobs.get(job_id)
+        if rec is None:
+            return
+        status = rec.status
+        state = status.state
+        if state in ("completed", "pending-approval"):
+            outcome = "completed"
+        elif state == "canceled":
+            outcome = "canceled"
+        else:
+            outcome = "failed"
+        raw_kind = str(((payload.get("metadata") or {}).get("source_kind")) or "")
+        adapter = resolve_import_source_key(raw_kind) or raw_kind
+        duration_ms: Optional[float] = None
+        if rec.started_monotonic:
+            duration_ms = (time.monotonic() - rec.started_monotonic) * 1000.0
+
+        from .import_export_metrics import import_export_metrics
+
+        import_export_metrics.record_job(
+            kind="import",
+            adapter_or_target=adapter,
+            format_key=adapter,
+            outcome=outcome,
+            duration_ms=duration_ms,
+            bytes_in=rec.bytes_in,
+        )
+        if outcome == "failed" and status.error is not None:
+            import_export_metrics.record_failure(
+                kind="import",
+                code=status.error.code,
+                adapter_or_target=adapter,
+                format_key=adapter,
+            )
+    except Exception:  # noqa: BLE001 - metrics must never affect the job
+        logger.debug("Failed to record terminal import metrics", exc_info=True)
+
+
+async def _drive_job_inner(job_id: str, payload: Dict[str, Any]) -> None:
     async with _jobs_lock:
         rec = _jobs.get(job_id)
         if rec is None:
             return
         if rec.cancel_requested:
-            rec.state = "canceled"
-            rec.status = SpecImportJobStatus(job_id=job_id, state="canceled", percent=0)
+            _set_status(
+                rec, SpecImportJobStatus(job_id=job_id, state="canceled", percent=0)
+            )
             canceled = True
         else:
-            rec.state = "running"
-            rec.status = SpecImportJobStatus(job_id=job_id, state="running", percent=0)
+            _set_status(
+                rec, SpecImportJobStatus(job_id=job_id, state="running", percent=0)
+            )
             canceled = False
     await _mirror_job(job_id)
     if canceled:
@@ -748,8 +875,13 @@ async def _drive_job(job_id: str, payload: Dict[str, Any]) -> None:
             rec = _jobs.get(job_id)
             if rec is None:
                 return
-            rec.state = "failed"
-            rec.status = _default_result_status(job_id, message, code="ADAPTER_UNAVAILABLE")
+            _set_status(
+                rec,
+                _default_result_status(
+                    job_id, message, code="ADAPTER_UNAVAILABLE",
+                    correlation_id=rec.correlation_id,
+                ),
+            )
         await _mirror_job(job_id)
         return
 
@@ -761,8 +893,13 @@ async def _drive_job(job_id: str, payload: Dict[str, Any]) -> None:
             rec = _jobs.get(job_id)
             if rec is None:
                 return
-            rec.state = "failed"
-            rec.status = _default_result_status(job_id, str(e), code="WORKER_EXCEPTION")
+            _set_status(
+                rec,
+                _default_result_status(
+                    job_id, str(e), code="WORKER_EXCEPTION",
+                    correlation_id=rec.correlation_id,
+                ),
+            )
         await _mirror_job(job_id)
         return
 
@@ -772,8 +909,9 @@ async def _drive_job(job_id: str, payload: Dict[str, Any]) -> None:
             return
         canceled = rec.cancel_requested
         if canceled:
-            rec.state = "canceled"
-            rec.status = SpecImportJobStatus(job_id=job_id, state="canceled", percent=0)
+            _set_status(
+                rec, SpecImportJobStatus(job_id=job_id, state="canceled", percent=0)
+            )
     if canceled:
         await _mirror_job(job_id)
         return
@@ -784,8 +922,12 @@ async def _drive_job(job_id: str, payload: Dict[str, Any]) -> None:
             rec = _jobs.get(job_id)
             if rec is None:
                 return
-            rec.state = "failed"
-            rec.status = _default_result_status(job_id, msg, code="WORKER_FAILED")
+            _set_status(
+                rec,
+                _default_result_status(
+                    job_id, msg, code="WORKER_FAILED", correlation_id=rec.correlation_id
+                ),
+            )
         await _mirror_job(job_id)
         return
 
@@ -795,9 +937,14 @@ async def _drive_job(job_id: str, payload: Dict[str, Any]) -> None:
             rec = _jobs.get(job_id)
             if rec is None:
                 return
-            rec.state = "failed"
-            rec.status = _default_result_status(
-                job_id, "Worker returned ok but no status object", code="BAD_WORKER_PAYLOAD"
+            _set_status(
+                rec,
+                _default_result_status(
+                    job_id,
+                    "Worker returned ok but no status object",
+                    code="BAD_WORKER_PAYLOAD",
+                    correlation_id=rec.correlation_id,
+                ),
             )
         await _mirror_job(job_id)
         return
@@ -810,9 +957,14 @@ async def _drive_job(job_id: str, payload: Dict[str, Any]) -> None:
             rec = _jobs.get(job_id)
             if rec is None:
                 return
-            rec.state = "failed"
-            rec.status = _default_result_status(
-                job_id, f"Invalid job status from worker: {e}", code="INVALID_STATUS"
+            _set_status(
+                rec,
+                _default_result_status(
+                    job_id,
+                    f"Invalid job status from worker: {e}",
+                    code="INVALID_STATUS",
+                    correlation_id=rec.correlation_id,
+                ),
             )
         await _mirror_job(job_id)
         return
@@ -821,8 +973,7 @@ async def _drive_job(job_id: str, payload: Dict[str, Any]) -> None:
         rec = _jobs.get(job_id)
         if rec is None:
             return
-        rec.state = status.state
-        rec.status = status
+        _set_status(rec, status)
         rec.commit_response = _maybe_build_commit_response(job_id, status)
         tenant_slug = rec.tenant_slug
         # Final snapshot carries any events not seen in streamed partials (notably the
@@ -843,6 +994,24 @@ async def _drive_job(job_id: str, payload: Dict[str, Any]) -> None:
             )
 
 
+def _current_correlation_id(job_id: str) -> str:
+    """The request id the observability middleware bound, else the job id.
+
+    Read from the structlog contextvars (IXH-6.6) so no route signature changes:
+    ``schedule_*`` always runs inside the submitting request's context. The job-id
+    fallback keeps non-HTTP callers (tests, tools) correlated by *something*.
+    """
+    try:
+        from structlog.contextvars import get_contextvars
+
+        value = get_contextvars().get("request_id")
+        if isinstance(value, str) and value:
+            return value
+    except Exception:  # noqa: BLE001 - correlation must never fail scheduling
+        pass
+    return job_id
+
+
 async def schedule_spec_import(
     tenant_slug: str,
     tenant_id: str,
@@ -850,6 +1019,7 @@ async def schedule_spec_import(
     body: SpecImportStartJsonRequest,
 ) -> SpecImportJobAccepted:
     job_id = str(uuid.uuid4())
+    correlation_id = _current_correlation_id(job_id)
     payload = _build_worker_payload(
         rest_job_id=job_id,
         tenant_slug=tenant_slug,
@@ -857,13 +1027,19 @@ async def schedule_spec_import(
         user_id=user_id,
         body=body,
     )
-    initial = SpecImportJobStatus(job_id=job_id, state="queued", percent=0)
+    payload["correlation_id"] = correlation_id
+    initial = SpecImportJobStatus(
+        job_id=job_id, state="queued", percent=0, correlation_id=correlation_id
+    )
     async with _jobs_lock:
         _jobs[job_id] = _JobRecord(
             tenant_slug=tenant_slug,
             job_id=job_id,
             state="queued",
             status=initial,
+            correlation_id=correlation_id,
+            # Base64 arithmetic sizes the source without re-decoding it (IXH-6.6).
+            bytes_in=(len(body.document_base64) * 3) // 4 if body.document_base64 else None,
         )
     # Mirror the initial 'queued' row before returning 202 so the very first poll — which
     # round-robin may route to any instance — already finds the job in the shared store.
@@ -924,6 +1100,7 @@ async def schedule_spec_import_from_path(
 ) -> SpecImportJobAccepted:
     """Schedule an import whose document already lives on a bounded tempfile."""
     job_id = str(uuid.uuid4())
+    correlation_id = _current_correlation_id(job_id)
     payload: Dict[str, Any] = {
         "rest_job_id": job_id,
         "tenant_slug": tenant_slug,
@@ -933,14 +1110,23 @@ async def schedule_spec_import_from_path(
         "document_path": document_path,
         "filename": filename,
         "content_type": content_type,
+        "correlation_id": correlation_id,
     }
-    initial = SpecImportJobStatus(job_id=job_id, state="queued", percent=0)
+    try:
+        bytes_in: Optional[int] = os.path.getsize(document_path)
+    except OSError:
+        bytes_in = None
+    initial = SpecImportJobStatus(
+        job_id=job_id, state="queued", percent=0, correlation_id=correlation_id
+    )
     async with _jobs_lock:
         _jobs[job_id] = _JobRecord(
             tenant_slug=tenant_slug,
             job_id=job_id,
             state="queued",
             status=initial,
+            correlation_id=correlation_id,
+            bytes_in=bytes_in,
         )
     await _mirror_job(job_id)
     asyncio.create_task(_drive_job(job_id, payload))

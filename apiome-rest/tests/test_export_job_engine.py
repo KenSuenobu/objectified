@@ -1308,3 +1308,122 @@ async def test_delivery_warnings_are_logged_and_carried_on_the_result():
     warn_events = [e for e in status["events"] if e["level"] == "warn"]
     assert [e["code"] for e in warn_events] == ["DELIVERY_SOURCE_ERRORS_OPEN"]
     assert result["download_path"].endswith("/download")
+
+
+# ---------------------------------------------------------------------------
+# IXH-6.6: observability — stage metrics, failure counters, correlation ids
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def _reset_import_export_metrics():
+    from app.import_export_metrics import import_export_metrics
+
+    import_export_metrics.reset()
+    yield import_export_metrics
+    import_export_metrics.reset()
+
+
+async def _wait_for_job_totals(registry) -> dict:
+    """The terminal job metric lands in the driver wrapper's ``finally``, moments after
+    the terminal state becomes pollable — wait briefly for it."""
+    for _ in range(200):
+        jobs = registry.snapshot()["jobs"].get("export")
+        if jobs:
+            return jobs
+        await asyncio.sleep(0.01)
+    raise AssertionError("terminal export job metrics never landed")
+
+
+async def test_completed_export_records_all_stages_bytes_and_the_job_total(
+    _reset_import_export_metrics,
+):
+    """An end-to-end export times every pipeline stage and records a job total with
+    bytes_out from the packaged artifact, keyed by the resolved target (AC1)."""
+    registry = _reset_import_export_metrics
+    request = ExportJobStartRequest(artifact="artifact-1", target="openapi")
+    with patch("app.export_job_engine.load_export_source", return_value=_source()):
+        accepted = await schedule_export_job(TENANT_SLUG, TENANT_ID, request)
+        status = await _wait_terminal(accepted.job_id)
+    assert status["state"] == "completed"
+
+    snap = registry.snapshot()
+    stages = snap["stages"]["export"]
+    for stage in (
+        "loading-source",
+        "analyzing-fidelity",
+        "emitting",
+        "validating",
+        "packaging",
+    ):
+        assert stages[stage]["completed"]["count"] == 1, stage
+        assert stages[stage]["completed"]["total_duration_ms"] >= 0
+
+    # The submitted alias "openapi" is normalized to the canonical emit format key.
+    jobs = await _wait_for_job_totals(registry)
+    (target_key,) = jobs.keys()
+    assert target_key.startswith("openapi")
+    cell = jobs[target_key][target_key]["completed"]
+    assert cell["count"] == 1
+    assert cell["bytes_out_total"] == status["result"]["files"][0]["size_bytes"]
+    assert cell["total_duration_ms"] > 0
+
+
+async def test_failed_export_counts_the_taxonomy_code_and_carries_the_correlation_id(
+    _reset_import_export_metrics,
+):
+    """A failed export increments failures.export.<code>.<target> and both the status
+    and its structured error name the correlation id (AC2/AC3)."""
+    registry = _reset_import_export_metrics
+    request = ExportJobStartRequest(artifact="missing", target="openapi")
+    with patch(
+        "app.export_job_engine.load_export_source",
+        side_effect=ExportSourceError("Artifact 'missing' was not found.", status_code=404),
+    ):
+        accepted = await schedule_export_job(TENANT_SLUG, TENANT_ID, request)
+        status = await _wait_terminal(accepted.job_id)
+
+    assert status["state"] == "failed"
+    assert status["error"]["code"] == "SOURCE_LOAD_FAILED"
+    # AC3: outside a request context the correlation id falls back to the job id —
+    # still one id linking the poll payload, the error, and every job log line.
+    assert status["correlation_id"] == accepted.job_id
+    assert status["error"]["correlation_id"] == accepted.job_id
+
+    failures = registry.snapshot()["failures"]["export"]
+    (target_key,) = failures["SOURCE_LOAD_FAILED"].keys()
+    assert target_key.startswith("openapi")
+    assert failures["SOURCE_LOAD_FAILED"][target_key] == 1
+    # The failed job also lands in the job totals under its outcome.
+    jobs = await _wait_for_job_totals(registry)
+    assert jobs[target_key][target_key]["failed"]["count"] == 1
+
+
+async def test_canceled_export_closes_the_inflight_stage_as_canceled(
+    _reset_import_export_metrics,
+):
+    """Cancellation closes whichever stage was running under outcome=canceled (AC1)."""
+    import threading
+
+    registry = _reset_import_export_metrics
+    started = threading.Event()
+    release = threading.Event()
+
+    # Block inside stage 1 (loading-source) so the cancel lands mid-stage; the loader
+    # runs in a worker thread, so threading events are the right synchronization.
+    def _blocking_load(*args, **kwargs):
+        started.set()
+        release.wait(timeout=5)
+        return _source()
+
+    request = ExportJobStartRequest(artifact="artifact-1", target="openapi")
+    with patch("app.export_job_engine.load_export_source", side_effect=_blocking_load):
+        accepted = await schedule_export_job(TENANT_SLUG, TENANT_ID, request)
+        await asyncio.wait_for(asyncio.to_thread(started.wait, 5), timeout=6)
+        await cancel_export_job(TENANT_SLUG, accepted.job_id)
+        release.set()
+        status = await _wait_terminal(accepted.job_id)
+
+    assert status["state"] == "canceled"
+    stages = registry.snapshot()["stages"].get("export", {})
+    assert stages.get("loading-source", {}).get("canceled", {}).get("count") == 1

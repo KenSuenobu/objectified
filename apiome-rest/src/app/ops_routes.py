@@ -31,6 +31,7 @@ from .auth import validate_authentication
 from .backup_status import collect_backup_status
 from .config import settings
 from .database import db
+from .import_export_metrics import import_export_metrics
 from .observability import metrics
 from .permissions import enforce_platform_admin
 from .toolchain_packaging import probe_all, verify_tool
@@ -96,6 +97,10 @@ def _metrics_payload() -> Dict[str, Any]:
         # reason category, sensitive reads, page serves. Counts only — never payload content —
         # so the ops dashboard can reveal analyzer failures without seeing what was analysed.
         "catalog_analysis": analysis_telemetry.snapshot(),
+        # Import/export pipeline observability (IXH-6.6): per-stage duration histograms and
+        # byte totals, job totals by adapter/target×format×outcome, and failure counters by
+        # taxonomy code. Closed-vocabulary tags only — never a tenant, job, or free-text tag.
+        "import_export": import_export_metrics.snapshot(),
     }
 
 
@@ -112,6 +117,29 @@ async def ops_metrics(auth_data: Dict[str, Any] = Depends(validate_authenticatio
     """Operational request metrics (request rate, error rate, latency). Platform-admin only."""
     enforce_platform_admin(db, auth_data)
     return JSONResponse(content=_metrics_payload())
+
+
+@ops_router.get("/import-export")
+async def ops_import_export(
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> JSONResponse:
+    """Import/export pipeline observability aggregates (IXH-6.6). Platform-admin only.
+
+    The full operator view of the three metric families — per-stage duration histograms
+    and byte totals, terminal job totals keyed by adapter/target × format × outcome, and
+    failure counters keyed by the IXH-6.4 taxonomy code — plus the complete documented
+    tag set every key is drawn from. Aggregates are in-process: per replica, reset on
+    restart (same posture as ``/v1/ops/metrics``); durable per-job timing evidence lives
+    in each job's ``PHASE_TIMING`` events in the shared job store.
+    """
+    enforce_platform_admin(db, auth_data)
+    return JSONResponse(
+        content={
+            "import_export": import_export_metrics.snapshot(),
+            "documented_tags": import_export_metrics.documented_tags(),
+            "scope": {"per_replica": True, "resets_on_restart": True},
+        }
+    )
 
 
 @ops_router.get("/backups")
@@ -263,6 +291,43 @@ def _render_dashboard_html(snapshot: Dict[str, Any], request_id_header: str) -> 
     if (b.latest && b.latest.created_at) backupNodes.push(row('latest', b.latest.created_at));
     cards.appendChild(card('Backups', backupNodes));
     cards.appendChild(card('Uptime', [bigMetric(Math.round((m.uptime_seconds ?? 0)) + 's')]));
+    // Import/export pipeline aggregates (IXH-6.6): job counts by kind and outcome, byte
+    // totals, and the top failure codes. All values via textContent, like every card above.
+    const ie = m.import_export || {{}};
+    const jobNodes = [];
+    let jobTotal = 0;
+    for (const kind of ['import', 'export']) {{
+      const outcomes = {{}};
+      let bytesIn = 0, bytesOut = 0;
+      for (const byFormat of Object.values((ie.jobs || {{}})[kind] || {{}})) {{
+        for (const byOutcome of Object.values(byFormat)) {{
+          for (const [outcome, cell] of Object.entries(byOutcome)) {{
+            outcomes[outcome] = (outcomes[outcome] || 0) + (cell.count || 0);
+            jobTotal += cell.count || 0;
+            bytesIn += cell.bytes_in_total || 0;
+            bytesOut += cell.bytes_out_total || 0;
+          }}
+        }}
+      }}
+      for (const [outcome, count] of Object.entries(outcomes)) {{
+        jobNodes.push(row(kind + ' ' + outcome, count));
+      }}
+      if (bytesIn) jobNodes.push(row(kind + ' bytes in', bytesIn));
+      if (bytesOut) jobNodes.push(row(kind + ' bytes out', bytesOut));
+    }}
+    cards.appendChild(card('Import/Export jobs', [bigMetric(jobTotal), ...jobNodes]));
+    const failNodes = [];
+    const failCounts = [];
+    for (const kind of ['import', 'export']) {{
+      for (const [code, byAdapter] of Object.entries((ie.failures || {{}})[kind] || {{}})) {{
+        const total = Object.values(byAdapter).reduce((a, b) => a + b, 0);
+        failCounts.push([kind + ' ' + code, total]);
+      }}
+    }}
+    failCounts.sort((a, b) => b[1] - a[1]);
+    for (const [label, total] of failCounts.slice(0, 8)) failNodes.push(row(label, total));
+    const failTotal = failCounts.reduce((a, [, n]) => a + n, 0);
+    cards.appendChild(card('Import/Export failures', [bigMetric(failTotal), ...failNodes]));
   }}
   render(INITIAL);
   async function refresh() {{

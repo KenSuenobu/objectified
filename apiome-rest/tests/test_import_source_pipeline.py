@@ -69,7 +69,8 @@ async def test_sample_adapter_runs_end_to_end() -> None:
     assert final.summary["persisted"] is False
 
     # Each phase emitted an event, accumulated across snapshots (final carries them all).
-    codes = [e.code for e in final.events]
+    # PHASE_TIMING events (IXH-6.6) interleave; the milestone order itself is unchanged.
+    codes = [e.code for e in final.events if e.code != "PHASE_TIMING"]
     assert codes == [
         "ADAPTER_INIT",
         "PARSE_OK",
@@ -81,6 +82,24 @@ async def test_sample_adapter_runs_end_to_end() -> None:
         "LINT_COMPLETED",
         "IMPORT_COMPLETED",
     ]
+
+    # IXH-6.6: every stage timed itself with a closed phase name and a numeric duration,
+    # in the same event shape the tsx worker emits.
+    timings = [e for e in final.events if e.code == "PHASE_TIMING"]
+    timed_phases = [e.context["phase"] for e in timings]
+    assert timed_phases == [
+        "intake",
+        "remote-refs",
+        "parse",
+        "analyze",
+        "normalize",
+        "route",
+        "version",
+        "lint",
+        "finalize",
+    ]
+    assert all(isinstance(e.context["ms"], (int, float)) for e in timings)
+    assert all(e.context["outcome"] == "completed" for e in timings)
 
 
 async def test_snapshots_report_monotonic_progress() -> None:
@@ -146,6 +165,31 @@ async def test_parse_error_yields_failed_status() -> None:
     final = await run_adapter_import_job(_ParseBoomSource(), _payload("x"))
     assert final.state == "failed"
     assert any(e.code == "PARSE_ERROR" and "cannot parse" in e.message for e in final.events)
+
+
+async def test_parse_failure_times_the_failed_phase_and_carries_the_correlation_id() -> None:
+    """IXH-6.6: a failed stage still records its timing (outcome=failed), and the
+    structural correlation id on the error is the one the engine put in the payload."""
+    payload = _payload("x")
+    payload["correlation_id"] = "req-abc123"
+    final = await run_adapter_import_job(_ParseBoomSource(), payload)
+
+    assert final.state == "failed"
+    timings = [e for e in final.events if e.code == "PHASE_TIMING"]
+    assert timings, "a failed run must still time the in-flight phase"
+    failed_timing = timings[-1]
+    assert failed_timing.context["outcome"] == "failed"
+    assert failed_timing.context["phase"] == "parse"
+    assert isinstance(failed_timing.context["ms"], (int, float))
+    assert final.error is not None
+    assert final.error.correlation_id == "req-abc123"
+
+
+async def test_correlation_id_falls_back_to_the_job_id() -> None:
+    """A payload scheduled outside a request context still correlates by job id."""
+    final = await run_adapter_import_job(_ParseBoomSource(), _payload("x"))
+    assert final.error is not None
+    assert final.error.correlation_id == "job-1"
 
 
 class _NormalizeBoomSource(_ParseBoomSource):

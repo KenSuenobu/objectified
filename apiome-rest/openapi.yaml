@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.109.0
+  version: 1.110.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -47347,6 +47347,78 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for ops metricsresponse422.
+  /v1/ops/import-export:
+    get:
+      tags:
+      - ops
+      summary: Ops Import Export
+      description: 'Import/export pipeline observability aggregates (IXH-6.6). Platform-admin
+        only.
+
+
+        The full operator view of the three metric families — per-stage duration histograms
+
+        and byte totals, terminal job totals keyed by adapter/target × format × outcome,
+        and
+
+        failure counters keyed by the IXH-6.4 taxonomy code — plus the complete documented
+
+        tag set every key is drawn from. Aggregates are in-process: per replica, reset
+        on
+
+        restart (same posture as ``/v1/ops/metrics``); durable per-job timing evidence
+        lives
+
+        in each job''s ``PHASE_TIMING`` events in the shared job store.'
+      operationId: ops_import_export_v1_ops_import_export_get
+      parameters:
+      - name: tenant_slug
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Ops Import Exportauthorization schema.
+          - type: 'null'
+            description: Ops Import Exportauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Ops Import Export Xapikey schema.
+          - type: 'null'
+            description: Ops Import Export Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for ops import export.
+          content:
+            application/json:
+              schema:
+                description: Response payload for ops import exportresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for ops import exportresponse422.
   /v1/ops/backups:
     get:
       tags:
@@ -55756,7 +55828,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-02T20:04:40Z'
+          example: '2026-08-02T22:30:58Z'
         envelope:
           additionalProperties: true
           type: object
@@ -57399,6 +57471,16 @@ components:
           title: Context
           description: Structured detail (e.g. an upstream ``status_code`` or guard
             reasons).
+        correlation_id:
+          anyOf:
+          - type: string
+            description: Export Job Error schema.
+          - type: 'null'
+            description: Export Job Error schema.
+          title: Correlation Id
+          description: Correlation id of the request that started the job (IXH-6.6)
+            — equal to the X-Request-ID echoed on the submitting 202 response. Quote
+            it in bug reports; it links the failure to every log line the job emitted.
       additionalProperties: false
       type: object
       required:
@@ -57925,6 +58007,16 @@ components:
             description: Export Job schema.
           description: Structured failure detail; set only in the ``failed`` terminal
             state.
+        correlation_id:
+          anyOf:
+          - type: string
+            description: Export Job schema.
+          - type: 'null'
+            description: Export Job schema.
+          title: Correlation Id
+          description: Correlation id of the request that started the job (IXH-6.6);
+            matches the X-Request-ID of the submitting request and every log line
+            the job emitted.
       type: object
       required:
       - job_id
@@ -82269,7 +82361,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-02T20:04:40Z'
+          example: '2026-08-02T22:30:58Z'
       additionalProperties: false
       type: object
       required:
@@ -86199,6 +86291,16 @@ components:
           description: Whether retrying the identical request may succeed without
             changing the input.
           example: false
+        correlation_id:
+          anyOf:
+          - type: string
+            description: Spec Import Job Error schema.
+          - type: 'null'
+            description: Spec Import Job Error schema.
+          title: Correlation Id
+          description: Correlation id of the request that started the job (IXH-6.6)
+            — equal to the X-Request-ID echoed on the submitting 202 response. Quote
+            it in bug reports; it links the failure to every log line the job emitted.
       additionalProperties: false
       type: object
       required:
@@ -86410,6 +86512,16 @@ components:
             description: Spec Import Job schema.
           description: 'Populated when state is failed: the stable taxonomy code and
             remediation for the terminal failure.'
+        correlation_id:
+          anyOf:
+          - type: string
+            description: Spec Import Job schema.
+          - type: 'null'
+            description: Spec Import Job schema.
+          title: Correlation Id
+          description: Correlation id of the request that started the job (IXH-6.6);
+            matches the X-Request-ID of the submitting request and every log line
+            the job emitted.
       type: object
       required:
       - job_id
@@ -93537,13 +93649,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-02T20:04:40Z'
+          example: '2026-08-02T22:30:58Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-02T20:04:40Z'
+          example: '2026-08-02T22:30:58Z'
         outcome:
           anyOf:
           - type: string
