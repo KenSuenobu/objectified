@@ -3,9 +3,14 @@
 The DB layer is mocked (patched on ``app.style_guide_routes.db``) so these tests exercise
 the route contract: response shapes (camelCase aliases), admin gating, read-only builtin
 handling, and the error codes the Control Panel screen keys off.
+
+The GOV-1.6 (#4432) revision history and audit surface is covered here too: which mutations
+capture the pre-edit state, which append a revision and with what change kind, which emit a
+``style_guide.*`` audit event, and the two read endpoints over the immutable history.
 """
 
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import psycopg2
@@ -42,6 +47,20 @@ def _admin():
     """Mutations require a tenant admin; default every test to an admin caller."""
     with patch("app.style_guide_routes.db.is_user_tenant_admin", return_value=True):
         yield
+
+
+@pytest.fixture(autouse=True)
+def governance():
+    """Stub the GOV-1.6 (#4432) history/audit seams every mutation now goes through.
+
+    Revision capture and audit writes talk to the DB singleton directly, so they are patched
+    for the whole module (the routes must not reach a database in a contract test) and handed
+    back as mocks for the tests that assert on them.
+    """
+    with patch("app.style_guide_routes.ensure_guide_revision") as ensure, patch(
+        "app.style_guide_routes.record_guide_revision"
+    ) as record, patch("app.style_guide_routes.audit_style_guide_event") as audit:
+        yield SimpleNamespace(ensure=ensure, record=record, audit=audit)
 
 
 def _builtin_row(**over):
@@ -629,3 +648,292 @@ def test_mutations_require_tenant_admin(method, path, body):
         kwargs = {"json": body} if body is not None else {}
         r = getattr(client, method)(path, **kwargs)
     assert r.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# Revisions & audit (GOV-1.6, #4432)
+# ---------------------------------------------------------------------------
+
+REVISION_ID = "00000000-0000-0000-0000-0000000000f4"
+
+
+def _revision_row(**over):
+    """A ``style_guide_revisions`` row as the DB accessors return it."""
+    row = {
+        "id": REVISION_ID,
+        "guide_id": GUIDE_ID,
+        "tenant_id": "t1",
+        "revision_number": 2,
+        "change_kind": "rules_changed",
+        "name": "Payments Guide",
+        "description": "House rules",
+        "external_lint_profile": "baseline",
+        "rules": [
+            {"rule_id": "naming.schema-pascal-case", "enabled": True, "severity": "error"},
+            {"rule_id": "naming.property-name", "enabled": False, "severity": "warning"},
+            {
+                "rule_id": "payments-currency",
+                "enabled": True,
+                "severity": "warning",
+                "custom_def": {"given": "$..currency", "then": {"function": "truthy"}},
+            },
+        ],
+        "policy": {
+            "axisGates": {},
+            "requiredCoverage": ["quality"],
+            "ciOutcomes": {"failOnUnwaivedErrors": True},
+        },
+        "content_fingerprint": "c" * 64,
+        "snapshot_fingerprint": "s" * 64,
+        "actor_user_id": None,
+        "actor_label": "admin@example.com",
+        "created_at": NOW,
+    }
+    row.update(over)
+    return row
+
+
+def test_create_records_the_first_revision_and_audits(governance):
+    with patch(
+        "app.style_guide_routes.db.create_style_guide", return_value=_custom_row()
+    ):
+        r = client.post("/v1/style-guides/acme", json={"name": "Payments Guide"})
+
+    assert r.status_code == 201
+    assert governance.record.call_args.args[:2] == (GUIDE_ID, "t1")
+    assert governance.record.call_args.kwargs["change_kind"] == "created"
+    assert governance.audit.call_args.kwargs["action"] == "style_guide.created"
+    assert governance.audit.call_args.kwargs["target"] == GUIDE_ID
+
+
+def test_update_captures_the_pre_edit_state_before_recording_the_new_one(governance):
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch(
+        "app.style_guide_routes.db.update_style_guide",
+        return_value=_custom_row(name="Renamed"),
+    ), patch("app.style_guide_routes.db.get_style_guide_rules", return_value=[]):
+        r = client.patch(f"/v1/style-guides/acme/{GUIDE_ID}", json={"name": "Renamed"})
+
+    assert r.status_code == 200
+    # The state an edit replaces must be in the history even for guides predating GOV-1.6.
+    governance.ensure.assert_called_once_with(GUIDE_ID, "t1")
+    assert governance.record.call_args.kwargs["change_kind"] == "edited"
+    detail = governance.audit.call_args.kwargs["detail"]
+    assert governance.audit.call_args.kwargs["action"] == "style_guide.updated"
+    assert detail["previousName"] == "Payments Guide"
+    assert detail["name"] == "Renamed"
+
+
+def test_put_rules_captures_records_and_audits(governance):
+    first = builtin_rule_descriptors()[0]
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch(
+        "app.style_guide_routes.db.replace_style_guide_builtin_rules", return_value=True
+    ), patch("app.style_guide_routes.db.get_style_guide_rules", return_value=[]), patch(
+        "app.style_guide_routes.snapshot_style_guide_policy"
+    ):
+        r = client.put(
+            f"/v1/style-guides/acme/{GUIDE_ID}/rules",
+            json={
+                "rules": [
+                    {"ruleId": first.rule_id, "enabled": True, "severity": "error"}
+                ]
+            },
+        )
+
+    assert r.status_code == 200
+    governance.ensure.assert_called_once_with(GUIDE_ID, "t1")
+    assert governance.record.call_args.kwargs["change_kind"] == "rules_changed"
+    assert governance.audit.call_args.kwargs["action"] == "style_guide.rules_updated"
+    assert governance.audit.call_args.kwargs["detail"]["ruleCount"] == 1
+
+
+def test_put_custom_rules_records_and_audits(governance):
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch(
+        "app.style_guide_routes.db.replace_style_guide_custom_rules", return_value=True
+    ), patch("app.style_guide_routes.db.get_style_guide_rules", return_value=[]), patch(
+        "app.style_guide_routes.snapshot_style_guide_policy"
+    ):
+        r = client.put(
+            f"/v1/style-guides/acme/{GUIDE_ID}/custom-rules",
+            json={"yaml": VALID_CUSTOM_YAML},
+        )
+
+    assert r.status_code == 200
+    governance.ensure.assert_called_once_with(GUIDE_ID, "t1")
+    assert governance.record.call_args.kwargs["change_kind"] == "custom_rules_changed"
+    assert (
+        governance.audit.call_args.kwargs["action"] == "style_guide.custom_rules_updated"
+    )
+    assert governance.audit.call_args.kwargs["detail"]["customRuleCount"] == 1
+
+
+def test_delete_audits_the_name_and_records_no_revision(governance):
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch("app.style_guide_routes.db.delete_style_guide", return_value=True):
+        r = client.delete(f"/v1/style-guides/acme/{GUIDE_ID}")
+
+    assert r.status_code == 200
+    # Revisions cascade away with the guide, so the ledger is the surviving evidence.
+    governance.record.assert_not_called()
+    detail = governance.audit.call_args.kwargs["detail"]
+    assert governance.audit.call_args.kwargs["action"] == "style_guide.deleted"
+    assert detail["name"] == "Payments Guide"
+
+
+def test_set_tenant_default_audits_a_tenant_scoped_assignment(governance):
+    with patch(
+        "app.style_guide_routes.db.set_style_guide_tenant_default",
+        return_value=_custom_row(is_default=True),
+    ), patch("app.style_guide_routes.db.get_style_guide_rules", return_value=[]):
+        r = client.put(f"/v1/style-guides/acme/{GUIDE_ID}/default")
+
+    assert r.status_code == 200
+    kwargs = governance.audit.call_args.kwargs
+    assert kwargs["action"] == "style_guide.assigned"
+    assert kwargs["detail"]["scope"] == "tenant"
+    # An assignment changes no guide content, so it is not a revision.
+    governance.record.assert_not_called()
+
+
+def test_assign_project_audits_a_project_scoped_assignment(governance):
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch(
+        "app.style_guide_routes.db.assign_style_guide_to_project", return_value=True
+    ):
+        r = client.put(
+            f"/v1/style-guides/acme/{GUIDE_ID}/assignments/projects/{PROJECT_ID}"
+        )
+
+    assert r.status_code == 200
+    kwargs = governance.audit.call_args.kwargs
+    assert kwargs["action"] == "style_guide.assigned"
+    assert kwargs["target"] == f"{GUIDE_ID}:{PROJECT_ID}"
+    assert kwargs["detail"]["projectId"] == PROJECT_ID
+
+
+def test_unassign_project_audits(governance):
+    with patch(
+        "app.style_guide_routes.db.unassign_style_guide_from_project", return_value=True
+    ):
+        r = client.delete(f"/v1/style-guides/acme/assignments/projects/{PROJECT_ID}")
+
+    assert r.status_code == 200
+    assert governance.audit.call_args.kwargs["action"] == "style_guide.unassigned"
+
+
+def test_failed_mutations_do_not_audit(governance):
+    """A 404 is not a governance event — only changes that happened are recorded."""
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch(
+        "app.style_guide_routes.db.assign_style_guide_to_project", return_value=False
+    ):
+        r = client.put(
+            f"/v1/style-guides/acme/{GUIDE_ID}/assignments/projects/{PROJECT_ID}"
+        )
+
+    assert r.status_code == 404
+    governance.audit.assert_not_called()
+
+
+def test_list_revisions_returns_history_with_rollups(governance):
+    rows = [_revision_row(), _revision_row(revision_number=1, change_kind="created")]
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch(
+        "app.style_guide_routes.db.list_style_guide_revisions", return_value=rows
+    ) as listed:
+        r = client.get(f"/v1/style-guides/acme/{GUIDE_ID}/revisions")
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["count"] == 2
+    assert body["guideId"] == GUIDE_ID
+    newest = body["revisions"][0]
+    assert newest["revisionNumber"] == 2
+    assert newest["changeKind"] == "rules_changed"
+    assert newest["ruleCount"] == 3
+    assert newest["enabledRuleCount"] == 2
+    assert newest["customRuleCount"] == 1
+    assert newest["contentFingerprint"] == "c" * 64
+    assert newest["actorLabel"] == "admin@example.com"
+    # The list projection stays light: no frozen rules until the detail endpoint.
+    assert "rules" not in newest
+    # Reading self-heals a guide that has no history yet.
+    governance.ensure.assert_called_once_with(GUIDE_ID, "t1")
+    listed.assert_called_once_with(GUIDE_ID, "t1", limit=100)
+
+
+def test_list_revisions_is_readable_by_non_admin_members():
+    with patch(
+        "app.style_guide_routes.db.is_user_tenant_admin", return_value=False
+    ), patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch("app.style_guide_routes.db.list_style_guide_revisions", return_value=[]):
+        r = client.get(f"/v1/style-guides/acme/{GUIDE_ID}/revisions")
+    assert r.status_code == 200
+
+
+def test_list_revisions_clamps_the_limit():
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch(
+        "app.style_guide_routes.db.list_style_guide_revisions", return_value=[]
+    ) as listed:
+        r = client.get(f"/v1/style-guides/acme/{GUIDE_ID}/revisions?limit=99999")
+    assert r.status_code == 200
+    assert listed.call_args.kwargs["limit"] == 500
+
+
+def test_list_revisions_missing_guide_404s():
+    with patch("app.style_guide_routes.db.get_style_guide_by_id", return_value=None):
+        r = client.get(f"/v1/style-guides/acme/{GUIDE_ID}/revisions")
+    assert r.status_code == 404
+
+
+def test_get_revision_returns_the_frozen_rules_and_policy():
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch(
+        "app.style_guide_routes.db.get_style_guide_revision", return_value=_revision_row()
+    ):
+        r = client.get(f"/v1/style-guides/acme/{GUIDE_ID}/revisions/{REVISION_ID}")
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["id"] == REVISION_ID
+    assert [rule["rule_id"] for rule in body["rules"]] == [
+        "naming.schema-pascal-case",
+        "naming.property-name",
+        "payments-currency",
+    ]
+    assert body["policy"]["requiredCoverage"] == ["quality"]
+    assert body["snapshotFingerprint"] == "s" * 64
+
+
+def test_get_revision_of_another_guide_404s():
+    """A revision id is only readable through the guide it belongs to."""
+    other_guide = "00000000-0000-0000-0000-0000000000f9"
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch(
+        "app.style_guide_routes.db.get_style_guide_revision",
+        return_value=_revision_row(guide_id=other_guide),
+    ):
+        r = client.get(f"/v1/style-guides/acme/{GUIDE_ID}/revisions/{REVISION_ID}")
+    assert r.status_code == 404
+
+
+def test_get_revision_missing_404s():
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch("app.style_guide_routes.db.get_style_guide_revision", return_value=None):
+        r = client.get(f"/v1/style-guides/acme/{GUIDE_ID}/revisions/{REVISION_ID}")
+    assert r.status_code == 404

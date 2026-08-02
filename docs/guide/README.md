@@ -38,6 +38,7 @@ project in ~10 minutes") and the [Golden Path](../GOLDEN_PATH.md) (the executabl
 | **Built-in lint rules** (stable ids, severities, rationales — `GET /v1/lint/rules`) | [lint-rules.md](lint-rules.md) |
 | **Custom lint rules** (Spectral-compatible DSL — `POST /v1/lint/custom-rules/validate`) | [custom-rules.md](custom-rules.md) |
 | **Spectral ruleset import** (`.spectral.yaml` → built-ins + custom rules — `POST /v1/lint/custom-rules/import`) | [spectral-import.md](spectral-import.md) |
+| **Style-guide revisions & audit** (immutable guide history, lint results pinned to a revision — `GET /v1/style-guides/{tenant}/{guide}/revisions`) | [style-guide-revisions.md](style-guide-revisions.md) |
 | **Portable mock bundles** (offline, signed, version-pinned mock runtime — `GET …/mock/bundle`) | [mock-bundle-format.md](mock-bundle-format.md) |
 | **Portable mock runtime** (`apiome mock run`, official image, readiness, structured logs, conformance) | [portable-mock-runtime.md](portable-mock-runtime.md) |
 | **Mock fixture packs** (versioned seed data, digests, `__mock__/session/reset` lifecycle) | [mock-fixture-packs.md](mock-fixture-packs.md) |
