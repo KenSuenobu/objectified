@@ -5,6 +5,46 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.237.0] - 2026-08-01
+
+### Added
+- **Breaking-publish guardrail (CTG-3.4, #4478)** —
+  CTG-3.1 made breaking changes visible *after* publish, but nothing stopped a publisher from
+  shipping one as a minor or patch bump — the semver violation that destroys consumer trust,
+  committed with the platform already knowing the change was breaking. Publish now says so
+  first.
+  - **The check.** At publish time the head is classified against the previous **published**
+    revision (the CTG-1.1 taxonomy through the CTG-1.3 changelog builder, so the guardrail lists
+    exactly what the published changelog will list) and the two version labels are compared for
+    a semver major bump. Breaking **and** no major bump is the only combination that triggers.
+    The baseline is resolved independently of the request's change-report baseline mode, so
+    selecting `initial` cannot dodge the guardrail, and the check runs *after* the
+    `allowBreaking` gate — a publisher who opted into shipping breaking changes is exactly the
+    one it exists for.
+  - **Tenant policy, on the guide.** `style_guides.breaking_publish_policy` (migration V237) is
+    `off` / `warn` (default) / `block`, resolved through the GOV-1.4 chain (project → tenant →
+    default) and editable at `PUT …/style-guides/{tenantSlug}/{guideId}/policy` beside the
+    CLX-1.3 gates. Under `block`, publish is refused with `422` carrying the full assessment;
+    force-publish (`skipPublishChecks` + reason) gets past it exactly as it does for style-guide
+    errors, per GOV-2.5. The level is frozen into each GOV-1.6 guide revision, so escalating to
+    `block` is auditable history.
+  - **Preflight for the dialog.** `GET /v1/versions/{tenantSlug}/{projectId}/{versionRecordId}/breaking-publish-guardrail`
+    returns the same payload read-only: status, the breaking changes (capped at 50, with
+    `truncated` and a true `breakingCount`), `majorBumped`, and the `recommendedVersion` a
+    compliant bump would use.
+  - **Never fails closed.** Version labels are free-form, so "was the major bumped?" has three
+    answers — a non-semver label yields `null`, which warns but never blocks, since that tenant
+    has not committed a semver violation. Every fault (unbuildable spec, missing baseline, DB
+    error, unknown policy value) degrades to `status: unavailable` or the `warn` default: a
+    guardrail that failed closed on its own bugs would be worse than the violation it guards
+    against.
+  - **Audited.** Every flagged publish appends a `version.breaking_publish_guardrail` workflow
+    audit row with `action: warned | forced`, the force reason, and the full assessment. The
+    forced case is assessed after publish, since `skipPublishChecks` skips the prechecks
+    wholesale — precisely the case where the trail matters most.
+  - Documented in `docs/breaking_publish_guardrail.md`; 50 tests in
+    `test_breaking_publish_guardrail.py` plus guide-policy and revision-snapshot coverage.
+
 ## [1.236.0] - 2026-08-01
 
 ### Added

@@ -38,6 +38,7 @@ import psycopg2
 from fastapi import APIRouter, Depends, HTTPException
 
 from .auth import get_authenticated_user_id, validate_authentication
+from .breaking_publish_policy import normalize_breaking_publish_policy
 from .compatibility_engine import openapi_for_revision
 from .custom_rule_dsl import (
     CustomRuleValidationError,
@@ -838,6 +839,9 @@ def _policy_settings_out(guide: Dict[str, Any]) -> StyleGuidePolicySettingsOut:
         axis_gates=default_axis_gates(guide.get("axis_gates")),
         required_coverage=default_required_coverage(guide.get("required_coverage")),
         ci_outcomes=style_guide_ci_outcomes_from_raw(ci),
+        breaking_publish_policy=normalize_breaking_publish_policy(
+            guide.get("breaking_publish_policy")
+        ),
     )
 
 
@@ -867,7 +871,11 @@ async def put_style_guide_policy_settings(
     body: StyleGuidePolicySettingsPutRequest,
     auth_data: Dict[str, Any] = Depends(validate_authentication),
 ) -> StyleGuidePolicySettingsOut:
-    """Update draft policy gates and optionally snapshot a policy pack (CLX-1.3, #4850)."""
+    """Update draft policy gates and optionally snapshot a policy pack (CLX-1.3, #4850).
+
+    Also carries the CTG-3.4 (#4478) breaking-publish guardrail level, which the publish
+    flow reads through the same guide-resolution chain.
+    """
     _ = tenant_slug
     tenant_id = _require_tenant_admin(auth_data)
     guide = _load_guide_or_404(guide_id, tenant_id)
@@ -888,6 +896,11 @@ async def put_style_guide_policy_settings(
         axis_gates=body.axis_gates,
         required_coverage=body.required_coverage,
         ci_outcomes=ci_payload,
+        breaking_publish_policy=(
+            normalize_breaking_publish_policy(body.breaking_publish_policy)
+            if body.breaking_publish_policy is not None
+            else None
+        ),
     )
     if not updated:
         raise HTTPException(status_code=404, detail="Style guide not found")

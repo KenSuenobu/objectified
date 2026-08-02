@@ -43,6 +43,7 @@ import json
 import logging
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
+from .breaking_publish_policy import normalize_breaking_publish_policy
 from .policy_evaluate import (
     default_axis_gates,
     default_ci_outcomes,
@@ -147,6 +148,9 @@ def guide_snapshot(
                 default_required_coverage(guide.get("required_coverage"))
             ),
             "ciOutcomes": default_ci_outcomes(guide.get("ci_outcomes")),
+            "breakingPublishPolicy": normalize_breaking_publish_policy(
+                guide.get("breaking_publish_policy")
+            ),
         },
     }
 

@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.100.0
+  version: 1.101.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -10056,7 +10056,13 @@ paths:
       - style-guides
       summary: Put Style Guide Policy Settings
       description: 'Update draft policy gates and optionally snapshot a policy pack
-        (CLX-1.3, #4850).'
+        (CLX-1.3, #4850).
+
+
+        Also carries the CTG-3.4 (#4478) breaking-publish guardrail level, which the
+        publish
+
+        flow reads through the same guide-resolution chain.'
       operationId: put_style_guide_policy_settings_v1_style_guides__tenant_slug___guide_id__policy_put
       parameters:
       - name: tenant_slug
@@ -13605,6 +13611,87 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for publish versionresponse422.
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/breaking-publish-guardrail:
+    get:
+      tags:
+      - versions
+      summary: Get Breaking Publish Guardrail
+      description: "Preflight the breaking-publish guardrail for a revision (CTG-3.4,\
+        \ #4478).\n\nWhat the publish dialog calls before showing Publish: it reports\
+        \ whether this revision\nwould break consumers without a major-version bump,\
+        \ which changes are breaking, and\nwhether the tenant's policy warns or blocks.\
+        \ Read-only — nothing is published or stored.\n\nArgs:\n    tenant_slug: The\
+        \ tenant slug\n    project_id: The project ID\n    version_record_id: The\
+        \ version record ID\n    auth_data: Authentication data (injected by dependency)\n\
+        \nReturns:\n    The guardrail assessment; ``status`` is ``unavailable`` (never\
+        \ an error) when the\n    comparison could not be made.\n\nRaises:\n    HTTPException:\
+        \ 404 when the revision does not exist in this project."
+      operationId: get_breaking_publish_guardrail_v1_versions__tenant_slug___project_id___version_record_id__breaking_publish_guardrail_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Breaking Publish Guardrailauthorization schema.
+          - type: 'null'
+            description: Get Breaking Publish Guardrailauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Breaking Publish Guardrail Xapikey schema.
+          - type: 'null'
+            description: Get Breaking Publish Guardrail Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get breaking publish guardrail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreakingPublishGuardrailOut'
+                description: Response payload for get breaking publish guardrailresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get breaking publish guardrailresponse422.
   /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock:
     put:
       tags:
@@ -48265,6 +48352,167 @@ components:
         \ is declared.\n    selector: ``\"0\"``, ``\"1\"``, … for ``oneOf``/``anyOf``;\
         \ ``\"then\"`` or ``\"else\"`` for\n        an ``if``/``then``/``else`` arm.\n\
         \    label: Human-readable name of the alternative (``oneOf[1]``, ``if/else``)."
+    BreakingPublishChangeOut:
+      properties:
+        pointer:
+          type: string
+          title: Pointer
+          description: Pointer.
+          example: example
+        ruleId:
+          type: string
+          title: Ruleid
+          description: Rule ID.
+          example: documentation.schema-missing-description
+        pathGroup:
+          type: string
+          title: Pathgroup
+          description: Path Group.
+          example: example
+        summary:
+          type: string
+          title: Summary
+          description: Short summary suitable for navigation and reference docs.
+          example: List pets
+      type: object
+      required:
+      - pointer
+      - ruleId
+      - pathGroup
+      - summary
+      title: BreakingPublishChangeOut
+      description: 'One breaking change listed by the publish guardrail (CTG-3.4,
+        #4478).'
+    BreakingPublishGuardrailOut:
+      properties:
+        policy:
+          type: string
+          title: Policy
+          description: 'Resolved guardrail level: off | warn | block.'
+          example: example
+        status:
+          type: string
+          title: Status
+          description: disabled | no-baseline | ok | warning | blocked | unavailable.
+          example: active
+        triggered:
+          type: boolean
+          title: Triggered
+          description: The guardrail has a warning or a block to report.
+          example: false
+        blocked:
+          type: boolean
+          title: Blocked
+          description: Publish is refused unless force-published.
+          example: false
+        breaking:
+          type: boolean
+          title: Breaking
+          description: Head classifies breaking against the baseline.
+          example: false
+        majorBumped:
+          anyOf:
+          - type: boolean
+            description: Response payload for breaking publish guardrail.
+          - type: 'null'
+            description: Response payload for breaking publish guardrail.
+          title: Majorbumped
+          description: Null when a version label is not semver (unknown, never assumed).
+        fromVersion:
+          anyOf:
+          - type: string
+            description: Response payload for breaking publish guardrail.
+          - type: 'null'
+            description: Response payload for breaking publish guardrail.
+          title: Fromversion
+          description: From Version.
+        toVersion:
+          anyOf:
+          - type: string
+            description: Response payload for breaking publish guardrail.
+          - type: 'null'
+            description: Response payload for breaking publish guardrail.
+          title: Toversion
+          description: To Version.
+        baselineRevisionId:
+          anyOf:
+          - type: string
+            description: Response payload for breaking publish guardrail.
+          - type: 'null'
+            description: Response payload for breaking publish guardrail.
+          title: Baselinerevisionid
+          description: Baseline Revision ID.
+        breakingChanges:
+          items:
+            $ref: '#/components/schemas/BreakingPublishChangeOut'
+          type: array
+          title: Breakingchanges
+          description: Breaking Changes.
+          maxItems: 1000
+        breakingCount:
+          type: integer
+          title: Breakingcount
+          default: 0
+          description: Number of breaking.
+          example: 1
+        truncated:
+          type: boolean
+          title: Truncated
+          description: Listed changes omit some of breakingCount.
+          default: false
+          example: false
+        counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Counts
+          description: Counts.
+        maxSeverity:
+          anyOf:
+          - type: string
+            description: Response payload for breaking publish guardrail.
+          - type: 'null'
+            description: Response payload for breaking publish guardrail.
+          title: Maxseverity
+          description: Max Severity.
+        recommendedVersion:
+          anyOf:
+          - type: string
+            description: Response payload for breaking publish guardrail.
+          - type: 'null'
+            description: Response payload for breaking publish guardrail.
+          title: Recommendedversion
+          description: Recommended Version.
+        detail:
+          anyOf:
+          - type: string
+            description: Response payload for breaking publish guardrail.
+          - type: 'null'
+            description: Response payload for breaking publish guardrail.
+          title: Detail
+          description: Detail.
+        message:
+          type: string
+          title: Message
+          description: Message.
+          example: Example validation message.
+      type: object
+      required:
+      - policy
+      - status
+      - triggered
+      - blocked
+      - breaking
+      - message
+      title: BreakingPublishGuardrailOut
+      description: 'Breaking-publish guardrail assessment for a candidate publish
+        (CTG-3.4, #4478).
+
+
+        Shared verbatim by the preflight endpoint, the blocked-publish 422 body, and
+        the audit
+
+        trail, so the dialog, the API error, and the audit row can never disagree.'
     BrowseDirectoryStats:
       properties:
         tenant_count:
@@ -79351,7 +79599,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-02T01:28:47Z'
+          example: '2026-08-02T02:57:37Z'
       additionalProperties: false
       type: object
       required:
@@ -84441,6 +84689,17 @@ components:
         ciOutcomes:
           $ref: '#/components/schemas/StyleGuideCiOutcomesOut'
           description: Ci Outcomes.
+        breakingPublishPolicy:
+          type: string
+          enum:
+          - 'off'
+          - warn
+          - block
+          title: Breakingpublishpolicy
+          description: 'Guardrail applied when a publish is breaking without a semver
+            major bump (CTG-3.4): off, warn (default), or block.'
+          default: warn
+          example: warn
       type: object
       required:
       - guideId
@@ -84473,6 +84732,18 @@ components:
           - type: 'null'
             description: Request body for style guide policy settings put.
           description: Ci Outcomes.
+        breakingPublishPolicy:
+          anyOf:
+          - type: string
+            enum:
+            - 'off'
+            - warn
+            - block
+            description: Request body for style guide policy settings put.
+          - type: 'null'
+            description: Request body for style guide policy settings put.
+          title: Breakingpublishpolicy
+          description: Breaking-publish guardrail level (CTG-3.4); omit to leave unchanged.
         snapshot:
           type: boolean
           title: Snapshot
@@ -89773,13 +90044,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-02T01:28:47Z'
+          example: '2026-08-02T02:57:37Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-02T01:28:47Z'
+          example: '2026-08-02T02:57:37Z'
         outcome:
           anyOf:
           - type: string

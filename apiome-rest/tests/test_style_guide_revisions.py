@@ -104,6 +104,19 @@ def test_snapshot_captures_identity_rules_and_normalized_policy():
     assert snapshot["policy"]["requiredCoverage"] == ["quality"]
     assert snapshot["policy"]["axisGates"] == {}
     assert snapshot["policy"]["ciOutcomes"]["failOnUnwaivedErrors"] is True
+    # The CTG-3.4 (#4478) guardrail level is a policy gate, so history freezes it too.
+    assert snapshot["policy"]["breakingPublishPolicy"] == "warn"
+
+
+def test_snapshot_freezes_an_escalated_breaking_publish_policy():
+    """Escalating to block is an auditable governance change, so it changes the snapshot."""
+    warn = guide_snapshot(_guide_row(), _rule_rows())
+    block = guide_snapshot(
+        _guide_row(breaking_publish_policy="block"), _rule_rows()
+    )
+
+    assert block["policy"]["breakingPublishPolicy"] == "block"
+    assert snapshot_fingerprint(block) != snapshot_fingerprint(warn)
 
 
 def test_snapshot_is_insensitive_to_rule_row_order():

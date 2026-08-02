@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Dict, Optional
 
 from fastapi import HTTPException
 
+from .breaking_publish_guardrail import assess_breaking_publish
 from .compatibility_engine import CompatibilityCheckEngine, openapi_for_revision
 from .database import db
 from .models import VersionPublishRequest
@@ -35,6 +36,7 @@ class PublishPrecheckOutcome:
         severity_counts: Per-severity violation counts when lint succeeded.
         error_findings: Error-severity findings (rule id + location) when lint succeeded.
         verification_decision: ECA-3.1 evidence-backed policy decision when evaluated.
+        breaking_publish_guardrail: CTG-3.4 semver guardrail payload when assessed.
     """
 
     lint_error_count: Optional[int] = None
@@ -43,6 +45,7 @@ class PublishPrecheckOutcome:
     severity_counts: Optional[Dict[str, int]] = None
     error_findings: Optional[tuple[Dict[str, str], ...]] = None
     verification_decision: Optional[Dict[str, Any]] = None
+    breaking_publish_guardrail: Optional[Dict[str, Any]] = None
 
 
 def enforce_publish_prechecks(
@@ -63,13 +66,16 @@ def enforce_publish_prechecks(
     Since ECA-3.1 (#4734) the evidence-backed verification policy is evaluated with
     ``purpose=publish``; when enforcement is ``block`` and the decision fails, publish is
     refused with the same decision payload the dashboard renders.
+    Since CTG-3.4 (#4478) the semver guardrail is assessed against the previous *published*
+    revision; under the ``block`` policy level a breaking change without a major-version bump
+    is refused, and under ``warn`` it is only reported on the outcome.
 
     Returns:
         The observed :class:`PublishPrecheckOutcome`.
 
     Raises:
-        HTTPException: 422 for documentation gaps, style-guide errors, or a blocking
-            verification-policy decision.
+        HTTPException: 422 for documentation gaps, style-guide errors, a blocking
+            verification-policy decision, or a blocked breaking publish.
         HTTPException: 409 when compatibility is breaking and ``allow_breaking`` is false.
     """
     if bool(request.skip_publish_checks):
@@ -185,12 +191,82 @@ def enforce_publish_prechecks(
                     ),
                 )
 
+    outcome = _with_breaking_publish_guardrail(
+        outcome,
+        tenant_slug=tenant_slug,
+        tenant_id=tenant_id,
+        project_id=project_id,
+        head_version=existing,
+        head_spec=head_spec,
+    )
+
     return _with_verification_policy(
         outcome,
         tenant_id=tenant_id,
         project_id=project_id,
         version_record_id=version_record_id,
     )
+
+
+def _with_breaking_publish_guardrail(
+    outcome: PublishPrecheckOutcome,
+    *,
+    tenant_slug: str,
+    tenant_id: str,
+    project_id: str,
+    head_version: Dict[str, Any],
+    head_spec: Dict[str, Any],
+) -> PublishPrecheckOutcome:
+    """Attach the CTG-3.4 assessment and refuse publish when the policy blocks.
+
+    The guardrail runs *after* the ``allow_breaking`` compatibility gate on purpose: a
+    publisher who has opted into shipping breaking changes is exactly the one the semver
+    guardrail exists for, and that gate would otherwise short-circuit it.
+
+    Args:
+        outcome: The precheck outcome so far.
+        tenant_slug: Tenant slug, for materializing the baseline OpenAPI.
+        tenant_id: Tenant context.
+        project_id: Project of the revision being published.
+        head_version: The candidate revision row.
+        head_spec: The head OpenAPI the prechecks already built.
+
+    Returns:
+        ``outcome`` with ``breaking_publish_guardrail`` set — always a payload, including the
+        ``disabled`` / ``unavailable`` cases, so a caller can tell "checked and clean" from
+        "not checked".
+
+    Raises:
+        HTTPException: 422 when the policy level is ``block`` and the head is breaking
+            without a major-version bump.
+    """
+    assessment = assess_breaking_publish(
+        tenant_slug=tenant_slug,
+        tenant_id=tenant_id,
+        project_id=project_id,
+        head_version=head_version,
+        head_spec=head_spec,
+        openapi_loader=openapi_for_revision,
+    )
+    payload = assessment.as_payload()
+    if assessment.blocked:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": (
+                    f"{assessment.message()} Bump the major version, relax the tenant "
+                    "breaking-publish policy, or force-publish with a reason."
+                ),
+                "breakingPublishGuardrail": payload,
+            },
+        )
+    if assessment.triggered:
+        logger.info(
+            "Breaking-publish guardrail warned on revision %s: %s",
+            str(head_version.get("id") or "?"),
+            assessment.message(),
+        )
+    return replace(outcome, breaking_publish_guardrail=payload)
 
 
 def _with_verification_policy(
@@ -233,14 +309,7 @@ def _with_verification_policy(
         )
         return outcome
 
-    enriched = PublishPrecheckOutcome(
-        lint_error_count=outcome.lint_error_count,
-        guide_id=outcome.guide_id,
-        guide_name=outcome.guide_name,
-        severity_counts=outcome.severity_counts,
-        error_findings=outcome.error_findings,
-        verification_decision=payload,
-    )
+    enriched = replace(outcome, verification_decision=payload)
     if decision.enforcement == "block" and not decision.passed:
         raise HTTPException(
             status_code=422,

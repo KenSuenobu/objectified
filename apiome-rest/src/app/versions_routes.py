@@ -17,6 +17,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from .auth import get_authenticated_user_id, validate_authentication
 from .branch_push_policy import effective_require_merge_path
+from .breaking_publish_guardrail import assess_breaking_publish
 from .compatibility_engine import CompatibilityCheckEngine, compat_audit_detail, openapi_for_revision
 from .config import settings
 from .database import BranchNotFoundError, StaleHeadPushError, db
@@ -36,6 +37,7 @@ from .mock_scenario_settings import (
     validate_mock_scenarios,
 )
 from .models import (
+    BreakingPublishGuardrailOut,
     MockChaosSpec,
     MockFixturePackSpec,
     MockScenarioSpec,
@@ -2023,7 +2025,7 @@ async def publish_version(
             request.change_report_baseline_revision_id,
         )
 
-    enforce_publish_prechecks(
+    precheck = enforce_publish_prechecks(
         tenant_slug=tenant_slug,
         tenant_id=auth_data["tenant_id"],
         project_id=project_id,
@@ -2061,6 +2063,18 @@ async def publish_version(
             },
         )
 
+    _audit_breaking_publish_guardrail(
+        tenant_slug=tenant_slug,
+        tenant_id=auth_data["tenant_id"],
+        project_id=project_id,
+        version_record_id=version_record_id,
+        existing=existing,
+        guardrail=precheck.breaking_publish_guardrail,
+        forced=bool(request.skip_publish_checks),
+        force_reason=request.force_publish_reason,
+        actor_id=user_id,
+    )
+
     background_tasks.add_task(
         generate_change_report_on_publish,
         tenant_slug=tenant_slug,
@@ -2090,6 +2104,122 @@ async def publish_version(
     )
 
     return VersionSchema(**version)
+
+
+#: Workflow-audit action for every breaking publish the CTG-3.4 guardrail flagged.
+BREAKING_PUBLISH_GUARDRAIL_AUDIT_ACTION = "version.breaking_publish_guardrail"
+
+
+def _audit_breaking_publish_guardrail(
+    *,
+    tenant_slug: str,
+    tenant_id: str,
+    project_id: str,
+    version_record_id: str,
+    existing: Dict[str, Any],
+    guardrail: Optional[Dict[str, Any]],
+    forced: bool,
+    force_reason: Optional[str],
+    actor_id: Optional[str],
+) -> None:
+    """Record a flagged breaking publish in the workflow audit trail (CTG-3.4, #4478).
+
+    Two publishes reach this point with something to record: one the guardrail *warned*
+    about and let through, and one that was *forced* past a block. The forced case has no
+    precheck assessment — ``skip_publish_checks`` skips the prechecks wholesale — so it is
+    assessed here, which is precisely the case where an audit trail matters most.
+
+    Args:
+        tenant_slug: Tenant slug, for materializing the baseline OpenAPI.
+        tenant_id: Tenant context.
+        project_id: Project of the published revision.
+        version_record_id: The published revision.
+        existing: The revision row as it was read before publish.
+        guardrail: The precheck's assessment payload, when the prechecks ran.
+        forced: Whether this publish set ``skipPublishChecks``.
+        force_reason: The recorded force-publish reason, when forced.
+        actor_id: The publishing user.
+
+    Returns:
+        None. Best-effort: an assessment or audit fault never fails a successful publish.
+    """
+    try:
+        payload = guardrail
+        if forced:
+            payload = assess_breaking_publish(
+                tenant_slug=tenant_slug,
+                tenant_id=tenant_id,
+                project_id=project_id,
+                head_version=existing,
+            ).as_payload()
+        if not payload or not payload.get("triggered"):
+            return
+        db.insert_workflow_audit(
+            tenant_id,
+            project_id,
+            version_record_id,
+            BREAKING_PUBLISH_GUARDRAIL_AUDIT_ACTION,
+            "success",
+            actor_id,
+            {
+                "action": "forced" if forced else "warned",
+                "reason": force_reason if forced else None,
+                "guardrail": payload,
+            },
+        )
+    except Exception:  # noqa: BLE001 - auditing must not fail an already-successful publish
+        logger.warning(
+            "Failed to audit the breaking-publish guardrail for revision %s",
+            version_record_id,
+            exc_info=True,
+        )
+
+
+@router.get(
+    "/{tenant_slug}/{project_id}/{version_record_id}/breaking-publish-guardrail",
+    response_model=BreakingPublishGuardrailOut,
+)
+async def get_breaking_publish_guardrail(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> BreakingPublishGuardrailOut:
+    """
+    Preflight the breaking-publish guardrail for a revision (CTG-3.4, #4478).
+
+    What the publish dialog calls before showing Publish: it reports whether this revision
+    would break consumers without a major-version bump, which changes are breaking, and
+    whether the tenant's policy warns or blocks. Read-only — nothing is published or stored.
+
+    Args:
+        tenant_slug: The tenant slug
+        project_id: The project ID
+        version_record_id: The version record ID
+        auth_data: Authentication data (injected by dependency)
+
+    Returns:
+        The guardrail assessment; ``status`` is ``unavailable`` (never an error) when the
+        comparison could not be made.
+
+    Raises:
+        HTTPException: 404 when the revision does not exist in this project.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.VIEW)
+    existing = db.get_version_by_id(version_record_id, auth_data["tenant_id"])
+    if not existing or str(existing.get("project_id")) != str(project_id):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Version not found: {version_record_id}",
+        )
+
+    assessment = assess_breaking_publish(
+        tenant_slug=tenant_slug,
+        tenant_id=auth_data["tenant_id"],
+        project_id=project_id,
+        head_version=existing,
+    )
+    return BreakingPublishGuardrailOut.model_validate(assessment.as_payload())
 
 
 @router.put("/{tenant_slug}/{project_id}/{version_record_id}/mock")

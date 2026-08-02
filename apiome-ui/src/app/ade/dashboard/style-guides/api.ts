@@ -106,12 +106,22 @@ export interface GuideCiOutcomes {
   failOnAxisGates: boolean;
 }
 
+/**
+ * Breaking-publish guardrail level (CTG-3.4, #4478).
+ *
+ * `off` never surfaces; `warn` (default) warns in the publish dialog; `block` refuses the
+ * publish until the major is bumped or the publish is forced with a reason.
+ */
+export type BreakingPublishPolicyLevel = 'off' | 'warn' | 'block';
+
 /** Draft policy gate settings — `GET/PUT /api/style-guides/{id}/policy` (CLX-1.3, #4850). */
 export interface GuidePolicySettings {
   guideId: string;
   axisGates: Record<string, { minGrade?: string; minScore?: number }>;
   requiredCoverage: string[];
   ciOutcomes: GuideCiOutcomes;
+  /** Breaking-publish guardrail level (CTG-3.4, #4478). */
+  breakingPublishPolicy: BreakingPublishPolicyLevel;
 }
 
 /** One immutable policy pack version (CLX-1.3, #4850). */
@@ -145,6 +155,34 @@ export const POLICY_COVERAGE_AXES = ['quality'] as const;
 
 /** Letter grades for axis gate floors (best → worst). */
 export const POLICY_GRADE_OPTIONS = ['A', 'B', 'C', 'D', 'F'] as const;
+
+/** What a guide gets without configuring the guardrail (CTG-3.4, #4478). */
+export const DEFAULT_BREAKING_PUBLISH_POLICY: BreakingPublishPolicyLevel = 'warn';
+
+/** Breaking-publish guardrail levels, with the copy the policy editor shows (CTG-3.4). */
+export const BREAKING_PUBLISH_POLICY_OPTIONS: ReadonlyArray<{
+  value: BreakingPublishPolicyLevel;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: 'off',
+    label: 'Off',
+    description: 'Never check for breaking changes at publish time.',
+  },
+  {
+    value: 'warn',
+    label: 'Warn (default)',
+    description:
+      'Warn when a publish is breaking without a major-version bump; publishing proceeds.',
+  },
+  {
+    value: 'block',
+    label: 'Block',
+    description:
+      'Refuse the publish until the major version is bumped, or it is force-published with a reason.',
+  },
+];
 
 /** Truncate a content fingerprint for list display. */
 export function truncatePolicyFingerprint(fingerprint: string, length = 12): string {
